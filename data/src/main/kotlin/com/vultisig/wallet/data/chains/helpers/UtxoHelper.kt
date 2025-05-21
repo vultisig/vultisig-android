@@ -26,7 +26,9 @@ class UtxoHelper(
     companion object {
         fun getHelper(vault: Vault, coinType: CoinType): UtxoHelper {
             when (coinType) {
-                CoinType.BITCOIN, CoinType.BITCOINCASH, CoinType.LITECOIN, CoinType.DOGECOIN, CoinType.DASH -> {
+                CoinType.BITCOIN, CoinType.BITCOINCASH,
+                CoinType.LITECOIN, CoinType.DOGECOIN,
+                CoinType.DASH, CoinType.ZCASH -> {
                     return UtxoHelper(
                         coinType = coinType,
                         vaultHexPublicKey = vault.pubKeyECDSA,
@@ -81,7 +83,7 @@ class UtxoHelper(
                     )
                 }
 
-                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH -> {
+                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH, CoinType.ZCASH -> {
                     val keyHash = lockScript.matchPayToPubkeyHash()
                     val redeemScript = BitcoinScript.buildPayToPublicKeyHash(keyHash)
                     signingInput.putScripts(
@@ -140,7 +142,7 @@ class UtxoHelper(
                     )
                 }
 
-                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH -> {
+                CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH, CoinType.ZCASH -> {
                     val keyHash = lockScript.matchPayToPubkeyHash()
                     val redeemScript = BitcoinScript.buildPayToPublicKeyHash(keyHash)
                     input.putScripts(
@@ -158,9 +160,17 @@ class UtxoHelper(
 
     private fun getBitcoinPreSigningInputData(keysignPayload: KeysignPayload): ByteArray {
         val signingInput = getBitcoinSigningInput(keysignPayload)
-        val plan: Bitcoin.TransactionPlan =
+        val initialPlan: Bitcoin.TransactionPlan =
             AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
+
+        val plan = if (coinType == CoinType.ZCASH) {
+            initialPlan.toBuilder()
+                .setBranchId(ByteString.fromHex("5510e7c8"))
+                .build()
+        } else initialPlan
+
         signingInput.setPlan(plan)
+
         return signingInput.build().toByteArray()
     }
 
