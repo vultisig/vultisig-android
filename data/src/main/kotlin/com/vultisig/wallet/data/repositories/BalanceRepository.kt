@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
 import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
+import com.vultisig.wallet.data.models.Chain.Zcash
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -241,7 +242,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash -> {
+            Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash, Zcash -> {
                 val balance = blockchairApi.getAddressInfo(coin.chain, address)?.address?.balance
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }

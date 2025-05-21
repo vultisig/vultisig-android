@@ -2032,5 +2032,19 @@ object Coins {
                 isNativeToken = true,
             ),
         ),
+
+        Chain.Zcash to listOf(
+            Coin(
+                chain = Chain.Zcash,
+                ticker = "ZEC",
+                logo = "zec",
+                decimal = 8,
+                address = "",
+                hexPublicKey = "",
+                priceProviderID = "zcash",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        )
     )
 }
