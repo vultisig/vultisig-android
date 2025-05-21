@@ -46,10 +46,19 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-            val gas = blockChairApi.getBlockChairStats(chain)
             val nativeToken = tokenRepository.getNativeToken(chain.id)
+
+            val gas = when (chain) {
+                Chain.Zcash -> "1000".toBigInteger()
+
+                else -> {
+                    val gas = blockChairApi.getBlockChairStats(chain)
+                    gas.multiply(BigInteger("5")).divide(BigInteger("2"))
+                }
+            }
+
             TokenValue(
-                gas.multiply(BigInteger("5")).divide(BigInteger("2")),
+                gas,
                 chain.feeUnit,
                 nativeToken.decimal
             )

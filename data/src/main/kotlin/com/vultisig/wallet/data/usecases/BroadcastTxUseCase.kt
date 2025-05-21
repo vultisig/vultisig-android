@@ -74,7 +74,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
             thorChainApi.broadcastTransaction(tx.rawTransaction)
         }
 
-        Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash -> {
+        Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash, Chain.Zcash -> {
             blockChairApi.broadcastTransaction(
                 chain,
                 tx.rawTransaction
