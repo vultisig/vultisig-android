@@ -110,7 +110,7 @@ object SigningHelper {
                     }
                 }
 
-                Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> {
+                Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash, Chain.Zcash -> {
                     val utxo =
                         UtxoHelper(payload.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
                     utxo.getPreSignedImageHash(payload)
@@ -210,7 +210,7 @@ object SigningHelper {
         val chain = keysignPayload.coin.chain
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
-            Chain.Bitcoin, Chain.Dash, Chain.BitcoinCash, Chain.Dogecoin, Chain.Litecoin -> {
+            Chain.Bitcoin, Chain.Dash, Chain.BitcoinCash, Chain.Dogecoin, Chain.Litecoin, Chain.Zcash -> {
                 val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
                 return utxo.getSignedTransaction(keysignPayload, signatures)
             }
