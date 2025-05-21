@@ -142,7 +142,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 savePrices(pricesWithContractAddress, currency)
             }
 
-        fetchThorPrices(tokens)
+        fetchThorPrices(
+            tokenList = tokens,
+            currency = currency,
+        )
     }
 
     override suspend fun getPriceByContactAddress(
@@ -264,13 +267,12 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private suspend fun fetchTetherPrice() =
         getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
-    private suspend fun fetchThorPrices(tokenList: List<Coin>) {
+    private suspend fun fetchThorPrices(tokenList: List<Coin>, currency: String) {
         coroutineScope {
             // if we have any thorchain tokens, then fetch their pool prices
             val thorTokens = tokenList.filter { it.chain == Chain.ThorChain && !it.isNativeToken }
             if (thorTokens.isEmpty()) return@coroutineScope // no tokens, no api request
 
-            val tickerUsd = AppCurrency.USD.ticker.lowercase()
             val poolAssetToPriceMap = try {
                 thorApi.getPools()
                     .associate {
@@ -281,6 +283,11 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 return@coroutineScope
             }
 
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true))
+                1.toBigDecimal()
+            else fetchTetherPrice()
+
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
                     val tokenAsset = "thor.${it.ticker}".lowercase()
@@ -288,13 +295,14 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                         ?.toBigDecimal(scale = 8)
                         ?: return@mapNotNull null
 
-                    it.id to mapOf(tickerUsd to priceUsd)
+                    //Since ninerealms provides prices in USD, we use the USDT rate to convert them into the selected currency
+                    it.id to mapOf(currency to priceUsd * tetherPrice)
                 }
                 .toMap()
 
             savePrices(
                 tokenIdToPrices,
-                tickerUsd
+                currency
             )
         }
     }
