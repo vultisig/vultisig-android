@@ -28,12 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.TokenLogo
@@ -45,6 +47,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -107,9 +110,8 @@ internal fun VerifySwapScreen(
     onBackClick: () -> Unit,
 ) {
     VerifySwapScreen(
-        provider = state.provider.asString(),
         showToolbar = showToolbar,
-        swapTransactionUiModel = state.swapTransactionUiModel,
+        tx = state.tx,
         hasAllConsents = state.hasAllConsents,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
@@ -128,9 +130,8 @@ internal fun VerifySwapScreen(
 
 @Composable
 private fun VerifySwapScreen(
-    provider: String,
     showToolbar: Boolean,
-    swapTransactionUiModel: SwapTransactionUiModel,
+    tx: SwapTransactionUiModel,
     hasAllConsents: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
@@ -184,8 +185,7 @@ private fun VerifySwapScreen(
                     UiSpacer(24.dp)
 
                     SwapToken(
-                        token = swapTransactionUiModel.srcToken,
-                        value = swapTransactionUiModel.srcTokenValue,
+                        valuedToken = tx.src,
                     )
 
                     Row(
@@ -231,8 +231,7 @@ private fun VerifySwapScreen(
 
 
                     SwapToken(
-                        token = swapTransactionUiModel.dstToken,
-                        value = swapTransactionUiModel.dstTokenValue,
+                        valuedToken = tx.dst,
                     )
 
                     VerifyCardDivider(
@@ -241,7 +240,7 @@ private fun VerifySwapScreen(
 
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_swap_screen_total_fees),
-                        subtitle = swapTransactionUiModel.totalFee,
+                        subtitle = tx.totalFee,
                     )
                 }
 
@@ -259,7 +258,7 @@ private fun VerifySwapScreen(
                             onCheckedChange = onConsentReceiveAmount,
                         )
 
-                        if (swapTransactionUiModel.hasConsentAllowance) {
+                        if (tx.hasConsentAllowance) {
                             VsCheckField(
                                 title = stringResource(R.string.verify_swap_agree_allowance),
                                 isChecked = consentAllowance,
@@ -305,9 +304,11 @@ private fun VerifySwapScreen(
 
 @Composable
 private fun SwapToken(
-    token: Coin,
-    value: String
+    valuedToken: ValuedToken,
 ) {
+    val token = valuedToken.token
+    val value = valuedToken.value
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -326,11 +327,29 @@ private fun SwapToken(
                 ),
         )
 
-        Text(
-            text = value,
-            style = Theme.brockmann.headings.title3,
-            color = Theme.colors.text.primary,
-        )
+        val text = buildAnnotatedString {
+            append(value)
+            append(" ")
+            withStyle(SpanStyle(color = Theme.colors.text.extraLight)) {
+                append(token.ticker)
+            }
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = text,
+                style = Theme.brockmann.headings.title3,
+                color = Theme.colors.text.primary,
+            )
+
+            Text(
+                text = valuedToken.fiatValue,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.colors.text.extraLight,
+            )
+        }
     }
 }
 
@@ -380,15 +399,12 @@ private fun VerifyCardDetails(
 @Composable
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
-        provider = "THORChain",
         showToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
         consentAmount = true,
         consentReceiveAmount = false,
-        swapTransactionUiModel = SwapTransactionUiModel(
-            srcTokenValue = "1 RUNE",
-            dstTokenValue = "1 ETH",
+        tx = SwapTransactionUiModel(
             totalFee = "1.00$",
             hasConsentAllowance = true,
         ),

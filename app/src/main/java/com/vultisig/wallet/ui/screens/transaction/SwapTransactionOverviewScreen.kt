@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -9,10 +10,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,8 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -40,6 +47,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -71,19 +79,44 @@ internal fun SwapTransactionOverviewScreen(
         content = { contentPadding ->
             Column(
                 modifier = Modifier
+                    .verticalScroll(rememberScrollState())
                     .padding(contentPadding)
                     .padding(
                         all = 16.dp,
                     ),
             ) {
+                Box {
+                    Image(
+                        painter = painterResource(R.drawable.img_tx_overview_bg),
+                        contentDescription = null,
+                        alignment = Alignment.Center,
+                        modifier = Modifier
+                            .padding(horizontal = 48.dp)
+                            .fillMaxWidth(),
+                    )
+
+                    Text(
+                        text = "Transaction successful",
+                        textAlign = TextAlign.Center,
+                        style = Theme.brockmann.body.l.medium
+                            .copy(
+                                brush = Theme.colors.gradients.primary,
+                            ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = 48.dp,
+                            ),
+                    )
+                }
 
                 Box {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         SwapToken(
-                            token = transactionTypeUiModel.srcToken,
-                            value = transactionTypeUiModel.srcTokenValue,
+                            valuedToken = transactionTypeUiModel.src,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.End,
                                 cutoutOffsetX = (-4).dp,
@@ -94,8 +127,7 @@ internal fun SwapTransactionOverviewScreen(
                         )
 
                         SwapToken(
-                            token = transactionTypeUiModel.dstToken,
-                            value = transactionTypeUiModel.dstTokenValue,
+                            valuedToken = transactionTypeUiModel.dst,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.Start,
                                 cutoutOffsetX = (-4).dp,
@@ -159,6 +191,24 @@ internal fun SwapTransactionOverviewScreen(
                             size = 1.dp,
                         )
                     }
+
+                    TextDetails(
+                        title = "From",
+                        subtitle = transactionTypeUiModel.src.token.address,
+                    )
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    TextDetails(
+                        title = "To",
+                        subtitle = transactionTypeUiModel.dst.token.address,
+                    )
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
 
                     TextDetails(
                         title = "Total Fees",
@@ -240,11 +290,13 @@ private fun TxDetails(
 
 @Composable
 private fun SwapToken(
-    token: Coin,
-    value: String,
+    valuedToken: ValuedToken,
     shape: Shape,
     modifier: Modifier = Modifier,
 ) {
+    val token: Coin = valuedToken.token
+    val value: String = valuedToken.value
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -278,23 +330,27 @@ private fun SwapToken(
 
         UiSpacer(12.dp)
 
+        val text = buildAnnotatedString {
+            append(value)
+            append(" ")
+            withStyle(SpanStyle(color = Theme.colors.text.extraLight)) {
+                append(token.ticker)
+            }
+        }
+
         Text(
-            text = value,
+            text = text,
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
-            minLines = 2,
-            maxLines = 2,
+            maxLines = 1,
         )
 
-        /*
-        TODO fiat value
         Text(
-            text = transactionTypeUiModel.srcTokenValue,
+            text = valuedToken.fiatValue,
             style = Theme.brockmann.supplementary.captionSmall,
             color = Theme.colors.text.extraLight,
         )
-         */
     }
 }
 
@@ -311,6 +367,7 @@ private fun TextDetails(
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
             maxLines = 1,
         )
@@ -353,9 +410,6 @@ private fun SwapTransactionOverviewScreenPreview() {
         approveTransactionLink = "",
         onComplete = {},
         progressLink = "",
-        transactionTypeUiModel = SwapTransactionUiModel(
-            srcTokenValue = "1.00 RUNE (ThorChain)",
-            dstTokenValue = "1.00 RUNE",
-        )
+        transactionTypeUiModel = SwapTransactionUiModel()
     )
 }
