@@ -289,16 +289,51 @@ internal class SendFormViewModel @Inject constructor(
                         "Address from QR has a different chain " +
                                 "than selected token, switching. $chainValidForAddress != $selectedChain"
                     )
+                    val preSelectedChainIds = chainValidForAddress.map { it.id }
+
+                    checkChainIdExistInAccounts(
+                        preSelectedChainIds = preSelectedChainIds,
+                        vaultId = vaultId
+                    )
 
                     preSelectToken(
-                        preSelectedChainIds = chainValidForAddress.map { it.id },
+                        preSelectedChainIds = preSelectedChainIds,
                         preSelectedTokenId = null,
                         forcePreselection = true,
-                        isQrCodeResult = true,
                     )
                 }
             }
         }
+    }
+
+    private fun checkChainIdExistInAccounts(preSelectedChainIds: List<String>, vaultId: String) {
+        // if chain Id is missing in accounts, add the first chain found by address manually.
+        val chainIdForAddition = preSelectedChainIds.firstOrNull()
+        val chainIdNotInAccounts = accounts.value.none {
+            it.token.chain.id.equals(chainIdForAddition, ignoreCase = true)
+        }
+        if (chainIdForAddition != null && chainIdNotInAccounts) {
+            viewModelScope.launch {
+                addNativeTokenToVault(chainIdForAddition)
+                loadAccounts(vaultId)
+            }
+        }
+    }
+
+    private suspend fun addNativeTokenToVault(chainIdForAddition: ChainId) {
+        val nativeToken = tokenRepository.getNativeToken(chainIdForAddition)
+        val vaultId = requireNotNull(vaultId)
+        val vault = requireNotNull(vaultRepository.get(vaultId))
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin = nativeToken,
+            vault = vault
+        )
+        val updatedCoin = nativeToken.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
+
+        vaultRepository.addTokenToVault(vaultId, updatedCoin)
     }
 
     fun setOutputAddress(address: String) {
@@ -708,7 +743,6 @@ internal class SendFormViewModel @Inject constructor(
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
         forcePreselection: Boolean = false,
-        isQrCodeResult: Boolean = false,
     ) {
         Timber.d("preSelectToken($preSelectedChainIds, $preSelectedTokenId, $forcePreselection)")
 
@@ -716,7 +750,7 @@ internal class SendFormViewModel @Inject constructor(
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
                 val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainIds, preSelectedTokenId, isQrCodeResult,
+                    accounts, preSelectedChainIds, preSelectedTokenId,
                 )
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
@@ -733,11 +767,10 @@ internal class SendFormViewModel @Inject constructor(
      * Returns first token found for tokenId or chainId or first token it all list,
      * can return null if there's no tokens in the vault
      */
-    private suspend fun findPreselectedToken(
+    private fun findPreselectedToken(
         accounts: List<Account>,
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
-        isQrCodeResult: Boolean,
     ): Coin? {
         var searchByChainResult: Coin? = null
 
@@ -752,40 +785,9 @@ internal class SendFormViewModel @Inject constructor(
                 searchByChainResult = accountToken
             }
         }
-
-        if (searchByChainResult != null)
-            return searchByChainResult
-
-        // if chain Id is missing in accounts, add the first chain found by address manually.
-        if (isQrCodeResult) {
-            val chainIdForAddition = preSelectedChainIds.firstOrNull()
-            chainIdForAddition?.let {
-                return addNativeTokenToVault(chainIdForAddition)
-            }
-        }
-
-        // if nothing was found, select the first token
-        return accounts.firstOrNull()?.token
-    }
-
-    private suspend fun addNativeTokenToVault(chainIdForAddition: ChainId): Coin {
-        val nativeToken = tokenRepository.getNativeToken(chainIdForAddition)
-        val vaultId = requireNotNull(vaultId)
-        val vault = requireNotNull(vaultRepository.get(vaultId))
-        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-            coin = nativeToken,
-            vault = vault
-        )
-        val updatedCoin = nativeToken.copy(
-            address = address,
-            hexPublicKey = derivedPublicKey
-        )
-
-        vaultRepository.addTokenToVault(vaultId, updatedCoin)
-
-        loadAccounts(vaultId)
-
-        return updatedCoin
+        // if user selected none, or nothing was found, select the first token
+        return searchByChainResult
+            ?: accounts.firstOrNull()?.token
     }
 
     private fun calculateGasTokenBalance() {
