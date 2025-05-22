@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.toProtoString
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
@@ -41,6 +42,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             memo = keysignPayload.memo,
             vaultLocalPartyId = keysignPayload.vaultLocalPartyID,
             vaultPublicKeyEcdsa = keysignPayload.vaultPublicKeyECDSA,
+            libType = keysignPayload.libType.toProtoString(),
             utxoSpecific = if (specific is BlockChainSpecific.UTXO) {
                 UTXOSpecific(
                     byteFee = specific.byteFee.toString(),

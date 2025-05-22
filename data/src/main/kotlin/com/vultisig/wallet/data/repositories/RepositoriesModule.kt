@@ -127,12 +127,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindBlowfishRepository(
-        impl: BlowfishRepositoryImpl
-    ): BlowfishRepository
-
-    @Binds
-    @Singleton
     fun bindDefaultChainsRepository(
         impl: DefaultChainsRepositoryImpl,
     ): DefaultChainsRepository
