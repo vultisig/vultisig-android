@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models.payload
 
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SigningLibType
 import java.math.BigInteger
 
 
@@ -15,4 +16,5 @@ data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     val vaultPublicKeyECDSA: String,
     val vaultLocalPartyID: String,
+    val libType: SigningLibType,
 )
