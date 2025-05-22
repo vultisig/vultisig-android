@@ -8,7 +8,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -19,7 +18,6 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -27,17 +25,34 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class SwapTransactionUiModel(
-    val srcTokenValue: String = "",
-    val srcToken: Coin = Tokens.wewe,
-    val dstTokenValue: String = "",
-    val dstToken: Coin = Tokens.wewe,
+    val src: ValuedToken = ValuedToken.Empty,
+    val dst: ValuedToken = ValuedToken.Empty,
+
+    val networkFee: ValuedToken = ValuedToken.Empty,
+    val providerFee: ValuedToken = ValuedToken.Empty,
+
     val totalFee: String = "",
+
     val hasConsentAllowance: Boolean = false,
 )
 
+internal data class ValuedToken(
+    val token: Coin,
+    val value: String, // value as string e.g. 1.0
+    val fiatValue: String, // e.g. $100
+) {
+    companion object {
+        val Empty = ValuedToken(
+            token = Tokens.wewe,
+            value = "0",
+            fiatValue = "0",
+        )
+    }
+}
+
 internal data class VerifySwapUiModel(
-    val swapTransactionUiModel: SwapTransactionUiModel = SwapTransactionUiModel(),
-    val provider: UiText = UiText.Empty,
+    val tx: SwapTransactionUiModel = SwapTransactionUiModel(),
+
     val consentAmount: Boolean = false,
     val consentReceiveAmount: Boolean = false,
     val consentAllowance: Boolean = false,
@@ -45,7 +60,7 @@ internal data class VerifySwapUiModel(
     val hasFastSign: Boolean = false,
 ) {
     val hasAllConsents: Boolean
-        get() = consentAmount && consentReceiveAmount && (consentAllowance || !swapTransactionUiModel.hasConsentAllowance)
+        get() = consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)
 }
 
 @HiltViewModel
@@ -71,17 +86,11 @@ internal class VerifySwapViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val transaction = swapTransactionRepository.getTransaction(transactionId)
-            val providerText = when (transaction.payload) {
-                is SwapPayload.OneInch -> R.string.swap_for_provider_1inch.asUiText()
-                is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
-                is SwapPayload.MayaChain -> R.string.swap_form_provider_mayachain.asUiText()
-            }
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
-                    provider = providerText,
                     consentAllowance = consentAllowance,
-                    swapTransactionUiModel = mapTransactionToUiModel(transaction)
+                    tx = mapTransactionToUiModel(transaction)
                 )
             }
         }

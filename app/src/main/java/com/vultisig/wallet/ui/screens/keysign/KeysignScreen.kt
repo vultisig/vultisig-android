@@ -104,14 +104,13 @@ private fun Keysign(
             is KeysignState.KeysignFinished -> {
                 onKeysignFinished?.invoke()
                 reviewManager.showReviewPopUp(context)
-                wrapperViewModel.loadTransaction()
             }
             else -> Unit
         }
     }
     KeysignView(
         state = state,
-        transactionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
+        transactionTypeUiModel = keysignViewModel.transactionTypeUiModel,
         txHash = keysignViewModel.txHash.collectAsState().value,
         approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,

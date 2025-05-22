@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
@@ -15,14 +16,13 @@ internal interface SwapTransactionToUiModelMapper :
     SuspendMapperFunc<SwapTransaction, SwapTransactionUiModel>
 
 internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
-    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val tokenRepository: TokenRepository,
-) :
-    SwapTransactionToUiModelMapper {
+) : SwapTransactionToUiModelMapper {
     override suspend fun invoke(from: SwapTransaction): SwapTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
         val provider: SwapProvider = swapQuoteRepository
@@ -33,6 +33,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
 
             SwapProvider.LIFI, SwapProvider.ONEINCH ->
                 tokenRepository.getNativeToken(from.srcToken.chain.id)
+
             SwapProvider.JUPITER ->
                 from.srcToken
         }
@@ -43,10 +44,30 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             currency
         )
         return SwapTransactionUiModel(
-            srcTokenValue = "${mapTokenValueToStringWithUnit(from.srcTokenValue)} (${from.srcToken.chain})",
-            srcToken = from.srcToken,
-            dstTokenValue = "${mapTokenValueToStringWithUnit(from.expectedDstTokenValue)} (${from.dstToken.chain})",
-            dstToken = from.dstToken,
+            src = ValuedToken(
+                value = mapTokenValueToDecimalUiString(from.srcTokenValue),
+                token = from.srcToken,
+                fiatValue = fiatValueToStringMapper.map(
+                    convertTokenValueToFiat(
+                        from.srcToken,
+                        from.srcTokenValue,
+                        currency
+                    )
+                ),
+            ),
+
+            dst = ValuedToken(
+                value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
+                token = from.dstToken,
+                fiatValue = fiatValueToStringMapper.map(
+                    convertTokenValueToFiat(
+                        from.dstToken,
+                        from.expectedDstTokenValue,
+                        currency
+                    )
+                ),
+            ),
+
             hasConsentAllowance = from.isApprovalRequired,
             totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
         )

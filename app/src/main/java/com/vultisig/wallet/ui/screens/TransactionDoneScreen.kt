@@ -51,7 +51,6 @@ internal fun TransactionDoneView(
     transactionLink: String,
     approveTransactionLink: String,
     onComplete: () -> Unit,
-    progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean,
@@ -103,13 +102,6 @@ internal fun TransactionDoneView(
                         )
 
                         is TransactionTypeUiModel.Send -> TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
-
-                        is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
-                            swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
-                            progressLink = progressLink,
-                        ) { progressLink ->
-                            uriHandler.openUri(progressLink)
-                        }
 
                         is TransactionTypeUiModel.SignMessage -> CustomMessageDetail(
                             transactionTypeUiModel.model,
@@ -202,54 +194,6 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
             title = stringResource(R.string.verify_deposit_gas_title),
             value = depositTransaction.estimatedFees,
         )
-    }
-}
-
-@Composable
-private fun ColumnScope.SwapTransactionDetail(
-    swapTransaction: SwapTransactionUiModel?,
-    progressLink: String?,
-    onProgressLinkClick: (String) -> Unit,
-) {
-    if (swapTransaction != null) {
-        AddressField(
-            title = stringResource(R.string.verify_transaction_from_title),
-            address = swapTransaction.srcTokenValue,
-        )
-
-        AddressField(
-            title = stringResource(R.string.verify_transaction_to_title),
-            address = swapTransaction.dstTokenValue
-        )
-
-        if (swapTransaction.hasConsentAllowance) {
-            AddressField(
-                title = stringResource(R.string.verify_approve_amount_title),
-                address = swapTransaction.srcTokenValue,
-            )
-        }
-
-        OtherField(
-            title = stringResource(R.string.verify_swap_screen_total_fees),
-            value = swapTransaction.totalFee,
-        )
-
-        if (progressLink != null) {
-            Text(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .align(Alignment.End)
-                    .clickOnce(onClick = {
-                        onProgressLinkClick(progressLink)
-                    }),
-                text = stringResource(R.string.transaction_swap_tracking_link),
-                color = Theme.colors.turquoise800,
-                style = Theme.montserrat.body3.copy(
-                    textDecoration = TextDecoration.Underline,
-                    lineHeight = 22.sp
-                ),
-            )
-        }
     }
 }
 
@@ -356,7 +300,6 @@ private fun TransactionDoneScreenPreview() {
         approveTransactionHash = "0x1234567890",
         transactionLink = "",
         approveTransactionLink = "",
-        progressLink = "https://track.ninerealms.com/",
         onComplete = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(

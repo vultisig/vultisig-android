@@ -17,8 +17,6 @@ internal class KeySignWrapperViewModel @AssistedInject constructor(
     @Assisted val viewModel: KeysignViewModel,
 ) : ViewModel() {
 
-    val transactionUiModel = MutableStateFlow<TransactionTypeUiModel?>(null)
-
     @AssistedFactory
     interface Factory {
         fun create(viewModel: KeysignViewModel): KeySignWrapperViewModel
@@ -26,12 +24,6 @@ internal class KeySignWrapperViewModel @AssistedInject constructor(
 
     init {
         viewModel.startKeysign()
-    }
-
-    fun loadTransaction() {
-        viewModel.transactionTypeUiModel?.let { transactionUiType ->
-            transactionUiModel.update { transactionUiType }
-        }
     }
 
     override fun onCleared() {
