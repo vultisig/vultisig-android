@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -107,6 +108,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
     data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
+    data object WrongLibType : JoinKeysignError(UiText.DynamicString("Wrong signing library type"))
 }
 
 sealed interface JoinKeysignState {
@@ -313,6 +315,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private suspend fun checkIsVaultCorrect(
         pubKeyEcdsa: String,
         localPartyId: String,
+        libType: SigningLibType?,
     ): Boolean {
         if (_currentVault.pubKeyECDSA != pubKeyEcdsa) {
             val matchingVault = vaultRepository.getAll().firstOrNull {
@@ -333,6 +336,11 @@ internal class JoinKeysignViewModel @Inject constructor(
             return false
         }
 
+        if (libType != null && libType != _currentVault.libType) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongLibType)
+            return false
+        }
+
         return true
     }
 
@@ -343,7 +351,8 @@ internal class JoinKeysignViewModel @Inject constructor(
         if (customMessage.vaultPublicKeyEcdsa.isNotEmpty()) {
             if (!checkIsVaultCorrect(
                     customMessage.vaultPublicKeyEcdsa,
-                    customMessage.vaultLocalPartyId
+                    customMessage.vaultLocalPartyId,
+                    libType = null,
                 )
             ) {
                 return false
@@ -377,7 +386,12 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     private suspend fun loadKeysignMessage(ksPayload: KeysignPayload): Boolean {
-        if (!checkIsVaultCorrect(ksPayload.vaultPublicKeyECDSA, ksPayload.vaultLocalPartyID)) {
+        if (!checkIsVaultCorrect(
+                ksPayload.vaultPublicKeyECDSA,
+                ksPayload.vaultLocalPartyID,
+                ksPayload.libType
+            )
+        ) {
             return false
         }
 

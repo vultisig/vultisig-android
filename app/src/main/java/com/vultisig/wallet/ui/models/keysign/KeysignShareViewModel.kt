@@ -85,6 +85,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
+                libType = vault.libType,
             )
         }
     }
@@ -146,6 +147,7 @@ internal class KeysignShareViewModel @Inject constructor(
                             spender = transaction.dstAddress,
                         )
                         else null,
+                        libType = vault.libType,
                     )
                 }
             }
@@ -182,6 +184,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = emptyList(),
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
+                libType = vault.libType,
             )
         }
     }

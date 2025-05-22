@@ -25,7 +25,23 @@ data class Vault(
 }
 
 @Serializable
-enum class SigningLibType { DKLS, GG20 }
+enum class SigningLibType {
+    DKLS,
+    GG20;
+
+    companion object {
+        fun from(string: String) = when (string.lowercase()) {
+            "dkls" -> DKLS
+            "gg20" -> GG20
+            else -> null
+        }
+    }
+}
+
+fun SigningLibType.toProtoString() = when (this) {
+    SigningLibType.DKLS -> "dkls"
+    SigningLibType.GG20 -> "gg20"
+}
 
 fun Vault.getVaultPart(): Int {
     return signers.indexOf(localPartyID) + 1
