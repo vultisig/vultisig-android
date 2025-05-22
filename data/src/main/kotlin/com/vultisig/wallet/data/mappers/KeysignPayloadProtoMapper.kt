@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -31,6 +32,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             toAmount = BigInteger(from.toAmount),
             memo = from.memo,
             coin = requireNotNull(from.coin).toCoin(),
+            libType = SigningLibType.from(from.libType)
+                ?: SigningLibType.GG20,
             utxos = from.utxoInfo
                 .asSequence()
                 .filterNotNull()
