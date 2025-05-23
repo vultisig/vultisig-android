@@ -42,7 +42,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             memo = keysignPayload.memo,
             vaultLocalPartyId = keysignPayload.vaultLocalPartyID,
             vaultPublicKeyEcdsa = keysignPayload.vaultPublicKeyECDSA,
-            libType = keysignPayload.libType.toProtoString(),
+            libType = keysignPayload.libType?.toProtoString() ?: "",
             utxoSpecific = if (specific is BlockChainSpecific.UTXO) {
                 UTXOSpecific(
                     byteFee = specific.byteFee.toString(),
