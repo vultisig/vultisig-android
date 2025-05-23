@@ -88,7 +88,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
-        // showVerifyServerBackupIfNeeded(vaultId)
+        showVerifyFastVaultPasswordReminderIfRequired(vaultId)
     }
 
     private fun showGlobalBackupReminder() {
@@ -96,6 +96,14 @@ internal class VaultAccountsViewModel @Inject constructor(
             val showReminder = isGlobalBackupReminderRequired()
             uiState.update {
                 it.copy(showMonthlyBackupReminder = showReminder)
+            }
+        }
+    }
+
+    private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
+        viewModelScope.launch {
+            if (vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)) {
+                navigator.route(Route.FastVaultPasswordReminder(vaultId))
             }
         }
     }
@@ -263,22 +271,5 @@ internal class VaultAccountsViewModel @Inject constructor(
         setNeverShowGlobalBackupReminder()
         dismissBackupReminder()
     }
-
-    /*
-    moved as a mandatory part of generation flow
-
-    private fun showVerifyServerBackupIfNeeded(vaultId: VaultId) {
-        viewModelScope.launch {
-            if (vaultMetadataRepo.shouldVerifyServerBackup(vaultId)) {
-                navigator.navigate(
-                    Destination.VerifyServerBackup(
-                        vaultId = vaultId,
-                        shouldSuggestBackup = false
-                    )
-                )
-            }
-        }
-    }
-     */
 
 }

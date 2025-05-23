@@ -12,16 +12,6 @@ interface VaultMetadataDao {
     @Query("SELECT * FROM vaultMetadata WHERE vaultId = :vaultId")
     suspend fun getBy(vaultId: VaultId): VaultMetadataEntity?
 
-    @Query(
-        "UPDATE vaultMetadata " +
-                "SET isServerBackupVerified = :isServerBackupVerified " +
-                "WHERE vaultId = :vaultId"
-    )
-    suspend fun setServerBackupVerified(
-        vaultId: VaultId,
-        isServerBackupVerified: Boolean,
-    )
-
     @Upsert
     suspend fun upsert(entity: VaultMetadataEntity)
 
