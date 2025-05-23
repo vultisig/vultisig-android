@@ -169,12 +169,23 @@ internal class ImportFileViewModel @Inject constructor(
                     )
                 }
             } else {
-                uiModel.update {
-                    it.copy(
-                        fileUri = uri,
-                        fileName = fileName,
-                        error = null,
-                    )
+                if (ext == "txt") {
+                    val normalizedFileName = fileName.replaceAfterLast('.', "vult")
+                    uiModel.update {
+                        it.copy(
+                            fileUri = uri,
+                            fileName = normalizedFileName,
+                            error = null,
+                        )
+                    }
+                } else {
+                    uiModel.update {
+                        it.copy(
+                            fileUri = uri,
+                            fileName = fileName,
+                            error = null,
+                        )
+                    }
                 }
             }
         }
