@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -102,7 +103,8 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
         viewModelScope.launch {
-            if (vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)) {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            if (vault.isFastVault() && vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)) {
                 navigator.route(Route.FastVaultPasswordReminder(vaultId))
             }
         }
