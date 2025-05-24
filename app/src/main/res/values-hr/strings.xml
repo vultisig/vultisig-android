@@ -319,6 +319,8 @@
     <string name="insufficient_native_token">Nedovoljno %1$s</string>
     <string name="swap_error_amount_too_low">Iznos zamjene je prenizak</string>
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
+    <string name="swap_error_small_swap_amount">Iznos zamjene premali. Povećajte iznos kako biste mogli zamijeniti</string>
+    <string name="swap_error_small_swap_amount">Iznos zamjene premali. Povećajte iznos kako biste mogli zamijeniti</string>
     <string name="keygen_verify_server_backup_invalid_code">Neispravan kod</string>
     <string name="swap_screen_invalid_no_vault">Trezor nije odabran</string>
     <string name="swap_screen_invalid_no_src_error">Nije odabran izvorni token</string>

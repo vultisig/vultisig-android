@@ -319,6 +319,8 @@
     <string name="insufficient_native_token">Nicht genügend %1$s</string>
     <string name="swap_error_amount_too_low">Swap-Betrag zu niedrig</string>
     <string name="swap_error_time_out">Die Swap-Anfrage ist abgelaufen. Bitte versuchen Sie es erneut.</string>
+    <string name="swap_error_small_swap_amount">Der Swap-Betrag ist zu gering. Bitte erhöhen Sie den Betrag, um tauschen zu können.</string>
+    <string name="swap_error_small_swap_amount">Der Swap-Betrag ist zu gering. Bitte erhöhen Sie den Betrag, um tauschen zu können.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ungültiger Code</string>
     <string name="swap_screen_invalid_no_vault">Kein Tresor ausgewählt</string>
     <string name="swap_screen_invalid_no_src_error">Kein Quelltoken ausgewählt</string>

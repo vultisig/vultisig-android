@@ -330,6 +330,8 @@
     <string name="insufficient_native_token">Недостаточно %1$s</string>
     <string name="swap_error_amount_too_low">Сумма обмена слишком мала</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
+    <string name="swap_error_small_swap_amount">Сумма обмена слишком мала. Пожалуйста, увеличьте сумму, чтобы иметь возможность обмена</string>
+    <string name="swap_error_small_swap_amount">Сумма обмена слишком мала. Пожалуйста, увеличьте сумму, чтобы иметь возможность обмена</string>
     <string name="keygen_verify_server_backup_invalid_code">Неверный код</string>
     <string name="swap_screen_invalid_no_vault">Хранилище не выбрано</string>
     <string name="swap_screen_invalid_no_src_error">Исходный токен не выбран</string>
