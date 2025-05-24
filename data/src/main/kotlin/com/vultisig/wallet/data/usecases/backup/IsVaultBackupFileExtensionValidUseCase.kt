@@ -7,7 +7,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 
-val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat", "vult")
+val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat", "vult", "txt")
 
 fun interface IsVaultBackupFileExtensionValidUseCase {
     operator fun invoke(uri: Uri): Boolean
