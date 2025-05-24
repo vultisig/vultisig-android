@@ -9,6 +9,7 @@ sealed class SwapException(message: String) : Exception(message) {
     class SwapRouteNotAvailable(message: String) : SwapException(message)
     class TimeOut(message: String) : SwapException(message)
     class NetworkConnection(message: String) : SwapException(message)
+    class SmallSwapAmount(message: String) : SwapException(message)
 
 
     companion object {
@@ -21,7 +22,8 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("not enough asset to pay for fees") -> InsufficentSwapAmount(error)
                     contains("outbound amount does not meet requirements") -> InsufficentSwapAmount(error)
                     contains("failed to simulate swap: pool") -> SwapRouteNotAvailable(error)
-                    contains("No available qoutes for the resquested") -> SwapRouteNotAvailable(error)
+                    contains("No available quotes for the requested") -> SwapRouteNotAvailable(error)
+                    contains("amount less than dust threshold: invalid request") -> SmallSwapAmount(error)
                     contains("pool does not exist") -> SwapRouteNotAvailable(error)
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
                     contains("timeout") -> TimeOut(error)

@@ -367,6 +367,7 @@
     <string name="insufficient_native_token">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low">Swap Amount too low</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
+    <string name="swap_error_small_swap_amount">Swap amount too small. Please increase the amount to be able to swap</string>
     <string name="keygen_verify_server_backup_invalid_code">Invalid code</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
