@@ -73,6 +73,7 @@ private fun FastVaultVerificationScreen(
     onChangeEmailClick: () -> Unit,
 ) {
     val textToPaste by rememberClipboardText { it?.isDigitsOnly() == true }
+    val hasClipContent = textToPaste != null
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -186,7 +187,6 @@ private fun FastVaultVerificationScreen(
                                 .testTag("FastVaultVerificationScreen.codeField")
                         )
 
-                        val hasClipContent = textToPaste != null
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
@@ -199,7 +199,7 @@ private fun FastVaultVerificationScreen(
                                 .clickable(
                                     enabled = hasClipContent,
                                     onClick = {
-                                        if (textToPaste != null) {
+                                        if (hasClipContent) {
                                             codeFieldState.setTextAndPlaceCursorAtEnd(textToPaste.toString())
                                         }
                                     },
@@ -208,8 +208,8 @@ private fun FastVaultVerificationScreen(
                             Text(
                                 text = stringResource(R.string.vault_backup_screen_paste),
                                 style = Theme.brockmann.body.s.medium,
-                                color = if (hasClipContent) Theme.colors.text.button.disabled
-                                else Theme.colors.text.primary,
+                                color = if (hasClipContent) Theme.colors.text.primary
+                                else Theme.colors.text.button.disabled,
                             )
                         }
                     }
