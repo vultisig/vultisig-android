@@ -16,5 +16,5 @@ data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     val vaultPublicKeyECDSA: String,
     val vaultLocalPartyID: String,
-    val libType: SigningLibType,
+    val libType: SigningLibType?,
 )
