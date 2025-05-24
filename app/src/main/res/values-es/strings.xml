@@ -320,7 +320,6 @@
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_small_swap_amount">El monto del intercambio es demasiado pequeño. Por favor, aumente el monto para poder intercambiar.</string>
-    <string name="swap_error_small_swap_amount">El monto del intercambio es demasiado pequeño. Por favor, aumente el monto para poder intercambiar.</string>
     <string name="keygen_verify_server_backup_invalid_code">Código inválido</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>

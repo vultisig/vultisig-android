@@ -331,7 +331,6 @@
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_error_small_swap_amount">Het ruilbedrag is te klein. Verhoog het bedrag om te kunnen ruilen.</string>
-    <string name="swap_error_small_swap_amount">Het ruilbedrag is te klein. Verhoog het bedrag om te kunnen ruilen.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ongeldige code</string>
     <string name="swap_screen_invalid_no_vault">Geen kluis geselecteerd</string>
     <string name="swap_screen_invalid_no_src_error">Geen brontoken geselecteerd</string>
