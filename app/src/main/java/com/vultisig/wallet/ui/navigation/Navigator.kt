@@ -61,3 +61,7 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
     }
 
 }
+
+internal suspend fun Navigator<Destination>.back() {
+    navigate(Destination.Back)
+}

@@ -378,3 +378,38 @@ private fun SupportSQLiteDatabase.updatePriceProviderId(
     """.trimIndent()
     )
 }
+
+internal val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // delete vault metadata isServerBackupVerified
+        // add fastVaultPasswordReminderShownDate as int
+        // Create a new table without the `isServerBackupVerified` column
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vaultMetadata_new` (
+                `vaultId` TEXT NOT NULL,
+                `fastVaultPasswordReminderShownDate` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`vaultId`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        // Copy data from the old table to the new table
+        db.execSQL(
+            """
+            INSERT INTO `vaultMetadata_new` (`vaultId`, `fastVaultPasswordReminderShownDate`)
+            SELECT `vaultId`, NULL AS `fastVaultPasswordReminderShownDate`
+            FROM `vaultMetadata`
+            """.trimIndent()
+        )
+
+        // Drop the old table
+        db.execSQL("DROP TABLE `vaultMetadata`")
+
+        // Rename the new table to the original table name
+        db.execSQL("ALTER TABLE `vaultMetadata_new` RENAME TO `vaultMetadata`")
+
+
+    }
+}
