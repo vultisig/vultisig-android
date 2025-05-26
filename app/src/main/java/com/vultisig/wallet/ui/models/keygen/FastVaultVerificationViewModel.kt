@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
@@ -25,6 +26,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import javax.inject.Inject
 
 
@@ -49,6 +53,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
     private val temporaryVaultRepository: TemporaryVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.FastVaultVerification>()
@@ -111,6 +116,11 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                         if (context.canAuthenticateBiometric()) {
                             vaultPasswordRepository.savePassword(vaultId, vault.password)
                         }
+
+                        vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
+                            vaultId = vaultId,
+                            date = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                        )
 
                         delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                         navigator.route(

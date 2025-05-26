@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -88,7 +89,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
-        // showVerifyServerBackupIfNeeded(vaultId)
+        showVerifyFastVaultPasswordReminderIfRequired(vaultId)
     }
 
     private fun showGlobalBackupReminder() {
@@ -96,6 +97,15 @@ internal class VaultAccountsViewModel @Inject constructor(
             val showReminder = isGlobalBackupReminderRequired()
             uiState.update {
                 it.copy(showMonthlyBackupReminder = showReminder)
+            }
+        }
+    }
+
+    private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            if (vault.isFastVault() && vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)) {
+                navigator.route(Route.FastVaultPasswordReminder(vaultId))
             }
         }
     }
@@ -263,22 +273,5 @@ internal class VaultAccountsViewModel @Inject constructor(
         setNeverShowGlobalBackupReminder()
         dismissBackupReminder()
     }
-
-    /*
-    moved as a mandatory part of generation flow
-
-    private fun showVerifyServerBackupIfNeeded(vaultId: VaultId) {
-        viewModelScope.launch {
-            if (vaultMetadataRepo.shouldVerifyServerBackup(vaultId)) {
-                navigator.navigate(
-                    Destination.VerifyServerBackup(
-                        vaultId = vaultId,
-                        shouldSuggestBackup = false
-                    )
-                )
-            }
-        }
-    }
-     */
 
 }
