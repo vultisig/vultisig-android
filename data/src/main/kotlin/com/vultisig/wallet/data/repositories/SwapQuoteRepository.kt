@@ -455,6 +455,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.THORCHAIN
             )
 
+            Chain.Zcash -> setOf(SwapProvider.MAYA)
+
             Chain.Arbitrum -> if (ticker in mayaArbTokens) setOf(
                 SwapProvider.LIFI,
                 SwapProvider.MAYA
@@ -465,7 +467,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
             Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple, Chain.Akash, Chain.Tron,
-            Chain.Zcash -> emptySet()
+                -> emptySet()
         }
 
 
