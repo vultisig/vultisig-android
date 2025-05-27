@@ -319,6 +319,7 @@
     <string name="insufficient_native_token">%1$s insuficiente</string>
     <string name="swap_error_amount_too_low">Valor de swap muito baixo</string>
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
+    <string name="swap_error_small_swap_amount">Valor de troca muito pequeno. Por favor aumente o valor para poder trocar</string>
     <string name="keygen_verify_server_backup_invalid_code">Código inválido</string>
     <string name="swap_screen_invalid_no_vault">Nenhum cofre selecionado</string>
     <string name="swap_screen_invalid_no_src_error">Nenhum token de origem selecionado</string>
