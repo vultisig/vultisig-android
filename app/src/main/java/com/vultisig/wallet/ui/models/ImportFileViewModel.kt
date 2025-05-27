@@ -46,7 +46,7 @@ internal data class ImportFileState(
     val passwordErrorHint: UiText? = null,
 )
 
-internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
+internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/*")
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
@@ -169,23 +169,12 @@ internal class ImportFileViewModel @Inject constructor(
                     )
                 }
             } else {
-                if (ext == "txt") {
-                    val normalizedFileName = fileName.replaceAfterLast('.', "vult")
-                    uiModel.update {
-                        it.copy(
-                            fileUri = uri,
-                            fileName = normalizedFileName,
-                            error = null,
-                        )
-                    }
-                } else {
-                    uiModel.update {
-                        it.copy(
-                            fileUri = uri,
-                            fileName = fileName,
-                            error = null,
-                        )
-                    }
+                uiModel.update {
+                    it.copy(
+                        fileUri = uri,
+                        fileName = fileName,
+                        error = null,
+                    )
                 }
             }
         }
