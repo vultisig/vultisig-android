@@ -493,7 +493,7 @@
     <string name="keygen_step_generating_ecdsa" translatable="false">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa" translatable="false">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server" translatable="false">Connecting with server...</string>
-    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a minute</string>
+    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately" translatable="false">Want to create vault privately?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local" translatable="false">Switch to local mode</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet" translatable="false">Switch back to internet mode</string>
