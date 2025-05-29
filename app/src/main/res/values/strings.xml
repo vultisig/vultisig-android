@@ -367,6 +367,7 @@
     <string name="insufficient_native_token">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low">Swap Amount too low</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
+    <string name="swap_error_small_swap_amount">Swap amount too small. Please increase the amount to be able to swap</string>
     <string name="keygen_verify_server_backup_invalid_code">Invalid code</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
@@ -492,7 +493,7 @@
     <string name="keygen_step_generating_ecdsa" translatable="false">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa" translatable="false">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server" translatable="false">Connecting with server...</string>
-    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a minute</string>
+    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately" translatable="false">Want to create vault privately?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local" translatable="false">Switch to local mode</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet" translatable="false">Switch back to internet mode</string>

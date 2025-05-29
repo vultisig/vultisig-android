@@ -327,6 +327,14 @@ internal sealed class Route {
     @Serializable
     data object Secret : Route()
 
+    // home
+
+    @Serializable
+    data class FastVaultPasswordReminder(
+        val vaultId: VaultId,
+    )
+
+
     // scan
 
     @Serializable

@@ -994,6 +994,8 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.NetworkConnection ->
                                 UiText.StringResource(R.string.network_connection_lost)
+                            is SwapException.SmallSwapAmount ->
+                                UiText.StringResource(R.string.swap_error_small_swap_amount)
                         }
                         uiState.update {
                             it.copy(
