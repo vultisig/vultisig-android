@@ -46,7 +46,7 @@ internal data class ImportFileState(
     val passwordErrorHint: UiText? = null,
 )
 
-internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/*")
+internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/plain")
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
