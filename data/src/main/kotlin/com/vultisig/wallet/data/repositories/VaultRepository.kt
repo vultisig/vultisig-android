@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

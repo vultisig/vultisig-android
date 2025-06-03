@@ -132,9 +132,9 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String, vaultId: String?): List<Coin> {
-        return when (chain) {
+        val tokens = when (chain) {
             Chain.ThorChain -> {
-                var tokens =  thorApi.getBalance(address)
+                thorApi.getBalance(address)
                     .mapNotNull {
                         val denom = it.denom
                         var symbol = ""
@@ -170,29 +170,14 @@ internal class TokenRepositoryImpl @Inject constructor(
                             )
                         }
                     }
-                if (vaultId != null) {
-                    val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
-                    if (enabledTokens.filter { it.chain==chain }.size>1) {
-                        val enabledTickers = enabledTokens.map { it.ticker }.toSet()
-                        tokens = tokens.filter { it.ticker in enabledTickers }
-                    }
-                }
-                tokens
             }
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
                 -> {
                 val evmApi = evmApiFactory.createEvmApi(chain)
-                var tokens = evmApi.getBalances(address).result.toCoins(chain)
-                if (vaultId != null) {
-                    val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
-                    if (enabledTokens.filter { it.chain==chain }.size>1) {
-                        val enabledTickers = enabledTokens.map { it.ticker }.toSet()
-                        tokens = tokens.filter { it.ticker in enabledTickers }
-                    }
-                }
-                tokens
+                evmApi.getBalances(address).result.toCoins(chain)
             }
+
             else -> {
                 // cant get this for non EVM chains right now
                 if (chain.standard != TokenStandard.EVM) return emptyList()
@@ -210,6 +195,18 @@ internal class TokenRepositoryImpl @Inject constructor(
                 return oneInchTokensWithBalance
                     .toCoins(chain)
             }
+        }
+        return if (vaultId != null) {
+            val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
+                .filter { it.chain == chain }
+            if (enabledTokens.size > 1|| (enabledTokens.size ==1  && enabledTokens.any { it.isNativeToken })) {
+                val enabledTickers = enabledTokens.map { it.ticker }.toSet()
+                tokens.filter { it.ticker in enabledTickers }
+            } else {
+                tokens
+            }
+        } else {
+            tokens
         }
     }
 

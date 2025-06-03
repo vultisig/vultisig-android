@@ -194,14 +194,15 @@ internal class ChainTokensViewModel @Inject constructor(
                     )
 
 
-                val enableTokens =  vaultRepository.getEnabledTokens(vaultId).first()
+                val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
 
                 val tokensFromAccounts = accounts.map { it.token }
                 tokens.update { it + tokensFromAccounts }
+                val enabledTokenIds = enabledTokens.map { it.id }.toSet()
                 val uiTokens = accounts
+                    .filter { enabledTokenIds.contains(it.token.id) }
                     .map { account ->
                     val token = account.token
-                    if( enableTokens.any{it.id == token.id}) {
                         ChainTokenUiModel(
                             id = token.id,
                             name = token.ticker,
@@ -214,10 +215,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             chainLogo = chain.logo,
                         )
                     }
-                    else {
-                        null
-                    }
-                }.filterNotNull()
+
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository
