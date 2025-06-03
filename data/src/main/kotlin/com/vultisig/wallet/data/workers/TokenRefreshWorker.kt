@@ -47,7 +47,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                         )
                         try {
                             (tokenRepository
-                                .getTokensWithBalance(chain, address) +
+                                .getTokensWithBalance(chain, address, vault.id) +
                                     enabledByDefaultTokens.getOrDefault(chain, emptyList()))
                                 .filter { !it.isNativeToken }
                                 .forEach { token ->

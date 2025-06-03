@@ -12,9 +12,11 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Provider
 
 interface VaultRepository {
 
@@ -49,7 +51,7 @@ interface VaultRepository {
 
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
-    private val tokenRepository: TokenRepository,
+    private val tokenRepositoryProvider: Provider<TokenRepository>
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -128,7 +130,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                     chain = chain,
                     ticker = it.ticker,
                     logo = it.logo.takeIf { it.isNotBlank() }
-                        ?: tokenRepository.getToken(it.id)?.logo ?: "",
+                        ?: tokenRepositoryProvider.get().getToken(it.id)?.logo ?: "",
                     address = it.address,
                     decimal = it.decimals,
                     hexPublicKey = it.hexPublicKey,

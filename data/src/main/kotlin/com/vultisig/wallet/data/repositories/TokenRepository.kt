@@ -36,7 +36,7 @@ interface TokenRepository {
 
     suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
 
-    suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
+    suspend fun getTokensWithBalance(chain: Chain, address: String, inputVaultId: String?): List<Coin>
 
     val builtInTokens: Flow<List<Coin>>
 
@@ -50,6 +50,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val thorApi: ThorChainApi,
     private val splTokenRepository: SplTokenRepository,
     private val coinGeckoApi: CoinGeckoApi,
+    private val vaultRepository : VaultRepository,
     private val currencyRepository: AppCurrencyRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
@@ -130,10 +131,10 @@ internal class TokenRepositoryImpl @Inject constructor(
         return coin
     }
 
-    override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+    override suspend fun getTokensWithBalance(chain: Chain, address: String, vaultId: String?): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
-                thorApi.getBalance(address)
+                var tokens =  thorApi.getBalance(address)
                     .mapNotNull {
                         val denom = it.denom
                         var symbol = ""
@@ -169,12 +170,28 @@ internal class TokenRepositoryImpl @Inject constructor(
                             )
                         }
                     }
+                if (vaultId != null) {
+                    val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
+                    if (enabledTokens.filter { it.chain==chain }.size>1) {
+                        val enabledTickers = enabledTokens.map { it.ticker }.toSet()
+                        tokens = tokens.filter { it.ticker in enabledTickers }
+                    }
+                }
+                tokens
             }
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
                 -> {
                 val evmApi = evmApiFactory.createEvmApi(chain)
-                evmApi.getBalances(address).result.toCoins(chain)
+                var tokens = evmApi.getBalances(address).result.toCoins(chain)
+                if (vaultId != null) {
+                    val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
+                    if (enabledTokens.filter { it.chain==chain }.size>1) {
+                        val enabledTickers = enabledTokens.map { it.ticker }.toSet()
+                        tokens = tokens.filter { it.ticker in enabledTickers }
+                    }
+                }
+                tokens
             }
             else -> {
                 // cant get this for non EVM chains right now
