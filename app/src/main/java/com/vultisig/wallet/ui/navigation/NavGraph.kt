@@ -11,7 +11,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -31,10 +30,12 @@ import com.vultisig.wallet.ui.navigation.Route.Onboarding
 import com.vultisig.wallet.ui.navigation.Route.Secret
 import com.vultisig.wallet.ui.navigation.Route.SelectAsset
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
+import com.vultisig.wallet.ui.navigation.Route.Send
 import com.vultisig.wallet.ui.navigation.Route.Swap
 import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
 import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VerifySend
 import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
@@ -83,6 +84,7 @@ import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
+import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
@@ -187,19 +189,6 @@ internal fun SetupNavGraph(
             VaultRenameScreen(navController)
         }
 
-
-        composable(
-            route = Destination.JoinKeysign.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_QR) { type = NavType.StringType }
-            )
-        ) {
-            JoinKeysignView(
-                navController = navController,
-            )
-        }
-
         composable(
             route = Destination.AddVault.route,
         ) {
@@ -248,36 +237,6 @@ internal fun SetupNavGraph(
                 navController = navController
             )
         }
-        composable(
-            route = Destination.Send.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) {
-                    type = NavType.StringType
-                    // if chainId = null show all tokens
-                    // else only tokens from chain
-                    nullable = true
-                },
-                navArgument(ARG_TOKEN_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument(ARG_QR) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) { entry ->
-            val args = requireNotNull(entry.arguments)
-
-            SendScreen(
-                navController = navController,
-                qrCodeResult = args.getString(ARG_QR),
-                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
-                chainId = args.getString(ARG_CHAIN_ID),
-                startWithTokenId = args.getString(ARG_TOKEN_ID),
-            )
-        }
 
         composable(
             route = Destination.SignMessage.STATIC_ROUTE,
@@ -291,12 +250,6 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
             )
-        }
-
-        composable(
-            route = Destination.ScanError.route,
-        ) {
-            ScanQrErrorScreen()
         }
 
         composable(
@@ -480,6 +433,10 @@ internal fun SetupNavGraph(
             ScanQrScreen()
         }
 
+        composable<Route.ScanError> {
+            ScanQrErrorScreen()
+        }
+
         // keygen vault info
         composable<ChooseVaultType> {
             ChooseVaultScreen()
@@ -556,6 +513,15 @@ internal fun SetupNavGraph(
             SelectNetworkScreen()
         }
 
+        // send
+        composable<Send> {
+            SendScreen()
+        }
+
+        composable<VerifySend> {
+            VerifySendScreen()
+        }
+
         // swap
         composable<Swap> {
             SwapScreen()
@@ -566,6 +532,12 @@ internal fun SetupNavGraph(
         }
 
         // keysign
+        composable<Keysign.Join> {
+            JoinKeysignView(
+                navController = navController,
+            )
+        }
+
         composable<Keysign.Password> {
             KeysignPasswordScreen()
         }

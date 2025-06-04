@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
-import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.utils.asString
@@ -82,7 +82,7 @@ internal fun JoinKeysignView(
 
                 when (val model = verifyUiModel) {
                     is VerifyUiModel.Send -> {
-                        VerifyTransactionScreen(
+                        VerifySendScreen(
                             state = model.model,
                             isConsentsEnabled = false,
                             confirmTitle = stringResource(R.string.verify_transaction_join_keysign),

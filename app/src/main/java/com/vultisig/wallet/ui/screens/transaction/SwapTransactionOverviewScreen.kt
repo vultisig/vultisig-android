@@ -289,7 +289,7 @@ private fun TxDetails(
 }
 
 @Composable
-private fun SwapToken(
+internal fun SwapToken(
     valuedToken: ValuedToken,
     shape: Shape,
     modifier: Modifier = Modifier,
@@ -355,7 +355,7 @@ private fun SwapToken(
 }
 
 @Composable
-private fun TextDetails(
+internal fun TextDetails(
     title: String,
     subtitle: String,
 ) {
@@ -375,7 +375,7 @@ private fun TextDetails(
 }
 
 @Composable
-private fun Details(
+internal fun Details(
     title: String,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,

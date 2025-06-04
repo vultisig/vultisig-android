@@ -125,8 +125,6 @@ internal sealed class Destination(
         }
     }
 
-    data object ScanError : Destination(route = "scan_error")
-
     data class AddressBook(
         val chain: Chain? = null,
         val requestId: String? = null,
@@ -236,34 +234,10 @@ internal sealed class Destination(
         }
     }
 
-    data class JoinKeysign(
-        val vaultId: String,
-        val qr: String,
-    ) : Destination(route = "join_keysign/$vaultId?qr=$qr") {
-
-        companion object {
-            const val STATIC_ROUTE = "join_keysign/{$ARG_VAULT_ID}?qr={$ARG_QR}"
-        }
-
-    }
-
     data class JoinKeygen(
         val qr: String,
         val isReshare: Boolean,
     ) : Destination(route = "join_keygen?qr=$qr")
-
-
-    data class VerifyServerBackup(
-        val vaultId: VaultId,
-        val shouldSuggestBackup: Boolean,
-    ) : Destination(route = "backup/server/verify/$vaultId?${ARG_SHOULD_SUGGEST_BACKUP}=$shouldSuggestBackup") {
-        companion object {
-            const val ARG_SHOULD_SUGGEST_BACKUP = "should_suggest_backup"
-            const val STATIC_ROUTE = "backup/server/verify/{$ARG_VAULT_ID}" +
-                    "?$ARG_SHOULD_SUGGEST_BACKUP={$ARG_SHOULD_SUGGEST_BACKUP}"
-        }
-    }
-
 
     data class ShareVaultQr(val vaultId: String) :
         Destination(route = "share_vault_qr/$vaultId") {
@@ -345,6 +319,9 @@ internal sealed class Route {
         val requestId: String? = null,
     )
 
+    @Serializable
+    data object ScanError
+
 
     // transactions
 
@@ -368,8 +345,25 @@ internal sealed class Route {
         enum class Filters {
             SwapAvailable,
             DisableNetworkSelection,
+            None,
         }
     }
+
+    // send
+
+    @Serializable
+    data class Send(
+        val vaultId: VaultId,
+        val chainId: ChainId? = null,
+        val tokenId: TokenId? = null,
+        val address: String? = null,
+    )
+
+    @Serializable
+    data class VerifySend(
+        val vaultId: VaultId,
+        val transactionId: TransactionId,
+    )
 
     // swap
 
@@ -384,12 +378,18 @@ internal sealed class Route {
     @Serializable
     data class VerifySwap(
         val vaultId: VaultId,
-        val transactionId: String,
+        val transactionId: TransactionId,
     )
 
     // keysign
 
     data object Keysign {
+
+        @Serializable
+        data class Join(
+            val vaultId: String,
+            val qr: String,
+        )
 
         @Serializable
         data class Password(
