@@ -53,6 +53,8 @@ class CosmosHelper(
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val inputData = Cosmos.SigningInput.newBuilder()
+            .setChainId(coinType.chainId())
+            .setMemo(keysignPayload.memo)
             .setPublicKey(ByteString.copyFrom(publicKey.data()))
             .setAccountNumber(atomData.accountNumber.toLong())
             .setSequence(atomData.sequence.toLong())

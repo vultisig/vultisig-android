@@ -43,7 +43,7 @@ class THORCHainHelper {
                     it.setAmount(keysignPayload.toAmount.toString())
                         .setDecimals(keysignPayload.coin.decimal.toLong())
                 } else it
-            }
+            }.build()
 
         val depositMsg = Cosmos.Message.newBuilder().apply {
             thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
