@@ -47,8 +47,8 @@ class CosmosHelper(
             ?: throw Exception("Invalid blockChainSpecific")
         val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain ?:
             throw Exception("Invalid swap payload for THORChain")
-        if(keysignPayload.memo.isNullOrEmpty()) {
-            throw Exception("Memo is required for THORChain swap")
+        require(keysignPayload.memo.isNullOrEmpty()) {
+            "Memo is required for THORChain swap"
         }
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)

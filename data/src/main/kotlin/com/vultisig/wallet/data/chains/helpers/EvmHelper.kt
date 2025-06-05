@@ -61,8 +61,14 @@ class EvmHelper(
             }.build()
         } else {
             // ERC20 token
-            if(thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
-                throw Exception("Router address is required for ERC20 token swap")
+            require(thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
+                "Router address is required for ERC20 token swap"
+            }
+            require(thorChainSwapPayload.data.fromCoin.contractAddress.isNotEmpty()) {
+                "Contract address is required for ERC20 token swap"
+            }
+            require(thorChainSwapPayload.data.vaultAddress.isNotEmpty()) {
+                "Vault address is required for ERC20 token swap"
             }
             val vaultAddress = AnyAddress(thorChainSwapPayload.data.vaultAddress, coinType)
             val contractAddr = AnyAddress(

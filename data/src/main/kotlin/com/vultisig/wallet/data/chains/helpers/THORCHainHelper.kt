@@ -21,13 +21,13 @@ class THORCHainHelper {
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        if(keysignPayload.memo.isNullOrEmpty()) {
-            throw Exception("Memo is required for THORChain swap")
+        require(keysignPayload.memo.isNullOrEmpty()) {
+            "Memo is required for THORChain swap"
         }
-       val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
-        if (thorChainSwapPayload == null) {
-            throw Exception("Invalid swap payload for THORChain")
-        }
+
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
+            ?: throw Exception("Invalid swap payload for THORChain")
+
         val fromAddress = AnyAddress(thorChainSwapPayload.srcToken.address, CoinType.THORCHAIN).data()
         val coin = Cosmos.THORChainCoin.newBuilder()
             .setAsset(

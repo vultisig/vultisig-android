@@ -13,7 +13,6 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
-import wallet.core.jni.proto.THORChainSwap
 import java.math.BigInteger
 
 class THORChainSwaps(
