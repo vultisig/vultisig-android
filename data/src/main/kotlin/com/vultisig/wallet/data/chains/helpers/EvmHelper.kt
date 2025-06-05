@@ -37,8 +37,8 @@ class EvmHelper(
         if (thorChainSwapPayload.data.vaultAddress.isEmpty()){
             throw Exception("Vault address is required for THORChain swap")
         }
-        if (keysignPayload.memo.isNullOrEmpty()){
-            throw Exception("Memo is required for THORChain swap")
+        require(!keysignPayload.memo.isNullOrEmpty()){
+            "Memo is required for THORChain swap"
         }
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
         val input = Ethereum.SigningInput.newBuilder().apply {
@@ -61,7 +61,7 @@ class EvmHelper(
             }.build()
         } else {
             // ERC20 token
-            require(thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
+            require(!thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
                 "Router address is required for ERC20 token swap"
             }
             require(thorChainSwapPayload.data.fromCoin.contractAddress.isNotEmpty()) {

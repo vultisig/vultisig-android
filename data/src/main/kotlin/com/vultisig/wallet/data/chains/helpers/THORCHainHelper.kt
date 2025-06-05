@@ -21,7 +21,7 @@ class THORCHainHelper {
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        require(keysignPayload.memo.isNullOrEmpty()) {
+        require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
 

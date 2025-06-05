@@ -56,10 +56,10 @@ class UtxoHelper(
         if (thorChainSwapPayload == null) {
             throw Exception("Invalid swap payload for THORChain")
         }
-        require(keysignPayload.memo.isNullOrEmpty()) {
+        require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
-        require(thorChainSwapPayload.data.vaultAddress.isEmpty()) {
+        require(thorChainSwapPayload.data.vaultAddress.isNotEmpty()) {
             "Vault address is required for THORChain swap"
         }
         val input = Bitcoin.SigningInput.newBuilder()
