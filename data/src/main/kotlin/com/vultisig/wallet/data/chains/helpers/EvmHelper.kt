@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.EthereumAbi
@@ -55,9 +56,7 @@ class EvmHelper(
             input.transaction = Ethereum.Transaction.newBuilder().apply {
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
                     amount = ByteString.copyFrom(thorChainSwapPayload.data.fromAmount.toByteArray())
-                    keysignPayload.memo?.let {
-                        data = it.toByteStringOrHex()
-                    }
+                    data = keysignPayload.memo.toByteStringOrHex()
                 }.build()
             }.build()
         } else {
@@ -65,10 +64,15 @@ class EvmHelper(
             if(thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
                 throw Exception("Router address is required for ERC20 token swap")
             }
+            val vaultAddress = AnyAddress(thorChainSwapPayload.data.vaultAddress, coinType)
+            val contractAddr = AnyAddress(
+                thorChainSwapPayload.data.fromCoin.contractAddress,
+                coinType
+            )
             input.toAddress = thorChainSwapPayload.data.routerAddress
             val f = EthereumAbiFunction("depositWithExpiry")
-            f.addParamAddress(thorChainSwapPayload.data.vaultAddress.toByteArray(),false)
-            f.addParamAddress(thorChainSwapPayload.data.fromCoin.contractAddress.toByteArray(),false)
+            f.addParamAddress(vaultAddress.data(),false)
+            f.addParamAddress(contractAddr.data(),false)
             f.addParamUInt256(thorChainSwapPayload.data.fromAmount.toByteArray(),false)
             f.addParamString(keysignPayload.memo, false)
             f.addParamUInt256(BigInteger(thorChainSwapPayload.data.expirationTime.toString()).toByteArray(),false)
