@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
@@ -41,19 +42,42 @@ class CosmosHelper(
     }
 
     fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload,
-        input: Cosmos.SigningInput.Builder,
-    ): ByteArray {
+        keysignPayload: KeysignPayload): ByteArray {
         val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
-
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain ?:
+            throw Exception("Invalid swap payload for THORChain")
+        if(keysignPayload.memo.isNullOrEmpty()) {
+            throw Exception("Memo is required for THORChain swap")
+        }
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val inputData = input
+        val inputData = Cosmos.SigningInput.newBuilder()
             .setPublicKey(ByteString.copyFrom(publicKey.data()))
             .setAccountNumber(atomData.accountNumber.toLong())
             .setSequence(atomData.sequence.toLong())
             .setMode(Cosmos.BroadcastMode.SYNC)
+            .setSigningMode(Cosmos.SigningMode.Protobuf)
+            .addAllMessages(
+                listOf(
+                    Cosmos.Message.newBuilder()
+                        .setSendCoinsMessage(
+                            Cosmos.Message.Send.newBuilder()
+                                .setFromAddress(thorChainSwapPayload.data.fromAddress)
+                                .setToAddress(thorChainSwapPayload.data.vaultAddress)
+                                .addAllAmounts(
+                                    listOf(
+                                        Cosmos.Amount.newBuilder()
+                                            .setDenom(denom)
+                                            .setAmount(thorChainSwapPayload.data.fromAmount.toString())
+                                            .build()
+                                    )
+                                )
+                                .build()
+                        )
+                        .build()
+                )
+            )
             .setFee(
                 Cosmos.Fee.newBuilder()
                     .setGas(gasLimit)
@@ -67,6 +91,7 @@ class CosmosHelper(
                     )
 
             ).build()
+
         return inputData.toByteArray()
     }
 

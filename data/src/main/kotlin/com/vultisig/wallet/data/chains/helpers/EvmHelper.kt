@@ -7,10 +7,13 @@ import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.EthereumAbi
+import wallet.core.jni.EthereumAbiFunction
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
@@ -25,6 +28,63 @@ class EvmHelper(
 ) {
     companion object{
         const val DEFAULT_ETH_SWAP_GAS_UNIT: Long = 600000L
+    }
+
+    fun getSwapPreSignedInputData(keysignPayload: KeysignPayload,nonceIncrement: BigInteger = BigInteger.ZERO): ByteArray {
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
+            ?: throw Exception("Invalid swap payload for EVM chain")
+        if (thorChainSwapPayload.data.vaultAddress.isEmpty()){
+            throw Exception("Vault address is required for THORChain swap")
+        }
+        if (keysignPayload.memo.isNullOrEmpty()){
+            throw Exception("Memo is required for THORChain swap")
+        }
+        val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
+        val input = Ethereum.SigningInput.newBuilder().apply {
+            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
+            nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
+            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+            txMode = Ethereum.TransactionMode.Enveloped
+        }
+
+        // Native token , send directly to asgard vault
+        if(thorChainSwapPayload.data.fromCoin.isNativeToken){
+            input.toAddress = thorChainSwapPayload.data.vaultAddress
+            input.transaction = Ethereum.Transaction.newBuilder().apply {
+                transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
+                    amount = ByteString.copyFrom(thorChainSwapPayload.data.fromAmount.toByteArray())
+                    keysignPayload.memo?.let {
+                        data = it.toByteStringOrHex()
+                    }
+                }.build()
+            }.build()
+        } else {
+            // ERC20 token
+            if(thorChainSwapPayload.data.routerAddress.isNullOrEmpty()) {
+                throw Exception("Router address is required for ERC20 token swap")
+            }
+            input.toAddress = thorChainSwapPayload.data.routerAddress
+            val f = EthereumAbiFunction("depositWithExpiry")
+            f.addParamAddress(thorChainSwapPayload.data.vaultAddress.toByteArray(),false)
+            f.addParamAddress(thorChainSwapPayload.data.fromCoin.contractAddress.toByteArray(),false)
+            f.addParamUInt256(thorChainSwapPayload.data.fromAmount.toByteArray(),false)
+            f.addParamString(keysignPayload.memo, false)
+            f.addParamUInt256(BigInteger(thorChainSwapPayload.data.expirationTime.toString()).toByteArray(),false)
+
+            input.transaction = Ethereum.Transaction.newBuilder().apply {
+                contractGeneric = Ethereum.Transaction.ContractGeneric.newBuilder().apply {
+                    data = ByteString.copyFrom(
+                        EthereumAbi.encode(f)
+                    )
+                    amount = ByteString.copyFrom(
+                        BigInteger.ZERO.toByteArray()
+                    )
+                }.build()
+            }.build()
+        }
+        return input.build().toByteArray()
     }
 
     fun getPreSignedInputData(
