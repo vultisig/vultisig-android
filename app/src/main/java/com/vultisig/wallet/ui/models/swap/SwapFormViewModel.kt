@@ -309,7 +309,7 @@ internal class SwapFormViewModel @Inject constructor(
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
                             isApprovalRequired = isApprovalRequired,
-                            memo = null,
+                            memo = quote.data.memo,
                             gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.ThorChain(
                                 THORChainSwapPayload(

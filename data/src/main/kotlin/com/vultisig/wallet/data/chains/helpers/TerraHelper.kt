@@ -28,13 +28,6 @@ class TerraHelper(
     private val gasLimit: Long,
 ) {
 
-    private val cosmos = CosmosHelper(coinType, denom, gasLimit)
-
-    fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload,
-        input: Cosmos.SigningInput.Builder,
-    ): ByteArray = cosmos.getSwapPreSignedInputData(keysignPayload, input)
-
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
         val hashes = preImageHashes(coinType, result)
