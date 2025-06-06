@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.send
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -18,12 +20,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -63,7 +68,7 @@ internal fun VerifySendScreen(
         {
             context.launchBiometricPrompt(
                 promptTitle = promptTitle,
-                onAuthorizationSuccess =  viewModel::authFastSign,
+                onAuthorizationSuccess = viewModel::authFastSign,
             )
         }
     }
@@ -179,7 +184,47 @@ internal fun VerifySendScreen(
                         )
                     }
 
-                    // TODO network
+                    VerifyCardDivider(0.dp)
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                vertical = 12.dp,
+                            )
+                    ) {
+                        Text(
+                            text = "Network",
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.colors.text.extraLight,
+                            maxLines = 1,
+                        )
+
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val chain = state.transaction.token.token.chain
+
+                            Image(
+                                painter = painterResource(chain.logo),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp),
+                            )
+
+                            Text(
+                                text = chain.raw,
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.colors.text.primary,
+                                textAlign = TextAlign.End,
+                                maxLines = 1,
+                                overflow = TextOverflow.MiddleEllipsis,
+                            )
+                        }
+                    }
 
                     VerifyCardDivider(0.dp)
 

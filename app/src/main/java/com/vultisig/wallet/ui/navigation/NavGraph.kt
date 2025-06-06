@@ -17,26 +17,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
-import com.vultisig.wallet.ui.navigation.Route.BackupPassword
-import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
-import com.vultisig.wallet.ui.navigation.Route.BackupVault
-import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
-import com.vultisig.wallet.ui.navigation.Route.FastVaultPasswordReminder
-import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
-import com.vultisig.wallet.ui.navigation.Route.ImportVault
-import com.vultisig.wallet.ui.navigation.Route.Keygen
-import com.vultisig.wallet.ui.navigation.Route.Keysign
-import com.vultisig.wallet.ui.navigation.Route.Onboarding
-import com.vultisig.wallet.ui.navigation.Route.Secret
-import com.vultisig.wallet.ui.navigation.Route.SelectAsset
-import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
-import com.vultisig.wallet.ui.navigation.Route.Send
-import com.vultisig.wallet.ui.navigation.Route.Swap
-import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
-import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
-import com.vultisig.wallet.ui.navigation.Route.VaultInfo
-import com.vultisig.wallet.ui.navigation.Route.VerifySend
-import com.vultisig.wallet.ui.navigation.Route.VerifySwap
+import com.vultisig.wallet.ui.navigation.Route.*
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -96,6 +77,7 @@ import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
+import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
@@ -429,11 +411,11 @@ internal fun SetupNavGraph(
 
         // scan
 
-        composable<Route.ScanQr> {
+        composable<ScanQr> {
             ScanQrScreen()
         }
 
-        composable<Route.ScanError> {
+        composable<ScanError> {
             ScanQrErrorScreen()
         }
 
@@ -552,12 +534,19 @@ internal fun SetupNavGraph(
 
         // migration
 
-        composable<Route.Migration.Onboarding> {
+        composable<Migration.Onboarding> {
             MigrationOnboardingScreen()
         }
 
-        composable<Route.Migration.Password> {
+        composable<Migration.Password> {
             MigrationPasswordScreen()
         }
+
+        // address book
+
+        dialog<AddressBook> {
+            AddressBookBottomSheet()
+        }
+
     }
 }

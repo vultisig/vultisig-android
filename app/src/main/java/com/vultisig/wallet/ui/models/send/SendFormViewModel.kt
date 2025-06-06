@@ -128,6 +128,7 @@ internal data class SendFormUiModel(
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
 
+    val expandedSection: SendSections = SendSections.Asset,
     val usingTokenAmountInput: Boolean = true,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
@@ -137,6 +138,12 @@ internal data class SendSrc(
     val address: Address,
     val account: Account,
 )
+
+internal enum class SendSections {
+    Asset,
+    Address,
+    Amount,
+}
 
 internal sealed class GasSettings {
     data class Eth(
@@ -411,20 +418,24 @@ internal class SendFormViewModel @Inject constructor(
 
     fun openAddressBook() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.AddressBook(
+            val vaultId = vaultId ?: return@launch
+            val selectedChain = selectedTokenValue?.chain ?: return@launch
+
+            navigator.route(
+                Route.AddressBook(
                     requestId = REQUEST_ADDRESS_ID,
-                    chain = selectedTokenValue?.chain,
+                    chainId = selectedChain.id,
+                    excludeVaultId = vaultId,
                 )
             )
+
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
                 ?: return@launch
 
-            val vaultId = vaultId
-            val selectedChain = address.chain
-            if (vaultId != null && selectedTokenValue?.chain != selectedChain) {
+            val selectedNewChain = address.chain
+            if (selectedChain != selectedNewChain) {
                 preSelectToken(
-                    preSelectedChainIds = listOf(selectedChain.id),
+                    preSelectedChainIds = listOf(selectedNewChain.id),
                     preSelectedTokenId = null,
                     forcePreselection = true
                 )
@@ -474,9 +485,9 @@ internal class SendFormViewModel @Inject constructor(
             gasFee.value.multiply(gasLimit)
         )
 
-        return availableTokenBalance?.copy(
-            value = (BigDecimal(availableTokenBalance.value) * percentage.toBigDecimal()).toBigInteger()
-        )?.decimal
+        return availableTokenBalance?.decimal
+            ?.multiply(percentage.toBigDecimal())
+            ?.setScale(8, RoundingMode.DOWN)
     }
 
     fun dismissError() {
@@ -1267,6 +1278,14 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update {
             it.copy(
                 usingTokenAmountInput = usingTokenAmountInput
+            )
+        }
+    }
+
+    fun expandSection(section: SendSections) {
+        uiState.update {
+            it.copy(
+                expandedSection = section
             )
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -137,6 +139,38 @@ internal fun SendTxOverviewScreen(
                         title = "To",
                         subtitle = tx.dstAddress,
                     )
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    Details(
+                        title = "Network"
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val chain = tx.token.token.chain
+
+                            Image(
+                                painter = painterResource(chain.logo),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp),
+                            )
+
+                            Text(
+                                text = chain.raw,
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.colors.text.primary,
+                                textAlign = TextAlign.End,
+                                maxLines = 1,
+                                overflow = TextOverflow.MiddleEllipsis,
+                            )
+                        }
+                    }
 
                     VerifyCardDivider(
                         size = 1.dp,

@@ -569,4 +569,13 @@ internal sealed class Route {
 
     }
 
+    // address book
+
+    @Serializable
+    data class AddressBook(
+        val requestId: String,
+        val chainId: ChainId,
+        val excludeVaultId: VaultId,
+    )
+
 }

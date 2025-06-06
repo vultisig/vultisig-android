@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -392,8 +391,6 @@ internal fun Details(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
-            modifier = Modifier
-                .weight(1f)
         )
 
         content()

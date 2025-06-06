@@ -74,6 +74,7 @@ import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
+import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
@@ -107,6 +108,7 @@ internal fun SendScreen(
         onGasSettingsClick = viewModel::openGasSettings,
         onBackClick = viewModel::back,
         onToogleAmountInputType = viewModel::toggleAmountInputType,
+        onExpandSection = viewModel::expandSection,
     )
 
     val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -143,7 +145,8 @@ private fun SendFormScreen(
     onRefreshRequest: () -> Unit = {},
     onGasSettingsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onToogleAmountInputType: (Boolean) -> Unit = {}
+    onToogleAmountInputType: (Boolean) -> Unit = {},
+    onExpandSection: (SendSections) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -190,13 +193,11 @@ private fun SendFormScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(all = 16.dp)
                 ) {
-                    var expandedSection by remember { mutableStateOf(SendSections.Asset) }
-
                     // select asset
                     FoldableSection(
-                        expanded = expandedSection == SendSections.Asset,
+                        expanded = state.expandedSection == SendSections.Asset,
                         onToggle = {
-                            expandedSection = SendSections.Asset
+                            onExpandSection(SendSections.Asset)
                         },
                         complete = true,
                         title = stringResource(R.string.form_token_selection_asset),
@@ -290,27 +291,11 @@ private fun SendFormScreen(
 
                     // input dst address
                     FoldableSection(
-                        expanded = expandedSection == SendSections.Address,
+                        expanded = state.expandedSection == SendSections.Address,
                         complete = state.isDstAddressComplete,
                         title = "Address",
                         onToggle = {
-                            expandedSection = SendSections.Address
-                        },
-                        expandedTitleActions = {
-                            if (state.hasGasSettings) {
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .weight(1f),
-                                ) {
-                                    UiIcon(
-                                        drawableResId = R.drawable.advance_gas_settings, // TODO different icon
-                                        size = 16.dp,
-                                        tint = Theme.colors.text.primary,
-                                        onClick = onGasSettingsClick,
-                                    )
-                                }
-                            }
+                            onExpandSection(SendSections.Address)
                         },
                         completeTitleContent = {
                             Text(
@@ -450,14 +435,29 @@ private fun SendFormScreen(
                     }
 
 
-                    // TODO gas settings when open
                     FoldableSection(
-                        expanded = expandedSection == SendSections.Amount,
+                        expanded = state.expandedSection == SendSections.Amount,
                         onToggle = {
                             if (state.isDstAddressComplete &&
                                 addressFieldState.text.isNotEmpty()
                             ) {
-                                expandedSection = SendSections.Amount
+                                onExpandSection(SendSections.Amount)
+                            }
+                        },
+                        expandedTitleActions = {
+                            if (state.hasGasSettings) {
+                                Row(
+                                    horizontalArrangement = Arrangement.End,
+                                    modifier = Modifier
+                                        .weight(1f),
+                                ) {
+                                    UiIcon(
+                                        drawableResId = R.drawable.advance_gas_settings, // TODO different icon
+                                        size = 16.dp,
+                                        tint = Theme.colors.text.primary,
+                                        onClick = onGasSettingsClick,
+                                    )
+                                }
                             }
                         },
                         title = "Amount"
@@ -786,12 +786,6 @@ internal fun EstimatedNetworkFee(
             )
         }
     }
-}
-
-private enum class SendSections {
-    Asset,
-    Address,
-    Amount,
 }
 
 @Composable
