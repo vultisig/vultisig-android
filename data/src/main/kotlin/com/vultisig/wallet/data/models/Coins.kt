@@ -1359,7 +1359,7 @@ object Coins {
                 decimal = 4,
                 hexPublicKey = "",
                 priceProviderID = "maya",
-                contractAddress = "",
+                contractAddress = "maya",
                 isNativeToken = false,
             ),
         ),
