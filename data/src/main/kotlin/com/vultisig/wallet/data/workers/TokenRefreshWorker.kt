@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 
 @HiltWorker
@@ -46,8 +47,10 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                             vault
                         )
                         try {
+                            val enabledTokens = vaultRepository.getEnabledTokens(vault.id).first()
+                                .filter { it.chain == chain }
                             (tokenRepository
-                                .getTokensWithBalance(chain, address, vault.id) +
+                                .getTokensWithBalance(chain, address, enabledTokens) +
                                     enabledByDefaultTokens.getOrDefault(chain, emptyList()))
                                 .filter { !it.isNativeToken }
                                 .forEach { token ->

@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import javax.inject.Provider
 
 interface VaultRepository {
 
@@ -50,7 +49,7 @@ interface VaultRepository {
 
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
-    private val tokenRepositoryProvider: Provider<TokenRepository>
+    private val tokenRepository: TokenRepository,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -129,7 +128,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                     chain = chain,
                     ticker = it.ticker,
                     logo = it.logo.takeIf { it.isNotBlank() }
-                        ?: tokenRepositoryProvider.get().getToken(it.id)?.logo ?: "",
+                        ?: tokenRepository.getToken(it.id)?.logo ?: "",
                     address = it.address,
                     decimal = it.decimals,
                     hexPublicKey = it.hexPublicKey,
