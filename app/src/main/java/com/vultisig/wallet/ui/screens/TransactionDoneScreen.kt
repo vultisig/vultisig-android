@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +21,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,15 +29,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
-import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
@@ -101,7 +97,7 @@ internal fun TransactionDoneView(
                             transactionTypeUiModel.depositTransactionUiModel
                         )
 
-                        is TransactionTypeUiModel.Send -> TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
+                        is TransactionTypeUiModel.Send -> TransactionDetail(transaction = transactionTypeUiModel.tx)
 
                         is TransactionTypeUiModel.SignMessage -> CustomMessageDetail(
                             transactionTypeUiModel.model,
@@ -198,7 +194,7 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 }
 
 @Composable
-private fun TransactionDetail(transaction: TransactionUiModel?) {
+private fun TransactionDetail(transaction: SendTxUiModel?) {
     if (transaction != null) {
 
         UiHorizontalDivider()
@@ -216,12 +212,12 @@ private fun TransactionDetail(transaction: TransactionUiModel?) {
 
         OtherField(
             title = stringResource(R.string.verify_transaction_amount_title),
-            value = transaction.tokenValue,
+            value = transaction.token.value,
         )
 
         OtherField(
             title = stringResource(R.string.verify_transaction_value),
-            value = transaction.fiatValue,
+            value = transaction.token.fiatValue,
         )
 
         FormDetails(modifier = Modifier
@@ -251,7 +247,7 @@ private fun TransactionDetail(transaction: TransactionUiModel?) {
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
                     )
                 ) {
-                    append(transaction.totalGas)
+                    append(transaction.networkFee.value)
                 }
                 withStyle(
                     style = SpanStyle(
@@ -261,7 +257,7 @@ private fun TransactionDetail(transaction: TransactionUiModel?) {
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
                     )
                 ) {
-                    append(" (~${transaction.estimatedFee})")
+                    append(" (~${transaction.networkFee.fiatValue})")
                 }
             })
     }
@@ -293,7 +289,7 @@ private fun CustomMessageDetail(
 
 @Preview
 @Composable
-private fun TransactionDoneScreenPreview() {
+private fun TransactionDoneViewPreview() {
     TransactionDoneView(
         showToolbar = true,
         transactionHash = "0x1234567890",
@@ -302,16 +298,10 @@ private fun TransactionDoneScreenPreview() {
         approveTransactionLink = "",
         onComplete = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            TransactionUiModel(
+            SendTxUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
-                tokenValue = "1.1",
-                fiatValue = "1.1",
-                fiatCurrency = "USD",
-                gasFeeValue = "1.1",
                 memo = "some memo",
-                estimatedFee = "0.75 USd",
-                totalGas = "0.00031361"
             )
         ),
     )

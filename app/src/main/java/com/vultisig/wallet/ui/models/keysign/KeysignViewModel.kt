@@ -26,7 +26,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
-import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -60,7 +60,7 @@ internal sealed class KeysignState {
 
 
 internal sealed interface TransactionTypeUiModel {
-    data class Send(val transactionUiModel: TransactionUiModel) : TransactionTypeUiModel
+    data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
     data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
         TransactionTypeUiModel

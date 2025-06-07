@@ -32,8 +32,6 @@ internal class SendViewModel @Inject constructor(
     val dst = sendNavigator.destination
     val isKeysignFinished = MutableStateFlow(false)
     val currentVault: MutableState<Vault?> = mutableStateOf(null)
-    val isGasSettingAvailable = advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(),false)
 
     init {
         viewModelScope.launch {

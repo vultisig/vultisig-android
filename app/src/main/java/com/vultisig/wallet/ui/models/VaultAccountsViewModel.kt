@@ -128,7 +128,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun send() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.navigate(Destination.Send(vaultId = vaultId))
+            navigator.route(Route.Send(vaultId = vaultId))
         }
     }
 
@@ -252,19 +252,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun onScanSuccess(qr: String) = viewModelScope.launch {
-//        navigator.navigate(getDirectionByQrCodeUseCase(qr, vaultId))
-
         val dst = getDirectionByQrCodeUseCase(qr, vaultId)
-        // TODO totally a hack
-        if (dst is Destination.JoinKeygen) {
-            navigator.route(
-                Route.Keygen.Join(
-                    qr = dst.qr,
-                )
-            )
-        } else {
-            navigator.navigate(dst)
-        }
+
+        navigator.route(dst)
 
         uiState.update { it.copy(showCameraBottomSheet = false) }
     }
