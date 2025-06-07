@@ -527,7 +527,7 @@ private fun SendFormScreen(
                                             modifier = Modifier
                                                 .width(IntrinsicSize.Min),
                                             decorator = { textField ->
-                                                if (tokenAmountFieldState.text.isEmpty()) {
+                                                if (primaryFieldState.text.isEmpty()) {
                                                     Text(
                                                         text = "0",
                                                         color = Theme.colors.text.light,

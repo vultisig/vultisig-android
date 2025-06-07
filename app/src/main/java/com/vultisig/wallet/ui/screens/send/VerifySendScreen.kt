@@ -374,7 +374,7 @@ internal fun OtherField(
 
 @Preview
 @Composable
-private fun VerifyTransactionScreenPreview() {
+private fun PreviewVerifySendScreen() {
     VerifySendScreen(
         state = VerifyTransactionUiModel(
             transaction = SendTxUiModel(

@@ -188,6 +188,7 @@ private fun EthGasSettings(
 
     VsTextInputField(
         textFieldState = baseFeeState,
+        keyboardType = KeyboardType.Number,
     )
 
     UiSpacer(14.dp)
@@ -202,6 +203,7 @@ private fun EthGasSettings(
 
     VsTextInputField(
         textFieldState = priorityFeeState,
+        keyboardType = KeyboardType.Number,
     )
 
     UiSpacer(14.dp)
@@ -216,6 +218,7 @@ private fun EthGasSettings(
 
     VsTextInputField(
         textFieldState = gasLimitState,
+        keyboardType = KeyboardType.Number,
     )
 }
 
