@@ -34,30 +34,28 @@ object RippleHelper {
             PublicKeyType.SECP256K1
         )
 
-        val operationBuilder = Ripple.OperationPayment.newBuilder()
+
+        val memoValue = keysignPayload.memo
+
+        val input = Ripple.SigningInput.newBuilder()
+            .setFee(gas.toLong())
+            .setSequence(sequence.toInt())
+            .setAccount(keysignPayload.coin.address)
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .setLastLedgerSequence(lastLedgerSequence.toInt())
+        
+        val operation = Ripple.OperationPayment.newBuilder()
             .setDestination(keysignPayload.toAddress)
             .setAmount(keysignPayload.toAmount.toLong())
 
-        val memoValue = keysignPayload.memo
-        val operation = operationBuilder.build()
         if (memoValue != null) {
             val memoAsLong = memoValue.toLongOrNull()
             if (memoAsLong != null) {
-                operationBuilder.setDestinationTag(memoAsLong)
-
-                val input = Ripple.SigningInput
-                    .newBuilder()
-                    .setFee(gas.toLong())
-                    .setSequence(sequence.toInt())
-                    .setLastLedgerSequence(lastLedgerSequence.toInt())
-                    .setAccount(keysignPayload.coin.address)
-                    .setPublicKey(
-                        ByteString.copyFrom(publicKey.data())
-                    )
-                    .setOpPayment(operation)
+                operation
+                    .setDestinationTag(memoAsLong)
                     .build()
-                return input.toByteArray()
-
+                input
+                    .setOpPayment(operation)
             } else {
                 val txJson: MutableMap<String, Any> = mutableMapOf(
                     "TransactionType" to "Payment",
@@ -82,34 +80,15 @@ object RippleHelper {
                     Timber.e("Failed to create JSON string ${e.message}")
                     error("Failed to create JSON string ${e.message}")
                 }
-                val input = Ripple.SigningInput.newBuilder()
-                    .setFee(gas.toLong())
-                    .setSequence(sequence.toInt())
-                    .setAccount(keysignPayload.coin.address)
-                    .setPublicKey(ByteString.copyFrom(publicKey.data()))
-                    .setLastLedgerSequence(lastLedgerSequence.toInt())
-                    .setRawJson(jsonData) // Only if setRawJson exists in your proto
-                    .build()
-                return input.toByteArray()
+                input
+                    .setRawJson(jsonData)
             }
 
         } else {
-            // Standard transaction without memo
-            val operation = Ripple.OperationPayment.newBuilder()
-                .setDestination(keysignPayload.toAddress)
-                .setAmount(keysignPayload.toAmount.toLong())
-                .build()
-
-            val input = Ripple.SigningInput.newBuilder()
-                .setFee(gas.toLong())
-                .setSequence(sequence.toInt())
-                .setAccount(keysignPayload.coin.address)
-                .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            input
                 .setOpPayment(operation)
-                .setLastLedgerSequence(lastLedgerSequence.toInt())
-                .build()
-            return input.toByteArray()
         }
+        return input.build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
