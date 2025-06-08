@@ -34,26 +34,61 @@ object RippleHelper {
             PublicKeyType.SECP256K1
         )
 
-        val operation = Ripple.OperationPayment.newBuilder()
-            .setDestination(keysignPayload.toAddress)
-            .setAmount(keysignPayload.toAmount.toLong())
-            .let {
-                if (keysignPayload.memo != null)
-                    it.setDestinationTag(keysignPayload.memo.toLongOrNull() ?: 0L)
-                else it
-            }.build()
+
+        val memoValue = keysignPayload.memo
 
         val input = Ripple.SigningInput.newBuilder()
             .setFee(gas.toLong())
             .setSequence(sequence.toInt())
-            .setLastLedgerSequence(lastLedgerSequence.toInt())
             .setAccount(keysignPayload.coin.address)
-            .setPublicKey(
-                ByteString.copyFrom(publicKey.data())
-            )
-            .setOpPayment(operation)
-            .build()
-        return input.toByteArray()
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .setLastLedgerSequence(lastLedgerSequence.toInt())
+        
+        val operation = Ripple.OperationPayment.newBuilder()
+            .setDestination(keysignPayload.toAddress)
+            .setAmount(keysignPayload.toAmount.toLong())
+
+        if (memoValue != null) {
+            val memoAsLong = memoValue.toLongOrNull()
+            if (memoAsLong != null) {
+                operation
+                    .setDestinationTag(memoAsLong)
+                    .build()
+                input
+                    .setOpPayment(operation)
+            } else {
+                val txJson: MutableMap<String, Any> = mutableMapOf(
+                    "TransactionType" to "Payment",
+                    "Account" to keysignPayload.coin.address,
+                    "Destination" to keysignPayload.toAddress,
+                    "Amount" to keysignPayload.toAmount.toString(),
+                    "Fee" to gas.toString(),
+                    "Sequence" to sequence,
+                    "LastLedgerSequence" to lastLedgerSequence,
+                    "Memos" to listOf(
+                        mapOf(
+                            "Memo" to mapOf(
+                                "MemoData" to memoValue.toByteArray(Charsets.UTF_8)
+                                    .joinToString("") { "%02x".format(it) }
+                            )
+                        )
+                    )
+                )
+                val jsonData = try {
+                    org.json.JSONObject(txJson).toString()
+                } catch (e: Exception) {
+                    Timber.e("Failed to create JSON string ${e.message}")
+                    error("Failed to create JSON string ${e.message}")
+                }
+                input
+                    .setRawJson(jsonData)
+            }
+
+        } else {
+            input
+                .setOpPayment(operation)
+        }
+        return input.build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
