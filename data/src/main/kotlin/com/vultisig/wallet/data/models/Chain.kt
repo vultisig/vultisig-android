@@ -61,7 +61,7 @@ enum class Chain(
     Tron("Tron",TRC20,"TRX")
     ;
 
-    val id: String
+    val id: ChainId
         get() = raw
 
     companion object {

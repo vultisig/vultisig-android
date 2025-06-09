@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -289,7 +288,7 @@ private fun TxDetails(
 }
 
 @Composable
-private fun SwapToken(
+internal fun SwapToken(
     valuedToken: ValuedToken,
     shape: Shape,
     modifier: Modifier = Modifier,
@@ -355,7 +354,7 @@ private fun SwapToken(
 }
 
 @Composable
-private fun TextDetails(
+internal fun TextDetails(
     title: String,
     subtitle: String,
 ) {
@@ -375,7 +374,7 @@ private fun TextDetails(
 }
 
 @Composable
-private fun Details(
+internal fun Details(
     title: String,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
@@ -392,8 +391,6 @@ private fun Details(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
-            modifier = Modifier
-                .weight(1f)
         )
 
         content()

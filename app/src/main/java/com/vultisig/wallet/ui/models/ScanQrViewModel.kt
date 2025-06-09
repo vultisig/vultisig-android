@@ -47,16 +47,7 @@ internal class ScanQrViewModel @Inject constructor(
             else -> {
                 viewModelScope.launch {
                     val dst = getDirectionByQrCodeUseCase(qr, args.vaultId)
-                    // TODO totally a hack
-                    if (dst is Destination.JoinKeygen) {
-                        navigator.route(
-                            Route.Keygen.Join(
-                                qr = dst.qr,
-                            )
-                        )
-                    } else {
-                        navigator.navigate(dst)
-                    }
+                    navigator.route(dst)
                 }
             }
         }

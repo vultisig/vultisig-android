@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -90,11 +91,13 @@ internal class SelectNetworkViewModel @Inject constructor(
                 .filter { it.raw.contains(query, ignoreCase = true) }
                 .let {
                     when (args.filters) {
-                        Route.SelectNetwork.Filters.SwapAvailable ->
+                        Filters.SwapAvailable ->
                             it.filter { it.IsSwapSupported }
 
-                        Route.SelectNetwork.Filters.DisableNetworkSelection ->
+                        Filters.DisableNetworkSelection ->
                             it.filter { it.id == selectedNetwork.id }
+
+                        Filters.None -> it
                     }
                 }
                 .sortedWith(compareBy { it.raw })
