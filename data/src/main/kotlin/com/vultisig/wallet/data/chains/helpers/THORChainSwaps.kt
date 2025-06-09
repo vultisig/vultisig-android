@@ -53,6 +53,9 @@ class THORChainSwaps(
                     nonceIncrement = nonceIncrement
                 )
             }
+            Chain.Ripple -> {
+                return RippleHelper.getPreSignedInputData(keysignPayload)
+            }
             Chain.GaiaChain -> {
                 val helper = CosmosHelper(
                     coinType = CoinType.COSMOS,
@@ -152,7 +155,9 @@ class THORChainSwaps(
                     UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
-
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(keysignPayload,signatures)
+            }
             Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
