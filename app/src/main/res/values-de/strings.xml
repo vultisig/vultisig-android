@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
-    <string name="deposit_screen_title">Bitte sichern Sie jetzt alle Ihre Vault-Freigaben.</string>
+    <string name="deposit_screen_title">Funktionssignatur</string>
     <string name="deposit_screen_amount_title">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>

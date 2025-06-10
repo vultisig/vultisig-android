@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Pretraživanje…</string>
     <string name="verify_swap_agree_allowance">Slažem se s pružanjem neograničenog ERC20 dodatka</string>
     <string name="backup_now">Sigurnosno kopirajte svoj trezor sada!</string>
-    <string name="deposit_screen_title">Polog</string>
+    <string name="deposit_screen_title">Potpis funkcije</string>
     <string name="deposit_screen_amount_title">Iznositi</string>
     <string name="verify_deposit_memo_title">dopis</string>
     <string name="verify_deposit_node_address_title">Adresa čvora</string>
