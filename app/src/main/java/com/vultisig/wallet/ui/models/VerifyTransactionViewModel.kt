@@ -49,7 +49,8 @@ internal data class VerifyTransactionUiModel(
     val consentDst: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
-    val functionName: String? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
