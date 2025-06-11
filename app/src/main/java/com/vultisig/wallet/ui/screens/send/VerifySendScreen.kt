@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
@@ -262,6 +263,7 @@ internal fun VerifySendScreen(
         bottomBar = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -269,39 +271,21 @@ internal fun VerifySendScreen(
                         vertical = 12.dp
                     )
             ) {
-                val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
-                    VsButtonState.Disabled
-                else VsButtonState.Enabled
-
                 if (state.hasFastSign) {
-
-                    VsButton(
-                        label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-                        state = buttonState,
-                        onClick = onFastSignClick,
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                    )
-
-                    UiSpacer(size = 12.dp)
-
-                    VsButton(
-                        label = confirmTitle,
-                        state = buttonState,
-                        variant = VsButtonVariant.Secondary,
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                    )
-                } else {
-                    VsButton(
-                        label = confirmTitle,
-                        state = buttonState,
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                    Text(
+                        text = "Hold for paired sign",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.extraLight,
+                        textAlign = TextAlign.Center,
                     )
                 }
+
+                VsHoldableButton(
+                    label = "Sign transaction",
+                    onLongClick = onConfirm,
+                    onClick = if (state.hasFastSign) onFastSignClick else onConfirm,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     )
