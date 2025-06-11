@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
+    <string name="verify_transaction_function_args_title">Entradas de función</string>
 </resources>
