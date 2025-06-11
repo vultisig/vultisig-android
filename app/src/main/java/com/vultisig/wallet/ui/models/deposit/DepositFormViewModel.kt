@@ -214,6 +214,10 @@ internal class DepositFormViewModel @Inject constructor(
                 accountsRepository.loadAddress(vaultId, chain)
                     .collect { address ->
                         this@DepositFormViewModel.address.value = address
+                        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+                        state.update {
+                            it.copy(selectedToken = selectedToken)
+                        }
                     }
             } catch (e: Exception) {
                 Timber.e(e)
