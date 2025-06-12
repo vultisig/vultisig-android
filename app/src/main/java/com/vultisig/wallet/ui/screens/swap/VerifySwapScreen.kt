@@ -397,6 +397,7 @@ internal fun VerifyCardDetails(
             color = Theme.colors.text.primary,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
+            maxLines = 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
     }
