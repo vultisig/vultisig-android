@@ -1571,15 +1571,15 @@ object Coins {
             ),
             Coin(
                 chain = Chain.Osmosis,
-                ticker = "LVN",
-                logo = "levana",
+                ticker = "allBTC",
+                logo = "btc",
                 address = "",
-                decimal = 6,
+                decimal = 8,
                 hexPublicKey = "",
-                priceProviderID = "levana-protocol",
-                contractAddress = "factory/osmo1mlng7pz4pnyxtpq0akfwall37czyk9lukaucsrn30ameplhhshtqdvfm5c/ulvn",
+                priceProviderID = "osmosis-allbtc",
+                contractAddress = "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC",
                 isNativeToken = false,
-            ),
+            )
         ),
 
         Chain.Polkadot to listOf(
