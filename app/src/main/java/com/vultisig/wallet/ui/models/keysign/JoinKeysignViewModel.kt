@@ -79,7 +79,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -686,7 +685,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             selectedToken = payload.coin,
                         )
                     )
-
+                    val functionDetails = getTransactionFunctionInfo(payload.memo, chain)
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
 
@@ -702,7 +701,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             currency,
                         ),
                         gasFee = gasFee,
-                        memo = payload.memo,
+                        memo = payload.memo.takeIf { functionDetails == null },
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGass = totalGasAndFee.formattedTokenValue
@@ -713,9 +712,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
                             transaction = transactionToUiModel,
+                            functionSignature = functionDetails?.first,
+                            functionInputs = functionDetails?.second,
                         )
                     )
-                    transactionFunctionName(payload.memo, chain)
                 }
             }
         }
@@ -868,17 +868,18 @@ internal class JoinKeysignViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun transactionFunctionName(memo: String?, chain: Chain) {
-        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return
-        viewModelScope.launch {
-            val functionName = fourByteRepository.decodeFunction(memo)
-            verifyUiModel.update { state ->
-                (state as VerifyUiModel.Send).copy(
-                    model = state.model.copy(
-                        functionName = functionName
-                    )
-                )
-            }
-        }
+    private suspend fun getTransactionFunctionInfo(
+        memo: String?,
+        chain: Chain,
+    ): Pair<String, String>? {
+        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty())
+            return null
+
+        val functionSignature = fourByteRepository.decodeFunction(memo)
+        val functionInputs = if (functionSignature != null) {
+            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
+        } else return null
+        return Pair(functionSignature, functionInputs)
     }
+
 }

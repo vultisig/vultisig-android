@@ -80,6 +80,7 @@ internal interface DataModule {
             ignoreUnknownKeys = true
             explicitNulls = false
             encodeDefaults = true
+            prettyPrint = true
             this.serializersModule = serializersModule
         }
 
