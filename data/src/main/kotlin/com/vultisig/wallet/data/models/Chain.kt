@@ -61,7 +61,7 @@ enum class Chain(
     Tron("Tron",TRC20,"TRX")
     ;
 
-    val id: String
+    val id: ChainId
         get() = raw
 
     companion object {
@@ -134,11 +134,12 @@ val Chain.IsSwapSupported: Boolean
     get() = this in arrayOf(
         Chain.ThorChain, Chain.MayaChain, Chain.GaiaChain, Chain.Kujira,
 
-        Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dash,
+        Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dash, Chain.Ripple,
 
         Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon,
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
+
     )
 
 val Chain.isDepositSupported: Boolean

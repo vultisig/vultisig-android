@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -12,7 +13,6 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
-import wallet.core.jni.proto.THORChainSwap
 import java.math.BigInteger
 
 class THORChainSwaps(
@@ -29,73 +29,44 @@ class THORChainSwaps(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
-        val input = THORChainSwap.SwapInput.newBuilder()
-            .setFromAsset(swapPayload.fromAsset)
-            .setFromAddress(swapPayload.fromAddress)
-            .setToAsset(swapPayload.toAsset)
-            .setToAddress(swapPayload.toAddress)
-            .setVaultAddress(swapPayload.vaultAddress)
-            .setRouterAddress(swapPayload.routerAddress ?: "")
-            .setFromAmount(swapPayload.fromAmount.toString())
-            .setToAmountLimit(swapPayload.toAmountLimit)
-            .setExpirationTime(swapPayload.expirationTime.toLong())
-            .setStreamParams(
-                THORChainSwap.StreamParams.newBuilder()
-                    .setInterval(swapPayload.streamingInterval)
-                    .setQuantity(swapPayload.streamingQuantity)
-            ).let {
-                if (swapPayload.isAffiliate) {
-                    it.setAffiliateFeeAddress(AFFILIATE_FEE_ADDRESS)
-                        .setAffiliateFeeRateBp(AFFILIATE_FEE_RATE)
-                } else {
-                    it
-                }
-            }
-            .build()
-        val inputData = input.toByteArray()
-        val outputData = wallet.core.jni.THORChainSwap.buildSwap(inputData)
-        val output = THORChainSwap.SwapOutput.parseFrom(outputData)
-        when (swapPayload.fromAsset.chain) {
-            THORChainSwap.Chain.THOR -> {
+        when (swapPayload.fromCoin.chain) {
+             Chain.ThorChain -> {
                 return THORCHainHelper()
-                    .getSwapPreSignedInputData(
-                        keysignPayload,
-                        output.cosmos.toBuilder()
-                    )
+                    .getSwapPreSignedInputData(keysignPayload)
             }
 
-            THORChainSwap.Chain.BTC, THORChainSwap.Chain.LTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH -> {
+            Chain.Bitcoin, Chain.Litecoin, Chain.Dogecoin, Chain.BitcoinCash -> {
                 val helper =
                     UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+                val input = helper.getSwapPreSigningInputData(keysignPayload)
                 return helper.getSigningInputData(
                     keysignPayload,
-                    output.bitcoin.toBuilder()
+                    input.toBuilder()
                 )
             }
 
-            THORChainSwap.Chain.ETH, THORChainSwap.Chain.BSC, THORChainSwap.Chain.AVAX -> {
+            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
-                return helper.getPreSignedInputData(
+                return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload,
-                    signingInput = output.ethereum,
-                    nonceIncrement = nonceIncrement,
+                    nonceIncrement = nonceIncrement
                 )
             }
-
-            THORChainSwap.Chain.ATOM -> {
+            Chain.Ripple -> {
+                return RippleHelper.getPreSignedInputData(keysignPayload)
+            }
+            Chain.GaiaChain -> {
                 val helper = CosmosHelper(
                     coinType = CoinType.COSMOS,
                     denom = CosmosHelper.ATOM_DENOM,
                 )
                 return helper.getSwapPreSignedInputData(
-                    keysignPayload = keysignPayload,
-                    input = output.cosmos.toBuilder()
+                    keysignPayload = keysignPayload
                 )
             }
 
-
-            THORChainSwap.Chain.BNB, THORChainSwap.Chain.UNRECOGNIZED, null -> {
+            else -> {
                 throw Exception("Unsupported chain")
             }
         }
@@ -170,8 +141,8 @@ class THORChainSwaps(
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
-        when (swapPayload.fromAsset.chain) {
-            THORChainSwap.Chain.THOR -> {
+        when (swapPayload.fromCoin.chain) {
+            Chain.ThorChain -> {
                 return ThorChainHelper.thor(vaultHexPublicKey, vaultHexChainCode)
                     .getSignedTransaction(
                         inputData,
@@ -179,19 +150,21 @@ class THORChainSwaps(
                     )
             }
 
-            THORChainSwap.Chain.BTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH, THORChainSwap.Chain.LTC -> {
+            Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin -> {
                 val helper =
                     UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
-
-            THORChainSwap.Chain.ETH, THORChainSwap.Chain.AVAX, THORChainSwap.Chain.BSC -> {
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(keysignPayload,signatures)
+            }
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
 
-            THORChainSwap.Chain.ATOM -> {
+            Chain.GaiaChain -> {
                 val helper = CosmosHelper(
                     coinType = CoinType.COSMOS,
                     denom = CosmosHelper.ATOM_DENOM,
@@ -203,7 +176,7 @@ class THORChainSwaps(
                 )
             }
 
-            THORChainSwap.Chain.UNRECOGNIZED, THORChainSwap.Chain.BNB, null -> {
+            else -> {
                 throw Exception("Unsupported chain")
             }
 

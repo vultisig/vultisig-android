@@ -9,7 +9,7 @@ data class Transaction(
     val id: TransactionId,
     val vaultId: String,
     val chainId: String,
-    val tokenId: String,
+    val token: Coin,
     val srcAddress: String,
     val dstAddress: String,
     val tokenValue: TokenValue,

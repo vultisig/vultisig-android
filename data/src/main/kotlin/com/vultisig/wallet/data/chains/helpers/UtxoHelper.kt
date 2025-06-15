@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.utils.Numeric
 import timber.log.Timber
 import tss.KeysignResponse
@@ -48,6 +49,31 @@ class UtxoHelper(
             .checkError()
         return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             .sorted()
+    }
+
+    fun getSwapPreSigningInputData(keysignPayload: KeysignPayload): Bitcoin.SigningInput {
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
+        if (thorChainSwapPayload == null) {
+            throw Exception("Invalid swap payload for THORChain")
+        }
+        require(!keysignPayload.memo.isNullOrEmpty()) {
+            "Memo is required for THORChain swap"
+        }
+        require(thorChainSwapPayload.data.vaultAddress.isNotEmpty()) {
+            "Vault address is required for THORChain swap"
+        }
+        val input = Bitcoin.SigningInput.newBuilder()
+            .setHashType(BitcoinScript.hashTypeForCoin(coinType))
+            .setAmount(thorChainSwapPayload.data.fromAmount.toLong())
+            .setToAddress(thorChainSwapPayload.data.vaultAddress)
+            .setChangeAddress(keysignPayload.coin.address)
+            .setByteFee(1L)
+            .setCoinType(coinType.value())
+            .setUseMaxAmount(false)
+            .setOutputOpReturn(
+                ByteString.copyFromUtf8(keysignPayload.memo)
+            )
+        return input.build()
     }
 
     @OptIn(ExperimentalStdlibApi::class)

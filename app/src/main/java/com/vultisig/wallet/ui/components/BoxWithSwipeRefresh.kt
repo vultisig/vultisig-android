@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+// TODO remove and just use PullToRefreshBox directly
 internal fun BoxWithSwipeRefresh(
     onSwipe: () -> Unit,
     isRefreshing: Boolean,

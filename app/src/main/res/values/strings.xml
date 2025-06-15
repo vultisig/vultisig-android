@@ -38,8 +38,8 @@
     <string name="choose_tokens">Choose Tokens</string>
     <string name="send_screen_title">Send</string>
     <string name="send_from_address">From</string>
-    <string name="send_to_address">To</string>
-    <string name="send_to_address_hint">Enter Address</string>
+    <string name="send_to_address">Send to</string>
+    <string name="send_to_address_hint">Enter address here</string>
     <string name="send_amount">Amount</string>
     <string name="send_amount_hint">Enter Amount</string>
     <string name="send_amount_currency">Amount (in %s)</string>

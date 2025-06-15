@@ -1,3 +1,5 @@
+@file:kotlin.OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.send
 
 import androidx.annotation.DrawableRes
@@ -5,8 +7,10 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -52,7 +56,8 @@ import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -79,12 +84,15 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.Uuid
+
 
 @Immutable
 internal data class TokenBalanceUiModel(
     val model: SendSrc,
     val title: String,
     val balance: String?,
+    val fiatValue: String?,
     val isNativeToken: Boolean,
     val isLayer2: Boolean,
     val tokenStandard: String?,
@@ -95,20 +103,34 @@ internal data class TokenBalanceUiModel(
 @Immutable
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
-    val from: String = "",
     val fiatCurrency: String = "",
-    val gasFee: UiText = UiText.Empty,
+
+    // src data
+    val srcAddress: String = "",
+    val srcVaultName: String = "",
+
+    // dst data
+    val isDstAddressComplete: Boolean = false,
+
+    // fees
     val totalGas: UiText = UiText.Empty,
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
+
+    // errors
     val errorText: UiText? = null,
-    val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
     val reapingError: UiText? = null,
+
     val hasMemo: Boolean = false,
+    val showGasFee: Boolean = true,
+    val hasGasSettings: Boolean = false,
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
+
+    val expandedSection: SendSections = SendSections.Asset,
+    val usingTokenAmountInput: Boolean = true,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
 )
@@ -118,8 +140,15 @@ internal data class SendSrc(
     val account: Account,
 )
 
+internal enum class SendSections {
+    Asset,
+    Address,
+    Amount,
+}
+
 internal sealed class GasSettings {
     data class Eth(
+        val baseFee: BigInteger,
         val priorityFee: BigInteger,
         val gasLimit: BigInteger,
     ) : GasSettings()
@@ -133,11 +162,10 @@ internal data class InvalidTransactionDataException(
     val text: UiText,
 ) : Exception()
 
-
 @HiltViewModel
 internal class SendFormViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val requestQrScan: RequestQrScanUseCase,
@@ -156,6 +184,8 @@ internal class SendFormViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
 ) : ViewModel() {
+
+    private val args = savedStateHandle.toRoute<Route.Send>()
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
@@ -205,6 +235,11 @@ internal class SendFormViewModel @Inject constructor(
 
 
     init {
+        loadData(
+            vaultId = args.vaultId,
+            preSelectedChainId = args.chainId,
+            preSelectedTokenId = args.tokenId,
+        )
         loadSelectedCurrency()
         collectSelectedAccount()
         collectAmountChanges()
@@ -215,6 +250,18 @@ internal class SendFormViewModel @Inject constructor(
         calculateSpecific()
         collectAdvanceGasUi()
         collectAmountChecks()
+        loadVaultName()
+        loadGasSettings()
+        collectDstAddress()
+    }
+
+    private fun loadGasSettings() {
+        viewModelScope.launch {
+            advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon
+                .collect { shouldShowAdvanceGasSettingsIcon ->
+                    uiState.update { it.copy(hasGasSettings = shouldShowAdvanceGasSettingsIcon) }
+                }
+        }
     }
 
     fun loadData(
@@ -228,6 +275,7 @@ internal class SendFormViewModel @Inject constructor(
             this.vaultId = vaultId
 
             loadAccounts(vaultId)
+            loadVaultName()
         }
 
         preSelectToken(
@@ -236,10 +284,27 @@ internal class SendFormViewModel @Inject constructor(
         )
     }
 
-    fun validateDstAddress() = viewModelScope.launch {
-        val errorText = validateDstAddress(addressFieldState.text.toString())
-        uiState.update {
-            it.copy(dstAddressError = errorText)
+    private fun loadVaultName() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            vaultRepository.get(vaultId)?.let { vault ->
+                uiState.update { it.copy(srcVaultName = vault.name) }
+            }
+        }
+    }
+
+    private fun collectDstAddress() {
+        viewModelScope.launch {
+            addressFieldState.textAsFlow()
+                .map { it.toString() }
+                .collect { dstAddress ->
+                    val isDstAddressComplete = dstAddress.isNotBlank()
+                    uiState.update {
+                        it.copy(
+                            isDstAddressComplete = isDstAddressComplete,
+                        )
+                    }
+                }
         }
     }
 
@@ -248,22 +313,62 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
-    fun openTokenSelection() {
-        val vaultId = vaultId ?: return
+    fun selectNetwork() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.SelectToken(
+            val vaultId = vaultId ?: return@launch
+            val selectedChain = selectedTokenValue?.chain ?: return@launch
+
+            val requestId = Uuid.random().toString()
+
+            navigator.route(
+                Route.SelectNetwork(
                     vaultId = vaultId,
-                    targetArg = Destination.SelectToken.ARG_SELECTED_TOKEN_ID,
+                    selectedNetworkId = selectedChain.id,
+                    requestId = requestId,
+                    filters = Route.SelectNetwork.Filters.None,
                 )
             )
 
-            val tokenSelectionResult = requestResultRepository
-                .request<Coin?>(Destination.SelectToken.ARG_SELECTED_TOKEN_ID)
+            val chain: Chain? = requestResultRepository.request(requestId)
 
-            if (tokenSelectionResult != null) {
-                selectToken(tokenSelectionResult)
+            if (chain == null || chain == selectedChain) {
+                return@launch
             }
+
+            val account = accounts.value.find {
+                it.token.isNativeToken && it.token.chain == chain
+            } ?: return@launch
+
+            selectToken(account.token)
+        }
+    }
+
+    fun openTokenSelection() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            val requestId = Uuid.random().toString()
+
+            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
+            navigator.route(
+                Route.SelectAsset(
+                    vaultId = vaultId,
+                    preselectedNetworkId = selectedChain.id,
+                    networkFilters = Route.SelectNetwork.Filters.None,
+                    requestId = requestId,
+                )
+            )
+
+            val newToken = requestResultRepository.request<Coin?>(requestId)
+
+            if (newToken != null) {
+                selectToken(newToken)
+            }
+        }
+    }
+
+    fun openGasSettings() {
+        viewModelScope.launch {
+            advanceGasUiRepository.showSettings()
         }
     }
 
@@ -351,20 +456,24 @@ internal class SendFormViewModel @Inject constructor(
 
     fun openAddressBook() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.AddressBook(
+            val vaultId = vaultId ?: return@launch
+            val selectedChain = selectedTokenValue?.chain ?: return@launch
+
+            navigator.route(
+                Route.AddressBook(
                     requestId = REQUEST_ADDRESS_ID,
-                    chain = selectedTokenValue?.chain,
+                    chainId = selectedChain.id,
+                    excludeVaultId = vaultId,
                 )
             )
+
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
                 ?: return@launch
 
-            val vaultId = vaultId
-            val selectedChain = address.chain
-            if (vaultId != null && selectedTokenValue?.chain != selectedChain) {
+            val selectedNewChain = address.chain
+            if (selectedChain != selectedNewChain) {
                 preSelectToken(
-                    preSelectedChainIds = listOf(selectedChain.id),
+                    preSelectedChainIds = listOf(selectedNewChain.id),
                     preSelectedTokenId = null,
                     forcePreselection = true
                 )
@@ -414,9 +523,9 @@ internal class SendFormViewModel @Inject constructor(
             gasFee.value.multiply(gasLimit)
         )
 
-        return availableTokenBalance?.copy(
-            value = (BigDecimal(availableTokenBalance.value) * percentage.toBigDecimal()).toBigInteger()
-        )?.decimal
+        return availableTokenBalance?.decimal
+            ?.multiply(percentage.toBigDecimal())
+            ?.setScale(8, RoundingMode.DOWN)
     }
 
     fun dismissError() {
@@ -525,6 +634,7 @@ internal class SendFormViewModel @Inject constructor(
                                     it.copy(
                                         blockChainSpecific = spec
                                             .copy(
+                                                maxFeePerGasWei = gasSettings.baseFee,
                                                 priorityFeeWei = gasSettings.priorityFee,
                                                 gasLimit = gasSettings.gasLimit,
                                             )
@@ -609,7 +719,7 @@ internal class SendFormViewModel @Inject constructor(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
                     chainId = chain.raw,
-                    tokenId = selectedToken.id,
+                    token = selectedToken,
                     srcAddress = srcAddress,
                     dstAddress = dstAddress,
                     tokenValue = TokenValue(
@@ -633,8 +743,9 @@ internal class SendFormViewModel @Inject constructor(
 
                 transactionRepository.addTransaction(transaction)
                 advanceGasUiRepository.hideIcon()
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
+
+                navigator.route(
+                    Route.VerifySend(
                         transactionId = transaction.id,
                         vaultId = vaultId,
                     )
@@ -1017,21 +1128,21 @@ internal class SendFormViewModel @Inject constructor(
                 val uiModel = accountToTokenBalanceUiModelMapper.map(
                     SendSrc(
                         Address(
-                        chain = token.chain,
-                        address = address,
-                        accounts = accounts,
-                    ),
-                    accounts.find { it.token.id == token.id } ?: Account(
-                        token = token,
-                        tokenValue = null,
-                        fiatValue = null,
-                    )
-                ))
+                            chain = token.chain,
+                            address = address,
+                            accounts = accounts,
+                        ),
+                        accounts.find { it.token.id == token.id } ?: Account(
+                            token = token,
+                            tokenValue = null,
+                            fiatValue = null,
+                        )
+                    ))
 
                 advanceGasUiRepository.updateTokenStandard(token.chain.standard)
                 uiState.update {
                     it.copy(
-                        from = address,
+                        srcAddress = address,
                         selectedCoin = uiModel,
                         hasMemo = hasMemo,
 
@@ -1194,6 +1305,28 @@ internal class SendFormViewModel @Inject constructor(
         advanceGasUiRepository.showIcon()
     }
 
+    fun back() {
+        viewModelScope.launch {
+            navigator.back()
+        }
+    }
+
+    fun toggleAmountInputType(usingTokenAmountInput: Boolean) {
+        uiState.update {
+            it.copy(
+                usingTokenAmountInput = usingTokenAmountInput
+            )
+        }
+    }
+
+    fun expandSection(section: SendSections) {
+        uiState.update {
+            it.copy(
+                expandedSection = section
+            )
+        }
+    }
+
     fun refreshGasFee() {
         val srcAddress = selectedToken.value ?: return
         viewModelScope.launch {
@@ -1238,3 +1371,43 @@ internal class SendFormViewModel @Inject constructor(
     }
 }
 
+internal fun List<Address>.firstSendSrc(
+    selectedTokenId: String?,
+    filterByChain: Chain?,
+): SendSrc {
+    val address = when {
+        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        filterByChain != null -> first { it.chain == filterByChain }
+        else -> first()
+    }
+
+    val account = when {
+        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
+        filterByChain != null -> address.accounts.first { it.token.isNativeToken }
+        else -> address.accounts.first()
+    }
+
+    return SendSrc(address, account)
+}
+
+internal fun List<Address>.findCurrentSrc(
+    selectedTokenId: String?,
+    currentSrc: SendSrc,
+): SendSrc {
+    if (selectedTokenId == null) {
+        val selectedAddress = currentSrc.address
+        val selectedAccount = currentSrc.account
+        val address = first {
+            it.chain == selectedAddress.chain &&
+                    it.address == selectedAddress.address
+        }
+        return SendSrc(
+            address,
+            address.accounts.first {
+                it.token.ticker == selectedAccount.token.ticker
+            },
+        )
+    } else {
+        return firstSendSrc(selectedTokenId, null)
+    }
+}

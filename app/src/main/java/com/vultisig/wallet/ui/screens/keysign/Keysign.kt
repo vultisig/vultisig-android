@@ -10,10 +10,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
-import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
+import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 
 @Composable
@@ -60,6 +61,16 @@ internal fun KeysignView(
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
                         )
                     }
+                    is TransactionTypeUiModel.Send -> {
+                        SendTxOverviewScreen(
+                            transactionHash = txHash,
+                            transactionLink = transactionLink,
+                            onComplete = onComplete,
+                            onBack = onBack,
+                            tx = transactionTypeUiModel.tx,
+                            showToolbar = showToolbar,
+                        )
+                    }
                     else -> {
                         TransactionDoneView(
                             transactionHash = txHash,
@@ -104,16 +115,10 @@ private fun KeysignPreview() {
         transactionLink = "",
         approveTransactionLink = "",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            TransactionUiModel(
+            SendTxUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
-                tokenValue = "1.1",
-                fiatValue = "1.1",
-                fiatCurrency = "USD",
-                gasFeeValue = "1.1",
                 memo = "some memo",
-                estimatedFee = "0.75 USd",
-                totalGas = "0.00031361"
             )
         ),
         onComplete = {},

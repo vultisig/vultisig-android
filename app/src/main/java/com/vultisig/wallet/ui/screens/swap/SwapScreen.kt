@@ -520,58 +520,10 @@ private fun TokenInput(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clickable(onClick = onSelectTokenClick)
-                    .background(
-                        color = Theme.colors.backgrounds.tertiary,
-                        shape = RoundedCornerShape(99.dp)
-                    )
-                    .padding(
-                        all = 6.dp,
-                    )
-            ) {
-                TokenLogo(
-                    errorLogoModifier = Modifier
-                        .size(32.dp)
-                        .background(Theme.colors.neutral100),
-                    logo = selectedToken?.tokenLogo ?: "",
-                    title = selectedToken?.title ?: "",
-                    modifier = Modifier
-                        .size(32.dp)
-                )
-
-                UiSpacer(8.dp)
-
-                Column {
-                    Text(
-                        // TODO loader
-                        text = selectedToken?.title ?: "",
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.colors.text.primary,
-                    )
-
-                    if (selectedToken?.isNativeToken == true) {
-                        Text(
-                            text = "Native",
-                            style = Theme.brockmann.supplementary.captionSmall,
-                            color = Theme.colors.text.extraLight,
-                        )
-                    }
-                }
-
-                UiSpacer(4.dp)
-
-                UiIcon(
-                    drawableResId = R.drawable.ic_chevron_right_small,
-                    size = 20.dp,
-                    tint = Theme.colors.text.primary,
-                )
-
-                UiSpacer(6.dp)
-            }
-
+            TokenChip(
+                selectedToken = selectedToken,
+                onSelectTokenClick = onSelectTokenClick,
+            )
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -587,6 +539,64 @@ private fun TokenInput(
                 )
             }
         }
+    }
+}
+
+@Composable
+internal fun TokenChip(
+    selectedToken: TokenBalanceUiModel?,
+    onSelectTokenClick: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clickable(onClick = onSelectTokenClick)
+            .background(
+                color = Theme.colors.backgrounds.tertiary,
+                shape = RoundedCornerShape(99.dp)
+            )
+            .padding(
+                all = 6.dp,
+            )
+    ) {
+        TokenLogo(
+            errorLogoModifier = Modifier
+                .size(32.dp)
+                .background(Theme.colors.neutral100),
+            logo = selectedToken?.tokenLogo ?: "",
+            title = selectedToken?.title ?: "",
+            modifier = Modifier
+                .size(32.dp)
+        )
+
+        UiSpacer(8.dp)
+
+        Column {
+            Text(
+                // TODO loader
+                text = selectedToken?.title ?: "",
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.colors.text.primary,
+            )
+
+            if (selectedToken?.isNativeToken == true) {
+                Text(
+                    text = "Native",
+                    style = Theme.brockmann.supplementary.captionSmall,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+        }
+
+        UiSpacer(4.dp)
+
+        UiIcon(
+            drawableResId = R.drawable.ic_chevron_right_small,
+            size = 20.dp,
+            tint = Theme.colors.text.primary,
+        )
+
+        UiSpacer(6.dp)
     }
 }
 

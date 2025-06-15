@@ -6,23 +6,29 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import kotlinx.coroutines.runBlocking
+import java.math.RoundingMode
 import javax.inject.Inject
 
 internal interface AccountToTokenBalanceUiModelMapper : Mapper<SendSrc, TokenBalanceUiModel>
 
 internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
-) :
-    AccountToTokenBalanceUiModelMapper {
+    private val mapFiatValueToString: FiatValueToStringMapper,
+) : AccountToTokenBalanceUiModelMapper {
 
     override fun map(from: SendSrc): TokenBalanceUiModel {
         val (_, fromAccount) = from
+        val tokenValue = fromAccount.tokenValue
+        
         return TokenBalanceUiModel(
             title = fromAccount.token.ticker,
-            balance = fromAccount.tokenValue
-                ?.let(mapTokenValueToDecimalUiString),
+            balance = tokenValue?.let(mapTokenValueToDecimalUiString),
+            fiatValue = fromAccount.fiatValue?.let { mapFiatValueToString.map(it) },
             tokenLogo = Tokens.getCoinLogo(fromAccount.token.logo),
             chainLogo = fromAccount.token.chain.logo,
             isNativeToken = fromAccount.token.isNativeToken,
