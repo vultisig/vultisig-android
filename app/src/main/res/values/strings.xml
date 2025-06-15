@@ -567,6 +567,6 @@
     <string name="deposit_form_custom_memo_optional_title" translatable="false">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
-    <string name="verify_transaction_function_args_title">Function Inputs</string>
+    <string name="verify_transaction_function_inputs_title">Function Inputs</string>
 
 </resources>

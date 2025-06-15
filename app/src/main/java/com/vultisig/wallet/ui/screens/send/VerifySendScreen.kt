@@ -189,7 +189,7 @@ internal fun VerifySendScreen(
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
-                            title = stringResource(R.string.verify_transaction_function_args_title),
+                            title = stringResource(R.string.verify_transaction_function_inputs_title),
                             subtitle = state.functionInputs
                         )
                     }
