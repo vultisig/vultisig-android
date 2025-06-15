@@ -141,6 +141,11 @@ internal sealed class VerifyUiModel {
 
 }
 
+internal data class FunctionInfo(
+    val signature: String,
+    val inputs: String,
+)
+
 @HiltViewModel
 internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -685,7 +690,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             selectedToken = payload.coin,
                         )
                     )
-                    val functionDetails = getTransactionFunctionInfo(payload.memo, chain)
+                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
 
@@ -701,7 +706,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             currency,
                         ),
                         gasFee = gasFee,
-                        memo = payload.memo.takeIf { functionDetails == null },
+                        memo = payload.memo.takeIf { functionInfo == null },
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGass = totalGasAndFee.formattedTokenValue
@@ -712,8 +717,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
                             transaction = transactionToUiModel,
-                            functionSignature = functionDetails?.first,
-                            functionInputs = functionDetails?.second,
+                            functionSignature = functionInfo?.signature,
+                            functionInputs = functionInfo?.inputs,
                         )
                     )
                 }
@@ -871,7 +876,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private suspend fun getTransactionFunctionInfo(
         memo: String?,
         chain: Chain,
-    ): Pair<String, String>? {
+    ): FunctionInfo? {
         if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty())
             return null
 
@@ -879,7 +884,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         val functionInputs = if (functionSignature != null) {
             fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
         } else return null
-        return Pair(functionSignature, functionInputs)
+        return FunctionInfo(functionSignature, functionInputs)
     }
 
 }

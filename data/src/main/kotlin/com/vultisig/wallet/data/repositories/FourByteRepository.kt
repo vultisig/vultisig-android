@@ -20,7 +20,7 @@ interface FourByteRepository {
 
 internal class FourByteRepositoryImpl @Inject constructor(
     private val fourByteApi: FourByteApi,
-    private val json: Json,
+    @PrettyJson private val json: Json,
 ) : FourByteRepository {
     override suspend fun decodeFunction(memo: String): String? {
         if (memo.length < 8) return null

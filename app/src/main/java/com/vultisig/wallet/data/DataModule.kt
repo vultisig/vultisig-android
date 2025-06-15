@@ -5,6 +5,7 @@ package com.vultisig.wallet.data
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
 import com.vultisig.wallet.data.utils.KeysignResponseSerializer
@@ -80,9 +81,16 @@ internal interface DataModule {
             ignoreUnknownKeys = true
             explicitNulls = false
             encodeDefaults = true
-            prettyPrint = true
             this.serializersModule = serializersModule
         }
+
+        @Provides
+        @Singleton
+        @PrettyJson
+        fun providePrettyJson() = Json {
+            prettyPrint = true
+        }
+
 
         @Provides
         @Singleton
