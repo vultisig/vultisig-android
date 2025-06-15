@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.swap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,7 +68,7 @@ internal fun VerifySwapScreen(
         {
             context.launchBiometricPrompt(
                 promptTitle = promptTitle,
-                onAuthorizationSuccess =  viewModel::authFastSign,
+                onAuthorizationSuccess = viewModel::authFastSign,
             )
         }
     }
@@ -377,7 +378,7 @@ internal fun VerifyCardDetails(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(
                 vertical = 12.dp,
@@ -398,6 +399,37 @@ internal fun VerifyCardDetails(
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.MiddleEllipsis,
+        )
+    }
+}
+
+@Composable
+internal fun VerifyCardJsonDetails(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                vertical = 12.dp,
+            )
+    ) {
+        Text(
+            text = title,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.extraLight,
+            maxLines = 1,
+        )
+
+        Text(
+            text = subtitle,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.primary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
         )
     }
 }

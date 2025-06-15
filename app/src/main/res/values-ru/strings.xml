@@ -198,7 +198,7 @@
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
     <string name="backup_now">Сделайте резервную копию своего хранилища прямо сейчас!</string>
-    <string name="deposit_screen_title">Депозит</string>
+    <string name="deposit_screen_title">Функция Подпись</string>
     <string name="deposit_screen_amount_title">Количество</string>
     <string name="token_selection_screen_custom_token">Пользовательский токен</string>
     <string name="custom_token_find_your_custom_token">Найдите свой индивидуальный токен</string>
@@ -356,4 +356,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
+    <string name="verify_transaction_function_inputs_title">Входные данные функции</string>
 </resources>

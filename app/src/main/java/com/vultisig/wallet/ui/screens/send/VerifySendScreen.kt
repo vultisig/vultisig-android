@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -176,12 +177,20 @@ internal fun VerifySendScreen(
                         )
                     }
 
-                    if (state.functionName != null) {
+                    if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.deposit_screen_title),
-                            subtitle = state.functionName
+                            subtitle = state.functionSignature
+                        )
+                    }
+                    if (state.functionInputs != null) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardJsonDetails(
+                            title = stringResource(R.string.verify_transaction_function_inputs_title),
+                            subtitle = state.functionInputs
                         )
                     }
 
@@ -376,3 +385,4 @@ private fun PreviewVerifySendScreen() {
         onConfirm = {},
     )
 }
+

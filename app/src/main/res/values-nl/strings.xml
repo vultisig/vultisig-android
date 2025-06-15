@@ -198,7 +198,7 @@
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
     <string name="backup_now">Maak nu een back-up van uw kluis!</string>
-    <string name="deposit_screen_title">Borg</string>
+    <string name="deposit_screen_title">Functiehandtekening</string>
     <string name="deposit_screen_amount_title">Hoeveelheid</string>
     <string name="verify_deposit_memo_title">Notitie</string>
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
@@ -356,4 +356,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
+    <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
 </resources>

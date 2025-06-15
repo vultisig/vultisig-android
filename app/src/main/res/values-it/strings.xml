@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\’accordo con la fornitura di un\’indennità ERC20 illimitata</string>
     <string name="backup_now">Esegui subito il backup del tuo caveau!</string>
-    <string name="deposit_screen_title">Depositare</string>
+    <string name="deposit_screen_title">Firma della funzione</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
+    <string name="verify_transaction_function_inputs_title">Input di funzione</string>
 </resources>
