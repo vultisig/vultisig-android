@@ -129,25 +129,28 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         }
     }
 
-    private fun getSetupMessage(request: Request, response: Response) {
+    private fun getSetupMessage(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         if (sessionID.isNullOrEmpty()) {
             response.body("sessionID is empty")
             response.status(HttpStatusCode.BadRequest.value)
-            return
+            return ""
         }
         val messageID = request.headers("message_id")
         var key = "setup-$sessionID"
-        messageID?.let {
-            key = "$key-$it"
+        if (!messageID.isNullOrEmpty()) {
+            key = "$key-$messageID"
         }
         cache[key]?.let {
             val content = it as? String
-            response.body(content)
+            Timber.tag("Server").d(content)
             response.status(HttpStatusCode.OK.value)
+            return content.toString()
         } ?: run {
+            Timber.tag("Server").d("setup message not found for key: %s", key)
             response.status(HttpStatusCode.NotFound.value)
         }
+        return ""
     }
 
     private fun postSetupMessage(request: Request, response: Response) {
@@ -160,34 +163,34 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val messageID = request.headers("message_id")
         Timber.d("upload setup message: %s", sessionID)
         var key = "setup-$sessionID"
-        messageID?.let {
-            key = "$key-$it"
+        if (!messageID.isNullOrEmpty()) {
+            key = "$key-$messageID"
         }
+        Timber.tag("Server").d("setup message content: %s", request.body())
         cache.put(key, request.body())
         response.status(HttpStatusCode.Created.value)
     }
-    private fun getPayload(request: Request, response: Response) {
+    private fun getPayload(request: Request, response: Response): String {
         val hash = request.params(":hash")
         if (hash.isNullOrEmpty()) {
-            response.body("hash is empty")
             response.status(HttpStatusCode.BadRequest.value)
-            return
+            return "hash is empty"
         }
         cache[hash]?.let {
-
             val content = it as? String
             val contentHash = content?.sha256()
             if (contentHash != hash) {
-                response.body("hash mismatch")
                 response.status(HttpStatusCode.BadRequest.value)
-                return
+                return "hash mismatch"
             }
-            response.body(content)
+
             Timber.d("return hash: %s", hash)
             response.status(HttpStatusCode.OK.value)
+            return content
         } ?: run {
             response.status(HttpStatusCode.NotFound.value)
         }
+        return ""
     }
 
     private fun postPayload(request: Request, response: Response) {
@@ -451,6 +454,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
 
     fun stopServer() {
         try {
+            Timber.tag("Server").d("Stopping server on port %s", port)
             this.service.stop()
             // clear cache
             cache.clear()
