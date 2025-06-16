@@ -112,6 +112,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Akash -> "https://www.mintscan.io/akash/"
             Chain.Tron -> "https://tronscan.org/#/"
             Chain.Zcash -> "https://blockchair.com/zcash/"
+            Chain.Cardano -> "https://cardanoscan.io/transaction/"
         }
 
 }

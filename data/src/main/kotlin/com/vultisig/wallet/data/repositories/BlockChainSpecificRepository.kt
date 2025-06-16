@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -69,6 +70,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
+    private val cardanoApi: CardanoApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -120,7 +122,12 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val evmApi = evmApiFactory.createEvmApi(chain)
             if (chain == Chain.ZkSync) {
                 val memoDataHex = "0xffffffff".toByteArray()
-                    .joinToString(separator = "") { byte -> String.format("%02x", byte) }
+                    .joinToString(separator = "") { byte ->
+                        String.format(
+                            "%02x",
+                            byte
+                        )
+                    }
 
                 val data = "0x$memoDataHex"
                 val nonce = evmApi.getNonce(address)
@@ -145,7 +152,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     when {
                         isSwap -> "600000"
                         chain == Chain.Arbitrum -> {
-                                "160000" // arbitrum has higher gas limit
+                            "160000" // arbitrum has higher gas limit
                         }
 
                         token.isNativeToken -> "23000"
@@ -167,23 +174,36 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
 
                 var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-                if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
+                if (chain in listOf(
+                        Chain.Ethereum,
+                        Chain.Avalanche
+                    )
+                ) {
                     maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
                 }
                 val nonce = evmApi.getNonce(address)
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Ethereum(
                         maxFeePerGasWei = gasFee.value,
-                        priorityFeeWei = minOf(maxPriorityFee, gasFee.value),
+                        priorityFeeWei = minOf(
+                            maxPriorityFee,
+                            gasFee.value
+                        ),
                         nonce = nonce,
-                        gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
+                        gasLimit = gasLimit ?: max(
+                            defaultGasLimit,
+                            estimateGasLimit
+                        ),
                     )
                 )
             }
         }
 
         TokenStandard.UTXO -> {
-            val utxos = blockChairApi.getAddressInfo(chain, address)
+            val utxos = blockChairApi.getAddressInfo(
+                chain,
+                address
+            )
 
             val byteFee = gasFee.value
 
@@ -384,6 +404,51 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             )
         }
+
+        TokenStandard.CARDANO -> {
+            try {
+                // Fetch UTXOs for Cardano using Koios API (assume cardanoApi is available)
+                val cardanoUTXOs = cardanoApi.getUTXOs(token)
+
+                // For send max, don't add fees - let WalletCore handle it
+                // For regular sends, add estimated fees to ensure we have enough
+                val totalNeeded: Long = if (isMaxAmountEnabled) {
+                    tokenAmountValue?.toLong() ?: 0L // Don't add fees for send max
+                } else {
+                    (tokenAmountValue?.toLong() ?: 0L) + (gasFee.value.toLong()
+                        ?: 0L) // Add fees for regular sends
+                }
+
+                val sortedUTXOs = cardanoUTXOs.sortedBy { it.amount }
+                val selectedUTXOs = mutableListOf<UtxoInfo>()
+                var totalSelected = 0L
+
+                for (utxo in sortedUTXOs) {
+                    selectedUTXOs.add(utxo)
+                    totalSelected += utxo.amount
+                    if (totalSelected >= totalNeeded) {
+                        break
+                    }
+                }
+
+                if (selectedUTXOs.isEmpty() || (!isMaxAmountEnabled && totalSelected < totalNeeded)) {
+                    error("Not enough balance for Cardano transaction")
+                }
+
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific = BlockChainSpecific.Cardano(
+                        byteFee = gasFee.value,
+                        sendMaxAmount = isMaxAmountEnabled,
+                        0L.toULong()
+                    ),
+                    utxos = selectedUTXOs
+                )
+            } catch (e: Exception) {
+                error("Not enough balance for Cardano transaction")
+            }
+        }
+
+
     }
 
     private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {

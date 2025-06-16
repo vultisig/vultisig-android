@@ -162,6 +162,12 @@ object SigningHelper {
                         vaultHexChainCode = vault.hexChainCode
                     ).getPreSignedImageHash(payload)
                 }
+
+                Chain.Cardano -> {
+                    CardanoHelper.getPreSignedImageHash(
+                        payload
+                    )
+                }
             }
         }
 
@@ -302,7 +308,15 @@ object SigningHelper {
                     keysignPayload = keysignPayload,
                     signatures = signatures,
                 )
+            }
 
+            Chain.Cardano -> {
+                return CardanoHelper.getSignedTransaction(
+                    vaultHexPublicKey = vault.pubKeyECDSA,
+                    vaultHexChainCode = vault.hexChainCode,
+                    keysignPayload = keysignPayload,
+                    signatures = signatures,
+                )
             }
         }
 

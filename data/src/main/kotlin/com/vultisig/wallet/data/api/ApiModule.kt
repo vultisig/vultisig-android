@@ -145,4 +145,10 @@ internal interface ApiModule {
     fun bindTronApi(
         impl: TronApiImpl,
     ): TronApi
+
+    @Binds
+    @Singleton
+    fun bindCardano(
+        impl:CardanoApiImpl ,
+    ): CardanoApi
 }
