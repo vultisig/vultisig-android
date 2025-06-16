@@ -17,7 +17,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.UiText.StringResource
+import com.vultisig.wallet.ui.utils.UiText.*
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +48,7 @@ internal class NameVaultViewModel @Inject constructor(
 
     val nameFieldState = TextFieldState()
 
-    val hint = when(args.vaultType){
+    val hint = when (args.vaultType) {
         VaultType.Fast -> R.string.naming_vault_placeholder_fast_vault
         VaultType.Secure -> R.string.naming_vault_placeholder_secure_vault
     }
@@ -69,9 +69,13 @@ internal class NameVaultViewModel @Inject constructor(
 
     private fun validate() = viewModelScope.launch {
         val name = nameFieldState.text.toString()
-        val errorMessage = if (!isNameValid(name))
-            StringResource(R.string.naming_vault_screen_invalid_name)
-        else null
+
+        val errorMessage = when {
+            !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
+            !isNameAvailable(name) -> DynamicString("Vault with this name already exists")
+            else -> null
+        }
+
         val isNextButtonEnabled = errorMessage == null
         state.update {
             it.copy(
@@ -85,18 +89,14 @@ internal class NameVaultViewModel @Inject constructor(
         return isNameLengthValid(name)
     }
 
+    private fun isNameAvailable(name: String): Boolean =
+        vaultNamesList.none { it == name }
+
     fun navigateToEmail() {
-        val expectedName = nameFieldState.text.toString()
-        if (!isNameValid(expectedName))
+        val name = nameFieldState.text.toString()
+        if (!(isNameValid(name) && isNameAvailable(name)))
             return
         viewModelScope.launch {
-            val name = uniqueName(
-                expectedName.ifEmpty {
-                    context.getString(hint)
-                },
-                vaultNamesList
-            )
-
             when (args.vaultType) {
                 VaultType.Fast -> {
                     navigator.route(
