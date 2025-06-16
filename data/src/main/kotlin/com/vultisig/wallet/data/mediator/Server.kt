@@ -143,7 +143,6 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         }
         cache[key]?.let {
             val content = it as? String
-            Timber.tag("Server").d(content)
             response.status(HttpStatusCode.OK.value)
             return content.toString()
         } ?: run {
@@ -166,7 +165,6 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         if (!messageID.isNullOrEmpty()) {
             key = "$key-$messageID"
         }
-        Timber.tag("Server").d("setup message content: %s", request.body())
         cache.put(key, request.body())
         response.status(HttpStatusCode.Created.value)
     }
