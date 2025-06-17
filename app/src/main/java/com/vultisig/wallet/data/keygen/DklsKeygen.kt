@@ -207,6 +207,7 @@ class DKLSKeygen(
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
+                delay(1000) //backoff delay
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -313,7 +314,10 @@ class DKLSKeygen(
                     }
                 }
                 TssAction.Migrate -> {
-                    val localUI = this.localUi ?: error("can't migrate, local UI is empty")
+                    if(this.localUi.isEmpty()){
+                        error("can't migrate, local UI is empty")
+                    }
+                    val localUI = this.localUi
                     val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyECDSA)
                     val publicKeySlice = publicKeyArray.toGoSlice()
                     val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
