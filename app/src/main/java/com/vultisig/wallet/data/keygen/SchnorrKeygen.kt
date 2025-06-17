@@ -172,6 +172,7 @@ class SchnorrKeygen(
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
+                delay(1000)
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -247,7 +248,10 @@ class SchnorrKeygen(
                     }
                 }
                 TssAction.Migrate -> {
-                    val localUI = this.localUi ?: throw RuntimeException("can't migrate, local UI is empty")
+                    if(this.localUi.isEmpty()){
+                        throw RuntimeException("can't migrate, local UI is empty")
+                    }
+                    val localUI = this.localUi
                     val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyEDDSA)
                     val publicKeySlice = publicKeyArray.toGoSlice()
                     val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)

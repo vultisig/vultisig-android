@@ -30,6 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -303,7 +305,7 @@ private fun VerifySwapScreen(
 }
 
 @Composable
-private fun SwapToken(
+internal fun SwapToken(
     valuedToken: ValuedToken,
 ) {
     val token = valuedToken.token
@@ -368,13 +370,13 @@ internal fun VerifyCardDivider(
 }
 
 @Composable
-private fun VerifyCardDetails(
+internal fun VerifyCardDetails(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -385,12 +387,17 @@ private fun VerifyCardDetails(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
+            maxLines = 1,
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.MiddleEllipsis,
         )
     }
 }

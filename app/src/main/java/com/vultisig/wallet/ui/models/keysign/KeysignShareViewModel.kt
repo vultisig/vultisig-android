@@ -71,7 +71,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             val pubKeyECDSA = vault.pubKeyECDSA
             val coin =
-                vault.coins.find { it.id == transaction.tokenId && it.chain.id == transaction.chainId }!!
+                vault.coins.find { it.id == transaction.token.id && it.chain.id == transaction.chainId }!!
 
             this@KeysignShareViewModel.vault = vault
             amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)

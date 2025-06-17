@@ -556,7 +556,9 @@ internal class KeygenViewModel @Inject constructor(
             serverUrl, sessionId, keygenCommittee
         )
     }
-
+    override fun onCleared() {
+        stopService()
+    }
 }
 
 private const val MAX_KEYGEN_ATTEMPTS = 3

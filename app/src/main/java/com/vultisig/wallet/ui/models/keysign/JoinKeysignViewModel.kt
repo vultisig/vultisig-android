@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
@@ -68,6 +69,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -172,8 +174,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val broadcastTx: BroadcastTxUseCase,
     private val fourByteRepository: FourByteRepository,
 ) : ViewModel() {
-    val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
-    private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
+    private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
+    private val vaultId: String = args.vaultId
+    private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveringSessionID)
@@ -689,7 +692,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         vaultId = payload.vaultPublicKeyECDSA,
                         chainId = chain.id,
-                        tokenId = payloadToken.id,
+                        token = payloadToken,
                         srcAddress = address,
                         dstAddress = payload.toAddress,
                         tokenValue = tokenValue,

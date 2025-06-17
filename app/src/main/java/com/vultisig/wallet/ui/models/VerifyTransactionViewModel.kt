@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
@@ -11,8 +12,11 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,28 +30,24 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Immutable
-internal data class TransactionUiModel(
+internal data class SendTxUiModel(
+    val token: ValuedToken = ValuedToken.Empty,
+
+    val networkFee: ValuedToken = ValuedToken.Empty,
+
     val srcAddress: String = "",
     val dstAddress: String = "",
+
     val memo: String? = null,
-    val tokenValue: String = "",
-    val fiatValue: String = "",
-    val fiatCurrency: String = "",
-    val gasFeeValue: String = "",
-    val totalGas: String = "",
-    val showGasField: Boolean = true,
-    val estimatedFee: String = "",
 )
 
 @Immutable
 internal data class VerifyTransactionUiModel(
-    val transaction: TransactionUiModel = TransactionUiModel(),
+    val transaction: SendTxUiModel = SendTxUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
     val consentDst: Boolean = false,
     val errorText: UiText? = null,
-    val blowfishShow: Boolean = false,
-    val blowfishWarnings: List<String> = emptyList(),
     val hasFastSign: Boolean = false,
     val functionName: String? = null,
 ) {
@@ -58,6 +58,7 @@ internal data class VerifyTransactionUiModel(
 @HiltViewModel
 internal class VerifyTransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     transactionRepository: TransactionRepository,
@@ -66,8 +67,10 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
-    private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
-    private val vaultId: String = requireNotNull(savedStateHandle["vault_id"])
+    private val args = savedStateHandle.toRoute<Route.VerifySend>()
+
+    private val transactionId: TransactionId = args.transactionId
+    private val vaultId: String = args.vaultId
 
     private val transaction = transactionRepository.getTransaction(transactionId)
         .stateIn(
@@ -122,6 +125,12 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            navigator.back()
+        }
     }
 
     private fun keysign(

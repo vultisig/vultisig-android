@@ -464,9 +464,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Blast, Chain.CronosChain-> setOf(SwapProvider.LIFI)
             Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
-
+            Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
-            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple, Chain.Akash, Chain.Tron,
+            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Tron,
                 -> emptySet()
         }
 

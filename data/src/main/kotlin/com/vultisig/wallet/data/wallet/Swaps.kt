@@ -26,7 +26,7 @@ internal object Swaps {
                 preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             }
 
-            TokenStandard.EVM, TokenStandard.THORCHAIN, TokenStandard.COSMOS ->
+            TokenStandard.EVM, TokenStandard.THORCHAIN, TokenStandard.COSMOS , TokenStandard.RIPPLE  ->
                 getPreSigningOutput(preImageHashes)
 
             TokenStandard.SOL ->{

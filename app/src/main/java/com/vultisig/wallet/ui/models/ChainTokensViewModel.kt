@@ -102,8 +102,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun send() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Send(
+            navigator.route(
+                Route.Send(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
