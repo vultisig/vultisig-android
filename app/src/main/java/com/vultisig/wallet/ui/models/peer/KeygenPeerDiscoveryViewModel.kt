@@ -587,8 +587,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        MediatorService.stop(context)
-    }
+
 
 }
