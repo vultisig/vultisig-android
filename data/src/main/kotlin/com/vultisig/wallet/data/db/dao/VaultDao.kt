@@ -63,7 +63,7 @@ interface VaultDao {
         }
     }
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDisabledCoin(disabledCoin: DisabledCoinEntity)
 
     @Upsert
