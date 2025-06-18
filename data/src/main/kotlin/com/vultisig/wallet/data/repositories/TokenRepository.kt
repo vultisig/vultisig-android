@@ -36,7 +36,7 @@ interface TokenRepository {
 
     suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
 
-    suspend fun getTokensWithBalance(chain: Chain, address: String,enabledTokens: List<Coin>): List<Coin>
+    suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
     val builtInTokens: Flow<List<Coin>>
 
@@ -130,8 +130,8 @@ internal class TokenRepositoryImpl @Inject constructor(
         return coin
     }
 
-    override suspend fun getTokensWithBalance(chain: Chain, address: String, enabledTokens: List<Coin>): List<Coin> {
-        val tokens = when (chain) {
+    override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+        return when (chain) {
             Chain.ThorChain -> {
                 thorApi.getBalance(address)
                     .mapNotNull {
@@ -194,12 +194,6 @@ internal class TokenRepositoryImpl @Inject constructor(
                     .toCoins(chain)
             }
         }
-        return  if (enabledTokens.size > 1) {
-                val enabledTickers = enabledTokens.map { it.ticker }.toSet()
-                tokens.filter { it.ticker in enabledTickers }
-            } else {
-                tokens
-            }
     }
 
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {

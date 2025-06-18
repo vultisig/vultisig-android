@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -31,7 +30,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -71,7 +69,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
-    private val vaultRepository: VaultRepository,
+
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
@@ -193,29 +191,22 @@ internal class ChainTokensViewModel @Inject constructor(
                             { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
                     )
 
-
-                val enabledTokens = vaultRepository.getEnabledTokens(vaultId).first()
-
                 val tokensFromAccounts = accounts.map { it.token }
                 tokens.update { it + tokensFromAccounts }
-                val enabledTokenIds = enabledTokens.map { it.id }.toSet()
-                val uiTokens = accounts
-                    .filter { enabledTokenIds.contains(it.token.id) }
-                    .map { account ->
+                val uiTokens = accounts.map { account ->
                     val token = account.token
-                        ChainTokenUiModel(
-                            id = token.id,
-                            name = token.ticker,
-                            balance = account.tokenValue
-                                ?.let(mapTokenValueToDecimalUiString)
-                                ?: "",
-                            fiatBalance = account.fiatValue
-                                ?.let(fiatValueToStringMapper::map),
-                            tokenLogo = Tokens.getCoinLogo(token.logo),
-                            chainLogo = chain.logo,
-                        )
-                    }
-
+                    ChainTokenUiModel(
+                        id = token.id,
+                        name = token.ticker,
+                        balance = account.tokenValue
+                            ?.let(mapTokenValueToDecimalUiString)
+                            ?: "",
+                        fiatBalance = account.fiatValue
+                            ?.let(fiatValueToStringMapper::map),
+                        tokenLogo = Tokens.getCoinLogo(token.logo),
+                        chainLogo = chain.logo,
+                    )
+                }
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository

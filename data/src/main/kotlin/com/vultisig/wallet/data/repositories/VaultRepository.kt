@@ -22,6 +22,7 @@ interface VaultRepository {
 
     fun getEnabledChains(vaultId: VaultId): Flow<Set<Chain>>
 
+    suspend fun getDisabledCoinIds(vaultId: VaultId): List<String>
 
     suspend fun get(vaultId: VaultId): Vault?
 
@@ -65,6 +66,9 @@ internal class VaultRepositoryImpl @Inject constructor(
                     .toSet()
             }
 
+    override suspend fun getDisabledCoinIds(vaultId: VaultId) =
+        vaultDao.loadDisabledCoinIds(vaultId)
+
     override suspend fun get(vaultId: String): Vault? =
         vaultDao.loadById(vaultId)?.toVault()
 
@@ -94,7 +98,7 @@ internal class VaultRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTokenFromVault(vaultId: String, tokenId: String) {
-        vaultDao.deleteTokenFromVault(vaultId, tokenId)
+        vaultDao.disableTokenFromVault(vaultId, tokenId)
     }
 
     override suspend fun deleteChainFromVault(vaultId: String, chain: Chain) {
@@ -102,7 +106,7 @@ internal class VaultRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addTokenToVault(vaultId: String, token: Coin) {
-        vaultDao.insertCoins(listOf(token.toCoinEntity(vaultId)))
+        vaultDao.enableCoins(listOf(token.toCoinEntity(vaultId)))
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {

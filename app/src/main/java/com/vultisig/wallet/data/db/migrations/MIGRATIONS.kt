@@ -413,3 +413,17 @@ internal val MIGRATION_21_22 = object : Migration(21, 22) {
 
     }
 }
+
+internal val MIGRATION_22_23 = object : Migration(22, 23) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `disabledCoin` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `coinId` TEXT NOT NULL,
+                `vaultId` TEXT NOT NULL
+            )
+        """.trimIndent()
+        )
+    }
+}

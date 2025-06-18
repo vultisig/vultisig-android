@@ -7,10 +7,12 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.vultisig.wallet.data.db.models.CoinEntity
+import com.vultisig.wallet.data.db.models.DisabledCoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
+import com.vultisig.wallet.data.models.VaultId
 
 @Dao
 interface VaultDao {
@@ -26,6 +28,9 @@ interface VaultDao {
     @Transaction
     @Query("SELECT * FROM vault")
     suspend fun loadAll(): List<VaultWithKeySharesAndTokens>
+
+    @Query("SELECT coinId FROM disabledCoin WHERE vaultId = :vaultId")
+    suspend fun loadDisabledCoinIds(vaultId: VaultId): List<String>
 
     @Query("SELECT COUNT(*) > 0 FROM vault")
     suspend fun hasVaults(): Boolean
@@ -49,6 +54,17 @@ interface VaultDao {
         insertKeyshares(vault.keyShares)
         insertSigners(vault.signers)
     }
+
+    @Transaction
+    suspend fun enableCoins(coins: List<CoinEntity>) {
+        insertCoins(coins)
+        coins.forEach {
+            deleteFromDisabledCoin(vaultId = it.vaultId, coinId = it.id)
+        }
+    }
+
+    @Insert
+    suspend fun insertDisabledCoin(disabledCoin: DisabledCoinEntity)
 
     @Upsert
     suspend fun upsertVault(vault: VaultEntity)
@@ -87,4 +103,17 @@ interface VaultDao {
     @Query("DELETE FROM vault WHERE id = :vaultId")
     suspend fun delete(vaultId: String)
 
+    @Query("DELETE FROM disabledCoin WHERE vaultId = :vaultId AND coinId = :coinId")
+    suspend fun deleteFromDisabledCoin(vaultId: VaultId, coinId: String)
+
+    @Transaction
+    suspend fun disableTokenFromVault(vaultId: String, tokenId: String) {
+        deleteTokenFromVault(vaultId, tokenId)
+        insertDisabledCoin(
+            DisabledCoinEntity(
+                vaultId = vaultId,
+                coinId = tokenId
+            )
+        )
+    }
 }
