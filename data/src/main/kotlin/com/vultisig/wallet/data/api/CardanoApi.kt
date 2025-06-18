@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -10,12 +9,11 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.json.JSONObject
-import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -31,7 +29,7 @@ internal class CardanoApiImpl @Inject constructor(
 
     private val url: String = "https://api.koios.rest/api/v1"
     private val apiV1Path: String = "api/v1"
-    private val rpcUrl: String = "https://api.vultisig.com/ripple"
+    private val url2 = "https://api.vultisig.com"
 
     override suspend fun getBalance(coin: Coin): BigInteger {
 
@@ -44,17 +42,12 @@ internal class CardanoApiImpl @Inject constructor(
                 )
             }
             setBody(requestBody)
+
             accept(ContentType.Application.Json)
-        }.bodyAsText()
-
-        val jsonArray = JSONObject("{\"data\":$response}").getJSONArray("data")
-
+        }
         return try {
-            val firstItem = if (jsonArray.length() > 0) jsonArray.getJSONObject(0) else null
-            val balanceString = firstItem?.optString(
-                "balance",
-                "0"
-            ) ?: "0"
+            val balances: List<CardanoBalanceResponse> = response.body()
+            val balanceString = balances.firstOrNull()?.balance ?: "0"
             BigInteger(balanceString)
         } catch (e: Exception) {
             BigInteger.ZERO
@@ -63,32 +56,30 @@ internal class CardanoApiImpl @Inject constructor(
 
     override suspend fun getUTXOs(coin: Coin): List<UtxoInfo> {
         val requestBody = mapOf("_addresses" to listOf(coin.address))
-        return try {
-            val response: List<Map<String, Any>> = httpClient.post(url) {
-                url {
-                    path(
-                        apiV1Path,
-                        "address_utxos"
-                    )
-                }
-                setBody(requestBody)
-                accept(ContentType.Application.Json)
-            }.body()
-            response.mapNotNull { utxoData ->
-                val txHash = utxoData["tx_hash"] as? String
-                val txIndex = (utxoData["tx_index"] as? Number)?.toInt()
-                val value = utxoData["value"] as? String
-                val valueInt = value?.toLongOrNull()
-                if (txHash != null && txIndex != null && valueInt != null) {
-                    UtxoInfo(
-                        hash = txHash,
-                        amount = valueInt,
-                        index = txIndex.toUInt()
-                    )
-                } else {
-                    null
-                }
+//        return try {
+        val response = httpClient.post(url) {
+            url {
+                path(
+                    apiV1Path,
+                    "address_utxos"
+                )
             }
+            setBody(requestBody)
+            accept(ContentType.Application.Json)
+        }
+        return try {
+            val cardanoUtxoResponse: List<CardanoUtxoResponse> = response.body()
+            var utxoInfos = mutableListOf<UtxoInfo>()
+            for (cardanoUtxoResponse: CardanoUtxoResponse in cardanoUtxoResponse) {
+                utxoInfos.add(
+                    UtxoInfo(
+                        hash = cardanoUtxoResponse.txHash ?: "",
+                        amount = cardanoUtxoResponse.value?.toLong() ?: 0L,
+                        index = cardanoUtxoResponse.txIndex?.toUInt() ?: 0u
+                    )
+                )
+            }
+            return utxoInfos
         } catch (e: Exception) {
             emptyList()
         }
@@ -101,12 +92,11 @@ internal class CardanoApiImpl @Inject constructor(
 
             val postData = mapOf("data" to signedTransaction)
 
-            val response: List<Map<String, Any>> = httpClient.post(rpcUrl) {
+            val response = httpClient.post(url2) {
                 url {
                     path(
-                        apiV1Path,
                         "blockchair",
-                        "chainName",
+                        chain,
                         "push",
                         "transaction"
                     )
@@ -115,15 +105,25 @@ internal class CardanoApiImpl @Inject constructor(
                 setBody(postData)
                 accept(ContentType.Application.Json)
 
-            }.body()
+            }
 
-            val json = JSONObject(response.toString())
-            val transaction_hash = json
-                .getJSONObject("data")
-                .getString("transaction_hash")
+            return try {
+                val balances: List<Map<String, Any>> = response.body()
+                val json = JSONObject(response.toString())
+                val transaction_hash = json
+                    .getJSONObject("data")
+                    .getString("transaction_hash")
 
 
-            transaction_hash
+                transaction_hash
+
+
+            } catch (e: Exception) {
+                error("Failed to broadcast transaction,error:(error.localizedDescription)")
+            }
+
+
+
         } catch (e: Exception) {
             error("Failed to broadcast transaction,error:(error.localizedDescription)")
         }
@@ -164,11 +164,25 @@ internal class CardanoApiImpl @Inject constructor(
             error("Invalid chain specific type for Cardano")
         }
         val (byteFee, sendMaxAmount, ttl) = chainSpecific
-        require(byteFee > BigInteger.ZERO) { "Cardano byte fee must be positive" }
+        require(byteFee > 0L) { "Cardano byte fee must be positive" }
 
         val currentSlot = getCurrentSlot()
         require(ttl > currentSlot) { "Cardano TTL must be greater than current slot" }
     }
 
+    @Serializable
+    data class CardanoBalanceResponse(
+        @SerialName("balance")
+        val balance: String? = null,
+    )
 
+    @Serializable
+    data class CardanoUtxoResponse(
+        @SerialName("tx_hash")
+        val txHash: String? = null,
+        @SerialName("tx_index")
+        val txIndex: Long? = null,
+        @SerialName("value")
+        val value: String? = null,
+    )
 }

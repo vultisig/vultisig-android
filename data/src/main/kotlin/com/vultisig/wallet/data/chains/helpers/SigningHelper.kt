@@ -312,7 +312,7 @@ object SigningHelper {
 
             Chain.Cardano -> {
                 return CardanoHelper.getSignedTransaction(
-                    vaultHexPublicKey = vault.pubKeyECDSA,
+                    vaultHexPublicKey = vault.pubKeyEDDSA,
                     vaultHexChainCode = vault.hexChainCode,
                     keysignPayload = keysignPayload,
                     signatures = signatures,

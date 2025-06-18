@@ -35,6 +35,6 @@ internal class RouterApiImp @Inject constructor(
     }
 
     override suspend fun shouldUploadPayload(payload: String): Boolean {
-        return true
+        return payload.length > 2048
     }
 }

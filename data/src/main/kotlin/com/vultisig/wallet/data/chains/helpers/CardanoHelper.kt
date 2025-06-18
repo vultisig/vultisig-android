@@ -3,11 +3,13 @@ package com.vultisig.wallet.data.chains.helpers
 import CoinFactory.Companion.createCardanoExtendedKey
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import wallet.core.jni.proto.Cardano
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.Numeric.hexStringToByteArray
 import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -57,30 +59,31 @@ object CardanoHelper {
 
         // For Cardano, we don't use UTXOs from Blockchair since it doesn't support Cardano
         // Instead, we create a simplified input structure
-        val input = Cardano.SigningInput.newBuilder().apply {
-            transferMessage = Cardano.Transfer.newBuilder().apply {
-//                toAddress = keysignPayload.toAddress
-                changeAddress = keysignPayload.coin.address
-                amount = keysignPayload.toAmount.toLong()
-                useMaxAmount = safeGuardMaxAmount
-            }.build()
-            this.ttl = ttl.toLong()
-
+        var input = Cardano.SigningInput.newBuilder()
+            .setTransferMessage(
+                Cardano.Transfer.newBuilder().setAmount(keysignPayload.toAmount.toLong())
+                    .setAmount(keysignPayload.toAmount.toLong())
+                    .setToAddress(keysignPayload.toAddress)
+                    .setUseMaxAmount(safeGuardMaxAmount)
+            )
             // TODO: Implement memo support when WalletCore adds Cardano metadata support
-        }.build()
+            .setTtl(ttl.toLong())
+            .build()
 
         // Add UTXOs to the input
         for (inputUtxo in keysignPayload.utxos) {
-            val utxo = Cardano.TxInput.newBuilder().apply {
-                outPoint = Cardano.OutPoint.newBuilder().apply {
-                    txHash =
-                        com.google.protobuf.ByteString.copyFrom(inputUtxo.hash.hexToByteArray())
-                    outputIndex = inputUtxo.index.toLong()
-                }.build()
-                amount = inputUtxo.amount.toLong()
-                address = keysignPayload.coin.address
-            }.build()
-            input.utxosList.add(utxo)
+            val utxo = Cardano.TxInput.newBuilder()
+                .setOutPoint(
+                    Cardano.OutPoint.newBuilder()
+                        .setTxHash(ByteString.copyFrom(hexStringToByteArray(inputUtxo.hash)))
+                        .setOutputIndex(inputUtxo.index.toLong())
+                        .build()
+                )
+                .setAmount(inputUtxo.amount.toLong())
+                .setAddress(keysignPayload.coin.address)
+                .build()
+            input.toBuilder().addUtxos(utxo)
+//            input = input.toBuilder().addUtxos(utxo).build()
         }
 
         return input.toByteArray()
@@ -123,7 +126,8 @@ object CardanoHelper {
             CoinType.CARDANO,
             inputData
         )
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
@@ -140,7 +144,7 @@ object CardanoHelper {
                 preSigningOutput.dataHash.toByteArray()
             )
         ) {
-           error("Cardano signature verification failed")
+            error("Cardano signature verification failed")
         }
 
         allSignatures.add(signature)
@@ -160,7 +164,6 @@ object CardanoHelper {
             transactionHash = output.txId.toByteArray().toHexString()
         )
     }
-
 
 
 }

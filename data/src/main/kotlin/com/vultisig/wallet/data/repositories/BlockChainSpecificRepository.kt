@@ -437,7 +437,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Cardano(
-                        byteFee = gasFee.value,
+                        byteFee = gasFee.value.toLong(),
                         sendMaxAmount = isMaxAmountEnabled,
                         0L.toULong()
                     ),

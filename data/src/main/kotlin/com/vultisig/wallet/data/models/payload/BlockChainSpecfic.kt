@@ -87,7 +87,7 @@ sealed class BlockChainSpecific {
     ) : BlockChainSpecific()
 
     data class Cardano(
-        val byteFee: BigInteger,
+        val byteFee: Long,
         val sendMaxAmount: Boolean,
         val ttl: ULong
     ) : BlockChainSpecific()
