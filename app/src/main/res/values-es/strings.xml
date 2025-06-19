@@ -188,7 +188,7 @@
     <string name="token_selection_search_hint">Buscar…</string>
     <string name="verify_swap_agree_allowance">Estoy de acuerdo con proporcionar una asignación ilimitada de ERC20</string>
     <string name="backup_now">¡Haga una copia de seguridad de su bóveda ahora!</string>
-    <string name="deposit_screen_title">Depósito</string>
+    <string name="deposit_screen_title">Firma de función</string>
     <string name="deposit_screen_amount_title">Cantidad</string>
     <string name="verify_deposit_node_address_title">Dirección del nodo</string>
     <string name="token_selection_screen_custom_token">Token personalizado</string>
@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">No hay suficiente gasolina para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Señal rápida</string>
-    <string name="keysign_paired_sign_title">Signo emparejado</string>
+    <string name="keysign_sign_transaction">Firmar transacción</string>
     <string name="keysign_password_title">Contraseña</string>
     <string name="home_screen_import_vault">Importar bóveda</string>
     <string name="keysign_password_incorrect_password">La contraseña es incorrecta</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
+    <string name="verify_transaction_function_inputs_title">Entradas de función</string>
 </resources>

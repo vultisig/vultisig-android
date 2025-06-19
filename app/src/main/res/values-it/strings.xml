@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\’accordo con la fornitura di un\’indennità ERC20 illimitata</string>
     <string name="backup_now">Esegui subito il backup del tuo caveau!</string>
-    <string name="deposit_screen_title">Depositare</string>
+    <string name="deposit_screen_title">Firma della funzione</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
-    <string name="keysign_paired_sign_title">Segno accoppiato</string>
+    <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Importa Vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
+    <string name="verify_transaction_function_inputs_title">Input di funzione</string>
 </resources>

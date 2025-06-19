@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
-    <string name="deposit_screen_title">Bitte sichern Sie jetzt alle Ihre Vault-Freigaben.</string>
+    <string name="deposit_screen_title">Funktionssignatur</string>
     <string name="deposit_screen_amount_title">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
-    <string name="keysign_paired_sign_title">Gepaartes Zeichen</string>
+    <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="keysign_password_title">Passwort</string>
     <string name="home_screen_import_vault">Tresor importieren</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
+    <string name="verify_transaction_function_inputs_title">Funktionseingänge</string>
 </resources>

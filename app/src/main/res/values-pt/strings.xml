@@ -188,7 +188,7 @@
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
     <string name="backup_now">Faça já o backup do seu cofre!</string>
-    <string name="deposit_screen_title">Depósito</string>
+    <string name="deposit_screen_title">Assinatura de Função</string>
     <string name="deposit_screen_amount_title">Montante</string>
     <string name="verify_deposit_memo_title">Memorando</string>
     <string name="verify_deposit_node_address_title">Endereço do nó</string>
@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
-    <string name="keysign_paired_sign_title">Sinal emparelhado</string>
+    <string name="keysign_sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
     <string name="home_screen_import_vault">Importar cofre</string>
     <string name="keysign_password_incorrect_password">A palavra-passe está incorreta</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
+    <string name="verify_transaction_function_inputs_title">Entradas de função</string>
 </resources>
