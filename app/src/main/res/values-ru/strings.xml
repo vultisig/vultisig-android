@@ -272,7 +272,7 @@
     <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию.\n Пожалуйста, пополните кошелек.</string>
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрый знак</string>
-    <string name="keysign_paired_sign_title">Парный знак</string>
+    <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
     <string name="home_screen_import_vault">Импортировать хранилище</string>
     <string name="keysign_password_incorrect_password">Пароль неверный</string>

@@ -305,7 +305,7 @@
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
-    <string name="keysign_paired_sign_title">Paired Sign</string>
+    <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>

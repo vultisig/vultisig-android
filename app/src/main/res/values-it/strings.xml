@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
-    <string name="keysign_paired_sign_title">Segno accoppiato</string>
+    <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Importa Vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>

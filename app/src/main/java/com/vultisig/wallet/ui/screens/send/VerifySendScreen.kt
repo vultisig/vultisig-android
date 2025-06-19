@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -79,7 +78,7 @@ internal fun VerifySendScreen(
         state = state,
         isConsentsEnabled = true,
         hasToolbar = true,
-        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
@@ -294,10 +293,12 @@ internal fun VerifySendScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
+                    val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled
                     VsButton(
-                        label = "Sign transaction",
-                        variant = VsButtonVariant.Primary,
-                        state = VsButtonState.Enabled,
+                        label = confirmTitle,
+                        state = buttonState,
                         onClick = onConfirm,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -386,7 +387,7 @@ private fun PreviewVerifySendScreen() {
             ),
         ),
         isConsentsEnabled = true,
-        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
         onConsentDst = {},
