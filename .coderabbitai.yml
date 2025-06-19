@@ -1,0 +1,8 @@
+rules:
+  untranslated_strings:
+    description: "Detect untranslated strings in the code."
+    match:
+      - pattern: '["\'].*["\']' # Matches hardcoded strings
+        exclude:
+          - path: 'res/values/strings.xml' # Exclude the strings.xml file
+    severity: warning
