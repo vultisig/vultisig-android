@@ -59,10 +59,12 @@ internal data class Colors(
 
     // new design system
     val buttons: ButtonsColors = ButtonsColors(),
+    val iconButtons: IconButtonsColors = IconButtonsColors(),
     val backgrounds: BackgroundsColors = BackgroundsColors(),
     val primary: PrimaryColors = PrimaryColors(),
     val text: TextColors = TextColors(),
     val borders: BordersColors = BordersColors(),
+    val buttonBorders: ButtonBorderColors = ButtonBorderColors(),
     val alerts: AlertsColors = AlertsColors(),
     val neutrals: NeutralsColors = NeutralsColors.Default,
     val fills: FillsColors = FillsColors(),
@@ -76,9 +78,17 @@ internal data class Colors(
 }
 
 internal data class ButtonsColors(
+    val primary: Color = Color(0xFF2155DF),
+    val secondary: Color = Color(0xFF02122B),
+    val disabledPrimary: Color = Color(0xFF0B1A3A),
+    val disabledSecondary: Color = Color(0xFF02122B),
+)
+
+internal data class IconButtonsColors(
     val primary: Color = Color(0xFF33E6BF),
-    val secondary: Color = Color(0xFF051B3A),
-    val disabled: Color = Color(0xFF0E1E36),
+    val secondary: Color = Color(0xFF061B3A),
+    val disabledPrimary: Color = Color(0xFF0B1A3A),
+    val disabledSecondary: Color = Color(0xFF061B3A),
 )
 
 internal data class BackgroundsColors(
@@ -109,12 +119,17 @@ internal data class TextColors(
 internal data class TextButtonColors(
     val dark: Color = Color(0xFF02122B),
     val light: Color = Color(0xFFF0F4FC),
-    val disabled: Color = Color(0xFF4D5F75),
+    val disabled: Color = Color(0xFF718096),
 )
 
 internal data class BordersColors(
     val normal: Color = Color(0xFF1B3F73),
     val light: Color = Color(0xFF12284A),
+)
+
+internal data class ButtonBorderColors(
+    val default: Color = Color(0xFF2155DF),
+    val disabled: Color = Color(0xFF153A97),
 )
 
 internal data class AlertsColors(
