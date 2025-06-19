@@ -95,6 +95,12 @@ interface VaultDao {
     @Query("DELETE FROM coin WHERE vaultId = :vaultId AND chain == :chainId")
     suspend fun deleteChainFromVault(vaultId: String, chainId: String)
 
+    @Transaction
+    suspend fun disableChainFromVault(vaultId: String, chainId: String) {
+        deleteChainFromVault(vaultId, chainId)
+        deleteChainFromDisabledCoin(vaultId, chainId)
+    }
+
     @Query("UPDATE vault SET name = :name WHERE id = :vaultId")
     suspend fun setVaultName(vaultId: String, name: String)
 
@@ -106,13 +112,17 @@ interface VaultDao {
     @Query("DELETE FROM disabledCoin WHERE vaultId = :vaultId AND coinId = :coinId")
     suspend fun deleteFromDisabledCoin(vaultId: VaultId, coinId: String)
 
+    @Query("DELETE FROM disabledCoin WHERE vaultId = :vaultId AND chain = :chain")
+    suspend fun deleteChainFromDisabledCoin(vaultId: VaultId, chain: String)
+
     @Transaction
-    suspend fun disableTokenFromVault(vaultId: String, tokenId: String) {
+    suspend fun disableTokenFromVault(vaultId: String, tokenId: String, chain: String) {
         deleteTokenFromVault(vaultId, tokenId)
         insertDisabledCoin(
             DisabledCoinEntity(
                 vaultId = vaultId,
-                coinId = tokenId
+                coinId = tokenId,
+                chain = chain,
             )
         )
     }

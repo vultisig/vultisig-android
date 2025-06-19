@@ -26,6 +26,9 @@ data class DisabledCoinEntity(
     @ColumnInfo("coinId")
     val coinId: String,
 
+    @ColumnInfo("chain")
+    val chain: String,
+
     @ColumnInfo("vaultId")
     val vaultId: String,
 

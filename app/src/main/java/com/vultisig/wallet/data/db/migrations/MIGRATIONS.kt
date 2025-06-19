@@ -421,6 +421,7 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
             CREATE TABLE IF NOT EXISTS `disabledCoin` (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 `coinId` TEXT NOT NULL,
+                `chain` TEXT NOT NULL,
                 `vaultId` TEXT NOT NULL,
                 FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON UPDATE CASCADE ON DELETE CASCADE
             )
