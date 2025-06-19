@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
+import com.vultisig.wallet.data.db.models.DisabledCoinEntity
 import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.db.models.FolderOrderEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
@@ -41,8 +42,9 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         FolderEntity::class,
         FolderOrderEntity::class,
         VaultMetadataEntity::class,
+        DisabledCoinEntity::class,
     ],
-    version = 22,
+    version = 23,
     exportSchema = false,
 )
 @TypeConverters(

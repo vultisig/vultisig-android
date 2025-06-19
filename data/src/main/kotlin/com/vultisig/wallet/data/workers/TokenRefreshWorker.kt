@@ -40,6 +40,9 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                     } else {
                         allVaultChains.filter { it.id == inputChainId }
                     }
+
+                    val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
+
                     for (chain in chains) {
                         val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
                             chain,
@@ -49,7 +52,11 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                             (tokenRepository
                                 .getTokensWithBalance(chain, address) +
                                     enabledByDefaultTokens.getOrDefault(chain, emptyList()))
-                                .filter { !it.isNativeToken }
+                                .filter {
+                                    !it.isNativeToken && disabledCoinIds.none { disabledId ->
+                                        disabledId == it.id
+                                    }
+                                }
                                 .forEach { token ->
                                     val updatedToken = token.copy(
                                         address = address,
