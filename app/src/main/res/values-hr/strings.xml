@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
-    <string name="keysign_paired_sign_title">Upareni znak</string>
+    <string name="keysign_sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
     <string name="home_screen_import_vault">Uvoz trezora</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
