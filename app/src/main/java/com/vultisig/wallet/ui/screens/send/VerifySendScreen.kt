@@ -287,14 +287,23 @@ internal fun VerifySendScreen(
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
+                    VsHoldableButton(
+                        label = "Sign transaction",
+                        onLongClick = onConfirm,
+                        onClick =  onFastSignClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    VsButton(
+                        label = "Sign transaction",
+                        variant = VsButtonVariant.Primary,
+                        state = VsButtonState.Enabled,
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
 
-                VsHoldableButton(
-                    label = "Sign transaction",
-                    onLongClick = onConfirm,
-                    onClick = if (state.hasFastSign) onFastSignClick else onConfirm,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+
             }
         }
     )
