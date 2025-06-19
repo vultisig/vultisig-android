@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
-    <string name="keysign_paired_sign_title">Gepaartes Zeichen</string>
+    <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="keysign_password_title">Passwort</string>
     <string name="home_screen_import_vault">Tresor importieren</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>

@@ -272,7 +272,7 @@
     <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de portemonnee.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
-    <string name="keysign_paired_sign_title">Gepaard teken</string>
+    <string name="keysign_sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
     <string name="home_screen_import_vault">Kluis importeren</string>
     <string name="keysign_password_incorrect_password">Wachtwoord is onjuist</string>
