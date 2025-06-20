@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,9 +43,9 @@ internal fun NamingComponent(
         bottomBar = {
             Box(Modifier.imePadding()) {
                 MultiColorButton(
-                    backgroundColor = Theme.colors.turquoise800,
-                    textColor = Theme.colors.oxfordBlue800,
-                    iconColor = Theme.colors.turquoise800,
+                    backgroundColor = Theme.colors.persianBlue400,
+                    textColor = Theme.colors.text.button.light,
+                    iconColor = Theme.colors.text.button.light,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth()
