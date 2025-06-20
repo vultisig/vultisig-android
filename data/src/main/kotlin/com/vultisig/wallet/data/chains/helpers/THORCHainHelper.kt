@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -14,6 +15,13 @@ import java.math.BigInteger
 
 @OptIn(ExperimentalStdlibApi::class)
 class THORCHainHelper {
+    private fun getTicker(coin: Coin): String {
+        return  if(coin.ticker.startsWith("x/",true)) {
+                coin.ticker.drop(2)
+            } else {
+                coin.ticker
+            }
+    }
     fun getSwapPreSignedInputData(
         keysignPayload: KeysignPayload
     ): ByteArray {
@@ -33,8 +41,8 @@ class THORCHainHelper {
             .setAsset(
                 Cosmos.THORChainAsset.newBuilder()
                     .setChain("THOR")
-                    .setSymbol(keysignPayload.coin.ticker)
-                    .setTicker(keysignPayload.coin.ticker)
+                    .setSymbol(getTicker(keysignPayload.coin))
+                    .setTicker(getTicker(keysignPayload.coin))
                     .setSynth(false)
                     .build()
             )
