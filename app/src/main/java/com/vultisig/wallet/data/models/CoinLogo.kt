@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.R
 
 internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
-    return when (logoName) {
+    return when (logoName.lowercase()) {
         "btc" -> R.drawable.bitcoin
         "bch" -> R.drawable.bitcoincash
         "ltc" -> R.drawable.litecoin
@@ -100,6 +100,7 @@ internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
         "vult" -> R.drawable.vult
         "tcy" -> R.drawable.tcy
         "zec" -> R.drawable.zcash
+        "ruji" -> R.drawable.ruji
         else -> logoName
     }
 }
