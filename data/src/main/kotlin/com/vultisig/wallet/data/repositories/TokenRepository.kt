@@ -143,7 +143,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
                             }
-                        } else if (denom.startsWith("x/")) {
+                        } else if (denom.startsWith("x/",true)) {
                             val parts = denom.split("/")
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
