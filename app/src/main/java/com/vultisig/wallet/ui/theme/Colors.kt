@@ -88,7 +88,7 @@ internal data class IconButtonsColors(
     val primary: Color = Color(0xFF33E6BF),
     val secondary: Color = Color(0xFF061B3A),
     val disabledPrimary: Color = Color(0xFF0B1A3A),
-    val disabledSecondary: Color = Color(0xFF061B3A),
+    val disabledSecondary: Color = Color(0xFF0B1A3A),
 )
 
 internal data class BackgroundsColors(
@@ -129,7 +129,7 @@ internal data class BordersColors(
 
 internal data class ButtonBorderColors(
     val default: Color = Color(0xFF2155DF),
-    val disabled: Color = Color(0xFF153A97),
+    val disabled: Color = Color(0x992155DF),
 )
 
 internal data class AlertsColors(
