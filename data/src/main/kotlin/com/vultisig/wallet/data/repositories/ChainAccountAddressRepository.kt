@@ -2,6 +2,9 @@
 
 package com.vultisig.wallet.data.repositories
 
+import CoinFactory.Companion.createCardanoEnterpriseAddress
+import CoinFactory.Companion.createCardanoExtendedKey
+import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.models.Chain
@@ -10,6 +13,8 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -70,12 +75,55 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         derivedPublicKey
                     )
                 }
+
             }
 
             TssKeyType.EDDSA -> {
+                if (chain == Chain.Cardano) {
+                    // For Cardano, we still need to create a proper PublicKey for transaction signing
+                    // even though we're creating the address manually
+                    val address =  createCardanoEnterpriseAddress(vault.pubKeyEDDSA)
+//                    val cardanoExtendedKey = createCardanoExtendedKey(
+//                        spendingKeyHex = vault.pubKeyEDDSA,
+//                        chainCodeHex = vault.hexChainCode
+//                    )
+
+                    // Always create Enterprise address to avoid "stake address" component
+                    // Use WalletCore's proper Blake2b hashing for deterministic results across all devices
+                    // Validate Cardano address using WalletCore's own validation
+                    if (!AnyAddress.isValid(
+                            address,
+                            CoinType.CARDANO
+                        )
+                    ) {
+                        error("WalletCore validation failed for Cardano address: $address")
+                    }
+
+                    // Create ed25519Cardano public key
+//                    val cardanoKey = try {
+//                        PublicKey(
+//                            cardanoExtendedKey,
+//                            PublicKeyType.ED25519CARDANO
+//                        )
+//                    } catch (e: Exception) {
+//                        println("Failed to create ed25519Cardano key from properly structured data")
+//                        error("Failed to create Cardano extended key")
+//                    }
+
+                    return Pair(
+                        AnyAddress(address, CoinType.CARDANO, "ada").description(),
+                        vault.pubKeyEDDSA
+                    )
+                }
                 val publicKey =
-                    PublicKey(vault.pubKeyEDDSA.hexToByteArray(), PublicKeyType.ED25519)
-                return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), vault.pubKeyEDDSA)
+                    PublicKey(
+                        vault.pubKeyEDDSA.hexToByteArray(),
+                        PublicKeyType.ED25519
+                    )
+                return Pair(
+                    chain.coinType.deriveAddressFromPublicKey(publicKey),
+                    vault.pubKeyEDDSA
+                )
             }
         }
 
@@ -84,25 +132,39 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override suspend fun getAddress(
         type: CoinType,
         publicKey: PublicKey,
-    ): String = adjustAddressPrefix(type, type.deriveAddressFromPublicKey(publicKey))
+    ): String = adjustAddressPrefix(
+        type,
+        type.deriveAddressFromPublicKey(publicKey)
+    )
 
     override suspend fun getAddress(
         coin: Coin,
         vault: Vault,
-    ): Pair<String, String> = getAddress(coin.chain, vault)
+    ): Pair<String, String> = getAddress(
+        coin.chain,
+        vault
+    )
 
     override fun isValid(
         chain: Chain,
         address: String,
     ): Boolean = if (chain == Chain.MayaChain) {
-        AnyAddress.isValidBech32(address, chain.coinType, "maya")
+        AnyAddress.isValidBech32(
+            address,
+            chain.coinType,
+            "maya"
+        )
     } else {
         chain.coinType.validate(address)
     }
 
     private fun adjustAddressPrefix(type: CoinType, address: String): String =
         if (type == CoinType.BITCOINCASH) {
-            address.replace("bitcoincash:", "")
+            address.replace(
+                "bitcoincash:",
+                ""
+            )
         } else address
 
 }
+

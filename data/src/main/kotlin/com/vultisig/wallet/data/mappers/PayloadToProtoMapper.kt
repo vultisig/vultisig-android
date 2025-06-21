@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.toProtoString
+import vultisig.keysign.v1.CardanoChainSpecific
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
@@ -140,6 +141,14 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     gasEstimation = specific.gasFeeEstimation,
                 )
             } else null,
+            cardano = if (specific is BlockChainSpecific.Cardano) {
+                CardanoChainSpecific(
+                    byteFee = specific.byteFee,
+                    sendMaxAmount = specific.sendMaxAmount,
+                    ttl = specific.ttl
+                )
+
+            } else null,
             thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
                 val from = swapPayload.data
                 vultisig.keysign.v1.THORChainSwapPayload(
@@ -204,7 +213,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     spender = approvePayload.spender,
                     amount = approvePayload.amount.toString(),
                 )
-            } else null,
+            }
+            else null,
         )
     }
 

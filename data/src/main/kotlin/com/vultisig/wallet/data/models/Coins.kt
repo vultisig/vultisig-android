@@ -2056,6 +2056,19 @@ object Coins {
                 contractAddress = "",
                 isNativeToken = true,
             )
+        ),
+        Chain.Cardano to listOf(
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "ADA",
+                logo = "ada",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "cardano",
+                contractAddress = "",
+                isNativeToken = true,
+            ),
         )
     )
 }
