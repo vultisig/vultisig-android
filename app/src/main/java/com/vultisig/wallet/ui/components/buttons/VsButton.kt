@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components.buttons
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,9 +55,28 @@ fun VsButton(
                 Secondary -> Theme.colors.buttons.secondary
             }
 
-            Disabled -> Theme.colors.buttons.disabled
+            Disabled ->  when (variant) {
+                Primary -> Theme.colors.buttons.disabledPrimary
+                Secondary -> Theme.colors.buttons.disabledSecondary
+            }
         },
         label = "VsButton.backgroundColor"
+    )
+
+
+    val borderColor by animateColorAsState(
+        when(state){
+            Enabled -> when (variant) {
+                Primary ->  Theme.colors.buttons.primary
+                Secondary -> Theme.colors.buttonBorders.default
+            }
+
+            Disabled ->  when (variant) {
+                Primary -> Theme.colors.buttons.disabledPrimary
+                Secondary -> Theme.colors.buttonBorders.disabled
+            }
+        },
+        label = "VsButton.borderColor"
     )
 
     Row(
@@ -66,6 +86,11 @@ fun VsButton(
             .background(
                 color = backgroundColor,
                 shape = RoundedCornerShape(percent = 100)
+            )
+            .border(
+                width = 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(percent = 100),
             )
             .clickable(enabled = state == Enabled, onClick = onClick)
             .then(
@@ -110,11 +135,7 @@ fun VsButton(
     ) {
         val contentColor by animateColorAsState(
             when (state) {
-                Enabled -> when (variant) {
-                    Primary -> Theme.colors.text.button.dark
-                    Secondary -> Theme.colors.text.button.light
-                }
-
+                Enabled -> Theme.colors.text.button.light
                 Disabled -> Theme.colors.text.button.disabled
             },
             label = "VsButton.contentColor"
