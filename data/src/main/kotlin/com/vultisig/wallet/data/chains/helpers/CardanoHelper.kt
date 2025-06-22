@@ -72,7 +72,6 @@ object CardanoHelper {
             )
             // TODO: Implement memo support when WalletCore adds Cardano metadata support
             .setTtl(ttl.toLong())
-            .build()
 
         // Add UTXOs to the input
         for (inputUtxo in keysignPayload.utxos) {
@@ -86,11 +85,11 @@ object CardanoHelper {
                 .setAmount(inputUtxo.amount.toLong())
                 .setAddress(keysignPayload.coin.address)
                 .build()
-            input.toBuilder().addUtxos(utxo)
+            input.addUtxos(utxo)
 //            input = input.toBuilder().addUtxos(utxo).build()
         }
 
-        return input.toByteArray()
+        return input.build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
