@@ -20,7 +20,6 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SaveVaultUseCase {
     override suspend fun invoke(vault: Vault, shouldOverrideVault: Boolean) {
-        Timber.d("saveVault(vault = $vault)")
         if (shouldOverrideVault) {
             vaultRepository.upsert(vault)
         } else {

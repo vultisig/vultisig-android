@@ -39,14 +39,17 @@ fun VsIconButton(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         modifier = modifier
             .background(
-                color = if (size == Mini) Theme.colors.transparent else
+                color =
                     when (state) {
                         Enabled -> when (variant) {
-                            Primary -> Theme.colors.buttons.primary
-                            Secondary -> Theme.colors.buttons.secondary
+                            Primary -> Theme.colors.iconButtons.primary
+                            Secondary -> Theme.colors.iconButtons.secondary
                         }
 
-                        Disabled -> Theme.colors.buttons.disabled
+                        Disabled -> when (variant) {
+                            Primary -> Theme.colors.iconButtons.disabledPrimary
+                            Secondary -> Theme.colors.iconButtons.disabledSecondary
+                        }
                     },
                 shape = RoundedCornerShape(percent = 100)
             )
@@ -62,21 +65,20 @@ fun VsIconButton(
                         vertical = 12.dp,
                         horizontal = 12.dp
                     )
+
                     Mini -> Modifier
                 }
             )
 
     ) {
-        val contentColor =
-            if (size == Mini) Theme.colors.text.button.light else
-                when (state) {
-                    Enabled -> when (variant) {
-                        Primary -> Theme.colors.text.button.dark
-                        Secondary -> Theme.colors.text.button.light
-                    }
+        val contentColor = when (state) {
+            Enabled -> when (variant) {
+                Primary -> Theme.colors.text.button.dark
+                Secondary -> Theme.colors.text.button.light
+            }
 
-                    Disabled -> Theme.colors.text.button.disabled
-                }
+            Disabled -> Theme.colors.text.button.disabled
+        }
 
         val iconSize = when (size) {
             Medium -> 20.dp

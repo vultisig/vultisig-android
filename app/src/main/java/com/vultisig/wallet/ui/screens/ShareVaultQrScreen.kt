@@ -140,9 +140,9 @@ internal fun ShareVaultQrScreen(
                     ),
             ) {
                 MultiColorButton(
-                    backgroundColor = Theme.colors.turquoise800,
-                    textColor = Theme.colors.oxfordBlue800,
-                    iconColor = Theme.colors.oxfordBlue800,
+                    backgroundColor = Theme.colors.persianBlue400,
+                    textColor = Theme.colors.text.button.light,
+                    iconColor = Theme.colors.text.button.light,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier.fillMaxWidth(),
                     content = {

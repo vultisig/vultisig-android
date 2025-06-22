@@ -488,6 +488,7 @@ internal class SendFormViewModel @Inject constructor(
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
             ?.setScale(8, RoundingMode.DOWN)
+            ?.stripTrailingZeros()
     }
 
     fun dismissError() {
@@ -1127,7 +1128,8 @@ internal class SendFormViewModel @Inject constructor(
                 if (lastTokenValueUserInput != tokenString) {
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
-                            value.multiply(price)
+                            // this is the fiat value , we should not keep too much decimal places
+                            value.multiply(price).setScale(3, RoundingMode.HALF_UP).stripTrailingZeros()
                         } ?: return@combine
 
                     lastTokenValueUserInput = tokenString

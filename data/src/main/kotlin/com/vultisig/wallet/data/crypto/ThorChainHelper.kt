@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -68,6 +69,17 @@ class ThorChainHelper(
         private val coinType: CoinType = CoinType.THORCHAIN
     }
 
+    private fun getTicker(coin: Coin): String {
+        return if (coin.isNativeToken) {
+            ticker
+        } else {
+            if(coin.ticker.startsWith("x/",true)) {
+                coin.ticker.drop(2)
+            } else {
+                coin.ticker
+            }
+        }
+    }
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val tokenAddress = keysignPayload.coin.address
         val fromAddress = if (hrp != null) {
@@ -157,16 +169,8 @@ class ThorChainHelper(
 
                 return input.toByteArray()
             }
-            val symbol = if (keysignPayload.coin.isNativeToken) {
-                ticker
-            } else {
-                keysignPayload.coin.ticker
-            }
-            val assetTicker = if (keysignPayload.coin.isNativeToken) {
-                ticker
-            } else {
-                keysignPayload.coin.ticker
-            }
+            val symbol = getTicker(keysignPayload.coin)
+            val assetTicker = getTicker(keysignPayload.coin)
             val coin = Cosmos.THORChainCoin.newBuilder()
                 .setAsset(
                     Cosmos.THORChainAsset.newBuilder()

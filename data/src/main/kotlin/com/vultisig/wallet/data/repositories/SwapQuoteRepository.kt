@@ -340,7 +340,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     } else {
         if (chain == Chain.Kujira && (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))) {
             "${chain.swapAssetName()}.${ticker}"
-        } else
+        } else if(chain == Chain.ThorChain)
+            "${chain.swapAssetName()}.${ticker}"
+        else
             "${chain.swapAssetName()}.${ticker}-${contractAddress}"
     }
 

@@ -187,7 +187,7 @@
     <string name="token_selection_search_hint">Pretraživanje…</string>
     <string name="verify_swap_agree_allowance">Slažem se s pružanjem neograničenog ERC20 dodatka</string>
     <string name="backup_now">Sigurnosno kopirajte svoj trezor sada!</string>
-    <string name="deposit_screen_title">Polog</string>
+    <string name="deposit_screen_title">Potpis funkcije</string>
     <string name="deposit_screen_amount_title">Iznositi</string>
     <string name="verify_deposit_memo_title">dopis</string>
     <string name="verify_deposit_node_address_title">Adresa čvora</string>
@@ -261,7 +261,7 @@
     <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
-    <string name="keysign_paired_sign_title">Upareni znak</string>
+    <string name="keysign_sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
     <string name="home_screen_import_vault">Uvoz trezora</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
@@ -345,4 +345,5 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
+    <string name="verify_transaction_function_inputs_title">Funkcijski ulazi</string>
 </resources>

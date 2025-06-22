@@ -124,8 +124,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val newSPLTokens = mutableListOf<Coin>()
         solanaAddress?.let {
             val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
+            val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
             splTokens.forEach { spl ->
-                if (!solanaCoins.any { it.id == spl.id }) {
+                if (!solanaCoins.any { it.id == spl.id } && disabledCoinIds.none { it == spl.id }) {
                     vaultRepository.addTokenToVault(vault.id, spl)
                     newSPLTokens += spl
                 }

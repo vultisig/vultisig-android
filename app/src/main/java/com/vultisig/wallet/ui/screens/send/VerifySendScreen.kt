@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -45,6 +44,7 @@ import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -78,7 +78,7 @@ internal fun VerifySendScreen(
         state = state,
         isConsentsEnabled = true,
         hasToolbar = true,
-        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
@@ -176,12 +176,20 @@ internal fun VerifySendScreen(
                         )
                     }
 
-                    if (state.functionName != null) {
+                    if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.deposit_screen_title),
-                            subtitle = state.functionName
+                            subtitle = state.functionSignature
+                        )
+                    }
+                    if (state.functionInputs != null) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardJsonDetails(
+                            title = stringResource(R.string.verify_transaction_function_inputs_title),
+                            subtitle = state.functionInputs
                         )
                     }
 
@@ -278,14 +286,25 @@ internal fun VerifySendScreen(
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
+                    VsHoldableButton(
+                        label = "Sign transaction",
+                        onLongClick = onConfirm,
+                        onClick =  onFastSignClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled
+                    VsButton(
+                        label = confirmTitle,
+                        state = buttonState,
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
 
-                VsHoldableButton(
-                    label = "Sign transaction",
-                    onLongClick = onConfirm,
-                    onClick = if (state.hasFastSign) onFastSignClick else onConfirm,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+
             }
         }
     )
@@ -368,7 +387,7 @@ private fun PreviewVerifySendScreen() {
             ),
         ),
         isConsentsEnabled = true,
-        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
         onConsentDst = {},
@@ -376,3 +395,4 @@ private fun PreviewVerifySendScreen() {
         onConfirm = {},
     )
 }
+

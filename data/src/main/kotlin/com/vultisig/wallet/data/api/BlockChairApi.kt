@@ -70,22 +70,45 @@ internal class BlockChairApiImp @Inject constructor(
             }
         return response.body<SuggestedTransactionFeeDataJson>().data.value
     }
-
-    override suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String {
-        val bodyContent = json.encodeToString(
-            TransactionHashRequestBodyJson(signedTransaction)
-        )
-        Timber.d("bodyContent:$bodyContent")
-        val response =
-            httpClient.post("https://api.vultisig.com/blockchair/${getChainName(chain)}/push/transaction") {
-                header("Content-Type", "application/json")
-                setBody(bodyContent)
+    suspend fun broadcastTransactionMempool(signedTransaction: String): String {
+        try {
+            val response = httpClient.post("https://api.vultisig.com/bitcoin/") {
+                header("Content-Type", "text/plain")
+                setBody(signedTransaction)
             }
-        if (response.status != HttpStatusCode.OK) {
-            Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
-            throw Exception("fail to broadcast transaction")
+            if (response.status != HttpStatusCode.OK) {
+                Timber.e("Failed to broadcast transaction: ${response.bodyAsText()}")
+                throw Exception("Failed to broadcast transaction")
+            }
+            return response.bodyAsText() // Returns the transaction ID
         }
+        catch (e: Exception) {
+            Timber.e("Error broadcasting transaction: ${e.message}")
+            throw e
+        }
+    }
+    override suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String {
+        when(chain){
+            Chain.Bitcoin -> {
+                return broadcastTransactionMempool(signedTransaction)
+            }
+            else -> {
+                val bodyContent = json.encodeToString(
+                    TransactionHashRequestBodyJson(signedTransaction)
+                )
+                Timber.d("bodyContent:$bodyContent")
+                val response =
+                    httpClient.post("https://api.vultisig.com/blockchair/${getChainName(chain)}/push/transaction") {
+                        header("Content-Type", "application/json")
+                        setBody(bodyContent)
+                    }
+                if (response.status != HttpStatusCode.OK) {
+                    Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
+                    throw Exception("fail to broadcast transaction")
+                }
 
-        return response.body<TransactionHashDataJson>().data.value
+                return response.body<TransactionHashDataJson>().data.value
+            }
+        }
     }
 }

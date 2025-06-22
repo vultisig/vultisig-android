@@ -19,9 +19,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
+// TODO: This component should be removed and replaced with VsButton
+@Deprecated("Use VsButton instead", ReplaceWith("VsButton"))
 @Composable
 internal fun MultiColorButton(
     text: String = "",

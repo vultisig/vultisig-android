@@ -1978,6 +1978,17 @@ object Coins {
                 contractAddress = "tcy",
                 isNativeToken = false,
             ),
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "RUJI",
+                logo = "ruji",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "ruji",
+                contractAddress = "x/ruji",
+                isNativeToken = false,
+            ),
         ),
 
         Chain.Ton to listOf(
