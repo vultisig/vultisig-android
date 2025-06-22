@@ -63,10 +63,12 @@ object CardanoHelper {
         // Instead, we create a simplified input structure
         var input = Cardano.SigningInput.newBuilder()
             .setTransferMessage(
-                Cardano.Transfer.newBuilder().setAmount(keysignPayload.toAmount.toLong())
+                Cardano.Transfer.newBuilder()
                     .setAmount(keysignPayload.toAmount.toLong())
                     .setToAddress(keysignPayload.toAddress)
                     .setUseMaxAmount(safeGuardMaxAmount)
+                    .setChangeAddress(keysignPayload.coin.address)
+                    .setForceFee(byteFee)
             )
             // TODO: Implement memo support when WalletCore adds Cardano metadata support
             .setTtl(ttl.toLong())
@@ -118,10 +120,10 @@ object CardanoHelper {
         val address =  createCardanoEnterpriseAddress(vaultHexPublicKey)
         val publicKey =AnyAddress(address, CoinType.CARDANO, "ada").description()
 
-//        val extendedKeyData = createCardanoExtendedKey(
-//            spendingKeyHex = vaultHexPublicKey,
-//            chainCodeHex = vaultHexChainCode
-//        )
+        val extendedKeyData = createCardanoExtendedKey(
+            spendingKeyHex = vaultHexPublicKey,
+            chainCodeHex = vaultHexChainCode
+        )
         val spendingKeyData = vaultHexPublicKey.hexToByteArray()
         val verificationKey = PublicKey(
             spendingKeyData,
@@ -136,11 +138,11 @@ object CardanoHelper {
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes).checkError()
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            CoinType.CARDANO.derivationPath()
-        )
+//        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
+//            vaultHexPublicKey,
+//            vaultHexChainCode,
+//            CoinType.CARDANO.derivationPath()
+//        )
 
 //        val publicKey = PublicKey(publicKey1.hexToByteArray(), PublicKeyType.ED25519CARDANO)
 //        val signatureProvider = SignatureProvider(signatures)
@@ -160,7 +162,7 @@ object CardanoHelper {
         }
 
         allSignatures.add(signature)
-        publicKeys.add(publicKey.toByteArray())
+        publicKeys.add(extendedKeyData)
 
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
             CoinType.CARDANO,
