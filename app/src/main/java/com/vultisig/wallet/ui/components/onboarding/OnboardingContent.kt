@@ -20,10 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize
-import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
+import com.vultisig.wallet.ui.components.buttons.VsIconButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsIconButtonState
+import com.vultisig.wallet.ui.components.buttons.VsIconButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.onboarding.components.ONBOARDING_STATE_MACHINE_NAME
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
@@ -91,9 +91,9 @@ internal fun OnboardingContent(
             exit = fadeOut(tween(200)),
         ) {
             VsIconButton(
-                variant = VsButtonVariant.Primary,
-                state = VsButtonState.Enabled,
-                size = VsButtonSize.Medium,
+                variant = VsIconButtonVariant.Primary,
+                state = VsIconButtonState.Enabled,
+                size = VsIconButtonSize.Medium,
                 icon = R.drawable.ic_caret_right,
                 onClick = nextClick,
                 modifier = Modifier

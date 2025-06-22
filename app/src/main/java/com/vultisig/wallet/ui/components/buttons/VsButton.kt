@@ -23,12 +23,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Secondary
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
 
 enum class VsButtonVariant {
-    Primary, Secondary
+    Primary, Secondary, Error,
 }
 
 enum class VsButtonState {
@@ -53,11 +52,13 @@ fun VsButton(
             Enabled -> when (variant) {
                 Primary -> Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttons.secondary
+                Error -> Theme.colors.alerts.error
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttons.disabledSecondary
+                Error -> Theme.colors.alerts.error
             }
         },
         label = "VsButton.backgroundColor"
@@ -69,11 +70,13 @@ fun VsButton(
             Enabled -> when (variant) {
                 Primary ->  Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttonBorders.default
+                Error -> Theme.colors.alerts.error
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttonBorders.disabled
+                Error -> Theme.colors.alerts.error
             }
         },
         label = "VsButton.borderColor"
@@ -208,6 +211,13 @@ private fun VsButtonPreview() {
             label = "Secondary Disabled",
             variant = Secondary,
             state = Disabled,
+            size = Medium,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Error",
+            variant = Error,
             size = Medium,
             onClick = {}
         )

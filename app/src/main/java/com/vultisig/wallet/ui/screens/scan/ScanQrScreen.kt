@@ -59,7 +59,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -141,11 +140,9 @@ internal fun ScanQrScreen(
     Scaffold(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
-                MultiColorButton(
-                    backgroundColor = Theme.colors.persianBlue400,
-                    textColor = Theme.colors.text.button.light,
-                    iconColor = Theme.colors.text.button.light,
-                    textStyle = Theme.montserrat.subtitle1,
+                VsButton(
+                    label = stringResource(id = R.string.scan_qr_screen_return_vault),
+                    onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -153,8 +150,6 @@ internal fun ScanQrScreen(
                             end = 16.dp,
                             bottom = 16.dp,
                         ),
-                    text = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = onDismiss,
                 )
 
         },
