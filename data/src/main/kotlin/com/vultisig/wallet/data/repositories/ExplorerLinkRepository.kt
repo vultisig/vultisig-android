@@ -60,7 +60,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton, Chain.Tron, Chain.Zcash ->
+            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton, Chain.Tron, Chain.Zcash  , Chain.Cardano->
                 "${explorerUrl}transaction/"
 
             Chain.Kujira ->
@@ -112,7 +112,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Akash -> "https://www.mintscan.io/akash/"
             Chain.Tron -> "https://tronscan.org/#/"
             Chain.Zcash -> "https://blockchair.com/zcash/"
-            Chain.Cardano -> "https://cardanoscan.io/transaction/"
+            Chain.Cardano -> "https://cardanoscan.io/"
         }
 
 }

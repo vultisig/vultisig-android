@@ -21,7 +21,6 @@ import wallet.core.jni.proto.Ripple
 object RippleHelper {
 
     const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000
-
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 

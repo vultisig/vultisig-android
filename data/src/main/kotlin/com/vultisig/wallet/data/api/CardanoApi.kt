@@ -26,6 +26,7 @@ import javax.inject.Inject
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
+    suspend fun calculateDynamicTTL(): ULong
     suspend fun broadcastTransaction(chain: String, signedTransaction: String): String
 }
 
@@ -33,8 +34,7 @@ internal class CardanoApiImpl @Inject constructor(
     private val json: Json,
     private val httpClient: HttpClient,
 ) : CardanoApi {
-
-    private val url: String = "https://api.koios.rest/api/v1"
+    private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val url2 = "https://api.vultisig.com"
 
@@ -96,56 +96,32 @@ internal class CardanoApiImpl @Inject constructor(
         chain: String, signedTransaction: String
     ): String {
         return try {
+            val postData = mapOf("data" to signedTransaction)
 
-            val bodyContent = json.encodeToString(
-                TransactionHashRequestBodyJson(signedTransaction)
-            )
-            Timber.d("bodyContent:$bodyContent")
-            val response =
-                httpClient.post("https://api.vultisig.com/blockchair/cardano/push/transaction") {
-                    header(
-                        "Content-Type",
-                        "application/json"
+            val response = httpClient.post(url2) {
+                url {
+                    path(
+                        "blockchair",
+                        "cardano",
+                        "push",
+                        "transaction"
                     )
-                    setBody(bodyContent)
+
                 }
+                setBody(postData)
+                accept(ContentType.Application.Json)
+
+            }
             if (response.status != HttpStatusCode.OK) {
                 Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
                 error("fail to broadcast transaction: ${response.bodyAsText()}")
             }
-
-
-            val postData = mapOf("data" to signedTransaction)
-
-//            val response = httpClient.post(url2) {
-//                url {
-//                    path(
-//                        "blockchair",
-//                        "cardano",
-//                        "push",
-//                        "transaction"
-//                    )
-//
-//                }
-//                setBody(postData)
-//                accept(ContentType.Application.Json)
-//
-//            }
-
             return try {
-                val balances: List<Map<String, Any>> = response.body()
-                val json = JSONObject(response.toString())
-                val transaction_hash = json
-                    .getJSONObject("data")
-                    .getString("transaction_hash")
-
-                transaction_hash
-
-
+                val cardanoBroadcastResponse: CardanoBroadcastResponse = response.body()
+                cardanoBroadcastResponse.data.transactionHash
             } catch (e: Exception) {
                 error("Failed to broadcast transaction,error: ${e.message}")
             }
-
 
         } catch (e: Exception) {
             error("Failed to broadcast transaction,error: ${e.message}")
@@ -153,31 +129,28 @@ internal class CardanoApiImpl @Inject constructor(
     }
 
 
-    fun estimateTransactionFee(): Int {
-        // Use typical Cardano transaction fee range
-        // Simple ADA transfers are usually around 170,000-200,000 lovelace (0.17-0.2 ADA)
-        // This is much more reliable than trying to calculate from network parameters
-        return 180_000 // 0.18 ADA - middle of typical range
-    }
-
     suspend fun getCurrentSlot(): ULong {
         val url = "https://api.koios.rest/api/v1"
-        val response: List<Map<String, Any>> = httpClient.get(url) {
+        val response = httpClient.get(url) {
             url {
-                path("tip")
+                path(
+                    apiV1Path,
+                    "tip"
+                )
             }
             accept(ContentType.Application.Json)
-        }.body()
-        val absSlot = response.firstOrNull()?.get("abs_slot")
-            ?: error("Failed to parse slot from response")
-        return when (absSlot) {
-            is Number -> absSlot.toLong().toULong()
-            is String -> absSlot.toULongOrNull() ?: error("Invalid slot value")
-            else -> error("Invalid slot value type")
         }
+
+        if (response.status != HttpStatusCode.OK) {
+            Timber.d("Failed to parse slot from response: ${response.bodyAsText()}")
+            error("Failed to parse slot from response: ${response.bodyAsText()}")
+        }
+        val cardanoSlotResponse: List<CardanoSlotResponse> = response.body()
+        return cardanoSlotResponse.firstOrNull()?.absSlot?.toULong() ?: 0UL
+
     }
 
-    suspend fun calculateDynamicTTL(): ULong {
+    override suspend fun calculateDynamicTTL(): ULong {
         val currentSlot = getCurrentSlot()
         return currentSlot + 720u // Add 720 slots (~12 minutes at 1 slot per second)
     }
@@ -200,6 +173,19 @@ internal class CardanoApiImpl @Inject constructor(
     )
 
     @Serializable
+    data class CardanoBroadcastResponse(
+        @SerialName("data")
+        val data: CardanoBroadcastDataResponse,
+    )
+
+    @Serializable
+    data class CardanoBroadcastDataResponse(
+        @SerialName("transaction_hash")
+        val transactionHash: String,
+    )
+
+
+    @Serializable
     data class CardanoUtxoResponse(
         @SerialName("tx_hash")
         val txHash: String? = null,
@@ -207,5 +193,11 @@ internal class CardanoApiImpl @Inject constructor(
         val txIndex: Long? = null,
         @SerialName("value")
         val value: String? = null,
+    )
+
+    @Serializable
+    data class CardanoSlotResponse(
+        @SerialName("abs_slot")
+        val absSlot: Long? = null,
     )
 }

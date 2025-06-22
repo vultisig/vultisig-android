@@ -22,7 +22,7 @@ import wallet.core.jni.TransactionCompiler
 
 @OptIn(ExperimentalStdlibApi::class)
 object CardanoHelper {
-
+    private val estimateTransactionFee: Long = 180_000
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
@@ -68,7 +68,7 @@ object CardanoHelper {
                     .setToAddress(keysignPayload.toAddress)
                     .setUseMaxAmount(safeGuardMaxAmount)
                     .setChangeAddress(keysignPayload.coin.address)
-                    .setForceFee(byteFee)
+                    .setForceFee(estimateTransactionFee)
             )
             // TODO: Implement memo support when WalletCore adds Cardano metadata support
             .setTtl(ttl.toLong())
@@ -116,8 +116,12 @@ object CardanoHelper {
         signatures: Map<String, tss.KeysignResponse>
     ): SignedTransactionResult {
 
-        val address =  createCardanoEnterpriseAddress(vaultHexPublicKey)
-        val publicKey =AnyAddress(address, CoinType.CARDANO, "ada").description()
+        val address = createCardanoEnterpriseAddress(vaultHexPublicKey)
+        val publicKey = AnyAddress(
+            address,
+            CoinType.CARDANO,
+            "ada"
+        ).description()
 
         val extendedKeyData = createCardanoExtendedKey(
             spendingKeyHex = vaultHexPublicKey,
@@ -134,7 +138,8 @@ object CardanoHelper {
             inputData
         )
         val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes).checkError()
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
         val allSignatures = DataVector()
         val publicKeys = DataVector()
 //        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(

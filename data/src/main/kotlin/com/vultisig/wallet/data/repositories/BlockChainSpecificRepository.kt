@@ -439,12 +439,12 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockChainSpecific = BlockChainSpecific.Cardano(
                         byteFee = gasFee.value.toLong(),
                         sendMaxAmount = isMaxAmountEnabled,
-                        0L.toULong()
+                        cardanoApi.calculateDynamicTTL()
                     ),
                     utxos = selectedUTXOs
                 )
             } catch (e: Exception) {
-                error("Not enough balance for Cardano transaction")
+                error("Error ${e.message}")
             }
         }
 
