@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -7,13 +8,18 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.json.JSONObject
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -24,6 +30,7 @@ interface CardanoApi {
 }
 
 internal class CardanoApiImpl @Inject constructor(
+    private val json: Json,
     private val httpClient: HttpClient,
 ) : CardanoApi {
 
@@ -90,22 +97,40 @@ internal class CardanoApiImpl @Inject constructor(
     ): String {
         return try {
 
+            val bodyContent = json.encodeToString(
+                TransactionHashRequestBodyJson(signedTransaction)
+            )
+            Timber.d("bodyContent:$bodyContent")
+            val response =
+                httpClient.post("https://api.vultisig.com/blockchair/cardano/push/transaction") {
+                    header(
+                        "Content-Type",
+                        "application/json"
+                    )
+                    setBody(bodyContent)
+                }
+            if (response.status != HttpStatusCode.OK) {
+                Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
+                error("fail to broadcast transaction: ${response.bodyAsText()}")
+            }
+
+
             val postData = mapOf("data" to signedTransaction)
 
-            val response = httpClient.post(url2) {
-                url {
-                    path(
-                        "blockchair",
-                        chain,
-                        "push",
-                        "transaction"
-                    )
-
-                }
-                setBody(postData)
-                accept(ContentType.Application.Json)
-
-            }
+//            val response = httpClient.post(url2) {
+//                url {
+//                    path(
+//                        "blockchair",
+//                        "cardano",
+//                        "push",
+//                        "transaction"
+//                    )
+//
+//                }
+//                setBody(postData)
+//                accept(ContentType.Application.Json)
+//
+//            }
 
             return try {
                 val balances: List<Map<String, Any>> = response.body()
@@ -114,18 +139,16 @@ internal class CardanoApiImpl @Inject constructor(
                     .getJSONObject("data")
                     .getString("transaction_hash")
 
-
                 transaction_hash
 
 
             } catch (e: Exception) {
-                error("Failed to broadcast transaction,error:(error.localizedDescription)")
+                error("Failed to broadcast transaction,error: ${e.message}")
             }
 
 
-
         } catch (e: Exception) {
-            error("Failed to broadcast transaction,error:(error.localizedDescription)")
+            error("Failed to broadcast transaction,error: ${e.message}")
         }
     }
 

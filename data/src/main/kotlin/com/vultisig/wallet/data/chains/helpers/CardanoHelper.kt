@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import CoinFactory.Companion.createCardanoEnterpriseAddress
 import CoinFactory.Companion.createCardanoExtendedKey
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import wallet.core.jni.proto.Cardano
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -23,12 +25,12 @@ object CardanoHelper {
 
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ADP" }
+        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
 
 
         val chainSpecific = keysignPayload.blockChainSpecific
 
-        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not XRP" }
+        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
 
         keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
 
@@ -39,10 +41,10 @@ object CardanoHelper {
             ?: error("fail to get Cardano chain specific parameters")
 
 
-        val toAddress = AnyAddress(
-            keysignPayload.toAddress,
-            CoinType.CARDANO
-        )
+//        val toAddress = AnyAddress(
+//            keysignPayload.toAddress,
+//            CoinType.CARDANO
+//        )
 //            ?: error("fail to get to address: ${keysignPayload.toAddress}")
 
 
@@ -112,10 +114,14 @@ object CardanoHelper {
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>
     ): SignedTransactionResult {
-        val extendedKeyData = createCardanoExtendedKey(
-            spendingKeyHex = vaultHexPublicKey,
-            chainCodeHex = vaultHexChainCode
-        )
+
+        val address =  createCardanoEnterpriseAddress(vaultHexPublicKey)
+        val publicKey =AnyAddress(address, CoinType.CARDANO, "ada").description()
+
+//        val extendedKeyData = createCardanoExtendedKey(
+//            spendingKeyHex = vaultHexPublicKey,
+//            chainCodeHex = vaultHexChainCode
+//        )
         val spendingKeyData = vaultHexPublicKey.hexToByteArray()
         val verificationKey = PublicKey(
             spendingKeyData,
@@ -127,10 +133,16 @@ object CardanoHelper {
             inputData
         )
         val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes).checkError()
         val allSignatures = DataVector()
         val publicKeys = DataVector()
+        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
+            vaultHexPublicKey,
+            vaultHexChainCode,
+            CoinType.CARDANO.derivationPath()
+        )
+
+//        val publicKey = PublicKey(publicKey1.hexToByteArray(), PublicKeyType.ED25519CARDANO)
 //        val signatureProvider = SignatureProvider(signatures)
 //        val signature = signatureProvider.getSignature(preSigningOutput.dataHash)
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
@@ -148,7 +160,7 @@ object CardanoHelper {
         }
 
         allSignatures.add(signature)
-        publicKeys.add(extendedKeyData)
+        publicKeys.add(publicKey.toByteArray())
 
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
             CoinType.CARDANO,
@@ -157,8 +169,8 @@ object CardanoHelper {
             publicKeys
         )
 
-
         val output = Cardano.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded.toByteArray().toHexString(),
             transactionHash = output.txId.toByteArray().toHexString()
