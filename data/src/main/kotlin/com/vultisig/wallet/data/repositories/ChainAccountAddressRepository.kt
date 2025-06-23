@@ -71,7 +71,6 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         derivedPublicKey
                     )
                 }
-
             }
 
             TssKeyType.EDDSA -> {
@@ -128,39 +127,25 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override suspend fun getAddress(
         type: CoinType,
         publicKey: PublicKey,
-    ): String = adjustAddressPrefix(
-        type,
-        type.deriveAddressFromPublicKey(publicKey)
-    )
+    ): String = adjustAddressPrefix(type, type.deriveAddressFromPublicKey(publicKey))
 
     override suspend fun getAddress(
         coin: Coin,
         vault: Vault,
-    ): Pair<String, String> = getAddress(
-        coin.chain,
-        vault
-    )
+    ): Pair<String, String> = getAddress(coin.chain, vault)
 
     override fun isValid(
         chain: Chain,
         address: String,
     ): Boolean = if (chain == Chain.MayaChain) {
-        AnyAddress.isValidBech32(
-            address,
-            chain.coinType,
-            "maya"
-        )
+        AnyAddress.isValidBech32(address, chain.coinType, "maya")
     } else {
         chain.coinType.validate(address)
     }
 
     private fun adjustAddressPrefix(type: CoinType, address: String): String =
         if (type == CoinType.BITCOINCASH) {
-            address.replace(
-                "bitcoincash:",
-                ""
-            )
+            address.replace("bitcoincash:", "")
         } else address
 
 }
-
