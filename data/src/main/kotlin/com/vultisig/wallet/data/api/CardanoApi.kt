@@ -13,6 +13,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
 import timber.log.Timber
@@ -105,8 +106,8 @@ internal class CardanoApiImpl @Inject constructor(
                     Timber.d("Cardano transaction already broadcast")
                     return null
                 }
-                Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
-                error("fail to broadcast transaction: ${response.bodyAsText()}")
+                Timber.d("fail to broadcast transaction: $responseString")
+                error("fail to broadcast transaction: $responseString")
             }
             return try {
                 val cardanoBroadcastResponse: CardanoBroadcastResponseJson = response.body()

@@ -622,6 +622,7 @@ internal class SendFormViewModel @Inject constructor(
                         }
                     }
                     .let { selectUtxosIfNeeded(tokenAmountInt, it) }
+
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
                         selectedAccount,
@@ -629,7 +630,6 @@ internal class SendFormViewModel @Inject constructor(
                             calculateGasLimit(chain, specific.blockChainSpecific)
                         )
                     )?.value ?: BigInteger.ZERO
-
 
                     if (tokenAmountInt > availableTokenBalance) {
                         throw InvalidTransactionDataException(
@@ -667,8 +667,6 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
                 }
-
-
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
