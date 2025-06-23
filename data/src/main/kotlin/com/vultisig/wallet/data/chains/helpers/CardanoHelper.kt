@@ -1,10 +1,9 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import CoinFactory.Companion.createCardanoEnterpriseAddress
-import CoinFactory.Companion.createCardanoExtendedKey
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.CardanoAddressHelper
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import wallet.core.jni.proto.Cardano
@@ -13,7 +12,6 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.hexStringToByteArray
 import timber.log.Timber
-import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -22,42 +20,19 @@ import wallet.core.jni.TransactionCompiler
 
 @OptIn(ExperimentalStdlibApi::class)
 object CardanoHelper {
-    private val estimateTransactionFee: Long = 180_000
+
+    private const val ESTIMATE_TRANSACTION_FEE: Long = 180_000
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
-
-
-        val chainSpecific = keysignPayload.blockChainSpecific
 
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
 
         keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
 
 
-
-
-        val (byteFee, sendMaxAmount, ttl) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
+        val (_, sendMaxAmount, ttl) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
             ?: error("fail to get Cardano chain specific parameters")
-
-
-//        val toAddress = AnyAddress(
-//            keysignPayload.toAddress,
-//            CoinType.CARDANO
-//        )
-//            ?: error("fail to get to address: ${keysignPayload.toAddress}")
-
-
-        // Prevent from accidentally sending all balance
-        var safeGuardMaxAmount = false
-//        val rawBalance = keysignPayload.coin.rawBalance.toLongOrNull()
-//        if (rawBalance != null &&
-//            sendMaxAmount &&
-//            rawBalance > 0 &&
-//            rawBalance == keysignPayload.toAmount.toLong()
-//        ) {
-//            safeGuardMaxAmount = true
-//        }
 
         // For Cardano, we don't use UTXOs from Blockchair since it doesn't support Cardano
         // Instead, we create a simplified input structure
@@ -66,9 +41,9 @@ object CardanoHelper {
                 Cardano.Transfer.newBuilder()
                     .setAmount(keysignPayload.toAmount.toLong())
                     .setToAddress(keysignPayload.toAddress)
-                    .setUseMaxAmount(safeGuardMaxAmount)
+                    .setUseMaxAmount(sendMaxAmount)
                     .setChangeAddress(keysignPayload.coin.address)
-                    .setForceFee(estimateTransactionFee)
+                    .setForceFee(ESTIMATE_TRANSACTION_FEE)
             )
             // TODO: Implement memo support when WalletCore adds Cardano metadata support
             .setTtl(ttl.toLong())
@@ -86,7 +61,6 @@ object CardanoHelper {
                 .setAddress(keysignPayload.coin.address)
                 .build()
             input.addUtxos(utxo)
-//            input = input.toBuilder().addUtxos(utxo).build()
         }
 
         return input.build().toByteArray()
@@ -113,17 +87,10 @@ object CardanoHelper {
         vaultHexPublicKey: String,
         vaultHexChainCode: String,
         keysignPayload: KeysignPayload,
-        signatures: Map<String, tss.KeysignResponse>
+        signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
 
-        val address = createCardanoEnterpriseAddress(vaultHexPublicKey)
-        val publicKey = AnyAddress(
-            address,
-            CoinType.CARDANO,
-            "ada"
-        ).description()
-
-        val extendedKeyData = createCardanoExtendedKey(
+        val extendedKeyData = CardanoAddressHelper.createExtendedKey(
             spendingKeyHex = vaultHexPublicKey,
             chainCodeHex = vaultHexChainCode
         )
