@@ -26,10 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -407,19 +408,19 @@ internal fun DepositFormScreen(
             UiSpacer(size = 80.dp)
         }
 
-        MultiColorButton(
-            text = stringResource(R.string.send_continue_button),
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(all = 16.dp),
+        VsButton(
+            label = stringResource(R.string.send_continue_button),
             onClick = {
                 focusManager.clearFocus()
                 onDeposit()
             },
-            isLoading = state.isLoading,
+            state = if (state.isLoading)
+                VsButtonState.Disabled
+            else VsButtonState.Enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(all = 16.dp),
         )
     }
 

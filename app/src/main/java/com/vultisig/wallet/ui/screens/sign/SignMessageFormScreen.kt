@@ -23,11 +23,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
-import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.sign.SignMessageFormUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageFormViewModel
-import com.vultisig.wallet.ui.theme.Theme
 
 
 @Composable
@@ -90,19 +90,20 @@ internal fun SignMessageFormScreen(
         }
 
 
-        MultiColorButton(
-            text = stringResource(R.string.send_continue_button),
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(all = 16.dp),
-            isLoading = state.isLoading,
+        VsButton(
+            label = stringResource(R.string.send_continue_button),
+            state = if (state.isLoading)
+                VsButtonState.Disabled
+            else
+                VsButtonState.Enabled,
             onClick = {
                 focusManager.clearFocus()
                 onSign()
             },
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(all = 16.dp),
         )
     }
 

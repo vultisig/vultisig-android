@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
@@ -42,25 +43,22 @@ internal fun NamingComponent(
     Scaffold(
         bottomBar = {
             Box(Modifier.imePadding()) {
-                MultiColorButton(
-                    backgroundColor = Theme.colors.persianBlue400,
-                    textColor = Theme.colors.text.button.light,
-                    iconColor = Theme.colors.text.button.light,
-                    textStyle = Theme.montserrat.subtitle1,
+                VsButton(
+                    label = saveButtonText,
+                    state = if (isLoading)
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
                             bottom = 16.dp,
-                        ),
-                    text = saveButtonText,
-                    onClick = {
-                        focusManager.clearFocus()
-                        onSave()
-                    },
-                    isLoading = isLoading,
-                )
+                        )
+                ) {
+                    focusManager.clearFocus()
+                    onSave()
+                }
             }
         },
         topBar = {

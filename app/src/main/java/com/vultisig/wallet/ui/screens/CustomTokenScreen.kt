@@ -44,10 +44,10 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -242,20 +242,16 @@ private fun SearchTokenResult(
     }
     UiSpacer(size = 16.dp)
 
-    MultiColorButton(modifier = Modifier
-        .fillMaxWidth()
-        .imePadding(),
+    VsButton(
+        label = stringResource(
+            R.string.custom_token_add_token,
+            token.ticker
+        ),
         onClick = onAddTokenClick,
-        content = {
-            Text(
-                text = stringResource(
-                    R.string.custom_token_add_token,
-                    token.ticker
-                ),
-                style = Theme.montserrat.subtitle1
-            )
-        })
-
+        modifier = Modifier
+            .fillMaxWidth()
+            .imePadding(),
+    )
 }
 
 
