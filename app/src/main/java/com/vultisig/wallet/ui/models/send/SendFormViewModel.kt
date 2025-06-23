@@ -15,6 +15,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.crypto.CardanoUtils.toADAString
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -81,6 +82,7 @@ import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -620,7 +622,6 @@ internal class SendFormViewModel @Inject constructor(
                         }
                     }
                     .let { selectUtxosIfNeeded(tokenAmountInt, it) }
-
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
                         selectedAccount,
@@ -629,9 +630,18 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     )?.value ?: BigInteger.ZERO
 
+
                     if (tokenAmountInt > availableTokenBalance) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+
+                    if (chain == Chain.Cardano) {
+                        validateCardanoUTXORequirements(
+                            sendAmount = tokenAmountInt,
+                            totalBalance = availableTokenBalance,
+                            estimatedFee = gasFee.value
                         )
                     }
                 } else {
@@ -657,6 +667,8 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
                 }
+
+
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
@@ -1331,8 +1343,49 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun validateCardanoUTXORequirements(
+        sendAmount: BigInteger,
+        totalBalance: BigInteger,
+        estimatedFee: BigInteger,
+    ) {
+        val minUTXOValue: BigInteger =  BigInteger.valueOf(MIN_CARDANO_UTXO_VALUE)
+
+        // 1. Check send amount meets minimum
+        if (sendAmount < minUTXOValue) {
+            val minAmountADA = minUTXOValue.toADAString
+            throw InvalidTransactionDataException(
+                UiText.DynamicString("Minimum send amount is $minAmountADA ADA. Cardano requires this to prevent spam.")
+            )
+        }
+
+        // 2. Check sufficient balance
+        val totalNeeded = sendAmount + estimatedFee
+        if (totalBalance < totalNeeded) {
+            val totalBalanceADA = totalBalance.toADAString
+            val errorMessage = if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
+                "Insufficient balance.  Try 'Send Max' to send $totalBalanceADA ADA instead."
+            } else {
+                val availableADA = totalBalance.toADAString
+                "Insufficient balance ($availableADA ADA). You need more ADA to complete this transaction."
+            }
+            throw InvalidTransactionDataException(UiText.DynamicString(errorMessage))
+        }
+
+        // 3. Check remaining balance (change) meets minimum UTXO requirement
+        val remainingBalance = totalBalance - sendAmount - estimatedFee
+        if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
+            val totalBalanceADA = totalBalance.toADAString
+
+            throw InvalidTransactionDataException(UiText.DynamicString(
+                "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."))
+        }
+    }
+
+
+
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
+        private const val MIN_CARDANO_UTXO_VALUE = 1_400_000L
     }
 }
 
@@ -1375,4 +1428,6 @@ internal fun List<Address>.findCurrentSrc(
     } else {
         return firstSendSrc(selectedTokenId, null)
     }
+
 }
+

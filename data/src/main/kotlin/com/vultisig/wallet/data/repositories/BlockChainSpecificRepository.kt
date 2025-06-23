@@ -30,6 +30,7 @@ import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.collections.plus
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -388,29 +389,18 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.CARDANO -> {
-            // Fetch UTXOs for Cardano using Koios API (assume cardanoApi is available)
-            val cardanoUTXOs = cardanoApi.getUTXOs(token)
-
             // For send max, don't add fees - let WalletCore handle it
             // For regular sends, add estimated fees to ensure we have enough
-            val totalNeeded: Long = if (isMaxAmountEnabled) {
-                tokenAmountValue?.toLong() ?: 0L // Don't add fees for send max
-            } else {
-                (tokenAmountValue?.toLong()
-                    ?: 0L) + (gasFee.value.toLong()) // Add fees for regular sends
-            }
+            val baseAmount = tokenAmountValue ?: BigInteger.ZERO
+            val totalNeeded = if (isMaxAmountEnabled)
+                baseAmount else baseAmount + gasFee.value
 
-            val sortedUTXOs = cardanoUTXOs.sortedBy { it.amount }
-            val selectedUTXOs = mutableListOf<UtxoInfo>()
-            var totalSelected = 0L
-
-            for (utxo in sortedUTXOs) {
-                selectedUTXOs.add(utxo)
-                totalSelected += utxo.amount
-                if (totalSelected >= totalNeeded) {
-                    break
+            val (selectedUTXOs, totalSelected) = cardanoApi.getUTXOs(token)
+                .sortedBy(UtxoInfo::amount)
+                .fold(listOf<UtxoInfo>() to BigInteger.ZERO) { (selected, total), utxo ->
+                    if (total >= totalNeeded) selected to total
+                    else (selected + utxo) to (total + BigInteger.valueOf(utxo.amount))
                 }
-            }
 
             if (selectedUTXOs.isEmpty() || (!isMaxAmountEnabled && totalSelected < totalNeeded)) {
                 error("Not enough balance for Cardano transaction")
@@ -420,7 +410,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 blockChainSpecific = BlockChainSpecific.Cardano(
                     byteFee = gasFee.value.toLong(),
                     sendMaxAmount = isMaxAmountEnabled,
-                    cardanoApi.calculateDynamicTTL()
+                    ttl = cardanoApi.calculateDynamicTTL()
                 ),
                 utxos = selectedUTXOs
             )

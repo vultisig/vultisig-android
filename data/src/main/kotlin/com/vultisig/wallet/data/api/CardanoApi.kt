@@ -7,14 +7,12 @@ import com.vultisig.wallet.data.api.models.cardano.CardanoTransactionHashRequest
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoRequestJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoResponseJson
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
 import timber.log.Timber
@@ -25,7 +23,7 @@ interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
     suspend fun calculateDynamicTTL(): ULong
-    suspend fun broadcastTransaction(chain: String, signedTransaction: String): String
+    suspend fun broadcastTransaction(chain: String, signedTransaction: String): String?
 }
 
 internal class CardanoApiImpl @Inject constructor(
@@ -87,7 +85,7 @@ internal class CardanoApiImpl @Inject constructor(
 
     override suspend fun broadcastTransaction(
         chain: String, signedTransaction: String,
-    ): String {
+    ): String? {
         return try {
             val response =
                 httpClient.post(url2) {
@@ -102,6 +100,11 @@ internal class CardanoApiImpl @Inject constructor(
                     setBody(CardanoTransactionHashRequestBodyJson(signedTransaction))
                 }
             if (response.status != HttpStatusCode.OK) {
+                val responseString =response.body<String>()
+                if (responseString.contains("BadInputsUTxO") || responseString.contains("timed out")) {
+                    Timber.d("Cardano transaction already broadcast")
+                    return null
+                }
                 Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
                 error("fail to broadcast transaction: ${response.bodyAsText()}")
             }
@@ -130,8 +133,9 @@ internal class CardanoApiImpl @Inject constructor(
         }
 
         if (response.status != HttpStatusCode.OK) {
-            Timber.d("Failed to parse slot from response: ${response.bodyAsText()}")
-            error("Failed to parse slot from response: ${response.bodyAsText()}")
+            var responseString =response.bodyAsText()
+            Timber.d("Failed to parse slot from response: $responseString")
+            error("Failed to parse slot from response: $responseString")
         }
         val cardanoSlotResponse: List<CardanoSlotResponseJson> = response.body()
         return cardanoSlotResponse.firstOrNull()?.absSlot?.toULong() ?: 0UL

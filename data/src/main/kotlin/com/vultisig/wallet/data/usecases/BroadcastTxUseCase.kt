@@ -128,7 +128,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
             tronApi.broadcastTransaction(tx.rawTransaction)
         }
         Chain.Cardano -> {
-            cardanoApi.broadcastTransaction(chain.name,tx.rawTransaction)
+            cardanoApi.broadcastTransaction(chain.name,tx.rawTransaction)?: tx.transactionHash
         }
 
     }

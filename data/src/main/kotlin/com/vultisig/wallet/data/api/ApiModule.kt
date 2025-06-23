@@ -149,6 +149,6 @@ internal interface ApiModule {
     @Binds
     @Singleton
     fun bindCardanoApi(
-        impl:CardanoApiImpl ,
+        impl: CardanoApiImpl,
     ): CardanoApi
 }

@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.chains.helpers
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.crypto.CardanoAddressHelper
+import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import wallet.core.jni.proto.Cardano
@@ -22,6 +22,7 @@ import wallet.core.jni.TransactionCompiler
 object CardanoHelper {
 
     private const val ESTIMATE_TRANSACTION_FEE: Long = 180_000
+
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
@@ -90,7 +91,7 @@ object CardanoHelper {
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
 
-        val extendedKeyData = CardanoAddressHelper.createExtendedKey(
+        val extendedKeyData = CardanoUtils.createExtendedKey(
             spendingKeyHex = vaultHexPublicKey,
             chainCodeHex = vaultHexChainCode
         )
@@ -109,15 +110,7 @@ object CardanoHelper {
                 .checkError()
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-//        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-//            vaultHexPublicKey,
-//            vaultHexChainCode,
-//            CoinType.CARDANO.derivationPath()
-//        )
 
-//        val publicKey = PublicKey(publicKey1.hexToByteArray(), PublicKeyType.ED25519CARDANO)
-//        val signatureProvider = SignatureProvider(signatures)
-//        val signature = signatureProvider.getSignature(preSigningOutput.dataHash)
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
 
         val signature = signatures[key]
@@ -144,11 +137,16 @@ object CardanoHelper {
 
         val output = Cardano.SigningOutput.parseFrom(compileWithSignature)
             .checkError()
+        var transactionHash = CardanoUtils.calculateCardanoTransactionHash(output.encoded.toByteArray())
         return SignedTransactionResult(
             rawTransaction = output.encoded.toByteArray().toHexString(),
-            transactionHash = output.txId.toByteArray().toHexString()
+            transactionHash = transactionHash
         )
     }
 
-
 }
+
+
+
+
+
