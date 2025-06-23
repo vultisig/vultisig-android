@@ -122,12 +122,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val evmApi = evmApiFactory.createEvmApi(chain)
             if (chain == Chain.ZkSync) {
                 val memoDataHex = "0xffffffff".toByteArray()
-                    .joinToString(separator = "") { byte ->
-                        String.format(
-                            "%02x",
-                            byte
-                        )
-                    }
+                    .joinToString(separator = "") { byte -> String.format("%02x", byte) }
 
                 val data = "0x$memoDataHex"
                 val nonce = evmApi.getNonce(address)
@@ -152,7 +147,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     when {
                         isSwap -> "600000"
                         chain == Chain.Arbitrum -> {
-                            "160000" // arbitrum has higher gas limit
+                                "160000" // arbitrum has higher gas limit
                         }
 
                         token.isNativeToken -> "23000"
@@ -174,36 +169,23 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
 
                 var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-                if (chain in listOf(
-                        Chain.Ethereum,
-                        Chain.Avalanche
-                    )
-                ) {
+                if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
                     maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
                 }
                 val nonce = evmApi.getNonce(address)
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Ethereum(
                         maxFeePerGasWei = gasFee.value,
-                        priorityFeeWei = minOf(
-                            maxPriorityFee,
-                            gasFee.value
-                        ),
+                        priorityFeeWei = minOf(maxPriorityFee, gasFee.value),
                         nonce = nonce,
-                        gasLimit = gasLimit ?: max(
-                            defaultGasLimit,
-                            estimateGasLimit
-                        ),
+                        gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
                     )
                 )
             }
         }
 
         TokenStandard.UTXO -> {
-            val utxos = blockChairApi.getAddressInfo(
-                chain,
-                address
-            )
+            val utxos = blockChairApi.getAddressInfo(chain, address)
 
             val byteFee = gasFee.value
 
