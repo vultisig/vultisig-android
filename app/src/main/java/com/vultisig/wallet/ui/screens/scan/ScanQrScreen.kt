@@ -189,23 +189,8 @@ internal fun ScanQrScreen(
                         onClick = {
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
-                        content = {
-                            Row {
-                                UiIcon(
-                                    modifier = Modifier
-                                        .padding(end = 16.dp),
-                                    size = 20.dp,
-                                    drawableResId = R.drawable.ic_qr_upload,
-                                    tint = Theme.colors.text.button.dark,
-                                )
-                                Text(
-                                    textAlign = TextAlign.Center,
-                                    text = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                                    style = Theme.brockmann.button.semibold,
-                                    color = Theme.colors.text.button.dark,
-                                )
-                            }
-                        }
+                        label = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                        iconLeft = R.drawable.ic_qr_upload
                     )
                 }
             } else if (cameraPermissionState.status.shouldShowRationale ||
