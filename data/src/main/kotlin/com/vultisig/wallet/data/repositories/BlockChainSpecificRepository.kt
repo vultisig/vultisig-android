@@ -406,46 +406,42 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.CARDANO -> {
-            try {
-                // Fetch UTXOs for Cardano using Koios API (assume cardanoApi is available)
-                val cardanoUTXOs = cardanoApi.getUTXOs(token)
+            // Fetch UTXOs for Cardano using Koios API (assume cardanoApi is available)
+            val cardanoUTXOs = cardanoApi.getUTXOs(token)
 
-                // For send max, don't add fees - let WalletCore handle it
-                // For regular sends, add estimated fees to ensure we have enough
-                val totalNeeded: Long = if (isMaxAmountEnabled) {
-                    tokenAmountValue?.toLong() ?: 0L // Don't add fees for send max
-                } else {
-                    (tokenAmountValue?.toLong() ?: 0L) + (gasFee.value.toLong()
-                        ?: 0L) // Add fees for regular sends
-                }
-
-                val sortedUTXOs = cardanoUTXOs.sortedBy { it.amount }
-                val selectedUTXOs = mutableListOf<UtxoInfo>()
-                var totalSelected = 0L
-
-                for (utxo in sortedUTXOs) {
-                    selectedUTXOs.add(utxo)
-                    totalSelected += utxo.amount
-                    if (totalSelected >= totalNeeded) {
-                        break
-                    }
-                }
-
-                if (selectedUTXOs.isEmpty() || (!isMaxAmountEnabled && totalSelected < totalNeeded)) {
-                    error("Not enough balance for Cardano transaction")
-                }
-
-                BlockChainSpecificAndUtxo(
-                    blockChainSpecific = BlockChainSpecific.Cardano(
-                        byteFee = gasFee.value.toLong(),
-                        sendMaxAmount = isMaxAmountEnabled,
-                        cardanoApi.calculateDynamicTTL()
-                    ),
-                    utxos = selectedUTXOs
-                )
-            } catch (e: Exception) {
-                error("Error ${e.message}")
+            // For send max, don't add fees - let WalletCore handle it
+            // For regular sends, add estimated fees to ensure we have enough
+            val totalNeeded: Long = if (isMaxAmountEnabled) {
+                tokenAmountValue?.toLong() ?: 0L // Don't add fees for send max
+            } else {
+                (tokenAmountValue?.toLong()
+                    ?: 0L) + (gasFee.value.toLong()) // Add fees for regular sends
             }
+
+            val sortedUTXOs = cardanoUTXOs.sortedBy { it.amount }
+            val selectedUTXOs = mutableListOf<UtxoInfo>()
+            var totalSelected = 0L
+
+            for (utxo in sortedUTXOs) {
+                selectedUTXOs.add(utxo)
+                totalSelected += utxo.amount
+                if (totalSelected >= totalNeeded) {
+                    break
+                }
+            }
+
+            if (selectedUTXOs.isEmpty() || (!isMaxAmountEnabled && totalSelected < totalNeeded)) {
+                error("Not enough balance for Cardano transaction")
+            }
+
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Cardano(
+                    byteFee = gasFee.value.toLong(),
+                    sendMaxAmount = isMaxAmountEnabled,
+                    cardanoApi.calculateDynamicTTL()
+                ),
+                utxos = selectedUTXOs
+            )
         }
 
 

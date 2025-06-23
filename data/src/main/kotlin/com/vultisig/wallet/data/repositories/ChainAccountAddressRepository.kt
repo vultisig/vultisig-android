@@ -2,19 +2,15 @@
 
 package com.vultisig.wallet.data.repositories
 
-import CoinFactory.Companion.createCardanoEnterpriseAddress
-import CoinFactory.Companion.createCardanoExtendedKey
-import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.crypto.CardanoAddressHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -82,7 +78,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 if (chain == Chain.Cardano) {
                     // For Cardano, we still need to create a proper PublicKey for transaction signing
                     // even though we're creating the address manually
-                    val address =  createCardanoEnterpriseAddress(vault.pubKeyEDDSA)
+                    val address =  CardanoAddressHelper.createEnterpriseAddress(vault.pubKeyEDDSA)
 //                    val cardanoExtendedKey = createCardanoExtendedKey(
 //                        spendingKeyHex = vault.pubKeyEDDSA,
 //                        chainCodeHex = vault.hexChainCode
