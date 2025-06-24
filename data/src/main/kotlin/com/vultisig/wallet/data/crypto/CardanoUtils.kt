@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.crypto
 
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.utils.Numeric
+import timber.log.Timber
 import wallet.core.jni.Bech32
 import wallet.core.jni.Hash
 import java.math.BigDecimal
@@ -99,10 +100,10 @@ object CardanoUtils {
             val txidHash = Utils.blake2bHash(transactionBodyData)
             txidHash.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            error("Error parsing Cardano CBOR: ${e.message}")
+            Timber.e("Error parsing Cardano CBOR: ${e.message}")
             val txidHash = Utils.blake2bHash(transactionData)
             val fallbackHash = txidHash.joinToString("") { "%02x".format(it) }
-            error(" Fallback TX ID from COMPLETE transaction: $fallbackHash")
+            Timber.w("Using fallback TX ID from COMPLETE transaction: $fallbackHash")
             fallbackHash
         }
     }

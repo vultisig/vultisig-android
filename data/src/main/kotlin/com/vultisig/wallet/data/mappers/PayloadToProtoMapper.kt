@@ -147,7 +147,6 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     sendMaxAmount = specific.sendMaxAmount,
                     ttl = specific.ttl
                 )
-
             } else null,
             thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
                 val from = swapPayload.data

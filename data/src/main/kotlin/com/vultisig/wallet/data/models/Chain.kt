@@ -33,6 +33,7 @@ enum class Chain(
     Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     Dash("Dash", UTXO, "DASH/vbyte"),
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
+    Cardano("Cardano", UTXO, "ADA/vbyte"),
 
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
@@ -50,7 +51,7 @@ enum class Chain(
 
     Ripple("Ripple", RIPPLE, "XRP"),
     Tron("Tron",TRC20,"TRX"),
-    Cardano("Cardano", CARDANO, "ADA/vbyte")
+
     ;
 
     val id: ChainId

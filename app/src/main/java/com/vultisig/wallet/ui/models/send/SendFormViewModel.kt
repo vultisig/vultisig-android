@@ -640,7 +640,7 @@ internal class SendFormViewModel @Inject constructor(
                     if (chain == Chain.Cardano) {
                         validateCardanoUTXORequirements(
                             sendAmount = tokenAmountInt,
-                            totalBalance = availableTokenBalance,
+                            totalBalance = selectedTokenValue.value,
                             estimatedFee = gasFee.value
                         )
                     }
@@ -946,7 +946,7 @@ internal class SendFormViewModel @Inject constructor(
             ) { token, dstAddress, tokenAmount, specific, memo ->
                 try {
                     val chain = token.chain
-                    if (chain.standard != TokenStandard.UTXO)
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano)
                         planFee.value = 1
 
                     val vaultId = vaultId

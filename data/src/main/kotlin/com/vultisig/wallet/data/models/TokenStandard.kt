@@ -11,5 +11,4 @@ enum class TokenStandard {
     TON,
     RIPPLE,
     TRC20,
-    CARDANO,
 }

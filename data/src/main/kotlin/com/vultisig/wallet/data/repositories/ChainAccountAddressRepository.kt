@@ -77,11 +77,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 if (chain == Chain.Cardano) {
                     // For Cardano, we still need to create a proper PublicKey for transaction signing
                     // even though we're creating the address manually
-                    val address =  CardanoUtils.createEnterpriseAddress(vault.pubKeyEDDSA)
-//                    val cardanoExtendedKey = createCardanoExtendedKey(
-//                        spendingKeyHex = vault.pubKeyEDDSA,
-//                        chainCodeHex = vault.hexChainCode
-//                    )
+                    val address = CardanoUtils.createEnterpriseAddress(vault.pubKeyEDDSA)
 
                     // Always create Enterprise address to avoid "stake address" component
                     // Use WalletCore's proper Blake2b hashing for deterministic results across all devices
@@ -94,19 +90,12 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         error("WalletCore validation failed for Cardano address: $address")
                     }
 
-                    // Create ed25519Cardano public key
-//                    val cardanoKey = try {
-//                        PublicKey(
-//                            cardanoExtendedKey,
-//                            PublicKeyType.ED25519CARDANO
-//                        )
-//                    } catch (e: Exception) {
-//                        println("Failed to create ed25519Cardano key from properly structured data")
-//                        error("Failed to create Cardano extended key")
-//                    }
-
                     return Pair(
-                        AnyAddress(address, CoinType.CARDANO, "ada").description(),
+                        AnyAddress(
+                            address,
+                            CoinType.CARDANO,
+                            "ada"
+                        ).description(),
                         vault.pubKeyEDDSA
                     )
                 }

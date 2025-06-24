@@ -90,7 +90,7 @@ internal fun  Solana.DecodingTransactionOutput.checkError():   Solana.DecodingTr
 
 internal fun Cardano.SigningOutput.checkError(): Cardano.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
-        error(" Decoding Transaction Output contains error: $errorMessage")
+        error("SigningOutput contains error: $errorMessage")
     }
     return this
 }

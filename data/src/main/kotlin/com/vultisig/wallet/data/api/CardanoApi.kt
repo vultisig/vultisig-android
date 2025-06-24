@@ -88,42 +88,37 @@ internal class CardanoApiImpl @Inject constructor(
         chain: String, signedTransaction: String,
     ): String? {
         return try {
-            val response =
-                httpClient.post(url2) {
-                    url {
-                        path(
-                            "blockchair",
-                            "cardano",
-                            "push",
-                            "transaction"
-                        )
-                    }
-                    setBody(CardanoTransactionHashRequestBodyJson(signedTransaction))
+            val response = httpClient.post(url2) {
+                url {
+                    path(
+                        "blockchair",
+                        "cardano",
+                        "push",
+                        "transaction"
+                    )
                 }
+                setBody(CardanoTransactionHashRequestBodyJson(signedTransaction))
+            }
+
             if (response.status != HttpStatusCode.OK) {
-                val responseString =response.body<String>()
+                val responseString = response.body<String>()
                 if (responseString.contains("BadInputsUTxO") || responseString.contains("timed out")) {
                     Timber.d("Cardano transaction already broadcast")
                     return null
                 }
-                Timber.d("fail to broadcast transaction: $responseString")
-                error("fail to broadcast transaction: $responseString")
-            }
-            return try {
-                val cardanoBroadcastResponse: CardanoBroadcastResponseJson = response.body()
-                cardanoBroadcastResponse.data.transactionHash
-            } catch (e: Exception) {
-                error("Failed to broadcast transaction,error: ${e.message}")
+                Timber.d("Failed to broadcast transaction: $responseString")
+                error("Failed to broadcast transaction: $responseString")
             }
 
+            val cardanoBroadcastResponse: CardanoBroadcastResponseJson = response.body()
+            cardanoBroadcastResponse.data.transactionHash
         } catch (e: Exception) {
-            error("Failed to broadcast transaction,error: ${e.message}")
+            error("Failed to broadcast transaction: ${e.message}")
         }
+
     }
 
-
     suspend fun getCurrentSlot(): ULong {
-        val url = "https://api.koios.rest/api/v1"
         val response = httpClient.get(url) {
             url {
                 path(
@@ -134,20 +129,18 @@ internal class CardanoApiImpl @Inject constructor(
         }
 
         if (response.status != HttpStatusCode.OK) {
-            var responseString =response.bodyAsText()
+            val responseString = response.bodyAsText()
             Timber.d("Failed to parse slot from response: $responseString")
             error("Failed to parse slot from response: $responseString")
         }
         val cardanoSlotResponse: List<CardanoSlotResponseJson> = response.body()
         return cardanoSlotResponse.firstOrNull()?.absSlot?.toULong() ?: 0UL
-
     }
 
     override suspend fun calculateDynamicTTL(): ULong {
         val currentSlot = getCurrentSlot()
         return currentSlot + 720u // Add 720 slots (~12 minutes at 1 slot per second)
     }
-
 }
 
 

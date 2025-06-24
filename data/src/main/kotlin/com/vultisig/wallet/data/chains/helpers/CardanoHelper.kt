@@ -27,11 +27,6 @@ object CardanoHelper {
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
 
-        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
-
-        keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
-
-
         val (_, sendMaxAmount, ttl) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
             ?: error("fail to get Cardano chain specific parameters")
 

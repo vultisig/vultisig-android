@@ -50,6 +50,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             val gas = when (chain) {
                 Chain.Zcash -> "1000".toBigInteger()
+                Chain.Cardano -> "180000".toBigInteger()
 
                 else -> {
                     val gas = blockChairApi.getBlockChairStats(chain)
@@ -164,14 +165,6 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.Tron -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id)
-                TokenValue(
-                    value = BigInteger("100000"),
-                    unit = chain.feeUnit,
-                    decimals = nativeToken.decimal,
-                )
-            }
-            Chain.Cardano -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = BigInteger("100000"),
