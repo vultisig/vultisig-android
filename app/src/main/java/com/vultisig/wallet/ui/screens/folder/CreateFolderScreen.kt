@@ -22,10 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.SelectionItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.folder.CreateFolderViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -41,11 +42,12 @@ internal fun CreateFolderScreen(
     Scaffold(
         bottomBar = {
             Box(Modifier.imePadding()) {
-                MultiColorButton(
-                    backgroundColor = Theme.colors.persianBlue400,
-                    textColor = Theme.colors.text.button.light,
-                    iconColor = Theme.colors.text.button.light,
-                    textStyle = Theme.montserrat.subtitle1,
+                VsButton(
+                    label = stringResource(id = R.string.create_folder_create),
+                    onClick = viewModel::createFolder,
+                    state = if (state.isCreateButtonEnabled)
+                        VsButtonState.Enabled
+                    else VsButtonState.Disabled,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -53,11 +55,6 @@ internal fun CreateFolderScreen(
                             end = 16.dp,
                             bottom = 16.dp,
                         ),
-                    text = stringResource(id = R.string.create_folder_create),
-                    disabled = !state.isCreateButtonEnabled,
-                    onClick = {
-                        viewModel.createFolder()
-                    },
                 )
             }
         },

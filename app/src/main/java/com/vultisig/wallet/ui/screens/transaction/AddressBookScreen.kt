@@ -41,9 +41,9 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
@@ -176,16 +176,15 @@ internal fun AddressBookScreen(
             }
         },
         bottomBar = {
-            MultiColorButton(
-                text = stringResource(R.string.address_book_add_address_button),
-                textColor = Theme.colors.oxfordBlue800,
+            VsButton(
+                label = stringResource(R.string.address_book_add_address_button),
+                onClick = onAddAddressClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
                         vertical = 16.dp,
                         horizontal = 16.dp,
                     ),
-                onClick = onAddAddressClick,
             )
         }
     )

@@ -33,13 +33,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.SelectionItem
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.VaultSwitch
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
@@ -60,12 +61,12 @@ internal fun FolderScreen(
         bottomBar = {
             if (state.isEditMode) {
                 Box(Modifier.imePadding()) {
-                    MultiColorButton(
-                        backgroundColor = Theme.colors.turquoise600Main,
-                        textColor = Theme.colors.oxfordBlue600Main,
-                        iconColor = Theme.colors.turquoise800,
-                        textStyle = Theme.montserrat.subtitle1,
-                        disabled = state.nameError != null,
+                    VsButton(
+                        label = stringResource(id = R.string.save_changes),
+                        state = if (state.nameError == null)
+                            VsButtonState.Enabled
+                        else VsButtonState.Disabled,
+                        onClick = viewModel::edit,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
@@ -73,8 +74,6 @@ internal fun FolderScreen(
                                 end = 16.dp,
                                 bottom = 16.dp,
                             ),
-                        text = stringResource(id = R.string.save_changes),
-                        onClick = viewModel::edit,
                     )
                 }
             }
