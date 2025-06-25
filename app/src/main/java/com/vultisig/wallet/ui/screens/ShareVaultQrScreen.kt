@@ -8,21 +8,15 @@ import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +31,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -49,9 +42,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
@@ -139,47 +133,22 @@ internal fun ShareVaultQrScreen(
                         vertical = 12.dp,
                     ),
             ) {
-                MultiColorButton(
-                    backgroundColor = Theme.colors.turquoise800,
-                    textColor = Theme.colors.oxfordBlue800,
-                    iconColor = Theme.colors.oxfordBlue800,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier.fillMaxWidth(),
-                    content = {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.share),
-                                contentDescription = null,
-                                tint = Theme.colors.oxfordBlue800,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = stringResource(R.string.share_vault_qr_share),
-                                color = Theme.colors.oxfordBlue800,
-                                style = Theme.montserrat.subtitle1
-                            )
-                        }
-                    },
+                
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_share),
+                    iconLeft = R.drawable.share,
                     onClick = onShareButtonClicked,
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 UiSpacer(size = 12.dp)
 
-                MultiColorButton(
-                    text = stringResource(R.string.share_vault_qr_save),
-                    backgroundColor = Theme.colors.oxfordBlue800,
-                    textColor = Theme.colors.turquoise800,
-                    iconColor = Theme.colors.oxfordBlue800,
-                    borderSize = 1.dp,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier.fillMaxWidth(),
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_save),
                     onClick = onSaveButtonClicked,
+                    variant = VsButtonVariant.Secondary,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-
             }
         },
         topBar = {

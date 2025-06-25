@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
 import timber.log.Timber
@@ -115,13 +116,10 @@ private fun BiometryAuthView(
 
         UiSpacer(weight = 1.5f)
 
-        MultiColorButton(
-            text = stringResource(R.string.biometry_auth_login_button),
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth(),
+        VsButton(
+            label = stringResource(R.string.biometry_auth_login_button),
             onClick = onRequestLogin,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

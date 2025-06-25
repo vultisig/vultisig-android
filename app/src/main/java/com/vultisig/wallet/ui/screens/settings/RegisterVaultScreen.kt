@@ -33,9 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
@@ -88,11 +88,9 @@ internal fun RegisterVaultScreen(
             )
         },
         bottomBar = {
-            MultiColorButton(
-                backgroundColor = colors.turquoise800,
-                textColor = colors.oxfordBlue800,
-                iconColor = colors.turquoise800,
-                textStyle = montserrat.subtitle1,
+            VsButton(
+                onClick = viewModel::saveBitmap,
+                label = stringResource(R.string.register_vault_screen_save_qr_code),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -100,8 +98,6 @@ internal fun RegisterVaultScreen(
                         end = 16.dp,
                         bottom = 16.dp,
                     ),
-                text = stringResource(R.string.register_vault_screen_save_qr_code),
-                onClick = viewModel::saveBitmap,
             )
         }
     ) {

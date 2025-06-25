@@ -41,14 +41,6 @@ internal fun ProgressScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             UiSpacer(size = 16.dp)
-
-            UiLinearProgressIndicator(
-                progress = progress,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            UiSpacer(size = 32.dp)
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

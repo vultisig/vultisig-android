@@ -34,8 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
@@ -105,12 +106,10 @@ internal fun ConfirmDeleteScreen(
             }
         },
         bottomBar = {
-            MultiColorButton(
-                minHeight = 48.dp,
-                backgroundColor = appColor.red,
-                textColor = appColor.oxfordBlue800,
-                iconColor = appColor.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
+            VsButton(
+                onClick = onConfirmClick,
+                label = stringResource(R.string.confirm_delete_delete_vault),
+                variant = VsButtonVariant.Error,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -118,9 +117,6 @@ internal fun ConfirmDeleteScreen(
                         end = 16.dp,
                         bottom = 16.dp,
                     ),
-                text = stringResource(R.string.confirm_delete_delete_vault),
-                onClick = onConfirmClick,
-                disabled = isDeleteButtonActive.not()
             )
         }
     ) { padding ->

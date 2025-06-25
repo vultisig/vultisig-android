@@ -340,7 +340,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     } else {
         if (chain == Chain.Kujira && (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))) {
             "${chain.swapAssetName()}.${ticker}"
-        } else
+        } else if(chain == Chain.ThorChain)
+            "${chain.swapAssetName()}.${ticker}"
+        else
             "${chain.swapAssetName()}.${ticker}-${contractAddress}"
     }
 
@@ -466,7 +468,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
             Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
-            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Tron,
+            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Tron, Chain.Cardano
                 -> emptySet()
         }
 

@@ -1978,6 +1978,17 @@ object Coins {
                 contractAddress = "tcy",
                 isNativeToken = false,
             ),
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "RUJI",
+                logo = "ruji",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "ruji",
+                contractAddress = "x/ruji",
+                isNativeToken = false,
+            ),
         ),
 
         Chain.Ton to listOf(
@@ -2045,6 +2056,19 @@ object Coins {
                 contractAddress = "",
                 isNativeToken = true,
             )
+        ),
+        Chain.Cardano to listOf(
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "ADA",
+                logo = "ada",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "cardano",
+                contractAddress = "",
+                isNativeToken = true,
+            ),
         )
     )
 }

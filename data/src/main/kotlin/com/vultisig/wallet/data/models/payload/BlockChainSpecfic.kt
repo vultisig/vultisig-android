@@ -86,4 +86,10 @@ sealed class BlockChainSpecific {
         val gasFeeEstimation : ULong,
     ) : BlockChainSpecific()
 
+    data class Cardano(
+        val byteFee: Long,
+        val sendMaxAmount: Boolean,
+        val ttl: ULong
+    ) : BlockChainSpecific()
+
 }

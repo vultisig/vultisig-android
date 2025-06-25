@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components.buttons
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,12 +23,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Secondary
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
 
 enum class VsButtonVariant {
-    Primary, Secondary
+    Primary, Secondary, Error,
 }
 
 enum class VsButtonState {
@@ -52,11 +52,34 @@ fun VsButton(
             Enabled -> when (variant) {
                 Primary -> Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttons.secondary
+                Error -> Theme.colors.alerts.error
             }
 
-            Disabled -> Theme.colors.buttons.disabled
+            Disabled ->  when (variant) {
+                Primary -> Theme.colors.buttons.disabledPrimary
+                Secondary -> Theme.colors.buttons.disabledSecondary
+                Error -> Theme.colors.alerts.error
+            }
         },
         label = "VsButton.backgroundColor"
+    )
+
+
+    val borderColor by animateColorAsState(
+        when(state){
+            Enabled -> when (variant) {
+                Primary ->  Theme.colors.buttons.primary
+                Secondary -> Theme.colors.buttonBorders.default
+                Error -> Theme.colors.alerts.error
+            }
+
+            Disabled ->  when (variant) {
+                Primary -> Theme.colors.buttons.disabledPrimary
+                Secondary -> Theme.colors.buttonBorders.disabled
+                Error -> Theme.colors.alerts.error
+            }
+        },
+        label = "VsButton.borderColor"
     )
 
     Row(
@@ -66,6 +89,11 @@ fun VsButton(
             .background(
                 color = backgroundColor,
                 shape = RoundedCornerShape(percent = 100)
+            )
+            .border(
+                width = 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(percent = 100),
             )
             .clickable(enabled = state == Enabled, onClick = onClick)
             .then(
@@ -110,11 +138,7 @@ fun VsButton(
     ) {
         val contentColor by animateColorAsState(
             when (state) {
-                Enabled -> when (variant) {
-                    Primary -> Theme.colors.text.button.dark
-                    Secondary -> Theme.colors.text.button.light
-                }
-
+                Enabled -> Theme.colors.text.button.light
                 Disabled -> Theme.colors.text.button.disabled
             },
             label = "VsButton.contentColor"
@@ -187,6 +211,13 @@ private fun VsButtonPreview() {
             label = "Secondary Disabled",
             variant = Secondary,
             state = Disabled,
+            size = Medium,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Error",
+            variant = Error,
             size = Medium,
             onClick = {}
         )

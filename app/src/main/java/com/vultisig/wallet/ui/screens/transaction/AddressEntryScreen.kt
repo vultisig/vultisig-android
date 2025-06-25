@@ -27,10 +27,10 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.TokenCard
@@ -157,17 +157,15 @@ internal fun AddAddressEntryScreen(
             }
         },
         bottomBar = {
-            MultiColorButton(
-                text = stringResource(R.string.add_address_save_address_button),
-                textColor = Theme.colors.oxfordBlue800,
-                minHeight = 44.dp,
+            VsButton(
+                label = stringResource(R.string.add_address_save_address_button),
+                onClick = onSaveAddressClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
                         vertical = 16.dp,
                         horizontal = 16.dp,
                     ),
-                onClick = onSaveAddressClick,
             )
         }
     )

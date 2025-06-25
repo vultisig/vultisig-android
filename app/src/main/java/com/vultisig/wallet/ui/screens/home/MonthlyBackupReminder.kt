@@ -16,14 +16,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun  MonthlyBackupReminder (
+internal fun MonthlyBackupReminder(
     onDismiss: () -> Unit,
     onBackup: () -> Unit,
     onDoNotRemind: () -> Unit,
@@ -37,7 +38,7 @@ internal fun  MonthlyBackupReminder (
         containerColor = Theme.colors.oxfordBlue800,
         onDismissRequest = onDismiss,
     ) {
-        Column (
+        Column(
             Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -62,25 +63,22 @@ internal fun  MonthlyBackupReminder (
 
             }
             UiSpacer(size = 16.dp)
-            MultiColorButton(
-                text = stringResource(R.string.backup_password_screen_title),
-                textColor = Theme.colors.oxfordBlue800,
+
+            VsButton(
+                label = stringResource(R.string.backup_password_screen_title),
+                onClick = onBackup,
                 modifier = Modifier
                     .fillMaxWidth(),
-                onClick = onBackup,
             )
 
             UiSpacer(size = 16.dp)
 
-            MultiColorButton(
-                text = stringResource(R.string.do_not_remind_me_again),
-                backgroundColor = Theme.colors.oxfordBlue800,
-                textColor = Theme.colors.turquoise800,
-                iconColor = Theme.colors.oxfordBlue800,
-                borderSize = 1.dp,
+            VsButton(
+                label = stringResource(R.string.do_not_remind_me_again),
+                variant = VsButtonVariant.Secondary,
+                onClick = onDoNotRemind,
                 modifier = Modifier
                     .fillMaxWidth(),
-                onClick = onDoNotRemind
             )
         }
     }
