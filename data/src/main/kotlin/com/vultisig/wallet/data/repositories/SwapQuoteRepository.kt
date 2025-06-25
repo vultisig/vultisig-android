@@ -236,6 +236,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             is LiFiSwapQuoteDeserialized.Result -> {
                 val liFiQuote = liFiQuoteResponse.data
                 val swapFee = liFiQuote.estimate.feeCosts
+                    // adapted from vultisig-windows:
+                    // https://github.com/vultisig/vultisig-windows/blob/5cb9748bc88efa8b375132c93ba1906e1ccccebe/core/chain/swap/general/lifi/api/getLifiSwapQuote.ts#L70
                     .find {
                         it.name.equals("LIFI Fixed Fee", ignoreCase = true)
                     }
