@@ -118,7 +118,7 @@ internal class CardanoApiImpl @Inject constructor(
 
     }
 
-    suspend fun getCurrentSlot(): ULong {
+    private suspend fun getCurrentSlot(): ULong {
         val response = httpClient.get(url) {
             url {
                 path(
