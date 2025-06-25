@@ -26,8 +26,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.GradientInfoCard
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
@@ -117,15 +118,10 @@ private fun ReshareStartScreen(
                     Brush.vultiGradient()
                 )
 
-                MultiColorButton(
-                    backgroundColor = colors.turquoise800,
-                    textColor = colors.oxfordBlue800,
-                    iconColor = colors.turquoise800,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    text = stringResource(R.string.reshare_start_screen_start_reshare),
+                VsButton(
+                    label = stringResource(R.string.reshare_start_screen_start_reshare),
                     onClick = onStartClick,
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 UiSpacer(size = 12.dp)
@@ -146,16 +142,11 @@ private fun ReshareStartScreen(
                 UiSpacer(size = 12.dp)
                  */
 
-                MultiColorButton(
-                    text = stringResource(R.string.reshare_start_join_reshare_button),
-                    backgroundColor = colors.oxfordBlue800,
-                    textColor = colors.turquoise800,
-                    iconColor = colors.oxfordBlue800,
-                    borderSize = 1.dp,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                VsButton(
+                    label = stringResource(R.string.reshare_start_join_reshare_button),
+                    variant = VsButtonVariant.Secondary,
                     onClick = onJoinClick,
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 UiSpacer(size = 16.dp)

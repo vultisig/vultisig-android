@@ -21,10 +21,11 @@ import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.reorderable.VerticalDoubleReorderList
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -138,25 +139,17 @@ private fun VaultListScreen(
                     ),
             ) {
                 if (!isRearrangeMode) {
-                    MultiColorButton(
-                        text = stringResource(R.string.home_screen_add_new_vault),
-                        backgroundColor = Theme.colors.persianBlue400,
-                        textColor = Theme.colors.text.button.light,
-                        iconColor = Theme.colors.text.button.light,
-                        textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier.fillMaxWidth(),
+                    VsButton(
+                        label = stringResource(R.string.home_screen_add_new_vault),
                         onClick = onCreateNewVault,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 } else if (vaults.isNotEmpty()) {
-                    MultiColorButton(
-                        text = stringResource(R.string.create_folder),
-                        backgroundColor = Theme.colors.oxfordBlue800,
-                        textColor = Theme.colors.turquoise800,
-                        iconColor = Theme.colors.oxfordBlue800,
-                        borderSize = 1.dp,
-                        textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier.fillMaxWidth(),
+                    VsButton(
+                        label = stringResource(R.string.create_folder),
+                        variant = VsButtonVariant.Secondary,
                         onClick = onCreateNewFolder,
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     UiSpacer(size = 12.dp)

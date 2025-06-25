@@ -20,9 +20,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
@@ -107,33 +108,28 @@ private fun VerifySignMessageScreen(
                     .padding(all = 16.dp)
             ) {
                 if (hasFastSign) {
-                    MultiColorButton(
-                        text = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-                        textColor = Theme.colors.oxfordBlue800,
+                    VsButton(
+                        label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+                        onClick = onFastSignClick,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        onClick = onFastSignClick,
                     )
 
                     UiSpacer(size = 16.dp)
 
-                    MultiColorButton(
-                        text = confirmTitle,
-                        backgroundColor = Theme.colors.oxfordBlue800,
-                        textColor = Theme.colors.turquoise800,
-                        iconColor = Theme.colors.oxfordBlue800,
-                        borderSize = 1.dp,
+                    VsButton(
+                        label = confirmTitle,
+                        onClick = onConfirm,
+                        variant = VsButtonVariant.Secondary,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        onClick = onConfirm
                     )
                 } else {
-                    MultiColorButton(
-                        text = confirmTitle,
-                        textColor = Theme.colors.oxfordBlue800,
+                    VsButton(
+                        label = confirmTitle,
+                        onClick = onConfirm,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        onClick = onConfirm,
                     )
                 }
             }
