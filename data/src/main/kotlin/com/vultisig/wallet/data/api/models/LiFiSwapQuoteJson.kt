@@ -56,4 +56,6 @@ data class LiFiSwapFeeCostJson(
     val amount: String,
     @SerialName("included")
     val included: Boolean,
+    @SerialName("name")
+    val name: String,
 )

@@ -236,9 +236,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             is LiFiSwapQuoteDeserialized.Result -> {
                 val liFiQuote = liFiQuoteResponse.data
                 val swapFee = liFiQuote.estimate.feeCosts
-                    .filterNot { it.included }
-                    .sumOf { it.amount.toBigInteger() }
-                    .toString()
+                    .find {
+                        it.name.equals("LIFI Fixed Fee", ignoreCase = true)
+                    }
+
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
                 return OneInchSwapQuoteJson(
                     dstAmount = liFiQuote.estimate.toAmount,
@@ -253,7 +254,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                             ?.toString() ?: "0",
                         gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
                             ?.hexToLong()?.toString() ?: "0",
-                        swapFee = swapFee,
+                        swapFee = swapFee?.amount ?: "0",
                     )
                 )
             }
