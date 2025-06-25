@@ -1,16 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.models.TokenStandard.COSMOS
-import com.vultisig.wallet.data.models.TokenStandard.EVM
-import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
-import com.vultisig.wallet.data.models.TokenStandard.SOL
-import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
-import com.vultisig.wallet.data.models.TokenStandard.SUI
-import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
-import com.vultisig.wallet.data.models.TokenStandard.TON
-import com.vultisig.wallet.data.models.TokenStandard.TRC20
-import com.vultisig.wallet.data.models.TokenStandard.UTXO
+import com.vultisig.wallet.data.models.TokenStandard.*
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -42,6 +33,7 @@ enum class Chain(
     Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     Dash("Dash", UTXO, "DASH/vbyte"),
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
+    Cardano("Cardano", UTXO, "ADA/vbyte"),
 
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
@@ -58,7 +50,8 @@ enum class Chain(
     Ton("Ton", TON, "TON"),
 
     Ripple("Ripple", RIPPLE, "XRP"),
-    Tron("Tron",TRC20,"TRX")
+    Tron("Tron",TRC20,"TRX"),
+
     ;
 
     val id: ChainId
@@ -104,11 +97,12 @@ val Chain.coinType: CoinType
         Chain.Akash -> CoinType.AKASH
         Chain.Tron -> CoinType.TRON
         Chain.Zcash -> CoinType.ZCASH
+        Chain.Cardano -> CoinType.CARDANO
     }
 
 val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.Solana, Chain.Polkadot, Chain.Sui, Chain.Ton -> TssKeyType.EDDSA
+        Chain.Solana, Chain.Polkadot, Chain.Sui, Chain.Ton, Chain.Cardano -> TssKeyType.EDDSA
         else -> TssKeyType.ECDSA
     }
 
@@ -207,6 +201,7 @@ fun Chain.swapAssetName(): String {
         Chain.Akash -> "AKT"
         Chain.Tron -> "TRX"
         Chain.Zcash -> "ZEC"
+        Chain.Cardano -> "ADA"
     }
 }
 

@@ -41,6 +41,7 @@ internal class BlockChairApiImp @Inject constructor(
         Chain.Dogecoin -> "dogecoin"
         Chain.Dash -> "dash"
         Chain.Zcash -> "zcash"
+        Chain.Cardano -> "cardano"
         else -> throw IllegalArgumentException("Unsupported chain $chain")
     }
 

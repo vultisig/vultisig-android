@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -20,6 +21,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -29,6 +31,7 @@ import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.collections.plus
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -69,6 +72,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
+    private val cardanoApi: CardanoApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -183,27 +187,60 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-            val utxos = blockChairApi.getAddressInfo(chain, address)
 
-            val byteFee = gasFee.value
 
-            BlockChainSpecificAndUtxo(
-                blockChainSpecific = BlockChainSpecific.UTXO(
-                    byteFee = byteFee,
-                    sendMaxAmount = isMaxAmountEnabled,
-                ),
-                utxos = utxos
-                    ?.utxos
-                    ?.sortedBy { it.value }
-                    ?.toList()
-                    ?.map {
-                        UtxoInfo(
-                            hash = it.transactionHash,
-                            amount = it.value,
-                            index = it.index.toUInt(),
-                        )
-                    } ?: emptyList(),
-            )
+            if (chain == Chain.Cardano) {
+                // For send max, don't add fees - let WalletCore handle it
+                // For regular sends, add estimated fees to ensure we have enough
+                val baseAmount = tokenAmountValue ?: BigInteger.ZERO
+                val totalNeeded = if (isMaxAmountEnabled)
+                    baseAmount else baseAmount + gasFee.value
+
+                val (selectedUTXOs, totalSelected) = cardanoApi.getUTXOs(token)
+                    .sortedBy(UtxoInfo::amount)
+                    .fold(listOf<UtxoInfo>() to BigInteger.ZERO) { (selected, total), utxo ->
+                        if (total >= totalNeeded) selected to total
+                        else (selected + utxo) to (total + BigInteger.valueOf(utxo.amount))
+                    }
+
+                if (selectedUTXOs.isEmpty() || (!isMaxAmountEnabled && totalSelected < totalNeeded)) {
+                    error("Not enough balance for Cardano transaction")
+                }
+
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific = BlockChainSpecific.Cardano(
+                        byteFee = gasFee.value.toLong(),
+                        sendMaxAmount = isMaxAmountEnabled,
+                        ttl = cardanoApi.calculateDynamicTTL()
+                    ),
+                    utxos = selectedUTXOs
+                )
+            } else {
+                val utxos = blockChairApi.getAddressInfo(
+                    chain,
+                    address
+                )
+
+                val byteFee = gasFee.value
+
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific = BlockChainSpecific.UTXO(
+                        byteFee = byteFee,
+                        sendMaxAmount = isMaxAmountEnabled,
+                    ),
+                    utxos = utxos
+                        ?.utxos
+                        ?.sortedBy { it.value }
+                        ?.toList()
+                        ?.map {
+                            UtxoInfo(
+                                hash = it.transactionHash,
+                                amount = it.value,
+                                index = it.index.toUInt(),
+                            )
+                        } ?: emptyList(),
+                )
+            }
         }
 
         TokenStandard.SOL -> coroutineScope {
@@ -384,6 +421,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             )
         }
+
     }
 
     private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
