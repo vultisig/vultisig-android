@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -104,6 +105,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
+    private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
 ) : BalanceRepository {
 
@@ -309,6 +311,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             Ton -> tonApi.getBalance(address)
             Chain.Ripple -> rippleApi.getBalance(coin)
             Chain.Tron -> tronApi.getBalance(coin)
+            Chain.Cardano -> cardanoApi.getBalance(coin)
         }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->
         tokenValueDao.insertTokenValue(

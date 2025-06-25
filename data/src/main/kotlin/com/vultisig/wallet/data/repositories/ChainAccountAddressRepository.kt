@@ -4,6 +4,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TssKeyType
@@ -73,9 +74,40 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             }
 
             TssKeyType.EDDSA -> {
+                if (chain == Chain.Cardano) {
+                    // For Cardano, we still need to create a proper PublicKey for transaction signing
+                    // even though we're creating the address manually
+                    val address = CardanoUtils.createEnterpriseAddress(vault.pubKeyEDDSA)
+
+                    // Always create Enterprise address to avoid "stake address" component
+                    // Use WalletCore's proper Blake2b hashing for deterministic results across all devices
+                    // Validate Cardano address using WalletCore's own validation
+                    if (!AnyAddress.isValid(
+                            address,
+                            CoinType.CARDANO
+                        )
+                    ) {
+                        error("WalletCore validation failed for Cardano address: $address")
+                    }
+
+                    return Pair(
+                        AnyAddress(
+                            address,
+                            CoinType.CARDANO,
+                            "ada"
+                        ).description(),
+                        vault.pubKeyEDDSA
+                    )
+                }
                 val publicKey =
-                    PublicKey(vault.pubKeyEDDSA.hexToByteArray(), PublicKeyType.ED25519)
-                return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), vault.pubKeyEDDSA)
+                    PublicKey(
+                        vault.pubKeyEDDSA.hexToByteArray(),
+                        PublicKeyType.ED25519
+                    )
+                return Pair(
+                    chain.coinType.deriveAddressFromPublicKey(publicKey),
+                    vault.pubKeyEDDSA
+                )
             }
         }
 

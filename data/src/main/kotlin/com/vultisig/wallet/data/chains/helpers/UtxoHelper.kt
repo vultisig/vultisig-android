@@ -29,7 +29,7 @@ class UtxoHelper(
             when (coinType) {
                 CoinType.BITCOIN, CoinType.BITCOINCASH,
                 CoinType.LITECOIN, CoinType.DOGECOIN,
-                CoinType.DASH, CoinType.ZCASH -> {
+                CoinType.DASH, CoinType.ZCASH  -> {
                     return UtxoHelper(
                         coinType = coinType,
                         vaultHexPublicKey = vault.pubKeyECDSA,

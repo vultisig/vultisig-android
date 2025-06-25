@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -64,6 +65,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
+    private val cardanoApi: CardanoApi,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(
@@ -125,6 +127,10 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
         Chain.Tron -> {
             tronApi.broadcastTransaction(tx.rawTransaction)
         }
+        Chain.Cardano -> {
+            cardanoApi.broadcastTransaction(chain.name,tx.rawTransaction)?: tx.transactionHash
+        }
+
     }
 
 }
