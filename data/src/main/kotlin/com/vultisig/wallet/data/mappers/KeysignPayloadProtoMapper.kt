@@ -193,6 +193,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         gasFeeEstimation = it.gasEstimation,
                     )
                 }
+                from.cardano !=null ->  from.cardano.let {
+                    BlockChainSpecific.Cardano(
+                        byteFee = it.byteFee.toLong(),
+                        sendMaxAmount = it.sendMaxAmount,
+                        ttl = it.ttl
+                    )
+                }
+
 
                 else -> error("No supported BlockChainSpecific in proto $from")
             },
