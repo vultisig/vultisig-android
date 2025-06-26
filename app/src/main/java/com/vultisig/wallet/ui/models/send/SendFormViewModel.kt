@@ -241,6 +241,7 @@ internal class SendFormViewModel @Inject constructor(
             vaultId = args.vaultId,
             preSelectedChainId = args.chainId,
             preSelectedTokenId = args.tokenId,
+            address = args.address,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -270,6 +271,7 @@ internal class SendFormViewModel @Inject constructor(
         vaultId: VaultId,
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
+        address: String?,
     ) {
         memoFieldState.clearText()
 
@@ -280,10 +282,14 @@ internal class SendFormViewModel @Inject constructor(
             loadVaultName()
         }
 
-        preSelectToken(
-            preSelectedChainIds = listOf(preSelectedChainId),
-            preSelectedTokenId = preSelectedTokenId,
-        )
+        if (address != null) {
+            setAddressFromQrCode(address)
+        } else {
+            preSelectToken(
+                preSelectedChainIds = listOf(preSelectedChainId),
+                preSelectedTokenId = preSelectedTokenId,
+            )
+        }
     }
 
     private fun loadVaultName() {
