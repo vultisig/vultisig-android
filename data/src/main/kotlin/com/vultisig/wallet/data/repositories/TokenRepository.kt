@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -25,18 +27,22 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.collections.first
+import kotlin.collections.map
 
 interface TokenRepository {
 
     suspend fun getToken(tokenId: String): Coin?
 
-    fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>>
+    fun getChainTokens(chain: Chain, vault: Vault): Flow<List<Coin>>
 
     suspend fun getNativeToken(chainId: String): Coin
 
     suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
 
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
+
+    suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
 
     val builtInTokens: Flow<List<Coin>>
 
@@ -51,43 +57,72 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val splTokenRepository: SplTokenRepository,
     private val coinGeckoApi: CoinGeckoApi,
     private val currencyRepository: AppCurrencyRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : TokenRepository {
+
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
-    override fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>> =
+    override fun getChainTokens(
+        chain: Chain,
+        vault: Vault,
+    ): Flow<List<Coin>> = flow {
+
+        val builtInTokens = builtInTokens.first().filter { it.chain == chain }
+        emitUniqueTokens(builtInTokens)
+
+        val refreshedTokens = getRefreshTokens(chain, vault)
+        emitUniqueTokens(
+            builtInTokens,
+            refreshedTokens
+        )
+
         when (chain.standard) {
-            TokenStandard.EVM -> flow {
-                val builtInTokens = builtInTokens.first().filter { it.chain == chain }
-                emit(builtInTokens)
-                val oneInchTokens = oneInchApi.getTokens(chain)
-                emitUniqueTokens(
-                    builtInTokens,
-                    oneInchTokens.tokens.toCoins(chain)
-                )
+            TokenStandard.EVM -> {
+                emitEvmTokens(chain, refreshedTokens, builtInTokens)
             }
-
-            TokenStandard.SOL -> flow {
-                val builtInTokens = builtInTokens.first().filter { it.chain == chain }
-                emit(builtInTokens)
-                val tokens = splTokenRepository.getTokens(address)
-                emitUniqueTokens(
-                    builtInTokens,
-                    tokens,
-                )
-                val jupiterTokens = splTokenRepository.getJupiterTokens()
-                emitUniqueTokens(
-                    builtInTokens,
-                    tokens,
-                    jupiterTokens
-                )
+            TokenStandard.SOL -> {
+                emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
             }
-
-            else ->
-                builtInTokens.map { allTokens ->
-                    allTokens.filter { it.chain.id == chain.id }
-                }
+            else -> Unit
         }
+    }
+
+    private suspend fun FlowCollector<List<Coin>>.emitEvmTokens(
+        chain: Chain,
+        refreshedTokens: List<Coin>,
+        builtInTokens: List<Coin>,
+    ) {
+        val oneInchTokens = oneInchApi.getTokens(chain)
+        emitUniqueTokens(
+            oneInchTokens.tokens.toCoins(chain),
+            refreshedTokens,
+            builtInTokens,
+        )
+    }
+
+    private suspend fun FlowCollector<List<Coin>>.emitSolTokens(
+        vault: Vault,
+        chain: Chain,
+        refreshedTokens: List<Coin>,
+        builtInTokens: List<Coin>,
+    ) {
+        val address = vault.coins.first { it.chain == chain }.address
+        val tokens = splTokenRepository.getTokens(address)
+        emitUniqueTokens(
+            refreshedTokens,
+            builtInTokens,
+            tokens,
+        )
+
+        val jupiterTokens = splTokenRepository.getJupiterTokens()
+        emitUniqueTokens(
+            refreshedTokens,
+            builtInTokens,
+            tokens,
+            jupiterTokens
+        )
+    }
 
     private suspend fun FlowCollector<List<Coin>>.emitUniqueTokens(vararg items: List<Coin>) {
         val coins = items.toList()
@@ -200,6 +235,26 @@ internal class TokenRepositoryImpl @Inject constructor(
                     .toCoins(chain)
             }
         }
+    }
+
+    override suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin> {
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            chain,
+            vault
+        )
+        return (getTokensWithBalance(chain, address) + enabledByDefaultTokens.getOrDefault(
+            chain,
+            emptyList()
+        ))
+            .filterNot {
+                it.isNativeToken
+            }
+            .map { token ->
+                token.copy(
+                    address = address,
+                    hexPublicKey = derivedPublicKey
+                )
+            }
     }
 
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
@@ -326,6 +381,11 @@ internal class TokenRepositoryImpl @Inject constructor(
                 )
             }
             .toList()
+
+
+    private val enabledByDefaultTokens = listOf(Tokens.tcy)
+        .groupBy { it.chain }
+
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
