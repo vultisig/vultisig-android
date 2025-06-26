@@ -21,6 +21,8 @@ interface TonApi {
     suspend fun broadcastTransaction(transaction: String): String?
 
     suspend fun getSpecificTransactionInfo(address: String): BigInteger
+
+    suspend fun getWalletState(address: String): String
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -30,11 +32,13 @@ internal class TonApiImpl @Inject constructor(
     private val baseUrl: String = "https://api.vultisig.com/ton"
 
     override suspend fun getBalance(address: String): BigInteger =
+        getAddressInformation(address).balance
+
+    private suspend fun getAddressInformation(address: String): TonAddressStateResponseJson =
         http.get("$baseUrl/v3/addressInformation") {
             parameter("address", address)
             parameter("use_v2", false)
-        }.body<TonBalanceResponseJson>()
-            .balance
+        }.body<TonAddressStateResponseJson>()
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
@@ -68,13 +72,17 @@ internal class TonApiImpl @Inject constructor(
             ?.let { BigInteger(it) }
             ?: BigInteger.ZERO
 
+    override suspend fun getWalletState(address: String): String =
+        getAddressInformation(address).state
 }
 
 @Serializable
-private data class TonBalanceResponseJson(
+private data class TonAddressStateResponseJson(
     @SerialName("balance")
     @Contextual
     val balance: BigInteger,
+    @SerialName("state")
+    val state: String,
 )
 
 @Serializable
