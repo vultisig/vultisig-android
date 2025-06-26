@@ -34,11 +34,11 @@ internal class TonApiImpl @Inject constructor(
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
 
-    private suspend fun getAddressInformation(address: String): TonAddressStateResponseJson =
+    private suspend fun getAddressInformation(address: String): TonAddressInfoResponseJson =
         http.get("$baseUrl/v3/addressInformation") {
             parameter("address", address)
             parameter("use_v2", false)
-        }.body<TonAddressStateResponseJson>()
+        }.body<TonAddressInfoResponseJson>()
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
@@ -77,7 +77,7 @@ internal class TonApiImpl @Inject constructor(
 }
 
 @Serializable
-private data class TonAddressStateResponseJson(
+private data class TonAddressInfoResponseJson(
     @SerialName("balance")
     @Contextual
     val balance: BigInteger,
