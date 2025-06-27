@@ -117,8 +117,12 @@ internal class TokenSelectionViewModel @Inject constructor(
                 val allChainTokens = tokenRepository.getChainTokens(chain, vault)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
 
-                allChainTokens.collect { chains ->
-                    disabledTokens.value = chains.filter { it.id !in enabledTokenIds }
+                allChainTokens.collect { allChains ->
+                    disabledTokens.value = allChains.filter { coin ->
+                        coin.id.lowercase() !in enabledTokenIds.map { tokenId ->
+                            tokenId.lowercase()
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 // todo handle error
