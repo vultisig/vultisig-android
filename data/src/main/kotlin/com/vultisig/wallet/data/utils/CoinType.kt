@@ -24,8 +24,7 @@ fun CoinType.toValue(value: BigDecimal): BigDecimal =
     value.divide(BigDecimal.TEN.pow(decimals))
 
 fun CoinType.toValue(value: BigInteger): BigDecimal =
-    toString().toBigDecimal().divide(BigDecimal.TEN.pow(decimals))
-
+    value.toBigDecimal().divide(BigDecimal.TEN.pow(decimals))
 
 internal val CoinType.getDustThreshold: Long
     get() = when (this) {

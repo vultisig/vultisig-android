@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -83,6 +84,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1368,11 +1370,11 @@ internal class SendFormViewModel @Inject constructor(
         totalBalance: BigInteger,
         estimatedFee: BigInteger,
     ) {
-        val minUTXOValue: BigInteger =  BigInteger.valueOf(MIN_CARDANO_UTXO_VALUE)
+        val minUTXOValue: BigInteger = Chain.Cardano.minAmountToTransfer
 
         // 1. Check send amount meets minimum
         if (sendAmount < minUTXOValue) {
-            val minAmountADA = minUTXOValue.toADAString
+            val minAmountADA = CoinType.CARDANO.toValue(minUTXOValue)
             throw InvalidTransactionDataException(
                 UiText.DynamicString("Minimum send amount is $minAmountADA ADA. Cardano requires this to prevent spam.")
             )
@@ -1381,12 +1383,11 @@ internal class SendFormViewModel @Inject constructor(
         // 2. Check sufficient balance
         val totalNeeded = sendAmount + estimatedFee
         if (totalBalance < totalNeeded) {
-            val totalBalanceADA = totalBalance.toADAString
+            val totalBalanceADA = CoinType.CARDANO.toValue(totalBalance)
             val errorMessage = if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
                 "Insufficient balance.  Try 'Send Max' to send $totalBalanceADA ADA instead."
             } else {
-                val availableADA = totalBalance.toADAString
-                "Insufficient balance ($availableADA ADA). You need more ADA to complete this transaction."
+                "Insufficient balance ($totalBalanceADA ADA). You need more ADA to complete this transaction."
             }
             throw InvalidTransactionDataException(UiText.DynamicString(errorMessage))
         }
@@ -1394,7 +1395,7 @@ internal class SendFormViewModel @Inject constructor(
         // 3. Check remaining balance (change) meets minimum UTXO requirement
         val remainingBalance = totalBalance - sendAmount - estimatedFee
         if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = totalBalance.toADAString
+            val totalBalanceADA = CoinType.CARDANO.toValue(totalBalance)
 
             throw InvalidTransactionDataException(UiText.DynamicString(
                 "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."))
@@ -1403,7 +1404,6 @@ internal class SendFormViewModel @Inject constructor(
 
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val MIN_CARDANO_UTXO_VALUE = 1_400_000L
     }
 }
 
