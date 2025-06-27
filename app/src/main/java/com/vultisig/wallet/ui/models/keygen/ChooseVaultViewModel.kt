@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keygen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.rive.runtime.kotlin.RiveAnimationView
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
@@ -16,6 +17,7 @@ import javax.inject.Inject
 
 internal data class SelectVaultTypeUiModel(
     val vaultType: VaultType = VaultType.Fast,
+    val animate: (RiveAnimationView) -> Unit = {},
 )
 
 internal sealed class VaultType(
@@ -45,12 +47,14 @@ internal class ChooseVaultViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(SelectVaultTypeUiModel())
-
     fun selectTab(type: VaultType) {
+        if (type == state.value.vaultType)
+            return
         clickOnce(coolDownPeriod = 1500L) {
             state.update {
                 it.copy(
                     vaultType = type,
+                    animate = { it.fireState("State Machine 1", "Switch") }
                 )
             }
         }.invoke()

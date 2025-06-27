@@ -28,9 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -107,10 +105,6 @@ private fun ChooseVaultScreen(
         ) {
             val isSecureTypeSelected = state.vaultType is VaultType.Secure
 
-            var initAnimation by remember { mutableStateOf(true) }
-
-            var animation: (RiveAnimationView) -> Unit by remember { mutableStateOf({}) }
-
             val fadeAnimation = remember {
                 Animatable(0f)
             }
@@ -125,15 +119,6 @@ private fun ChooseVaultScreen(
                 startScaleAnimation(scaleAnimation)
             }
 
-            LaunchedEffect(state.vaultType) {
-                /* was used to not switch animation when secure vault was first selection
-                if (initAnimation) {
-                    initAnimation = false
-                    return@LaunchedEffect
-                }
-                 */
-                animation = { it.fireState("State Machine 1", "Switch") }
-            }
 
             VsTopAppBar(
                 title = stringResource(R.string.select_vault_type_choose_setup),
@@ -148,7 +133,7 @@ private fun ChooseVaultScreen(
                     .weight(1f),
                 alignment = TOP_CENTER,
                 onInit = { rive: RiveAnimationView ->
-                    animation(rive)
+                    state.animate(rive)
                 }
             )
 
