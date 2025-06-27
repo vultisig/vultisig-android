@@ -32,10 +32,14 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.hasReaping
+import com.vultisig.wallet.data.models.isBtcLike
+import com.vultisig.wallet.data.models.minAmountToTransfer
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -52,6 +56,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -82,7 +87,6 @@ import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -644,6 +648,10 @@ internal class SendFormViewModel @Inject constructor(
                             estimatedFee = gasFee.value
                         )
                     }
+
+                    if (chain.isBtcLike) {
+                        validateBtcLikeAmount(tokenAmountInt, chain)
+                    }
                 } else {
                     val nativeTokenAccount = accounts.value
                         .find { it.token.isNativeToken && it.token.chain == chain }
@@ -733,6 +741,18 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
+        val minAmount = chain.minAmountToTransfer
+        if (tokenAmountInt < minAmount) {
+            val symbol = chain.coinType.symbol
+            val name = chain.raw
+            val formattedMinAmount = chain.toValue(minAmount).toString()
+            throw InvalidTransactionDataException(
+                UiText.DynamicString("Minimum send amount is $formattedMinAmount $symbol. $name requires this to prevent spam.")
+            )
+        }
+    }
+
     private suspend fun getBitcoinTransactionPlan(
         vaultId: String,
         selectedToken: Coin,
@@ -761,6 +781,8 @@ internal class SendFormViewModel @Inject constructor(
         return plan
     }
 
+    // TODO: Review Probably not required as WC perform selection. Also a bit dangerous as
+    // it will pick Dust UTXOS as valid
     private fun selectUtxosIfNeeded(
         tokenAmount: BigInteger,
         specific: BlockChainSpecificAndUtxo
@@ -1378,8 +1400,6 @@ internal class SendFormViewModel @Inject constructor(
                 "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."))
         }
     }
-
-
 
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"

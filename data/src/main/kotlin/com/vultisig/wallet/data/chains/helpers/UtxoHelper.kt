@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.getDustThreshold
 import timber.log.Timber
 import tss.KeysignResponse
 import wallet.core.java.AnySigner
@@ -53,9 +54,7 @@ class UtxoHelper(
 
     fun getSwapPreSigningInputData(keysignPayload: KeysignPayload): Bitcoin.SigningInput {
         val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
-        if (thorChainSwapPayload == null) {
-            throw Exception("Invalid swap payload for THORChain")
-        }
+            ?: throw Exception("Invalid swap payload for THORChain")
         require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
@@ -86,6 +85,7 @@ class UtxoHelper(
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(utxo.sendMaxAmount)
             .setByteFee(utxo.byteFee.toLong())
+            .setFixedDustThreshold(coinType.getDustThreshold)
         for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
@@ -141,6 +141,7 @@ class UtxoHelper(
             .setChangeAddress(keysignPayload.coin.address)
             .setByteFee(utxo.byteFee.toLong())
             .setCoinType(coinType.value())
+            .setFixedDustThreshold(coinType.getDustThreshold)
         keysignPayload.memo?.let {
             input.setOutputOpReturn(ByteString.copyFromUtf8(it))
         }

@@ -2,7 +2,12 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.*
+import com.vultisig.wallet.data.utils.getDustThreshold
+import com.vultisig.wallet.data.utils.toUnit
+import com.vultisig.wallet.data.utils.toValue
 import wallet.core.jni.CoinType
+import java.math.BigDecimal
+import java.math.BigInteger
 
 typealias ChainId = String
 
@@ -210,3 +215,33 @@ val Chain.hasReaping: Boolean
         Chain.Polkadot, Chain.Ripple -> true
         else -> false
     }
+
+val Chain.isBtcLike: Boolean
+    get() = when (this) {
+        Chain.Bitcoin,
+        Chain.BitcoinCash,
+        Chain.Litecoin,
+        Chain.Dogecoin,
+        Chain.Dash,
+        Chain.Zcash -> true
+        else -> false
+    }
+
+val Chain.minAmountToTransfer: BigInteger
+    get() = when {
+        this.isBtcLike -> coinType.getDustThreshold.toBigInteger()
+        this == Chain.Cardano -> "1400000".toBigInteger()
+        else -> throw UnsupportedOperationException("Chain not supported")
+    }
+
+fun Chain.toValue(value: BigInteger): BigDecimal =
+    coinType.toValue(value)
+
+fun Chain.toValue(value: BigDecimal): BigDecimal =
+    coinType.toValue(value)
+
+fun Chain.toUnit(value: BigInteger): BigInteger =
+    coinType.toUnit(value)
+
+fun Chain.toUnit(value: BigDecimal): BigInteger =
+    coinType.toUnit(value)
