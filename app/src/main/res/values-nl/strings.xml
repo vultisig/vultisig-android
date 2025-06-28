@@ -166,6 +166,7 @@
     <string name="naming_vault_screen_invalid_name">Ongeldige naam</string>
     <string name="rename_vault_invalid_name">Ongeldige naam</string>
     <string name="swap_form_invalid_amount">Ongeldig bedrag</string>
+    <string name="vault_name_too_long_error">O nome do cofre é demasiado longo</string>
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
     <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecteer de koppelingsapparaten</string>

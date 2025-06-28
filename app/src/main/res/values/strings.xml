@@ -179,6 +179,7 @@
     <string name="swap_error_no_amount">Amount must be a positive number</string>
     <string name="naming_vault_screen_invalid_name">Invalid name</string>
     <string name="rename_vault_invalid_name">Invalid name</string>
+    <string name="vault_name_too_long_error">Vault name is too long</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
     <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
