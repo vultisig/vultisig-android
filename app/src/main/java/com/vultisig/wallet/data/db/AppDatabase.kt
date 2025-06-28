@@ -44,7 +44,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         VaultMetadataEntity::class,
         DisabledCoinEntity::class,
     ],
-    version = 24,
+    version = 23,
     exportSchema = false,
 )
 @TypeConverters(

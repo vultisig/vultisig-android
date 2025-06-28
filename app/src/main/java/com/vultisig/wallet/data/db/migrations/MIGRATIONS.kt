@@ -429,33 +429,3 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
         )
     }
 }
-
-internal val MIGRATION_23_24 = object : Migration(23, 24) {
-
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
-            """
-            DELETE FROM `coin` WHERE 
-            ROWID NOT IN (SELECT MAX(ROWID) FROM `coin` GROUP BY LOWER(`id`),`vaultId`)
-        """.trimIndent()
-        )
-        database.execSQL(
-            """
-            DELETE FROM disabledCoin
-            WHERE ROWID NOT IN (SELECT MAX(ROWID) FROM disabledCoin GROUP BY LOWER(`coinId`))
-        """.trimIndent()
-        )
-        database.execSQL(
-            """
-            DELETE FROM tokenValue 
-            WHERE ROWID NOT IN (SELECT MAX(ROWID) FROM tokenValue GROUP BY LOWER(`ticker`),`address`)
-        """.trimIndent()
-        )
-        database.execSQL(
-            """
-            DELETE FROM tokenPrice
-            WHERE `tokenId` NOT IN (SELECT `tokenId` FROM tokenPrice GROUP BY LOWER(`tokenId`))
-        """.trimIndent()
-        )
-    }
-}

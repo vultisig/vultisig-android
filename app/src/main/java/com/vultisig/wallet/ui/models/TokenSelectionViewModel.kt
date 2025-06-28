@@ -116,12 +116,12 @@ internal class TokenSelectionViewModel @Inject constructor(
                 val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
                 val allChainTokens = tokenRepository.getChainTokens(chain, vault)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
-
+                val enabledTokenIdsLowercase = enabledTokenIds.map { tokenId ->
+                    tokenId.lowercase()
+                }
                 allChainTokens.collect { allChains ->
                     disabledTokens.value = allChains.filter { coin ->
-                        coin.id.lowercase() !in enabledTokenIds.map { tokenId ->
-                            tokenId.lowercase()
-                        }
+                        coin.id.lowercase() !in enabledTokenIdsLowercase
                     }
                 }
             } catch (e: Exception) {
