@@ -117,6 +117,5 @@ object TonHelper {
 
 internal fun String.isAddressBounceable(): Boolean = when {
     startsWith("E") -> true
-    startsWith("U") -> false
     else -> false
 }
