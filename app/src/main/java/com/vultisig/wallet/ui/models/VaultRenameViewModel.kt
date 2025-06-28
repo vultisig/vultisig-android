@@ -113,7 +113,7 @@ internal class VaultRenameViewModel @Inject constructor(
         if (newName.isEmpty())
             return StringResource(R.string.rename_vault_invalid_name)
         if (!isVaultNameValid(newName)) {
-            return StringResource(com.vultisig.wallet.R.string.vault_name_too_long_error)
+            return StringResource(R.string.vault_name_too_long_error)
         }
         val isNameAlreadyExist = vaultRepository.getAll().any { it.name == newName }
         if (isNameAlreadyExist) {
