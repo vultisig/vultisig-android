@@ -370,7 +370,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         tonApi.getWalletState(dstAddress) == TON_WALLET_STATE_UNINITIALIZED
                     if (isUninitialized) return@async false
 
-                    dstAddress.isAddressBounceable()
+                    dstAddress.startsWith("E")
                 }
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Ton(

@@ -114,5 +114,3 @@ object TonHelper {
         )
     }
 }
-
-internal fun String.isAddressBounceable(): Boolean = startsWith("E")
