@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
@@ -187,6 +188,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -243,6 +245,7 @@ internal class SendFormViewModel @Inject constructor(
             vaultId = args.vaultId,
             preSelectedChainId = args.chainId,
             preSelectedTokenId = args.tokenId,
+            address = args.address,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -272,6 +275,7 @@ internal class SendFormViewModel @Inject constructor(
         vaultId: VaultId,
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
+        address: String?,
     ) {
         memoFieldState.clearText()
 
@@ -282,10 +286,14 @@ internal class SendFormViewModel @Inject constructor(
             loadVaultName()
         }
 
-        preSelectToken(
-            preSelectedChainIds = listOf(preSelectedChainId),
-            preSelectedTokenId = preSelectedTokenId,
-        )
+        if (address != null) {
+            setAddressFromQrCode(address)
+        } else {
+            preSelectToken(
+                preSelectedChainIds = listOf(preSelectedChainId),
+                preSelectedTokenId = preSelectedTokenId,
+            )
+        }
     }
 
     private fun loadVaultName() {
@@ -398,15 +406,51 @@ internal class SendFormViewModel @Inject constructor(
                         "Address from QR has a different chain " +
                                 "than selected token, switching. $chainValidForAddress != $selectedChain"
                     )
+                    val preSelectedChainIds = chainValidForAddress.map { it.id }
+
+                    checkChainIdExistInAccounts(
+                        preSelectedChainIds = preSelectedChainIds,
+                        vaultId = vaultId
+                    )
 
                     preSelectToken(
-                        preSelectedChainIds = chainValidForAddress.map { it.id },
+                        preSelectedChainIds = preSelectedChainIds,
                         preSelectedTokenId = null,
-                        forcePreselection = true
+                        forcePreselection = true,
                     )
                 }
             }
         }
+    }
+
+    private fun checkChainIdExistInAccounts(preSelectedChainIds: List<String>, vaultId: String) {
+        // if chain Id is missing in accounts, add the first chain found by address manually.
+        val chainIdForAddition = preSelectedChainIds.firstOrNull()
+        val chainIdNotInAccounts = accounts.value.none {
+            it.token.chain.id.equals(chainIdForAddition, ignoreCase = true)
+        }
+        if (chainIdForAddition != null && chainIdNotInAccounts) {
+            viewModelScope.launch {
+                addNativeTokenToVault(chainIdForAddition)
+                loadAccounts(vaultId)
+            }
+        }
+    }
+
+    private suspend fun addNativeTokenToVault(chainIdForAddition: ChainId) {
+        val nativeToken = tokenRepository.getNativeToken(chainIdForAddition)
+        val vaultId = requireNotNull(vaultId)
+        val vault = requireNotNull(vaultRepository.get(vaultId))
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin = nativeToken,
+            vault = vault
+        )
+        val updatedCoin = nativeToken.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
+
+        vaultRepository.addTokenToVault(vaultId, updatedCoin)
     }
 
     fun setOutputAddress(address: String) {
@@ -857,7 +901,7 @@ internal class SendFormViewModel @Inject constructor(
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
                 val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainIds, preSelectedTokenId
+                    accounts, preSelectedChainIds, preSelectedTokenId,
                 )
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
@@ -892,7 +936,6 @@ internal class SendFormViewModel @Inject constructor(
                 searchByChainResult = accountToken
             }
         }
-
         // if user selected none, or nothing was found, select the first token
         return searchByChainResult
             ?: accounts.firstOrNull()?.token
