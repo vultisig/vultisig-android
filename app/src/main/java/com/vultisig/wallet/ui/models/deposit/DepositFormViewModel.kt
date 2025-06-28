@@ -66,6 +66,7 @@ internal enum class DepositOption {
     TransferIbc,
     Switch,
     Merge,
+    UnMerge,
     StakeTcy,
     UnstakeTcy
 }
@@ -513,6 +514,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.TransferIbc -> createTransferIbcTx()
                     DepositOption.Switch -> createSwitchTx()
                     DepositOption.Merge -> createMergeTx()
+                    DepositOption.UnMerge -> createUnMergeTx()
                     DepositOption.StakeTcy -> createTcyStakeTx("TCY+")
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
@@ -543,6 +545,10 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = false
             }
         }
+    }
+
+    private fun createUnMergeTx(): DepositTransaction {
+        TODO("Not yet implemented")
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
