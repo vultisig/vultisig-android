@@ -22,6 +22,7 @@
     <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
     <string name="rename_vault_invalid_name">Nombre inválido</string>
+    <string name="vault_name_too_long_error">El nombre de la bóveda es demasiado largo</string>
     <string name="swap_form_invalid_amount">Monto invalido</string>
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="choose_tokens">Elegir Tokens</string>

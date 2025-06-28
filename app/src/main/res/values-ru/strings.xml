@@ -165,6 +165,7 @@
     <string name="swap_error_no_amount">Сумма должна быть положительным числом</string>
     <string name="naming_vault_screen_invalid_name">Недопустимое имя</string>
     <string name="rename_vault_invalid_name">Недопустимое имя</string>
+    <string name="vault_name_too_long_error">Имя хранилища слишком длинное</string>
     <string name="swap_form_invalid_amount">Недопустимая сумма</string>
     <string name="send_from_invalid_amount">Недопустимая сумма</string>
     <string name="keygen_peer_discovery_looking_for_devices">Поиск устройств…</string>
