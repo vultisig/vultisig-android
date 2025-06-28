@@ -13,7 +13,6 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
-import com.vultisig.wallet.data.crypto.isAddressBounceable
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
