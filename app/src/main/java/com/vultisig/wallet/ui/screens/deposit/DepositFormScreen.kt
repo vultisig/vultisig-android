@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
+import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -193,6 +194,7 @@ internal fun DepositFormScreen(
                         DepositOption.TransferIbc -> stringResource(R.string.deposit_option_ibc_transfer)
                         DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
                         DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
+                        DepositOption.UnMerge -> stringResource(R.string.deposit_option_unmerge)
                         DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
                         DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
                     }
@@ -254,6 +256,15 @@ internal fun DepositFormScreen(
                         coinList = state.coinList,
                         onSelectCoin = onSelectCoin,
 
+                        balance = state.balance,
+                        amountFieldState = amountFieldState,
+                        onAmountLostFocus = onAmountLostFocus,
+                        amountError = state.amountError,
+                    )
+                }
+
+                DepositOption.UnMerge -> {
+                    UnMergeFunctionScreen(
                         balance = state.balance,
                         amountFieldState = amountFieldState,
                         onAmountLostFocus = onAmountLostFocus,
