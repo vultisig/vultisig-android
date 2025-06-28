@@ -73,7 +73,7 @@ internal class TonApiImpl @Inject constructor(
             ?: BigInteger.ZERO
 
     override suspend fun getWalletState(address: String): String =
-        getAddressInformation(address).state
+        getAddressInformation(address).status
 }
 
 @Serializable
@@ -81,8 +81,8 @@ private data class TonAddressInfoResponseJson(
     @SerialName("balance")
     @Contextual
     val balance: BigInteger,
-    @SerialName("state")
-    val state: String,
+    @SerialName("status")
+    val status: String,
 )
 
 @Serializable
