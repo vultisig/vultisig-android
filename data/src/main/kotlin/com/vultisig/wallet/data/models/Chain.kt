@@ -230,7 +230,7 @@ val Chain.isBtcLike: Boolean
 val Chain.minAmountToTransfer: BigInteger
     get() = when {
         this.isBtcLike -> coinType.getDustThreshold.toBigInteger()
-        this == Chain.Cardano -> "1400000".toBigInteger()
+        this == Chain.Cardano -> "1400000".toBigInteger() // review once tokens are supported
         else -> throw UnsupportedOperationException("Chain not supported")
     }
 
