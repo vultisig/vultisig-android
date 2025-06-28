@@ -23,13 +23,9 @@ object TonHelper {
     private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
-        val tonBlockchainSpecific = payload.blockChainSpecific as? BlockChainSpecific.Ton
-            ?: throw RuntimeException("Fail to get Ton chain specific")
-
-        val sequenceNumber = tonBlockchainSpecific.sequenceNumber
-        val expireAt = tonBlockchainSpecific.expireAt
-        val sendMaxAmount = tonBlockchainSpecific.sendMaxAmount
-        val isBounceable = tonBlockchainSpecific.bounceable
+        val (sequenceNumber, expireAt, bounceable, _, sendMaxAmount) =
+            (payload.blockChainSpecific as? BlockChainSpecific.Ton)
+                ?: throw RuntimeException("Fail to get Ton chain specific")
 
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
 
@@ -50,7 +46,7 @@ object TonHelper {
             .setDest(toAddress.description())
             .setAmount(amount)
             .setMode(mode)
-            .setBounceable(isBounceable)
+            .setBounceable(bounceable)
             .let {
                 if (payload.memo != null) {
                     it.setComment(payload.memo)
