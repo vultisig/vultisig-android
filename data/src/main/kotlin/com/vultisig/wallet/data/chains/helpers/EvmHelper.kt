@@ -126,11 +126,10 @@ class EvmHelper(
         return signingInput.apply {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
-
             gasLimit = ByteString.copyFrom(gas.toByteArray())
-            setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
-
-            txMode = Ethereum.TransactionMode.Legacy
+            maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+            txMode = Ethereum.TransactionMode.Enveloped
         }.build().toByteArray()
     }
 
