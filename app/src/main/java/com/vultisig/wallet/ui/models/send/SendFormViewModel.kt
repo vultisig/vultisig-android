@@ -625,7 +625,6 @@ internal class SendFormViewModel @Inject constructor(
                             it
                         }
                     }
-                    .let { selectUtxosIfNeeded(tokenAmountInt, it) }
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -779,31 +778,6 @@ internal class SendFormViewModel @Inject constructor(
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
-    }
-
-    // TODO: Review Probably not required as WC perform selection. Also a bit dangerous as
-    // it will pick Dust UTXOS as valid
-    private fun selectUtxosIfNeeded(
-        tokenAmount: BigInteger,
-        specific: BlockChainSpecificAndUtxo
-    ): BlockChainSpecificAndUtxo {
-        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO
-
-        return if (spec != null) {
-            val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
-            val resultingUtxos = mutableListOf<UtxoInfo>()
-            val existingUtxos = specific.utxos
-            var total = 0L
-            for (utxo in existingUtxos) {
-                resultingUtxos.add(utxo)
-                total += utxo.amount
-                if (total >= totalAmount.toLong()) {
-                    break
-                }
-            }
-
-            specific.copy(utxos = resultingUtxos)
-        } else specific
     }
 
     private fun hideLoading() {

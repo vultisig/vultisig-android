@@ -69,7 +69,7 @@ class UtxoHelper(
             .setByteFee(1L)
             .setCoinType(coinType.value())
             .setUseMaxAmount(false)
-            .setOutputOpReturn(
+            .setOutputOpReturn( // index is latest
                 ByteString.copyFromUtf8(keysignPayload.memo)
             )
         return input.build()
