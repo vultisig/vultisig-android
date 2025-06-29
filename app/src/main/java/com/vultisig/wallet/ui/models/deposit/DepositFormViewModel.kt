@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -102,6 +103,8 @@ internal data class DepositFormUiModel(
     val coinList: List<TokenMergeInfo> = tokensToMerge,
 
     val unstakableTcyAmount: String? = null,
+
+    val unMergeShares: UiText = UiText.Empty,
 )
 
 @HiltViewModel
@@ -548,8 +551,49 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private fun createUnMergeTx(): DepositTransaction {
-        TODO("Not yet implemented")
+    private suspend fun createUnMergeTx(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val account = address.accounts.find { it.token.chain == Chain.ThorChain }
+            ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_address))
+        val srcAddress = account.token.address
+        val memo = "unmerged:XXXX" // Set amount
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain = chain,
+                address = srcAddress,
+                token = account.token,
+                gasFee = gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddr,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmount,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+        )
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
@@ -1053,7 +1097,6 @@ internal class DepositFormViewModel @Inject constructor(
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
-
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
@@ -1076,7 +1119,15 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = "merge:${mergeToken.denom}"
 
-        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -1370,9 +1421,13 @@ internal class DepositFormViewModel @Inject constructor(
                 lpUnits.all { it.isDigit() } &&
                 lpUnits.toInt() > 0
 
-    fun onLoadRujiShares(): String {
-       return "0"
-       // thorChainApi.lo
+    fun onLoadRujiShares() {
+        viewModelScope.launch {
+            state.update {
+                it.copy(isLoading = true)
+            }
+            delay(5000)
+        }
     }
 }
 
