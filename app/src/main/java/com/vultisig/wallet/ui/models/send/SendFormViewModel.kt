@@ -33,9 +33,10 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.hasReaping
-import com.vultisig.wallet.data.models.minAmountToTransfer
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -81,7 +82,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -666,7 +666,8 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             it
                         }
-                    }
+                    }.let { selectUtxosIfNeeded(chain, tokenAmountInt, it) }
+
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -783,7 +784,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
-        val minAmount = chain.minAmountToTransfer
+        val minAmount = chain.getDustThreshold
         if (tokenAmountInt < minAmount) {
             val symbol = chain.coinType.symbol
             val name = chain.raw
@@ -820,6 +821,31 @@ internal class SendFormViewModel @Inject constructor(
 
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
+    }
+
+    private fun selectUtxosIfNeeded(
+        chain: Chain,
+        tokenAmount: BigInteger,
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
+        val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
+        val resultingUtxos = mutableListOf<UtxoInfo>()
+        val existingUtxos = specific.utxos
+        var total = 0L
+        for (utxo in existingUtxos) {
+            if (utxo.amount < chain.getDustThreshold.toLong()) {
+                continue
+            }
+            resultingUtxos.add(utxo)
+            total += utxo.amount
+            if (total >= totalAmount.toLong()) {
+                break
+            }
+        }
+
+        return specific.copy(utxos = resultingUtxos)
     }
 
     private fun hideLoading() {
@@ -1383,7 +1409,7 @@ internal class SendFormViewModel @Inject constructor(
         totalBalance: BigInteger,
         estimatedFee: BigInteger,
     ) {
-        val minUTXOValue: BigInteger = Chain.Cardano.minAmountToTransfer
+        val minUTXOValue: BigInteger = Chain.Cardano.getDustThreshold
 
         // 1. Check send amount meets minimum
         if (sendAmount < minUTXOValue) {

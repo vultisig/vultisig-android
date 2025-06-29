@@ -216,7 +216,7 @@ val Chain.hasReaping: Boolean
         else -> false
     }
 
-val Chain.minAmountToTransfer: BigInteger
+val Chain.getDustThreshold: BigInteger
     get() = when {
         standard == UTXO -> coinType.getDustThreshold.toBigInteger()
         else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
