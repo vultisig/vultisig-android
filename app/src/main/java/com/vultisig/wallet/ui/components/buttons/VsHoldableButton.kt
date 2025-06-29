@@ -64,7 +64,7 @@ fun VsHoldableButton(
                         val up = waitForUpOrCancellation()
 
                         if (up != null) {
-                            if (progress.value < 0.2f) onClick()
+                            if (progress.value < 0.5f) onClick()
                         }
 
                         scope.launch {
