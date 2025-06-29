@@ -33,11 +33,9 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.hasReaping
-import com.vultisig.wallet.data.models.isBtcLike
 import com.vultisig.wallet.data.models.minAmountToTransfer
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -692,7 +690,7 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
 
-                    if (chain.isBtcLike) {
+                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                         validateBtcLikeAmount(tokenAmountInt, chain)
                     }
                 } else {

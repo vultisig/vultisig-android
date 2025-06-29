@@ -216,22 +216,10 @@ val Chain.hasReaping: Boolean
         else -> false
     }
 
-val Chain.isBtcLike: Boolean
-    get() = when (this) {
-        Chain.Bitcoin,
-        Chain.BitcoinCash,
-        Chain.Litecoin,
-        Chain.Dogecoin,
-        Chain.Dash,
-        Chain.Zcash -> true
-        else -> false
-    }
-
 val Chain.minAmountToTransfer: BigInteger
     get() = when {
-        this.isBtcLike -> coinType.getDustThreshold.toBigInteger()
-        this == Chain.Cardano -> "1400000".toBigInteger() // review once tokens are supported
-        else -> throw UnsupportedOperationException("Chain not supported")
+        standard == UTXO -> coinType.getDustThreshold.toBigInteger()
+        else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
     }
 
 fun Chain.toValue(value: BigInteger): BigDecimal =

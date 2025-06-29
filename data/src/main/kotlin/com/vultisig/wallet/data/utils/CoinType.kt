@@ -30,6 +30,7 @@ internal val CoinType.getDustThreshold: Long
     get() = when (this) {
         CoinType.DOGECOIN -> 1_000_000L
         CoinType.BITCOIN -> 546L
+        CoinType.CARDANO -> 1_400_000L
         CoinType.LITECOIN,
         CoinType.DASH,
         CoinType.ZCASH,
