@@ -956,7 +956,7 @@ internal class DepositFormViewModel @Inject constructor(
             srcAddress = srcAddress,
             dstAddress = "",
 
-            memo = memo.toString(),
+            memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
                 token = selectedToken,
@@ -1370,7 +1370,10 @@ internal class DepositFormViewModel @Inject constructor(
                 lpUnits.all { it.isDigit() } &&
                 lpUnits.toInt() > 0
 
-
+    fun onLoadRujiShares(): String {
+       return "0"
+       // thorChainApi.lo
+    }
 }
 
 internal data class TokenMergeInfo(

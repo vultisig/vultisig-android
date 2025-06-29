@@ -92,6 +92,7 @@ internal fun DepositFormScreen(
         memoFieldState = model.customMemoFieldState,
         onMemoLostFocus = {  },
         onSelectCoin = model::selectMergeToken,
+        onUnmergedLoad = model::onLoadRujiShares,
 
         thorAddress = model.thorAddressFieldState,
         onThorAddressLostFocus = {  },
@@ -143,6 +144,8 @@ internal fun DepositFormScreen(
     onSetThorAddress: (String) -> Unit = {},
 
     onSelectCoin: (TokenMergeInfo) -> Unit = {},
+
+    onUnmergedLoad: () -> Unit = {},
 
     onOpenSelectToken: () -> Unit = {},
 ) {

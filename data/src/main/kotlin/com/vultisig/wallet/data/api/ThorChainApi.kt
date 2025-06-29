@@ -71,6 +71,8 @@ interface ThorChainApi {
     suspend fun getUnstakableTcyAmount(address: String): String?
 
     suspend fun getPools(): List<ThorChainPoolJson>
+
+    suspend fun getRujiraBalance(address: String): BigInteger
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -241,6 +243,10 @@ internal class ThorChainApiImpl @Inject constructor(
                 header(xClientID, xClientIDValue)
             }.throwIfUnsuccessful()
             .body()
+
+    override suspend fun getRujiraBalance(address: String): BigInteger {
+        return "150".toBigInteger()
+    }
 
 
     companion object {
