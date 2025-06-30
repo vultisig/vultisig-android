@@ -3,14 +3,17 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.JupiterApi
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
@@ -32,6 +35,13 @@ interface SwapQuoteRepository {
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote
+
+    suspend  fun getKyberSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+        isAffiliate: Boolean,
+    ) :KyberSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
         srcToken: Coin,
@@ -76,6 +86,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val liFiChainApi: LiFiChainApi,
     private val jupiterApi: JupiterApi,
+    private val kyberApi : KyberApi
 ) : SwapQuoteRepository {
 
     override suspend fun getOneInchSwapQuote(
@@ -97,6 +108,30 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             is OneInchSwapQuoteDeserialized.Result -> {
                 oneInchQuote.data.error?.let { throw SwapException.handleSwapException(it) }
                 return oneInchQuote.data
+            }
+        }
+    }
+
+
+    override suspend fun getKyberSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+        isAffiliate: Boolean,
+    ): KyberSwapQuoteJson {
+        var kyberQuote = kyberApi.getSwapQuote(
+            chain = srcToken.chain,
+            srcTokenContractAddress = srcToken.contractAddress,
+            dstTokenContractAddress = dstToken.contractAddress,
+            amount = tokenValue.value.toString(),
+            srcAddress = srcToken.address,
+            isAffiliate = false
+        )
+        when (kyberQuote) {
+            is KyberSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(kyberQuote.error)
+            is KyberSwapQuoteDeserialized.Result -> {
+                kyberQuote.data.error?.let { throw SwapException.handleSwapException(it) }
+                return kyberQuote.data
             }
         }
     }
@@ -404,6 +439,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 ticker in thorEthTokens && ticker in mayaEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
@@ -411,29 +447,44 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 ticker in thorEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                 )
 
                 ticker in mayaEthTokens -> setOf(
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
-
-                else -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+                else -> setOf(
+                    SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
+                    SwapProvider.LIFI
+                )
             }
 
             Chain.BscChain -> if (ticker in thorBscTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
+                SwapProvider.KYBER,
                 SwapProvider.LIFI,
-            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+            ) else setOf(
+                SwapProvider.ONEINCH,
+                SwapProvider.KYBER,
+                SwapProvider.LIFI
+            )
 
             Chain.Avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
+                SwapProvider.KYBER,
                 SwapProvider.LIFI,
-            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+            ) else setOf(
+                SwapProvider.ONEINCH,
+                SwapProvider.KYBER,
+                SwapProvider.LIFI
+            )
 
             Chain.Base -> setOf(
                 SwapProvider.LIFI,

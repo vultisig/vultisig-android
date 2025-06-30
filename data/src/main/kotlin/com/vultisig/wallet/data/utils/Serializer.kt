@@ -1,19 +1,22 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
-import com.vultisig.wallet.data.api.models.THORChainSwapQuote
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -140,6 +143,29 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
         } else {
             LiFiSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+}
+
+interface KyberSwapQuoteResponseJsonSerializer : DefaultSerializer<KyberSwapQuoteDeserialized>
+
+class KyberSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
+    KyberSwapQuoteResponseJsonSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("KyberSwapQuoteResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): KyberSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("dstAmount")) {
+            KyberSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<KyberSwapQuoteResponse>(jsonObject)
+            )
+        } else {
+            KyberSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<String>(jsonObject)
             )
         }
     }

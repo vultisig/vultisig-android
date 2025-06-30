@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.models
+package com.vultisig.wallet.data.api.models.quotes
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi

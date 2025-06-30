@@ -449,6 +449,70 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val gasFeeFiatValue = estimatedGasFee.fiatValue
 
                 when (swapPayload) {
+                    is SwapPayload.Kyber ->{
+                        val kyberSwapTxJson = swapPayload.data.quote.tx
+                        //if swapFee is not null then it provider is Lifi otherwise 1inch
+                        kyberSwapTxJson
+                        val value = if (swapPayload.data.quote.data.fee != null) {
+                            swapPayload.data.quote.data.fee
+                        } else {
+                            kyberSwapTxJson.gasPrice.toBigInteger() *
+                                    (kyberSwapTxJson.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+                        }
+
+
+                        val feeToken = nativeToken
+                        val estimatedTokenFees = TokenValue(
+                            value = value?: BigInteger.ZERO,
+                            token = feeToken
+                        )
+
+                        val estimatedFee = convertTokenValueToFiat(
+                            feeToken,
+                            estimatedTokenFees,
+                            currency
+                        )
+
+                        val swapTransaction = SwapTransactionUiModel(
+                            src = ValuedToken(
+                                value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                token = srcToken,
+                                fiatValue = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(
+                                        srcToken,
+                                        srcTokenValue,
+                                        currency
+                                    )
+                                ),
+                            ),
+
+                            dst = ValuedToken(
+                                value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                token = dstToken,
+                                fiatValue = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(
+                                        dstToken,
+                                        dstTokenValue,
+                                        currency
+                                    )
+                                ),
+                            ),
+
+                            totalFee = fiatValueToStringMapper.map(
+                                estimatedFee + gasFeeFiatValue
+                            ),
+                        )
+
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
+
+                        verifyUiModel.value = VerifyUiModel.Swap(
+                            VerifySwapUiModel(
+                                tx = swapTransaction
+                            )
+                        )
+
+                    }
                     is SwapPayload.OneInch -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
                         //if swapFee is not null then it provider is Lifi otherwise 1inch

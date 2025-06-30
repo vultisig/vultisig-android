@@ -1,7 +1,12 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.OutputChange
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -10,6 +15,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
@@ -88,6 +94,43 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     SwapPayload.MayaChain(
                         it.toThorChainSwapPayload()
                     )
+                }
+
+                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
+                    SwapPayload.Kyber(
+                        KyberSwapPayloadJson(
+                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                            toCoin = requireNotNull(it.toCoin).toCoin(),
+                            fromAmount = BigInteger(it.fromAmount),
+                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
+                            quote = requireNotNull(it.quote).let { it ->
+                                KyberSwapQuoteResponse(
+                                    code = 0, // Provide appropriate code
+                                    message = "", // Provide appropriate message
+                                    data = KyberSwapQuoteData(
+                                        amountIn = "",
+                                        amountInUsd = "",
+                                        amountOut = it.dstAmount, // Using dstAmount here
+                                        amountOutUsd = "",
+                                        gas = it.tx?.gas.toString(),
+                                        gasUsd = "",
+                                        additionalCostUsd = "",
+                                        additionalCostMessage = "",
+                                        outputChange = OutputChange(
+                                            amount = TODO(),
+                                            percent = TODO(),
+                                            level = TODO()
+                                        ), // You might need to provide proper initialization
+                                        data = it.tx?.data ?: "",
+                                        routerAddress = it.tx?.to ?: "",
+                                        transactionValue = it.tx?.value ?: "",
+                                        gasPrice = it.tx?.gasPrice ?: "",
+                                        fee = BigInteger.ZERO
+                                    ),
+                                    requestId = "" // Provide appropriate requestId
+                                )
+                            }
+                        ))
                 }
 
                 else -> null
@@ -173,6 +216,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         sendMaxAmount = it.sendMaxAmount,
                     )
                 }
+
                 from.rippleSpecific != null -> from.rippleSpecific.let {
                     BlockChainSpecific.Ripple(
                         sequence = it.sequence,
@@ -194,7 +238,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         gasFeeEstimation = it.gasEstimation,
                     )
                 }
-                from.cardano !=null ->  from.cardano.let {
+
+                from.cardano != null -> from.cardano.let {
                     BlockChainSpecific.Cardano(
                         byteFee = it.byteFee,
                         sendMaxAmount = it.sendMaxAmount,
@@ -235,5 +280,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
         )
+
 
 }

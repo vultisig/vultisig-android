@@ -1,15 +1,15 @@
-package com.vultisig.wallet.data.wallet
+package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
-import wallet.core.jni.proto.Ethereum.SigningInput
-import wallet.core.jni.proto.Ethereum.Transaction
+import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
 
 class OneInchSwap(
@@ -38,7 +38,11 @@ class OneInchSwap(
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
         val helper =
-            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+            EvmHelper(
+                keysignPayload.coin.coinType,
+                vaultHexPublicKey,
+                vaultHexChainCode
+            )
         return helper.getSignedTransaction(inputData, signatures)
     }
 
@@ -47,12 +51,12 @@ class OneInchSwap(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
-        val input = SigningInput.newBuilder()
+        val input = Ethereum.SigningInput.newBuilder()
             .setToAddress(quote.tx.to)
             .setTransaction(
-                Transaction.newBuilder()
+                Ethereum.Transaction.newBuilder()
                     .setContractGeneric(
-                        Transaction.ContractGeneric.newBuilder()
+                        Ethereum.Transaction.ContractGeneric.newBuilder()
                             .setAmount(
                                 ByteString.copyFrom(
                                     quote.tx.value.toBigInteger().toByteArray()
@@ -64,7 +68,7 @@ class OneInchSwap(
 
         val gasPrice = quote.tx.gasPrice.toBigInteger()
         val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+            ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
         return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,

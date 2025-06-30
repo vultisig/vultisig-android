@@ -196,6 +196,7 @@
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
     <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1$s %2$s "</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
+    <string name="swap_for_provider_kyber" translatable="false">Kyber</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="verify_approve_amount_title">Amount to approve</string>
