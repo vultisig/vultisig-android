@@ -370,24 +370,24 @@ data class MergeAccount(
     val pool: Pool?,
     val size: Size?,
     val shares: String?
-)
+) {
+    @Serializable
+    data class Pool(
+        val mergeAsset: MergeAsset?
+    ) {
+        @Serializable
+        data class MergeAsset(
+            val metadata: Metadata?
+        ) {
+            @Serializable
+            data class Metadata(
+                val symbol: String?
+            )
+        }
+    }
 
-@Serializable
-data class Pool(
-    val mergeAsset: MergeAsset?
-)
-
-@Serializable
-data class MergeAsset(
-    val metadata: Metadata?
-)
-
-@Serializable
-data class Metadata(
-    val symbol: String?
-)
-
-@Serializable
-data class Size(
-    val amount: String?
-)
+    @Serializable
+    data class Size(
+        val amount: String?
+    )
+}

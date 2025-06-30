@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -28,6 +29,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
+import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.DecimalFormat
@@ -124,6 +127,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private lateinit var vaultId: String
     private var chain: Chain? = null
+    private var rujiBalances: List<MergeAccount>? = null
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -956,7 +960,7 @@ internal class DepositFormViewModel @Inject constructor(
             srcAddress = srcAddress,
             dstAddress = "",
 
-            memo = memo.toString(),
+            memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
                 token = selectedToken,
@@ -1227,13 +1231,30 @@ internal class DepositFormViewModel @Inject constructor(
 
     fun onLoadRujiBalances() {
         viewModelScope.launch {
-            val address = address.value
-                ?: throw RuntimeException("Invalid Address, can't fetch balance")
+            try {
+                val selectedToken = state.value.selectedCoin
+                val addressString = address.value?.address
+                    ?: error("Invalid address: cannot fetch balance")
 
-            thorChainApi.getRujiBalances("thor103xklz882ffz6vwjwcrawwt8tn57ngrhpfq3cl")
+                rujiBalances = thorChainApi.getRujiBalances(addressString)
+
+                val selectedSymbol = selectedToken.ticker
+                val selectedMergeAccount = rujiBalances
+                    ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol == selectedSymbol }
+
+                val amountText = selectedMergeAccount?.shares
+                    ?.toBigInteger()
+                    ?.let { CoinType.THORCHAIN.toValue(it).toString() }
+                    ?: "0"
+
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
+            } catch (t: Throwable) {
+                Timber.e("Can't load Ruji Balances")
+            } finally {
+                isLoading = false
+            }
         }
     }
-
     private fun requireTokenAmount(
         selectedToken: Coin,
         selectedAccount: Account,
@@ -1378,8 +1399,6 @@ internal class DepositFormViewModel @Inject constructor(
         lpUnits.toIntOrNull() != null &&
                 lpUnits.all { it.isDigit() } &&
                 lpUnits.toInt() > 0
-
-
 }
 
 internal data class TokenMergeInfo(
