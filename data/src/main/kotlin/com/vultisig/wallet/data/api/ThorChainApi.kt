@@ -30,11 +30,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 interface ThorChainApi {
 
@@ -71,6 +75,8 @@ interface ThorChainApi {
     suspend fun getUnstakableTcyAmount(address: String): String?
 
     suspend fun getPools(): List<ThorChainPoolJson>
+
+    suspend fun getRujiBalances(address: String)
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -242,6 +248,45 @@ internal class ThorChainApiImpl @Inject constructor(
             }.throwIfUnsuccessful()
             .body()
 
+    @OptIn(ExperimentalEncodingApi::class)
+    override suspend fun getRujiBalances(address: String) {
+        val accountBase64 = Base64.encode("Account:$address".toByteArray())
+
+        val query = """
+        {
+          node(id:"$accountBase64") {
+            ... on Account {
+              merge {
+                accounts {
+                  pool {
+                    mergeAsset {
+                      metadata {
+                        symbol
+                      }
+                    }
+                  }
+                  size {
+                    amount
+                  }
+                  shares
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject {
+                put("query", query)
+            })
+        }
+
+        val parsed = response.body<GraphQLResponse<RootData>>()
+
+        println(parsed)
+    }
 
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
@@ -300,4 +345,57 @@ data class ThorChainPoolJson(
     @Contextual
     @SerialName("asset_tor_price")
     val assetTorPrice: BigInteger,
+)
+
+@Serializable
+data class GraphQLResponse<T>(
+    val data: T? = null,
+    val errors: List<GraphQLError>? = null
+)
+
+@Serializable
+data class GraphQLError(
+    val message: String
+)
+
+@Serializable
+data class RootData(
+    val node: AccountNode?
+)
+
+@Serializable
+data class AccountNode(
+    val merge: MergeInfo?
+)
+
+@Serializable
+data class MergeInfo(
+    val accounts: List<MergeAccount>,
+)
+
+@Serializable
+data class MergeAccount(
+    val pool: Pool?,
+    val size: Size?,
+    val shares: String?
+)
+
+@Serializable
+data class Pool(
+    val mergeAsset: MergeAsset?
+)
+
+@Serializable
+data class MergeAsset(
+    val metadata: Metadata?
+)
+
+@Serializable
+data class Metadata(
+    val symbol: String?
+)
+
+@Serializable
+data class Size(
+    val amount: String?
 )

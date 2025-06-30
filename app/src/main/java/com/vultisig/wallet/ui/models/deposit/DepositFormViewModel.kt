@@ -66,6 +66,7 @@ internal enum class DepositOption {
     TransferIbc,
     Switch,
     Merge,
+    UnMerge,
     StakeTcy,
     UnstakeTcy
 }
@@ -160,6 +161,7 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Leave,
                 DepositOption.Custom,
                 DepositOption.Merge,
+                DepositOption.UnMerge,
                 DepositOption.StakeTcy,
                 DepositOption.UnstakeTcy,
             )
@@ -513,6 +515,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.TransferIbc -> createTransferIbcTx()
                     DepositOption.Switch -> createSwitchTx()
                     DepositOption.Merge -> createMergeTx()
+                    DepositOption.UnMerge -> createUnMergeTx()
                     DepositOption.StakeTcy -> createTcyStakeTx("TCY+")
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
@@ -543,6 +546,10 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = false
             }
         }
+    }
+
+    private fun createUnMergeTx(): DepositTransaction {
+        error("Not implemented yet")
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
@@ -1216,6 +1223,15 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    fun onLoadRujiBalances() {
+        viewModelScope.launch {
+            val address = address.value
+                ?: throw RuntimeException("Invalid Address, can't fetch balance")
+
+            thorChainApi.getRujiBalances("thor103xklz882ffz6vwjwcrawwt8tn57ngrhpfq3cl")
+        }
     }
 
     private fun requireTokenAmount(

@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
+import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -97,6 +98,8 @@ internal fun DepositFormScreen(
         onSetThorAddress = {  },
 
         onOpenSelectToken = model::selectToken,
+
+        onLoadRujiBalances = model::onLoadRujiBalances,
     )
 }
 
@@ -144,6 +147,8 @@ internal fun DepositFormScreen(
     onSelectCoin: (TokenMergeInfo) -> Unit = {},
 
     onOpenSelectToken: () -> Unit = {},
+
+    onLoadRujiBalances: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -193,6 +198,7 @@ internal fun DepositFormScreen(
                         DepositOption.TransferIbc -> stringResource(R.string.deposit_option_ibc_transfer)
                         DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
                         DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
+                        DepositOption.UnMerge -> stringResource(R.string.deposit_option_unmerge)
                         DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
                         DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
                     }
@@ -258,6 +264,19 @@ internal fun DepositFormScreen(
                         amountFieldState = amountFieldState,
                         onAmountLostFocus = onAmountLostFocus,
                         amountError = state.amountError,
+                    )
+                }
+
+                DepositOption.UnMerge -> {
+                    UnMergeFunctionScreen(
+                        selectedToken = state.selectedCoin,
+                        coinList = state.coinList,
+                        onSelectCoin = onSelectCoin,
+                        shares = state.balance,
+                        amountFieldState = amountFieldState,
+                        onAmountLostFocus = onAmountLostFocus,
+                        amountError = state.amountError,
+                        onLoadRujiBalances = onLoadRujiBalances,
                     )
                 }
 

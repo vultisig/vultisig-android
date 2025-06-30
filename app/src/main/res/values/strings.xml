@@ -8,6 +8,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_unmerge">Unmerge</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="app_name">Vultisig</string>
@@ -44,6 +45,7 @@
     <string name="send_amount_hint">Enter Amount</string>
     <string name="send_amount_currency">Amount (in %s)</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
+    <string name="send_shares_currency_hint">Enter Shares</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="send_form_network_fee">Network fee</string>
@@ -226,6 +228,7 @@
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
+    <string name="deposit_form_shares_title">Shares</string>
     <string name="deposit_form_amount_title_without_balance" translatable="false">Amount</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
