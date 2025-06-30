@@ -212,7 +212,8 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(
                 selectedCoin = coinList.first(),
-                coinList = coinList
+                coinList = coinList,
+                selectedUnMergeCoin = coinList.first(),
             )
         }
 
@@ -1240,11 +1241,11 @@ internal class DepositFormViewModel @Inject constructor(
     fun onLoadRujiShares() {
         viewModelScope.launch {
             try {
-                val selectedToken = state.value.selectedCoin
+                val selectedToken = state.value.selectedUnMergeCoin
                 val addressString = address.value?.address
                     ?: error("Invalid address: cannot fetch balance")
 
-                rujiBalances = thorChainApi.getRujiBalances("thor103xklz882ffz6vwjwcrawwt8tn57ngrhpfq3cl")
+                rujiBalances = thorChainApi.getRujiBalances(addressString)
 
                 setUnMergeTokenShares(selectedToken)
             } catch (t: Throwable) {
