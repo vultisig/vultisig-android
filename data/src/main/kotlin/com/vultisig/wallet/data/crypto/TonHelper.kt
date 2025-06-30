@@ -23,22 +23,30 @@ object TonHelper {
     private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
-        val (sequenceNumber, expireAt, _) = payload.blockChainSpecific as? BlockChainSpecific.Ton
-            ?: throw RuntimeException("Fail to get Ton chain specific")
+        val (sequenceNumber, expireAt, bounceable, _, sendMaxAmount) =
+            (payload.blockChainSpecific as? BlockChainSpecific.Ton)
+                ?: throw RuntimeException("Fail to get Ton chain specific")
 
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
 
         val publicKey =
             PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519)
 
+        // If sending max amount, set amount to 0 (entire balance will be attached)
+        val amount = if (sendMaxAmount) 0L else payload.toAmount.toLong()
+
+        // Always include IGNORE_ACTION_PHASE_ERRORS_VALUE to prevent validators from retrying
+        // until funds are depleted
+        val mode = when {
+            sendMaxAmount -> TheOpenNetwork.SendMode.ATTACH_ALL_CONTRACT_BALANCE.number
+            else -> TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+        } or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
+
         val transfer = TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
-            .setAmount(payload.toAmount.toLong())
-            .setMode(
-                TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
-                        or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
-            )
-            .setBounceable(false) // TODO
+            .setAmount(amount)
+            .setMode(mode)
+            .setBounceable(bounceable)
             .let {
                 if (payload.memo != null) {
                     it.setComment(payload.memo)
@@ -105,5 +113,4 @@ object TonHelper {
             transactionHash = output.hash.toByteArray().toHexString()
         )
     }
-
 }
