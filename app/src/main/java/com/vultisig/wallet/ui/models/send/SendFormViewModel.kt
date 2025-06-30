@@ -83,7 +83,6 @@ import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -504,19 +503,21 @@ internal class SendFormViewModel @Inject constructor(
             val max = fetchPercentageOfAvailableBalance(1f)
 
             maxAmount = max
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                max?.toPlainString() ?: ""
-            )
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.roundDown())
         }
     }
 
     fun choosePercentageAmount(percentage: Float) {
         viewModelScope.launch {
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                fetchPercentageOfAvailableBalance(percentage)?.toPlainString() ?: ""
+                fetchPercentageOfAvailableBalance(percentage).roundDown()
             )
         }
     }
+
+    private fun BigDecimal?.roundDown() = this?.setScale(12, RoundingMode.DOWN)
+        ?.stripTrailingZeros()
+        ?.toPlainString() ?: ""
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal? {
         val selectedAccount = selectedAccount ?: return null
@@ -533,8 +534,6 @@ internal class SendFormViewModel @Inject constructor(
 
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
-            ?.setScale(8, RoundingMode.DOWN)
-            ?.stripTrailingZeros()
     }
 
     fun dismissError() {
