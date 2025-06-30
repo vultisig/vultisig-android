@@ -66,6 +66,7 @@ sealed class BlockChainSpecific {
         val expireAt: ULong,
         val bounceable: Boolean,
         val isDeposit: Boolean = false,
+        val sendMaxAmount: Boolean = false,
     ) : BlockChainSpecific()
 
     data class Ripple(
