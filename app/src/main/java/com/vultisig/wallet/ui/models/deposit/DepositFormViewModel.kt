@@ -102,6 +102,7 @@ internal data class DepositFormUiModel(
     val thorAddressError: UiText? = null,
 
     val selectedCoin: TokenMergeInfo = tokensToMerge.first(),
+    val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
 
     val unstakableTcyAmount: String? = null,
@@ -410,6 +411,13 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(selectedCoin = mergeInfo)
         }
+    }
+
+    fun selectUnMergeToken(unmergeInfo: TokenMergeInfo) {
+        state.update {
+            it.copy(selectedUnMergeCoin = unmergeInfo)
+        }
+        setUnMergeTokenShares(unmergeInfo)
     }
 
     private fun resetTextFields() {
@@ -1229,25 +1237,16 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    fun onLoadRujiBalances() {
+    fun onLoadRujiShares() {
         viewModelScope.launch {
             try {
                 val selectedToken = state.value.selectedCoin
                 val addressString = address.value?.address
                     ?: error("Invalid address: cannot fetch balance")
 
-                rujiBalances = thorChainApi.getRujiBalances(addressString)
+                rujiBalances = thorChainApi.getRujiBalances("thor103xklz882ffz6vwjwcrawwt8tn57ngrhpfq3cl")
 
-                val selectedSymbol = selectedToken.ticker
-                val selectedMergeAccount = rujiBalances
-                    ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol == selectedSymbol }
-
-                val amountText = selectedMergeAccount?.shares
-                    ?.toBigInteger()
-                    ?.let { CoinType.THORCHAIN.toValue(it).toString() }
-                    ?: "0"
-
-                tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
+                setUnMergeTokenShares(selectedToken)
             } catch (t: Throwable) {
                 Timber.e("Can't load Ruji Balances")
             } finally {
@@ -1255,6 +1254,23 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
     }
+
+    private fun setUnMergeTokenShares(selectedToken: TokenMergeInfo) {
+        val selectedSymbol = selectedToken.ticker
+        val selectedMergeAccount = rujiBalances
+            ?.firstOrNull {
+                it.pool?.mergeAsset?.metadata?.symbol.equals(selectedSymbol, true)
+            } ?: return
+
+        val amountText = selectedMergeAccount.shares
+            ?.toBigInteger()
+            ?.let { CoinType.THORCHAIN.toValue(it).toString() }
+            ?: "0"
+
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
+    }
+
+
     private fun requireTokenAmount(
         selectedToken: Coin,
         selectedAccount: Account,

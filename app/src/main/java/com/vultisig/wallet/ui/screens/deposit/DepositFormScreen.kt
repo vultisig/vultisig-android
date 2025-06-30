@@ -92,6 +92,7 @@ internal fun DepositFormScreen(
         memoFieldState = model.customMemoFieldState,
         onMemoLostFocus = {  },
         onSelectCoin = model::selectMergeToken,
+        onSelectUnMergeCoin = model::selectUnMergeToken,
 
         thorAddress = model.thorAddressFieldState,
         onThorAddressLostFocus = {  },
@@ -99,7 +100,7 @@ internal fun DepositFormScreen(
 
         onOpenSelectToken = model::selectToken,
 
-        onLoadRujiBalances = model::onLoadRujiBalances,
+        onLoadRujiBalances = model::onLoadRujiShares,
     )
 }
 
@@ -145,6 +146,7 @@ internal fun DepositFormScreen(
     onSetThorAddress: (String) -> Unit = {},
 
     onSelectCoin: (TokenMergeInfo) -> Unit = {},
+    onSelectUnMergeCoin: (TokenMergeInfo) -> Unit = {},
 
     onOpenSelectToken: () -> Unit = {},
 
@@ -269,9 +271,9 @@ internal fun DepositFormScreen(
 
                 DepositOption.UnMerge -> {
                     UnMergeFunctionScreen(
-                        selectedToken = state.selectedCoin,
+                        selectedToken = state.selectedUnMergeCoin,
                         coinList = state.coinList,
-                        onSelectCoin = onSelectCoin,
+                        onSelectCoin = onSelectUnMergeCoin,
                         shares = state.balance,
                         amountFieldState = amountFieldState,
                         onAmountLostFocus = onAmountLostFocus,
