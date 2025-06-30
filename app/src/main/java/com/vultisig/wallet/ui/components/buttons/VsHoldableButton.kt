@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -22,15 +21,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 
 @Composable
@@ -53,7 +49,7 @@ fun VsHoldableButton(
                 forEachGesture {
                     awaitPointerEventScope {
                         val down = awaitFirstDown()
-                        scope.launch {
+                        val longClickJob = scope.launch {
                             progress.animateTo(
                                 1f,
                                 tween(holdDuration.toInt(), easing = LinearEasing)
@@ -64,11 +60,12 @@ fun VsHoldableButton(
                         val up = waitForUpOrCancellation()
 
                         if (up != null) {
-                            if (progress.value < 1f) onClick()
+                            if (progress.value < 0.2f) onClick()
                         }
 
                         scope.launch {
                             progress.snapTo(0f)
+                            longClickJob.cancelAndJoin()
                         }
                     }
                 }
