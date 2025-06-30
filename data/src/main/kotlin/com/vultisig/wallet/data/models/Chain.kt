@@ -2,7 +2,12 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.*
+import com.vultisig.wallet.data.utils.getDustThreshold
+import com.vultisig.wallet.data.utils.toUnit
+import com.vultisig.wallet.data.utils.toValue
 import wallet.core.jni.CoinType
+import java.math.BigDecimal
+import java.math.BigInteger
 
 typealias ChainId = String
 
@@ -210,3 +215,21 @@ val Chain.hasReaping: Boolean
         Chain.Polkadot, Chain.Ripple -> true
         else -> false
     }
+
+val Chain.getDustThreshold: BigInteger
+    get() = when {
+        standard == UTXO -> coinType.getDustThreshold.toBigInteger()
+        else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
+    }
+
+fun Chain.toValue(value: BigInteger): BigDecimal =
+    coinType.toValue(value)
+
+fun Chain.toValue(value: BigDecimal): BigDecimal =
+    coinType.toValue(value)
+
+fun Chain.toUnit(value: BigInteger): BigInteger =
+    coinType.toUnit(value)
+
+fun Chain.toUnit(value: BigDecimal): BigInteger =
+    coinType.toUnit(value)
