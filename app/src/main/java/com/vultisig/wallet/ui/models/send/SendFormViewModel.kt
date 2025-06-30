@@ -15,7 +15,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.crypto.CardanoUtils.toADAString
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -32,10 +31,13 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.hasReaping
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -53,6 +55,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -83,7 +86,6 @@ import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -664,8 +666,8 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             it
                         }
-                    }
-                    .let { selectUtxosIfNeeded(tokenAmountInt, it) }
+                    }.let { selectUtxosIfNeeded(chain, tokenAmountInt, it) }
+
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -687,6 +689,10 @@ internal class SendFormViewModel @Inject constructor(
                             totalBalance = selectedTokenValue.value,
                             estimatedFee = gasFee.value
                         )
+                    }
+
+                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                        validateBtcLikeAmount(tokenAmountInt, chain)
                     }
                 } else {
                     val nativeTokenAccount = accounts.value
@@ -777,6 +783,18 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
+        val minAmount = chain.getDustThreshold
+        if (tokenAmountInt < minAmount) {
+            val symbol = chain.coinType.symbol
+            val name = chain.raw
+            val formattedMinAmount = chain.toValue(minAmount).toString()
+            throw InvalidTransactionDataException(
+                UiText.DynamicString("Minimum send amount is $formattedMinAmount $symbol. $name requires this to prevent spam.")
+            )
+        }
+    }
+
     private suspend fun getBitcoinTransactionPlan(
         vaultId: String,
         selectedToken: Coin,
@@ -806,26 +824,28 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun selectUtxosIfNeeded(
+        chain: Chain,
         tokenAmount: BigInteger,
         specific: BlockChainSpecificAndUtxo
     ): BlockChainSpecificAndUtxo {
-        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO
+        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
 
-        return if (spec != null) {
-            val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
-            val resultingUtxos = mutableListOf<UtxoInfo>()
-            val existingUtxos = specific.utxos
-            var total = 0L
-            for (utxo in existingUtxos) {
-                resultingUtxos.add(utxo)
-                total += utxo.amount
-                if (total >= totalAmount.toLong()) {
-                    break
-                }
+        val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
+        val resultingUtxos = mutableListOf<UtxoInfo>()
+        val existingUtxos = specific.utxos
+        var total = 0L
+        for (utxo in existingUtxos) {
+            if (utxo.amount < chain.getDustThreshold.toLong()) {
+                continue
             }
+            resultingUtxos.add(utxo)
+            total += utxo.amount
+            if (total >= totalAmount.toLong()) {
+                break
+            }
+        }
 
-            specific.copy(utxos = resultingUtxos)
-        } else specific
+        return specific.copy(utxos = resultingUtxos)
     }
 
     private fun hideLoading() {
@@ -1389,11 +1409,11 @@ internal class SendFormViewModel @Inject constructor(
         totalBalance: BigInteger,
         estimatedFee: BigInteger,
     ) {
-        val minUTXOValue: BigInteger =  BigInteger.valueOf(MIN_CARDANO_UTXO_VALUE)
+        val minUTXOValue: BigInteger = Chain.Cardano.getDustThreshold
 
         // 1. Check send amount meets minimum
         if (sendAmount < minUTXOValue) {
-            val minAmountADA = minUTXOValue.toADAString
+            val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
             throw InvalidTransactionDataException(
                 UiText.DynamicString("Minimum send amount is $minAmountADA ADA. Cardano requires this to prevent spam.")
             )
@@ -1402,12 +1422,11 @@ internal class SendFormViewModel @Inject constructor(
         // 2. Check sufficient balance
         val totalNeeded = sendAmount + estimatedFee
         if (totalBalance < totalNeeded) {
-            val totalBalanceADA = totalBalance.toADAString
+            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
             val errorMessage = if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
                 "Insufficient balance.  Try 'Send Max' to send $totalBalanceADA ADA instead."
             } else {
-                val availableADA = totalBalance.toADAString
-                "Insufficient balance ($availableADA ADA). You need more ADA to complete this transaction."
+                "Insufficient balance ($totalBalanceADA ADA). You need more ADA to complete this transaction."
             }
             throw InvalidTransactionDataException(UiText.DynamicString(errorMessage))
         }
@@ -1415,18 +1434,15 @@ internal class SendFormViewModel @Inject constructor(
         // 3. Check remaining balance (change) meets minimum UTXO requirement
         val remainingBalance = totalBalance - sendAmount - estimatedFee
         if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = totalBalance.toADAString
+            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
 
             throw InvalidTransactionDataException(UiText.DynamicString(
                 "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."))
         }
     }
 
-
-
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val MIN_CARDANO_UTXO_VALUE = 1_400_000L
     }
 }
 

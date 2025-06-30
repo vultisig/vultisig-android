@@ -5,10 +5,6 @@ import com.vultisig.wallet.data.utils.Numeric
 import timber.log.Timber
 import wallet.core.jni.Bech32
 import wallet.core.jni.Hash
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import kotlin.experimental.and
 
 object CardanoUtils {
@@ -263,16 +259,4 @@ object CardanoUtils {
             else -> error("Unsupported CBOR length encoding")
         }
     }
-
-    val BigInteger.toADAString: String
-        get() {
-            val ada = BigDecimal(this).divide(BigDecimal("1000000"))
-            val formatter = DecimalFormat().apply {
-                minimumFractionDigits = 0
-                maximumFractionDigits = 6
-                isGroupingUsed = false
-            }
-            formatter.roundingMode = RoundingMode.DOWN
-            return formatter.format(ada)
-        }
 }
