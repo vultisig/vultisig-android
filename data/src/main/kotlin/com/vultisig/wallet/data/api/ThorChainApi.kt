@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.GraphQLResponse
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
@@ -76,7 +77,7 @@ interface ThorChainApi {
 
     suspend fun getPools(): List<ThorChainPoolJson>
 
-    suspend fun getRujiBalances(address: String)
+    suspend fun getRujiBalances(address: String): List<MergeAccount>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -249,7 +250,7 @@ internal class ThorChainApiImpl @Inject constructor(
             .body()
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun getRujiBalances(address: String) {
+    override suspend fun getRujiBalances(address: String): List<MergeAccount> {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
 
         val query = """
@@ -281,11 +282,13 @@ internal class ThorChainApiImpl @Inject constructor(
             setBody(buildJsonObject {
                 put("query", query)
             })
+        }.body<GraphQLResponse<RootData>>()
+
+        if (!response.errors.isNullOrEmpty()) {
+            throw Exception("Could not fetch balances: ${response.errors}")
         }
 
-        val parsed = response.body<GraphQLResponse<RootData>>()
-
-        println(parsed)
+        return response.data?.node?.merge?.accounts ?: emptyList()
     }
 
     companion object {
@@ -345,17 +348,6 @@ data class ThorChainPoolJson(
     @Contextual
     @SerialName("asset_tor_price")
     val assetTorPrice: BigInteger,
-)
-
-@Serializable
-data class GraphQLResponse<T>(
-    val data: T? = null,
-    val errors: List<GraphQLError>? = null
-)
-
-@Serializable
-data class GraphQLError(
-    val message: String
 )
 
 @Serializable
