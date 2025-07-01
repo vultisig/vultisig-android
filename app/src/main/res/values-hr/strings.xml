@@ -343,8 +343,12 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_unmerge">Unmerge</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
     <string name="verify_transaction_function_inputs_title">Funkcijski ulazi</string>
+    <string name="send_shares_currency_hint">Unesite udjele</string>
+    <string name="send_error_max_shares">Iznos ne smije premašiti stanje</string>
+    <string name="deposit_form_shares_title">Udjeli</string>
 </resources>
