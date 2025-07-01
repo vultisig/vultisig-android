@@ -1324,7 +1324,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                 setUnMergeTokenShares(selectedToken)
             } catch (t: Throwable) {
-                Timber.e("Can't load Ruji Balances")
+                Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
                 isLoading = false
             }
