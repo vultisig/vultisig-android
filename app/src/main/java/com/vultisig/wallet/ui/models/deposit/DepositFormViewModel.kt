@@ -562,6 +562,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
+    // TODO: Clean up this method
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
         val selectedUnMergeAccount = rujiBalances
