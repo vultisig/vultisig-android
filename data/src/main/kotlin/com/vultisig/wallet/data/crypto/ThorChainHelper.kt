@@ -124,7 +124,7 @@ class ThorChainHelper(
                 val mergeToken = keysignPayload.memo
                     ?.lowercase()
                     ?.removePrefix("merge:")
-                    ?: throw IllegalArgumentException("Missing merge token")
+                    ?: throw IllegalArgumentException("Missing memo for merge or unmerge")
 
                 // Validate the sender address
                 val fromAddr = try {
