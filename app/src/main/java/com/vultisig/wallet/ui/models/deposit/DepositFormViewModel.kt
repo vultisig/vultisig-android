@@ -567,13 +567,7 @@ internal class DepositFormViewModel @Inject constructor(
         val unmergeToken = state.value.selectedUnMergeCoin
         val unMergeAccountBalance = rujiBalances.value
             ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true) }
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        val maxShares = unMergeAccountBalance.shares?.toBigInteger()
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
+        val maxShares = unMergeAccountBalance?.shares?.toBigInteger() ?: BigInteger.ZERO
 
         // transform amount back to share units
         val tokenShares = tokenAmountFieldState.text
