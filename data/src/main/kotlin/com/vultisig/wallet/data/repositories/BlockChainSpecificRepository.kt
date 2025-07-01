@@ -114,6 +114,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         sequence = BigInteger(account.sequence ?: "0"),
                         fee = gasFee.value,
                         isDeposit = isDeposit,
+                        transactionType = transactionType,
                     )
                 }
             )

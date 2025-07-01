@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -91,18 +92,21 @@ class ThorChainHelper(
         val isDeposit: Boolean
         val accountNumber: BigInteger
         val sequence: BigInteger
+        val transactionType: TransactionType
 
         when (val specific = keysignPayload.blockChainSpecific) {
             is BlockChainSpecific.THORChain -> {
                 isDeposit = specific.isDeposit
                 accountNumber = specific.accountNumber
                 sequence = specific.sequence
+                transactionType = specific.transactionType
             }
 
             is BlockChainSpecific.MayaChain -> {
                 isDeposit = specific.isDeposit
                 accountNumber = specific.accountNumber
                 sequence = specific.sequence
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED
             }
 
             else -> error("Invalid blockChainSpecific $specific for ThorChainHelper")
