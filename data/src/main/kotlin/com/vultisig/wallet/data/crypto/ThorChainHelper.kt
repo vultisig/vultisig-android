@@ -118,10 +118,13 @@ class ThorChainHelper(
         val memo = keysignPayload.memo
 
         val msgSend = if (isDeposit) {
-            if (keysignPayload.memo?.lowercase()?.startsWith("merge:") == true) {
+            if (transactionType == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
+                transactionType == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE) {
+
                 val mergeToken = keysignPayload.memo
-                    .lowercase()
-                    .replace("merge:", "")
+                    ?.lowercase()
+                    ?.removePrefix("merge:")
+                    ?: throw IllegalArgumentException("Missing merge token")
 
                 // Validate the sender address
                 val fromAddr = try {
@@ -135,15 +138,26 @@ class ThorChainHelper(
                     Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
                         senderAddress = fromAddr.description()
                         contractAddress = keysignPayload.toAddress
-                        executeMsg = """
-                        { "deposit": {} }
-                    """.trimIndent()
-                        addCoins(
-                            Cosmos.Amount.newBuilder().apply {
-                                denom = mergeToken.lowercase()
-                                amount = keysignPayload.toAmount.toString()
-                            }.build()
-                        )
+                        when (transactionType) {
+                            TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
+                                executeMsg = """{ "deposit": {} }"""
+                                addCoins(
+                                    Cosmos.Amount.newBuilder().apply {
+                                        denom = mergeToken.lowercase()
+                                        amount = keysignPayload.toAmount.toString()
+                                    }.build()
+                                )
+                            }
+                            TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
+                                val sharesAmount = keysignPayload.memo
+                                    .takeIf { it.startsWith("unmerge:") }
+                                    ?.split(":")
+                                    ?.getOrNull(2)
+                                    ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
+                                executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
+                            }
+                            else -> error("Unsupported type ${transactionType.name}")
+                        }
                     }.build()
 
                 val message = Cosmos.Message.newBuilder().apply {
@@ -293,5 +307,4 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
-
 }
