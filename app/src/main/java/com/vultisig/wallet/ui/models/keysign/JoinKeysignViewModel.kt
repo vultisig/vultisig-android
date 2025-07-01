@@ -328,13 +328,13 @@ internal class JoinKeysignViewModel @Inject constructor(
             val matchingVault = vaultRepository.getAll().firstOrNull {
                 it.pubKeyECDSA == pubKeyEcdsa
             }
-            currentState.value = JoinKeysignState.Error(
-                if (matchingVault != null)
-                    JoinKeysignError.WrongVault
-                else
+            if (matchingVault != null) {
+                switchToCorrectVault(matchingVault)
+                return true
+            } else
+                currentState.value = JoinKeysignState.Error(
                     JoinKeysignError.MissingRequiredVault
-            )
-
+                )
             return false
         }
 
@@ -349,6 +349,11 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
 
         return true
+    }
+
+    private fun switchToCorrectVault(vault: Vault) {
+        _currentVault = vault
+        _localPartyID = vault.localPartyID
     }
 
     private suspend fun handleCustomMessage(
