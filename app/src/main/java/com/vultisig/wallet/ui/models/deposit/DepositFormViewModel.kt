@@ -419,7 +419,7 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(selectedUnMergeCoin = unmergeInfo)
         }
-        setUnMergeTokenShares(unmergeInfo)
+        setUnMergeTokenSharesField(unmergeInfo)
     }
 
     private fun resetTextFields() {
@@ -1322,7 +1322,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                 rujiBalances = thorChainApi.getRujiBalances(addressString)
 
-                setUnMergeTokenShares(selectedToken)
+                setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
                 Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
@@ -1331,7 +1331,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private fun setUnMergeTokenShares(selectedToken: TokenMergeInfo) {
+    private fun setUnMergeTokenSharesField(selectedToken: TokenMergeInfo) {
         val selectedSymbol = selectedToken.ticker
         val selectedMergeAccount = rujiBalances
             ?.firstOrNull {

@@ -186,8 +186,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-
-
             if (chain == Chain.Cardano) {
                 // For send max, don't add fees - let WalletCore handle it
                 // For regular sends, add estimated fees to ensure we have enough
