@@ -1324,6 +1324,9 @@ internal class DepositFormViewModel @Inject constructor(
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
+                state.update {
+                    it.copy(sharesBalance = UiText.Empty)
+                }
                 Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
                 isLoading = false
