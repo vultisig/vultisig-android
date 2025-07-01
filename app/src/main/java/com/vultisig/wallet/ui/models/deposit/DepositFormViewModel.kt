@@ -420,7 +420,11 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(selectedUnMergeCoin = unmergeInfo)
         }
-        setUnMergeTokenSharesField(unmergeInfo)
+        if (rujiBalances.value == null) {
+            onLoadRujiBalances()
+        } else {
+            setUnMergeTokenSharesField(unmergeInfo)
+        }
     }
 
     private fun resetTextFields() {
