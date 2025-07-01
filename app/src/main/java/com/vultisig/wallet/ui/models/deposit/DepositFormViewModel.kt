@@ -619,7 +619,7 @@ internal class DepositFormViewModel @Inject constructor(
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                transactionType = TransactionType.TRANSACTION_TYPE_THOR_UNMERGE,
             )
 
         return DepositTransaction(
@@ -1175,7 +1175,7 @@ internal class DepositFormViewModel @Inject constructor(
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                transactionType = TransactionType.TRANSACTION_TYPE_THOR_MERGE,
             )
 
         return DepositTransaction(

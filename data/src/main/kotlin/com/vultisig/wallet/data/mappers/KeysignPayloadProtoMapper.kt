@@ -235,5 +235,4 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
         )
-
 }
