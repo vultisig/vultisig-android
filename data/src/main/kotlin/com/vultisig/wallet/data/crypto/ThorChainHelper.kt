@@ -121,10 +121,8 @@ class ThorChainHelper(
             if (transactionType == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
                 transactionType == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE) {
 
-                val mergeToken = keysignPayload.memo
-                    ?.lowercase()
-                    ?.removePrefix("merge:")
-                    ?: throw IllegalArgumentException("Missing memo for merge or unmerge")
+                val mergeToken = keysignPayload.memo?.lowercase()
+                    ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
 
                 // Validate the sender address
                 val fromAddr = try {
@@ -143,7 +141,7 @@ class ThorChainHelper(
                                 executeMsg = """{ "deposit": {} }"""
                                 addCoins(
                                     Cosmos.Amount.newBuilder().apply {
-                                        denom = mergeToken.lowercase()
+                                        denom = mergeToken.removePrefix("merge:")
                                         amount = keysignPayload.toAmount.toString()
                                     }.build()
                                 )
