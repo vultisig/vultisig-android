@@ -130,7 +130,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private lateinit var vaultId: String
     private var chain: Chain? = null
-    private var rujiBalances: List<MergeAccount>? = null
+    private var rujiBalances = MutableStateFlow<List<MergeAccount>?>(null)
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -565,7 +565,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
-        val unMergeAccountBalance = rujiBalances
+        val unMergeAccountBalance = rujiBalances.value
             ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true) }
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
@@ -1320,7 +1320,7 @@ internal class DepositFormViewModel @Inject constructor(
                 val addressString = address.value?.address
                     ?: error("Invalid address: cannot fetch balance")
 
-                rujiBalances = thorChainApi.getRujiBalances(addressString)
+                rujiBalances.value = thorChainApi.getRujiBalances(addressString)
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
@@ -1336,7 +1336,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private fun setUnMergeTokenSharesField(selectedToken: TokenMergeInfo) {
         val selectedSymbol = selectedToken.ticker
-        val selectedMergeAccount = rujiBalances
+        val selectedMergeAccount = rujiBalances.value
             ?.firstOrNull {
                 it.pool?.mergeAsset?.metadata?.symbol.equals(selectedSymbol, true)
             } ?: return
