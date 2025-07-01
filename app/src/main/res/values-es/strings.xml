@@ -350,5 +350,5 @@
     <string name="verify_transaction_function_inputs_title">Entradas de función</string>
     <string name="send_shares_currency_hint">Introduce acciones</string>
     <string name="send_error_max_shares">La cantidad no debe exceder el saldo</string>
-    <string name="deposit_form_shares_title">Acciones</string>
+    <string name="deposit_form_shares_title">Acciones (Saldo: %1$s)</string>
 </resources>

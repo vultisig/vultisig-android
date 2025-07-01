@@ -361,5 +361,5 @@
     <string name="verify_transaction_function_inputs_title">Входные данные функции</string>
     <string name="send_shares_currency_hint">Введите доли</string>
     <string name="send_error_max_shares">Сумма не должна превышать баланс</string>
-    <string name="deposit_form_shares_title">Доли</string>
+    <string name="deposit_form_shares_title">Доли (Баланс: %1$s)</string>
 </resources>

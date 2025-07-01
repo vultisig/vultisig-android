@@ -94,6 +94,7 @@ internal data class DepositFormUiModel(
     val lpUnitsError: UiText? = null,
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
+    val sharesBalance: UiText = "Loading...".asUiText(),
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -562,7 +563,6 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    // TODO: Clean up this method
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
         val selectedUnMergeAccount = rujiBalances
@@ -1343,9 +1343,10 @@ internal class DepositFormViewModel @Inject constructor(
             ?.let { CoinType.THORCHAIN.toValue(it).toString() }
             ?: "0"
 
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
+        state.update {
+            it.copy(sharesBalance = amountText.asUiText())
+        }
     }
-
 
     private fun requireTokenAmount(
         selectedToken: Coin,

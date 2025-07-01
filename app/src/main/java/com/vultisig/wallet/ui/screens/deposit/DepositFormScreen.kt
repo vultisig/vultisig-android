@@ -274,7 +274,7 @@ internal fun DepositFormScreen(
                         selectedToken = state.selectedUnMergeCoin,
                         coinList = state.coinList,
                         onSelectCoin = onSelectUnMergeCoin,
-                        shares = state.balance,
+                        shares = state.sharesBalance,
                         amountFieldState = amountFieldState,
                         onAmountLostFocus = onAmountLostFocus,
                         amountError = state.amountError,

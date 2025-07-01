@@ -361,5 +361,5 @@
     <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>
     <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>
-    <string name="deposit_form_shares_title">Aandelen</string>
+    <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>
 </resources>
