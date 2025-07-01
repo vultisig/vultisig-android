@@ -1318,7 +1318,7 @@ internal class DepositFormViewModel @Inject constructor(
             try {
                 val selectedToken = state.value.selectedUnMergeCoin
                 val addressString = address.value?.address
-                    ?: error("Invalid address: cannot fetch balance")
+                    ?: throw RuntimeException("Invalid address: cannot fetch balance")
 
                 rujiBalances.value = thorChainApi.getRujiBalances(addressString)
 
