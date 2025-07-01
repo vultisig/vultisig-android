@@ -565,12 +565,12 @@ internal class DepositFormViewModel @Inject constructor(
 
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
-        val selectedUnMergeAccount = rujiBalances
+        val unMergeAccountBalance = rujiBalances
             ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true) }
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
-        val maxShares = selectedUnMergeAccount.shares?.toBigInteger()
+        val maxShares = unMergeAccountBalance.shares?.toBigInteger()
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
