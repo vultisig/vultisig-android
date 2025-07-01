@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
@@ -561,8 +562,81 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private fun createUnMergeTx(): DepositTransaction {
-        error("Not implemented yet")
+    private suspend fun createUnMergeTx(): DepositTransaction {
+        val unmergeToken = state.value.selectedUnMergeCoin
+        val selectedUnMergeAccount = rujiBalances
+            ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true) }
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        val maxShares = selectedUnMergeAccount.shares?.toBigInteger()
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+
+        // transform amount back to share units
+        val tokenShares = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()?.run { CoinType.THORCHAIN.toUnit(this) }
+
+        if (tokenShares == null || tokenShares <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        if (tokenShares > maxShares) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_max_shares)
+            )
+        }
+
+        val chain = chain ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val account = address.accounts
+            .find { it.token.ticker.equals(unmergeToken.ticker, ignoreCase = true) }
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.merge_account_doesnt_exist)
+            )
+
+        val srcAddress = account.token.address
+        val dstAddr = unmergeToken.contract
+        val memo = "unmerge:${unmergeToken.denom}"
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                account.token,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = account.token,
+            srcAddress = srcAddress,
+            dstAddress = dstAddr,
+
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenShares,
+                token = account.token,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+        )
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
