@@ -1313,7 +1313,7 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    fun onLoadRujiShares() {
+    fun onLoadRujiBalances() {
         viewModelScope.launch {
             try {
                 val selectedToken = state.value.selectedUnMergeCoin

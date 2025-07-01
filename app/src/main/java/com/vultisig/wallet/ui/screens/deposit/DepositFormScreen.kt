@@ -100,7 +100,7 @@ internal fun DepositFormScreen(
 
         onOpenSelectToken = model::selectToken,
 
-        onLoadRujiBalances = model::onLoadRujiShares,
+        onLoadRujiBalances = model::onLoadRujiBalances,
     )
 }
 
