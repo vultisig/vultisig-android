@@ -578,7 +578,7 @@ internal class DepositFormViewModel @Inject constructor(
         // transform amount back to share units
         val tokenShares = tokenAmountFieldState.text
             .toString()
-            .toBigDecimalOrNull()?.run { CoinType.THORCHAIN.toUnit(this) }
+            .toBigDecimalOrNull()?.let { CoinType.THORCHAIN.toUnit(it) }
 
         if (tokenShares == null || tokenShares <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(
