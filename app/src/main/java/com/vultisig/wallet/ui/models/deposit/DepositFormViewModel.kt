@@ -607,7 +607,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val srcAddress = account.token.address
         val dstAddr = unmergeToken.contract
-        val memo = "unmerge:${unmergeToken.denom}"
+        val memo = "unmerge:${unmergeToken.denom}:${tokenShares}"
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val specific = blockChainSpecificRepository
