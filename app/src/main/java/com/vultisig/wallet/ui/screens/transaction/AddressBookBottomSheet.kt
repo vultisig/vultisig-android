@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.ColorGenerator
 
 @Composable
 internal fun AddressBookBottomSheet(
@@ -197,7 +197,7 @@ private fun EntryItem(
                 modifier = Modifier
                     .size(32.dp)
                     .background(
-                        color = Theme.colors.text.light,
+                        color = ColorGenerator.generate(title),
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center
