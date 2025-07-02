@@ -21,7 +21,6 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -115,6 +114,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         sequence = BigInteger(account.sequence ?: "0"),
                         fee = gasFee.value,
                         isDeposit = isDeposit,
+                        transactionType = transactionType,
                     )
                 }
             )
@@ -187,8 +187,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-
-
             if (chain == Chain.Cardano) {
                 // For send max, don't add fees - let WalletCore handle it
                 // For regular sends, add estimated fees to ensure we have enough
@@ -359,16 +357,30 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.TON -> {
-            BlockChainSpecificAndUtxo(
-                blockChainSpecific = BlockChainSpecific.Ton(
-                    sequenceNumber = tonApi.getSpecificTransactionInfo(address)
-                        .toString().toULong(),
-                    expireAt = (Clock.System.now()
-                        .epochSeconds + 600L).toULong(),
-                    bounceable = false,
-                    isDeposit = isDeposit,
-                ),
-            )
+            coroutineScope {
+                val sequenceNumberDeferred = async {
+                    tonApi.getSpecificTransactionInfo(address)
+                }
+                val isBounceable = async {
+                    if (dstAddress == null) return@async false
+
+                    val isUninitialized =
+                        tonApi.getWalletState(dstAddress) == TON_WALLET_STATE_UNINITIALIZED
+                    if (isUninitialized) return@async false
+
+                    dstAddress.startsWith("E")
+                }
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific = BlockChainSpecific.Ton(
+                        sequenceNumber = sequenceNumberDeferred.await().toString().toULong(),
+                        expireAt = (Clock.System.now()
+                            .epochSeconds + 600L).toULong(),
+                        bounceable = isBounceable.await(),
+                        isDeposit = isDeposit,
+                        sendMaxAmount = isMaxAmountEnabled,
+                    ),
+                )
+            }
         }
 
         TokenStandard.RIPPLE -> {
@@ -430,4 +442,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         return priorityFee.coerceAtLeast(oneGwei)
     }
 
+    companion object {
+        private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
+    }
 }

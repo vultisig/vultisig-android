@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -91,18 +92,21 @@ class ThorChainHelper(
         val isDeposit: Boolean
         val accountNumber: BigInteger
         val sequence: BigInteger
+        val transactionType: TransactionType
 
         when (val specific = keysignPayload.blockChainSpecific) {
             is BlockChainSpecific.THORChain -> {
                 isDeposit = specific.isDeposit
                 accountNumber = specific.accountNumber
                 sequence = specific.sequence
+                transactionType = specific.transactionType
             }
 
             is BlockChainSpecific.MayaChain -> {
                 isDeposit = specific.isDeposit
                 accountNumber = specific.accountNumber
                 sequence = specific.sequence
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED
             }
 
             else -> error("Invalid blockChainSpecific $specific for ThorChainHelper")
@@ -114,10 +118,11 @@ class ThorChainHelper(
         val memo = keysignPayload.memo
 
         val msgSend = if (isDeposit) {
-            if (keysignPayload.memo?.lowercase()?.startsWith("merge:") == true) {
-                val mergeToken = keysignPayload.memo
-                    .lowercase()
-                    .replace("merge:", "")
+            if (transactionType == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
+                transactionType == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE) {
+
+                val mergeToken = keysignPayload.memo?.lowercase()
+                    ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
 
                 // Validate the sender address
                 val fromAddr = try {
@@ -131,15 +136,26 @@ class ThorChainHelper(
                     Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
                         senderAddress = fromAddr.description()
                         contractAddress = keysignPayload.toAddress
-                        executeMsg = """
-                        { "deposit": {} }
-                    """.trimIndent()
-                        addCoins(
-                            Cosmos.Amount.newBuilder().apply {
-                                denom = mergeToken.lowercase()
-                                amount = keysignPayload.toAmount.toString()
-                            }.build()
-                        )
+                        when (transactionType) {
+                            TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
+                                executeMsg = """{ "deposit": {} }"""
+                                addCoins(
+                                    Cosmos.Amount.newBuilder().apply {
+                                        denom = mergeToken.removePrefix("merge:")
+                                        amount = keysignPayload.toAmount.toString()
+                                    }.build()
+                                )
+                            }
+                            TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
+                                val sharesAmount = keysignPayload.memo
+                                    .takeIf { it.startsWith("unmerge:") }
+                                    ?.split(":")
+                                    ?.getOrNull(2)
+                                    ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
+                                executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
+                            }
+                            else -> error("Unsupported type ${transactionType.name}")
+                        }
                     }.build()
 
                 val message = Cosmos.Message.newBuilder().apply {
@@ -289,5 +305,4 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
-
 }

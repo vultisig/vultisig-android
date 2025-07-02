@@ -22,6 +22,7 @@
     <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
     <string name="rename_vault_invalid_name">Nombre inválido</string>
+    <string name="vault_name_too_long_error">El nombre de la bóveda es demasiado largo</string>
     <string name="swap_form_invalid_amount">Monto invalido</string>
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="choose_tokens">Elegir Tokens</string>
@@ -342,8 +343,12 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_unmerge">Unmerge Ruji</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
     <string name="verify_transaction_function_inputs_title">Entradas de función</string>
+    <string name="send_shares_currency_hint">Introduce acciones</string>
+    <string name="send_error_max_shares">La cantidad no debe exceder el saldo</string>
+    <string name="deposit_form_shares_title">Acciones (Saldo: %1$s)</string>
 </resources>

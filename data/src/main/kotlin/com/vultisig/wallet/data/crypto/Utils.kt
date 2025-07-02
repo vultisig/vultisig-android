@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.crypto
 
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Ethereum
