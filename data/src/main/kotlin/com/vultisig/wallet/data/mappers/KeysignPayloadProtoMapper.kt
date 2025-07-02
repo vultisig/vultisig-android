@@ -109,6 +109,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         sequence = BigInteger(it.sequence.toString()),
                         fee = BigInteger(it.fee.toString()),
                         isDeposit = it.isDeposit,
+                        transactionType = it.transactionType,
                     )
                 }
 
@@ -235,5 +236,4 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
         )
-
 }
