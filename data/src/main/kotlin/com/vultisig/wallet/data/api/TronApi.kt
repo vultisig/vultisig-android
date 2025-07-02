@@ -107,7 +107,6 @@ internal class TronApiImpl @Inject constructor(
         return paddedAddressHex + paddedAmountHex
     }
 
-
     override suspend fun getBalance(coin: Coin): BigInteger {
         try {
             val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
