@@ -101,21 +101,19 @@ internal class TronApiImpl @Inject constructor(
     }
 
     private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {
-        val paddedAddressHex = "0".repeat(24) + recipientBaseHex.stripHexPrefix()
-        val amountHex = amount.toString(16)
-        val paddedAmountHex = "0".repeat(max(0, 64 - amountHex.count())) + amountHex
+        val paddedAddressHex = recipientBaseHex.stripHexPrefix().drop(2).padStart(64, '0')
+        val paddedAmountHex = amount.toString(16).padStart(64, '0')
         return paddedAddressHex + paddedAmountHex
     }
-
 
     override suspend fun getBalance(coin: Coin): BigInteger {
         try {
             val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
             val content = response.body<TronBalanceResponseJson>()
             return if (coin.isNativeToken)
-                content.tronBalanceResponseData.get(0).balance
+                content.tronBalanceResponseData[0].balance
             else
-                content.tronBalanceResponseData.get(0).trc20.get(0).get(coin.contractAddress)
+                content.tronBalanceResponseData[0].trc20[0][coin.contractAddress]
                     ?: BigInteger.ZERO
         } catch (e: Exception) {
             Timber.e(e, "error getting tron balance")
