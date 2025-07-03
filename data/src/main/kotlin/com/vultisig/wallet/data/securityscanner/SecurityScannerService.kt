@@ -5,7 +5,7 @@ import timber.log.Timber
 
 class SecurityScannerService(private val blockaidRpcClient: BlockaidRpcClientContract) : SecurityScannerServiceContract {
 
-    override suspend fun scanTransaction(transaction: SecurityScannerTransaction) {
+    override suspend fun scanTransaction(transaction: SecurityScannerTransaction) =
         when (val chain = transaction.chain) {
             Chain.Arbitrum,
             Chain.Avalanche,
@@ -21,7 +21,6 @@ class SecurityScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Sui -> scanSuiTransaction(transaction)
             else -> throw UnsupportedOperationException("${chain.name} is not supported")
         }
-    }
 
     private suspend fun scanEvmTransaction(transaction: SecurityScannerTransaction) {
         Timber.d("Scanning ${transaction.chain.name} transaction: $transaction")
