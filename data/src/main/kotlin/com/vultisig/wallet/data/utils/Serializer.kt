@@ -151,7 +151,7 @@ interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<OneInchSwap
 class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
     OneInchSwapQuoteResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("OnceInchSwapQuoteResponseJsonSerializer")
+        buildClassSerialDescriptor("OneInchSwapQuoteResponseJsonSerializer")
 
     override fun deserialize(decoder: Decoder): OneInchSwapQuoteDeserialized {
         val input = decoder as JsonDecoder
