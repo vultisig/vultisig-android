@@ -60,3 +60,32 @@ data class CommonMetadata(
     val type: String = "wallet",
     val url: String,
 )
+
+@Serializable
+data class BlockaidTransactionScanResponse(
+    @SerialName("request_id")
+    val requestId: String?,
+    @SerialName("account_address")
+    val accountAddress: String?,
+    val status: String?,
+    val validation: BlockaidValidation?,
+) {
+    @Serializable
+    data class BlockaidValidation(
+        val status: String?,
+        val classification: String?,
+        @SerialName("result_type")
+        val resultType: String?,
+        val description: String?,
+        val reason: String?,
+        val features: BlockaidFeature?
+    ){
+        @Serializable
+        data class BlockaidFeature(
+            val type: String,
+            val severity: String?,
+            val description: String,
+            val address: String?,
+        )
+    }
+}

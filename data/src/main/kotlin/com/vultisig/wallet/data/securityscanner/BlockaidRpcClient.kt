@@ -6,27 +6,22 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class BlockaidRpcClient @Inject constructor(
-    private val json: Json,
     private val httpClient: HttpClient,
 ) : BlockaidRpcClientContract {
 
     override suspend fun scanBitcoinTransaction(address: String, serializedTransaction: String) {
-        val bitcoinRequest = BitcoinScanTransactionRequest(
-            chain = Chain.Bitcoin.toName(),
-            metadata = CommonMetadata(
-                url = "https://vultisig.com/",
-            ),
-            options = listOf("validation"),
-            accountAddress = address,
-            transaction = serializedTransaction,
-        )
+        val bitcoinRequest = buildBitcoinScanRequest(address, serializedTransaction)
 
-        httpClient.post("$BLOCKAID_URL/bitcoin/transaction-raw/scan") {
+        httpClient.post(BLOCKAID_BASE_URL) {
+            url {
+                appendPathSegments("/bitcoin/transaction-raw/scan")
+            }
             contentType(ContentType.Application.Json)
             setBody(bitcoinRequest)
         }
@@ -39,10 +34,65 @@ class BlockaidRpcClient @Inject constructor(
         amount: String,
         data: String
     ) {
-        val evmRequest = EthereumScanTransactionRequest(
+        val evmRequest = buildEthereumScanRequest(chain, from, to, data, amount)
+
+        httpClient.post(BLOCKAID_BASE_URL) {
+            url {
+                appendPathSegments("/evm/json-rpc/scan")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(evmRequest)
+        }
+    }
+
+    override suspend fun scanSolanaTransaction(address: String, serializedMessage: String) {
+        val solanaRequest = buildSolanaScanRequest(address, serializedMessage)
+
+        httpClient.post(BLOCKAID_BASE_URL) {
+            url {
+                appendPathSegments("/solana/address/scan")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(solanaRequest)
+        }
+    }
+
+    override suspend fun scanSuiTransaction(address: String, serializedTransaction: String) {
+        val suiRequest = buildSuiScanRequest(address, serializedTransaction)
+
+        httpClient.post(BLOCKAID_BASE_URL) {
+            url {
+                appendPathSegments("/sui/transaction/scan")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(suiRequest)
+        }
+    }
+
+    private fun buildBitcoinScanRequest(
+        address: String,
+        serializedTransaction: String
+    ): BitcoinScanTransactionRequest {
+        return BitcoinScanTransactionRequest(
+            chain = Chain.Bitcoin.toName(),
+            metadata = CommonMetadata(url = VULTISIG_DOMAIN),
+            options = listOf("validation"),
+            accountAddress = address,
+            transaction = serializedTransaction,
+        )
+    }
+
+    private fun buildEthereumScanRequest(
+        chain: Chain,
+        from: String,
+        to: String,
+        data: String,
+        amount: String
+    ): EthereumScanTransactionRequest {
+        return EthereumScanTransactionRequest(
             chain = chain.toName(),
             metadata = EthereumScanTransactionRequest.Metadata(
-                domain = "",
+                domain = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
             accountAddress = from,
@@ -54,48 +104,42 @@ class BlockaidRpcClient @Inject constructor(
                 value = amount,
             ),
         )
-        httpClient.post("$BLOCKAID_URL/evm/json-rpc/scan") {
-            contentType(ContentType.Application.Json)
-            setBody(evmRequest)
-        }
     }
 
-    override suspend fun scanSolanaTransaction(address: String, serializedMessage: String) {
-        val solanaRequest = SolanaScanTransactionRequest(
-            chain = Chain.Bitcoin.toName(),
+    private fun buildSolanaScanRequest(
+        address: String,
+        serializedMessage: String
+    ): SolanaScanTransactionRequest {
+        return SolanaScanTransactionRequest(
+            chain = Chain.Solana.toName(),
             metadata = CommonMetadata(
-                url = "https://vultisig.com/",
+                url = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
             accountAddress = address,
-            encoding = "base64", // to check
+            encoding = "base64", // TODO: Confirm if this is the correct encoding
             transactions = listOf(serializedMessage),
         )
-        httpClient.post("$BLOCKAID_URL/solana/address/scan") {
-            contentType(ContentType.Application.Json)
-            setBody(solanaRequest)
-        }
     }
 
-    override suspend fun scanSuiTransaction(address: String, serializedTransaction: String) {
-        val suiRequest = SuiScanTransactionRequest(
-            chain = Chain.Bitcoin.toName(),
+    private fun buildSuiScanRequest(
+        address: String,
+        serializedTransaction: String
+    ): SuiScanTransactionRequest {
+        return SuiScanTransactionRequest(
+            chain = Chain.Sui.toName(),
             metadata = CommonMetadata(
-                url = "https://vultisig.com/",
+                url = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
             accountAddress = address,
             transaction = serializedTransaction,
         )
-
-        httpClient.post("$BLOCKAID_URL/sui/transaction/scan") {
-            contentType(ContentType.Application.Json)
-            setBody(suiRequest)
-        }
     }
 
     private companion object {
-        private const val BLOCKAID_URL = "https://api.blockaid.io/v0"
+        private const val BLOCKAID_BASE_URL = "https://api.blockaid.io/v0"
+        private const val VULTISIG_DOMAIN = "vultisig.com"
 
         private fun Chain.toName(): String {
             return when (this) {
