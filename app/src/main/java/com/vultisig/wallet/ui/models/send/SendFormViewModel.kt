@@ -979,7 +979,7 @@ internal class SendFormViewModel @Inject constructor(
                 selectedToken
                     .filterNotNull()
                     .map {
-                        gasFeeRepository.getGasFee(it.chain, it.address, it.contractAddress)
+                        gasFeeRepository.getGasFee(it.chain, it.address)
                     }
                     .catch {
                         // TODO handle error when querying gas fee
@@ -1377,7 +1377,6 @@ internal class SendFormViewModel @Inject constructor(
                 gasFeeRepository.getGasFee(
                     chain = srcAddress.chain,
                     address = srcAddress.address,
-                    contract = srcAddress.contractAddress,
                 )
             } catch (e: Exception) {
                 uiState.update {
