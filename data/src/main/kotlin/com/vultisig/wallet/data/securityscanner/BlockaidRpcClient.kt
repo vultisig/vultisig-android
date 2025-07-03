@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.models.Chain
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -15,16 +16,19 @@ class BlockaidRpcClient @Inject constructor(
     private val httpClient: HttpClient,
 ) : BlockaidRpcClientContract {
 
-    override suspend fun scanBitcoinTransaction(address: String, serializedTransaction: String) {
+    override suspend fun scanBitcoinTransaction(
+        address: String,
+        serializedTransaction: String
+    ): BlockaidTransactionScanResponse {
         val bitcoinRequest = buildBitcoinScanRequest(address, serializedTransaction)
 
-        httpClient.post(BLOCKAID_BASE_URL) {
+        return httpClient.post(BLOCKAID_BASE_URL) {
             url {
                 appendPathSegments("/bitcoin/transaction-raw/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(bitcoinRequest)
-        }
+        }.body<BlockaidTransactionScanResponse>()
     }
 
     override suspend fun scanEVMTransaction(
@@ -33,40 +37,46 @@ class BlockaidRpcClient @Inject constructor(
         to: String,
         amount: String,
         data: String
-    ) {
+    ): BlockaidTransactionScanResponse {
         val evmRequest = buildEthereumScanRequest(chain, from, to, data, amount)
 
-        httpClient.post(BLOCKAID_BASE_URL) {
+        return httpClient.post(BLOCKAID_BASE_URL) {
             url {
                 appendPathSegments("/evm/json-rpc/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(evmRequest)
-        }
+        }.body<BlockaidTransactionScanResponse>()
     }
 
-    override suspend fun scanSolanaTransaction(address: String, serializedMessage: String) {
+    override suspend fun scanSolanaTransaction(
+        address: String,
+        serializedMessage: String
+    ): BlockaidTransactionScanResponse {
         val solanaRequest = buildSolanaScanRequest(address, serializedMessage)
 
-        httpClient.post(BLOCKAID_BASE_URL) {
+        return httpClient.post(BLOCKAID_BASE_URL) {
             url {
                 appendPathSegments("/solana/address/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(solanaRequest)
-        }
+        }.body<BlockaidTransactionScanResponse>()
     }
 
-    override suspend fun scanSuiTransaction(address: String, serializedTransaction: String) {
+    override suspend fun scanSuiTransaction(
+        address: String,
+        serializedTransaction: String
+    ): BlockaidTransactionScanResponse {
         val suiRequest = buildSuiScanRequest(address, serializedTransaction)
 
-        httpClient.post(BLOCKAID_BASE_URL) {
+        return httpClient.post(BLOCKAID_BASE_URL) {
             url {
                 appendPathSegments("/sui/transaction/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(suiRequest)
-        }
+        }.body<BlockaidTransactionScanResponse>()
     }
 
     private fun buildBitcoinScanRequest(
