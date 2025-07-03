@@ -979,7 +979,7 @@ internal class SendFormViewModel @Inject constructor(
                 selectedToken
                     .filterNotNull()
                     .map {
-                        gasFeeRepository.getGasFee(it.chain, it.address)
+                        gasFeeRepository.getGasFee(it.chain, it.address, it.contractAddress)
                     }
                     .catch {
                         // TODO handle error when querying gas fee
@@ -1375,8 +1375,9 @@ internal class SendFormViewModel @Inject constructor(
             }
             val gasFee = try {
                 gasFeeRepository.getGasFee(
-                    srcAddress.chain,
-                    srcAddress.address
+                    chain = srcAddress.chain,
+                    address = srcAddress.address,
+                    contract = srcAddress.contractAddress,
                 )
             } catch (e: Exception) {
                 uiState.update {
