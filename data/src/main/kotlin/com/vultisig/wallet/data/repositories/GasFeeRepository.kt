@@ -172,7 +172,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 val feeAmount = if (contract.isNotEmpty()) {
                     chain.toUnit("28.0".toBigDecimal())
                 } else {
-                    BigInteger("100000")
+                    chain.toUnit("0.1".toBigDecimal())
                 }
                 TokenValue(
                     value = feeAmount,
