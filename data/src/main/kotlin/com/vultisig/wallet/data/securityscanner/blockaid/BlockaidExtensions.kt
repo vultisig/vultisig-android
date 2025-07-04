@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.securityscanner.SecuritySeverity
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
 import com.vultisig.wallet.data.securityscanner.SecurityWarningType
 
-fun BlockaidTransactionScanResponse.toSecurityScannerResult(): SecurityScannerResult {
+fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): SecurityScannerResult {
     val riskLevel = this.toValidationRiskLevel()
     val securityWarnings = validation?.features?.map { feature ->
         SecurityWarning(
@@ -21,7 +21,7 @@ fun BlockaidTransactionScanResponse.toSecurityScannerResult(): SecurityScannerRe
     val isSecure = riskLevel == SecurityRiskLevel.NONE || riskLevel == SecurityRiskLevel.LOW
 
     return SecurityScannerResult(
-        provider = "blockaid",
+        provider = provider,
         riskLevel = riskLevel,
         warnings = securityWarnings,
         isSecure = isSecure,

@@ -10,6 +10,8 @@ import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
+import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -67,6 +70,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val securityScannerService: SecurityScannerContract,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -182,6 +186,27 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
             uiState.update {
                 it.copy(transaction = transactionUiModel)
+            }
+
+            try {
+                val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
+                val transferType = if (isTokenTransfer) {
+                    SecurityTransactionType.TOKEN_TRANSFER
+                } else {
+                    SecurityTransactionType.COIN_TRANSFER
+                }
+                val result = securityScannerService.scanTransaction(
+                    transaction = SecurityScannerTransaction(
+                        chain = transaction.token.chain,
+                        type = transferType,
+                        from = transaction.srcAddress,
+                        to= transaction.dstAddress,
+                        amount = transaction.tokenValue.value,
+                    )
+                )
+                println(result)
+            } catch (t: Throwable) {
+                Timber.e(t, "Security Scanner Failed")
             }
         }
     }

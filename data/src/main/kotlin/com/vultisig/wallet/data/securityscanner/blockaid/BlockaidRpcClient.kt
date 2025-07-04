@@ -40,7 +40,7 @@ class BlockaidRpcClient(
 
         return httpClient.post(BLOCKAID_BASE_URL) {
             url {
-                appendPathSegments("/evm/json-rpc/scan")
+                appendPathSegments("/evm/transaction/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(evmRequest)
@@ -146,7 +146,7 @@ class BlockaidRpcClient(
     }
 
     private companion object {
-        private const val BLOCKAID_BASE_URL = "https://api.blockaid.io/v0"
+        private const val BLOCKAID_BASE_URL = "https://api.vultisig.com/blockaid/v0"
         private const val VULTISIG_DOMAIN = "vultisig.com"
 
         private fun Chain.toName(): String {

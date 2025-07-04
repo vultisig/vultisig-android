@@ -35,7 +35,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
                 to = transaction.to,
                 amount = "0x${transaction.amount.toString(16)}", // review
                 data = transaction.data,
-            ).toSecurityScannerResult()
+            ).toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
@@ -44,7 +44,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             blockaidRpcClient.scanBitcoinTransaction(
                 address = transaction.from,
                 serializedTransaction = transaction.data,
-            ).toSecurityScannerResult()
+            ).toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
@@ -53,7 +53,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             blockaidRpcClient.scanSolanaTransaction(
                 address = transaction.from,
                 serializedMessage = transaction.data,
-            ).toSecurityScannerResult()
+            ).toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
@@ -62,7 +62,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             blockaidRpcClient.scanSuiTransaction(
                 address = transaction.from,
                 serializedTransaction = transaction.data,
-            ).toSecurityScannerResult()
+            ).toSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
