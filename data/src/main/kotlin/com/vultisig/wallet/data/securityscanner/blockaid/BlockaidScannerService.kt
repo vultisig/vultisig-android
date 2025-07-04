@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.securityscanner.runSecurityScan
+import com.vultisig.wallet.data.utils.toHexString
 
 class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientContract) :
     ProviderScannerServiceContract {
@@ -33,7 +34,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
                 chain = transaction.chain,
                 from = transaction.from,
                 to = transaction.to,
-                amount = "0x${transaction.amount.toString(16)}", // review
+                amount = transaction.amount.toHexString(),
                 data = transaction.data,
             ).toSecurityScannerResult(PROVIDER_NAME)
         }
