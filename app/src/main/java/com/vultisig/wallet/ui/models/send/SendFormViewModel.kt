@@ -1378,8 +1378,8 @@ internal class SendFormViewModel @Inject constructor(
             }
             val gasFee = try {
                 gasFeeRepository.getGasFee(
-                    srcAddress.chain,
-                    srcAddress.address
+                    chain = srcAddress.chain,
+                    address = srcAddress.address,
                 )
             } catch (e: Exception) {
                 uiState.update {

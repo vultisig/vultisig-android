@@ -16,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -134,17 +134,7 @@ internal fun AddAddressEntryScreen(
                     textFieldState = addressTextFieldState,
                     onLostFocus = onAddressFieldLostFocus,
                 ) {
-                    val clipboard = LocalClipboardManager.current
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_paste,
-                        size = 20.dp,
-                        onClick = {
-                            clipboard.getText()
-                                ?.toString()
-                                ?.let(onSetOutputAddress)
-                        }
-                    )
+                    PasteIcon(onPaste = onSetOutputAddress)
 
                     UiSpacer(size = 8.dp)
 

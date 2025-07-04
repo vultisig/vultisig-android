@@ -14,11 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -26,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -140,13 +139,8 @@ private fun TxLinkAndHash(
             color = Theme.colors.neutral0,
             style = Theme.montserrat.heading5,
         )
-        
-        val clipboard = LocalClipboardManager.current
 
-        UiIcon(drawableResId = R.drawable.copy, size = 20.dp, onClick = {
-            clipboard.setText(AnnotatedString(transactionLink))
-        })
-
+        CopyIcon(textToCopy = transactionLink)
 
         UiIcon(drawableResId = R.drawable.ic_link, size = 20.dp, onClick = {
             uriHandler.openUri(transactionLink)
