@@ -10,7 +10,12 @@ data class SecurityScannerTransaction(
     val to: String,
     val amount: BigInteger = BigInteger.ZERO,
     val data: String = "",
-    val metadata: Map<String, String>,
+)
+
+data class SecurityScannerMetadata(
+    val requestId: String = "",
+    val classification: String = "",
+    val resultType: String = "",
 )
 
 enum class SecurityTransactionType {
@@ -27,6 +32,7 @@ data class SecurityScannerResult(
     val riskLevel: SecurityRiskLevel,
     val warnings: List<SecurityWarning>,
     val recommendations: String,
+    val metadata: SecurityScannerMetadata = SecurityScannerMetadata(),
 )
 
 data class SecurityWarning(
