@@ -126,7 +126,7 @@ class BlockaidRpcClient @Inject constructor(
             ),
             options = listOf("validation"),
             accountAddress = address,
-            encoding = "base64", // TODO: Confirm if this is the correct encoding
+            encoding = "base64",
             transactions = listOf(serializedMessage),
         )
     }

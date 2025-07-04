@@ -73,3 +73,13 @@ enum class SecurityWarningType {
 enum class SecurityScannerFeaturesType {
     SCAN_TRANSACTION,
 }
+
+data class SecurityScannerSupport(
+    val provider: String,
+    val feature: Feature,
+) {
+    data class Feature(
+        val chains: List<Chain>,
+        val featureType: SecurityScannerFeaturesType,
+    )
+}

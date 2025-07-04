@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.securityscanner.ProviderScannerServiceContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
-import timber.log.Timber
+import com.vultisig.wallet.data.securityscanner.runSecurityScan
 
 class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientContract) :
     ProviderScannerServiceContract {
@@ -28,53 +28,59 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
         }
 
     private suspend fun scanEvmTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        Timber.d("Scanning ${transaction.chain.name} transaction: $transaction")
-
-        val scanResult = blockaidRpcClient.scanEVMTransaction(
-            chain = transaction.chain,
-            from = transaction.from,
-            to = transaction.to,
-            amount = "0x${transaction.amount.toString(16)}", // review
-            data = transaction.data,
-        )
+        return runSecurityScan(transaction) {
+            blockaidRpcClient.scanEVMTransaction(
+                chain = transaction.chain,
+                from = transaction.from,
+                to = transaction.to,
+                amount = "0x${transaction.amount.toString(16)}", // review
+                data = transaction.data,
+            ).toSecurityScannerResult()
+        }
     }
 
     private suspend fun scanBitcoinTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        Timber.d("Scanning ${transaction.chain.name} transaction: $transaction")
-
-        val scanResult = blockaidRpcClient.scanBitcoinTransaction(
-            address = transaction.from,
-            serializedTransaction = transaction.data,
-        )
+        return runSecurityScan(transaction) {
+            blockaidRpcClient.scanBitcoinTransaction(
+                address = transaction.from,
+                serializedTransaction = transaction.data,
+            ).toSecurityScannerResult()
+        }
     }
 
     private suspend fun scanSolanaTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        Timber.d("Scanning ${transaction.chain.name} transaction: $transaction")
-
-        val scanResult = blockaidRpcClient.scanSolanaTransaction(
-            address = transaction.from,
-            serializedMessage = transaction.data,
-        )
+        return runSecurityScan(transaction) {
+            blockaidRpcClient.scanSolanaTransaction(
+                address = transaction.from,
+                serializedMessage = transaction.data,
+            ).toSecurityScannerResult()
+        }
     }
 
     private suspend fun scanSuiTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        Timber.d("Scanning ${transaction.chain.name} transaction: $transaction")
-
-        val scanResult = blockaidRpcClient.scanSuiTransaction(
-            address = transaction.from,
-            serializedTransaction = transaction.data,
-        )
+        return runSecurityScan(transaction) {
+            blockaidRpcClient.scanSuiTransaction(
+                address = transaction.from,
+                serializedTransaction = transaction.data,
+            ).toSecurityScannerResult()
+        }
     }
 
     override fun getProviderName(): String {
         return PROVIDER_NAME
     }
 
-    override fun supportsChain(chain: Chain): Boolean {
-        return chain in supportedChains
+    override fun supportsChain(chain: Chain, feature: SecurityScannerFeaturesType): Boolean {
+        val supportedChainsByFeature = getSupportedChains()[feature] ?: return false
+
+        return supportedChainsByFeature.any { it.raw == chain.raw }
     }
 
-    override fun getSupportedChains(): List<Chain> = supportedChains
+    override fun getSupportedChains(): Map<SecurityScannerFeaturesType, List<Chain>> {
+        return mapOf(
+            SecurityScannerFeaturesType.SCAN_TRANSACTION to supportedChains,
+        )
+    }
 
     override fun getSupportedFeatures(): List<SecurityScannerFeaturesType> {
         return listOf(SecurityScannerFeaturesType.SCAN_TRANSACTION)
