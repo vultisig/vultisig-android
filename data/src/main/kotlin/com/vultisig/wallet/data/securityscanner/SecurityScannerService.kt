@@ -2,8 +2,9 @@ package com.vultisig.wallet.data.securityscanner
 
 import timber.log.Timber
 import java.util.concurrent.ConcurrentSkipListSet
+import javax.inject.Inject
 
-class SecurityScannerService(
+class SecurityScannerService @Inject constructor(
     private val providers: List<ProviderScannerServiceContract>
 ) : SecurityScannerContract {
     private val disabledProvidersNames: MutableSet<String> = ConcurrentSkipListSet()

@@ -6,8 +6,9 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.securityscanner.runSecurityScan
+import javax.inject.Inject
 
-class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientContract) :
+class BlockaidScannerService @Inject constructor(private val blockaidRpcClient: BlockaidRpcClientContract) :
     ProviderScannerServiceContract {
 
     override suspend fun scanTransaction(transaction: SecurityScannerTransaction) =
