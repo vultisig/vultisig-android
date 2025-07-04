@@ -535,7 +535,10 @@ internal class SendFormViewModel @Inject constructor(
 
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
-            ?.setScale(12, RoundingMode.DOWN)
+            ?.setScale(
+                selectedAccount.token.decimal,
+                RoundingMode.DOWN
+            )
             ?.stripTrailingZeros()
     }
 
