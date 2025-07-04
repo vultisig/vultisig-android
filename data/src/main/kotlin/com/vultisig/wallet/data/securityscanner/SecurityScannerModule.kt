@@ -3,32 +3,35 @@ package com.vultisig.wallet.data.securityscanner
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClient
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidScannerService
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
+import io.ktor.client.HttpClient
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface SecurityScannerModule {
-    @Binds
-    @Singleton
-    fun bindBlockhaidRpcClient(
-        impl: BlockaidRpcClient
-    ): BlockaidRpcClientContract
+object SecurityScannerModule {
 
-    @Binds
-    @IntoSet
     @Singleton
-    fun bindBlockaidScannerService(
-        service: BlockaidScannerService
-    ): ProviderScannerServiceContract
+    @Provides
+    fun provideBlockaidRpcClient(httpClient: HttpClient): BlockaidRpcClientContract {
+        return BlockaidRpcClient(httpClient)
+    }
 
-    @Binds
     @Singleton
-    fun bindSecurityScanner(
-        impl: SecurityScannerService
-    ): SecurityScannerContract
+    @Provides
+    fun provideBlockaidScannerService(blockaidRpcClient: BlockaidRpcClientContract): ProviderScannerServiceContract {
+        return BlockaidScannerService(blockaidRpcClient)
+    }
+
+    @Singleton
+    @Provides
+    fun provideSecurityScannerService(
+        blockaidScannerService: ProviderScannerServiceContract
+    ): SecurityScannerContract {
+        val providers = listOf(blockaidScannerService)
+        return SecurityScannerService(providers)
+    }
 }

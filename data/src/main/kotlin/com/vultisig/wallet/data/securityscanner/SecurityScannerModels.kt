@@ -23,7 +23,7 @@ enum class SecurityTransactionType {
     TOKEN_TRANSFER,
     SWAP,
     APPROVAL,
-    SMART_CONTRACT, // generic call/Msg
+    SMART_CONTRACT,
 }
 
 data class SecurityScannerResult(

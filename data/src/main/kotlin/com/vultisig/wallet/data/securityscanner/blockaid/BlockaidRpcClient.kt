@@ -9,9 +9,8 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
-import javax.inject.Inject
 
-class BlockaidRpcClient @Inject constructor(
+class BlockaidRpcClient(
     private val httpClient: HttpClient,
 ) : BlockaidRpcClientContract {
 
