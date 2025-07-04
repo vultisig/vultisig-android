@@ -19,11 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,6 +31,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -43,10 +42,11 @@ internal fun ChainAccountItem(
     onCopy: (String) -> Unit,
     onClick: () -> Unit = {},
 ) {
-    val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val longClick = {
-        clipboard.setText(AnnotatedString(account.address))
+
+        VsClipboardService.copy(context, account.address)
+
         onCopy(
             context.getString(
                 R.string.chain_account_item_address_copied,

@@ -51,7 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -79,6 +80,7 @@ import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -395,20 +397,12 @@ private fun SendFormScreen(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                val clipboard = LocalClipboardManager.current
-
-                                UiIcon(
-                                    drawableResId = R.drawable.ic_paste,
-                                    size = 20.dp,
+                                PasteIcon(
                                     modifier = Modifier
                                         .vsClickableBackground()
                                         .padding(all = 12.dp)
                                         .weight(1f),
-                                    onClick = {
-                                        clipboard.getText()
-                                            ?.toString()
-                                            ?.let(onSetOutputAddress)
-                                    }
+                                    onPaste = onSetOutputAddress
                                 )
 
                                 UiIcon(
@@ -680,16 +674,15 @@ private fun SendFormScreen(
                                 AnimatedVisibility(
                                     visible = isMemoExpanded,
                                 ) {
-                                    val clipboardManager = LocalClipboardManager.current
-
+                                    val context = LocalContext.current
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
                                         hint = "Enter Memo",
                                         trailingIcon = R.drawable.ic_paste,
                                         onTrailingIconClick = {
-                                            clipboardManager.getText()
-                                                ?.toString()
-                                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(it) }
+                                            memoFieldState.setTextAndPlaceCursorAtEnd(
+                                                text = VsClipboardService.getClipboardData(context)
+                                            )
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth(),
