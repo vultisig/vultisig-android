@@ -105,6 +105,9 @@ internal class FastVaultPasswordViewModel @Inject constructor(
     }
 
     fun navigateToHint() {
+        if(!state.value.isNextButtonEnabled) {
+            return
+        }
         viewModelScope.launch {
             val enteredPassword = passwordTextFieldState.text.toString()
             navigator.route(
