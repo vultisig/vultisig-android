@@ -76,7 +76,7 @@ enum class SecurityScannerFeaturesType {
 
 data class SecurityScannerSupport(
     val provider: String,
-    val feature: Feature,
+    val feature: List<Feature>,
 ) {
     data class Feature(
         val chains: List<Chain>,
