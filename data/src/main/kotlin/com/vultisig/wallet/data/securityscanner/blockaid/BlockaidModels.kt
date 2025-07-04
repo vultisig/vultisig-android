@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.securityscanner
+package com.vultisig.wallet.data.securityscanner.blockaid
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

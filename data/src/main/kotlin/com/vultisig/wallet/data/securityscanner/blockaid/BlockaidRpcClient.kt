@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.securityscanner
+package com.vultisig.wallet.data.securityscanner.blockaid
 
 
 import com.vultisig.wallet.data.models.Chain
@@ -9,7 +9,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class BlockaidRpcClient @Inject constructor(

@@ -63,3 +63,7 @@ enum class SecurityWarningType {
     FRONT_RUNNING,
     OTHER,
 }
+
+enum class SecurityScannerFeaturesType {
+    SCAN_TRANSACTION,
+}

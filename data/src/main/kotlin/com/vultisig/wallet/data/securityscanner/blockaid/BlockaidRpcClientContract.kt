@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.securityscanner
+package com.vultisig.wallet.data.securityscanner.blockaid
 
 import com.vultisig.wallet.data.models.Chain
 
