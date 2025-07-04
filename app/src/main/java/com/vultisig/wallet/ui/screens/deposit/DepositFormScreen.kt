@@ -17,7 +17,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -300,17 +299,17 @@ internal fun DepositFormScreen(
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
                     val unstakableBalance = state.unstakableTcyAmount?.takeIf { it.isNotBlank() } ?: "0"
-                    
+
                     val amountLabel = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
-                    
+
                     val amountHint = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
-                    
+
                     if (
                         isTcyOption ||
                         (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain) ||
@@ -340,18 +339,7 @@ internal fun DepositFormScreen(
                             onLostFocus = onNodeAddressLostFocus,
                             error = state.nodeAddressError,
                         ) {
-                            val clipboard = LocalClipboardManager.current
-
-                            UiIcon(
-                                drawableResId = R.drawable.ic_paste,
-                                size = 20.dp,
-                                onClick = {
-                                    clipboard.getText()
-                                        ?.toString()
-                                        ?.let(onSetNodeAddress)
-                                }
-                            )
-
+                            PasteIcon(onPaste = onSetNodeAddress)
                             UiSpacer(size = 8.dp)
                         }
                     }
@@ -365,18 +353,7 @@ internal fun DepositFormScreen(
                             onLostFocus = onProviderLostFocus,
                             error = state.providerError,
                         ) {
-                            val clipboard = LocalClipboardManager.current
-
-                            UiIcon(
-                                drawableResId = R.drawable.ic_paste,
-                                size = 20.dp,
-                                onClick = {
-                                    clipboard.getText()
-                                        ?.toString()
-                                        ?.let(onSetProvider)
-                                }
-                            )
-
+                            PasteIcon(onPaste = onSetProvider)
                             UiSpacer(size = 8.dp)
                         }
 

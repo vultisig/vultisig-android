@@ -2,13 +2,12 @@ package com.vultisig.wallet.ui.screens.function
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormSelection
@@ -71,18 +70,7 @@ internal fun TransferIbcFunctionScreen(
         onLostFocus = onDstAddressLostFocus,
         error = dstAddressError,
     ) {
-        val clipboard = LocalClipboardManager.current
-
-        UiIcon(
-            drawableResId = R.drawable.ic_paste,
-            size = 20.dp,
-            onClick = {
-                clipboard.getText()
-                    ?.toString()
-                    ?.let(onSetDstAddress)
-            }
-        )
-
+        PasteIcon(onPaste = onSetDstAddress)
         UiSpacer(size = 8.dp)
     }
 

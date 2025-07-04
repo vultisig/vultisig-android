@@ -535,7 +535,10 @@ internal class SendFormViewModel @Inject constructor(
 
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
-            ?.setScale(8, RoundingMode.DOWN)
+            ?.setScale(
+                selectedAccount.token.decimal,
+                RoundingMode.DOWN
+            )
             ?.stripTrailingZeros()
     }
 
@@ -1375,8 +1378,8 @@ internal class SendFormViewModel @Inject constructor(
             }
             val gasFee = try {
                 gasFeeRepository.getGasFee(
-                    srcAddress.chain,
-                    srcAddress.address
+                    chain = srcAddress.chain,
+                    address = srcAddress.address,
                 )
             } catch (e: Exception) {
                 uiState.update {
