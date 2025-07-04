@@ -29,7 +29,7 @@ internal fun rememberClipboardText(
     onClipDataChanged {
         val clipText = VsClipboardService.getClipboardData(context)
         if (filter(clipText)) {
-            text.value = VsClipboardService.getClipboardData(context)
+            text.value = clipText
         }
     }
 
