@@ -53,10 +53,8 @@ import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
-import com.vultisig.wallet.ui.theme.AlertsColors
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 internal fun VerifySendScreen(
@@ -140,9 +138,7 @@ internal fun VerifySendScreen(
 
                 val tx = state.transaction
 
-                if (state.txScanStatus is TransactionScanStatus.Scanned) {
-                    SecurityScannerBadget()
-                }
+                SecurityScannerBadget(state.txScanStatus)
 
                 Column(
                     modifier = Modifier
@@ -327,34 +323,46 @@ internal fun VerifySendScreen(
 
 @Composable
 internal fun SecurityScannerBadget(
-    provider: String = "Blockaid"
+    status: TransactionScanStatus,
+    provider: String = "blockaid"
 ) {
     Row(
+        modifier = Modifier
+            .height(24.dp) ,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Default.Check,
-            contentDescription = "Check",
-            tint = Theme.colors.alerts.success,
-            modifier = Modifier.size(16.dp)
-        )
+        if (status is TransactionScanStatus.Scanned) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Check",
+                tint = Theme.colors.alerts.success,
+                modifier = Modifier.size(16.dp)
+            )
 
-        Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
-        Text(
-            text = "Transaction scanned by",
-            fontSize = 14.sp,
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.light
-        )
+            Text(
+                text = "Transaction scanned by",
+                fontSize = 14.sp,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.colors.text.light
+            )
 
-        Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(4.dp))
 
-        Image(
-            painter = painterResource(id = R.drawable.blockaid_logo),
-            contentDescription = "Provider Logo",
-            modifier = Modifier.height(16.dp)
-        )
+            Image(
+                painter = painterResource(id = getSecurityScannerLogo(provider)),
+                contentDescription = "Provider Logo",
+                modifier = Modifier.height(16.dp)
+            )
+        }
+    }
+}
+
+private fun getSecurityScannerLogo(provider: String): Int {
+    return when (provider) {
+        "blockaid" -> R.drawable.blockaid_logo
+        else -> R.drawable.blockaid_logo
     }
 }
 
