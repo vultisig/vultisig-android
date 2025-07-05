@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -62,14 +62,11 @@ internal fun CustomTokenScreen(
     viewModel: CustomTokenViewModel = hiltViewModel(),
 ) {
     val uiModel by viewModel.uiModel.collectAsState()
-    val clipboardManager = LocalClipboardManager.current
     CustomTokenScreen(
         navController = navController,
         state = uiModel,
         searchFieldState = viewModel.searchFieldState,
-        onPasteClick = {
-            viewModel.pasteToSearchField(clipboardManager.getText()?.text ?: "")
-        },
+        onPasteClick = viewModel::pasteToSearchField,
         onSearchClick = viewModel::searchCustomToken,
         onAddTokenClick = viewModel::addCoinToTempRepo
     )
@@ -80,7 +77,7 @@ private fun CustomTokenScreen(
     navController: NavHostController,
     state: CustomTokenUiModel,
     searchFieldState: TextFieldState,
-    onPasteClick: () -> Unit,
+    onPasteClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     onAddTokenClick: () -> Unit,
 ) {
@@ -258,7 +255,7 @@ private fun SearchTokenResult(
 @Composable
 private fun SearchTokenTextField(
     searchTextFieldState: TextFieldState,
-    onPasteClick: () -> Unit = {},
+    onPasteClick: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -272,12 +269,7 @@ private fun SearchTokenTextField(
                 keyboardType = KeyboardType.Text,
                 textFieldState = searchTextFieldState,
                 content = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_paste),
-                        contentDescription = null,
-                        tint = Theme.colors.neutral0,
-                        modifier = Modifier.clickOnce(onClick = onPasteClick)
-                    )
+                    PasteIcon(onPaste = onPasteClick)
                 }
             )
         }
