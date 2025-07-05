@@ -100,6 +100,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         loadFastSign()
         loadTransaction()
         loadPassword()
+        scanTransaction()
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -195,8 +196,13 @@ internal class VerifyTransactionViewModel @Inject constructor(
             uiState.update {
                 it.copy(transaction = transactionUiModel)
             }
+        }
+    }
 
+    private fun scanTransaction() {
+        viewModelScope.launch {
             try {
+                val transaction = transaction.filterNotNull().first()
                 val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
                 val transferType = if (isTokenTransfer) {
                     SecurityTransactionType.TOKEN_TRANSFER
@@ -211,15 +217,13 @@ internal class VerifyTransactionViewModel @Inject constructor(
                         chain = transaction.token.chain,
                         type = transferType,
                         from = transaction.srcAddress,
-                        to= transaction.dstAddress,
+                        to = transaction.dstAddress,
                         amount = transaction.tokenValue.value,
                     )
                 )
 
-                println(result)
-
                 uiState.update {
-                    it.copy(txScanStatus = TransactionScanStatus.Scanned(isSafe = true))
+                    it.copy(txScanStatus = TransactionScanStatus.Scanned(isSafe = result.isSecure))
                 }
             } catch (t: Throwable) {
                 val errorMessage = "Security Scanner Failed"
