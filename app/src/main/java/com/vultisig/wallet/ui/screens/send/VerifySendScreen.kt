@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.SwapToken
@@ -139,7 +140,7 @@ internal fun VerifySendScreen(
 
                 val tx = state.transaction
 
-                if (state.hasScannedTxSuccessfully) {
+                if (state.txScanStatus is TransactionScanStatus.Scanned) {
                     SecurityScannerBadget()
                 }
 

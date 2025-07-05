@@ -55,10 +55,17 @@ internal data class VerifyTransactionUiModel(
     val hasFastSign: Boolean = false,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
-    val hasScannedTxSuccessfully: Boolean = false,
+    val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
+}
+
+sealed class TransactionScanStatus {
+    object NotStarted : TransactionScanStatus()
+    object Scanning : TransactionScanStatus()
+    data class Scanned(val isSafe: Boolean) : TransactionScanStatus()
+    data class Error(val message: String) : TransactionScanStatus()
 }
 
 @HiltViewModel
@@ -196,6 +203,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 } else {
                     SecurityTransactionType.COIN_TRANSFER
                 }
+                uiState.update {
+                    it.copy(txScanStatus = TransactionScanStatus.Scanning)
+                }
                 val result = securityScannerService.scanTransaction(
                     transaction = SecurityScannerTransaction(
                         chain = transaction.token.chain,
@@ -206,15 +216,22 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     )
                 )
 
+                println(result)
+
                 uiState.update {
-                    it.copy(hasScannedTxSuccessfully = true)
+                    it.copy(txScanStatus = TransactionScanStatus.Scanned(isSafe = true))
                 }
             } catch (t: Throwable) {
-                Timber.e(t, "Security Scanner Failed")
+                val errorMessage = "Security Scanner Failed"
+                Timber.e(t, errorMessage)
+
+                uiState.update {
+                    val message = t.message ?: errorMessage
+                    it.copy(txScanStatus = TransactionScanStatus.Error(message = message))
+                }
             }
         }
     }
-
 }
 
 
