@@ -9,7 +9,8 @@ class SecurityScannerService(
     private val disabledProvidersNames: MutableSet<String> = ConcurrentSkipListSet()
 
     override suspend fun scanTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        // For now we'll stick to first one blockaid, here perform selection in the
+        // For now we'll stick to first one (blockaid). Perform proper selection when having
+        // multiple providers
         return providers.firstOrNull()?.scanTransaction(transaction)
             ?: run {
                 val errorMessage =
