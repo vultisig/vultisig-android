@@ -6,9 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import vultisig.keysign.v1.KeysignPayload
 import javax.inject.Inject
 
 @Immutable
@@ -242,18 +244,13 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     private fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
-        val chain = transaction.token.chain
         val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
         val transferType = if (isTokenTransfer) {
             SecurityTransactionType.TOKEN_TRANSFER
         } else {
             SecurityTransactionType.COIN_TRANSFER
         }
-        val data = if (chain.standard == TokenStandard.EVM) {
-            "0x"
-        } else {
-            getPreHashOfTransaction()
-        }
+        val data = "0x"
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
@@ -265,8 +262,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
         )
     }
 
-    private fun getPreHashOfTransaction(): String {
-        TODO("Not yet implemented")
+    // TODO: Implement other chains
+    private fun getPreHashOfTransaction(transaction: Transaction): String {
+        return ""
     }
 }
 
