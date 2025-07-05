@@ -309,8 +309,6 @@ internal fun VerifySendScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-
-
             }
         }
     )

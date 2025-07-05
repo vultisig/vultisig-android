@@ -108,7 +108,7 @@ private fun ScanStatusContentWithLogo(
 }
 
 
-private fun getSecurityScannerLogo(provider: String): Int {
+fun getSecurityScannerLogo(provider: String): Int {
     return when (provider) {
         "blockaid" -> R.drawable.blockaid_logo
         else -> R.drawable.blockaid_logo
