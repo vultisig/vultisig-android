@@ -28,6 +28,7 @@ suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "mess
     }
 }
 
+// TODO: Enhance and check for key recursively
 suspend fun extractError(response: HttpResponse, errorKey: String): String {
     return try {
         val responseBody = response.bodyAsText()
