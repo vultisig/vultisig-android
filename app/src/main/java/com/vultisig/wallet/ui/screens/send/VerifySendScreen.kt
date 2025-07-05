@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -47,6 +49,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import timber.log.Timber
 
 @Composable
 internal fun VerifySendScreen(
@@ -120,6 +123,7 @@ internal fun VerifySendScreen(
         content = { contentPadding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(contentPadding)
                     .padding(all = 16.dp)
@@ -128,6 +132,8 @@ internal fun VerifySendScreen(
             ) {
 
                 val tx = state.transaction
+
+                SecurityScannerBadget(state.txScanStatus)
 
                 Column(
                     modifier = Modifier
@@ -303,8 +309,6 @@ internal fun VerifySendScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-
-
             }
         }
     )
