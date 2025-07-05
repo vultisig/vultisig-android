@@ -9,7 +9,7 @@ data class SecurityScannerTransaction(
     val from: String,
     val to: String,
     val amount: BigInteger = BigInteger.ZERO,
-    val data: String = "",
+    val data: String = "0x",
 )
 
 data class SecurityScannerMetadata(
