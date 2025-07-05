@@ -78,7 +78,8 @@ data class BlockaidTransactionScanResponse(
         val resultType: String?,
         val description: String?,
         val reason: String?,
-        val features: List<BlockaidFeature>?
+        val features: List<BlockaidFeature>?,
+        val error: String?,
     ){
         @Serializable
         data class BlockaidFeature(

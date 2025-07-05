@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.securityscanner.blockaid
 
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
+import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecuritySeverity
@@ -39,6 +40,13 @@ private fun BlockaidTransactionScanResponse.toValidationRiskLevel(): SecurityRis
     val classification = validation?.classification
     val status = validation?.status
     val resultType = validation?.resultType
+
+    if (status.equals("error", true)
+        || resultType.equals("error", true)
+    ) {
+        val errorMessage = validation?.error ?: "Scanning failed"
+        throw SecurityScannerException("SecurityScanner $errorMessage , payload: $this")
+    }
 
     val isBenign = status.equals("success", ignoreCase = true) &&
             resultType.equals("benign", ignoreCase = true) &&
