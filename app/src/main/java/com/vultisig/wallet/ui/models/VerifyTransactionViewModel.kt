@@ -55,7 +55,7 @@ internal data class VerifyTransactionUiModel(
     val hasFastSign: Boolean = false,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
-    val hasScannedTxSuccessfully: Boolean = true,
+    val hasScannedTxSuccessfully: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
@@ -205,7 +205,10 @@ internal class VerifyTransactionViewModel @Inject constructor(
                         amount = transaction.tokenValue.value,
                     )
                 )
-                println(result)
+
+                uiState.update {
+                    it.copy(hasScannedTxSuccessfully = true)
+                }
             } catch (t: Throwable) {
                 Timber.e(t, "Security Scanner Failed")
             }

@@ -8,7 +8,9 @@ internal suspend fun <T> runSecurityScan(
 ): T {
     Timber.d("SecurityScanner: Scanning ${transaction.chain.name} transaction: $transaction")
     return try {
-        block()
+        val result = block()
+        Timber.d("SecurityScanner: Result for ${transaction.chain.name} transaction: $result")
+        result
     } catch (t: Throwable) {
         val errorMessage = "SecurityScanner: Error scanning ${transaction.chain.name}"
         Timber.e(t, errorMessage)
