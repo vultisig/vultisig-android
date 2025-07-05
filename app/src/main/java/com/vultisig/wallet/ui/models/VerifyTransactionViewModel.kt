@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -23,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
@@ -64,8 +67,8 @@ internal data class VerifyTransactionUiModel(
 sealed class TransactionScanStatus {
     object NotStarted : TransactionScanStatus()
     object Scanning : TransactionScanStatus()
-    data class Scanned(val isSafe: Boolean) : TransactionScanStatus()
-    data class Error(val message: String) : TransactionScanStatus()
+    data class Scanned(val isSafe: Boolean, val provider: String) : TransactionScanStatus()
+    data class Error(val message: String, val provider: String) : TransactionScanStatus()
 }
 
 @HiltViewModel
@@ -202,28 +205,24 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun scanTransaction() {
         viewModelScope.launch {
             try {
-                val transaction = transaction.filterNotNull().first()
-                val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
-                val transferType = if (isTokenTransfer) {
-                    SecurityTransactionType.TOKEN_TRANSFER
-                } else {
-                    SecurityTransactionType.COIN_TRANSFER
-                }
                 uiState.update {
                     it.copy(txScanStatus = TransactionScanStatus.Scanning)
                 }
+
+                val transaction = transaction.filterNotNull().first()
+                val securityScannerTransaction = createSecurityScannerTransaction(transaction)
+
                 val result = securityScannerService.scanTransaction(
-                    transaction = SecurityScannerTransaction(
-                        chain = transaction.token.chain,
-                        type = transferType,
-                        from = transaction.srcAddress,
-                        to = transaction.dstAddress,
-                        amount = transaction.tokenValue.value,
-                    )
+                    transaction = securityScannerTransaction
                 )
 
                 uiState.update {
-                    it.copy(txScanStatus = TransactionScanStatus.Scanned(isSafe = result.isSecure))
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Scanned(
+                            isSafe = result.isSecure,
+                            provider = result.provider,
+                        )
+                    )
                 }
             } catch (t: Throwable) {
                 val errorMessage = "Security Scanner Failed"
@@ -231,10 +230,43 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
                 uiState.update {
                     val message = t.message ?: errorMessage
-                    it.copy(txScanStatus = TransactionScanStatus.Error(message = message))
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Error(
+                            message = message,
+                            provider = "blockaid",
+                        )
+                    )
                 }
             }
         }
+    }
+
+    private fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+        val chain = transaction.token.chain
+        val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
+        val transferType = if (isTokenTransfer) {
+            SecurityTransactionType.TOKEN_TRANSFER
+        } else {
+            SecurityTransactionType.COIN_TRANSFER
+        }
+        val data = if (chain.standard == TokenStandard.EVM) {
+            "0x"
+        } else {
+            getPreHashOfTransaction()
+        }
+
+        return SecurityScannerTransaction(
+            chain = transaction.token.chain,
+            type = transferType,
+            from = transaction.srcAddress,
+            to = transaction.dstAddress,
+            amount = transaction.tokenValue.value,
+            data = data,
+        )
+    }
+
+    private fun getPreHashOfTransaction(): String {
+        TODO("Not yet implemented")
     }
 }
 
