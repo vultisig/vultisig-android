@@ -9,10 +9,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -26,11 +26,11 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -207,16 +207,21 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun scanTransaction() {
         viewModelScope.launch {
             try {
+                val transaction = transaction.filterNotNull().firstOrNull() ?: return@launch
+                val chain = transaction.token.chain
+
+                val isSupported = securityScannerService
+                    .getSupportedChainsByFeature()
+                    .isChainSupported(chain)
+
+                if (!isSupported) return@launch
+
                 uiState.update {
                     it.copy(txScanStatus = TransactionScanStatus.Scanning)
                 }
 
-                val transaction = transaction.filterNotNull().first()
                 val securityScannerTransaction = createSecurityScannerTransaction(transaction)
-
-                val result = securityScannerService.scanTransaction(
-                    transaction = securityScannerTransaction
-                )
+                val result = securityScannerService.scanTransaction(securityScannerTransaction)
 
                 uiState.update {
                     it.copy(
@@ -239,6 +244,14 @@ internal class VerifyTransactionViewModel @Inject constructor(
                         )
                     )
                 }
+            }
+        }
+    }
+
+    private fun List<SecurityScannerSupport>.isChainSupported(chain: Chain): Boolean {
+        return any { support ->
+            support.feature.any { feature ->
+                chain in feature.chains
             }
         }
     }
