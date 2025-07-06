@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -30,38 +30,34 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.theme.Theme
 
-// TODO: Finalize with both status and proper params
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecurityScannerBottomSheet(
-    showBottomSheet: Boolean,
     title: String,
     description: String,
-    onGoBack: () -> Unit,
     onContinueAnyway: () -> Unit,
+    onDismissRequest: () -> Unit,
     provider: String,
 ) {
     ModalBottomSheet(
-        onDismissRequest = {
-            // TODO: Fill
-        },
+        onDismissRequest = onDismissRequest,
         containerColor = Theme.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
+                .padding(16.dp)
                 .fillMaxWidth()
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                imageVector = Icons.Outlined.Warning,
                 contentDescription = "Warning",
                 tint = Theme.colors.alerts.error,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(32.dp)
             )
 
             Text(
@@ -79,8 +75,6 @@ fun SecurityScannerBottomSheet(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -105,7 +99,8 @@ fun SecurityScannerBottomSheet(
                 variant = Primary,
                 state = Enabled,
                 size = Medium,
-                onClick = {}
+                onClick = onDismissRequest,
+                modifier = Modifier.fillMaxWidth()
             )
 
             VsButton(
@@ -113,7 +108,8 @@ fun SecurityScannerBottomSheet(
                 variant = Primary,
                 state = Disabled,
                 size = Medium,
-                onClick = {}
+                onClick = onContinueAnyway,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))

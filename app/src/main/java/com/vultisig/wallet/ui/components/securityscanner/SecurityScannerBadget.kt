@@ -40,7 +40,7 @@ internal fun SecurityScannerBadget(
                     image = Icons.Default.Check,
                     imageColor = Theme.colors.alerts.success,
                     message = "Transaction scanned by",
-                    providerLogoId = status.provider,
+                    providerLogoId = status.result.provider,
                 )
             }
 

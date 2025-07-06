@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,6 +38,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -49,7 +49,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import timber.log.Timber
 
 @Composable
 internal fun VerifySendScreen(
@@ -85,13 +84,15 @@ internal fun VerifySendScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onConfirm = viewModel::joinKeysign,
+        onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = {
             if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
             }
         },
+        onConfirmScanning = viewModel::joinKeySignAndSkipWarnings,
+        onDismissScanning = viewModel::dismissScanningWarning,
     )
 }
 
@@ -107,6 +108,8 @@ internal fun VerifySendScreen(
     onConsentAmount: (Boolean) -> Unit = {},
     onConsentDst: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
+    onConfirmScanning: () -> Unit = {},
+    onDismissScanning: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -285,6 +288,16 @@ internal fun VerifySendScreen(
                         vertical = 12.dp
                     )
             ) {
+                if (state.showScanningWarning) {
+                    SecurityScannerBottomSheet(
+                        title = "High Risk",
+                        description = "[TOKEN] has been flagged as malicious by Blockaid. Interacting with it may compromise " +
+                                "your assets. Proceed only if you are certain.",
+                        onContinueAnyway = onConfirmScanning,
+                        provider = "blockaid",
+                        onDismissRequest = onDismissScanning,
+                    )
+                }
                 if (state.hasFastSign) {
                     Text(
                         text = "Hold for paired sign",

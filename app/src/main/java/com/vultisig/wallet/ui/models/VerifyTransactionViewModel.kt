@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
@@ -35,7 +36,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import vultisig.keysign.v1.KeysignPayload
 import javax.inject.Inject
 
 @Immutable
@@ -61,6 +61,7 @@ internal data class VerifyTransactionUiModel(
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
+    val showScanningWarning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
@@ -69,7 +70,7 @@ internal data class VerifyTransactionUiModel(
 sealed class TransactionScanStatus {
     object NotStarted : TransactionScanStatus()
     object Scanning : TransactionScanStatus()
-    data class Scanned(val isSafe: Boolean, val provider: String) : TransactionScanStatus()
+    data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
     data class Error(val message: String, val provider: String) : TransactionScanStatus()
 }
 
@@ -139,12 +140,35 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    fun joinKeysign() {
+    fun joinKeySign() {
+        when (val status = uiState.value.txScanStatus) {
+            is TransactionScanStatus.Scanned -> showWarningDialogIfNeeded(status)
+            is TransactionScanStatus.Error,
+            TransactionScanStatus.NotStarted,
+            TransactionScanStatus.Scanning -> keysign(KeysignInitType.QR_CODE)
+        }
+    }
+
+    fun joinKeySignAndSkipWarnings() {
         keysign(KeysignInitType.QR_CODE)
+    }
+
+    private fun showWarningDialogIfNeeded(status: TransactionScanStatus.Scanned) {
+        val isSecure = status.result.isSecure
+
+        if (!isSecure){
+            uiState.update { it.copy(showScanningWarning = true) }
+        } else {
+            keysign(KeysignInitType.QR_CODE)
+        }
     }
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
+    }
+
+    fun dismissScanningWarning() {
+        uiState.update { it.copy(showScanningWarning = false) }
     }
 
     fun back() {
@@ -225,10 +249,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
                 uiState.update {
                     it.copy(
-                        txScanStatus = TransactionScanStatus.Scanned(
-                            isSafe = result.isSecure,
-                            provider = result.provider,
-                        )
+                        txScanStatus = TransactionScanStatus.Scanned(result)
                     )
                 }
             } catch (t: Throwable) {
