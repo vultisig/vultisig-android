@@ -31,6 +31,7 @@ data class SecurityScannerResult(
     val isSecure: Boolean,
     val riskLevel: SecurityRiskLevel,
     val warnings: List<SecurityWarning>,
+    val description: String?,
     val recommendations: String,
     val metadata: SecurityScannerMetadata = SecurityScannerMetadata(),
 )

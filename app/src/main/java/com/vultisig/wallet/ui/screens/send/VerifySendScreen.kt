@@ -294,8 +294,7 @@ internal fun VerifySendScreen(
                     SecurityScannerBottomSheet(
                         securityScannerdModel = state.txScanStatus.result,
                         title = "High Risk",
-                        description = "[TOKEN] has been flagged as malicious by Blockaid. Interacting with it may compromise " +
-                                "your assets. Proceed only if you are certain.",
+                        description = "The transaction is interacting with a malicious dapp",
                         onContinueAnyway = onConfirmScanning,
                         provider = "blockaid",
                         onDismissRequest = onDismissScanning,

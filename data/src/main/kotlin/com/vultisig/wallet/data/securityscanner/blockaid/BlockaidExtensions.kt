@@ -25,6 +25,7 @@ fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): S
         warnings = securityWarnings,
         isSecure = isSecure,
         recommendations = recommendations,
+        description = validation?.description,
         metadata = SecurityScannerMetadata(
             requestId = requestId ?: "",
             classification = validation?.classification ?: "",
@@ -67,8 +68,8 @@ private fun String?.toWarningType(): SecurityRiskLevel {
 
 private fun String.toRecommendations(): String {
     return when (this.lowercase()) {
-        "malicious" -> "⚠️ This transaction is flagged as malicious. Do not proceed."
-        "warning" -> "⚠️ This transaction has been flagged with warnings. Review carefully before proceeding."
+        "malicious" -> "This transaction is flagged as malicious. Do not proceed."
+        "warning" -> "This transaction has been flagged with warnings. Review carefully before proceeding."
         "spam" -> "This transaction appears to be spam. Consider avoiding it."
         else -> ""
     }

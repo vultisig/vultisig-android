@@ -20,9 +20,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
@@ -35,12 +38,12 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 fun SecurityScannerBottomSheet(
     securityScannerdModel: SecurityScannerResult,
-    title: String,
-    description: String,
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
     provider: String,
 ) {
+    val contentStyle = securityScannerdModel.getSecurityScannerBottomSheetStyle()
+
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         containerColor = Theme.colors.backgrounds.secondary,
@@ -56,14 +59,14 @@ fun SecurityScannerBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Outlined.Warning,
+                imageVector = contentStyle.image,
                 contentDescription = "Warning",
-                tint = Theme.colors.alerts.error,
+                tint = contentStyle.imageColor,
                 modifier = Modifier.size(32.dp)
             )
 
             Text(
-                text = title,
+                text = contentStyle.title,
                 color = Theme.colors.alerts.error,
                 style = Theme.brockmann.headings.title2,
                 textAlign = TextAlign.Center,
@@ -71,7 +74,7 @@ fun SecurityScannerBottomSheet(
             )
 
             Text(
-                text = description,
+                text = contentStyle.description,
                 color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center,
@@ -118,3 +121,35 @@ fun SecurityScannerBottomSheet(
         }
     }
 }
+
+@Composable
+fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerBottomSheetStyle {
+    val title = when (riskLevel) {
+        SecurityRiskLevel.MEDIUM -> "Medium Security Risk"
+        SecurityRiskLevel.HIGH -> "High Security Risk"
+        SecurityRiskLevel.CRITICAL -> "Critical Security Risk"
+        SecurityRiskLevel.NONE,
+        SecurityRiskLevel.LOW -> "No Security Risk"
+    }
+
+    val description = description ?: "This transaction has been flagged as potentially dangerous."
+    val (color, icon) = if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
+        Pair(Theme.colors.alerts.error, Icons.Outlined.Warning)
+    } else {
+        Pair(Theme.colors.alerts.warning, Icons.Outlined.Warning)
+    }
+
+    return SecurityScannerBottomSheetStyle(
+        title = title,
+        description = description,
+        imageColor = color,
+        image = icon,
+    )
+}
+
+data class SecurityScannerBottomSheetStyle(
+    val title: String,
+    val description: String,
+    val image: ImageVector,
+    val imageColor: Color,
+)
