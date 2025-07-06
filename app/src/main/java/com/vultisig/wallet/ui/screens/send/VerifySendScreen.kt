@@ -293,8 +293,6 @@ internal fun VerifySendScreen(
                     state.txScanStatus is TransactionScanStatus.Scanned) {
                     SecurityScannerBottomSheet(
                         securityScannerdModel = state.txScanStatus.result,
-                        title = "High Risk",
-                        description = "The transaction is interacting with a malicious dapp",
                         onContinueAnyway = onConfirmScanning,
                         provider = "blockaid",
                         onDismissRequest = onDismissScanning,
