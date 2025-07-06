@@ -4,17 +4,14 @@ import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
-import com.vultisig.wallet.data.securityscanner.SecuritySeverity
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
-import com.vultisig.wallet.data.securityscanner.SecurityWarningType
 
 fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): SecurityScannerResult {
     val riskLevel = this.toValidationRiskLevel()
     val securityWarnings = validation?.features?.map { feature ->
         SecurityWarning(
-            // TODO: REVIEW THIS, SEEMS IOS GOT IT WRONG
             type = feature.type.toWarningType(),
-            severity = (feature.severity ?: "medium").toSecuritySeverity(),
+            severity = feature.featureId,
             message = feature.description,
             details = feature.address
         )
@@ -54,36 +51,17 @@ private fun BlockaidTransactionScanResponse.toValidationRiskLevel(): SecurityRis
             !hasFeatures
     if (isBenign) return SecurityRiskLevel.NONE
 
-    val label = classification?.takeIf { it.isNotBlank() } ?: resultType
+    val label = resultType ?: classification
 
-    return when (label?.lowercase()) {
-        "benign" -> SecurityRiskLevel.LOW
+    return label.toWarningType()
+}
+
+private fun String?.toWarningType(): SecurityRiskLevel {
+    return when (this?.lowercase()) {
+        "benign", "info" -> SecurityRiskLevel.LOW
         "warning", "spam" -> SecurityRiskLevel.MEDIUM
         "malicious" -> SecurityRiskLevel.CRITICAL
         else -> SecurityRiskLevel.MEDIUM
-    }
-}
-
-private fun String.toWarningType(): SecurityWarningType {
-    return when (this) {
-        "malicious_contract" -> SecurityWarningType.MALICIOUS_CONTRACT
-        "suspicious_contract" -> SecurityWarningType.SUSPICIOUS_CONTRACT
-        "phishing" -> SecurityWarningType.PHISHING_ATTEMPT
-        "high_value" -> SecurityWarningType.HIGH_VALUE_TRANSFER
-        "unknown_token" -> SecurityWarningType.UNKNOWN_TOKEN
-        "rug_pull" -> SecurityWarningType.RUG_PULL_RISK
-        "sandwich_attack" -> SecurityWarningType.SANDWICH_ATTACK
-        else -> SecurityWarningType.OTHER
-    }
-}
-
-private fun String.toSecuritySeverity(): SecuritySeverity {
-    return when (this.lowercase()) {
-        "low" -> SecuritySeverity.INFO
-        "medium" -> SecuritySeverity.WARNING
-        "high" -> SecuritySeverity.ERROR
-        "critical" -> SecuritySeverity.CRITICAL
-        else -> SecuritySeverity.WARNING
     }
 }
 

@@ -84,7 +84,8 @@ data class BlockaidTransactionScanResponse(
         @Serializable
         data class BlockaidFeature(
             val type: String,
-            val severity: String?,
+            @SerialName("feature_id")
+            val featureId: String,
             val description: String,
             val address: String?,
         )

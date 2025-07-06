@@ -36,18 +36,11 @@ data class SecurityScannerResult(
 )
 
 data class SecurityWarning(
-    val type: SecurityWarningType,
-    val severity: SecuritySeverity,
+    val type: SecurityRiskLevel,
+    val severity: String,
     val message: String,
     val details: String?,
 )
-
-enum class SecuritySeverity {
-    INFO,
-    WARNING,
-    ERROR,
-    CRITICAL,
-}
 
 enum class SecurityRiskLevel {
     NONE,
@@ -55,19 +48,6 @@ enum class SecurityRiskLevel {
     MEDIUM,
     HIGH,
     CRITICAL,
-}
-
-enum class SecurityWarningType {
-    SUSPICIOUS_CONTRACT,
-    HIGH_VALUE_TRANSFER,
-    UNKNOWN_TOKEN,
-    PHISHING_ATTEMPT,
-    MALICIOUS_CONTRACT,
-    UNUSUAL_ACTIVITY,
-    RUG_PULL_RISK,
-    SANDWICH_ATTACK,
-    FRONT_RUNNING,
-    OTHER,
 }
 
 enum class SecurityScannerFeaturesType {
