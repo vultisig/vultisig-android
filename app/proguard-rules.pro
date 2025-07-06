@@ -6,7 +6,8 @@
 -keepattributes InnerClasses
 # Keep EnclosingMethod for inner class reflection
 -keepattributes EnclosingMethod
-
+# CRUCIAL for web3j to correctly determine generic type parameters at runtime.
+-keepattributes Signature
 
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
@@ -72,15 +73,9 @@
 
 # Web3j specific rules
 # Keep all classes and members within the org.web3j package.
-# This is often a good starting point for web3j to ensure core functionality is not stripped.
+# starting point for web3j to ensure core functionality is not stripped.
 -keep class org.web3j.** { *; }
 
-# Keep the Signature attribute for TypeReference and generic types.
-# CRUCIAL for web3j to correctly determine generic type parameters at runtime.
--keepattributes Signature
-
+-keep class org.web3j.** { *; }
 # Keep classes that extend TypeReference.
 -keep class * extends org.web3j.abi.TypeReference
-
-# Keep Web3j data types. This prevents obfuscation/removal of the specific Solidity type classes.
--keep class org.web3j.abi.datatypes.** { *; }
