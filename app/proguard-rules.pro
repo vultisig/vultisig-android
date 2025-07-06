@@ -74,9 +74,10 @@
 # Umbrella protection
 -keep class org.web3j.** { *; }
 
+# Sometimes previous statements is not enough and leakes.
 # Keep classes that extend TypeReference.
 -keep class * extends org.web3j.abi.TypeReference
 
 # Keep Web3j data types, sometimes previous statements is not enough and leakes.
-# This prevents obfuscation/removal of the specific Solidity type classes.
+# Keeps data types
 -keep class org.web3j.abi.datatypes.** { *; }
