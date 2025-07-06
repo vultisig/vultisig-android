@@ -71,16 +71,11 @@
 -keep class okhttp3.** { *; }
 -keep interface okhttp3.** { *; }
 
-# Web3j specific rules
-# Keep all classes and members within the org.web3j package.
-# starting point for web3j to ensure core functionality is not stripped.
+# Umbrella protection
 -keep class org.web3j.** { *; }
 
 # Keep classes that extend TypeReference.
 -keep class * extends org.web3j.abi.TypeReference
-
-# Umbrella protection
--keep class org.web3j.** { *; }
 
 # Keep Web3j data types, sometimes previous statements is not enough and leakes.
 # This prevents obfuscation/removal of the specific Solidity type classes.
