@@ -74,10 +74,9 @@
 # Umbrella protection
 -keep class org.web3j.** { *; }
 
-# Sometimes previous statements is not enough and leakes.
+# Sometimes the previous rule is not enough and some classes are leaked.
 # Keep classes that extend TypeReference.
 -keep class * extends org.web3j.abi.TypeReference
 
-# Keep Web3j data types, sometimes previous statements is not enough and leakes.
-# Keeps data types
+# Keep Web3j data types. Sometimes the previous rule is not enough and data types are leaked.
 -keep class org.web3j.abi.datatypes.** { *; }
