@@ -1,5 +1,12 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+# Keep all annotations (especially runtime annotations like @Inject, etc.)
+-keepattributes *Annotation*
+# Keep InnerClasses attribute to help with anonymous inner classes reflection
+-keepattributes InnerClasses
+# Keep EnclosingMethod for inner class reflection
+-keepattributes EnclosingMethod
+
 
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
@@ -59,7 +66,21 @@
 -dontwarn org.ietf.jgss.GSSName
 -dontwarn org.ietf.jgss.Oid
 
-
 # OkHttp
 -keep class okhttp3.** { *; }
 -keep interface okhttp3.** { *; }
+
+# Web3j specific rules
+# Keep all classes and members within the org.web3j package.
+# This is often a good starting point for web3j to ensure core functionality is not stripped.
+-keep class org.web3j.** { *; }
+
+# Keep the Signature attribute for TypeReference and generic types.
+# CRUCIAL for web3j to correctly determine generic type parameters at runtime.
+-keepattributes Signature
+
+# Keep classes that extend TypeReference.
+-keep class * extends org.web3j.abi.TypeReference
+
+# Keep Web3j data types. This prevents obfuscation/removal of the specific Solidity type classes.
+-keep class org.web3j.abi.datatypes.** { *; }
