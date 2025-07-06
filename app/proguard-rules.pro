@@ -76,6 +76,9 @@
 # starting point for web3j to ensure core functionality is not stripped.
 -keep class org.web3j.** { *; }
 
--keep class org.web3j.** { *; }
 # Keep classes that extend TypeReference.
 -keep class * extends org.web3j.abi.TypeReference
+
+-keep class org.web3j.** { *; }
+# Keep Web3j data types. This prevents obfuscation/removal of the specific Solidity type classes.
+-keep class org.web3j.abi.datatypes.** { *; }
