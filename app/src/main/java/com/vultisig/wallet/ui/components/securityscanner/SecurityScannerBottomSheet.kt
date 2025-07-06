@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
@@ -33,6 +34,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecurityScannerBottomSheet(
+    securityScannerdModel: SecurityScannerResult,
     title: String,
     description: String,
     onContinueAnyway: () -> Unit,

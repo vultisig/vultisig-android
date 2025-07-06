@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.SwapToken
@@ -288,8 +289,10 @@ internal fun VerifySendScreen(
                         vertical = 12.dp
                     )
             ) {
-                if (state.showScanningWarning) {
+                if (state.showScanningWarning &&
+                    state.txScanStatus is TransactionScanStatus.Scanned) {
                     SecurityScannerBottomSheet(
+                        securityScannerdModel = state.txScanStatus.result,
                         title = "High Risk",
                         description = "[TOKEN] has been flagged as malicious by Blockaid. Interacting with it may compromise " +
                                 "your assets. Proceed only if you are certain.",

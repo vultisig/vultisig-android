@@ -12,6 +12,7 @@ fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): S
     val riskLevel = this.toValidationRiskLevel()
     val securityWarnings = validation?.features?.map { feature ->
         SecurityWarning(
+            // TODO: REVIEW THIS, SEEMS IOS GOT IT WRONG
             type = feature.type.toWarningType(),
             severity = (feature.severity ?: "medium").toSecuritySeverity(),
             message = feature.description,
