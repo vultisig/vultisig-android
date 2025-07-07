@@ -12,6 +12,9 @@ import vultisig.keysign.v1.CardanoChainSpecific
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
+import vultisig.keysign.v1.KyberSwapPayload
+import vultisig.keysign.v1.KyberSwapQuote
+import vultisig.keysign.v1.KyberSwapTransaction
 import vultisig.keysign.v1.MAYAChainSpecific
 import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload
@@ -203,6 +206,32 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                     swapFee = it.swapFee,
                                 )
                             }
+                        )
+                    }
+                )
+            } else null,
+            kyberswapSwapPayload = if(swapPayload is SwapPayload.Kyber) {
+                val from = swapPayload.data
+                KyberSwapPayload(
+                    fromCoin = from.fromCoin.toCoinProto(),
+                    toCoin = from.toCoin.toCoinProto(),
+                    fromAmount = from.fromAmount.toString(),
+                    toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                    quote =
+                        from.quote.let { it ->
+
+                        KyberSwapQuote(
+                            dstAmount = it.dstAmount,
+                            tx = it.tx.let {
+                                KyberSwapTransaction(
+                                    from = it.from,
+                                    to = it.to,
+                                    `data` = it.data,
+                                    `value` = it.value,
+                                    gasPrice = it.gasPrice,
+                                    gas = it.gas,
+                                )
+                            },
                         )
                     }
                 )

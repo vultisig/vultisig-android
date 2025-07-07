@@ -1,9 +1,7 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
-import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
@@ -13,12 +11,12 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.Numeric
 import tss.KeysignResponse
-import vultisig.keysign.v1.KyberSwapPayload
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
 import  com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
+import com.vultisig.wallet.data.wallet.Swaps
 
 class KyberSwap(
     private val vaultHexPublicKey: String,
@@ -28,35 +26,32 @@ class KyberSwap(
 
     @Throws(Exception::class)
     fun getPreSignedImageHash(
-        payload: KyberSwapPayloadJson,
+        swapPayload: KyberSwapPayloadJson,
         keysignPayload: KeysignPayload,
-        incrementNonce: BigInteger,
+        nonceIncrement: BigInteger,
     ): List<String> {
         val inputData = getPreSignedInputData(
-            payload.quote,
+            swapPayload.quote,
             keysignPayload,
-            incrementNonce
+            nonceIncrement
         )
-        val hashes = TransactionCompiler.preImageHashes(
-            keysignPayload.coin.coinType,
-            inputData
-        )
-//        val preSigningOutput = TxCompilerPreSigningOutput(hashes)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
 
 
-        return listOf(Numeric.toHexStringNoPrefix((preSigningOutput.dataHash.toByteArray())))
+        val chain = swapPayload.fromCoin.chain
+        val coinType = keysignPayload.coin.coinType
+
+        return Swaps.getPreSignedImageHash(inputData, coinType, chain)
     }
 
     @Throws(Exception::class)
     fun getSignedTransaction(
-        payload: KyberSwapPayloadJson, keysignPayload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>, incrementNonce: BigInteger
+        swapPayload: KyberSwapPayloadJson,
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+        incrementNonce: BigInteger
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(
-            payload.quote,
+            swapPayload.quote,
             keysignPayload,
             incrementNonce
         )
@@ -72,13 +67,6 @@ class KyberSwap(
             signatures
         )
 
-//        val helper = EvmHelper.getHelper(keysignPayload.coin)
-//        return helper.getSignedTransaction(
-//            vaultHexPublicKey,
-//            vaultHexChainCode,
-//            inputData,
-//            signatures
-//        )
     }
 
     @Throws(Exception::class)
@@ -89,13 +77,14 @@ class KyberSwap(
 
             .setToAddress(keysignPayload.coin.contractAddress).setTransaction(
                 Ethereum.Transaction.newBuilder().setErc20Approve(
-                        Ethereum.Transaction.ERC20Approve.newBuilder().setAmount(
-                                ByteString.copyFrom(
-                                    approvePayload.amount.abs().toByteArray()
-                                )
-                            ).setSpender(approvePayload.spender).build()
-                    ).build()
+                    Ethereum.Transaction.ERC20Approve.newBuilder().setAmount(
+                        ByteString.copyFrom(
+                            approvePayload.amount.abs().toByteArray()
+                        )
+                    ).setSpender(approvePayload.spender).build()
+                ).build()
             ).build()
+
 
         return EvmHelper(
             keysignPayload.coin.coinType,
@@ -151,31 +140,27 @@ class KyberSwap(
             signatures
         )
 
-//        return EVMHelper.getHelper(keysignPayload.coin)
-//            .getSignedTransaction(
-//                vaultHexPublicKey,
-//                vaultHexChainCode,
-//                inputData,
-//                signatures
-//            )
+
     }
 
     @Throws(Exception::class)
     fun getPreSignedInputData(
-        quote: KyberSwapQuoteResponse?, keysignPayload: KeysignPayload, incrementNonce: BigInteger
+        quote: KyberSwapQuoteResponse?,
+        keysignPayload: KeysignPayload,
+        incrementNonce: BigInteger
     ): ByteArray {
 
         val input = Ethereum.SigningInput.newBuilder()
 
             .setToAddress(quote?.tx?.to).setTransaction(
                 Ethereum.Transaction.newBuilder().setContractGeneric(
-                        Ethereum.Transaction.ContractGeneric.newBuilder().setAmount(
-                                ByteString.copyFrom(
-                                    quote?.tx?.value?.toBigInteger()?.toByteArray()
-                                        ?: BigInteger.ZERO.toByteArray()
-                                )
-                            ).setData(quote?.tx?.data?.removePrefix("0x")?.toByteStringOrHex())
-                    ).build()
+                    Ethereum.Transaction.ContractGeneric.newBuilder().setAmount(
+                        ByteString.copyFrom(
+                            quote?.tx?.value?.toBigInteger()?.toByteArray()
+                                ?: BigInteger.ZERO.toByteArray()
+                        )
+                    ).setData(quote?.tx?.data?.removePrefix("0x")?.toByteStringOrHex())
+                ).build()
             ).build()
 
         val gas =
@@ -227,6 +212,7 @@ class KyberSwap(
         inputBuilder.maxInclusionFeePerGas = correctedPriorityFee.abs().toByteString()
         inputBuilder.txMode = Ethereum.TransactionMode.Enveloped
 
-        return input.toByteArray()
+
+        return inputBuilder.build().toByteArray()
     }
 }

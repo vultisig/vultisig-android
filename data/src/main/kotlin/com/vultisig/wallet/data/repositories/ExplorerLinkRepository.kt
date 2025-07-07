@@ -54,6 +54,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 null
             }
         }
+        is SwapPayload.Kyber -> "https://kyberswap.com/swap/tx/${tx.removePrefix("0x")}"
 
         else -> null
     }

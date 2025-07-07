@@ -37,8 +37,7 @@ class OneInchSwap(
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
-        val helper =
-            EvmHelper(
+        val helper = EvmHelper(
                 keysignPayload.coin.coinType,
                 vaultHexPublicKey,
                 vaultHexChainCode

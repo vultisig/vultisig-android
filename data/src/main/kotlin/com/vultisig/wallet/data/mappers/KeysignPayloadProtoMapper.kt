@@ -83,6 +83,42 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         )
                     )
                 }
+                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
+                    SwapPayload.Kyber(
+                        KyberSwapPayloadJson(
+                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                            toCoin = requireNotNull(it.toCoin).toCoin(),
+                            fromAmount = BigInteger(it.fromAmount),
+                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
+                            quote = requireNotNull(it.quote).let { it ->
+                                KyberSwapQuoteResponse(
+                                    code = 0,
+                                    message = "Success",
+                                    data = KyberSwapQuoteData(
+                                        amountIn =from.toAmount,
+                                        amountInUsd = "0",
+                                        amountOut = it.dstAmount,
+                                        amountOutUsd = "0",
+                                        gas = it.tx?.gas.toString(),
+                                        gasUsd = "0",
+//                                        additionalCostUsd = "",
+//                                        additionalCostMessage = "",
+//                                        outputChange = OutputChange(
+//                                            amount = TODO(),
+//                                            percent = TODO(),
+//                                            level = TODO()
+//                                        ),
+                                        data = it.tx?.data ?: "",
+                                        routerAddress = it.tx?.to ?: "",
+                                        transactionValue = it.tx?.value ?: "",
+                                        gasPrice = it.tx?.gasPrice ?: "",
+                                        fee = BigInteger.ZERO
+                                    ),
+                                    requestId = ""
+                                )
+                            }
+                        ))
+                }
 
                 from.thorchainSwapPayload != null -> from.thorchainSwapPayload.let {
                     SwapPayload.ThorChain(
@@ -96,42 +132,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     )
                 }
 
-                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
-                    SwapPayload.Kyber(
-                        KyberSwapPayloadJson(
-                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
-                            toCoin = requireNotNull(it.toCoin).toCoin(),
-                            fromAmount = BigInteger(it.fromAmount),
-                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
-                            quote = requireNotNull(it.quote).let { it ->
-                                KyberSwapQuoteResponse(
-                                    code = 0, // Provide appropriate code
-                                    message = "", // Provide appropriate message
-                                    data = KyberSwapQuoteData(
-                                        amountIn = "",
-                                        amountInUsd = "",
-                                        amountOut = it.dstAmount, // Using dstAmount here
-                                        amountOutUsd = "",
-                                        gas = it.tx?.gas.toString(),
-                                        gasUsd = "",
-                                        additionalCostUsd = "",
-                                        additionalCostMessage = "",
-                                        outputChange = OutputChange(
-                                            amount = TODO(),
-                                            percent = TODO(),
-                                            level = TODO()
-                                        ), // You might need to provide proper initialization
-                                        data = it.tx?.data ?: "",
-                                        routerAddress = it.tx?.to ?: "",
-                                        transactionValue = it.tx?.value ?: "",
-                                        gasPrice = it.tx?.gasPrice ?: "",
-                                        fee = BigInteger.ZERO
-                                    ),
-                                    requestId = "" // Provide appropriate requestId
-                                )
-                            }
-                        ))
-                }
+
 
                 else -> null
             },

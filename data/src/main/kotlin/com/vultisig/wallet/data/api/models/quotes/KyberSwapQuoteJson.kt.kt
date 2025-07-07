@@ -1,11 +1,9 @@
 package com.vultisig.wallet.data.api.models.quotes
 
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuote.Transaction
 import com.vultisig.wallet.data.models.Chain
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import vultisig.keysign.v1.KyberSwapTransaction
 import java.math.BigInteger
 import kotlin.text.toLongOrNull
 
@@ -22,11 +20,11 @@ sealed class KyberSwapQuoteDeserialized {
 
 
 @Serializable
-public data class KyberSwapQuoteJson(
+data class KyberSwapQuoteJson(
     @SerialName("dstAmount")
-    public val dstAmount: String = "",
+    val dstAmount: String = "",
     @SerialName("tx")
-    public val tx: KyberSwapTxJson,
+    val tx: KyberSwapTxJson,
     @SerialName("error")
     val error: String? = null,
     @Contextual
@@ -39,7 +37,7 @@ public data class KyberSwapQuoteJson(
 //        get() = data.amountOut
 
     fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
-        val baseGas = tx?.gas ?: 600_000L
+        val baseGas = tx.gas
         val gasMultiplierTimes10 = when (chain) {
             Chain.Ethereum -> 14L
             Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
@@ -143,12 +141,6 @@ data class KyberSwapQuoteData(
     val gas: String?,
     @SerialName("gasUsd")
     val gasUsd: String,
-    @SerialName("additionalCostUsd")
-    val additionalCostUsd: String,
-    @SerialName("additionalCostMessage")
-    val additionalCostMessage: String,
-    @SerialName("outputChange")
-    val outputChange: OutputChange,
     @SerialName("data")
     val data: String,
     @SerialName("routerAddress")
@@ -156,11 +148,34 @@ data class KyberSwapQuoteData(
     @SerialName("transactionValue")
     val transactionValue: String,
     //not in response
-    @Contextual
-    val gasPrice: String?,
-    @Contextual
-    val fee: BigInteger?,
+    @kotlinx.serialization.Transient
+    val gasPrice: String?="",
+    @kotlinx.serialization.Transient
+    val fee: BigInteger?= BigInteger.ZERO,
+)
 
+@Serializable
+data class Data(
+    @SerialName("amountIn")
+    val amountIn: String,
+    @SerialName("amountInUsd")
+    val amountInUsd: String,
+    @SerialName("amountOut")
+    val amountOut: String,
+    @SerialName("amountOutUsd")
+    val amountOutUsd: String,
+    @SerialName("gas")
+    val gas: String?,
+    @SerialName("gasUsd")
+    val gasUsd: String,
+    @SerialName("data")
+    val data: String,
+    @SerialName("routerAddress")
+    val routerAddress: String,
+    @SerialName("transactionValue")
+    val transactionValue: String,
+    @SerialName("gasPrice")
+    var gasPrice: String? = null
 )
 
 @Serializable
@@ -211,37 +226,17 @@ class KyberSwapQuote(
             )
         }
 
-    @Serializable
-    data class Data(
-        @SerialName("amountIn")
-        val amountIn: String,
-        @SerialName("amountInUsd")
-        val amountInUsd: String,
-        @SerialName("amountOut")
-        val amountOut: String,
-        @SerialName("amountOutUsd")
-        val amountOutUsd: String,
-        @SerialName("gas")
-        val gas: String?,
-        @SerialName("gasUsd")
-        val gasUsd: String,
-        @SerialName("data")
-        val data: String,
-        @SerialName("routerAddress")
-        val routerAddress: String,
-        @SerialName("transactionValue")
-        val transactionValue: String,
-        @SerialName("gasPrice")
-        var gasPrice: String? = null
-    )
-
-    @Serializable
-    data class Transaction(
-        val from: String,
-        val to: String,
-        val data: String,
-        val value: String,
-        val gasPrice: String,
-        val gas: Long
-    )
 }
+
+
+
+@Serializable
+data class Transaction(
+    // @SerialName("from") ?
+    val from: String,
+    val to: String,
+    val data: String,
+    val value: String,
+    val gasPrice: String,
+    val gas: Long
+)

@@ -78,6 +78,10 @@ object SigningHelper {
 
                     messages += message
                 }
+                is SwapPayload.Kyber -> {
+                    messages += KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
+                }
                 // mayachain is implemented through send transaction
                 else -> Unit
             }
