@@ -136,7 +136,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         keysign(KeysignInitType.BIOMETRY)
     }
 
-    fun tryToFastSignWithPassword(): Boolean {
+    private fun tryToFastSignWithPassword(): Boolean {
         if (password.value != null) {
             return false
         } else {
@@ -302,11 +302,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
             amount = transaction.tokenValue.value,
             data = data,
         )
-    }
-
-    // TODO: Implement other chains
-    private fun getPreHashOfTransaction(transaction: Transaction): String {
-        return ""
     }
 
     fun fastSignAndSkipWarnings() {

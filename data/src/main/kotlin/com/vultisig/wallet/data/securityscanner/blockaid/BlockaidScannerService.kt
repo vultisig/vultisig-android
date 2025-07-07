@@ -94,12 +94,12 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Base,
             Chain.Blast,
             Chain.BscChain,
-            Chain.Bitcoin,
+            // Chain.Bitcoin,
             Chain.Ethereum,
             Chain.Optimism,
             Chain.Polygon,
-            Chain.Sui,
-            Chain.Solana,
+            // Chain.Sui,
+            // Chain.Solana,
         )
 
         private val PROVIDER_NAME = "blockaid"
