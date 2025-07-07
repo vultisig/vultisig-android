@@ -27,11 +27,13 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -102,6 +104,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
 
+    private val _fastSignFlow = Channel<Boolean>()
+    val fastSignFlow = _fastSignFlow.receiveAsFlow()
+
     init {
         loadFastSign()
         loadTransaction()
@@ -142,7 +147,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     fun joinKeySign() {
         when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> showWarningDialogIfNeeded(status)
+            is TransactionScanStatus.Scanned -> showWarningDialogIfNeededForConfirm(status)
             is TransactionScanStatus.Error,
             TransactionScanStatus.NotStarted,
             TransactionScanStatus.Scanning -> keysign(KeysignInitType.QR_CODE)
@@ -157,7 +162,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         keysign(KeysignInitType.QR_CODE)
     }
 
-    private fun showWarningDialogIfNeeded(status: TransactionScanStatus.Scanned) {
+    private fun showWarningDialogIfNeededForConfirm(status: TransactionScanStatus.Scanned) {
         val isSecure = status.result.isSecure
         if (!isSecure){
             uiState.update { it.copy(showScanningWarning = true) }
@@ -302,6 +307,37 @@ internal class VerifyTransactionViewModel @Inject constructor(
     // TODO: Implement other chains
     private fun getPreHashOfTransaction(transaction: Transaction): String {
         return ""
+    }
+
+    fun fastSignAndSkipWarnings() {
+        val isScanningBottomSheetVisible = uiState.value.showScanningWarning
+        if (isScanningBottomSheetVisible) {
+            uiState.update { it.copy(showScanningWarning = false) }
+        }
+
+        if (!tryToFastSignWithPassword()) {
+            viewModelScope.launch {
+                _fastSignFlow.send(true)
+            }
+        }
+    }
+
+    fun fastSign() {
+        when (val status = uiState.value.txScanStatus) {
+            is TransactionScanStatus.Scanned -> showWarningDialogIfNeededForFastSign(status)
+            is TransactionScanStatus.Error,
+            TransactionScanStatus.NotStarted,
+            TransactionScanStatus.Scanning -> fastSignAndSkipWarnings()
+        }
+    }
+
+    private fun showWarningDialogIfNeededForFastSign(status: TransactionScanStatus.Scanned) {
+        val isSecure = status.result.isSecure
+        if (!isSecure){
+            uiState.update { it.copy(showScanningWarning = true) }
+        } else {
+            fastSignAndSkipWarnings()
+        }
     }
 }
 

@@ -15,8 +15,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +62,7 @@ internal fun VerifySendScreen(
     val state = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
-
+    var fastSign by remember { mutableStateOf(false) }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -77,6 +81,14 @@ internal fun VerifySendScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.fastSignFlow.collect { shouldShowPrompt ->
+            if (shouldShowPrompt) {
+                authorize()
+            }
+        }
+    }
+
     VerifySendScreen(
         state = state,
         isConsentsEnabled = true,
@@ -85,14 +97,22 @@ internal fun VerifySendScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onConfirm = viewModel::joinKeySign,
+        onConfirm = {
+            fastSign = false
+            viewModel.joinKeySign()
+        },
         onBackClick = viewModel::back,
         onFastSignClick = {
-            if (!viewModel.tryToFastSignWithPassword()) {
-                authorize()
+            fastSign = true
+            viewModel.fastSign()
+        },
+        onConfirmScanning = {
+            if (!fastSign) {
+                viewModel.joinKeySignAndSkipWarnings()
+            } else {
+                viewModel.fastSignAndSkipWarnings()
             }
         },
-        onConfirmScanning = viewModel::joinKeySignAndSkipWarnings,
         onDismissScanning = viewModel::dismissScanningWarning,
     )
 }
