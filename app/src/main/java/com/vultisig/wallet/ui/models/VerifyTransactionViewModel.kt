@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -287,19 +289,21 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     private fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val isTokenTransfer = transaction.token.contractAddress.isNotEmpty()
-        val transferType = if (isTokenTransfer) {
-            SecurityTransactionType.TOKEN_TRANSFER
+        val (transferType, amount, data) = if (isTokenTransfer) {
+            val destination = transaction.dstAddress
+            val tokenAmount = transaction.tokenValue.value
+            val data = EthereumFunction.transferErc20(destination, tokenAmount)
+            Triple(SecurityTransactionType.TOKEN_TRANSFER, BigInteger.ZERO, data)
         } else {
-            SecurityTransactionType.COIN_TRANSFER
+            Triple(SecurityTransactionType.COIN_TRANSFER, transaction.tokenValue.value, "0x")
         }
-        val data = "0x"
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
             type = transferType,
             from = transaction.srcAddress,
             to = transaction.dstAddress,
-            amount = transaction.tokenValue.value,
+            amount = amount,
             data = data,
         )
     }
