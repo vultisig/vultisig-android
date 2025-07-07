@@ -291,6 +291,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
+    // TODO: Create factory in following PR when supporting other chains
     private fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val transferType: SecurityTransactionType
         val amount: BigInteger
