@@ -1,5 +1,13 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+# Keep all annotations (especially runtime annotations like @Inject, etc.)
+-keepattributes *Annotation*
+# Keep InnerClasses attribute to help with anonymous inner classes reflection
+-keepattributes InnerClasses
+# Keep EnclosingMethod for inner class reflection
+-keepattributes EnclosingMethod
+# CRUCIAL for web3j to correctly determine generic type parameters at runtime.
+-keepattributes Signature
 
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
@@ -59,7 +67,16 @@
 -dontwarn org.ietf.jgss.GSSName
 -dontwarn org.ietf.jgss.Oid
 
-
 # OkHttp
 -keep class okhttp3.** { *; }
 -keep interface okhttp3.** { *; }
+
+# Umbrella protection
+-keep class org.web3j.** { *; }
+
+# Sometimes the previous rule is not enough and some classes are leaked.
+# Keep classes that extend TypeReference.
+-keep class * extends org.web3j.abi.TypeReference
+
+# Keep Web3j data types. Sometimes the previous rule is not enough and data types are leaked.
+-keep class org.web3j.abi.datatypes.** { *; }
