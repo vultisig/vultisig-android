@@ -32,12 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +46,7 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
+import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.TokenLogo
@@ -249,7 +248,6 @@ private fun ChainAccountInfo(
 ) {
     val appColor = Theme.colors
     val uriHandler = LocalUriHandler.current
-    val clipboard = LocalClipboardManager.current
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -278,13 +276,9 @@ private fun ChainAccountInfo(
                 modifier = Modifier.weight(1f)
             )
 
-            UiIcon(
-                drawableResId = R.drawable.copy,
-                size = 20.dp,
-                onClick = {
-                    clipboard.setText(AnnotatedString(address))
-                    onCopy(address)
-                }
+            CopyIcon(
+                textToCopy = address,
+                onCopyCompleted = onCopy
             )
 
             UiIcon(

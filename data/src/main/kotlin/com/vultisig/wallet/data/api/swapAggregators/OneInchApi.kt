@@ -71,10 +71,9 @@ class OneInchApiImpl @Inject constructor(
                     parameter("slippage", "0.5")
                     parameter("disableEstimate", true)
                     parameter("includeGas", true)
-                    if (isAffiliate) {
-                        parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-                        parameter("fee", ONEINCH_REFERRER_FEE)
-                    }
+                    parameter("referrer", ONEINCH_REFERRER_ADDRESS)
+                    parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
+
                 }
             if (!response.status.isSuccess()) {
                 return OneInchSwapQuoteDeserialized.Error(

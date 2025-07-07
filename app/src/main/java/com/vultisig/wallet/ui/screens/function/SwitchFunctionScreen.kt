@@ -2,12 +2,11 @@ package com.vultisig.wallet.ui.screens.function
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -51,18 +50,7 @@ internal fun SwitchFunctionScreen(
         onLostFocus = onDstAddressLostFocus,
         error = dstAddressError,
     ) {
-        val clipboard = LocalClipboardManager.current
-
-        UiIcon(
-            drawableResId = R.drawable.ic_paste,
-            size = 20.dp,
-            onClick = {
-                clipboard.getText()
-                    ?.toString()
-                    ?.let(onSetDstAddress)
-            }
-        )
-
+        PasteIcon(onPaste = onSetDstAddress)
         UiSpacer(size = 8.dp)
     }
 
@@ -74,7 +62,6 @@ internal fun SwitchFunctionScreen(
         onLostFocus = onThorAddressLostFocus,
         error = thorAddressError,
     ) {
-        val clipboard = LocalClipboardManager.current
 
         /*UiIcon(
             drawableResId = R.drawable.ic_paste,

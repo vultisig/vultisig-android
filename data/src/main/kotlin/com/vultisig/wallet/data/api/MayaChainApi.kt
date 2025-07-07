@@ -81,10 +81,8 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
-                    if (isAffiliate) {
-                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
-                    }
+                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                    parameter("affiliate_bps", if(isAffiliate)THORChainSwaps.AFFILIATE_FEE_RATE else "0")
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {

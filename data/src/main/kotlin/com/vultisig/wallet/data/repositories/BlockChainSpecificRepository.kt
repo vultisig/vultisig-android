@@ -114,6 +114,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         sequence = BigInteger(account.sequence ?: "0"),
                         fee = gasFee.value,
                         isDeposit = isDeposit,
+                        transactionType = transactionType,
                     )
                 }
             )
@@ -186,8 +187,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-
-
             if (chain == Chain.Cardano) {
                 // For send max, don't add fees - let WalletCore handle it
                 // For regular sends, add estimated fees to ensure we have enough
@@ -407,7 +406,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
             // Tron does not have a 0x... it can be any address
             // We will only simulate the transaction fee with below address
-            val recipientAddressHex = Numeric.toHexString(Base58.decode(address))
+            val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
 
             val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
                 ?: run {

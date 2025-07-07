@@ -128,7 +128,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         val coins = items.toList()
             .flatten()
             .asSequence()
-            .distinctBy { it.ticker to it.chain.id }
+            .distinctBy { it.contractAddress to it.chain.id }
             .toList()
         emit(coins)
     }

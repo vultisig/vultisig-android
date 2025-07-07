@@ -23,6 +23,7 @@ sealed class BlockChainSpecific {
         val sequence: BigInteger,
         val fee: BigInteger,
         val isDeposit: Boolean,
+        val transactionType: TransactionType,
     ) : BlockChainSpecific()
 
     data class MayaChain(
@@ -92,5 +93,4 @@ sealed class BlockChainSpecific {
         val sendMaxAmount: Boolean,
         val ttl: ULong
     ) : BlockChainSpecific()
-
 }

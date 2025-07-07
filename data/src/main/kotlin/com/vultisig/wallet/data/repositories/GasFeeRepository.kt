@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.toUnit
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -166,8 +167,10 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.Tron -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
+                val feeAmount = chain.toUnit("0.1".toBigDecimal())
+
                 TokenValue(
-                    value = BigInteger("100000"),
+                    value = feeAmount,
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )
