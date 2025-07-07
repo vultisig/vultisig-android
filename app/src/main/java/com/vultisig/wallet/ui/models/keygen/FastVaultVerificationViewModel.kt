@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -63,8 +64,17 @@ internal class FastVaultVerificationViewModel @Inject constructor(
 
     val codeFieldState = TextFieldState()
 
-    fun verifyCode() {
-        verify()
+    fun processCode(code: String) {
+        if (code.length >= FAST_VAULT_VERIFICATION_CODE_LENGTH) {
+            verify()
+        } else {
+            updateVerifyState(VerifyPinState.Idle)
+        }
+    }
+
+    fun paste(code: String) {
+        codeFieldState.setTextAndPlaceCursorAtEnd(code)
+        updateVerifyState(VerifyPinState.Idle)
     }
 
     fun back() {
