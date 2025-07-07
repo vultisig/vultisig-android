@@ -9,6 +9,7 @@ import io.ktor.serialization.JsonConvertException
 import io.ktor.serialization.WebsocketContentConvertException
 import io.ktor.serialization.WebsocketDeserializeException
 import org.json.JSONObject
+import timber.log.Timber
 
 suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "message"): T {
     return if (status.isSuccess()) {
@@ -35,6 +36,7 @@ suspend fun extractError(response: HttpResponse, errorKey: String): String {
         val json = JSONObject(responseBody)
         return json.optString(errorKey, responseBody)
     } catch (t: Throwable) {
+        Timber.w("Failed to extract error from response", t)
         response.bodyAsText()
     }
 }
