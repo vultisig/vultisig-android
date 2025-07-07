@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -255,7 +257,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 }
 
                 val securityScannerTransaction = createSecurityScannerTransaction(transaction)
-                val result = securityScannerService.scanTransaction(securityScannerTransaction)
+                val result = withContext(Dispatchers.IO) {
+                    securityScannerService.scanTransaction(securityScannerTransaction)
+                }
 
                 uiState.update {
                     it.copy(
