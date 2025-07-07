@@ -41,7 +41,6 @@ fun SecurityScannerBottomSheet(
     securityScannerdModel: SecurityScannerResult,
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
-    provider: String,
 ) {
     val contentStyle = securityScannerdModel.getSecurityScannerBottomSheetStyle()
 
@@ -94,7 +93,7 @@ fun SecurityScannerBottomSheet(
                 )
 
                 Image(
-                    painter = painterResource(id = getSecurityScannerLogo(provider)),
+                    painter = painterResource(id = getSecurityScannerLogo(securityScannerdModel.provider)),
                     contentDescription = "Provider Logo",
                     modifier = Modifier.height(16.dp)
                 )
