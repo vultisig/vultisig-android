@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -136,7 +137,7 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
     val (color, icon) = if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
         Pair(Theme.colors.alerts.error, Icons.Outlined.Warning)
     } else {
-        Pair(Theme.colors.alerts.warning, Icons.Outlined.Warning)
+        Pair(Theme.colors.alerts.warning, Icons.Outlined.Info)
     }
 
     return SecurityScannerBottomSheetStyle(
