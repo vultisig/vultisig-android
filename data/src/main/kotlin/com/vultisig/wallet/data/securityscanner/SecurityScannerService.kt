@@ -9,12 +9,11 @@ class SecurityScannerService(
     private val disabledProvidersNames: MutableSet<String> = ConcurrentSkipListSet()
 
     override suspend fun scanTransaction(transaction: SecurityScannerTransaction): SecurityScannerResult {
-        // For now we'll stick to first one (blockaid). Perform proper selection when having
-        // multiple providers
-        return providers.firstOrNull()?.scanTransaction(transaction)
+        val enabledProviders = providers.filter { it.getProviderName() !in disabledProvidersNames }
+        return enabledProviders.firstOrNull()?.scanTransaction(transaction)
             ?: run {
                 val errorMessage =
-                    "SecurityScanner: No provider available for scanning ${transaction.chain.name} tx"
+                    "SecurityScanner: No enabled provider available for scanning ${transaction.chain.name} tx"
                 Timber.w(errorMessage)
                 throw SecurityScannerException(
                     message = errorMessage,
