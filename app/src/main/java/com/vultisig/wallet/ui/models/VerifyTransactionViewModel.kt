@@ -150,12 +150,15 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     fun joinKeySignAndSkipWarnings() {
+        val isScanningBottomSheetVisible = uiState.value.showScanningWarning
+        if (isScanningBottomSheetVisible) {
+            uiState.update { it.copy(showScanningWarning = false) }
+        }
         keysign(KeysignInitType.QR_CODE)
     }
 
     private fun showWarningDialogIfNeeded(status: TransactionScanStatus.Scanned) {
         val isSecure = status.result.isSecure
-
         if (!isSecure){
             uiState.update { it.copy(showScanningWarning = true) }
         } else {

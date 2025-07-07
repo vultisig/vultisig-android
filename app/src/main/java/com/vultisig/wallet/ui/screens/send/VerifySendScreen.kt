@@ -308,7 +308,7 @@ internal fun VerifySendScreen(
                     VsHoldableButton(
                         label = "Sign transaction",
                         onLongClick = onConfirm,
-                        onClick =  onFastSignClick,
+                        onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {

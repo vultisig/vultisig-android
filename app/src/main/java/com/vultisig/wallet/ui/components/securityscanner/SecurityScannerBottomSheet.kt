@@ -114,6 +114,7 @@ fun SecurityScannerBottomSheet(
                 variant = Primary,
                 state = Disabled,
                 size = Medium,
+                forceClickable = true,
                 onClick = onContinueAnyway,
                 modifier = Modifier.fillMaxWidth()
             )
