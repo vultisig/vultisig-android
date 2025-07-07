@@ -57,17 +57,14 @@ class SecurityScannerService(
 
     override fun getSupportedChainsByFeature(): List<SecurityScannerSupport> {
         return providers.map { provider ->
-            val supportedFeaturesByChain = provider.getSupportedChains()
-
-            val features = supportedFeaturesByChain.map { (featureType, chains) ->
-                SecurityScannerSupport.Feature(
-                    chains = chains,
-                    featureType = featureType
-                )
-            }
             SecurityScannerSupport(
                 provider = provider.getProviderName(),
-                feature = features
+                feature = provider.getSupportedChains().map { (featureType, chains) ->
+                    SecurityScannerSupport.Feature(
+                        chains = chains,
+                        featureType = featureType
+                    )
+                }
             )
         }
     }
