@@ -9,6 +9,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.securityscanner.isChainSupported
+import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -20,13 +25,19 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -51,9 +62,18 @@ internal data class VerifyTransactionUiModel(
     val hasFastSign: Boolean = false,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
+    val showScanningWarning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
+}
+
+internal sealed class TransactionScanStatus {
+    data object NotStarted : TransactionScanStatus()
+    data object Scanning : TransactionScanStatus()
+    data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
+    data class Error(val message: String, val provider: String) : TransactionScanStatus()
 }
 
 @HiltViewModel
@@ -66,6 +86,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val securityScannerService: SecurityScannerContract,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -83,10 +104,16 @@ internal class VerifyTransactionViewModel @Inject constructor(
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
 
+    private val _fastSignFlow = Channel<Boolean>()
+    val fastSignFlow = _fastSignFlow.receiveAsFlow()
+
+    private var _fastSign = false
+
     init {
         loadFastSign()
         loadTransaction()
         loadPassword()
+        scanTransaction()
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -111,7 +138,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         keysign(KeysignInitType.BIOMETRY)
     }
 
-    fun tryToFastSignWithPassword(): Boolean {
+    private fun tryToFastSignWithPassword(): Boolean {
         if (password.value != null) {
             return false
         } else {
@@ -120,12 +147,69 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    fun joinKeysign() {
+    private fun handleSigningFlow(
+        onSign: () -> Unit,
+        onSignAndSkipWarnings: () -> Unit
+    ) {
+        when (val status = uiState.value.txScanStatus) {
+            is TransactionScanStatus.Scanned -> {
+                if (!status.result.isSecure) {
+                    uiState.update { it.copy(showScanningWarning = true) }
+                } else {
+                    onSignAndSkipWarnings()
+                }
+            }
+            is TransactionScanStatus.Error,
+            TransactionScanStatus.NotStarted,
+            TransactionScanStatus.Scanning -> onSign()
+        }
+    }
+
+    fun joinKeySign() {
+        _fastSign = false
+        handleSigningFlow(
+            onSign = { keysign(KeysignInitType.QR_CODE) },
+            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
+        )
+    }
+
+    fun joinKeySignAndSkipWarnings() {
+        uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
+    }
+
+    fun fastSign() {
+        _fastSign = true
+        handleSigningFlow(
+            onSign = { fastSignAndSkipWarnings() },
+            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
+        )
+    }
+
+    fun fastSignAndSkipWarnings() {
+        uiState.update { it.copy(showScanningWarning = false) }
+
+        if (!tryToFastSignWithPassword()) {
+            viewModelScope.launch {
+                _fastSignFlow.send(true)
+            }
+        }
+    }
+
+    fun onConfirmScanning() {
+        if (!_fastSign) {
+            joinKeySignAndSkipWarnings()
+        } else {
+            fastSignAndSkipWarnings()
+        }
     }
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
+    }
+
+    fun dismissScanningWarning() {
+        uiState.update { it.copy(showScanningWarning = false) }
     }
 
     fun back() {
@@ -185,6 +269,48 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
+    private fun scanTransaction() {
+        viewModelScope.launch {
+            try {
+                val transaction = transaction.filterNotNull().firstOrNull() ?: return@launch
+                val chain = transaction.token.chain
+
+                val isSupported = securityScannerService
+                    .getSupportedChainsByFeature()
+                    .isChainSupported(chain)
+
+                if (!isSupported) return@launch
+
+                uiState.update {
+                    it.copy(txScanStatus = TransactionScanStatus.Scanning)
+                }
+
+                val securityScannerTransaction = transaction.toSecurityScannerTransaction()
+                val result = withContext(Dispatchers.IO) {
+                    securityScannerService.scanTransaction(securityScannerTransaction)
+                }
+
+                uiState.update {
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Scanned(result)
+                    )
+                }
+            } catch (t: Throwable) {
+                val errorMessage = "Security Scanner Failed"
+                Timber.e(t, errorMessage)
+
+                uiState.update {
+                    val message = t.message ?: errorMessage
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Error(
+                            message = message,
+                            provider = BLOCKAID_PROVIDER,
+                        )
+                    )
+                }
+            }
+        }
+    }
 }
 
 
