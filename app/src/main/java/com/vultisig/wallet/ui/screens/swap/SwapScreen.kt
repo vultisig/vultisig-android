@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -259,26 +261,48 @@ internal fun SwapScreen(
                         )
                     }
 
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_bottom_top),
-                        contentDescription = null,
-                        tint = Theme.colors.text.primary,
+                    Box(
                         modifier = Modifier
-                            .clickable {
-                                spinTrigger++
-                                onFlipSelectedTokens()
-                            }
+                            .align(Alignment.Center)
+                            .size(40.dp)
                             .background(
                                 color = Theme.colors.persianBlue400,
                                 shape = CircleShape,
                             )
-                            .padding(all = 8.dp)
-                            .align(Alignment.Center)
-                            .size(24.dp)
-                            .graphicsLayer {
-                                rotationZ = rotation.value
+                            .padding(all = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AnimatedContent(
+                            targetState = state.isLoading,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(250)) togetherWith
+                                        fadeOut(animationSpec = tween(250))
                             },
-                    )
+                        ) { isLoading ->
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Theme.colors.text.primary,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_arrow_bottom_top),
+                                    contentDescription = null,
+                                    tint = Theme.colors.text.primary,
+                                    modifier = Modifier
+                                        .clickable {
+                                            spinTrigger++
+                                            onFlipSelectedTokens()
+                                        }
+                                        .size(24.dp)
+                                        .graphicsLayer {
+                                            rotationZ = rotation.value
+                                        },
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(
