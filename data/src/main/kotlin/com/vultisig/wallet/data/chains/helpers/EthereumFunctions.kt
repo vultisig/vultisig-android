@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.utils.add0x
+import com.vultisig.wallet.data.common.add0x
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.EthereumAbi

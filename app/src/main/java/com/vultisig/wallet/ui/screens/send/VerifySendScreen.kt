@@ -314,7 +314,6 @@ internal fun VerifySendScreen(
                     SecurityScannerBottomSheet(
                         securityScannerdModel = state.txScanStatus.result,
                         onContinueAnyway = onConfirmScanning,
-                        provider = "blockaid",
                         onDismissRequest = onDismissScanning,
                     )
                 }
