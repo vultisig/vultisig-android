@@ -6,7 +6,7 @@ interface BlockaidRpcClientContract {
     suspend fun scanBitcoinTransaction(
         address: String,
         serializedTransaction: String
-    ): BlockaidTransactionScanResponse
+    ): BlockaidTransactionScanResponseJson
 
     suspend fun scanEVMTransaction(
         chain: Chain,
@@ -14,15 +14,15 @@ interface BlockaidRpcClientContract {
         to: String,
         amount: String,
         data: String
-    ): BlockaidTransactionScanResponse
+    ): BlockaidTransactionScanResponseJson
 
     suspend fun scanSolanaTransaction(
         address: String,
         serializedMessage: String
-    ): BlockaidTransactionScanResponse
+    ): BlockaidTransactionScanResponseJson
 
     suspend fun scanSuiTransaction(
         address: String,
         serializedTransaction: String
-    ): BlockaidTransactionScanResponse
+    ): BlockaidTransactionScanResponseJson
 }

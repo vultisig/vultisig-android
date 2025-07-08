@@ -17,7 +17,7 @@ class BlockaidRpcClient(
     override suspend fun scanBitcoinTransaction(
         address: String,
         serializedTransaction: String
-    ): BlockaidTransactionScanResponse {
+    ): BlockaidTransactionScanResponseJson {
         val bitcoinRequest = buildBitcoinScanRequest(address, serializedTransaction)
 
         return httpClient.post(BLOCKAID_BASE_URL) {
@@ -26,7 +26,7 @@ class BlockaidRpcClient(
             }
             contentType(ContentType.Application.Json)
             setBody(bitcoinRequest)
-        }.bodyOrThrow<BlockaidTransactionScanResponse>()
+        }.bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
     override suspend fun scanEVMTransaction(
@@ -35,7 +35,7 @@ class BlockaidRpcClient(
         to: String,
         amount: String,
         data: String
-    ): BlockaidTransactionScanResponse {
+    ): BlockaidTransactionScanResponseJson {
         val evmRequest = buildEthereumScanRequest(chain, from, to, data, amount)
 
         return httpClient.post(BLOCKAID_BASE_URL) {
@@ -44,13 +44,13 @@ class BlockaidRpcClient(
             }
             contentType(ContentType.Application.Json)
             setBody(evmRequest)
-        }.bodyOrThrow<BlockaidTransactionScanResponse>()
+        }.bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
     override suspend fun scanSolanaTransaction(
         address: String,
         serializedMessage: String
-    ): BlockaidTransactionScanResponse {
+    ): BlockaidTransactionScanResponseJson {
         val solanaRequest = buildSolanaScanRequest(address, serializedMessage)
 
         return httpClient.post(BLOCKAID_BASE_URL) {
@@ -59,13 +59,13 @@ class BlockaidRpcClient(
             }
             contentType(ContentType.Application.Json)
             setBody(solanaRequest)
-        }.bodyOrThrow<BlockaidTransactionScanResponse>()
+        }.bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
     override suspend fun scanSuiTransaction(
         address: String,
         serializedTransaction: String
-    ): BlockaidTransactionScanResponse {
+    ): BlockaidTransactionScanResponseJson {
         val suiRequest = buildSuiScanRequest(address, serializedTransaction)
 
         return httpClient.post(BLOCKAID_BASE_URL) {
@@ -74,16 +74,16 @@ class BlockaidRpcClient(
             }
             contentType(ContentType.Application.Json)
             setBody(suiRequest)
-        }.bodyOrThrow<BlockaidTransactionScanResponse>()
+        }.bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
     private fun buildBitcoinScanRequest(
         address: String,
         serializedTransaction: String
-    ): BitcoinScanTransactionRequest {
-        return BitcoinScanTransactionRequest(
+    ): BitcoinScanTransactionRequestJson {
+        return BitcoinScanTransactionRequestJson(
             chain = Chain.Bitcoin.toName(),
-            metadata = CommonMetadata(url = VULTISIG_DOMAIN),
+            metadata = CommonMetadataJson(url = VULTISIG_DOMAIN),
             options = listOf("validation"),
             accountAddress = address,
             transaction = serializedTransaction,
@@ -96,16 +96,16 @@ class BlockaidRpcClient(
         to: String,
         data: String,
         amount: String
-    ): EthereumScanTransactionRequest {
-        return EthereumScanTransactionRequest(
+    ): EthereumScanTransactionRequestJson {
+        return EthereumScanTransactionRequestJson(
             chain = chain.toName(),
-            metadata = EthereumScanTransactionRequest.Metadata(
+            metadata = EthereumScanTransactionRequestJson.MetadataJson(
                 domain = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
             accountAddress = from,
             simulatedWithEstimatedGas = false,
-            data = EthereumScanTransactionRequest.Data(
+            data = EthereumScanTransactionRequestJson.DataJson(
                 from = from,
                 to = to,
                 data = data,
@@ -117,10 +117,10 @@ class BlockaidRpcClient(
     private fun buildSolanaScanRequest(
         address: String,
         serializedMessage: String
-    ): SolanaScanTransactionRequest {
-        return SolanaScanTransactionRequest(
+    ): SolanaScanTransactionRequestJson {
+        return SolanaScanTransactionRequestJson(
             chain = Chain.Solana.toName(),
-            metadata = CommonMetadata(
+            metadata = CommonMetadataJson(
                 url = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
@@ -133,10 +133,10 @@ class BlockaidRpcClient(
     private fun buildSuiScanRequest(
         address: String,
         serializedTransaction: String
-    ): SuiScanTransactionRequest {
-        return SuiScanTransactionRequest(
+    ): SuiScanTransactionRequestJson {
+        return SuiScanTransactionRequestJson(
             chain = Chain.Sui.toName(),
-            metadata = CommonMetadata(
+            metadata = CommonMetadataJson(
                 url = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),

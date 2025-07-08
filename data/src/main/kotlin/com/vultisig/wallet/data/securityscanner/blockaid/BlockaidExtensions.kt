@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
 import timber.log.Timber
 
-fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): SecurityScannerResult {
+fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(provider: String): SecurityScannerResult {
     val riskLevel = this.toValidationRiskLevel()
     val securityWarnings = validation?.features?.map { feature ->
         SecurityWarning(
@@ -35,7 +35,7 @@ fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): S
     )
 }
 
-private fun BlockaidTransactionScanResponse.toValidationRiskLevel(): SecurityRiskLevel {
+private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {
     val hasFeatures = validation?.features?.isEmpty() == false
     val classification = validation?.classification
     val status = validation?.status
