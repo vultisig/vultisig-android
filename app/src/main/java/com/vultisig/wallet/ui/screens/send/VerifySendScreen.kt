@@ -62,7 +62,6 @@ internal fun VerifySendScreen(
     val state = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
-    var fastSign by remember { mutableStateOf(false) }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -97,22 +96,10 @@ internal fun VerifySendScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onConfirm = {
-            fastSign = false
-            viewModel.joinKeySign()
-        },
+        onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
-        onFastSignClick = {
-            fastSign = true
-            viewModel.fastSign()
-        },
-        onConfirmScanning = {
-            if (!fastSign) {
-                viewModel.joinKeySignAndSkipWarnings()
-            } else {
-                viewModel.fastSignAndSkipWarnings()
-            }
-        },
+        onFastSignClick = viewModel::fastSign,
+        onConfirmScanning = viewModel::onConfirmScanning,
         onDismissScanning = viewModel::dismissScanningWarning,
     )
 }

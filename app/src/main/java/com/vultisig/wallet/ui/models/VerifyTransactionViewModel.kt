@@ -106,6 +106,8 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val _fastSignFlow = Channel<Boolean>()
     val fastSignFlow = _fastSignFlow.receiveAsFlow()
 
+    private var _fastSign = false
+
     init {
         loadFastSign()
         loadTransaction()
@@ -163,6 +165,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     fun joinKeySign() {
+        _fastSign = false
         handleSigningFlow(
             onSign = { keysign(KeysignInitType.QR_CODE) },
             onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
@@ -175,6 +178,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     fun fastSign() {
+        _fastSign = true
         handleSigningFlow(
             onSign = { fastSignAndSkipWarnings() },
             onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
@@ -188,6 +192,14 @@ internal class VerifyTransactionViewModel @Inject constructor(
             viewModelScope.launch {
                 _fastSignFlow.send(true)
             }
+        }
+    }
+
+    fun onConfirmScanning() {
+        if (!_fastSign) {
+            joinKeySignAndSkipWarnings()
+        } else {
+            fastSignAndSkipWarnings()
         }
     }
 
