@@ -40,11 +40,11 @@ import com.vultisig.wallet.ui.theme.Theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SecurityScannerBottomSheet(
-    securityScannerdModel: SecurityScannerResult,
+    securityScannerModel: SecurityScannerResult,
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val contentStyle = securityScannerdModel.getSecurityScannerBottomSheetStyle()
+    val contentStyle = securityScannerModel.getSecurityScannerBottomSheetStyle()
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -95,7 +95,7 @@ internal fun SecurityScannerBottomSheet(
                 )
 
                 Image(
-                    painter = painterResource(id = getSecurityScannerLogo(securityScannerdModel.provider)),
+                    painter = painterResource(id = getSecurityScannerLogo(securityScannerModel.provider)),
                     contentDescription = "Provider Logo",
                     modifier = Modifier.height(16.dp)
                 )
