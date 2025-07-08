@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
+import timber.log.Timber
 
 fun BlockaidTransactionScanResponse.toSecurityScannerResult(provider: String): SecurityScannerResult {
     val riskLevel = this.toValidationRiskLevel()
@@ -62,7 +63,12 @@ private fun String?.toWarningType(): SecurityRiskLevel {
         "benign", "info" -> SecurityRiskLevel.LOW
         "warning", "spam" -> SecurityRiskLevel.MEDIUM
         "malicious" -> SecurityRiskLevel.CRITICAL
-        else -> SecurityRiskLevel.MEDIUM
+        else -> {
+            if (this != null) {
+                Timber.w("SecurityScanner: Unknown risk classification: $this")
+            }
+            SecurityRiskLevel.MEDIUM
+        }
     }
 }
 
