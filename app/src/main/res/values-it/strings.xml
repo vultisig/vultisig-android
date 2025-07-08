@@ -353,4 +353,17 @@
     <string name="deposit_form_shares_title">Quote (Saldo: %1$s)</string>
     <string name="verify_your_server_share_password">Verifica la password di condivisione del server</string>
     <string name="periodically_ask_verify_password">Ti chiederemo periodicamente di verificare la tua password di accesso rapido in modo che tu possa sempre ricordarla</string>
+
+    <string name="security_scanner_medium_risk_title">Rischio di sicurezza medio</string>
+    <string name="security_scanner_high_risk_title">Rischio di sicurezza elevato</string>
+    <string name="security_scanner_critical_risk_title">Rischio di sicurezza critico</string>
+    <string name="security_scanner_low_risk_title">Rischio di sicurezza basso</string>
+    <string name="security_scanner_default_description">Questa transazione è stata segnalata come potenzialmente pericolosa.</string>
+    <string name="security_scanner_continue_anyway">Continua comunque</string>
+    <string name="security_scanner_continue_go_back">Torna indietro</string>
+    <string name="security_scanner_powered_by">Fornito da </string>
+
+    <string name="security_scanner_transaction_scanned_by">Transazione scansionata da</string>
+    <string name="security_scanner_transaction_scanning">Scansione in corso…</string>
+    <string name="security_scanner_transaction_not_scanned">Transazione non scansionata da</string>
 </resources>

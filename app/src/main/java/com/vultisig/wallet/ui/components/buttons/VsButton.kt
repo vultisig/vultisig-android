@@ -44,6 +44,7 @@ fun VsButton(
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
+    forceClickable: Boolean = false, // TODO: Review with designer, we should stick to current pattern
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -95,7 +96,7 @@ fun VsButton(
                 color = borderColor,
                 shape = RoundedCornerShape(percent = 100),
             )
-            .clickable(enabled = state == Enabled, onClick = onClick)
+            .clickable(enabled = state == Enabled || forceClickable, onClick = onClick)
             .then(
                 when (size) {
                     Medium -> Modifier.padding(
@@ -127,6 +128,7 @@ fun VsButton(
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
+    forceClickable: Boolean = false,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -134,6 +136,7 @@ fun VsButton(
         variant = variant,
         state = state,
         size = size,
+        forceClickable = forceClickable,
         onClick = onClick,
     ) {
         val contentColor by animateColorAsState(

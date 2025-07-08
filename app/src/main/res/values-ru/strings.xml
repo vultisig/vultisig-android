@@ -364,4 +364,15 @@
     <string name="deposit_form_shares_title">Доли (Баланс: %1$s)</string>
     <string name="verify_your_server_share_password">Подтвердите свой пароль для общего доступа к серверу</string>
     <string name="periodically_ask_verify_password">Мы будем периодически просить вас подтвердить ваш пароль для быстрой регистрации, чтобы вы всегда его помнили.</string>
+    <string name="security_scanner_medium_risk_title">Средний риск безопасности</string>
+    <string name="security_scanner_high_risk_title">Высокий риск безопасности</string>
+    <string name="security_scanner_critical_risk_title">Критический риск безопасности</string>
+    <string name="security_scanner_low_risk_title">Низкий риск безопасности</string>
+    <string name="security_scanner_default_description">Эта транзакция помечена как потенциально опасная.</string>
+    <string name="security_scanner_continue_anyway">Продолжить</string>
+    <string name="security_scanner_continue_go_back">Назад</string>
+    <string name="security_scanner_powered_by">Работает на базе </string>
+    <string name="security_scanner_transaction_scanned_by">Транзакция отсканирована</string>
+    <string name="security_scanner_transaction_scanning">Сканирование…</string>
+    <string name="security_scanner_transaction_not_scanned">Транзакция не отсканирована</string>
 </resources>
