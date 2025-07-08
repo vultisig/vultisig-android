@@ -574,4 +574,16 @@
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
 
+    <string name="security_scanner_medium_risk_title">Medium Security Risk</string>
+    <string name="security_scanner_high_risk_title">High Security Risk</string>
+    <string name="security_scanner_critical_risk_title">Critical Security Risk</string>
+    <string name="security_scanner_low_risk_title">Low Security Risk</string>
+    <string name="security_scanner_default_description">This transaction has been flagged as potentially dangerous.</string>
+    <string name="security_scanner_continue_anyway">Continue anyway</string>
+    <string name="security_scanner_continue_go_back">Go Back</string>
+    <string name="security_scanner_powered_by">Powered by </string>
+
+    <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
+    <string name="security_scanner_transaction_scanning">Scanning…</string>
+    <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 </resources>

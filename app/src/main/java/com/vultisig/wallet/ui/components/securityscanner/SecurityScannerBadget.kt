@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -39,7 +40,7 @@ internal fun SecurityScannerBadget(
                 ScanStatusContentWithLogo(
                     image = Icons.Default.Check,
                     imageColor = Theme.colors.alerts.success,
-                    message = "Transaction scanned by",
+                    message = stringResource(R.string.security_scanner_transaction_scanned_by),
                     providerLogoId = status.result.provider,
                 )
             }
@@ -54,7 +55,7 @@ internal fun SecurityScannerBadget(
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Text(
-                    text = "Scanning...",
+                    text = stringResource(R.string.security_scanner_transaction_scanning),
                     fontSize = 14.sp,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.light
@@ -65,7 +66,7 @@ internal fun SecurityScannerBadget(
                 ScanStatusContentWithLogo(
                     image = Icons.Default.Warning,
                     imageColor = Theme.colors.text.light,
-                    message = "Transaction not scanned by",
+                    message = stringResource(R.string.security_scanner_transaction_not_scanned),
                     providerLogoId = status.provider,
                 )
             }

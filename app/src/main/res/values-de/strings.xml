@@ -351,4 +351,17 @@
     <string name="send_shares_currency_hint">Anteile eingeben</string>
     <string name="send_error_max_shares">Betrag darf den Kontostand nicht überschreiten</string>
     <string name="deposit_form_shares_title">Anteile (Guthaben: %1$s)</string>
+
+    <string name="security_scanner_medium_risk_title">Mittleres Sicherheitsrisiko</string>
+    <string name="security_scanner_high_risk_title">Hohes Sicherheitsrisiko</string>
+    <string name="security_scanner_critical_risk_title">Kritisches Sicherheitsrisiko</string>
+    <string name="security_scanner_low_risk_title">Geringes Sicherheitsrisiko</string>
+    <string name="security_scanner_default_description">Diese Transaktion wurde als potenziell gefährlich eingestuft.</string>
+    <string name="security_scanner_continue_anyway">Trotzdem fortfahren</string>
+    <string name="security_scanner_continue_go_back">Zurück</string>
+    <string name="security_scanner_powered_by">Bereitgestellt von </string>
+
+    <string name="security_scanner_transaction_scanned_by">Transaktion gescannt von</string>
+    <string name="security_scanner_transaction_scanning">Wird gescannt…</string>
+    <string name="security_scanner_transaction_not_scanned">Transaktion nicht gescannt von</string>
 </resources>

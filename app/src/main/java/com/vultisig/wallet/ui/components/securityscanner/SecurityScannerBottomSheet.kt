@@ -24,8 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -86,7 +88,7 @@ fun SecurityScannerBottomSheet(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Powered by ",
+                    text = stringResource(R.string.security_scanner_powered_by),
                     color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.body.s.medium,
                     textAlign = TextAlign.Center,
@@ -100,7 +102,7 @@ fun SecurityScannerBottomSheet(
             }
 
             VsButton(
-                label = "Go Back",
+                label = stringResource(R.string.security_scanner_continue_go_back),
                 variant = Primary,
                 state = Enabled,
                 size = Medium,
@@ -109,7 +111,7 @@ fun SecurityScannerBottomSheet(
             )
 
             VsButton(
-                label = "Continue anyway",
+                label = stringResource(R.string.security_scanner_continue_anyway),
                 variant = Primary,
                 state = Disabled,
                 size = Medium,
@@ -126,14 +128,14 @@ fun SecurityScannerBottomSheet(
 @Composable
 fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerBottomSheetStyle {
     val title = when (riskLevel) {
-        SecurityRiskLevel.MEDIUM -> "Medium Security Risk"
-        SecurityRiskLevel.HIGH -> "High Security Risk"
-        SecurityRiskLevel.CRITICAL -> "Critical Security Risk"
+        SecurityRiskLevel.MEDIUM -> stringResource(R.string.security_scanner_medium_risk_title)
+        SecurityRiskLevel.HIGH -> stringResource(R.string.security_scanner_high_risk_title)
+        SecurityRiskLevel.CRITICAL -> stringResource(R.string.security_scanner_critical_risk_title)
         SecurityRiskLevel.NONE,
-        SecurityRiskLevel.LOW -> "No Security Risk"
+        SecurityRiskLevel.LOW -> stringResource(R.string.security_scanner_low_risk_title)
     }
 
-    val description = description ?: "This transaction has been flagged as potentially dangerous."
+    val description = description ?: stringResource(R.string.security_scanner_default_description)
     val (color, icon) = if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
         Pair(Theme.colors.alerts.error, Icons.Outlined.Warning)
     } else {
