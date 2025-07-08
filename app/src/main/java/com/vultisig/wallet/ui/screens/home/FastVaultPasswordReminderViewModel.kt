@@ -38,12 +38,15 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.FastVaultPasswordReminder>()
 
+    private val vaultId = args.vaultId
+
     val passwordFieldState = TextFieldState()
 
     val state = MutableStateFlow(FastVaultPasswordReminderUiModel())
 
     fun back() {
         viewModelScope.launch {
+            updatePasswordNextReminderTime()
             navigator.back()
         }
     }
@@ -58,18 +61,10 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
         val password = passwordFieldState.text.toString()
 
         viewModelScope.launch {
-            val vaultId = args.vaultId
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
 
             if (vultiSignerRepository.isPasswordValid(vault.pubKeyECDSA, password)) {
-                vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
-                    vaultId = vaultId,
-                    date = Clock.System.todayIn(
-                        TimeZone.currentSystemDefault()
-                    )
-                )
-
                 back()
             } else {
                 state.update {
@@ -77,6 +72,15 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun updatePasswordNextReminderTime() {
+        vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
+            vaultId = vaultId,
+            date = Clock.System.todayIn(
+                TimeZone.currentSystemDefault()
+            )
+        )
     }
 
 }

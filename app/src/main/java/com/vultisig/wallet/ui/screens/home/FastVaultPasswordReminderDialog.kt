@@ -12,16 +12,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -60,12 +63,22 @@ private fun FastVaultPasswordReminderDialog(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Verify your Server Share Password",
+            text = stringResource(R.string.verify_your_server_share_password),
             textAlign = TextAlign.Center,
             style = Theme.brockmann.headings.title3,
             color = Theme.colors.text.primary,
             modifier = Modifier
                 .padding(all = 10.dp),
+        )
+
+        FadingHorizontalDivider()
+
+        Text(
+            text = stringResource(R.string.periodically_ask_verify_password),
+            textAlign = TextAlign.Center,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.colors.text.extraLight,
+            modifier = Modifier
         )
 
         VsTextInputField(

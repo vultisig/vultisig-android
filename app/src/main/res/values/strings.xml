@@ -573,6 +573,8 @@
     <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
+    <string name="verify_your_server_share_password">Verify your Server Share Password</string>
+    <string name="periodically_ask_verify_password">We will periodically ask you to verify your fast sign password so you will always remember it</string>
 
     <string name="security_scanner_medium_risk_title">Medium Security Risk</string>
     <string name="security_scanner_high_risk_title">High Security Risk</string>
