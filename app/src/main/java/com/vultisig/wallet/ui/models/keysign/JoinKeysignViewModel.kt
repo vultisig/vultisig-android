@@ -84,6 +84,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -780,10 +781,16 @@ internal class JoinKeysignViewModel @Inject constructor(
         flow: MutableStateFlow<VerifyUiModel>,
         updateBlock: (VerifyTransactionUiModel) -> VerifyTransactionUiModel
     ) {
-        val currentVerifyModel = flow.value
-        if (currentVerifyModel is VerifyUiModel.Send) {
-            val updatedSendModel = updateBlock(currentVerifyModel.model)
-            flow.value = VerifyUiModel.Send(updatedSendModel)
+        flow.update { currentVerifyModel ->
+            if (currentVerifyModel is VerifyUiModel.Send) {
+                val updatedSendModel = updateBlock(currentVerifyModel.model)
+                VerifyUiModel.Send(updatedSendModel)
+            } else {
+                // If it's not a Send model, return the current state unchanged.
+                // `update` requires you to return a new state
+                // for every call, even if no change is desired.
+                currentVerifyModel
+            }
         }
     }
 
