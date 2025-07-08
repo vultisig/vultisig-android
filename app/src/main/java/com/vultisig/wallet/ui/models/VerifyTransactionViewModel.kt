@@ -296,24 +296,26 @@ internal class VerifyTransactionViewModel @Inject constructor(
         val transferType: SecurityTransactionType
         val amount: BigInteger
         val data: String
-        val destination: String = transaction.dstAddress
+        val to: String
 
         if (transaction.token.contractAddress.isNotEmpty()) {
             val tokenAmount = transaction.tokenValue.value
             transferType = SecurityTransactionType.TOKEN_TRANSFER
-            amount = BigInteger.ZERO // For token transfers, amount is in 'data'
-            data = EthereumFunction.transferErc20(destination, tokenAmount)
+            amount = BigInteger.ZERO
+            data = EthereumFunction.transferErc20(transaction.dstAddress, tokenAmount)
+            to = transaction.token.contractAddress
         } else {
             transferType = SecurityTransactionType.COIN_TRANSFER
             amount = transaction.tokenValue.value
             data = "0x"
+            to = transaction.dstAddress
         }
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
             type = transferType,
             from = transaction.srcAddress,
-            to = destination,
+            to = to,
             amount = amount,
             data = data,
         )
