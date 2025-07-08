@@ -432,11 +432,17 @@ internal fun SwapScreen(
                     }
                 } else {
                     VsButton(
-                        label = stringResource(R.string.swap_swap_button),
+                        label = if (state.isLoading) {
+                            stringResource(R.string.swap_swap_button_fill_in_amount)
+                        } else {
+                            stringResource(R.string.swap_swap_button)
+                        },
                         variant = VsButtonVariant.Primary,
-                        state = if (state.isSwapDisabled)
+                        state = if (state.isSwapDisabled || state.isLoading){
                             VsButtonState.Disabled
-                        else VsButtonState.Enabled,
+                        } else {
+                            VsButtonState.Enabled
+                        },
                         onClick = {
                             focusManager.clearFocus(true)
                             onSwap()
