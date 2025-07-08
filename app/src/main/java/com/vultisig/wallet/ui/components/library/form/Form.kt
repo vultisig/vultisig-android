@@ -591,6 +591,7 @@ internal fun FormDetails2(
     title: String,
     value: String,
     modifier: Modifier = Modifier,
+    placeholder: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -604,12 +605,16 @@ internal fun FormDetails2(
             textAlign = TextAlign.Start,
         )
 
-        Text(
-            text = value,
-            color = Theme.colors.text.light,
-            style = Theme.brockmann.supplementary.caption,
-            textAlign = TextAlign.End,
-        )
+        if (placeholder != null) {
+            placeholder()
+        } else {
+            Text(
+                text = value,
+                color = Theme.colors.text.light,
+                style = Theme.brockmann.supplementary.caption,
+                textAlign = TextAlign.End,
+            )
+        }
     }
 }
 
@@ -618,6 +623,7 @@ internal fun FormDetails2(
     title: AnnotatedString,
     value: AnnotatedString,
     modifier: Modifier = Modifier,
+    placeholder: @Composable (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier,
@@ -630,12 +636,16 @@ internal fun FormDetails2(
             textAlign = TextAlign.Start,
         )
 
-        Text(
-            text = value,
-            color = Theme.colors.text.light,
-            style = Theme.brockmann.supplementary.caption,
-            textAlign = TextAlign.End,
-        )
+        if (placeholder != null) {
+            placeholder()
+        } else {
+            Text(
+                text = value,
+                color = Theme.colors.text.light,
+                style = Theme.brockmann.supplementary.caption,
+                textAlign = TextAlign.End,
+            )
+        }
     }
 }
 
