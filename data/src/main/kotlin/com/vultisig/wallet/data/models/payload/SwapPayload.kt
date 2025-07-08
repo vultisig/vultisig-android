@@ -90,5 +90,4 @@ sealed class SwapPayload {
             )
 
     }
-
 }
