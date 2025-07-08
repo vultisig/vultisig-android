@@ -39,7 +39,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecurityScannerBottomSheet(
+internal fun SecurityScannerBottomSheet(
     securityScannerdModel: SecurityScannerResult,
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,

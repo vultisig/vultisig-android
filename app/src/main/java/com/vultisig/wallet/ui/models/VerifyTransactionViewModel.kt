@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
@@ -68,9 +69,9 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount && consentDst
 }
 
-sealed class TransactionScanStatus {
-    object NotStarted : TransactionScanStatus()
-    object Scanning : TransactionScanStatus()
+internal sealed class TransactionScanStatus {
+    data object NotStarted : TransactionScanStatus()
+    data object Scanning : TransactionScanStatus()
     data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
     data class Error(val message: String, val provider: String) : TransactionScanStatus()
 }
@@ -303,7 +304,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     it.copy(
                         txScanStatus = TransactionScanStatus.Error(
                             message = message,
-                            provider = "blockaid",
+                            provider = BLOCKAID_PROVIDER,
                         )
                     )
                 }

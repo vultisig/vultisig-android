@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
@@ -109,9 +110,9 @@ private fun ScanStatusContentWithLogo(
 }
 
 
-fun getSecurityScannerLogo(provider: String): Int {
+internal fun getSecurityScannerLogo(provider: String): Int {
     return when (provider) {
-        "blockaid" -> R.drawable.blockaid_logo
+        BLOCKAID_PROVIDER -> R.drawable.blockaid_logo
         else -> {
             Timber.w("SecurityScanner: Unknown provider logo requested: $provider")
             R.drawable.blockaid_logo

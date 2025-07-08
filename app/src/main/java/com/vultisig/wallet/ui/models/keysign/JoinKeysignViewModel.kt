@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
@@ -767,7 +768,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
                         txScanStatus = TransactionScanStatus.Error(
-                            e.message ?: "Security Scanner Failed", "blockaid"
+                            e.message ?: "Security Scanner Failed", BLOCKAID_PROVIDER
                         )
                     )
                 }
