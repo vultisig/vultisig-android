@@ -345,7 +345,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     private fun showWarningDialogIfNeededForFastSign(status: TransactionScanStatus.Scanned) {
         val isSecure = status.result.isSecure
-        if (!isSecure){
+        if (!isSecure) {
             uiState.update { it.copy(showScanningWarning = true) }
         } else {
             fastSignAndSkipWarnings()

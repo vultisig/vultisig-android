@@ -112,6 +112,9 @@ private fun ScanStatusContentWithLogo(
 fun getSecurityScannerLogo(provider: String): Int {
     return when (provider) {
         "blockaid" -> R.drawable.blockaid_logo
-        else -> R.drawable.blockaid_logo
+        else -> {
+            Timber.w("SecurityScanner: Unknown provider logo requested: $provider")
+            R.drawable.blockaid_logo
+        }
     }
 }

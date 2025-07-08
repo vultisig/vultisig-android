@@ -32,8 +32,14 @@ class SecurityScannerService(
 
     override fun disableProviders(providersToDisable: List<String>) {
         val actualProviders = providers.map { it.getProviderName() }.toSet()
-        val disabledCount = providersToDisable.count { providerName ->
-            providerName in actualProviders && disabledProvidersNames.add(providerName)
+        val validProviders = providersToDisable.filter { it in actualProviders }
+        val invalidProviders = providersToDisable.filter { it !in actualProviders }
+        if (invalidProviders.isNotEmpty()) {
+            Timber.w("SecurityScanner: Invalid provider names: ${invalidProviders.joinToString()}")
+        }
+
+        val disabledCount = validProviders.count { providerName ->
+            disabledProvidersNames.add(providerName)
         }
         if (disabledCount > 0) {
             Timber.i("SecurityScanner: Disabled $disabledCount providers.")
