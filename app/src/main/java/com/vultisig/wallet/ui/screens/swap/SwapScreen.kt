@@ -280,8 +280,8 @@ internal fun SwapScreen(
                         AnimatedContent(
                             targetState = state.isLoading,
                             transitionSpec = {
-                                fadeIn(animationSpec = tween(250)) togetherWith
-                                        fadeOut(animationSpec = tween(250))
+                                fadeIn(animationSpec = tween(200)) togetherWith
+                                        fadeOut(animationSpec = tween(200))
                             },
                         ) { isLoading ->
                             if (isLoading) {
