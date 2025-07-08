@@ -6,17 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.chains.helpers.EthereumFunction
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
-import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
-import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
-import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
+import com.vultisig.wallet.data.securityscanner.isChainSupported
+import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -256,7 +252,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     it.copy(txScanStatus = TransactionScanStatus.Scanning)
                 }
 
-                val securityScannerTransaction = createSecurityScannerTransaction(transaction)
+                val securityScannerTransaction = transaction.toSecurityScannerTransaction()
                 val result = withContext(Dispatchers.IO) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }
@@ -281,44 +277,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    private fun List<SecurityScannerSupport>.isChainSupported(chain: Chain): Boolean {
-        return any { support ->
-            support.feature.any { feature ->
-                chain in feature.chains
-            }
-        }
-    }
-
-    // TODO: Create factory in following PR when supporting other chains
-    private fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
-        val transferType: SecurityTransactionType
-        val amount: BigInteger
-        val data: String
-        val to: String
-
-        if (transaction.token.contractAddress.isNotEmpty()) {
-            val tokenAmount = transaction.tokenValue.value
-            transferType = SecurityTransactionType.TOKEN_TRANSFER
-            amount = BigInteger.ZERO
-            data = EthereumFunction.transferErc20(transaction.dstAddress, tokenAmount)
-            to = transaction.token.contractAddress
-        } else {
-            transferType = SecurityTransactionType.COIN_TRANSFER
-            amount = transaction.tokenValue.value
-            data = "0x"
-            to = transaction.dstAddress
-        }
-
-        return SecurityScannerTransaction(
-            chain = transaction.token.chain,
-            type = transferType,
-            from = transaction.srcAddress,
-            to = to,
-            amount = amount,
-            data = data,
-        )
     }
 
     fun fastSignAndSkipWarnings() {

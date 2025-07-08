@@ -45,12 +45,16 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.isChainSupported
+import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -177,6 +181,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val pullTssMessages: PullTssMessagesUseCase,
     private val broadcastTx: BroadcastTxUseCase,
     private val fourByteRepository: FourByteRepository,
+    private val securityScannerService: SecurityScannerContract,
 ) : ViewModel() {
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
@@ -698,7 +703,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                     val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
-
                         vaultId = payload.vaultPublicKeyECDSA,
                         chainId = chain.id,
                         token = payloadToken,
@@ -726,8 +730,59 @@ internal class JoinKeysignViewModel @Inject constructor(
                             functionInputs = functionInfo?.inputs,
                         )
                     )
+                    val uiModel = verifyUiModel.value
+                    if (uiModel is VerifyUiModel.Send) {
+                        scanTransaction(transaction)
+                    }
                 }
             }
+        }
+    }
+
+    private fun scanTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            val chain = transaction.token.chain
+            val isChainSupported = securityScannerService
+                .getSupportedChainsByFeature()
+                .isChainSupported(chain)
+            if (!isChainSupported) {
+                return@launch
+            }
+
+            // update loading status
+            updateSendUiModel(verifyUiModel) { currentModel ->
+                currentModel.copy(txScanStatus = TransactionScanStatus.Scanning)
+            }
+
+            try {
+                // run scanner and update UI widget
+                val securityScannerTransaction = transaction.toSecurityScannerTransaction()
+                val scanResult = withContext(Dispatchers.IO) {
+                    securityScannerService.scanTransaction(securityScannerTransaction)
+                }
+                updateSendUiModel(verifyUiModel) { currentModel ->
+                    currentModel.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult))
+                }
+            } catch (e: Exception) {
+                updateSendUiModel(verifyUiModel) { currentModel ->
+                    currentModel.copy(
+                        txScanStatus = TransactionScanStatus.Error(
+                            e.message ?: "Security Scanner Failed", "blockaid"
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun updateSendUiModel(
+        flow: MutableStateFlow<VerifyUiModel>,
+        updateBlock: (VerifyTransactionUiModel) -> VerifyTransactionUiModel
+    ) {
+        val currentVerifyModel = flow.value
+        if (currentVerifyModel is VerifyUiModel.Send) {
+            val updatedSendModel = updateBlock(currentVerifyModel.model)
+            flow.value = VerifyUiModel.Send(updatedSendModel)
         }
     }
 
@@ -891,5 +946,4 @@ internal class JoinKeysignViewModel @Inject constructor(
         } else return null
         return FunctionInfo(functionSignature, functionInputs)
     }
-
 }
