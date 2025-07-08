@@ -317,6 +317,9 @@ internal fun SwapScreen(
                             horizontal = 8.dp,
                         )
                 ) {
+                    val placeHolderModifier = Modifier
+                        .height(16.dp)
+                        .width(80.dp)
                     FormDetails2(
                         title = stringResource(R.string.swap_screen_provider_title),
                         value = state.provider.asString(),
@@ -325,7 +328,7 @@ internal fun SwapScreen(
                     FormDetails2(
                         title = stringResource(R.string.swap_form_estimated_fees_title),
                         value = state.fee,
-                        placeholder = if (state.isLoading) defaultPlaceHolder() else null
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
 
                     FormDetails2(
@@ -354,13 +357,13 @@ internal fun SwapScreen(
                                 )
                             }
                         },
-                        placeholder = if (state.isLoading) defaultPlaceHolder() else null,
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
 
                     FormDetails2(
                         title = stringResource(R.string.swap_form_total_fees_title),
                         value = state.totalFee,
-                        placeholder = if (state.isLoading) defaultPlaceHolder() else null,
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
                 }
 
@@ -466,16 +469,6 @@ internal fun SwapScreen(
             }
         }
     )
-}
-
-@Composable
-fun defaultPlaceHolder(modifier: Modifier? = null): @Composable (() -> Unit) {
-    val appliedModifier = modifier ?: Modifier
-        .height(16.dp)
-        .width(80.dp)
-    return {
-        UiPlaceholderLoader(modifier = appliedModifier)
-    }
 }
 
 @Composable
