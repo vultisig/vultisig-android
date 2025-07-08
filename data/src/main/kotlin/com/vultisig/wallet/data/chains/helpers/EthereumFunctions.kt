@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.common.add0x
+import com.vultisig.wallet.data.utils.toSafeByteArray
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.EthereumAbi
@@ -15,7 +16,7 @@ object EthereumFunction {
 
         try {
             val destinationAddress = AnyAddress(address, CoinType.ETHEREUM)
-            val amountOut = amount.toByteArray()
+            val amountOut = amount.toSafeByteArray()
 
             val encodedFunction = EthereumAbiFunction("transfer").apply {
                 addParamAddress(destinationAddress.data(), false)
