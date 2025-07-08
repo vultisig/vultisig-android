@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -145,29 +144,50 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    fun joinKeySign() {
+    private fun handleSigningFlow(
+        onSign: () -> Unit,
+        onSignAndSkipWarnings: () -> Unit
+    ) {
         when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> showWarningDialogIfNeededForConfirm(status)
+            is TransactionScanStatus.Scanned -> {
+                if (!status.result.isSecure) {
+                    uiState.update { it.copy(showScanningWarning = true) }
+                } else {
+                    onSignAndSkipWarnings()
+                }
+            }
             is TransactionScanStatus.Error,
             TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> keysign(KeysignInitType.QR_CODE)
+            TransactionScanStatus.Scanning -> onSign()
         }
+    }
+
+    fun joinKeySign() {
+        handleSigningFlow(
+            onSign = { keysign(KeysignInitType.QR_CODE) },
+            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
+        )
     }
 
     fun joinKeySignAndSkipWarnings() {
-        val isScanningBottomSheetVisible = uiState.value.showScanningWarning
-        if (isScanningBottomSheetVisible) {
-            uiState.update { it.copy(showScanningWarning = false) }
-        }
+        uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
     }
 
-    private fun showWarningDialogIfNeededForConfirm(status: TransactionScanStatus.Scanned) {
-        val isSecure = status.result.isSecure
-        if (!isSecure){
-            uiState.update { it.copy(showScanningWarning = true) }
-        } else {
-            keysign(KeysignInitType.QR_CODE)
+    fun fastSign() {
+        handleSigningFlow(
+            onSign = { fastSignAndSkipWarnings() },
+            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
+        )
+    }
+
+    fun fastSignAndSkipWarnings() {
+        uiState.update { it.copy(showScanningWarning = false) }
+
+        if (!tryToFastSignWithPassword()) {
+            viewModelScope.launch {
+                _fastSignFlow.send(true)
+            }
         }
     }
 
@@ -276,37 +296,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    fun fastSignAndSkipWarnings() {
-        val isScanningBottomSheetVisible = uiState.value.showScanningWarning
-        if (isScanningBottomSheetVisible) {
-            uiState.update { it.copy(showScanningWarning = false) }
-        }
-
-        if (!tryToFastSignWithPassword()) {
-            viewModelScope.launch {
-                _fastSignFlow.send(true)
-            }
-        }
-    }
-
-    fun fastSign() {
-        when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> showWarningDialogIfNeededForFastSign(status)
-            is TransactionScanStatus.Error,
-            TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> fastSignAndSkipWarnings()
-        }
-    }
-
-    private fun showWarningDialogIfNeededForFastSign(status: TransactionScanStatus.Scanned) {
-        val isSecure = status.result.isSecure
-        if (!isSecure) {
-            uiState.update { it.copy(showScanningWarning = true) }
-        } else {
-            fastSignAndSkipWarnings()
         }
     }
 }
