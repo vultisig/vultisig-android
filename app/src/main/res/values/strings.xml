@@ -545,6 +545,7 @@
     <string name="vault_settings_migration_title" translatable="false">Migrate</string>
     <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button" translatable="false">Swap</string>
+    <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
     <string name="select_asset_title" translatable="false">Select asset</string>
     <string name="select_asset_chain_title" translatable="false">Chain</string>
     <string name="select_network_network_title" translatable="false">Network</string>
