@@ -50,8 +50,10 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
 
     fun onContinueSecurity() {
         viewModelScope.launch {
-            uiModel.update { it.copy(showWarningDialog = false) }
-            onChainSecurityScannerRepository.saveSecurityScannerStatus(false)
+            uiModel.update { it.copy(showWarningDialog = false, isSwitchEnabled = false) }
+            withContext(Dispatchers.IO) {
+                onChainSecurityScannerRepository.saveSecurityScannerStatus(false)
+            }
         }
     }
 
