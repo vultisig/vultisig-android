@@ -473,7 +473,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         }
 
 
-                        val feeToken = nativeToken
+                        val feeToken = srcToken
                         val estimatedTokenFees = TokenValue(
                             value = value ?: BigInteger.ZERO,
                             token = feeToken
