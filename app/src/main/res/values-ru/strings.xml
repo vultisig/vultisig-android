@@ -18,6 +18,7 @@
     <string name="vault_settings_rename_title">Переименовать</string>
     <string name="vault_settings_rename_subtitle">Редактировать имя вашего хранилища</string>
     <string name="vault_settings_reshare_title">Повторное совместное использование</string>
+    <string name="vault_settings_security_screen_title">Безопасность</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>

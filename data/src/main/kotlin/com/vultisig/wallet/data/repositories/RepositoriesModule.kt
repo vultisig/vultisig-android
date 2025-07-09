@@ -216,6 +216,12 @@ internal interface RepositoriesModule {
         impl: VaultPasswordRepositoryImpl,
     ): VaultPasswordRepository
 
+    @Singleton
+    @Binds
+    fun bindSecurityScannerRepository(
+        impl: SecurityScannerRepositoryImpl,
+    ): SecurityScannerRepository
+
     @Binds
     @Singleton
     fun bindThorChainRepository(

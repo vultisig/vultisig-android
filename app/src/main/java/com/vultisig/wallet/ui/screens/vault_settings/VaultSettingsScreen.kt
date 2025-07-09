@@ -143,14 +143,14 @@ private fun VaultSettingsScreen(
                 onClick = onOnChainSecurity
             )
 
-            //if (uiModel.hasFastSign && canAuthenticateBiometric) {
+            if (uiModel.hasFastSign && canAuthenticateBiometric) {
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_biometrics_title),
                     subtitle = stringResource(R.string.vault_settings_biometrics_description),
                     icon = R.drawable.ic_biometric,
                     onClick = onBiometricsClick,
                 )
-            //}
+            }
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),

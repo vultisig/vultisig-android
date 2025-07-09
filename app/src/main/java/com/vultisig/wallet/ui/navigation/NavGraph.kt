@@ -82,6 +82,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
+import com.vultisig.wallet.ui.screens.vault_settings.components.security.SecurityScannerEnableScreen
 import com.vultisig.wallet.ui.theme.slideInFromBottomEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -380,7 +381,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.OnChainSecurity.route,
         ) {
-            BiometricsEnableScreen(navController)
+            SecurityScannerEnableScreen(navController)
         }
 
         composable(
