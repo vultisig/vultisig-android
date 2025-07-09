@@ -106,7 +106,7 @@ fun SecurityScannerBottomSheetContent(
 
         Text(
             text = contentStyle.title,
-            color = Theme.colors.alerts.error,
+            color = contentStyle.imageColor,
             style = Theme.brockmann.headings.title2,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -192,8 +192,8 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
 private fun buildSettingsSecurityScannerBottomSheeStyle() = SecurityScannerBottomSheetStyle(
     title = "On-chain security disabled",
     description = "Disabling on-chain security means Blockaid can't verify transactions. You'll be less protective",
-    imageColor = Theme.colors.alerts.error,
-    image = Icons.Outlined.Warning,
+    imageColor = Theme.colors.alerts.warning,
+    image = Icons.Outlined.Info,
 )
 
 data class SecurityScannerBottomSheetStyle(
