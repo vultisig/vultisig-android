@@ -17,6 +17,8 @@
     <string name="vault_settings_security_screen_title">Sigurnost</string>
     <string name="vault_settings_security_screen_title_switch">Upravljajte svojom sigurnošću na lancu</string>
     <string name="vault_settings_security_screen_title_content">Možete onemogućiti svoju sigurnost na lancu u stvarnom vremenu</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Sigurnost na lancu onemogućena</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Onemogućavanje sigurnosti na lancu znači da Blockaid ne može provjeriti transakcije. Bit ćete manje zaštićeni.</string>
     <string name="choose_tokens">Odaberite tokene</string>
     <string name="send_screen_title">POŠALJI</string>
     <string name="send_from_address">Od</string>

@@ -278,6 +278,9 @@
     <string name="create_folder_title">Create Folder</string>
     <string name="create_folder_name">Folder Name</string>
     <string name="create_folder_create">Create</string>
+
+    <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
     <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security</string>
     <string name="vault_settings_security_screen_title">Security</string>
@@ -295,7 +298,6 @@
     <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
-
     <string name="folders_list_title">Folders</string>
 
     <!--    fast&active vaults are temporarily disabled -->

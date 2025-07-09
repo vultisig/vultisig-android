@@ -8,6 +8,8 @@
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Держите устройства в одной WiFi-сети, корректный хранилище и парные устройства.\nУбедитесь, что никакие другие устройства не работают с Vultisig.</string>
     <string name="try_again">Попробуйте еще раз</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Безопасность в сети отключена</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Отключение безопасности в сети означает, что Blockaid не сможет проверять транзакции. Вы будете менее защищены.</string>
     <string name="vault_choose_chains">Выберите цепочки</string>
     <string name="plus_icon">Иконка плюса</string>
     <string name="vault_settings_title">Настройки хранилища</string>

@@ -17,6 +17,8 @@
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Seguridad en cadena desactivada</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Desactivar la seguridad en cadena significa que Blockaid no puede verificar las transacciones. Estará menos protegido.</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
     <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
     <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>

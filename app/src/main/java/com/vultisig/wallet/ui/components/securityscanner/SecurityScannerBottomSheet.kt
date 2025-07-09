@@ -190,8 +190,8 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
 
 @Composable
 private fun buildSettingsSecurityScannerBottomSheeStyle() = SecurityScannerBottomSheetStyle(
-    title = "On-chain security disabled",
-    description = "Disabling on-chain security means Blockaid can't verify transactions. You'll be less protective",
+    title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
+    description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
     imageColor = Theme.colors.alerts.warning,
     image = Icons.Outlined.Info,
 )

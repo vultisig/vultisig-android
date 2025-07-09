@@ -65,7 +65,6 @@ class SecurityScannerService(
         }
     }
 
-
     override fun getSupportedChainsByFeature(): List<SecurityScannerSupport> {
         return providers.map { provider ->
             SecurityScannerSupport(

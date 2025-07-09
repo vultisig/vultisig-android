@@ -20,6 +20,8 @@
     <string name="vault_settings_security_screen_title">Segurança</string>
     <string name="vault_settings_security_screen_title_switch">Gerencie sua segurança on-chain</string>
     <string name="vault_settings_security_screen_title_content">Você pode desativar sua segurança on-chain em tempo real</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Segurança on-chain desativada</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Desativar a segurança on-chain significa que a Blockaid não consegue verificar as transações. Você estará menos protegido.</string>
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="send_screen_title">Enviar</string>
     <string name="send_from_address">De</string>
