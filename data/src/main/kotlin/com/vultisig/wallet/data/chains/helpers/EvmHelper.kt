@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.crypto.checkError
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -41,14 +42,11 @@ class EvmHelper(
             "Memo is required for THORChain swap"
         }
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
-        val input = Ethereum.SigningInput.newBuilder().apply {
-            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
-            nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
-            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
-            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
-            txMode = Ethereum.TransactionMode.Enveloped
-        }
+        val input = setGasParameters(ethSpecifc.gasLimit,
+            ethSpecifc.maxFeePerGasWei,
+            Ethereum.SigningInput.newBuilder(),
+            keysignPayload,
+            nonceIncrement)
 
         // Native token , send directly to asgard vault
         if(thorChainSwapPayload.data.fromCoin.isNativeToken){
@@ -103,34 +101,42 @@ class EvmHelper(
         nonceIncrement: BigInteger = BigInteger.ZERO,
     ): ByteArray {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
-
-        return signingInput.toBuilder().apply {
-            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
-            nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
-            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
-            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
-            txMode = Ethereum.TransactionMode.Enveloped
-        }.build().toByteArray()
+        return setGasParameters(
+            gas =  ethSpecifc.gasLimit,
+            gasPrice = ethSpecifc.maxFeePerGasWei,
+            signingInput = signingInput.toBuilder(),
+            keysignPayload = keysignPayload,
+            nonceIncrement = nonceIncrement
+        ).build().toByteArray()
     }
 
-    fun getPreSignedInputData(
+    fun setGasParameters(
         gas: BigInteger,
         gasPrice: BigInteger,
         signingInput: Ethereum.SigningInput.Builder,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger = BigInteger.ZERO,
-    ): ByteArray {
+    ): Ethereum.SigningInput.Builder {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
-
-        return signingInput.apply {
+        val signingInputBuilder = signingInput.apply {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
-            gasLimit = ByteString.copyFrom(gas.toByteArray())
-            maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
-            txMode = Ethereum.TransactionMode.Enveloped
-        }.build().toByteArray()
+        }
+        if(keysignPayload.coin.chain == Chain.BscChain) {
+            signingInputBuilder.apply  {
+                txMode = Ethereum.TransactionMode.Legacy
+                setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
+                gasLimit =ByteString.copyFrom(gas.toByteArray())
+            }
+        } else {
+            signingInputBuilder.apply {
+                txMode = Ethereum.TransactionMode.Enveloped
+                gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+                maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+                maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+            }
+        }
+        return signingInputBuilder
     }
 
     private fun requireEthereumSpec(spec: BlockChainSpecific): BlockChainSpecific.Ethereum =
@@ -142,13 +148,7 @@ class EvmHelper(
             ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
         input.apply {
-            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
-            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
-            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
-            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
             toAddress = keysignPayload.toAddress
-            txMode = Ethereum.TransactionMode.Enveloped
             transaction = Ethereum.Transaction.newBuilder().apply {
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
                     amount = ByteString.copyFrom(keysignPayload.toAmount.toByteArray())
@@ -158,7 +158,7 @@ class EvmHelper(
                 }.build()
             }.build()
         }
-        return input.build().toByteArray()
+        return setGasParameters(ethSpecifc.gasLimit,ethSpecifc.maxFeePerGasWei,input,keysignPayload).build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {

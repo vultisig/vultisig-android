@@ -69,13 +69,13 @@ class OneInchSwap(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
             vaultHexChainCode,
-        ).getPreSignedInputData(
+        ).setGasParameters(
             gas = gas,
             gasPrice = gasPrice,
             signingInput = input,
             keysignPayload = keysignPayload,
             nonceIncrement = nonceIncrement,
-        )
+        ).build().toByteArray()
     }
 
 }
