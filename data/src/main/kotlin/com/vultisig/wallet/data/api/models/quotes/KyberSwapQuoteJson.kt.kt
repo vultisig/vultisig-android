@@ -24,10 +24,6 @@ data class KyberSwapQuoteJson(
     val fee: BigInteger? = null,
 )
 
-
-//    val dstAmount: String
-//        get() = data.amountOut
-
 fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
     val baseGas = tx.gas
     val gasMultiplierTimes10 = when (chain) {
@@ -37,16 +33,6 @@ fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
     }
     return (baseGas * gasMultiplierTimes10) / 10
 }
-//
-//    val tx: Transaction
-//        get() = Transaction(
-//            from = "",
-//            to = data.routerAddress,
-//            data = data.data,
-//            value = data.transactionValue,
-//            gasPrice = data.gasPrice ?: "",
-//            gas = data.gas.toLongOrNull() ?: 0L
-//        )
 
 @Serializable
 data class KyberSwapTxJson(
@@ -64,15 +50,6 @@ data class KyberSwapTxJson(
     val gas: Long
 )
 
-fun KyberSwapQuoteResponse.gasForChain(chain: Chain): Long {
-    val baseGas = data.gas?.toLongOrNull() ?: 600_000L
-    val gasMultiplierTimes10 = when (chain) {
-        Chain.Ethereum -> 14L
-        Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
-        else -> 16L
-    }
-    return (baseGas * gasMultiplierTimes10) / 10
-}
 
 @Serializable
 data class KyberSwapQuoteResponse(
@@ -111,7 +88,8 @@ data class KyberSwapQuoteResponse(
                 data = data.data,
                 value = data.transactionValue,
                 gasPrice = data.gasPrice ?: "",
-                gas = data.gas?.toLongOrNull() ?: 0L
+                gas = data.gas?.toLongOrNull() ?: 0L,
+                fee = data.fee?.toLong() ?: 0L
             )
         }
 
@@ -144,82 +122,12 @@ data class KyberSwapQuoteData(
     val fee: BigInteger? = BigInteger.ZERO,
 )
 
-@Serializable
-data class Data(
-    @SerialName("amountIn")
-    val amountIn: String,
-    @SerialName("amountInUsd")
-    val amountInUsd: String,
-    @SerialName("amountOut")
-    val amountOut: String,
-    @SerialName("amountOutUsd")
-    val amountOutUsd: String,
-    @SerialName("gas")
-    val gas: String?,
-    @SerialName("gasUsd")
-    val gasUsd: String,
-    @SerialName("data")
-    val data: String,
-    @SerialName("routerAddress")
-    val routerAddress: String,
-    @SerialName("transactionValue")
-    val transactionValue: String,
-    @SerialName("gasPrice")
-    var gasPrice: String? = null
-)
-
-
-@Serializable
-class KyberSwapQuote(
-    @SerialName("code")
-    val code: Int,
-    @SerialName("message")
-    val message: String,
-    @SerialName("data")
-    var data: Data,
-    @SerialName("requestId")
-    val requestId: String
-) {
-    val dstAmount: String
-        get() = data.amountOut
-
-    fun gasForChain(chain: Chain): Long {
-        val baseGas = data.gas?.toLongOrNull() ?: 600_000L
-        val gasMultiplierTimes10 = when (chain) {
-            Chain.Ethereum -> 14L
-            Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
-            else -> 16L
-        }
-        return (baseGas * gasMultiplierTimes10) / 10
-    }
-
-    val tx: Transaction
-        get() {
-            return Transaction(
-                from = "",
-                to = data.routerAddress,
-                data = data.data,
-                value = data.transactionValue,
-                gasPrice = data.gasPrice ?: "",
-                gas =data.gas?.toLongOrNull() ?: 0L
-            )
-        }
-
-}
-
-
-@Serializable
 data class Transaction(
-    @SerialName("from")
     val from: String,
-    @SerialName("to")
     val to: String,
-    @SerialName("data")
     val data: String,
-    @SerialName("value")
     val value: String,
-    @SerialName("gasPrice")
     val gasPrice: String,
-    @SerialName("gas")
-    val gas: Long
+    val gas: Long,
+    val fee: Long
 )

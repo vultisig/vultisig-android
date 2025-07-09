@@ -104,7 +104,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                         routerAddress = it.tx?.to ?: "",
                                         transactionValue = it.tx?.value ?: "",
                                         gasPrice = it.tx?.gasPrice ?: "",
-                                        fee = BigInteger.ZERO
+                                        fee = it.tx?.fee?.toBigInteger() ?: BigInteger.ZERO,
                                     ),
                                     requestId = ""
                                 )

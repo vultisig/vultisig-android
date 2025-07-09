@@ -230,6 +230,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                     `value` = it.value,
                                     gasPrice = it.gasPrice,
                                     gas = it.gas,
+                                    fee = it.fee,
                                 )
                             },
                         )
