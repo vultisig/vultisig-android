@@ -37,8 +37,6 @@ class KyberApiImpl @Inject constructor(
 ) : KyberApi {
     private val aggregatorApiBaseUrl = "https://aggregator-api.kyberswap.com"
     private val tokenApiBaseUrl = "https://ks-setting.kyberswap.com"
-    //let url = "https://aggregator-api.kyberswap.com/\(chain)/api/v1/routes
-    // ?tokenIn=\(tokenIn)&tokenOut=\(tokenOut)&amountIn=\(amountIn)&saveGas=\(saveGas)&gasInclude=\(gasInclude)&slippageTolerance=\(slippageTolerance)"
 
 
     override suspend fun getSwapQuote(
@@ -80,6 +78,19 @@ class KyberApiImpl @Inject constructor(
                     "slippageTolerance",
                     "100"
                 )
+                parameters.append(
+                    "isAffiliate",
+                    isAffiliate.toString()
+                )
+                parameter(
+                    "sourceIdentifier",
+                    if (isAffiliate) CLIENT_ID else null
+                )
+                parameter(
+                    "referrerAddress",
+                    if (isAffiliate) CLIENT_ID else null
+                )
+
                 headers {
                     accept(ContentType.Application.Json)
                     append(
@@ -114,21 +125,24 @@ class KyberApiImpl @Inject constructor(
             buildTransactionWithFallback(
                 chain,
                 route,
-                srcAddress
+                srcAddress,
+                isAffiliate
             )
         )
     }
 
 
     private suspend fun buildTransactionWithFallback(
-        chain: Chain, routeResponse: KyberSwapRouteResponse, from: String
+        chain: Chain, routeResponse: KyberSwapRouteResponse, from: String, isAffiliate: Boolean
     ): KyberSwapQuoteResponse {
         return try {
             buildTransaction(
                 chain,
                 routeResponse,
                 from,
-                enableGasEstimation = true
+                enableGasEstimation = true,
+                isAffiliate = isAffiliate
+
             )
         } catch (e: KyberSwapError.TransactionWillRevert) {
             if (e.message?.contains("TransferHelper") == true) {
@@ -136,7 +150,8 @@ class KyberApiImpl @Inject constructor(
                     chain,
                     routeResponse,
                     from,
-                    enableGasEstimation = false
+                    enableGasEstimation = false,
+                    isAffiliate
                 )
             } else {
                 error(e.message ?: "Unknown KyberSwap transaction revert error")
@@ -146,7 +161,7 @@ class KyberApiImpl @Inject constructor(
 
     private suspend fun buildTransaction(
         chain: Chain, routeResponse: KyberSwapRouteResponse, from: String,
-        enableGasEstimation: Boolean
+        enableGasEstimation: Boolean, isAffiliate: Boolean
     ): KyberSwapQuoteResponse {
 
 
@@ -157,7 +172,9 @@ class KyberApiImpl @Inject constructor(
             slippageTolerance = 100,
             deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
             enableGasEstimation = enableGasEstimation,
-            source = "vultisig-android"
+            source = CLIENT_ID,
+            referral = if (isAffiliate) REFERRER_ADDRESS else null,
+            ignoreCappedSlippage = false
         )
         val responseString = httpClient.post(aggregatorApiBaseUrl) {
             url {
@@ -205,6 +222,9 @@ class KyberApiImpl @Inject constructor(
         val calculatedGas = buildResponse.gasForChain(chain)
         val finalGas =
             if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
+        buildResponse = buildResponse.copy(
+            data = buildResponse.data.copy(gas = finalGas.toString())
+        )
         val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
         val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
         val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
@@ -247,6 +267,8 @@ class KyberApiImpl @Inject constructor(
     }
 
     companion object {
+        //        static let referrerAddress = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
+        private const val REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val GAS_PRICE_VALUE = 20000000000L

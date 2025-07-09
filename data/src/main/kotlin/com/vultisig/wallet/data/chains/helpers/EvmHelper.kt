@@ -128,7 +128,7 @@ class EvmHelper(
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
             gasLimit = ByteString.copyFrom(gas.toByteArray())
             maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.abs().toByteArray())
             txMode = Ethereum.TransactionMode.Enveloped
         }.build().toByteArray()
     }
@@ -146,7 +146,7 @@ class EvmHelper(
             nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
             gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
             maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.abs().toByteArray())
             toAddress = keysignPayload.toAddress
             txMode = Ethereum.TransactionMode.Enveloped
             transaction = Ethereum.Transaction.newBuilder().apply {

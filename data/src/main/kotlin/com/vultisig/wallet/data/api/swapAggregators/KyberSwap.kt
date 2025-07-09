@@ -15,6 +15,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
 import  com.vultisig.wallet.data.common.toByteString
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.wallet.Swaps
 
@@ -92,45 +93,7 @@ class KyberSwap(
 
     }
 
-    @Throws(Exception::class)
-    fun getPreSignedApproveImageHash(
-        approvePayload: ERC20ApprovePayload, keysignPayload: KeysignPayload
-    ): List<String> {
-        val inputData = getPreSignedApproveInputData(
-            approvePayload,
-            keysignPayload
-        )
-        val hashes = TransactionCompiler.preImageHashes(
-            keysignPayload.coin.coinType,
-            inputData
-        )
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
 
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
-    }
-
-    @Throws(Exception::class)
-    fun getSignedApproveTransaction(
-        approvePayload: ERC20ApprovePayload, keysignPayload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>
-    ): SignedTransactionResult {
-        val inputData = getPreSignedApproveInputData(
-            approvePayload,
-            keysignPayload
-        )
-
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode
-        ).getSignedTransaction(
-            inputData,
-            signatures
-        )
-
-    }
 
     @Throws(Exception::class)
     fun getPreSignedInputData(
@@ -150,58 +113,31 @@ class KyberSwap(
                         )
                     ).setData(quote?.tx?.data?.removePrefix("0x")?.toByteStringOrHex())
                 ).build()
-            ).build()
+            )
 
-        val gas =
-            quote?.gasForChain(keysignPayload.coin.chain) ?: error("fail to get gas for chain")
-        return getPreSignedInputDataWithCustomGasLimit(
-            input,
-            keysignPayload,
-            gas.toBigInteger(),
-            incrementNonce
+        var gasPrice = quote?.tx?.gasPrice?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        if (keysignPayload.coin.chain == Chain.Arbitrum) {
+            // set gasPrice to null/zero for envelope transaction on arbitrum chain
+            gasPrice = BigInteger.ZERO
+        }
+
+
+
+        val gas = (quote?.tx?.gas.takeIf { it != 0L }
+            ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+
+        return EvmHelper(
+            keysignPayload.coin.coinType,
+            vaultHexPublicKey,
+            vaultHexChainCode,
+        ).getPreSignedInputData(
+            gas =gas,
+            gasPrice = gasPrice,
+            signingInput = input,
+            keysignPayload = keysignPayload,
+            nonceIncrement = incrementNonce,
         )
+
     }
 
-    @Throws(Exception::class)
-    fun getPreSignedInputDataWithCustomGasLimit(
-        input: Ethereum.SigningInput, keysignPayload: KeysignPayload, customGasLimit: BigInteger,
-        incrementNonce: BigInteger
-    ): ByteArray {
-        val chainSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
-            ?: error("fail to get Ethereum chain specific")
-
-        val oneGweiInWei = BigInteger("1000000000")
-        val correctedPriorityFee = chainSpecific.priorityFeeWei.max(oneGweiInWei)
-        val correctedMaxFeePerGas = listOf(
-            chainSpecific.maxFeePerGasWei,
-            correctedPriorityFee,
-            oneGweiInWei
-        ).maxOrNull() ?: oneGweiInWei
-
-
-        //Todo add ETHEREUM_SEPOLIA test chain
-//        val chainIdString = if (keysignPayload.coin.chain == Chain.ETHEREUM_SEPOLIA)
-//            "11155111"
-//        else
-//            keysignPayload.coin.coinType.chainId
-
-        val chainIdString = keysignPayload.coin.coinType.chainId()
-
-        val intChainID = chainIdString.toBigIntegerOrNull() ?: error("fail to get chainID")
-
-//        val incrementNonceValue = if (incrementNonce) 1L else 0L
-        val inputBuilder = input.toBuilder()
-
-
-        inputBuilder.chainId = intChainID.toByteString()
-//        inputBuilder.nonce = (chainSpecific.nonce + incrementNonceValue.toBigInteger()).toByteString()
-        inputBuilder.nonce = (chainSpecific.nonce + incrementNonce).toByteString()
-        inputBuilder.gasLimit = customGasLimit.toByteString()
-        inputBuilder.maxFeePerGas = correctedMaxFeePerGas.abs().toByteString()
-        inputBuilder.maxInclusionFeePerGas = correctedPriorityFee.abs().toByteString()
-        inputBuilder.txMode = Ethereum.TransactionMode.Enveloped
-
-
-        return inputBuilder.build().toByteArray()
-    }
 }

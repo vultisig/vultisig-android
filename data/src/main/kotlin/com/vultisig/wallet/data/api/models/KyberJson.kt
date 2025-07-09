@@ -58,9 +58,13 @@ data class KyberSwapRouteResponse(
 data class KyberSwapBuildRequest(
     val routeSummary: KyberSwapRouteResponse.RouteSummary,
     val sender: String,
-    val recipient: String, val slippageTolerance: Int = 100, val deadline: Int,
-    val enableGasEstimation: Boolean = true, val source: String? = "vultisig-android",
-    val ignoreCappedSlippage: Boolean? = false
+    val referral : String?=null,
+    val recipient: String,
+    val slippageTolerance: Int ,
+    val deadline: Int,
+    val enableGasEstimation: Boolean ,
+    val source: String ,
+    val ignoreCappedSlippage: Boolean
 )
 
 @Serializable

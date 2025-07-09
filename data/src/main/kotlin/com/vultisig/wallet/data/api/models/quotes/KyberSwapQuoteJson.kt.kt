@@ -105,15 +105,13 @@ data class KyberSwapQuoteResponse(
 
     val tx: Transaction
         get() {
-            val bufferedGas = gasForChain(Chain.Ethereum)
-            val gasPriceValue = data.gasPrice ?: "20000000000"
             return Transaction(
                 from = "",
                 to = data.routerAddress,
                 data = data.data,
                 value = data.transactionValue,
-                gasPrice = gasPriceValue,
-                gas = if (bufferedGas == 0L) 600_000L else bufferedGas
+                gasPrice = data.gasPrice ?: "",
+                gas = data.gas?.toLongOrNull() ?: 0L
             )
         }
 
@@ -197,15 +195,13 @@ class KyberSwapQuote(
 
     val tx: Transaction
         get() {
-            val bufferedGas = gasForChain(Chain.Ethereum)
-            val gasPriceValue = data.gasPrice ?: "20000000000"
             return Transaction(
                 from = "",
                 to = data.routerAddress,
                 data = data.data,
                 value = data.transactionValue,
-                gasPrice = gasPriceValue,
-                gas = if (bufferedGas == 0L) 600_000L else bufferedGas
+                gasPrice = data.gasPrice ?: "",
+                gas =data.gas?.toLongOrNull() ?: 0L
             )
         }
 
