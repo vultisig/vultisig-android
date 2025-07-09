@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
-import com.vultisig.wallet.data.api.models.quotes.OutputChange
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -95,19 +94,12 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                     code = 0,
                                     message = "Success",
                                     data = KyberSwapQuoteData(
-                                        amountIn =from.toAmount,
+                                        amountIn = from.toAmount,
                                         amountInUsd = "0",
                                         amountOut = it.dstAmount,
                                         amountOutUsd = "0",
                                         gas = it.tx?.gas.toString(),
                                         gasUsd = "0",
-//                                        additionalCostUsd = "",
-//                                        additionalCostMessage = "",
-//                                        outputChange = OutputChange(
-//                                            amount = TODO(),
-//                                            percent = TODO(),
-//                                            level = TODO()
-//                                        ),
                                         data = it.tx?.data ?: "",
                                         routerAddress = it.tx?.to ?: "",
                                         transactionValue = it.tx?.value ?: "",

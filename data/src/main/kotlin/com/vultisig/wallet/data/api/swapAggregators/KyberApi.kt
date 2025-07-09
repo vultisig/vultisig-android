@@ -228,7 +228,7 @@ class KyberApiImpl @Inject constructor(
                 parameters {
                     append(
                         "chainIds",
-                        CLIENT_ID
+                        chain.id
                     )
                     append(
                         "isWhitelisted",

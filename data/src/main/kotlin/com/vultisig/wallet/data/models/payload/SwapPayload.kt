@@ -104,7 +104,7 @@ sealed class SwapPayload {
 //    ) : SwapPayload() {
 
         override val srcToken: Coin
-            get() =data.fromCoin
+            get() = data.fromCoin
 
         override val dstToken: Coin
             get() = data.toCoin
@@ -117,7 +117,7 @@ sealed class SwapPayload {
 
         override val dstTokenValue: TokenValue
             get() = TokenValue(
-                value =data.toAmountDecimal
+                value = data.toAmountDecimal
                     .movePointRight(dstToken.decimal)
                     .toBigInteger(),
                 token = dstToken,

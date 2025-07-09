@@ -7,17 +7,10 @@ import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.text.toLongOrNull
 
-
-//    val code: Int,
-//    val message: String,
-//    var data: Data,
-//    val requestId: String
-
 sealed class KyberSwapQuoteDeserialized {
     data class Result(val data: KyberSwapQuoteResponse) : KyberSwapQuoteDeserialized()
     data class Error(val error: String) : KyberSwapQuoteDeserialized()
 }
-
 
 @Serializable
 data class KyberSwapQuoteJson(
@@ -28,23 +21,22 @@ data class KyberSwapQuoteJson(
     @SerialName("error")
     val error: String? = null,
     @Contextual
-    val fee :BigInteger ? = null,
+    val fee: BigInteger? = null,
 )
-
 
 
 //    val dstAmount: String
 //        get() = data.amountOut
 
-    fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
-        val baseGas = tx.gas
-        val gasMultiplierTimes10 = when (chain) {
-            Chain.Ethereum -> 14L
-            Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
-            else -> 16L
-        }
-        return (baseGas * gasMultiplierTimes10) / 10
+fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
+    val baseGas = tx.gas
+    val gasMultiplierTimes10 = when (chain) {
+        Chain.Ethereum -> 14L
+        Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
+        else -> 16L
     }
+    return (baseGas * gasMultiplierTimes10) / 10
+}
 //
 //    val tx: Transaction
 //        get() = Transaction(
@@ -92,7 +84,7 @@ data class KyberSwapQuoteResponse(
     var data: KyberSwapQuoteData,
     @SerialName("requestId")
     val requestId: String
-){
+) {
     var dstAmount: String
         get() = data.amountOut
         set(value) {
@@ -149,9 +141,9 @@ data class KyberSwapQuoteData(
     val transactionValue: String,
     //not in response
     @kotlinx.serialization.Transient
-    val gasPrice: String?="",
+    val gasPrice: String? = "",
     @kotlinx.serialization.Transient
-    val fee: BigInteger?= BigInteger.ZERO,
+    val fee: BigInteger? = BigInteger.ZERO,
 )
 
 @Serializable
@@ -178,15 +170,6 @@ data class Data(
     var gasPrice: String? = null
 )
 
-@Serializable
-data class OutputChange(
-    @SerialName("amount")
-    val amount: String,
-    @SerialName("percent")
-    val percent: Int,
-    @SerialName("level")
-    val level: Int
-)
 
 @Serializable
 class KyberSwapQuote(
@@ -229,14 +212,18 @@ class KyberSwapQuote(
 }
 
 
-
 @Serializable
 data class Transaction(
-    // @SerialName("from") ?
+    @SerialName("from")
     val from: String,
+    @SerialName("to")
     val to: String,
+    @SerialName("data")
     val data: String,
+    @SerialName("value")
     val value: String,
+    @SerialName("gasPrice")
     val gasPrice: String,
+    @SerialName("gas")
     val gas: Long
 )

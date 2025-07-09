@@ -56,16 +56,11 @@ class KyberSwap(
             incrementNonce
         )
 
-        val helper = EvmHelper(
+        return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
             vaultHexChainCode
-        )
-
-        return helper.getSignedTransaction(
-            inputData,
-            signatures
-        )
+        ).getSignedTransaction(inputData, signatures)
 
     }
 
@@ -95,11 +90,6 @@ class KyberSwap(
             keysignPayload = keysignPayload
         )
 
-//        return EvmHelper.getHelper(keysignPayload.coin)
-//            .getPreSignedInputData(
-//                approveInput,
-//                keysignPayload
-//            )
     }
 
     @Throws(Exception::class)
@@ -139,7 +129,6 @@ class KyberSwap(
             inputData,
             signatures
         )
-
 
     }
 

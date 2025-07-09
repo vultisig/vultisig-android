@@ -461,10 +461,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val gasFeeFiatValue = estimatedGasFee.fiatValue
 
                 when (swapPayload) {
-                    is SwapPayload.Kyber ->{
+                    is SwapPayload.Kyber -> {
                         val kyberSwapTxJson = swapPayload.data.quote.tx
-                        //if swapFee is not null then it provider is Lifi otherwise 1inch
-                        kyberSwapTxJson
+                        // Calculate fee from Kyber quote data
                         val value = if (swapPayload.data.quote.data.fee != null) {
                             swapPayload.data.quote.data.fee
                         } else {
@@ -476,7 +475,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         val feeToken = nativeToken
                         val estimatedTokenFees = TokenValue(
-                            value = value?: BigInteger.ZERO,
+                            value = value ?: BigInteger.ZERO,
                             token = feeToken
                         )
 

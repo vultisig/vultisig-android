@@ -120,13 +120,13 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): KyberSwapQuoteResponse {
-        var kyberQuote = kyberApi.getSwapQuote(
+        val kyberQuote = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
             amount = tokenValue.value.toString(),
             srcAddress = srcToken.address,
-            isAffiliate = false
+            isAffiliate = isAffiliate
         )
         when (kyberQuote) {
             is KyberSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(kyberQuote.error)
