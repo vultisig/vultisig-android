@@ -1,10 +1,12 @@
 package com.vultisig.wallet.data.securityscanner
 
+import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import timber.log.Timber
 import java.util.concurrent.ConcurrentSkipListSet
 
 class SecurityScannerService(
-    private val providers: List<ProviderScannerServiceContract>
+    private val providers: List<ProviderScannerServiceContract>,
+    private val repository: OnChainSecurityScannerRepository,
 ) : SecurityScannerContract {
     private val disabledProvidersNames: MutableSet<String> = ConcurrentSkipListSet()
 
@@ -20,6 +22,10 @@ class SecurityScannerService(
                     chain = transaction.chain
                 )
             }
+    }
+
+    override suspend fun isSecurityServiceEnabled(): Boolean {
+        return repository.getSecurityScannerStatus()
     }
 
     override fun getDisabledProviders(): List<String> {
@@ -58,7 +64,6 @@ class SecurityScannerService(
             Timber.d("SecurityScanner: No new providers were enabled.")
         }
     }
-
 
     override fun getSupportedChainsByFeature(): List<SecurityScannerSupport> {
         return providers.map { provider ->

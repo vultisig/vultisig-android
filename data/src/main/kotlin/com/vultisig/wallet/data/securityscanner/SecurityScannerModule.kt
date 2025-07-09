@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.securityscanner
 
+import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClient
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidScannerService
@@ -29,9 +30,10 @@ object SecurityScannerModule {
     @Singleton
     @Provides
     fun provideSecurityScannerService(
-        blockaidScannerService: ProviderScannerServiceContract
+        blockaidScannerService: ProviderScannerServiceContract,
+        onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
     ): SecurityScannerContract {
         val providers = listOf(blockaidScannerService)
-        return SecurityScannerService(providers)
+        return SecurityScannerService(providers, onChainSecurityScannerRepository)
     }
 }

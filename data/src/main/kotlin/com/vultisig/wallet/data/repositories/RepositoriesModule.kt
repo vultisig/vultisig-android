@@ -216,6 +216,12 @@ internal interface RepositoriesModule {
         impl: VaultPasswordRepositoryImpl,
     ): VaultPasswordRepository
 
+    @Singleton
+    @Binds
+    fun bindSecurityScannerRepository(
+        impl: OnChainSecurityScannerRepositoryImpl,
+    ): OnChainSecurityScannerRepository
+
     @Binds
     @Singleton
     fun bindThorChainRepository(
@@ -251,8 +257,6 @@ internal interface RepositoriesModule {
     fun bindTemporaryVaultRepository(
         impl: TemporaryVaultRepositoryImpl
     ): TemporaryVaultRepository
-
-
 }
 
 @Qualifier
