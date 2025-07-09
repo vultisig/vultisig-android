@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import com.vultisig.wallet.ui.theme.Theme
 
-@Deprecated("Use VsSwitch, new design does not require scale and changes breaks compatibility")
+@Deprecated("Use VsSwitch. The new design does not require scaling, and any changes will break compatibility")
 @Composable
 internal fun VaultSwitch(
     checked: Boolean,
