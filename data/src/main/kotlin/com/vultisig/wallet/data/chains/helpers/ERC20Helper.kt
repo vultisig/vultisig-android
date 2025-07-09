@@ -25,13 +25,7 @@ class ERC20Helper(
         val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
-            .setChainId(ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray()))
-            .setNonce(ByteString.copyFrom(ethSpecific.nonce.toByteArray()))
-            .setGasLimit(ByteString.copyFrom(ethSpecific.gasLimit.toByteArray()))
-            .setMaxFeePerGas(ByteString.copyFrom(ethSpecific.maxFeePerGasWei.toByteArray()))
-            .setMaxInclusionFeePerGas(ByteString.copyFrom(ethSpecific.priorityFeeWei.toByteArray()))
             .setToAddress(keysignPayload.coin.contractAddress)
-            .setTxMode(Ethereum.TransactionMode.Enveloped)
             .setTransaction(
                 Ethereum.Transaction.newBuilder()
                     .setErc20Transfer(
@@ -42,8 +36,15 @@ class ERC20Helper(
                     )
                     .build()
             )
-            .build()
-        return input.toByteArray()
+
+        return EthereumGasHelper.setGasParameters(
+            ethSpecific.gasLimit,
+            ethSpecific.maxFeePerGasWei,
+            input,
+            keysignPayload,
+            nonceIncrement = BigInteger.ZERO,
+            coinType = coinType
+        ).build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
