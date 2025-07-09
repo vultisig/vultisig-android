@@ -278,6 +278,8 @@
     <string name="create_folder_title">Create Folder</string>
     <string name="create_folder_name">Folder Name</string>
     <string name="create_folder_create">Create</string>
+    <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
+    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security</string>
     <string name="vault_settings_security_screen_title">Security</string>
     <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
     <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>

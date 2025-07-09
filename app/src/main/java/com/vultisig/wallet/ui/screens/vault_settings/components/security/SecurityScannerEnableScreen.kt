@@ -60,12 +60,12 @@ private fun SecurityScannerEnableScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Manage your on-chain security",
+                text = stringResource(id = R.string.vault_settings_security_screen_title_switch),
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.colors.text.primary
             )
             Text(
-                text = "You can disable your realtime on-chain security",
+                text = stringResource(id = R.string.vault_settings_security_screen_title_content),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.colors.text.light
             )

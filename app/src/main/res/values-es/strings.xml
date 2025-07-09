@@ -19,6 +19,8 @@
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
     <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
+    <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>
+    <string name="vault_settings_security_screen_title_content">Puedes desactivar tu seguridad en cadena en tiempo real</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>
     <string name="join_keysign_missing_required_vault">No tienes la bóveda necesaria para Keysign</string>
     <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
