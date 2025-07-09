@@ -33,8 +33,8 @@ internal fun SecurityScannerEnableScreen(
         uiModel = model,
         navController = navController,
         onCheckChange = { viewModel.onCheckedChange(it) },
-        onContinueAnyway = { viewModel.onContinueSecurity() },
-        onGoBack = { viewModel.onDismiss() },
+        onContinueAnyway = viewModel::onContinueSecurity,
+        onGoBack = viewModel::onDismiss,
     )
 }
 
