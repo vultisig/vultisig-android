@@ -257,8 +257,6 @@ internal interface RepositoriesModule {
     fun bindTemporaryVaultRepository(
         impl: TemporaryVaultRepositoryImpl
     ): TemporaryVaultRepository
-
-
 }
 
 @Qualifier

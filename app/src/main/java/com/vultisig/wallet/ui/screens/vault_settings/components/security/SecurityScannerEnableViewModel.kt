@@ -37,9 +37,9 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
 
     fun onCheckedChange(status: Boolean) {
         viewModelScope.launch {
-            if (!status) {
-                uiModel.update { it.copy(showWarningDialog = true) }
-            }
+            //if (!status) {
+                uiModel.update { it.copy(isSwitchEnabled = status) }
+            //}
         }
     }
 }
