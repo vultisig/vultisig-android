@@ -378,6 +378,12 @@ internal fun SetupNavGraph(
         }
 
         composable(
+            route = Destination.OnChainSecurity.route,
+        ) {
+            BiometricsEnableScreen(navController)
+        }
+
+        composable(
             route = Destination.RegisterVault.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {

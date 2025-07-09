@@ -11,6 +11,8 @@
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite sef s novim odborom</string>
     <string name="vault_settings_delete_title">Izbriši</string>
+    <string name="vault_settings_security_title">On-chain sigurnost</string>
+    <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
     <string name="join_keysign_missing_required_vault">Nemate potreban trezor za Keysign</string>
     <string name="choose_tokens">Odaberite tokene</string>
     <string name="send_screen_title">POŠALJI</string>

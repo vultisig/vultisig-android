@@ -270,6 +270,8 @@ internal sealed class Destination(
         }
     }
 
+    data object OnChainSecurity: Destination(route = "onchain_security")
+
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {
         companion object {

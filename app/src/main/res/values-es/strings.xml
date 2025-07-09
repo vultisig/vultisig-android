@@ -17,6 +17,8 @@
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de bóveda de forma permanente</string>
+    <string name="vault_settings_security_title">Seguridad en cadena</string>
+    <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
     <string name="join_keysign_missing_required_vault">No tienes la bóveda necesaria para Keysign</string>
     <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
     <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>

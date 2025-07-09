@@ -48,6 +48,7 @@ internal fun VaultSettingsScreen(
         onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
         onMigrateClick = viewModel::migrate,
+        onOnChainSecurity = viewModel::naviateToOnChainSecurityScreen,
     )
 }
 
@@ -64,6 +65,7 @@ private fun VaultSettingsScreen(
     onBiometricsClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onMigrateClick: () -> Unit = {},
+    onOnChainSecurity: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val canAuthenticateBiometric = remember { context.canAuthenticateBiometric() }
@@ -134,14 +136,21 @@ private fun VaultSettingsScreen(
                 onClick = onSignMessageClick,
             )
 
-            if (uiModel.hasFastSign && canAuthenticateBiometric) {
+            SettingsItem(
+                title = stringResource(R.string.vault_settings_security_title),
+                subtitle = stringResource(R.string.vault_settings_security_subtitle),
+                icon = R.drawable.ic_on_chain_security,
+                onClick = onOnChainSecurity
+            )
+
+            //if (uiModel.hasFastSign && canAuthenticateBiometric) {
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_biometrics_title),
                     subtitle = stringResource(R.string.vault_settings_biometrics_description),
                     icon = R.drawable.ic_biometric,
                     onClick = onBiometricsClick,
                 )
-            }
+            //}
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),
