@@ -81,7 +81,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
-    fun naviateToOnChainSecurityScreen() {
+    fun navigateToOnChainSecurityScreen() {
         viewModelScope.launch {
             navigator.navigate(Destination.OnChainSecurity)
         }

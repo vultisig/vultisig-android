@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class SecurityScannerEnableUiModel(
@@ -42,7 +43,11 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
             } else {
                 uiModel.update { it.copy(isSwitchEnabled = true) }
                 withContext(Dispatchers.IO) {
-                    onChainSecurityScannerRepository.saveSecurityScannerStatus(true)
+                    try {
+                        onChainSecurityScannerRepository.saveSecurityScannerStatus(true)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to save security scanner status")
+                    }
                 }
             }
         }
@@ -52,7 +57,11 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
         viewModelScope.launch {
             uiModel.update { it.copy(showWarningDialog = false, isSwitchEnabled = false) }
             withContext(Dispatchers.IO) {
-                onChainSecurityScannerRepository.saveSecurityScannerStatus(false)
+                try {
+                    onChainSecurityScannerRepository.saveSecurityScannerStatus(false)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to save security scanner status")
+                }
             }
         }
     }

@@ -48,7 +48,7 @@ internal fun VaultSettingsScreen(
         onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
         onMigrateClick = viewModel::migrate,
-        onOnChainSecurity = viewModel::naviateToOnChainSecurityScreen,
+        onOnChainSecurity = viewModel::navigateToOnChainSecurityScreen,
     )
 }
 
