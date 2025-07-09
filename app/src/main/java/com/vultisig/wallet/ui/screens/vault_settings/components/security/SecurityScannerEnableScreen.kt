@@ -19,6 +19,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
+import com.vultisig.wallet.ui.components.securityscanner.SettingsSecurityScannerBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -32,8 +33,8 @@ internal fun SecurityScannerEnableScreen(
         uiModel = model,
         navController = navController,
         onCheckChange = { viewModel.onCheckedChange(it) },
-        onContinueSecurity = {},
-        onGoBackSecurity = {},
+        onContinueAnyway = { viewModel.onContinueSecurity() },
+        onGoBack = { viewModel.onDismiss() },
     )
 }
 
@@ -42,8 +43,8 @@ private fun SecurityScannerEnableScreen(
     uiModel: SecurityScannerEnableUiModel,
     navController: NavController,
     onCheckChange: (Boolean) -> Unit = {},
-    onGoBackSecurity: () -> Unit = {},
-    onContinueSecurity: () -> Unit = {},
+    onGoBack: () -> Unit = {},
+    onContinueAnyway: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -89,7 +90,10 @@ private fun SecurityScannerEnableScreen(
             }
 
             if (uiModel.showWarningDialog) {
-                // SHOW ALERT DIALOG
+                SettingsSecurityScannerBottomSheet(
+                    onContinueAnyway = onContinueAnyway,
+                    onDismissRequest = onGoBack,
+                )
             }
         }
     }

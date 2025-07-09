@@ -19,7 +19,7 @@ internal data class SecurityScannerEnableUiModel(
 @HiltViewModel
 internal class SecurityScannerEnableViewModel @Inject constructor(
     private val onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
-): ViewModel() {
+) : ViewModel() {
     val uiModel = MutableStateFlow(SecurityScannerEnableUiModel())
 
     init {
@@ -37,9 +37,25 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
 
     fun onCheckedChange(status: Boolean) {
         viewModelScope.launch {
-            //if (!status) {
-                uiModel.update { it.copy(isSwitchEnabled = status) }
-            //}
+            if (!status) {
+                uiModel.update { it.copy(showWarningDialog = true) }
+            } else {
+                uiModel.update { it.copy(isSwitchEnabled = true) }
+                withContext(Dispatchers.IO) {
+                    onChainSecurityScannerRepository.saveSecurityScannerStatus(true)
+                }
+            }
         }
+    }
+
+    fun onContinueSecurity() {
+        viewModelScope.launch {
+            uiModel.update { it.copy(showWarningDialog = false) }
+            onChainSecurityScannerRepository.saveSecurityScannerStatus(false)
+        }
+    }
+
+    fun onDismiss() {
+        uiModel.update { it.copy(showWarningDialog = false) }
     }
 }
