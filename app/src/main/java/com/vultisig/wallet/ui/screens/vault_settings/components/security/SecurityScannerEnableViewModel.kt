@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.screens.vault_settings.components.security
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.SecurityScannerRepository
+import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ internal data class SecurityScannerEnableUiModel(
 
 @HiltViewModel
 internal class SecurityScannerEnableViewModel @Inject constructor(
-    private val securityScannerRepository: SecurityScannerRepository,
+    private val onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
 ): ViewModel() {
     val uiModel = MutableStateFlow(SecurityScannerEnableUiModel())
 
@@ -29,7 +29,7 @@ internal class SecurityScannerEnableViewModel @Inject constructor(
     private fun initSwitchState() {
         viewModelScope.launch {
             val switchEnabled = withContext(Dispatchers.IO) {
-                securityScannerRepository.getSecurityScannerStatus()
+                onChainSecurityScannerRepository.getSecurityScannerStatus()
             }
             uiModel.update { it.copy(isSwitchEnabled = switchEnabled) }
         }

@@ -219,8 +219,8 @@ internal interface RepositoriesModule {
     @Singleton
     @Binds
     fun bindSecurityScannerRepository(
-        impl: SecurityScannerRepositoryImpl,
-    ): SecurityScannerRepository
+        impl: OnChainSecurityScannerRepositoryImpl,
+    ): OnChainSecurityScannerRepository
 
     @Binds
     @Singleton

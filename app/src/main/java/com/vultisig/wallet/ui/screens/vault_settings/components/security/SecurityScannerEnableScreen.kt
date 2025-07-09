@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,6 +18,7 @@ import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -35,7 +34,6 @@ internal fun SecurityScannerEnableScreen(
         onCheckChange = { viewModel.onCheckedChange(it) },
         onContinueSecurity = {},
         onGoBackSecurity = {},
-        isSecurityEnabled = model.isSwitchEnabled,
     )
 }
 
@@ -46,7 +44,6 @@ private fun SecurityScannerEnableScreen(
     onCheckChange: (Boolean) -> Unit = {},
     onGoBackSecurity: () -> Unit = {},
     onContinueSecurity: () -> Unit = {},
-    isSecurityEnabled: Boolean,
 ) {
     Scaffold(
         topBar = {
@@ -77,22 +74,15 @@ private fun SecurityScannerEnableScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Switch(
-                    checked = isSecurityEnabled,
+                VsSwitch(
+                    checked = uiModel.isSwitchEnabled,
                     onCheckedChange = onCheckChange,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Theme.colors.neutrals.n50,
-                        checkedTrackColor = Theme.colors.primary.accent4,
-                        uncheckedThumbColor = Theme.colors.neutrals.n50,
-                        uncheckedTrackColor = Theme.colors.neutral500,
-                        uncheckedBorderColor = Theme.colors.neutral500,
-                    )
                 )
 
                 UiSpacer(12.dp)
 
                 Text(
-                    text = if (isSecurityEnabled) "ON" else "OFF",
+                    text = if (uiModel.isSwitchEnabled) "ON" else "OFF",
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.colors.text.primary
                 )

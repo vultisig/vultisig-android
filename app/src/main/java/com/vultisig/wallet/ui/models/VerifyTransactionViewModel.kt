@@ -277,7 +277,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
                 val isSupported = securityScannerService
                     .getSupportedChainsByFeature()
-                    .isChainSupported(chain)
+                    .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
 
                 if (!isSupported) return@launch
 

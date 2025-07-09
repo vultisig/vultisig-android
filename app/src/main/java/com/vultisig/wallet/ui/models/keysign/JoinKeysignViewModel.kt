@@ -746,7 +746,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             val chain = transaction.token.chain
             val isChainSupported = securityScannerService
                 .getSupportedChainsByFeature()
-                .isChainSupported(chain)
+                .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+
             if (!isChainSupported) {
                 return@launch
             }

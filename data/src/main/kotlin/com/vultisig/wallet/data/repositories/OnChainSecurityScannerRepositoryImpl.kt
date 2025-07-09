@@ -4,14 +4,14 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import jakarta.inject.Inject
 
-interface SecurityScannerRepository {
+interface OnChainSecurityScannerRepository {
     fun getSecurityScannerStatus(): Boolean
     fun saveSecurityScannerStatus(enable: Boolean)
 }
 
-internal class SecurityScannerRepositoryImpl @Inject constructor(
+internal class OnChainSecurityScannerRepositoryImpl @Inject constructor(
     private val encryptedSharedPreferences: SharedPreferences
-): SecurityScannerRepository {
+): OnChainSecurityScannerRepository {
     override fun getSecurityScannerStatus(): Boolean {
         return encryptedSharedPreferences.getBoolean(SECURITY_SCANNER_KEY, true)
     }
