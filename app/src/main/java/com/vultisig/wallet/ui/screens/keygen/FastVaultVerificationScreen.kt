@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +58,8 @@ internal fun FastVaultVerificationScreen(
         state = state,
         codeFieldState = model.codeFieldState,
         onBackClick = model::back,
-        onCodeInputFinished = model::verifyCode,
+        onCodeChanged = model::processCode,
+        onPasteClick = model::paste,
         onChangeEmailClick = model::changeEmail,
     )
 }
@@ -69,7 +69,8 @@ private fun FastVaultVerificationScreen(
     state: VaultBackupState,
     codeFieldState: TextFieldState,
     onBackClick: () -> Unit,
-    onCodeInputFinished: () -> Unit,
+    onCodeChanged: (String) -> Unit,
+    onPasteClick:(String)-> Unit,
     onChangeEmailClick: () -> Unit,
 ) {
     val textToPaste by rememberClipboardText { it?.isDigitsOnly() == true }
@@ -176,7 +177,7 @@ private fun FastVaultVerificationScreen(
                     ) {
                         VsCodeInputField(
                             textFieldState = codeFieldState,
-                            onFinishedInput = onCodeInputFinished,
+                            onChangeInput = onCodeChanged,
                             maxCharacters = FAST_VAULT_VERIFICATION_CODE_LENGTH,
                             state = when (state.verifyPinState) {
                                 VerifyPinState.Success -> VsCodeInputFieldState.Success
@@ -200,7 +201,7 @@ private fun FastVaultVerificationScreen(
                                     enabled = hasClipContent,
                                     onClick = {
                                         if (hasClipContent) {
-                                            codeFieldState.setTextAndPlaceCursorAtEnd(textToPaste.toString())
+                                            onPasteClick(textToPaste.toString())
                                         }
                                     },
                                 )
@@ -262,7 +263,8 @@ private fun VaultBackupScreenPreview() {
         ),
         codeFieldState = TextFieldState(),
         onBackClick = {},
-        onCodeInputFinished = {},
+        onCodeChanged = {},
+        onPasteClick = {},
         onChangeEmailClick = {}
     )
 }

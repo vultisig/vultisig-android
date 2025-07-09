@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.peer
 
 import android.icu.text.MessageFormat
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -17,11 +19,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -129,6 +130,8 @@ internal fun PeerDiscoveryScreen(
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
+    val remainedDevicesSize = maxOf(1, state.minimumDevicesDisplayed - devicesSize)
+    val totalDevicesSize = devicesSize + remainedDevicesSize
     val hasEnoughDevices = selectedDevicesSize >= state.minimumDevices
 
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
@@ -166,9 +169,8 @@ internal fun PeerDiscoveryScreen(
             Column(
                 modifier = Modifier
                     .padding(contentPadding)
-                    .padding(
-                        horizontal = 24.dp,
-                    ),
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
             ) {
                 val shape = RoundedCornerShape(24.dp)
 
@@ -217,22 +219,22 @@ internal fun PeerDiscoveryScreen(
 
                 UiSpacer(24.dp)
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                FlowRow(
+                    maxItemsInEachRow = 2,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    item {
-                        PeerDeviceItem(
-                            title = state.localPartyId,
-                            caption = stringResource(R.string.peer_discovery_this_device),
-                            state = PeerDeviceState.ThisDevice,
-                            modifier = Modifier
-                                .animateItem()
-                        )
-                    }
 
-                    items(state.devices) { device ->
+                    PeerDeviceItem(
+                        title = state.localPartyId,
+                        caption = stringResource(R.string.peer_discovery_this_device),
+                        state = PeerDeviceState.ThisDevice,
+                        modifier = Modifier
+                            .weight(1f)
+                            .animateContentSize()
+                    )
+
+                    state.devices.forEach { device ->
                         val nameParts = device.split("-")
                         val name = nameParts.take(nameParts.size - 1)
                             .joinToString(separator = "")
@@ -248,15 +250,15 @@ internal fun PeerDiscoveryScreen(
                                 onDeviceClick(device)
                             },
                             modifier = Modifier
-                                .animateItem()
+                                .weight(1f)
+                                .animateContentSize()
                         )
                     }
 
-                    items(
-                        count = maxOf(1, state.minimumDevicesDisplayed - devicesSize)
-                    ) { index ->
-                        val ordinalDeviceIndex = ordinalFormatter
-                            .format(arrayOf(devicesSize + index + 1))
+                    repeat(times = remainedDevicesSize) { remindedItemIndex ->
+                        val totalIndex = devicesSize + remindedItemIndex + 1
+                        val isLastDevice = totalIndex == totalDevicesSize
+                        val ordinalDeviceIndex = ordinalFormatter.format(arrayOf(totalIndex))
 
                         PeerDeviceItem(
                             title = stringResource(
@@ -266,8 +268,14 @@ internal fun PeerDiscoveryScreen(
                             caption = null,
                             state = PeerDeviceState.Waiting,
                             modifier = Modifier
-                                .animateItem()
+                                .weight(1f)
+                                .animateContentSize()
                         )
+
+                        // Spacer to preserve 2-column layout spacing
+                        if (isLastDevice && totalDevicesSize % 2 == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }

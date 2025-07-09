@@ -362,4 +362,17 @@
     <string name="send_shares_currency_hint">Voer aandelen in</string>
     <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>
     <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>
+    <string name="verify_your_server_share_password">Controleer uw serversharewachtwoord</string>
+    <string name="periodically_ask_verify_password">We zullen u regelmatig vragen om uw snel-aanmeldingswachtwoord te verifiëren, zodat u het altijd kunt onthouden</string>
+    <string name="security_scanner_medium_risk_title">Gemiddeld beveiligingsrisico</string>
+    <string name="security_scanner_high_risk_title">Hoog beveiligingsrisico</string>
+    <string name="security_scanner_critical_risk_title">Kritiek beveiligingsrisico</string>
+    <string name="security_scanner_low_risk_title">Laag beveiligingsrisico</string>
+    <string name="security_scanner_default_description">Deze transactie is gemarkeerd als potentieel gevaarlijk.</string>
+    <string name="security_scanner_continue_anyway">Toch doorgaan</string>
+    <string name="security_scanner_continue_go_back">Terug</string>
+    <string name="security_scanner_powered_by">Mogelijk gemaakt door </string>
+    <string name="security_scanner_transaction_scanned_by">Transactie gescand door</string>
+    <string name="security_scanner_transaction_scanning">Scannen…</string>
+    <string name="security_scanner_transaction_not_scanned">Transactie niet gescand door</string>
 </resources>

@@ -546,6 +546,7 @@
     <string name="vault_settings_migration_title" translatable="false">Migrate</string>
     <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button" translatable="false">Swap</string>
+    <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
     <string name="select_asset_title" translatable="false">Select asset</string>
     <string name="select_asset_chain_title" translatable="false">Chain</string>
     <string name="select_network_network_title" translatable="false">Network</string>
@@ -574,5 +575,19 @@
     <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
+    <string name="verify_your_server_share_password">Verify your Server Share Password</string>
+    <string name="periodically_ask_verify_password">We will periodically ask you to verify your fast sign password so you will always remember it</string>
 
+    <string name="security_scanner_medium_risk_title">Medium Security Risk</string>
+    <string name="security_scanner_high_risk_title">High Security Risk</string>
+    <string name="security_scanner_critical_risk_title">Critical Security Risk</string>
+    <string name="security_scanner_low_risk_title">Low Security Risk</string>
+    <string name="security_scanner_default_description">This transaction has been flagged as potentially dangerous.</string>
+    <string name="security_scanner_continue_anyway">Continue anyway</string>
+    <string name="security_scanner_continue_go_back">Go Back</string>
+    <string name="security_scanner_powered_by">Powered by </string>
+
+    <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
+    <string name="security_scanner_transaction_scanning">Scanning…</string>
+    <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 </resources>

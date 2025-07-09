@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -21,9 +23,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,6 +80,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
 import com.vultisig.wallet.ui.components.library.form.FormError
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
@@ -185,6 +190,7 @@ internal fun SwapScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         TokenInput(
+                            isLoading = state.isLoading,
                             title = "From",
                             selectedToken = state.selectedSrcToken,
                             fiatValue = state.srcFiatValue,
@@ -220,6 +226,7 @@ internal fun SwapScreen(
 
                         TokenInput(
                             title = "To",
+                            isLoading = state.isLoading,
                             selectedToken = state.selectedDstToken,
                             fiatValue = state.estimatedDstFiatValue,
                             onSelectNetworkClick = onSelectDstNetworkClick,
@@ -259,26 +266,48 @@ internal fun SwapScreen(
                         )
                     }
 
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_bottom_top),
-                        contentDescription = null,
-                        tint = Theme.colors.text.primary,
+                    Box(
                         modifier = Modifier
-                            .clickable {
-                                spinTrigger++
-                                onFlipSelectedTokens()
-                            }
+                            .align(Alignment.Center)
+                            .size(40.dp)
                             .background(
                                 color = Theme.colors.persianBlue400,
                                 shape = CircleShape,
                             )
-                            .padding(all = 8.dp)
-                            .align(Alignment.Center)
-                            .size(24.dp)
-                            .graphicsLayer {
-                                rotationZ = rotation.value
+                            .padding(all = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AnimatedContent(
+                            targetState = state.isLoading,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(150)) togetherWith
+                                        fadeOut(animationSpec = tween(150))
                             },
-                    )
+                        ) { isLoading ->
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Theme.colors.text.primary,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_arrow_bottom_top),
+                                    contentDescription = null,
+                                    tint = Theme.colors.text.primary,
+                                    modifier = Modifier
+                                        .clickable {
+                                            spinTrigger++
+                                            onFlipSelectedTokens()
+                                        }
+                                        .size(24.dp)
+                                        .graphicsLayer {
+                                            rotationZ = rotation.value
+                                        },
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(
@@ -288,6 +317,9 @@ internal fun SwapScreen(
                             horizontal = 8.dp,
                         )
                 ) {
+                    val placeHolderModifier = Modifier
+                        .height(16.dp)
+                        .width(80.dp)
                     FormDetails2(
                         title = stringResource(R.string.swap_screen_provider_title),
                         value = state.provider.asString(),
@@ -295,7 +327,8 @@ internal fun SwapScreen(
 
                     FormDetails2(
                         title = stringResource(R.string.swap_form_estimated_fees_title),
-                        value = state.fee
+                        value = state.fee,
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
 
                     FormDetails2(
@@ -323,12 +356,14 @@ internal fun SwapScreen(
                                     else ""
                                 )
                             }
-                        }
+                        },
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
 
                     FormDetails2(
                         title = stringResource(R.string.swap_form_total_fees_title),
-                        value = state.totalFee
+                        value = state.totalFee,
+                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                     )
                 }
 
@@ -408,11 +443,17 @@ internal fun SwapScreen(
                     }
                 } else {
                     VsButton(
-                        label = stringResource(R.string.swap_swap_button),
+                        label = if (state.isLoading) {
+                            stringResource(R.string.swap_swap_button_fill_in_amount)
+                        } else {
+                            stringResource(R.string.swap_swap_button)
+                        },
                         variant = VsButtonVariant.Primary,
-                        state = if (state.isSwapDisabled)
+                        state = if (state.isSwapDisabled || state.isLoading) {
                             VsButtonState.Disabled
-                        else VsButtonState.Enabled,
+                        } else {
+                            VsButtonState.Enabled
+                        },
                         onClick = {
                             focusManager.clearFocus(true)
                             onSwap()
@@ -461,6 +502,7 @@ fun keyboardAsState(): State<Boolean> {
 
 @Composable
 private fun TokenInput(
+    isLoading: Boolean,
     title: String,
     selectedToken: TokenBalanceUiModel?,
     fiatValue: String,
@@ -529,14 +571,30 @@ private fun TokenInput(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.End,
             ) {
-                textFieldContent()
+                if (isLoading && title == "To") {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .height(24.dp)
+                            .width(150.dp)
+                    )
+                } else {
+                    textFieldContent()
+                }
 
-                Text(
-                    text = fiatValue,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight,
-                    textAlign = TextAlign.End,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .width(80.dp)
+                    )
+                } else {
+                    Text(
+                        text = fiatValue,
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.colors.text.extraLight,
+                        textAlign = TextAlign.End,
+                    )
+                }
             }
         }
     }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.textAsFlow
 
 private const val FAST_VAULT_VERIFICATION_CODE_CHARS = 4
 
@@ -48,7 +49,7 @@ internal enum class VsCodeInputFieldState {
 @Composable
 internal fun VsCodeInputField(
     textFieldState: TextFieldState,
-    onFinishedInput: () -> Unit,
+    onChangeInput: (String) -> Unit,
     modifier: Modifier = Modifier,
     onKeyboardAction: KeyboardActionHandler? = null,
     maxCharacters: Int = FAST_VAULT_VERIFICATION_CODE_CHARS,
@@ -58,6 +59,12 @@ internal fun VsCodeInputField(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+    }
+
+    LaunchedEffect(Unit) {
+        textFieldState.textAsFlow().collect {
+            onChangeInput(it.toString())
+        }
     }
 
     Box(
@@ -77,11 +84,6 @@ internal fun VsCodeInputField(
                         delete(maxCharacters - 1, length - 1)
                     }
                 },
-            outputTransformation = {
-                if (length >= maxCharacters) {
-                    onFinishedInput()
-                }
-            },
             onKeyboardAction = onKeyboardAction,
             modifier = Modifier
                 .alpha(0.01f)
@@ -162,7 +164,7 @@ internal fun VsCodeInputField(
 private fun VsCodeInputFieldPreview() {
     VsCodeInputField(
         textFieldState = TextFieldState(),
-        onFinishedInput = {},
+        onChangeInput = {},
     )
 }
 
