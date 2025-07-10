@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
 import timber.log.Timber
 
+// Solana has different payload, for simplicity, avoid confusion and any potential bug
+// we'll keep it separated. Other chains such as SUI and BTC shared the same EVM payload
 fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(provider: String): SecurityScannerResult {
     when {
         status.equals("error", ignoreCase = true) || !error.isNullOrEmpty() -> {
