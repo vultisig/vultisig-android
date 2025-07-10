@@ -122,8 +122,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     )
                 }
 
-
-
                 else -> null
             },
 
@@ -208,7 +206,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         sendMaxAmount = it.sendMaxAmount,
                     )
                 }
-
                 from.rippleSpecific != null -> from.rippleSpecific.let {
                     BlockChainSpecific.Ripple(
                         sequence = it.sequence,
@@ -230,8 +227,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         gasFeeEstimation = it.gasEstimation,
                     )
                 }
-
-                from.cardano != null -> from.cardano.let {
+                from.cardano !=null ->  from.cardano.let {
                     BlockChainSpecific.Cardano(
                         byteFee = it.byteFee,
                         sendMaxAmount = it.sendMaxAmount,
@@ -272,6 +268,4 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
         )
-
-
 }

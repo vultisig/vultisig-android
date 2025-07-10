@@ -436,25 +436,23 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.MayaChain, Chain.Dash, Chain.Kujira -> setOf(SwapProvider.MAYA)
             Chain.Ethereum -> when {
                 ticker in thorEthTokens && ticker in mayaEthTokens -> setOf(
-                    SwapProvider.KYBER,
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
 
                 ticker in thorEthTokens -> setOf(
-                    SwapProvider.KYBER,
-
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                 )
 
                 ticker in mayaEthTokens -> setOf(
-                    SwapProvider.KYBER,
                     SwapProvider.ONEINCH,
-
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
@@ -472,20 +470,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.LIFI,
             ) else setOf(
                 SwapProvider.KYBER,
-
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI
             )
 
             Chain.Avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.KYBER,
-
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
             ) else setOf(
                 SwapProvider.KYBER,
-
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI
             )
