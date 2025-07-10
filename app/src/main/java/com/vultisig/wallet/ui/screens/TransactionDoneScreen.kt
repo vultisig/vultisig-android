@@ -239,7 +239,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
                     )
                 ) {
-                    append(transaction.networkFee.value)
+                    append(transaction.networkFeeTokenValue)
                 }
                 withStyle(
                     style = SpanStyle(
@@ -249,7 +249,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
                     )
                 ) {
-                    append(" (~${transaction.networkFee.fiatValue})")
+                    append(" (~${transaction.networkFeeFiatValue})")
                 }
             })
     }
