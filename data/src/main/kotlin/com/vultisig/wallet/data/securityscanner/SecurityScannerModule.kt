@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClient
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
@@ -19,8 +20,12 @@ object SecurityScannerModule {
 
     @Singleton
     @Provides
-    fun provideSecurityScannerTransactionFactory(solanaApi: SolanaApi, suiApi: SuiApi): SecurityScannerTransactionFactoryContract {
-        return SecurityScannerTransactionFactory(solanaApi, suiApi)
+    fun provideSecurityScannerTransactionFactory(
+        solanaApi: SolanaApi,
+        suiApi: SuiApi,
+        blockChainSpecificRepository: BlockChainSpecificRepository
+    ): SecurityScannerTransactionFactoryContract {
+        return SecurityScannerTransactionFactory(solanaApi, suiApi, blockChainSpecificRepository)
     }
 
     @Singleton
@@ -43,6 +48,10 @@ object SecurityScannerModule {
         securityScannerTransactionFactory: SecurityScannerTransactionFactoryContract,
     ): SecurityScannerContract {
         val providers = listOf(blockaidScannerService)
-        return SecurityScannerService(providers, onChainSecurityScannerRepository, securityScannerTransactionFactory)
+        return SecurityScannerService(
+            providers,
+            onChainSecurityScannerRepository,
+            securityScannerTransactionFactory
+        )
     }
 }

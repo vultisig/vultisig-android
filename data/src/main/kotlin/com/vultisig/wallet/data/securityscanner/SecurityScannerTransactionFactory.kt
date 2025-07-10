@@ -4,18 +4,23 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 
 class SecurityScannerTransactionFactory(
     private val solanaApi: SolanaApi,
     private val suiApi: SuiApi,
+    private val blockchainSpecificRepository: BlockChainSpecificRepository,
 ) : SecurityScannerTransactionFactoryContract {
     override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val chain = transaction.token.chain
@@ -23,6 +28,7 @@ class SecurityScannerTransactionFactory(
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
             TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             TokenStandard.SUI -> createSUISecurityScannerTransaction(transaction)
+            TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
             else -> error("Not supported")
         }
     }
@@ -142,6 +148,34 @@ class SecurityScannerTransactionFactory(
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
             data = serializedTransaction,
+        )
+    }
+
+    // TODO: Review as it looks like it requires PSBT, which is not supported by WC legacy API
+    private fun createBTCSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+        val keySignPayload = KeysignPayload(
+            coin = transaction.token,
+            toAddress = transaction.dstAddress,
+            toAmount = transaction.tokenValue.value,
+            blockChainSpecific = transaction.blockChainSpecific,
+            utxos = transaction.utxos,
+            memo = transaction.memo,
+            vaultPublicKeyECDSA = "", // no need for BTC
+            vaultLocalPartyID = "", // no need for BTC
+            libType = null, // no need for BTC
+        )
+
+        val btcHelper = UtxoHelper.getHelper(Vault("", ""), CoinType.BITCOIN)
+
+        val preHash = btcHelper.getPreSignedImageHash(keySignPayload)
+
+        return SecurityScannerTransaction(
+            chain = transaction.token.chain,
+            type = SecurityTransactionType.COIN_TRANSFER,
+            from = transaction.srcAddress,
+            to = transaction.dstAddress,
+            amount = BigInteger.ZERO,
+            data = preHash[0],
         )
     }
 }
