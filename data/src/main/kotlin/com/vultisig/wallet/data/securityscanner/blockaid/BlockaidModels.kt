@@ -103,6 +103,8 @@ data class BlockaidTransactionScanResponseJson(
     val validation: BlockaidValidationJson?,
     @SerialName("result")
     val result: BlockaidSolanaResultJson?,
+    @SerialName("error")
+    val error: String?,
 ) {
     @Serializable
     data class BlockaidSolanaResultJson(
