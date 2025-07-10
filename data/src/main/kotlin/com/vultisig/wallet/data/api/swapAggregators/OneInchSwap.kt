@@ -9,7 +9,8 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
-import wallet.core.jni.proto.Ethereum
+import wallet.core.jni.proto.Ethereum.SigningInput
+import wallet.core.jni.proto.Ethereum.Transaction
 import java.math.BigInteger
 
 class OneInchSwap(
@@ -37,11 +38,8 @@ class OneInchSwap(
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
-        val helper = EvmHelper(
-                keysignPayload.coin.coinType,
-                vaultHexPublicKey,
-                vaultHexChainCode
-            )
+        val helper =
+            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
         return helper.getSignedTransaction(inputData, signatures)
     }
 
@@ -50,12 +48,12 @@ class OneInchSwap(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
-        val input = Ethereum.SigningInput.newBuilder()
+        val input = SigningInput.newBuilder()
             .setToAddress(quote.tx.to)
             .setTransaction(
-                Ethereum.Transaction.newBuilder()
+                Transaction.newBuilder()
                     .setContractGeneric(
-                        Ethereum.Transaction.ContractGeneric.newBuilder()
+                        Transaction.ContractGeneric.newBuilder()
                             .setAmount(
                                 ByteString.copyFrom(
                                     quote.tx.value.toBigInteger().toByteArray()
@@ -67,7 +65,7 @@ class OneInchSwap(
 
         val gasPrice = quote.tx.gasPrice.toBigInteger()
         val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
         return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
