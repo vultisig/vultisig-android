@@ -88,7 +88,7 @@ class KyberApiImpl @Inject constructor(
                 )
                 parameter(
                     "referrerAddress",
-                    if (isAffiliate) CLIENT_ID else null
+                    if (isAffiliate) REFERRER_ADDRESS else null
                 )
 
                 headers {
@@ -267,7 +267,6 @@ class KyberApiImpl @Inject constructor(
     }
 
     companion object {
-        //        static let referrerAddress = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"

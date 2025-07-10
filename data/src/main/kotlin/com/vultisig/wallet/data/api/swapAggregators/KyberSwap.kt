@@ -84,26 +84,26 @@ class KyberSwap(
     }
 
     fun getPreSignedInputData(
-        quote: KyberSwapQuoteJson?, keysignPayload: KeysignPayload, nonceIncrement: BigInteger
+        quote: KyberSwapQuoteJson, keysignPayload: KeysignPayload, nonceIncrement: BigInteger
     ): ByteArray {
         val input = Ethereum.SigningInput.newBuilder()
 
-            .setToAddress(quote?.tx?.to).setTransaction(
+            .setToAddress(quote.tx.to).setTransaction(
                 Ethereum.Transaction.newBuilder().setContractGeneric(
                     Ethereum.Transaction.ContractGeneric.newBuilder().setAmount(
                         ByteString.copyFrom(
-                            quote?.tx?.value?.toBigInteger()?.toByteArray()
+                            quote.tx.value.toBigInteger().toByteArray()
                                 ?: BigInteger.ZERO.toByteArray()
                         )
-                    ).setData(quote?.tx?.data?.removePrefix("0x")?.toByteStringOrHex())
+                    ).setData(quote.tx.data.removePrefix("0x").toByteStringOrHex())
                 ).build()
             )
-        var gasPrice = quote?.tx?.gasPrice?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        var gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         if (keysignPayload.coin.chain == Chain.Arbitrum) {
             // set gasPrice to null/zero for envelope transaction on arbitrum chain
             gasPrice = BigInteger.ZERO
         }
-        val gas = (quote?.tx?.gas.takeIf { it != 0L }
+        val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
         return EthereumGasHelper.setGasParameters(
