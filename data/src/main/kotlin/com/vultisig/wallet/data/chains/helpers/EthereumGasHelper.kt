@@ -37,7 +37,7 @@ object EthereumGasHelper {
                 txMode = Ethereum.TransactionMode.Enveloped
                 gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
                 maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-                maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+                maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.abs().toByteArray())
             }
         }
         return signingInputBuilder

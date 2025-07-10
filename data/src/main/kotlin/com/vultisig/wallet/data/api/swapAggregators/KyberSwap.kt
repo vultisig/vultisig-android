@@ -2,19 +2,15 @@ package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
+import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteStringOrHex
-import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.utils.Numeric
 import tss.KeysignResponse
-import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
-import  com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.wallet.Swaps
@@ -41,7 +37,11 @@ class KyberSwap(
         val chain = swapPayload.fromCoin.chain
         val coinType = keysignPayload.coin.coinType
 
-        return Swaps.getPreSignedImageHash(inputData, coinType, chain)
+        return Swaps.getPreSignedImageHash(
+            inputData,
+            coinType,
+            chain
+        )
     }
 
     @Throws(Exception::class)
@@ -61,7 +61,10 @@ class KyberSwap(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
             vaultHexChainCode
-        ).getSignedTransaction(inputData, signatures)
+        ).getSignedTransaction(
+            inputData,
+            signatures
+        )
 
     }
 
@@ -94,12 +97,11 @@ class KyberSwap(
     }
 
 
-
     @Throws(Exception::class)
     fun getPreSignedInputData(
         quote: KyberSwapQuoteResponse?,
         keysignPayload: KeysignPayload,
-        incrementNonce: BigInteger
+        nonceIncrement: BigInteger
     ): ByteArray {
 
         val input = Ethereum.SigningInput.newBuilder()
@@ -122,21 +124,17 @@ class KyberSwap(
         }
 
 
-
         val gas = (quote?.tx?.gas.takeIf { it != 0L }
             ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode,
-        ).getPreSignedInputData(
-            gas =gas,
+        return EthereumGasHelper.setGasParameters(
+            gas = gas,
             gasPrice = gasPrice,
             signingInput = input,
             keysignPayload = keysignPayload,
-            nonceIncrement = incrementNonce,
-        )
+            nonceIncrement = nonceIncrement,
+            coinType = keysignPayload.coin.coinType
+        ).build().toByteArray()
 
     }
 
