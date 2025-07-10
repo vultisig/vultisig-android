@@ -48,7 +48,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -759,7 +758,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
             try {
                 // run scanner and update UI widget
-                val securityScannerTransaction = transaction.toSecurityScannerTransaction()
+                val securityScannerTransaction =
+                    securityScannerService.createSecurityScannerTransaction(transaction)
                 val scanResult = withContext(Dispatchers.IO) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }

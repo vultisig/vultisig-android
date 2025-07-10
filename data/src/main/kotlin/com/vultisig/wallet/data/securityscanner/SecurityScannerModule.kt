@@ -17,6 +17,12 @@ object SecurityScannerModule {
 
     @Singleton
     @Provides
+    fun provideSecurityScannerTransactionFactory(): SecurityScannerTransactionFactoryContract {
+        return SecurityScannerTransactionFactory()
+    }
+
+    @Singleton
+    @Provides
     fun provideBlockaidRpcClient(httpClient: HttpClient): BlockaidRpcClientContract {
         return BlockaidRpcClient(httpClient)
     }
@@ -32,8 +38,9 @@ object SecurityScannerModule {
     fun provideSecurityScannerService(
         blockaidScannerService: ProviderScannerServiceContract,
         onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
+        securityScannerTransactionFactory: SecurityScannerTransactionFactoryContract,
     ): SecurityScannerContract {
         val providers = listOf(blockaidScannerService)
-        return SecurityScannerService(providers, onChainSecurityScannerRepository)
+        return SecurityScannerService(providers, onChainSecurityScannerRepository, securityScannerTransactionFactory)
     }
 }

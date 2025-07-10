@@ -275,7 +275,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun scanTransaction() {
         viewModelScope.launch {
             try {
@@ -292,35 +291,8 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     it.copy(txScanStatus = TransactionScanStatus.Scanning)
                 }
 
-                val blockchainSpecific = transaction.blockChainSpecific
-                require(blockchainSpecific is BlockChainSpecific.Solana) {
-                    "Error wrong type for blockchain specific"
-                }
-                val vaultHexPubKey = Base58.decodeNoCheck("4aGv9wBV619wxxuBvzxUN8PhLeNeT5BiYrfSMFzj3Bxj").toHexString()//Base58.decodeNoCheck(transaction.srcAddress).toHexString()
-                val solanaHelper = SolanaHelper(vaultHexPubKey)
-
-                val keySignPayload = KeysignPayload(
-                    coin = transaction.token,
-                    toAddress = transaction.dstAddress,
-                    toAmount = transaction.tokenValue.value,
-                    blockChainSpecific = transaction.blockChainSpecific,
-                    memo = transaction.memo,
-                    vaultPublicKeyECDSA = "",
-                    vaultLocalPartyID = "",
-                    libType = null,
-                )
-                val prehashZeroX = solanaHelper.getZeroSignedTransaction(keySignPayload)
-                println(prehashZeroX)
-
-                val securityScannerTransaction = SecurityScannerTransaction(
-                    chain = transaction.token.chain,
-                    type = SecurityTransactionType.COIN_TRANSFER,
-                    from = "4aGv9wBV619wxxuBvzxUN8PhLeNeT5BiYrfSMFzj3Bxj",//transaction.srcAddress,
-                    to = transaction.dstAddress,
-                    amount = BigInteger.ZERO, // encoded in tx
-                    data = prehashZeroX,
-                )
-                // val securityScannerTransaction = transaction.toSecurityScannerTransaction()
+                val securityScannerTransaction =
+                    securityScannerService.createSecurityScannerTransaction(transaction)
 
                 val result = withContext(Dispatchers.IO) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
