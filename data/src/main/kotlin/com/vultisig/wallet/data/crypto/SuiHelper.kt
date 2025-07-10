@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import timber.log.Timber
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
+import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -79,18 +80,35 @@ object SuiHelper {
         return input.toByteArray()
     }
 
-    fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
+    private fun getPreSigningOutput(keysignPayload: KeysignPayload):
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput {
         val inputData = getPreSignedInputData(keysignPayload)
         Timber.d("input data: ${inputData.toHexString()}")
 
         val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError()
+                .checkError() // Assuming checkError() handles throwing if there's an error
 
+        // Although checkError() might throw, an explicit check here can be good for clarity
         require(preSigningOutput.errorMessage.isEmpty()) { preSigningOutput.errorMessage }
 
+        return preSigningOutput
+    }
+
+    fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
+        val preSigningOutput = getPreSigningOutput(keysignPayload)
         return listOf(preSigningOutput.dataHash.toByteArray().toHexString())
+    }
+
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
+        val preSigningOutput = getPreSigningOutput(keysignPayload)
+
+        // Drop 3 first bytes which represents signature, they're added by WalletCore
+        // but for simulations or blockaid is not required
+        val tx = preSigningOutput.data.toByteArray().drop(3).toByteArray()
+
+        return Base64.encode(tx)
     }
 
     fun getSignedTransaction(

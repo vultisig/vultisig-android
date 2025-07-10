@@ -136,7 +136,7 @@ class BlockaidRpcClient(
         serializedTransaction: String
     ): SuiScanTransactionRequestJson {
         return SuiScanTransactionRequestJson(
-            chain = Chain.Sui.toName(),
+            chain = SUI_CHAIN,
             metadata = CommonMetadataJson(
                 url = VULTISIG_DOMAIN,
             ),
@@ -153,6 +153,8 @@ class BlockaidRpcClient(
         private const val SOLANA_SIGN_AND_SEND = "signAndSendTransaction"
         private const val SOLANA_ENCODING = "base58"
         private const val SOLANA_CHAIN = "mainnet"
+
+        private const val SUI_CHAIN = "mainnet"
 
         private fun Chain.toName(): String {
             return when (this) {

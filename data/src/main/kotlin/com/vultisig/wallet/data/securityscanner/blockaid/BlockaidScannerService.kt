@@ -98,7 +98,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Ethereum,
             Chain.Optimism,
             Chain.Polygon,
-            // Chain.Sui,
+            Chain.Sui,
             Chain.Solana,
         )
 
