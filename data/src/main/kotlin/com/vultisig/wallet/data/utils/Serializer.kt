@@ -161,7 +161,7 @@ class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val
         return if (swapJsonObject != null && quoteJsonObject != null) {
             val swapJson = json.decodeFromJsonElement<OneInchSwapQuoteJson>(swapJsonObject)
             val quoteJson = json.decodeFromJsonElement<OneInchQuoteJson>(quoteJsonObject)
-            OneInchSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = swapJson.tx.gas + quoteJson.gas)))
+            OneInchSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas)))
         } else {
             OneInchSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<String>(jsonObject)
