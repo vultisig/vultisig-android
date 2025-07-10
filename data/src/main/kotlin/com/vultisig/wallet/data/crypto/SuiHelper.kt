@@ -88,9 +88,8 @@ object SuiHelper {
         val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                .checkError() // Assuming checkError() handles throwing if there's an error
+                .checkError()
 
-        // Although checkError() might throw, an explicit check here can be good for clarity
         require(preSigningOutput.errorMessage.isEmpty()) { preSigningOutput.errorMessage }
 
         return preSigningOutput
