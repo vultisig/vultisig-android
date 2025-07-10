@@ -23,9 +23,8 @@ object SecurityScannerModule {
     fun provideSecurityScannerTransactionFactory(
         solanaApi: SolanaApi,
         suiApi: SuiApi,
-        blockChainSpecificRepository: BlockChainSpecificRepository
     ): SecurityScannerTransactionFactoryContract {
-        return SecurityScannerTransactionFactory(solanaApi, suiApi, blockChainSpecificRepository)
+        return SecurityScannerTransactionFactory(solanaApi, suiApi)
     }
 
     @Singleton

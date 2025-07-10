@@ -20,7 +20,6 @@ import java.math.BigInteger
 class SecurityScannerTransactionFactory(
     private val solanaApi: SolanaApi,
     private val suiApi: SuiApi,
-    private val blockchainSpecificRepository: BlockChainSpecificRepository,
 ) : SecurityScannerTransactionFactoryContract {
     override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val chain = transaction.token.chain
