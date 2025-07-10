@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -66,17 +67,14 @@ class OneInchSwap(
         val gasPrice = quote.tx.gasPrice.toBigInteger()
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode,
-        ).getPreSignedInputData(
+        return EthereumGasHelper.setGasParameters(
             gas = gas,
             gasPrice = gasPrice,
             signingInput = input,
             keysignPayload = keysignPayload,
             nonceIncrement = nonceIncrement,
-        )
+            coinType = keysignPayload.coin.coinType
+        ).build().toByteArray()
     }
 
 }
