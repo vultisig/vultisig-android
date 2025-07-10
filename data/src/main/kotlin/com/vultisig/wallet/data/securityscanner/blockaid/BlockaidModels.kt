@@ -16,7 +16,9 @@ data class SolanaScanTransactionRequestJson(
     @SerialName("encoding")
     val encoding: String,
     @SerialName("transactions")
-    val transactions: List<String>
+    val transactions: List<String>,
+    @SerialName("method")
+    val method: String,
 )
 
 @Serializable
@@ -99,7 +101,14 @@ data class BlockaidTransactionScanResponseJson(
     val status: String?,
     @SerialName("validation")
     val validation: BlockaidValidationJson?,
+    @SerialName("result")
+    val result: BlockaidSolanaResult?,
 ) {
+    @Serializable
+    data class BlockaidSolanaResult(
+        val x: String,
+    )
+
     @Serializable
     data class BlockaidValidationJson(
         @SerialName("status")

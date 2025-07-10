@@ -38,17 +38,19 @@ fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(provider: String
 private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {
     val hasFeatures = validation?.features?.isEmpty() == false
     val classification = validation?.classification
-    val status = validation?.status
+    val validationStatus = validation?.status
+    val globalStatus = status
     val resultType = validation?.resultType
 
-    if (status.equals("error", true)
+    if (validationStatus.equals("error", true)
         || resultType.equals("error", true)
+        || globalStatus.equals("error", ignoreCase = true)
     ) {
         val errorMessage = validation?.error ?: "Scanning failed"
         throw SecurityScannerException("SecurityScanner $errorMessage , payload: $this")
     }
 
-    val isBenign = status.equals("success", ignoreCase = true) &&
+    val isBenign = validationStatus.equals("success", ignoreCase = true) &&
             resultType.equals("benign", ignoreCase = true) &&
             !hasFeatures
     if (isBenign) return SecurityRiskLevel.NONE

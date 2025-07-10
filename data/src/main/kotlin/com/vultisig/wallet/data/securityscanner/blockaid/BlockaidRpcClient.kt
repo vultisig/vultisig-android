@@ -55,7 +55,7 @@ class BlockaidRpcClient(
 
         return httpClient.post(BLOCKAID_BASE_URL) {
             url {
-                appendPathSegments("/solana/address/scan")
+                appendPathSegments("/solana/message/scan")
             }
             contentType(ContentType.Application.Json)
             setBody(solanaRequest)
@@ -119,14 +119,15 @@ class BlockaidRpcClient(
         serializedMessage: String
     ): SolanaScanTransactionRequestJson {
         return SolanaScanTransactionRequestJson(
-            chain = Chain.Solana.toName(),
+            chain = SOLANA_CHAIN,
             metadata = CommonMetadataJson(
                 url = VULTISIG_DOMAIN,
             ),
             options = listOf("validation"),
             accountAddress = address,
-            encoding = "base64",
+            encoding = SOLANA_ENCODING,
             transactions = listOf(serializedMessage),
+            method = SOLANA_SIGN_AND_SEND
         )
     }
 
@@ -148,6 +149,10 @@ class BlockaidRpcClient(
     private companion object {
         private const val BLOCKAID_BASE_URL = "https://api.vultisig.com/blockaid/v0"
         private const val VULTISIG_DOMAIN = "vultisig.com"
+
+        private const val SOLANA_SIGN_AND_SEND = "signAndSendTransaction"
+        private const val SOLANA_ENCODING = "base58"
+        private const val SOLANA_CHAIN = "mainnet"
 
         private fun Chain.toName(): String {
             return when (this) {
