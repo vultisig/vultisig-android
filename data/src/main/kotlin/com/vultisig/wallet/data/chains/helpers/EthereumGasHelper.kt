@@ -26,20 +26,14 @@ object EthereumGasHelper {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
         }
-        if(keysignPayload.coin.chain == Chain.BscChain) {
-            signingInputBuilder.apply  {
-                txMode = Ethereum.TransactionMode.Legacy
-                setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
-                gasLimit =ByteString.copyFrom(gas.toByteArray())
-            }
-        } else {
-            signingInputBuilder.apply {
-                txMode = Ethereum.TransactionMode.Enveloped
-                gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
-                maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-                maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
-            }
+
+        signingInputBuilder.apply {
+            txMode = Ethereum.TransactionMode.Enveloped
+            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
         }
+
         return signingInputBuilder
     }
 }
