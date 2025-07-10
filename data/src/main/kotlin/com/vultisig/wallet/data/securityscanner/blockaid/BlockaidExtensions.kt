@@ -7,6 +7,49 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityWarning
 import timber.log.Timber
 
+fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(provider: String): SecurityScannerResult {
+    when {
+        status.equals("error", ignoreCase = true) || !error.isNullOrEmpty() -> {
+            throw SecurityScannerException("SecurityScanner Error: ${error ?: "Unknown error"}. Payload: $this")
+        }
+
+        result == null -> {
+            throw SecurityScannerException("SecurityScanner Invalid response: 'result' is null. Payload: $this")
+        }
+
+        else -> {
+            val riskLevel = this.result.toSolanaValidationRiskLevel()
+            val isSecure = riskLevel == SecurityRiskLevel.NONE || riskLevel == SecurityRiskLevel.LOW
+            val description: String? = if (isSecure) {
+                null
+            } else {
+                this.result.validation.features
+                    .take(3)
+                    .joinToString("\n")
+                    .takeIf { it.isNotEmpty() }
+            }
+
+            val warnings = this.result.validation.extendedFeatures.map { extendedFeature ->
+                SecurityWarning(
+                    type = extendedFeature.type.toWarningType(),
+                    message = extendedFeature.description,
+                    severity = "",
+                    details = null,
+                )
+            }
+
+            return SecurityScannerResult(
+                provider = provider,
+                isSecure = isSecure,
+                riskLevel = riskLevel,
+                warnings = warnings,
+                description = description,
+                recommendations = "",
+            )
+        }
+    }
+}
+
 fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(provider: String): SecurityScannerResult {
     val riskLevel = this.toValidationRiskLevel()
     val securityWarnings = validation?.features?.map { feature ->
@@ -33,6 +76,17 @@ fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(provider: String
             resultType = validation?.resultType ?: "",
         )
     )
+}
+
+private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson.toSolanaValidationRiskLevel(): SecurityRiskLevel {
+    val resultType = validation.resultType
+    val features = validation.features
+
+    val isBenign = resultType.equals("benign", ignoreCase = true) && features.isEmpty()
+
+    if (isBenign) return SecurityRiskLevel.NONE
+
+    return resultType.toWarningType()
 }
 
 private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {

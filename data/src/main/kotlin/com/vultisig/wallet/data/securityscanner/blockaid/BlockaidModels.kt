@@ -120,7 +120,7 @@ data class BlockaidTransactionScanResponseJson(
             @SerialName("features")
             val features: List<String> = emptyList(),
             @SerialName("extended_features")
-            val extendedFeatures: BlockaidSolanaExtendedFeaturesJson,
+            val extendedFeatures: List<BlockaidSolanaExtendedFeaturesJson> = emptyList(),
         ) {
             @Serializable
             data class BlockaidSolanaExtendedFeaturesJson(

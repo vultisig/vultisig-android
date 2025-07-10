@@ -54,7 +54,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             blockaidRpcClient.scanSolanaTransaction(
                 address = transaction.from,
                 serializedMessage = transaction.data,
-            ).toSecurityScannerResult(PROVIDER_NAME)
+            ).toSolanaSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
