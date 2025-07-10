@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.KyberSwapToken
 import com.vultisig.wallet.data.api.models.KyberSwapTokensResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
@@ -134,7 +134,7 @@ class KyberApiImpl @Inject constructor(
 
     private suspend fun buildTransactionWithFallback(
         chain: Chain, routeResponse: KyberSwapRouteResponse, from: String, isAffiliate: Boolean
-    ): KyberSwapQuoteResponse {
+    ): KyberSwapQuoteJson {
         return try {
             buildTransaction(
                 chain,
@@ -162,7 +162,7 @@ class KyberApiImpl @Inject constructor(
     private suspend fun buildTransaction(
         chain: Chain, routeResponse: KyberSwapRouteResponse, from: String,
         enableGasEstimation: Boolean, isAffiliate: Boolean
-    ): KyberSwapQuoteResponse {
+    ): KyberSwapQuoteJson {
 
 
         val buildPayload = KyberSwapBuildRequest(
@@ -214,7 +214,7 @@ class KyberApiImpl @Inject constructor(
         }
 
         val gasPrice = routeResponse.data.routeSummary.gasPrice
-        var buildResponse = json.decodeFromString<KyberSwapQuoteResponse>(responseString)
+        var buildResponse = json.decodeFromString<KyberSwapQuoteJson>(responseString)
             .apply {
                 data = data.copy(gasPrice = gasPrice)
             }

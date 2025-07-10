@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import kotlinx.datetime.Instant
@@ -18,7 +17,7 @@ sealed class SwapQuote {
         override val expectedDstValue: TokenValue,
         override val fees: TokenValue,
         override val expiredAt: Instant,
-        val data: KyberSwapQuoteResponse,
+        val data: KyberSwapQuoteJson,
     ) : SwapQuote()
 
     data class OneInch(

@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteStringOrHex
@@ -18,10 +18,8 @@ import com.vultisig.wallet.data.wallet.Swaps
 class KyberSwap(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
+) {
 
-    ) {
-
-    @Throws(Exception::class)
     fun getPreSignedImageHash(
         swapPayload: KyberSwapPayloadJson,
         keysignPayload: KeysignPayload,
@@ -32,8 +30,6 @@ class KyberSwap(
             keysignPayload,
             nonceIncrement
         )
-
-
         val chain = swapPayload.fromCoin.chain
         val coinType = keysignPayload.coin.coinType
 
@@ -44,17 +40,14 @@ class KyberSwap(
         )
     }
 
-    @Throws(Exception::class)
     fun getSignedTransaction(
-        swapPayload: KyberSwapPayloadJson,
-        keysignPayload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>,
-        incrementNonce: BigInteger
+        swapPayload: KyberSwapPayloadJson, keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>, nonceIncrement: BigInteger
     ): SignedTransactionResult {
         val inputData = getPreSignedInputData(
             swapPayload.quote,
             keysignPayload,
-            incrementNonce
+            nonceIncrement
         )
 
         return EvmHelper(
@@ -65,26 +58,21 @@ class KyberSwap(
             inputData,
             signatures
         )
-
     }
 
-    @Throws(Exception::class)
     fun getPreSignedApproveInputData(
         approvePayload: ERC20ApprovePayload, keysignPayload: KeysignPayload
     ): ByteArray {
         val approveInput = Ethereum.SigningInput.newBuilder()
-
             .setToAddress(keysignPayload.coin.contractAddress).setTransaction(
                 Ethereum.Transaction.newBuilder().setErc20Approve(
                     Ethereum.Transaction.ERC20Approve.newBuilder().setAmount(
                         ByteString.copyFrom(
-                            approvePayload.amount.abs().toByteArray()
+                            approvePayload.amount.toByteArray()
                         )
                     ).setSpender(approvePayload.spender).build()
                 ).build()
             ).build()
-
-
         return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
@@ -93,17 +81,11 @@ class KyberSwap(
             signingInput = approveInput,
             keysignPayload = keysignPayload
         )
-
     }
 
-
-    @Throws(Exception::class)
     fun getPreSignedInputData(
-        quote: KyberSwapQuoteResponse?,
-        keysignPayload: KeysignPayload,
-        nonceIncrement: BigInteger
+        quote: KyberSwapQuoteJson?, keysignPayload: KeysignPayload, nonceIncrement: BigInteger
     ): ByteArray {
-
         val input = Ethereum.SigningInput.newBuilder()
 
             .setToAddress(quote?.tx?.to).setTransaction(
@@ -116,14 +98,11 @@ class KyberSwap(
                     ).setData(quote?.tx?.data?.removePrefix("0x")?.toByteStringOrHex())
                 ).build()
             )
-
         var gasPrice = quote?.tx?.gasPrice?.toBigIntegerOrNull() ?: BigInteger.ZERO
         if (keysignPayload.coin.chain == Chain.Arbitrum) {
             // set gasPrice to null/zero for envelope transaction on arbitrum chain
             gasPrice = BigInteger.ZERO
         }
-
-
         val gas = (quote?.tx?.gas.takeIf { it != 0L }
             ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
@@ -135,7 +114,5 @@ class KyberSwap(
             nonceIncrement = nonceIncrement,
             coinType = keysignPayload.coin.coinType
         ).build().toByteArray()
-
     }
-
 }

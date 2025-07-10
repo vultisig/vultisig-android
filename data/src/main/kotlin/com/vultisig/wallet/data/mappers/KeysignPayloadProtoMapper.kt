@@ -2,8 +2,6 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
@@ -90,7 +88,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             fromAmount = BigInteger(it.fromAmount),
                             toAmountDecimal = BigDecimal(it.toAmountDecimal),
                             quote = requireNotNull(it.quote).let { it ->
-                                KyberSwapQuoteResponse(
+                                KyberSwapQuoteJson(
                                     code = 0,
                                     message = "Success",
                                     data = KyberSwapQuoteData(

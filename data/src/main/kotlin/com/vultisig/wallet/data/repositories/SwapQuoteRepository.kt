@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
@@ -42,7 +41,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ) :KyberSwapQuoteResponse
+    ) :KyberSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
         srcToken: Coin,
@@ -119,7 +118,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): KyberSwapQuoteResponse {
+    ): KyberSwapQuoteJson {
         val kyberQuote = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,

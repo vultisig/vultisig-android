@@ -1,61 +1,18 @@
 package com.vultisig.wallet.data.api.models.quotes
 
 import com.vultisig.wallet.data.models.Chain
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.text.toLongOrNull
 
 sealed class KyberSwapQuoteDeserialized {
-    data class Result(val data: KyberSwapQuoteResponse) : KyberSwapQuoteDeserialized()
+    data class Result(val data: KyberSwapQuoteJson) : KyberSwapQuoteDeserialized()
     data class Error(val error: String) : KyberSwapQuoteDeserialized()
 }
 
 @Serializable
 data class KyberSwapQuoteJson(
-    @SerialName("dstAmount")
-    val dstAmount: String = "",
-    @SerialName("tx")
-    val tx: KyberSwapTxJson,
-    @SerialName("error")
-    val error: String? = null,
-    @Contextual
-    val fee: BigInteger? = null,
-)
-
-private fun calculateGasForChain(baseGas: Long, chain: Chain): Long {
-    val gasMultiplierTimes10 = when (chain) {
-        Chain.Ethereum -> 14L
-        Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
-        else -> 16L
-    }
-    return (baseGas * gasMultiplierTimes10) / 10
-}
-
-fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
-    return calculateGasForChain(tx.gas, chain)
-}
-
-@Serializable
-data class KyberSwapTxJson(
-    @SerialName("from")
-    val from: String,
-    @SerialName("to")
-    val to: String,
-    @SerialName("data")
-    val data: String,
-    @SerialName("value")
-    val value: String,
-    @SerialName("gasPrice")
-    val gasPrice: String,
-    @SerialName("gas")
-    val gas: Long
-)
-
-
-@Serializable
-data class KyberSwapQuoteResponse(
     @SerialName("code")
     val code: Int,
     @SerialName("message")

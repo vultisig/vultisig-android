@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteResponse
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -161,7 +160,7 @@ class KyberSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val j
 
         return if (jsonObject.containsKey("dstAmount")) {
             KyberSwapQuoteDeserialized.Result(
-                json.decodeFromJsonElement<KyberSwapQuoteResponse>(jsonObject)
+                json.decodeFromJsonElement<KyberSwapQuoteJson>(jsonObject)
             )
         } else {
             KyberSwapQuoteDeserialized.Error(
