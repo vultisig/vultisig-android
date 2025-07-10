@@ -11,7 +11,14 @@
     <string name="vault_settings_reshare_title">Ricondividi</string>
     <string name="vault_settings_reshare_subtitle">Ricondividi la cassaforte con un nuovo comitato</string>
     <string name="vault_settings_delete_title">Elimina</string>
+    <string name="vault_settings_security_title">Sicurezza On-chain</string>
+    <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>
     <string name="join_keysign_missing_required_vault">Non hai il vault richiesto per Keysign</string>
+    <string name="vault_settings_security_screen_title">Sicurezza</string>
+    <string name="vault_settings_security_screen_title_switch">Gestisci la tua sicurezza on-chain</string>
+    <string name="vault_settings_security_screen_title_content">Puoi disabilitare la tua sicurezza on-chain in tempo reale</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Sicurezza on-chain disabilitata</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">La disabilitazione della sicurezza on-chain significa che Blockaid non può verificare le transazioni. Sarai meno protetto.</string>
     <string name="choose_tokens">Scegli Token</string>
     <string name="send_screen_title">Invia</string>
     <string name="send_from_address">Da</string>

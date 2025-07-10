@@ -21,7 +21,14 @@
     <string name="vault_settings_reshare_subtitle">Deel de kluis opnieuw met een nieuwe commissie</string>
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent</string>
+    <string name="vault_settings_security_title">On-chain beveiliging</string>
+    <string name="vault_settings_security_subtitle">Beheer uw on-chain beveiliging</string>
     <string name="join_keysign_missing_required_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
+    <string name="vault_settings_security_screen_title_switch">Beheer uw on-chain beveiliging</string>
+    <string name="vault_settings_security_screen_title_content">U kunt uw realtime on-chain beveiliging uitschakelen</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">On-chain beveiliging uitgeschakeld</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Het uitschakelen van on-chain beveiliging betekent dat Blockaid transacties niet kan verifiëren. Je bent dan minder beschermd.</string>
+    <string name="vault_settings_security_screen_title">Beveiliging</string>
     <string name="join_keysign_discovery_service">Service ontdekken</string>
     <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="choose_tokens">Kies Tokens</string>

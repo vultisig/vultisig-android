@@ -8,6 +8,8 @@
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Держите устройства в одной WiFi-сети, корректный хранилище и парные устройства.\nУбедитесь, что никакие другие устройства не работают с Vultisig.</string>
     <string name="try_again">Попробуйте еще раз</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Безопасность в сети отключена</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Отключение безопасности в сети означает, что Blockaid не сможет проверять транзакции. Вы будете менее защищены.</string>
     <string name="vault_choose_chains">Выберите цепочки</string>
     <string name="plus_icon">Иконка плюса</string>
     <string name="vault_settings_title">Настройки хранилища</string>
@@ -18,9 +20,14 @@
     <string name="vault_settings_rename_title">Переименовать</string>
     <string name="vault_settings_rename_subtitle">Редактировать имя вашего хранилища</string>
     <string name="vault_settings_reshare_title">Повторное совместное использование</string>
+    <string name="vault_settings_security_screen_title">Безопасность</string>
+    <string name="vault_settings_security_screen_title_switch">Управление безопасностью в сети</string>
+    <string name="vault_settings_security_screen_title_content">Вы можете отключить свою безопасность в сети в реальном времени</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
+    <string name="vault_settings_security_title">Безопасность в сети</string>
+    <string name="vault_settings_security_subtitle">Управляйте своей безопасностью в сети</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="join_keysign_discovery_service">Обнаружение службы</string>
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>

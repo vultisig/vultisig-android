@@ -52,37 +52,75 @@ internal fun SecurityScannerBottomSheet(
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
     ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .navigationBarsPadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                imageVector = contentStyle.image,
-                contentDescription = "Warning",
-                tint = contentStyle.imageColor,
-                modifier = Modifier.size(32.dp)
-            )
+        SecurityScannerBottomSheetContent(
+            contentStyle = contentStyle,
+            securityScannerProvider = securityScannerModel.provider,
+            onDismissRequest = onDismissRequest,
+            onContinueAnyway = onContinueAnyway
+        )
+    }
+}
 
-            Text(
-                text = contentStyle.title,
-                color = Theme.colors.alerts.error,
-                style = Theme.brockmann.headings.title2,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SettingsSecurityScannerBottomSheet(
+    onContinueAnyway: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        containerColor = Theme.colors.backgrounds.secondary,
+        shape = RoundedCornerShape(24.dp),
+        dragHandle = null,
+    ) {
+        SecurityScannerBottomSheetContent(
+            contentStyle = buildSettingsSecurityScannerBottomSheeStyle(),
+            securityScannerProvider = null,
+            onDismissRequest = onDismissRequest,
+            onContinueAnyway = onContinueAnyway
+        )
+    }
+}
 
-            Text(
-                text = contentStyle.description,
-                color = Theme.colors.text.extraLight,
-                style = Theme.brockmann.body.s.medium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+@Composable
+fun SecurityScannerBottomSheetContent(
+    contentStyle: SecurityScannerBottomSheetStyle,
+    securityScannerProvider: String?,
+    onDismissRequest: () -> Unit,
+    onContinueAnyway: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = contentStyle.image,
+            contentDescription = "Warning",
+            tint = contentStyle.imageColor,
+            modifier = Modifier.size(32.dp)
+        )
 
+        Text(
+            text = contentStyle.title,
+            color = contentStyle.imageColor,
+            style = Theme.brockmann.headings.title2,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = contentStyle.description,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.body.s.medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        if (securityScannerProvider != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -95,33 +133,33 @@ internal fun SecurityScannerBottomSheet(
                 )
 
                 Image(
-                    painter = painterResource(id = getSecurityScannerLogo(securityScannerModel.provider)),
+                    painter = painterResource(id = getSecurityScannerLogo(securityScannerProvider)),
                     contentDescription = "Provider Logo",
                     modifier = Modifier.height(16.dp)
                 )
             }
-
-            VsButton(
-                label = stringResource(R.string.security_scanner_continue_go_back),
-                variant = Primary,
-                state = Enabled,
-                size = Medium,
-                onClick = onDismissRequest,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            VsButton(
-                label = stringResource(R.string.security_scanner_continue_anyway),
-                variant = Primary,
-                state = Disabled,
-                size = Medium,
-                forceClickable = true,
-                onClick = onContinueAnyway,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
+
+        VsButton(
+            label = stringResource(R.string.security_scanner_continue_go_back),
+            variant = Primary,
+            state = Enabled,
+            size = Medium,
+            onClick = onDismissRequest,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        VsButton(
+            label = stringResource(R.string.security_scanner_continue_anyway),
+            variant = Primary,
+            state = Disabled,
+            size = Medium,
+            forceClickable = true,
+            onClick = onContinueAnyway,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -149,6 +187,14 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
         image = icon,
     )
 }
+
+@Composable
+private fun buildSettingsSecurityScannerBottomSheeStyle() = SecurityScannerBottomSheetStyle(
+    title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
+    description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
+    imageColor = Theme.colors.alerts.warning,
+    image = Icons.Outlined.Info,
+)
 
 data class SecurityScannerBottomSheetStyle(
     val title: String,
