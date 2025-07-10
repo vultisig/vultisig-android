@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.securityscanner
 
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClient
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
@@ -17,8 +18,8 @@ object SecurityScannerModule {
 
     @Singleton
     @Provides
-    fun provideSecurityScannerTransactionFactory(): SecurityScannerTransactionFactoryContract {
-        return SecurityScannerTransactionFactory()
+    fun provideSecurityScannerTransactionFactory(solanaApi: SolanaApi): SecurityScannerTransactionFactoryContract {
+        return SecurityScannerTransactionFactory(solanaApi)
     }
 
     @Singleton

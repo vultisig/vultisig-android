@@ -30,7 +30,7 @@ class SecurityScannerService(
         return repository.getSecurityScannerStatus()
     }
 
-    override fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+    override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         return factory.createSecurityScannerTransaction(transaction)
     }
 
