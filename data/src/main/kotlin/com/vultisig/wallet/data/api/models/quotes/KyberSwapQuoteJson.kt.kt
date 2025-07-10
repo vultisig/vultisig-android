@@ -24,14 +24,17 @@ data class KyberSwapQuoteJson(
     val fee: BigInteger? = null,
 )
 
-fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
-    val baseGas = tx.gas
+private fun calculateGasForChain(baseGas: Long, chain: Chain): Long {
     val gasMultiplierTimes10 = when (chain) {
         Chain.Ethereum -> 14L
         Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
         else -> 16L
     }
     return (baseGas * gasMultiplierTimes10) / 10
+}
+
+fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
+    return calculateGasForChain(tx.gas, chain)
 }
 
 @Serializable

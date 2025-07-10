@@ -94,14 +94,6 @@ sealed class SwapPayload {
     data class Kyber(
         val data: KyberSwapPayloadJson
     ) : SwapPayload() {
-//    data class KyberSwap(
-//        val fromCoin: Coin,
-//        val toCoin: Coin,
-//        val fromAmount: String,
-//        val toAmountDecimal: String,
-//        val dstAmount: String,
-//        val tx: Transaction
-//    ) : SwapPayload() {
 
         override val srcToken: Coin
             get() = data.fromCoin

@@ -131,7 +131,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         when (kyberQuote) {
             is KyberSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(kyberQuote.error)
             is KyberSwapQuoteDeserialized.Result -> {
-//                kyberQuote.data.error?.let { throw SwapException.handleSwapException(it) }
                 return kyberQuote.data
             }
         }
