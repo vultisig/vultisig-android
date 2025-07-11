@@ -16,8 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 fun VsHoldableButton(
@@ -42,6 +46,7 @@ fun VsHoldableButton(
 
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
+    var isLongPressed by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -50,22 +55,32 @@ fun VsHoldableButton(
                     awaitPointerEventScope {
                         val down = awaitFirstDown()
                         val longClickJob = scope.launch {
-                            progress.animateTo(
-                                1f,
-                                tween(holdDuration.toInt(), easing = LinearEasing)
-                            )
-                            onLongClick()
+                            try {
+                                progress.animateTo(
+                                    1f,
+                                    tween(holdDuration.toInt(), easing = LinearEasing)
+                                )
+                                if (progress.value >= 1f) {
+                                    isLongPressed = true
+                                    onLongClick()
+                                }
+                            } catch (e: Exception) {
+                                Timber.w("Animation cancelled", e)
+                            }
                         }
 
                         val up = waitForUpOrCancellation()
 
-                        if (up != null) {
-                            if (progress.value < 0.2f) onClick()
+                        if (up != null && !isLongPressed) {
+                            if (progress.value < 0.25f) {
+                                onClick()
+                            }
                         }
 
                         scope.launch {
                             progress.snapTo(0f)
                             longClickJob.cancelAndJoin()
+                            isLongPressed = false
                         }
                     }
                 }
