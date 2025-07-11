@@ -272,8 +272,8 @@ private fun VerifySwapScreen(
                     )
 
                     VerifyCardDetails(
-                        title = "Swap Fee(0.5%)",
-                        subtitle = "$0.12",
+                        title = stringResource(R.string.swap_form_estimated_fees_title),
+                        subtitle = tx.providerFee.fiatValue,
                     )
 
                     VerifyCardDivider(
