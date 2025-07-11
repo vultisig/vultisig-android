@@ -6,11 +6,14 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -248,6 +253,16 @@ private fun VerifySwapScreen(
                         size = 20.dp,
                     )
 
+                    VerifyVaultDetails(
+                        title = "Vault",
+                        subtitle = "Main Vault",
+                        metadata = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427"
+                    )
+
+                    VerifyCardDivider(
+                        size = 20.dp,
+                    )
+
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_swap_screen_total_fees),
                         subtitle = tx.totalFee,
@@ -416,6 +431,54 @@ internal fun VerifyCardDetails(
             maxLines = 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
+    }
+}
+
+@Composable
+internal fun VerifyVaultDetails(
+    title: String,
+    subtitle: String,
+    metadata: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = title,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.extraLight,
+            maxLines = 1,
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.widthIn(max = 200.dp)
+        ) {
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.colors.text.primary,
+                textAlign = TextAlign.End,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            val prefix = metadata.substring(0, 4)
+            val suffix = metadata.takeLast(4)
+
+            Text(
+                text = "($prefix...$suffix)",
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.colors.text.extraLight,
+                maxLines = 1,
+            )
+        }
     }
 }
 
