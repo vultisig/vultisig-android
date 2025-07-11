@@ -43,6 +43,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             from.estimatedFees,
             currency
         )
+
         return SwapTransactionUiModel(
             src = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.srcTokenValue),
@@ -67,17 +68,18 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
+            hasConsentAllowance = from.isApprovalRequired,
             providerFee = ValuedToken(
                 token = tokenValue,
                 value = from.estimatedFees.value.toString(),
                 fiatValue = fiatValueToStringMapper.map(quotesFeesFiat),
             ),
-            //networkFee = ValuedToken(
-            //    token = from.srcToken,
-            //    value = ,
-            //    fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
-            //),
-            hasConsentAllowance = from.isApprovalRequired,
+            networkFee = ValuedToken(
+                token = from.srcToken,
+                value = mapTokenValueToDecimalUiString(from.gasFees),
+                fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
+            ),
+            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees) + from.gasFees.unit,
             totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }

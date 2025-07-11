@@ -267,7 +267,7 @@ private fun VerifySwapScreen(
                     )
 
                     EstimatedNetworkFee(
-                        tokenGas = "${tx.networkFee.value} ${tx.networkFee.token.ticker}",
+                        tokenGas = tx.networkFeeFormatted,
                         fiatGas = tx.networkFee.fiatValue,
                     )
 
