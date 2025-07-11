@@ -156,7 +156,7 @@
     <string name="chain_account_item_address_copied">%1$s gekopieerd naar klembord</string>
     <string name="settings_screen_vault_settings">Kluisinstellingen</string>
     <string name="home_scree_done">Klaar</string>
-    <string name="verify_swap_sign_button">Ondertekenen</string>
+    <string name="verify_swap_sign_button">Transactie Ondertekenen</string>
     <string-array name="digit_words">
         <item>nul</item>
         <item>één</item>
