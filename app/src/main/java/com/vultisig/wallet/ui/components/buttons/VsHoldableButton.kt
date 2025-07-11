@@ -72,7 +72,7 @@ fun VsHoldableButton(
                         val up = waitForUpOrCancellation()
 
                         if (up != null && !isLongPressed) {
-                            if (progress.value < 0.2f) {
+                            if (progress.value < 0.25f) {
                                 onClick()
                             }
                         }
