@@ -128,6 +128,7 @@ internal fun VerifySwapScreen(
         confirmTitle = confirmTitle,
         isConsentsEnabled = isConsentsEnabled,
         hasFastSign = state.hasFastSign,
+        vaultName = state.vaultName?.asString(),
         onConsentReceiveAmount = onConsentReceiveAmount,
         onConsentAmount = onConsentAmount,
         onConsentAllowance = onConsentAllowance,
@@ -148,6 +149,7 @@ private fun VerifySwapScreen(
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     hasFastSign: Boolean,
+    vaultName: String?,
     onConsentReceiveAmount: (Boolean) -> Unit,
     onConsentAmount: (Boolean) -> Unit,
     onConsentAllowance: (Boolean) -> Unit,
@@ -256,8 +258,8 @@ private fun VerifySwapScreen(
 
                     VerifyVaultDetails(
                         title = "Vault",
-                        subtitle = "Main Vault",
-                        metadata = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427"
+                        subtitle = vaultName ?: "Main Vault",
+                        metadata = tx.src.token.address,
                     )
 
                     VerifyCardDivider(
@@ -482,17 +484,25 @@ internal fun VerifyVaultDetails(
                 maxLines = 1,
             )
 
-            Spacer(modifier = Modifier.width(4.dp))
+            if (metadata.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(4.dp))
 
-            val prefix = metadata.substring(0, 4)
-            val suffix = metadata.takeLast(4)
+                val prefix = metadata.take(4)
+                val suffix = if (metadata.length > 4) metadata.takeLast(4) else ""
 
-            Text(
-                text = "($prefix...$suffix)",
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.extraLight,
-                maxLines = 1,
-            )
+                val display = if (metadata.length > 8) {
+                    "($prefix...$suffix)"
+                } else {
+                    "($metadata)"
+                }
+
+                Text(
+                    text = display,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.extraLight,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
@@ -544,6 +554,7 @@ private fun VerifySwapScreenPreview() {
         consentAllowance = true,
         confirmTitle = "Sign",
         hasFastSign = false,
+        vaultName = "Main Vault",
         onConsentReceiveAmount = {},
         onConsentAmount = {},
         onConsentAllowance = {},

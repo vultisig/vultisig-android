@@ -72,5 +72,4 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
         )
     }
-
 }
