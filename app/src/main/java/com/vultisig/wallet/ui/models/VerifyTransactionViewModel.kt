@@ -44,7 +44,8 @@ import javax.inject.Inject
 internal data class SendTxUiModel(
     val token: ValuedToken = ValuedToken.Empty,
 
-    val networkFee: ValuedToken = ValuedToken.Empty,
+    val networkFeeFiatValue: String = "",
+    val networkFeeTokenValue: String = "",
 
     val srcAddress: String = "",
     val dstAddress: String = "",

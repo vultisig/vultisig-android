@@ -26,11 +26,8 @@ internal class TransactionToUiModelMapperImpl @Inject constructor(
 
             memo = from.memo,
 
-            networkFee = ValuedToken(
-                value = mapTokenValueToDecimalUiString(from.gasFee),
-                token = from.token,
-                fiatValue = from.estimatedFee,
-            ),
+            networkFeeFiatValue = from.estimatedFee,
+            networkFeeTokenValue = from.totalGass,
         )
     }
 

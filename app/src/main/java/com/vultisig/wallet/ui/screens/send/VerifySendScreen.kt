@@ -254,8 +254,8 @@ internal fun VerifySendScreen(
                     UiSpacer(12.dp)
 
                     EstimatedNetworkFee(
-                        tokenGas = "${tx.networkFee.value} ${tx.networkFee.token.ticker}",
-                        fiatGas = tx.networkFee.fiatValue,
+                        tokenGas = tx.networkFeeTokenValue,
+                        fiatGas = tx.networkFeeFiatValue,
                     )
                 }
 
