@@ -57,7 +57,6 @@ fun VsHoldableButton(
                 },
                 onLongClick = {
                     isLongPressed = true
-                    // Ensure the animation completes before calling onLongClick
                     scope.launch {
                         progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
                         onLongClick()
