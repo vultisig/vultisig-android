@@ -69,7 +69,7 @@ class KyberSwap(
             .setToAddress(quote.tx.to).setTransaction(
                 Ethereum.Transaction.newBuilder().setContractGeneric(
                     Ethereum.Transaction.ContractGeneric.newBuilder().setAmount(
-                        (quote.tx.value.toBigInteger().toByteArray()
+                        (quote.tx.value.toBigIntegerOrNull()?.toByteArray()
                             ?: BigInteger.ZERO.toByteArray()).toByteString()
                     ).setData(quote.tx.data.removePrefix("0x").toByteStringOrHex())
                 ).build()
