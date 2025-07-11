@@ -226,6 +226,12 @@ private fun VerifySwapScreen(
                             )
                         }
 
+                        Text(
+                            "To",
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.colors.text.extraLight,
+                        )
+
                         HorizontalDivider(
                             thickness = 1.dp,
                             color = Theme.colors.borders.light,
@@ -235,6 +241,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
+                        isDestinationToken = true,
                     )
 
                     VerifyCardDivider(
@@ -308,6 +315,7 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
+    isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
@@ -341,6 +349,14 @@ internal fun SwapToken(
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (isDestinationToken) {
+                Text(
+                    text = "min. payout",
+                    style = Theme.brockmann.supplementary.captionSmall,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+
             Text(
                 text = text,
                 style = Theme.brockmann.headings.title3,

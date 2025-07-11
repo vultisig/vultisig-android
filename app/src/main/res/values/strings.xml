@@ -371,7 +371,7 @@
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
     <string name="register_vault_screen_save_qr_code">Save QR Code</string>
-    <string name="verify_swap_screen_total_fees">Total Fees</string>
+    <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
