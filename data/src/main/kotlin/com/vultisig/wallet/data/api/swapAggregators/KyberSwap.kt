@@ -2,8 +2,10 @@ package com.vultisig.wallet.data.api.swapAggregators
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -60,49 +62,19 @@ class KyberSwap(
         )
     }
 
-    fun getPreSignedApproveInputData(
-        approvePayload: ERC20ApprovePayload, keysignPayload: KeysignPayload
-    ): ByteArray {
-        val approveInput = Ethereum.SigningInput.newBuilder()
-            .setToAddress(keysignPayload.coin.contractAddress).setTransaction(
-                Ethereum.Transaction.newBuilder().setErc20Approve(
-                    Ethereum.Transaction.ERC20Approve.newBuilder().setAmount(
-                        ByteString.copyFrom(
-                            approvePayload.amount.toByteArray()
-                        )
-                    ).setSpender(approvePayload.spender).build()
-                ).build()
-            ).build()
-        return EvmHelper(
-            keysignPayload.coin.coinType,
-            vaultHexPublicKey,
-            vaultHexChainCode
-        ).getPreSignedInputData(
-            signingInput = approveInput,
-            keysignPayload = keysignPayload
-        )
-    }
-
     fun getPreSignedInputData(
         quote: KyberSwapQuoteJson, keysignPayload: KeysignPayload, nonceIncrement: BigInteger
     ): ByteArray {
         val input = Ethereum.SigningInput.newBuilder()
-
             .setToAddress(quote.tx.to).setTransaction(
                 Ethereum.Transaction.newBuilder().setContractGeneric(
                     Ethereum.Transaction.ContractGeneric.newBuilder().setAmount(
-                        ByteString.copyFrom(
-                            quote.tx.value.toBigInteger().toByteArray()
-                                ?: BigInteger.ZERO.toByteArray()
-                        )
+                        (quote.tx.value.toBigInteger().toByteArray()
+                            ?: BigInteger.ZERO.toByteArray()).toByteString()
                     ).setData(quote.tx.data.removePrefix("0x").toByteStringOrHex())
                 ).build()
             )
         var gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
-        if (keysignPayload.coin.chain == Chain.Arbitrum) {
-            // set gasPrice to null/zero for envelope transaction on arbitrum chain
-            gasPrice = BigInteger.ZERO
-        }
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 

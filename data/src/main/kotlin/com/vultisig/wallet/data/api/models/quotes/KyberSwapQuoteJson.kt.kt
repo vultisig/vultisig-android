@@ -21,39 +21,34 @@ data class KyberSwapQuoteJson(
     var data: KyberSwapQuoteData,
     @SerialName("requestId")
     val requestId: String
-) {
-    var dstAmount: String
-        get() = data.amountOut
-        set(value) {
-            // Note: This will only work if amountOut in KyberSwapQuoteData is a var, not val
-            // Otherwise you'll need to handle this differently
-            data = data.copy(amountOut = value)
-        }
+)
 
-    fun gasForChain(chain: Chain): Long {
-        val baseGas = data.gas?.toLongOrNull() ?: 600_000L
-        val gasMultiplierTimes10 = when (chain) {
-            Chain.Ethereum -> 14L
-            Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
-            else -> 16L
-        }
-        return (baseGas * gasMultiplierTimes10) / 10
+fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
+    val baseGas = data.gas?.toLongOrNull() ?: 600_000L
+    val gasMultiplierTimes10 = when (chain) {
+        Chain.Ethereum -> 14L
+        Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
+        else -> 16L
     }
-
-    val tx: Transaction
-        get() {
-            return Transaction(
-                from = "",
-                to = data.routerAddress,
-                data = data.data,
-                value = data.transactionValue,
-                gasPrice = data.gasPrice ?: "",
-                gas = data.gas?.toLongOrNull() ?: 0L,
-                fee = data.fee?.toLong() ?: 0L
-            )
-        }
-
+    return (baseGas * gasMultiplierTimes10) / 10
 }
+
+val KyberSwapQuoteJson.tx: Transaction
+    get() = Transaction(
+        from = "",
+        to = data.routerAddress,
+        data = data.data,
+        value = data.transactionValue,
+        gasPrice = data.gasPrice ?: "",
+        gas = data.gas?.toLongOrNull() ?: 0L,
+        fee = data.fee?.toLong() ?: 0L
+    )
+
+var KyberSwapQuoteJson.dstAmount: String
+    get() = data.amountOut
+    set(value) {
+        data = data.copy(amountOut = value)
+    }
 
 @Serializable
 data class KyberSwapQuoteData(

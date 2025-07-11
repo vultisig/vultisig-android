@@ -36,7 +36,6 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
 
             SwapProvider.JUPITER ->
                 from.srcToken
-
         }
 
         val fiatFees = convertTokenValueToFiat(

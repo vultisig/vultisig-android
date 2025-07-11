@@ -112,7 +112,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun getKyberSwapQuote(
         srcToken: Coin,
         dstToken: Coin,
@@ -530,4 +529,5 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
             "So11111111111111111111111111111111111111112"
     }
+
 }

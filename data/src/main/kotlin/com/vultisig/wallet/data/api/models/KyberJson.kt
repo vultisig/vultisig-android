@@ -27,7 +27,6 @@ data class KyberSwapRouteResponse(
         val routerAddress: String
     )
 
-
     @Serializable
     data class RouteSummary(
         val tokenIn: String, val amountIn: String, val amountInUsd: String,
@@ -60,7 +59,7 @@ data class KyberSwapBuildRequest(
     val sender: String,
     val referral : String?=null,
     val recipient: String,
-    val slippageTolerance: Int ,
+    val slippageTolerance: Double ,
     val deadline: Int,
     val enableGasEstimation: Boolean ,
     val source: String ,

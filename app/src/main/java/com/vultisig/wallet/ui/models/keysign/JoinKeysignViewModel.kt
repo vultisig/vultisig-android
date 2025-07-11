@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -472,12 +473,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                                         ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
                         }
 
-
                         val estimatedTokenFees = TokenValue(
                             value = value ?: BigInteger.ZERO,
                             token = nativeToken
                         )
-
                         val estimatedFee = convertTokenValueToFiat(
                             nativeToken,
                             estimatedTokenFees,
@@ -521,7 +520,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 tx = swapTransaction
                             )
                         )
-
                     }
                     is SwapPayload.OneInch -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx

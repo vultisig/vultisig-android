@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.quotes.dstAmount
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -389,7 +391,6 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.Kyber -> {
-
                         val dstAddress = quote.data.tx.to
 
                         val allowance = allowanceRepository.getAllowance(
@@ -400,7 +401,6 @@ internal class SwapFormViewModel @Inject constructor(
                         )
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
-
 
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -944,7 +944,6 @@ internal class SwapFormViewModel @Inject constructor(
                                         expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                                     )
                                 }
-
                             }
 
                             SwapProvider.ONEINCH -> {

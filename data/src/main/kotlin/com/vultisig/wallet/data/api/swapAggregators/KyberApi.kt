@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.KyberSwapToken
 import com.vultisig.wallet.data.api.models.KyberSwapTokensResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
@@ -54,42 +55,44 @@ class KyberApiImpl @Inject constructor(
                     chain.raw.lowercase(),
                     "api/v1/routes",
                 )
-                parameters.append(
-                    "tokenIn",
-                    sourceAddress
-                )
-                parameters.append(
-                    "tokenOut",
-                    destinationAddress
-                )
-                parameters.append(
-                    "amountIn",
-                    amount
-                )
-                parameters.append(
-                    "saveGas",
-                    "false"
-                )
-                parameters.append(
-                    "gasInclude",
-                    "true"
-                )
-                parameters.append(
-                    "slippageTolerance",
-                    "100"
-                )
-                parameters.append(
-                    "isAffiliate",
-                    isAffiliate.toString()
-                )
-                parameter(
-                    "sourceIdentifier",
-                    if (isAffiliate) CLIENT_ID else null
-                )
-                parameter(
-                    "referrerAddress",
-                    if (isAffiliate) REFERRER_ADDRESS else null
-                )
+                parameters.apply {
+                    append(
+                        "tokenIn",
+                        sourceAddress
+                    )
+                    append(
+                        "tokenOut",
+                        destinationAddress
+                    )
+                    append(
+                        "amountIn",
+                        amount
+                    )
+                    append(
+                        "saveGas",
+                        "false"
+                    )
+                    append(
+                        "gasInclude",
+                        "true"
+                    )
+                    append(
+                        "slippageTolerance",
+                        SLIPPAGE_TOLERANCE.toString()
+                    )
+                    append(
+                        "isAffiliate",
+                        isAffiliate.toString()
+                    )
+                    parameter(
+                        "sourceIdentifier",
+                        if (isAffiliate) CLIENT_ID else null
+                    )
+                    parameter(
+                        "referrerAddress",
+                        if (isAffiliate) REFERRER_ADDRESS else null
+                    )
+                }
 
                 headers {
                     accept(ContentType.Application.Json)
@@ -169,7 +172,7 @@ class KyberApiImpl @Inject constructor(
             routeSummary = routeResponse.data.routeSummary,
             sender = from,
             recipient = from,
-            slippageTolerance = 100,
+            slippageTolerance = SLIPPAGE_TOLERANCE,
             deadline = (System.currentTimeMillis() / 1000L + 1200).toInt(),
             enableGasEstimation = enableGasEstimation,
             source = CLIENT_ID,
@@ -239,38 +242,12 @@ class KyberApiImpl @Inject constructor(
         return buildResponse
     }
 
-    suspend fun fetchTokens(chain: Chain): List<KyberSwapToken> {
-        val responseString = httpClient.get(tokenApiBaseUrl) {
-            url {
-                path(
-                    "/api/v1/tokens",
-                )
-                parameters {
-                    append(
-                        "chainIds",
-                        chain.id
-                    )
-                    append(
-                        "isWhitelisted",
-                        "true"
-                    )
-                    append(
-                        "pageSize",
-                        "100"
-                    )
-                }
-            }
-        }.bodyAsText()
-
-        val response = json.decodeFromString<KyberSwapTokensResponse>(responseString)
-        return response.data.tokens
-    }
-
     companion object {
         private const val REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val GAS_PRICE_VALUE = 20000000000L
         private const val MIN_GAS_PRICE = 1000000000L
+        private const val SLIPPAGE_TOLERANCE = 2.5
     }
 }
