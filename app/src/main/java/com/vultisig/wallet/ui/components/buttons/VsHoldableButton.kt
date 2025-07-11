@@ -4,7 +4,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.forEachGesture
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -14,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,11 +24,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 fun VsHoldableButton(
@@ -46,32 +50,43 @@ fun VsHoldableButton(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(percent = 100))
-            .background(backgroundColor)
-            .combinedClickable(
-                onClick = {
-                    if (!isLongPressed) {
-                        onClick()
-                    }
-                    isLongPressed = false
-                },
-                onLongClick = {
-                    isLongPressed = true
-                    scope.launch {
-                        progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
-                        onLongClick()
-                        progress.snapTo(0f)
-                        isLongPressed = false
+            .pointerInput(Unit) {
+                forEachGesture {
+                    awaitPointerEventScope {
+                        val down = awaitFirstDown()
+                        val longClickJob = scope.launch {
+                            try {
+                                progress.animateTo(
+                                    1f,
+                                    tween(holdDuration.toInt(), easing = LinearEasing)
+                                )
+                                if (progress.value >= 1f) {
+                                    isLongPressed = true
+                                    onLongClick()
+                                }
+                            } catch (e: Exception) {
+                                Timber.w("Animation cancelled", e)
+                            }
+                        }
+
+                        val up = waitForUpOrCancellation()
+
+                        if (up != null && !isLongPressed) {
+                            if (progress.value < 0.2f) {
+                                onClick()
+                            }
+                        }
+
+                        scope.launch {
+                            progress.snapTo(0f)
+                            longClickJob.cancelAndJoin()
+                            isLongPressed = false
+                        }
                     }
                 }
-            )
-    ) {
-        LaunchedEffect(isLongPressed) {
-            if (!isLongPressed) {
-                progress.snapTo(0f)
             }
-        }
-
+            .background(backgroundColor, RoundedCornerShape(percent = 100)),
+    ) {
         Box(
             modifier = Modifier
                 .matchParentSize()
