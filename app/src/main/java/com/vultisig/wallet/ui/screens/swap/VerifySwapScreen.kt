@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
+import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -261,6 +262,20 @@ private fun VerifySwapScreen(
 
                     VerifyCardDivider(
                         size = 20.dp,
+                    )
+
+                    EstimatedNetworkFee(
+                        tokenGas = "${tx.networkFee.value} ${tx.networkFee.token.ticker}",
+                        fiatGas = tx.networkFee.fiatValue,
+                    )
+
+                    VerifyCardDetails(
+                        title = "Swap Fee(0.5%)",
+                        subtitle = "$0.12",
+                    )
+
+                    VerifyCardDivider(
+                        size = 10.dp,
                     )
 
                     VerifyCardDetails(
