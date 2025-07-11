@@ -93,6 +93,7 @@
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="swap_screen_title">Scambia</string>
+    <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>

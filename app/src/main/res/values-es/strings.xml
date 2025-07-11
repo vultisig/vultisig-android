@@ -141,6 +141,7 @@
     <string name="settings_screen_vault_settings">Configuración Bóvedas</string>
     <string name="home_scree_done">hecho</string>
     <string name="verify_swap_sign_button">Firmar Transación</string>
+    <string name="swap_form_min_pay">pago mín.</string>
     <string name="swap_error_no_amount">La cantidad debe ser un número positivo</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>

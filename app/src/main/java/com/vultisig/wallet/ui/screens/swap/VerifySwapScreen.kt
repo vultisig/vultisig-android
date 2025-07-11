@@ -383,7 +383,7 @@ internal fun SwapToken(
         ) {
             if (isDestinationToken) {
                 Text(
-                    text = "min. payout",
+                    text = stringResource(R.string.swap_form_min_pay),
                     style = Theme.brockmann.supplementary.captionSmall,
                     color = Theme.colors.text.extraLight,
                 )
