@@ -202,8 +202,12 @@ internal class JoinKeygenViewModel @Inject constructor(
                         }
                     }
                     else -> {
-                        state.update{
-                            it.copy(error = UnknownError(e.message ?: "something went wrong"))
+                        state.update {
+                            it.copy(
+                                error = UnknownError(
+                                    e.message ?: "An unexpected error occurred"
+                                )
+                            )
                         }
                     }
                 }

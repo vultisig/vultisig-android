@@ -39,7 +39,7 @@ internal fun JoinKeygenScreen(
     } else {
         ErrorView(
             errorLabel = error.message.asString(),
-            buttonText = "back",
+            buttonText = "Back",
             onButtonClick = model::navigateBack
         )
     }
