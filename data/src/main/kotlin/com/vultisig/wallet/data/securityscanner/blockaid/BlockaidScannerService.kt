@@ -54,7 +54,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             blockaidRpcClient.scanSolanaTransaction(
                 address = transaction.from,
                 serializedMessage = transaction.data,
-            ).toSecurityScannerResult(PROVIDER_NAME)
+            ).toSolanaSecurityScannerResult(PROVIDER_NAME)
         }
     }
 
@@ -98,8 +98,8 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Ethereum,
             Chain.Optimism,
             Chain.Polygon,
-            // Chain.Sui,
-            // Chain.Solana,
+            Chain.Sui,
+            Chain.Solana,
         )
 
         private val PROVIDER_NAME = "blockaid"
