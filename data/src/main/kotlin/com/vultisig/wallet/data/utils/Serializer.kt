@@ -14,8 +14,6 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -142,29 +140,6 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
         } else {
             LiFiSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
-            )
-        }
-    }
-}
-
-interface KyberSwapQuoteResponseJsonSerializer : DefaultSerializer<KyberSwapQuoteDeserialized>
-
-class KyberSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
-    KyberSwapQuoteResponseJsonSerializer {
-    override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("KyberSwapQuoteResponseSerializer")
-
-    override fun deserialize(decoder: Decoder): KyberSwapQuoteDeserialized {
-        val input = decoder as JsonDecoder
-        val jsonObject = input.decodeJsonElement().jsonObject
-
-        return if (jsonObject.containsKey("dstAmount")) {
-            KyberSwapQuoteDeserialized.Result(
-                json.decodeFromJsonElement<KyberSwapQuoteJson>(jsonObject)
-            )
-        } else {
-            KyberSwapQuoteDeserialized.Error(
-                json.decodeFromJsonElement<String>(jsonObject)
             )
         }
     }

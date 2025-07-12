@@ -6,10 +6,6 @@ import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.text.toLongOrNull
 
-sealed class KyberSwapQuoteDeserialized {
-    data class Result(val data: KyberSwapQuoteJson) : KyberSwapQuoteDeserialized()
-    data class Error(val error: String) : KyberSwapQuoteDeserialized()
-}
 
 @Serializable
 data class KyberSwapQuoteJson(

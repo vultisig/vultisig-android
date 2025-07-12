@@ -1,24 +1,14 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
 import com.vultisig.wallet.data.api.models.KyberSwapBuildRequest
-import com.vultisig.wallet.data.api.models.KyberSwapError
-import com.vultisig.wallet.data.api.models.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
-import com.vultisig.wallet.data.api.models.KyberSwapToken
-import com.vultisig.wallet.data.api.models.KyberSwapTokensResponse
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.gasForChain
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.*
-import io.ktor.client.call.body
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.*
-import java.math.BigInteger
 import io.ktor.http.path
 import javax.inject.Inject
 import kotlin.text.lowercase
@@ -26,24 +16,38 @@ import kotlin.text.lowercase
 interface KyberApi {
 
     suspend fun getSwapQuote(
-        chain: Chain, srcTokenContractAddress: String, dstTokenContractAddress: String,
-        amount: String, srcAddress: String, isAffiliate: Boolean
-    ): KyberSwapQuoteDeserialized
+        chain: Chain,
+        srcTokenContractAddress: String,
+        dstTokenContractAddress: String,
+        amount: String,
+        srcAddress: String,
+        isAffiliate: Boolean,
+    ): KyberSwapRouteResponse
+
+    suspend fun getKyberSwapQuote(
+        chain: Chain,
+        routeSummery: KyberSwapRouteResponse.RouteSummary,
+        from: String,
+        enableGasEstimation: Boolean,
+        isAffiliate: Boolean,
+    ): KyberSwapQuoteJson
 }
 
 class KyberApiImpl @Inject constructor(
     private val httpClient: HttpClient,
-    private val kyberSwapQuoteResponseJsonSerializer: KyberSwapQuoteResponseJsonSerializer,
     private val json: Json,
 ) : KyberApi {
     private val aggregatorApiBaseUrl = "https://aggregator-api.kyberswap.com"
-    private val tokenApiBaseUrl = "https://ks-setting.kyberswap.com"
 
 
     override suspend fun getSwapQuote(
-        chain: Chain, srcTokenContractAddress: String, dstTokenContractAddress: String,
-        amount: String, srcAddress: String, isAffiliate: Boolean
-    ): KyberSwapQuoteDeserialized {
+        chain: Chain,
+        srcTokenContractAddress: String,
+        dstTokenContractAddress: String,
+        amount: String,
+        srcAddress: String,
+        isAffiliate: Boolean,
+    ): KyberSwapRouteResponse {
         val sourceAddress =
             if (srcTokenContractAddress.isEmpty()) NULL_ADDRESS else srcTokenContractAddress
         val destinationAddress =
@@ -104,72 +108,19 @@ class KyberApiImpl @Inject constructor(
             }
         }
 
-        val responseString = response.body<String>()
-
-        if (!response.status.isSuccess()) {
-            return KyberSwapQuoteDeserialized.Error(
-                error = HttpStatusCode.fromValue(response.status.value).description
-            )
-        }
-        val errorResponse = runCatching {
-            json.decodeFromString<KyberSwapErrorResponse>(responseString)
-        }.getOrNull()
-
-        if (errorResponse != null && errorResponse.code != 0) {
-            throw KyberSwapError.ApiError(
-                errorResponse.code,
-                errorResponse.message,
-                errorResponse.details
-            )
-        }
-
-        val route = json.decodeFromString<KyberSwapRouteResponse>(responseString)
-        return KyberSwapQuoteDeserialized.Result(
-            buildTransactionWithFallback(
-                chain,
-                route,
-                srcAddress,
-                isAffiliate
-            )
-        )
+        return response.bodyOrThrow()
     }
 
-
-    private suspend fun buildTransactionWithFallback(
-        chain: Chain, routeResponse: KyberSwapRouteResponse, from: String, isAffiliate: Boolean
-    ): KyberSwapQuoteJson {
-        return try {
-            buildTransaction(
-                chain,
-                routeResponse,
-                from,
-                enableGasEstimation = true,
-                isAffiliate = isAffiliate
-
-            )
-        } catch (e: KyberSwapError.TransactionWillRevert) {
-            if (e.message?.contains("TransferHelper") == true) {
-                buildTransaction(
-                    chain,
-                    routeResponse,
-                    from,
-                    enableGasEstimation = false,
-                    isAffiliate
-                )
-            } else {
-                error(e.message ?: "Unknown KyberSwap transaction revert error")
-            }
-        }
-    }
-
-    private suspend fun buildTransaction(
-        chain: Chain, routeResponse: KyberSwapRouteResponse, from: String,
-        enableGasEstimation: Boolean, isAffiliate: Boolean
+    override suspend fun getKyberSwapQuote(
+        chain: Chain,
+        routeSummery: KyberSwapRouteResponse.RouteSummary,
+        from: String,
+        enableGasEstimation: Boolean,
+        isAffiliate: Boolean,
     ): KyberSwapQuoteJson {
 
-
-        val buildPayload = KyberSwapBuildRequest(
-            routeSummary = routeResponse.data.routeSummary,
+        val request =   KyberSwapBuildRequest(
+            routeSummary = routeSummery,
             sender = from,
             recipient = from,
             slippageTolerance = SLIPPAGE_TOLERANCE,
@@ -179,7 +130,8 @@ class KyberApiImpl @Inject constructor(
             referral = if (isAffiliate) REFERRER_ADDRESS else null,
             ignoreCappedSlippage = false
         )
-        val responseString = httpClient.post(aggregatorApiBaseUrl) {
+
+        return httpClient.post(aggregatorApiBaseUrl) {
             url {
                 path(
                     chain.raw.lowercase(),
@@ -194,60 +146,15 @@ class KyberApiImpl @Inject constructor(
                     )
                 }
             }
-            setBody(json.encodeToString(buildPayload))
-        }.bodyAsText()
-
-        val errorResponse = runCatching {
-            json.decodeFromString<KyberSwapErrorResponse>(responseString)
-        }.getOrNull()
-        if (errorResponse != null && errorResponse.code != 0) {
-            when {
-                errorResponse.message.contains("execution reverted") -> throw KyberSwapError.TransactionWillRevert(errorResponse.message)
-
-                errorResponse.message.contains("insufficient allowance") -> throw KyberSwapError.InsufficientAllowance(errorResponse.message)
-
-                errorResponse.message.contains("insufficient funds") -> throw KyberSwapError.InsufficientFunds(errorResponse.message)
-
-                else -> throw KyberSwapError.ApiError(
-                    errorResponse.code,
-                    errorResponse.message,
-                    errorResponse.details
-                )
-            }
-        }
-
-        val gasPrice = routeResponse.data.routeSummary.gasPrice
-        var buildResponse = json.decodeFromString<KyberSwapQuoteJson>(responseString)
-            .apply {
-                data = data.copy(gasPrice = gasPrice)
-            }
-
-        val calculatedGas = buildResponse.gasForChain(chain)
-        val finalGas =
-            if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
-        buildResponse = buildResponse.copy(
-            data = buildResponse.data.copy(gas = finalGas.toString())
-        )
-        val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
-        val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
-        val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
-        // Fix: buildResponse.data is a KyberSwapQuoteData, not a numeric type. You likely want to update a fee or value field, not replace the whole data object with a BigInteger.
-        // If you want to update a fee field inside data, do so like this (assuming 'fee' is a String or BigInteger):
-        val newFee = finalGas.toBigInteger() * finalGasPrice
-
-        buildResponse = buildResponse.copy(
-            data = buildResponse.data.copy(fee = newFee)
-        )
-
-        return buildResponse
+            setBody(json.encodeToString(request))
+        }.bodyOrThrow<KyberSwapQuoteJson>()
     }
+
 
     companion object {
         private const val REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        private const val GAS_PRICE_VALUE = 20000000000L
-        private const val MIN_GAS_PRICE = 1000000000L
         private const val SLIPPAGE_TOLERANCE = 2.5
     }
 }

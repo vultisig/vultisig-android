@@ -60,10 +60,4 @@ internal interface SerializerModule {
         impl: OneInchSwapQuoteResponseJsonSerializerImpl,
     ): OneInchSwapQuoteResponseJsonSerializer
 
-    @Binds
-    @Singleton
-    fun bindKyberSwapTransactionBuildingResponseSerializer(
-        impl: KyberSwapQuoteResponseJsonSerializerImpl
-    ): KyberSwapQuoteResponseJsonSerializer
-
 }
