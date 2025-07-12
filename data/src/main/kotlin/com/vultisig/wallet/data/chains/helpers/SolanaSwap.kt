@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson

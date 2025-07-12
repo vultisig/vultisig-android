@@ -31,7 +31,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             SwapProvider.THORCHAIN, SwapProvider.MAYA ->
                 from.dstToken
 
-            SwapProvider.LIFI, SwapProvider.ONEINCH ->
+            SwapProvider.LIFI, SwapProvider.ONEINCH, SwapProvider.KYBER ->
                 tokenRepository.getNativeToken(from.srcToken.chain.id)
 
             SwapProvider.JUPITER ->

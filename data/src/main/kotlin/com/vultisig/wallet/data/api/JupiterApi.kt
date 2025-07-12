@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.QuoteSwapTotalDataJson
-import com.vultisig.wallet.data.api.models.QuoteSwapTransactionJson
-import com.vultisig.wallet.data.api.models.SwapRouteResponseJson
+import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
+import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
+import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

@@ -59,4 +59,5 @@ internal interface SerializerModule {
     fun bindOneInchSwapQuoteResponseJsonSerializer(
         impl: OneInchSwapQuoteResponseJsonSerializerImpl,
     ): OneInchSwapQuoteResponseJsonSerializer
+
 }

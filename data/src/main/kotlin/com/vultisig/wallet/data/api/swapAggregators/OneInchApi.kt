@@ -1,6 +1,6 @@
-package com.vultisig.wallet.data.api
+package com.vultisig.wallet.data.api.swapAggregators
 
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.data.models.Chain

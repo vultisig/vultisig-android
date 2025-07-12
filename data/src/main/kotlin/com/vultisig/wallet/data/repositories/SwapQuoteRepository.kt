@@ -3,14 +3,19 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.JupiterApi
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.gasForChain
+import com.vultisig.wallet.data.api.swapAggregators.KyberApi
+import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
@@ -21,6 +26,7 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 
 interface SwapQuoteRepository {
@@ -32,6 +38,13 @@ interface SwapQuoteRepository {
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote
+
+    suspend fun getKyberSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+        isAffiliate: Boolean,
+    ): KyberSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
         srcToken: Coin,
@@ -76,6 +89,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val liFiChainApi: LiFiChainApi,
     private val jupiterApi: JupiterApi,
+    private val kyberApi: KyberApi
 ) : SwapQuoteRepository {
 
     override suspend fun getOneInchSwapQuote(
@@ -93,13 +107,82 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
         when (oneInchQuote) {
-            is OneInchSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(oneInchQuote.error)
+            is OneInchSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(
+                oneInchQuote.error
+            )
+
             is OneInchSwapQuoteDeserialized.Result -> {
                 oneInchQuote.data.error?.let { throw SwapException.handleSwapException(it) }
                 return oneInchQuote.data
             }
         }
     }
+
+    override suspend fun getKyberSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+        isAffiliate: Boolean,
+    ): KyberSwapQuoteJson {
+        val routeResponse = kyberApi.getSwapQuote(
+            chain = srcToken.chain,
+            srcTokenContractAddress = srcToken.contractAddress,
+            dstTokenContractAddress = dstToken.contractAddress,
+            amount = tokenValue.value.toString(),
+            srcAddress = srcToken.address,
+            isAffiliate = isAffiliate
+        )
+
+        val buildTransactionWithGasOption: suspend (Boolean) -> KyberSwapQuoteJson =
+            { enableGasEstimation: Boolean ->
+                buildTransaction(
+                    chain = srcToken.chain,
+                    routeSummary = routeResponse.data.routeSummary,
+                    response = kyberApi.getKyberSwapQuote(
+                        chain = srcToken.chain,
+                        routeSummary = routeResponse.data.routeSummary,
+                        from = srcToken.address,
+                        enableGasEstimation = enableGasEstimation,
+                        isAffiliate = isAffiliate
+                    ),
+                )
+        }
+
+        return try {
+            buildTransactionWithGasOption(true)
+        } catch (_: Exception) {
+            buildTransactionWithGasOption(false)
+        }
+    }
+
+
+
+    private fun buildTransaction(
+        chain: Chain,
+        routeSummary: KyberSwapRouteResponse.RouteSummary,
+        response: KyberSwapQuoteJson,
+    ): KyberSwapQuoteJson {
+        val gasPrice = routeSummary.gasPrice
+        val calculatedGas = response.gasForChain(chain)
+        val finalGas =
+            if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
+
+        val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
+        val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
+        val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
+        // Fix: buildResponse.data is a KyberSwapQuoteData, not a numeric type. You likely want to update a fee or value field, not replace the whole data object with a BigInteger.
+        // If you want to update a fee field inside data, do so like this (assuming 'fee' is a String or BigInteger):
+        val newFee = finalGas.toBigInteger() * finalGasPrice
+
+      return response.copy(
+            data = response.data.copy(
+                gasPrice = gasPrice,
+                fee = newFee,
+                gas = finalGas.toString()
+            )
+        )
+    }
+
 
     override suspend fun getMayaSwapQuote(
         dstAddress: String,
@@ -184,7 +267,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 val expectedDstTokenValue = thorQuote.data.expectedAmountOut
                     .convertToTokenValue(dstToken)
 
-                val recommendedMinTokenValue = thorQuote.data.recommendedMinAmountIn.convertToTokenValue(srcToken)
+                val recommendedMinTokenValue =
+                    thorQuote.data.recommendedMinAmountIn.convertToTokenValue(srcToken)
 
                 return SwapQuote.ThorChain(
                     expectedDstValue = expectedDstTokenValue,
@@ -195,7 +279,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 )
             }
         }
-
 
 
     }
@@ -288,9 +371,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
 
         val swapFee = jupiterQuote.routePlan
-            .firstOrNull { it.swapInfo.feeMint == fromToken }?.let {
-                it.swapInfo.feeAmount
-            } ?: "0"
+                .firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount ?: "0"
 
 
         return OneInchSwapQuoteJson(
@@ -306,7 +387,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             )
         )
     }
-
 
 
     private val Coin.streamingInterval: String
@@ -341,9 +421,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             "${chain.swapAssetName()}.${ticker}"
         }
     } else {
-        if (chain == Chain.Kujira && (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))) {
+        if (chain == Chain.Kujira && (contractAddress.contains("factory/") || contractAddress.contains(
+                "ibc/"
+            ))
+        ) {
             "${chain.swapAssetName()}.${ticker}"
-        } else if(chain == Chain.ThorChain)
+        } else if (chain == Chain.ThorChain)
             "${chain.swapAssetName()}.${ticker}"
         else
             "${chain.swapAssetName()}.${ticker}-${contractAddress}"
@@ -404,6 +487,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 ticker in thorEthTokens && ticker in mayaEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
@@ -411,29 +495,45 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 ticker in thorEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                 )
 
                 ticker in mayaEthTokens -> setOf(
                     SwapProvider.ONEINCH,
+                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                 )
 
-                else -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+                else -> setOf(
+                    SwapProvider.KYBER,
+                    SwapProvider.ONEINCH,
+                    SwapProvider.LIFI
+                )
             }
 
             Chain.BscChain -> if (ticker in thorBscTokens) setOf(
+                SwapProvider.KYBER,
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
-            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+            ) else setOf(
+                SwapProvider.KYBER,
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI
+            )
 
             Chain.Avalanche -> if (ticker in thorAvaxTokens) setOf(
+                SwapProvider.KYBER,
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
-            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
+            ) else setOf(
+                SwapProvider.KYBER,
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI
+            )
 
             Chain.Base -> setOf(
                 SwapProvider.LIFI,
@@ -467,7 +567,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.MAYA
             ) else setOf(SwapProvider.LIFI)
 
-            Chain.Blast, Chain.CronosChain-> setOf(SwapProvider.LIFI)
+            Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
             Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
             Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
@@ -479,5 +579,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     companion object {
         private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
             "So11111111111111111111111111111111111111112"
+        private const val MIN_GAS_PRICE = 1000000000L
+        private const val GAS_PRICE_VALUE = 20000000000L
     }
 }

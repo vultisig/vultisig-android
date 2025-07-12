@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializer

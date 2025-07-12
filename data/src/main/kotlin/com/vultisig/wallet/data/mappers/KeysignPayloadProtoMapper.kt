@@ -1,7 +1,9 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -10,6 +12,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
@@ -76,6 +79,35 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             },
                         )
                     )
+                }
+                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
+                    SwapPayload.Kyber(
+                        KyberSwapPayloadJson(
+                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                            toCoin = requireNotNull(it.toCoin).toCoin(),
+                            fromAmount = BigInteger(it.fromAmount),
+                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
+                            quote = requireNotNull(it.quote).let { it ->
+                                KyberSwapQuoteJson(
+                                    code = 0,
+                                    message = "Success",
+                                    data = KyberSwapQuoteData(
+                                        amountIn = from.toAmount,
+                                        amountInUsd = "0",
+                                        amountOut = it.dstAmount,
+                                        amountOutUsd = "0",
+                                        gas = it.tx?.gas.toString(),
+                                        gasUsd = "0",
+                                        data = it.tx?.data ?: "",
+                                        routerAddress = it.tx?.to ?: "",
+                                        transactionValue = it.tx?.value ?: "",
+                                        gasPrice = it.tx?.gasPrice ?: "",
+                                        fee = it.tx?.fee?.toBigInteger() ?: BigInteger.ZERO,
+                                    ),
+                                    requestId = ""
+                                )
+                            }
+                        ))
                 }
 
                 from.thorchainSwapPayload != null -> from.thorchainSwapPayload.let {
