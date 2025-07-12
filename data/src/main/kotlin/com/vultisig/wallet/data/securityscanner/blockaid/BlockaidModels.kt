@@ -16,7 +16,9 @@ data class SolanaScanTransactionRequestJson(
     @SerialName("encoding")
     val encoding: String,
     @SerialName("transactions")
-    val transactions: List<String>
+    val transactions: List<String>,
+    @SerialName("method")
+    val method: String,
 )
 
 @Serializable
@@ -99,7 +101,37 @@ data class BlockaidTransactionScanResponseJson(
     val status: String?,
     @SerialName("validation")
     val validation: BlockaidValidationJson?,
+    @SerialName("result")
+    val result: BlockaidSolanaResultJson?,
+    @SerialName("error")
+    val error: String?,
 ) {
+    @Serializable
+    data class BlockaidSolanaResultJson(
+        @SerialName("validation")
+        val validation: BlockaidSolanaValidationJson,
+    ) {
+        @Serializable
+        data class BlockaidSolanaValidationJson(
+            @SerialName("result_type")
+            val resultType: String,
+            @SerialName("reason")
+            val reason: String,
+            @SerialName("features")
+            val features: List<String> = emptyList(),
+            @SerialName("extended_features")
+            val extendedFeatures: List<BlockaidSolanaExtendedFeaturesJson> = emptyList(),
+        ) {
+            @Serializable
+            data class BlockaidSolanaExtendedFeaturesJson(
+                @SerialName("type")
+                val type: String,
+                @SerialName("description")
+                val description: String,
+            )
+        }
+    }
+
     @Serializable
     data class BlockaidValidationJson(
         @SerialName("status")

@@ -33,7 +33,6 @@ class SolanaHelper(
     }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-
         val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
             ?: error("Invalid blockChainSpecific")
         if (keysignPayload.coin.chain != Chain.Solana) {
