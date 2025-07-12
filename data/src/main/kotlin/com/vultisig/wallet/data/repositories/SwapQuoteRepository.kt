@@ -124,7 +124,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): KyberSwapQuoteJson {
-        val buildResponse = kyberApi.getSwapQuote(
+        val routeResponse = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
@@ -133,24 +133,25 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate
         )
 
-        val createTransaction: suspend (Boolean) -> KyberSwapQuoteJson = { enableGasEstimation: Boolean ->
-            buildTransaction(
-                chain = srcToken.chain,
-                routeSummery =buildResponse.data.routeSummary,
-                response = kyberApi.getKyberSwapQuote(
+        val buildTransactionWithGasOption: suspend (Boolean) -> KyberSwapQuoteJson =
+            { enableGasEstimation: Boolean ->
+                buildTransaction(
                     chain = srcToken.chain,
-                    routeSummery = buildResponse.data.routeSummary,
-                    from = srcToken.address,
-                    enableGasEstimation = enableGasEstimation,
-                    isAffiliate = isAffiliate
-                ),
-            )
+                    routeSummary = routeResponse.data.routeSummary,
+                    response = kyberApi.getKyberSwapQuote(
+                        chain = srcToken.chain,
+                        routeSummary = routeResponse.data.routeSummary,
+                        from = srcToken.address,
+                        enableGasEstimation = enableGasEstimation,
+                        isAffiliate = isAffiliate
+                    ),
+                )
         }
 
         return try {
-            createTransaction(true)
+            buildTransactionWithGasOption(true)
         } catch (_: Exception) {
-            createTransaction(false)
+            buildTransactionWithGasOption(false)
         }
     }
 
@@ -158,10 +159,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     private fun buildTransaction(
         chain: Chain,
-        routeSummery: KyberSwapRouteResponse.RouteSummary,
+        routeSummary: KyberSwapRouteResponse.RouteSummary,
         response: KyberSwapQuoteJson,
     ): KyberSwapQuoteJson {
-        val gasPrice = routeSummery.gasPrice
+        val gasPrice = routeSummary.gasPrice
         val calculatedGas = response.gasForChain(chain)
         val finalGas =
             if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas

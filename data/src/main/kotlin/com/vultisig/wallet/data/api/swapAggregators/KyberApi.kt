@@ -26,7 +26,7 @@ interface KyberApi {
 
     suspend fun getKyberSwapQuote(
         chain: Chain,
-        routeSummery: KyberSwapRouteResponse.RouteSummary,
+        routeSummary: KyberSwapRouteResponse.RouteSummary,
         from: String,
         enableGasEstimation: Boolean,
         isAffiliate: Boolean,
@@ -113,14 +113,14 @@ class KyberApiImpl @Inject constructor(
 
     override suspend fun getKyberSwapQuote(
         chain: Chain,
-        routeSummery: KyberSwapRouteResponse.RouteSummary,
+        routeSummary: KyberSwapRouteResponse.RouteSummary,
         from: String,
         enableGasEstimation: Boolean,
         isAffiliate: Boolean,
     ): KyberSwapQuoteJson {
 
         val request =   KyberSwapBuildRequest(
-            routeSummary = routeSummery,
+            routeSummary = routeSummary,
             sender = from,
             recipient = from,
             slippageTolerance = SLIPPAGE_TOLERANCE,
