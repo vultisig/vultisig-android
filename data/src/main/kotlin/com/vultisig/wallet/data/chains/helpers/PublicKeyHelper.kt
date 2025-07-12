@@ -10,5 +10,4 @@ internal object PublicKeyHelper {
     ): String {
         return Tss.getDerivedPubKey(hexPublicKey, hexChainCode, derivePath, false)
     }
-
 }

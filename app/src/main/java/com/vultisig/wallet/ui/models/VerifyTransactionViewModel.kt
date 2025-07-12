@@ -6,14 +6,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
+import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.securityscanner.toSecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -38,13 +42,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import wallet.core.jni.Base58
+import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
 internal data class SendTxUiModel(
     val token: ValuedToken = ValuedToken.Empty,
 
-    val networkFee: ValuedToken = ValuedToken.Empty,
+    val networkFeeFiatValue: String = "",
+    val networkFeeTokenValue: String = "",
 
     val srcAddress: String = "",
     val dstAddress: String = "",
@@ -285,7 +292,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     it.copy(txScanStatus = TransactionScanStatus.Scanning)
                 }
 
-                val securityScannerTransaction = transaction.toSecurityScannerTransaction()
+                val securityScannerTransaction =
+                    securityScannerService.createSecurityScannerTransaction(transaction)
+
                 val result = withContext(Dispatchers.IO) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }
