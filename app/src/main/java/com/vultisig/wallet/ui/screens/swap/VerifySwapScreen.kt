@@ -128,7 +128,7 @@ internal fun VerifySwapScreen(
         confirmTitle = confirmTitle,
         isConsentsEnabled = isConsentsEnabled,
         hasFastSign = state.hasFastSign,
-        vaultName = state.vaultName?.asString(),
+        vaultName = state.vaultName,
         onConsentReceiveAmount = onConsentReceiveAmount,
         onConsentAmount = onConsentAmount,
         onConsentAllowance = onConsentAllowance,
