@@ -17,12 +17,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.ErrorView
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun JoinKeygenScreen(
@@ -31,10 +33,16 @@ internal fun JoinKeygenScreen(
     KeepScreenOn()
 
     val state by model.state.collectAsState()
-
-    JoinKeygenScreen(
-        state = state,
-    )
+    val error = state.error
+    if (error == null) {
+        JoinKeygenScreen(state = state)
+    } else {
+        ErrorView(
+            errorLabel = error.message.asString(),
+            buttonText = "back",
+            onButtonClick = model::navigateBack
+        )
+    }
 }
 
 @Composable
