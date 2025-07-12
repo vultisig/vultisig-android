@@ -23,10 +23,13 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
@@ -49,11 +52,22 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
-data class JoinKeygenUiModel(
+internal sealed class JoinKeygenError(val message: UiText) {
+    data object DuplicateVaultName : JoinKeygenError("Vault with duplicate name exists".asUiText())
+    data object InvalidQr : JoinKeygenError("Invalid QR code".asUiText())
+    data object UnknownTss : JoinKeygenError("Unknown TssAction".asUiText())
+    data object WrongResharePrefix : JoinKeygenError("Wrong reshare prefix".asUiText())
+    data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
+}
+
+
+
+internal data class JoinKeygenUiModel(
     val isSuccess: Boolean = false,
+    val error: JoinKeygenError? = null
 )
 
-private class DuplicateVaultNameException : Exception("Vault with duplicate name exists")
+private class JoinKeygenException(val error: JoinKeygenError) : Exception()
 
 @HiltViewModel
 internal class JoinKeygenViewModel @Inject constructor(
@@ -85,7 +99,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 )
 
                 val bytes = decompressQr(
-                    (deepLink.getJsonData() ?: error("Invalid QR code"))
+                    (deepLink.getJsonData() ?: error(InvalidQr))
                         .decodeBase64Bytes()
                 )
 
@@ -133,7 +147,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         if (existingVault != null &&
                             existingVault.resharePrefix != message.oldResharePrefix
                         ) {
-                            error("Wrong reshare prefix")
+                            error(WrongResharePrefix)
                         }
 
                         // if we don't reshare vault which we already have,
@@ -169,7 +183,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         )
                     }
 
-                    else -> error("Unknown TssAction")
+                    else -> error(UnknownTss)
                 }
 
                 sessionApi.startSession(
@@ -181,13 +195,41 @@ internal class JoinKeygenViewModel @Inject constructor(
                 waitForKeygenToStart(session)
             } catch (e: Exception) {
                 Timber.e(e)
+                when(e){
+                    is JoinKeygenException-> {
+                        state.update {
+                            it.copy(error = e.error)
+                        }
+                    }
+                    else -> {
+                        state.update {
+                            it.copy(
+                                error = UnknownError(
+                                    e.message ?: "An unexpected error occurred"
+                                )
+                            )
+                        }
+                    }
+                }
             }
+        }
+    }
+
+
+    private fun error(error: JoinKeygenError): Nothing {
+        throw JoinKeygenException(error)
+    }
+
+
+    fun navigateBack(){
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
         }
     }
 
     private fun assertNoVaultNameDuplicates(existingVaults: List<Vault>, name: String) {
         if (existingVaults.any { it.name == name }) {
-            throw DuplicateVaultNameException()
+            error(DuplicateVaultName)
         }
     }
 
