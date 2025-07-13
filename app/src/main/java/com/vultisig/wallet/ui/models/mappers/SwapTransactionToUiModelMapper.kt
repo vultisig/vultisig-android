@@ -79,7 +79,8 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                 value = mapTokenValueToDecimalUiString(from.gasFees),
                 fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
             ),
-            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees) + from.gasFees.unit,
+            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
+                    + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }
