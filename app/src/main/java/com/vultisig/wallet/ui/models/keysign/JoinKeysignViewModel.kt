@@ -458,6 +458,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
                 )
                 val gasFeeFiatValue = estimatedGasFee.fiatValue
+                val vaultName = _currentVault.name
 
                 when (swapPayload) {
                     is SwapPayload.OneInch -> {
@@ -519,7 +520,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransaction
+                                tx = swapTransaction,
+                                vaultName = vaultName,
                             )
                         )
                     }
@@ -571,9 +573,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
                         )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransactionUiModel
+                                tx = swapTransactionUiModel,
+                                vaultName = vaultName,
                             )
                         )
                     }
@@ -629,7 +633,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransactionUiModel
+                                tx = swapTransactionUiModel,
+                                vaultName = vaultName,
                             )
                         )
                     }
