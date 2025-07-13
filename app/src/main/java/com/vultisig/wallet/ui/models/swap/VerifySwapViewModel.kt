@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -58,6 +59,8 @@ internal data class VerifySwapUiModel(
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
+    val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
+    val showScanningWarning: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() = consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)

@@ -48,7 +48,10 @@ import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -115,6 +118,8 @@ internal fun VerifySwapScreen(
     VerifySwapScreen(
         showToolbar = showToolbar,
         tx = state.tx,
+        scanStatus = state.txScanStatus,
+        hasToShowWarningScanning = state.showScanningWarning,
         hasAllConsents = state.hasAllConsents,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
@@ -135,6 +140,8 @@ internal fun VerifySwapScreen(
 private fun VerifySwapScreen(
     showToolbar: Boolean,
     tx: SwapTransactionUiModel,
+    scanStatus: TransactionScanStatus,
+    hasToShowWarningScanning: Boolean,
     hasAllConsents: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
@@ -168,6 +175,8 @@ private fun VerifySwapScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
+
+                SecurityScannerBadget(scanStatus)
 
                 Column(
                     modifier = Modifier
@@ -281,6 +290,16 @@ private fun VerifySwapScreen(
                         vertical = 12.dp,
                     )
             ) {
+
+                if (hasToShowWarningScanning &&
+                    scanStatus is TransactionScanStatus.Scanned) {
+                    SecurityScannerBottomSheet(
+                        securityScannerModel = scanStatus.result,
+                        onContinueAnyway = onConfirmScanning,
+                        onDismissRequest = onDismissScanning,
+                    )
+                }
+
                 if (hasFastSign) {
                     VsButton(
                         label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
@@ -441,6 +460,8 @@ private fun VerifySwapScreenPreview() {
         showToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
+        hasToShowWarningScanning = false,
+        scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,
         consentReceiveAmount = false,
         tx = SwapTransactionUiModel(
