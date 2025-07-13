@@ -511,7 +511,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 ),
                             ),
                             providerFee = ValuedToken(
-                                token = dstToken,
+                                token = feeToken,
                                 value = value.toString(),
                                 fiatValue = fiatValueToStringMapper.map(estimatedFee),
                             ),
