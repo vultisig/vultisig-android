@@ -61,7 +61,7 @@ internal data class VerifySwapUiModel(
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
-    val vaultName: String? = null,
+    val vaultName: String = "",
 ) {
     val hasAllConsents: Boolean
         get() = consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)
@@ -104,7 +104,7 @@ internal class VerifySwapViewModel @Inject constructor(
                 it.copy(
                     consentAllowance = consentAllowance,
                     tx = mapTransactionToUiModel(transaction),
-                    vaultName = vaultName ?: "Main Vault",
+                    vaultName = vaultName?.takeIf { it.isNotEmpty() } ?: "Main Vault",
                 )
             }
         }

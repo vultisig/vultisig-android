@@ -149,7 +149,7 @@ private fun VerifySwapScreen(
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     hasFastSign: Boolean,
-    vaultName: String?,
+    vaultName: String,
     onConsentReceiveAmount: (Boolean) -> Unit,
     onConsentAmount: (Boolean) -> Unit,
     onConsentAllowance: (Boolean) -> Unit,
