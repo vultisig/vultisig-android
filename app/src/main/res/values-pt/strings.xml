@@ -98,6 +98,7 @@
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
     <string name="verify_swap_sign_button">Sign</string>
+    <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>

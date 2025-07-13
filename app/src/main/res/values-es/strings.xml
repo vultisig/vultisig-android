@@ -147,6 +147,7 @@
     <string name="token_logo">Logotipo de token</string>
     <string name="tokens">Tokens</string>
     <string name="chains">Cadenas</string>
+    <string name="swap_screen_invalid_vault">La transacción probablemente fallará, la bóveda no pudo cargarse.</string>
     <string name="vault_settings_backup_subtitle">Realice una copia de seguridad de su recurso compartido de bóveda</string>
     <string name="send_amount_currency">Cantidad (en %s)</string>
     <string name="vault_settings_error_backup_file">ocurrió un error</string>

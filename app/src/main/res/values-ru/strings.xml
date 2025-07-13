@@ -177,6 +177,7 @@
     <string name="swap_form_invalid_amount">Недопустимая сумма</string>
     <string name="send_from_invalid_amount">Недопустимая сумма</string>
     <string name="keygen_peer_discovery_looking_for_devices">Поиск устройств…</string>
+    <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Выберите сопрягаемые устройства</string>
     <string name="peer_discovery_hint_connect_to_internet">Подключите все устройства к одной сети с открытым приложением Vultisig</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Подключите все устройства к интернету с открытым приложением Vultisig</string>

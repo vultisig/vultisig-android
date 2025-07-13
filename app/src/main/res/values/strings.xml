@@ -389,6 +389,7 @@
     <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be Zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
+    <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="backup_password_screen_skip">Skip Password</string>
     <string name="backup_password_screen_empty_password">Please use &#8220;Skip Password&#8221; to save without password</string>
     <string name="edit_address_title">Edit Address</string>

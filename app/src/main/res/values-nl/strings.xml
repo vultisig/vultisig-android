@@ -178,6 +178,7 @@
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
     <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecteer de koppelingsapparaten</string>
+    <string name="swap_screen_invalid_vault">De transactie zal waarschijnlijk mislukken, de kluis kon niet worden geladen.</string>
     <string name="peer_discovery_hint_connect_to_internet">Verbind alle apparaten met hetzelfde netwerk met Vultisig open</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Verbind alle apparaten met het internet met Vultisig open</string>
     <string name="verify_transaction_memo_title">Memo</string>

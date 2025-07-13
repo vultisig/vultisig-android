@@ -96,6 +96,7 @@
     <string name="home_scree_done">fertig</string>
     <string name="verify_swap_sign_button">Transaktion Signieren</string>
     <string name="swap_form_min_pay">min. Auszahlung</string>
+    <string name="swap_screen_invalid_vault">Die Transaktion wird wahrscheinlich fehlschlagen, Tresor konnte nicht geladen werden.</string>
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>

@@ -100,6 +100,7 @@
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Devo registrarmi?</string>
     <string name="home_screen_title">Cassaforti</string>
+    <string name="swap_screen_invalid_vault">La transazione probabilmente fallirà, la cassaforte non è stata caricata.</string>
     <string name="join_keysign_waiting_keysign_start">In attesa dell\’avvio di Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">I token VULT vengono bruciati a causa delle commissioni.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">I token VULT vengono distribuiti agli utenti tramite airdrop.</string>

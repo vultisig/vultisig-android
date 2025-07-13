@@ -90,6 +90,15 @@ internal class VerifySwapViewModel @Inject constructor(
         viewModelScope.launch {
             val transaction = swapTransactionRepository.getTransaction(transactionId)
             val vaultName = vaultRepository.get(vaultId)?.name
+            if (vaultName == null) {
+                state.update {
+                    it.copy(
+                        errorText = UiText.StringResource(
+                            R.string.swap_screen_invalid_vault
+                        )
+                    )
+                }
+            }
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
