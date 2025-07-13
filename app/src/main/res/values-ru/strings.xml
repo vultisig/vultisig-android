@@ -156,7 +156,7 @@
     <string name="chain_account_item_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="settings_screen_vault_settings">Настройки хранилища</string>
     <string name="home_scree_done">Готово</string>
-    <string name="verify_swap_sign_button">Подписать</string>
+    <string name="verify_swap_sign_button">Подписать транзакцию</string>
     <string-array name="digit_words">
         <item>ноль</item>
         <item>один</item>
@@ -171,11 +171,13 @@
     </string-array>
     <string name="swap_error_no_amount">Сумма должна быть положительным числом</string>
     <string name="naming_vault_screen_invalid_name">Недопустимое имя</string>
+    <string name="swap_form_min_pay">мин. выплата</string>
     <string name="rename_vault_invalid_name">Недопустимое имя</string>
     <string name="vault_name_too_long_error">Имя хранилища слишком длинное</string>
     <string name="swap_form_invalid_amount">Недопустимая сумма</string>
     <string name="send_from_invalid_amount">Недопустимая сумма</string>
     <string name="keygen_peer_discovery_looking_for_devices">Поиск устройств…</string>
+    <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Выберите сопрягаемые устройства</string>
     <string name="peer_discovery_hint_connect_to_internet">Подключите все устройства к одной сети с открытым приложением Vultisig</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Подключите все устройства к интернету с открытым приложением Vultisig</string>

@@ -446,7 +446,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     nativeToken, _currentVault
                 )
                 val gasFee = gasFeeRepository.getGasFee(chain, nativeTokenAddress)
-                val estimatedGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
+                val estimatedNetworkGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
                             (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
@@ -457,7 +457,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         selectedToken = srcToken,
                     )
                 )
-                val gasFeeFiatValue = estimatedGasFee.fiatValue
+                val networkGasFeeFiatValue = estimatedNetworkGasFee.fiatValue
+
+                val vaultName = _currentVault.name
 
                 when (swapPayload) {
                     is SwapPayload.OneInch -> {
@@ -497,7 +499,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -509,9 +510,20 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
+                            providerFee = ValuedToken(
+                                token = feeToken,
+                                value = value.toString(),
+                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                            ),
+                            networkFee = ValuedToken(
+                                token = srcToken,
+                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                            ),
+                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)+
+                                    " ${estimatedNetworkGasFee.tokenValue.unit}",
                             totalFee = fiatValueToStringMapper.map(
-                                estimatedFee + gasFeeFiatValue
+                                estimatedFee + networkGasFeeFiatValue
                             ),
                         )
 
@@ -519,7 +531,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransaction
+                                tx = swapTransaction,
+                                vaultName = vaultName,
                             )
                         )
                     }
@@ -553,7 +566,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -565,15 +577,29 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
+                            networkFee = ValuedToken(
+                                token = srcToken,
+                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                            ),
+                            providerFee = ValuedToken(
+                                token = dstToken,
+                                value = quote.fees.value.toString(),
+                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                            ),
+                            networkFeeFormatted =
+                                mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
+                                        " ${estimatedNetworkGasFee.tokenValue.unit}",
                             totalFee = fiatValueToStringMapper.map(
-                                estimatedFee + gasFeeFiatValue
+                                estimatedFee + networkGasFeeFiatValue
                             ),
                         )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransactionUiModel
+                                tx = swapTransactionUiModel,
+                                vaultName = vaultName,
                             )
                         )
                     }
@@ -621,15 +647,28 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
+                            providerFee = ValuedToken(
+                                token = dstToken,
+                                value = quote.fees.value.toString(),
+                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                            ),
+                            networkFee = ValuedToken(
+                                token = srcToken,
+                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                            ),
+                            networkFeeFormatted =
+                                mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)
+                                        + " ${estimatedNetworkGasFee.tokenValue.unit}",
                             totalFee = fiatValueToStringMapper.map(
-                                estimatedFee + gasFeeFiatValue
+                                estimatedFee + networkGasFeeFiatValue
                             ),
                         )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransactionUiModel
+                                tx = swapTransactionUiModel,
+                                vaultName = vaultName,
                             )
                         )
                     }
