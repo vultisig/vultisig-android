@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -32,6 +33,8 @@ internal data class SwapTransactionUiModel(
     val providerFee: ValuedToken = ValuedToken.Empty,
 
     val totalFee: String = "",
+    val networkFeeFormatted: String = "",
+    val providerFeeFormatted: String = "",
 
     val hasConsentAllowance: Boolean = false,
 )
@@ -58,6 +61,7 @@ internal data class VerifySwapUiModel(
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
+    val vaultName: String = "",
 ) {
     val hasAllConsents: Boolean
         get() = consentAmount && consentReceiveAmount && (consentAllowance || !tx.hasConsentAllowance)
@@ -73,24 +77,34 @@ internal class VerifySwapViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
     private val password = MutableStateFlow<String?>(null)
-
     private val args = savedStateHandle.toRoute<Route.VerifySwap>()
-
     private val vaultId: VaultId = args.vaultId
     private val transactionId: String = args.transactionId
 
     init {
         viewModelScope.launch {
             val transaction = swapTransactionRepository.getTransaction(transactionId)
+            val vaultName = vaultRepository.get(vaultId)?.name
+            if (vaultName == null) {
+                state.update {
+                    it.copy(
+                        errorText = UiText.StringResource(
+                            R.string.swap_screen_invalid_vault
+                        )
+                    )
+                }
+            }
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
-                    tx = mapTransactionToUiModel(transaction)
+                    tx = mapTransactionToUiModel(transaction),
+                    vaultName = vaultName?.takeIf { it.isNotEmpty() } ?: "Main Vault",
                 )
             }
         }
@@ -146,8 +160,10 @@ internal class VerifySwapViewModel @Inject constructor(
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                launchKeysign(keysignInitType, transactionId, password.value,
-                    Route.Keysign.Keysign.TxType.Swap, vaultId)
+                launchKeysign(
+                    keysignInitType, transactionId, password.value,
+                    Route.Keysign.Keysign.TxType.Swap, vaultId
+                )
             }
         } else {
             state.update {

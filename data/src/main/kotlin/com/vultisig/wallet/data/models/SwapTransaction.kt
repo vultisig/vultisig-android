@@ -14,6 +14,7 @@ sealed interface SwapTransaction {
     val expectedDstTokenValue: TokenValue
     val blockChainSpecific: BlockChainSpecificAndUtxo
     val estimatedFees: TokenValue
+    val gasFees: TokenValue
     val memo: String?
     val payload: SwapPayload
     val isApprovalRequired: Boolean
@@ -29,6 +30,7 @@ sealed interface SwapTransaction {
         override val expectedDstTokenValue: TokenValue,
         override val blockChainSpecific: BlockChainSpecificAndUtxo,
         override val estimatedFees: TokenValue,
+        override val gasFees: TokenValue,
         override val memo: String?,
         override val payload: SwapPayload,
         override val isApprovalRequired: Boolean,

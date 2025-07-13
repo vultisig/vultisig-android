@@ -148,6 +148,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
 
+    private val gasEstimatedToken = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
     private val gasFeeFiat = MutableStateFlow<FiatValue?>(null)
@@ -309,6 +310,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             isApprovalRequired = isApprovalRequired,
                             memo = quote.data.memo,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -362,6 +364,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -409,6 +412,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -686,6 +690,7 @@ internal class SwapFormViewModel @Inject constructor(
                         )
 
                         gasFeeFiat.value = estimatedFee.fiatValue
+                        gasEstimatedToken.value = estimatedFee.tokenValue
 
                         uiState.update {
                             it.copy(
