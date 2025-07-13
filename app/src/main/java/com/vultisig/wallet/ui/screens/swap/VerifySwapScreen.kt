@@ -487,13 +487,10 @@ internal fun VerifyVaultDetails(
             if (metadata.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(4.dp))
 
-                val prefix = metadata.take(4)
-                val suffix = if (metadata.length > 4) metadata.takeLast(4) else ""
-
-                val display = if (metadata.length > 8) {
-                    "($prefix...$suffix)"
-                } else {
-                    "($metadata)"
+                val display = when {
+                    metadata.length > 8 -> "(${metadata.take(4)}...${metadata.takeLast(4)})"
+                    metadata.isNotEmpty() -> "($metadata)"
+                    else -> ""
                 }
 
                 Text(
