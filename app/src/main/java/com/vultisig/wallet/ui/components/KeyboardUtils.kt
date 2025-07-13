@@ -15,8 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 
 @Composable
 internal fun rememberKeyboardVisibilityAsState(): State<Boolean> {
-    val isImeVisible = ViewCompat.getRootWindowInsets(LocalView.current)
-        ?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     return rememberUpdatedState(isImeVisible)
 }
 
