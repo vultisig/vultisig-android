@@ -57,7 +57,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-            srcNativeLogo = from.srcToken.getNativeLogo(),
+            srcNativeLogo = tokenRepository.getNativeLogo(from.srcToken),
             dst = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                 token = from.dstToken,
@@ -69,7 +69,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-            dstNativeLogo = from.dstToken.getNativeLogo(),
+            dstNativeLogo = tokenRepository.getNativeLogo(from.dstToken),
             hasConsentAllowance = from.isApprovalRequired,
             providerFee = ValuedToken(
                 token = tokenValue,
@@ -85,12 +85,5 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
-    }
-
-    private suspend fun Coin.getNativeLogo(): String {
-        if (!this.isNativeToken) {
-            return tokenRepository.getNativeToken(this.chain.id).logo
-        }
-        return this.logo
     }
 }

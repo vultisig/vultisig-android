@@ -499,6 +499,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -510,6 +511,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             providerFee = ValuedToken(
                                 token = feeToken,
                                 value = value.toString(),
@@ -566,6 +568,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -577,6 +580,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
@@ -635,7 +639,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -647,6 +651,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             providerFee = ValuedToken(
                                 token = dstToken,
                                 value = quote.fees.value.toString(),
