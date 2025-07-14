@@ -510,7 +510,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
 
                             totalFee = fiatValueToStringMapper.map(
-                                estimatedFee + gasFeeFiatValue
+                                estimatedFee + networkGasFeeFiatValue
                             ),
                         )
 

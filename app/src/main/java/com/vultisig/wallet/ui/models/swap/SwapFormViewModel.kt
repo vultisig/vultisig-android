@@ -415,6 +415,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
