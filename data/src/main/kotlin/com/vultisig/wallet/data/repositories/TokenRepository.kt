@@ -44,6 +44,8 @@ interface TokenRepository {
 
     suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
 
+    suspend fun getNativeLogo(coin: Coin): String
+
     val builtInTokens: Flow<List<Coin>>
 
     val nativeTokens: Flow<List<Coin>>
@@ -255,6 +257,13 @@ internal class TokenRepositoryImpl @Inject constructor(
                     hexPublicKey = derivedPublicKey
                 )
             }
+    }
+
+    override suspend fun getNativeLogo(coin: Coin): String {
+        if (!coin.isNativeToken) {
+            return getNativeToken(coin.chain.id).logo
+        }
+        return coin.logo
     }
 
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
