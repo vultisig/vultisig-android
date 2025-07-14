@@ -17,5 +17,4 @@ internal class FiatValueToStringMapperImpl @Inject constructor() : FiatValueToSt
         currencyFormat.currency = Currency.getInstance(it.currency)
         currencyFormat.format(it.value)
     }
-
 }

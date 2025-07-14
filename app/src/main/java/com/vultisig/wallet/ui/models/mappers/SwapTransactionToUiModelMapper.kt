@@ -38,11 +38,12 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                 from.srcToken
         }
 
-        val fiatFees = convertTokenValueToFiat(
+        val quotesFeesFiat = convertTokenValueToFiat(
             tokenValue,
             from.estimatedFees,
             currency
         )
+
         return SwapTransactionUiModel(
             src = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.srcTokenValue),
@@ -67,10 +68,20 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-
             hasConsentAllowance = from.isApprovalRequired,
-            totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
+            providerFee = ValuedToken(
+                token = tokenValue,
+                value = from.estimatedFees.value.toString(),
+                fiatValue = fiatValueToStringMapper.map(quotesFeesFiat),
+            ),
+            networkFee = ValuedToken(
+                token = from.srcToken,
+                value = mapTokenValueToDecimalUiString(from.gasFees),
+                fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
+            ),
+            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
+                    + " ${from.gasFees.unit}",
+            totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }
-
 }

@@ -140,12 +140,14 @@
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
     <string name="settings_screen_vault_settings">Configuración Bóvedas</string>
     <string name="home_scree_done">hecho</string>
-    <string name="verify_swap_sign_button">Firmar</string>
+    <string name="verify_swap_sign_button">Firmar Transación</string>
+    <string name="swap_form_min_pay">pago mín.</string>
     <string name="swap_error_no_amount">La cantidad debe ser un número positivo</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>
     <string name="tokens">Tokens</string>
     <string name="chains">Cadenas</string>
+    <string name="swap_screen_invalid_vault">La transacción probablemente fallará, la bóveda no pudo cargarse.</string>
     <string name="vault_settings_backup_subtitle">Realice una copia de seguridad de su recurso compartido de bóveda</string>
     <string name="send_amount_currency">Cantidad (en %s)</string>
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
