@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
@@ -185,7 +186,7 @@ fun SettingsScreen(navController: NavHostController) {
                 R.drawable.shield_check,
                 stringResource(R.string.settings_screen_privacy_policy)
             ) {
-                uriHandler.openUri("https://vultisig.com/privacy")
+                uriHandler.openUri(VsAuxiliaryLinks.PRIVACY)
             }
 
 
@@ -193,7 +194,7 @@ fun SettingsScreen(navController: NavHostController) {
                 R.drawable.note,
                 stringResource(R.string.settings_screen_tos)
             ) {
-                uriHandler.openUri("https://vultisig.com/termofservice")
+                uriHandler.openUri(VsAuxiliaryLinks.TERMS_OF_SERVICE)
             }
 
             UiSpacer(weight = 1f)
@@ -205,21 +206,21 @@ fun SettingsScreen(navController: NavHostController) {
                     painter = painterResource(id = R.drawable.settings_github),
                     contentDescription = "github",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://github.com/vultisig")
+                        uriHandler.openUri(VsAuxiliaryLinks.GITHUB)
                     }
                 )
                 Image(
                     painter = painterResource(id = R.drawable.settings_twitter),
                     contentDescription = "twitter",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://twitter.com/vultisig")
+                        uriHandler.openUri(VsAuxiliaryLinks.TWITTER)
                     }
                 )
                 Image(
                     painter = painterResource(id = R.drawable.settings_discord),
                     contentDescription = "discord",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://discord.gg/54wEtGYxuv")
+                        uriHandler.openUri(VsAuxiliaryLinks.DISCORD)
                     }
                 )
             }
