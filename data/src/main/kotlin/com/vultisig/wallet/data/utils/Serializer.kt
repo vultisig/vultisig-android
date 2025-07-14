@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
