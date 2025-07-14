@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -88,7 +89,10 @@ internal class SelectNetworkViewModel @Inject constructor(
         ) { chains, query ->
             val filteredChains = chains
                 .asSequence()
-                .filter { it.raw.contains(query, ignoreCase = true) }
+                .filter {
+                    it.raw.contains(query, ignoreCase = true) ||
+                            it.swapAssetName().contains(query, ignoreCase = true)
+                }
                 .let {
                     when (args.filters) {
                         Filters.SwapAvailable ->
