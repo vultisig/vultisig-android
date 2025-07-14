@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson

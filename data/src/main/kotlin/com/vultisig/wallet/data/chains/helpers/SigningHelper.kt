@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.api.swapAggregators.KyberSwap
 import com.vultisig.wallet.data.common.isHex
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
@@ -15,7 +16,7 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.wallet.OneInchSwap
+import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 
@@ -76,6 +77,10 @@ object SigningHelper {
                         )
 
                     messages += message
+                }
+                is SwapPayload.Kyber -> {
+                    messages += KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
                 // mayachain is implemented through send transaction
                 else -> Unit
@@ -209,8 +214,19 @@ object SigningHelper {
                         )
                 }
 
+                is SwapPayload.Kyber -> {
+                    return KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(
+                            swapPayload.data,
+                            keysignPayload,
+                            signatures,
+                            nonceAcc
+                        )
+                }
+
                 else -> {}
             }
+
         }
 
         val chain = keysignPayload.coin.chain

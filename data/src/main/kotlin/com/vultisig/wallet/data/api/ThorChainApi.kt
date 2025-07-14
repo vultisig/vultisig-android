@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.GraphQLResponse
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
