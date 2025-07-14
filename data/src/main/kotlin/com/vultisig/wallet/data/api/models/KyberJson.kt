@@ -16,28 +16,40 @@ sealed class KyberSwapError(message: String) : Exception(message) {
 
 @Serializable
 data class KyberSwapRouteResponse(
-    val code: Int, val message: String, val data: RouteData, val requestId: String
+    val code: Int,
+    val message: String,
+    val data: RouteData,
+    val requestId: String
 ) {
     @Serializable
     data class RouteData(
-        val routeSummary: RouteSummary, val routerAddress: String
+        val routeSummary: RouteSummary,
+        val routerAddress: String
     )
 
     @Serializable
     data class RouteSummary(
-        val gas: String,
-        val gasPrice: String,
-        val extraFee: ExtraFee? = null,
-        val timestamp: Int
+        val tokenIn: String, val amountIn: String, val amountInUsd: String,
+        val tokenInMarketPriceAvailable: Boolean? = null, val tokenOut: String,
+        val amountOut: String, val amountOutUsd: String,
+        val tokenOutMarketPriceAvailable: Boolean? = null, val gas: String,
+        val gasPrice: String, val gasUsd: String, val l1FeeUsd: String? = null,
+        val additionalCostUsd: String? = null, val additionalCostMessage: String? = null,
+        val extraFee: ExtraFee? = null, val route: List<List<RouteStep>>, val routeID: String,
+        val checksum: String, val timestamp: Int
     ) {
         @Serializable
         data class ExtraFee(
-            val feeAmount: String,
-            val chargeFeeBy: String,
-            val isInBps: Boolean,
+            val feeAmount: String, val chargeFeeBy: String, val isInBps: Boolean,
             val feeReceiver: String
         )
 
+        @Serializable
+        data class RouteStep(
+            val pool: String, val tokenIn: String, val tokenOut: String, val swapAmount: String,
+            val amountOut: String, val exchange: String, val poolType: String,
+            val poolExtra: JsonElement? = null, val extra: JsonElement? = null
+        )
     }
 }
 
@@ -45,28 +57,24 @@ data class KyberSwapRouteResponse(
 data class KyberSwapBuildRequest(
     val routeSummary: KyberSwapRouteResponse.RouteSummary,
     val sender: String,
-    val referral: String? = null,
-    val recipient: String, val slippageTolerance: Double,
+    val referral : String?=null,
+    val recipient: String,
+    val slippageTolerance: Double ,
     val deadline: Int,
-    val enableGasEstimation: Boolean,
-    val source: String,
+    val enableGasEstimation: Boolean ,
+    val source: String ,
     val ignoreCappedSlippage: Boolean
 )
 
 @Serializable
 data class KyberSwapErrorResponse(
-    val code: Int,
-    val message: String,
-    val details: List<String>? = null,
+    val code: Int, val message: String, val details: List<String>? = null,
     val requestId: String? = null
 )
 
 @Serializable
 data class KyberSwapToken(
-    val address: String,
-    val symbol: String,
-    val name: String,
-    val decimals: Int,
+    val address: String, val symbol: String, val name: String, val decimals: Int,
     val logoURI: String? = null
 ) {
     val logoUrl: String?
