@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="deposit_option_leave">Leave</string>
@@ -33,6 +33,8 @@
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
+    <string name="vault_settings_security_title">On-chain Security</string>
+    <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
@@ -159,6 +161,9 @@
     <string name="swap_screen_title">Swap</string>
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
+    <string name="swap_form_vault" translatable="false">Vault</string>
+    <string name="swap_form_min_pay">min. payout</string>
+    <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
@@ -166,7 +171,7 @@
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
-    <string name="verify_swap_sign_button">Sign</string>
+    <string name="verify_swap_sign_button">Sign Transaction</string>
     <string-array name="digit_words">
         <item>zero</item>
         <item>one</item>
@@ -199,6 +204,7 @@
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
     <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1$s %2$s "</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
+    <string name="swap_for_provider_kyber" translatable="false">Kyber</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="verify_approve_amount_title">Amount to approve</string>
@@ -276,6 +282,12 @@
     <string name="create_folder_title">Create Folder</string>
     <string name="create_folder_name">Folder Name</string>
     <string name="create_folder_create">Create</string>
+
+    <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
+    <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
+    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security</string>
+    <string name="vault_settings_security_screen_title">Security</string>
     <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
     <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>
     <string name="vault_settings_biometrics_screen_password_placeholder">Type here</string>
@@ -290,7 +302,6 @@
     <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
-
     <string name="folders_list_title">Folders</string>
 
     <!--    fast&active vaults are temporarily disabled -->
@@ -364,7 +375,7 @@
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
     <string name="register_vault_screen_save_qr_code">Save QR Code</string>
-    <string name="verify_swap_screen_total_fees">Total Fees</string>
+    <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
@@ -380,6 +391,7 @@
     <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be Zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
+    <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="backup_password_screen_skip">Skip Password</string>
     <string name="backup_password_screen_empty_password">Please use &#8220;Skip Password&#8221; to save without password</string>
     <string name="edit_address_title">Edit Address</string>
@@ -545,6 +557,7 @@
     <string name="vault_settings_migration_title" translatable="false">Migrate</string>
     <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button" translatable="false">Swap</string>
+    <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
     <string name="select_asset_title" translatable="false">Select asset</string>
     <string name="select_asset_chain_title" translatable="false">Chain</string>
     <string name="select_network_network_title" translatable="false">Network</string>
@@ -573,5 +586,19 @@
     <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
+    <string name="verify_your_server_share_password">Verify your Server Share Password</string>
+    <string name="periodically_ask_verify_password">We will periodically ask you to verify your fast sign password so you will always remember it</string>
 
+    <string name="security_scanner_medium_risk_title">Medium Security Risk</string>
+    <string name="security_scanner_high_risk_title">High Security Risk</string>
+    <string name="security_scanner_critical_risk_title">Critical Security Risk</string>
+    <string name="security_scanner_low_risk_title">Low Security Risk</string>
+    <string name="security_scanner_default_description">This transaction has been flagged as potentially dangerous.</string>
+    <string name="security_scanner_continue_anyway">Continue anyway</string>
+    <string name="security_scanner_continue_go_back">Go Back</string>
+    <string name="security_scanner_powered_by">Powered by </string>
+
+    <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
+    <string name="security_scanner_transaction_scanning">Scanning…</string>
+    <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 </resources>

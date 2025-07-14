@@ -81,6 +81,12 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
+    fun navigateToOnChainSecurityScreen() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.OnChainSecurity)
+        }
+    }
+
     fun signMessage() {
         viewModelScope.launch {
             navigator.navigate(Destination.SignMessage(vaultId))
@@ -92,5 +98,4 @@ internal open class VaultSettingsViewModel @Inject constructor(
             navigator.route(Route.Migration.Onboarding(vaultId = vaultId))
         }
     }
-
 }

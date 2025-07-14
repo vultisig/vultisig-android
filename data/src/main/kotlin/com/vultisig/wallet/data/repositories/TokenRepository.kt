@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
@@ -43,6 +43,8 @@ interface TokenRepository {
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
     suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
+
+    suspend fun getNativeLogo(coin: Coin): String
 
     val builtInTokens: Flow<List<Coin>>
 
@@ -255,6 +257,13 @@ internal class TokenRepositoryImpl @Inject constructor(
                     hexPublicKey = derivedPublicKey
                 )
             }
+    }
+
+    override suspend fun getNativeLogo(coin: Coin): String {
+        if (!coin.isNativeToken) {
+            return getNativeToken(coin.chain.id).logo
+        }
+        return coin.logo
     }
 
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {

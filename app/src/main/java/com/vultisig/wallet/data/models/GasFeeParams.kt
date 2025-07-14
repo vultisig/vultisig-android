@@ -12,5 +12,6 @@ data class GasFeeParams(
 internal data class EstimatedGasFee(
     val formattedTokenValue: String,
     val formattedFiatValue: String,
+    val tokenValue: TokenValue,
     val fiatValue: FiatValue
 )

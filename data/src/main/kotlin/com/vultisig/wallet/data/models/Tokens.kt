@@ -3,7 +3,6 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.models.Chain.Ripple
 
 object Tokens {
-
     val rune = Coin(
         chain = Chain.ThorChain,
         ticker = "RUNE",
@@ -59,5 +58,4 @@ object Tokens {
         address = "",
         hexPublicKey = "",
     )
-
 }

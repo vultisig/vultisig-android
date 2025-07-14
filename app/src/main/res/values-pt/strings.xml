@@ -14,8 +14,16 @@
     <string name="vault_settings_reshare_title">Recompartilhar</string>
     <string name="vault_settings_reshare_subtitle">Recompartilhar cofre com um novo comitê</string>
     <string name="vault_settings_delete_title">Delete</string>
+    <string name="vault_settings_security_title">Segurança On-chain</string>
+    <string name="vault_settings_security_subtitle">Gerencie sua segurança on-chain</string>
     <string name="join_keysign_missing_required_vault">Não tem o cofre necessário para o Keysign</string>
+    <string name="vault_settings_security_screen_title">Segurança</string>
+    <string name="vault_settings_security_screen_title_switch">Gerencie sua segurança on-chain</string>
+    <string name="vault_settings_security_screen_title_content">Você pode desativar sua segurança on-chain em tempo real</string>
+    <string name="vault_settings_security_screen_title_bottomsheet">Segurança on-chain desativada</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Desativar a segurança on-chain significa que a Blockaid não consegue verificar as transações. Você estará menos protegido.</string>
     <string name="choose_tokens">Escolha os Tokens</string>
+    <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
@@ -91,6 +99,7 @@
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
     <string name="verify_swap_sign_button">Sign</string>
+    <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>
@@ -106,6 +115,7 @@
     <string name="token_settings_supply">Fornecimento: %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="scan_qr_screen_return_vault">Retornar ao Cofre</string>
+    <string name="swap_form_min_pay">pagamento mín.</string>
     <string name="plus_icon">Ícone de mais</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, verifique todos os consentimentos</string>
     <string name="settings_screen_others">Outras</string>
@@ -351,4 +361,17 @@
     <string name="send_shares_currency_hint">Insira cotas</string>
     <string name="send_error_max_shares">O valor não deve exceder o saldo</string>
     <string name="deposit_form_shares_title">Cotas (Saldo: %1$s)</string>
+    <string name="verify_your_server_share_password">Verifique a palavra-passe da sua partilha de servidor</string>
+    <string name="periodically_ask_verify_password">Pediremos periodicamente que verifique a sua palavra-passe de login rápido para que se lembre sempre dela</string>
+    <string name="security_scanner_medium_risk_title">Risco de segurança médio</string>
+    <string name="security_scanner_high_risk_title">Risco de segurança alto</string>
+    <string name="security_scanner_critical_risk_title">Risco de segurança crítico</string>
+    <string name="security_scanner_low_risk_title">Risco de segurança baixo</string>
+    <string name="security_scanner_default_description">Esta transação foi sinalizada como potencialmente perigosa.</string>
+    <string name="security_scanner_continue_anyway">Continuar</string>
+    <string name="security_scanner_continue_go_back">Voltar</string>
+    <string name="security_scanner_powered_by">Desenvolvido por </string>
+    <string name="security_scanner_transaction_scanned_by">Transação verificada por</string>
+    <string name="security_scanner_transaction_scanning">Verificando…</string>
+    <string name="security_scanner_transaction_not_scanned">Transação não verificada por</string>
 </resources>

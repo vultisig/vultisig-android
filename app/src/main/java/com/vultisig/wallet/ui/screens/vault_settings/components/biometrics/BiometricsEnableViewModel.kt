@@ -30,8 +30,8 @@ internal data class BiometricsEnableUiModel(
     val isSaveEnabled: Boolean = false,
     val isPasswordVisible: Boolean = false,
     val passwordErrorMessage: UiText? = null,
-    val passwordHint: UiText? = null,
-    )
+    val passwordHint: UiText? = null
+)
 
 @HiltViewModel
 internal class BiometricsEnableViewModel @Inject constructor(
@@ -128,5 +128,4 @@ internal class BiometricsEnableViewModel @Inject constructor(
             listOf(passwordHintString)
         )
     }
-
 }

@@ -1,17 +1,16 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchQuoteJson
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
-import com.vultisig.wallet.data.api.models.THORChainSwapQuote
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson

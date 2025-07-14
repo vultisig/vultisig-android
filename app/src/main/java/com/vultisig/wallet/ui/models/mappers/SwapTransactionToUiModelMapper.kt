@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -31,18 +32,19 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             SwapProvider.THORCHAIN, SwapProvider.MAYA ->
                 from.dstToken
 
-            SwapProvider.LIFI, SwapProvider.ONEINCH ->
+            SwapProvider.LIFI, SwapProvider.ONEINCH, SwapProvider.KYBER ->
                 tokenRepository.getNativeToken(from.srcToken.chain.id)
 
             SwapProvider.JUPITER ->
                 from.srcToken
         }
 
-        val fiatFees = convertTokenValueToFiat(
+        val quotesFeesFiat = convertTokenValueToFiat(
             tokenValue,
             from.estimatedFees,
             currency
         )
+
         return SwapTransactionUiModel(
             src = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.srcTokenValue),
@@ -55,7 +57,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-
+            srcNativeLogo = tokenRepository.getNativeLogo(from.srcToken),
             dst = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                 token = from.dstToken,
@@ -67,10 +69,21 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-
+            dstNativeLogo = tokenRepository.getNativeLogo(from.dstToken),
             hasConsentAllowance = from.isApprovalRequired,
-            totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
+            providerFee = ValuedToken(
+                token = tokenValue,
+                value = from.estimatedFees.value.toString(),
+                fiatValue = fiatValueToStringMapper.map(quotesFeesFiat),
+            ),
+            networkFee = ValuedToken(
+                token = from.srcToken,
+                value = mapTokenValueToDecimalUiString(from.gasFees),
+                fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
+            ),
+            networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
+                    + " ${from.gasFees.unit}",
+            totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }
-
 }

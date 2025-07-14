@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,8 +38,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.SwapToken
@@ -55,7 +59,6 @@ internal fun VerifySendScreen(
     val state = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
     val promptTitle = stringResource(R.string.biometry_keysign_login_button)
-
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -74,6 +77,14 @@ internal fun VerifySendScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.fastSignFlow.collect { shouldShowPrompt ->
+            if (shouldShowPrompt) {
+                authorize()
+            }
+        }
+    }
+
     VerifySendScreen(
         state = state,
         isConsentsEnabled = true,
@@ -82,13 +93,11 @@ internal fun VerifySendScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onConfirm = viewModel::joinKeysign,
+        onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
-        onFastSignClick = {
-            if (!viewModel.tryToFastSignWithPassword()) {
-                authorize()
-            }
-        },
+        onFastSignClick = viewModel::fastSign,
+        onConfirmScanning = viewModel::onConfirmScanning,
+        onDismissScanning = viewModel::dismissScanningWarning,
     )
 }
 
@@ -104,6 +113,8 @@ internal fun VerifySendScreen(
     onConsentAmount: (Boolean) -> Unit = {},
     onConsentDst: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
+    onConfirmScanning: () -> Unit = {},
+    onDismissScanning: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -120,6 +131,7 @@ internal fun VerifySendScreen(
         content = { contentPadding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(contentPadding)
                     .padding(all = 16.dp)
@@ -128,6 +140,8 @@ internal fun VerifySendScreen(
             ) {
 
                 val tx = state.transaction
+
+                SecurityScannerBadget(state.txScanStatus)
 
                 Column(
                     modifier = Modifier
@@ -240,8 +254,8 @@ internal fun VerifySendScreen(
                     UiSpacer(12.dp)
 
                     EstimatedNetworkFee(
-                        tokenGas = "${tx.networkFee.value} ${tx.networkFee.token.ticker}",
-                        fiatGas = tx.networkFee.fiatValue,
+                        tokenGas = tx.networkFeeTokenValue,
+                        fiatGas = tx.networkFeeFiatValue,
                     )
                 }
 
@@ -279,6 +293,14 @@ internal fun VerifySendScreen(
                         vertical = 12.dp
                     )
             ) {
+                if (state.showScanningWarning &&
+                    state.txScanStatus is TransactionScanStatus.Scanned) {
+                    SecurityScannerBottomSheet(
+                        securityScannerModel = state.txScanStatus.result,
+                        onContinueAnyway = onConfirmScanning,
+                        onDismissRequest = onDismissScanning,
+                    )
+                }
                 if (state.hasFastSign) {
                     Text(
                         text = "Hold for paired sign",
@@ -289,7 +311,7 @@ internal fun VerifySendScreen(
                     VsHoldableButton(
                         label = "Sign transaction",
                         onLongClick = onConfirm,
-                        onClick =  onFastSignClick,
+                        onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 } else {
@@ -303,8 +325,6 @@ internal fun VerifySendScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-
-
             }
         }
     )
