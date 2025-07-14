@@ -3,6 +3,7 @@
 package com.vultisig.wallet.app.activity
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -67,7 +68,13 @@ class MainActivity : AppCompatActivity() {
                 VsAuxiliaryLinks.PRIVACY,
                 VsAuxiliaryLinks.TERMS_OF_SERVICE,
                 VsAuxiliaryLinks.VULT,
-                    -> openCct(uri)
+                    -> openCct(
+                    uri = uri,
+                    onError = {
+                        Toast.makeText(
+                             this, "Chrome browser is required to open this link. Please install it from the Play Store", Toast.LENGTH_SHORT
+                        ).show()
+                    })
 
                 else -> mainViewModel.openUri(uri)
             }

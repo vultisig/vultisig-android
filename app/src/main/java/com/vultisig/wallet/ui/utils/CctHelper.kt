@@ -7,12 +7,14 @@ import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsService
 
-internal fun Activity.openCct(uri: Uri) {
+internal fun Activity.openCct(uri: Uri, onError: () -> Unit = {}) {
     val intent = CustomTabsIntent.Builder().build()
     val cctPackageName = getCustomTabsPackages().getOrNull(0)?.activityInfo?.packageName
     if (cctPackageName != null) {
         intent.intent.setPackage(cctPackageName)
         intent.launchUrl(this, uri)
+    } else {
+        onError()
     }
 }
 
