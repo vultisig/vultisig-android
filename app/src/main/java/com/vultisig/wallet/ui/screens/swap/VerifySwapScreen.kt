@@ -425,7 +425,7 @@ internal fun SwapToken(
                 UiSpacer(8.dp)
 
                 Text(
-                    text = "on " + token.chain.swapAssetName(),
+                    text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.extraLight,
                 )

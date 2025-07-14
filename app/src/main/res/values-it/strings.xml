@@ -15,6 +15,7 @@
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>
     <string name="join_keysign_missing_required_vault">Non hai il vault richiesto per Keysign</string>
     <string name="vault_settings_security_screen_title">Sicurezza</string>
+    <string name="swap_form_on_chain">su</string>
     <string name="vault_settings_security_screen_title_switch">Gestisci la tua sicurezza on-chain</string>
     <string name="vault_settings_security_screen_title_content">Puoi disabilitare la tua sicurezza on-chain in tempo reale</string>
     <string name="vault_settings_security_screen_title_bottomsheet">Sicurezza on-chain disabilitata</string>
