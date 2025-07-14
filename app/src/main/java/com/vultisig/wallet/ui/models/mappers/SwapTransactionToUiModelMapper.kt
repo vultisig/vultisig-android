@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -56,7 +57,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-
+            srcNativeLogo = tokenRepository.getNativeLogo(from.srcToken),
             dst = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                 token = from.dstToken,
@@ -68,6 +69,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
+            dstNativeLogo = tokenRepository.getNativeLogo(from.dstToken),
             hasConsentAllowance = from.isApprovalRequired,
             providerFee = ValuedToken(
                 token = tokenValue,

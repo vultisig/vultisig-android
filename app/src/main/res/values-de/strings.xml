@@ -24,6 +24,7 @@
     <string name="send_screen_title">Senden</string>
     <string name="send_from_address">Von</string>
     <string name="send_to_address">Zu</string>
+    <string name="swap_form_on_chain">auf</string>
     <string name="send_to_address_hint">Menge eingeben</string>
     <string name="send_amount">Menge</string>
     <string name="send_amount_hint">Menge eingeben</string>

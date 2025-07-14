@@ -163,6 +163,7 @@
     <string name="swap_form_total_fees_title">Total fees</string>
     <string name="swap_form_vault" translatable="false">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
+    <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
