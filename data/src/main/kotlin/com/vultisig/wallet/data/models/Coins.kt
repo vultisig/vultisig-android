@@ -1,9 +1,7 @@
 package com.vultisig.wallet.data.models
 
 object Coins {
-    val coins = mapOf<Chain, List<Coin>>(
-
-
+    val coins = mapOf(
         Chain.Akash to listOf(
             Coin(
                 chain = Chain.Akash,

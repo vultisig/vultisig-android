@@ -32,10 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -46,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -197,6 +196,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.src,
+                        chainLogo = tx.srcNativeLogo,
                     )
 
                     Row(
@@ -249,6 +249,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
+                        chainLogo = tx.dstNativeLogo,
                         isDestinationToken = true,
                     )
 
@@ -347,6 +348,7 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
+    chainLogo: String? = null,
     isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
@@ -400,6 +402,34 @@ internal fun SwapToken(
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.colors.text.extraLight,
             )
+        }
+
+        if (!valuedToken.token.isNativeToken && !chainLogo.isNullOrEmpty()) {
+            UiSpacer(1f)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TokenLogo(
+                    logo = Tokens.getCoinLogo(chainLogo),
+                    title = token.ticker,
+                    errorLogoModifier = Modifier
+                        .size(16.dp),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.borders.light,
+                            shape = CircleShape,
+                        )
+                )
+
+                UiSpacer(8.dp)
+
+                Text(
+                    text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
     }
 }

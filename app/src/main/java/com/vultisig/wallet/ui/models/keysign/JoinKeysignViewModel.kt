@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -462,6 +463,65 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val vaultName = _currentVault.name
 
                 when (swapPayload) {
+                    is SwapPayload.Kyber -> {
+                        val kyberSwapTxJson = swapPayload.data.quote.tx
+                        // Calculate fee from Kyber quote data
+                        val value = if (swapPayload.data.quote.data.fee != null) {
+                            swapPayload.data.quote.data.fee
+                        } else {
+                            kyberSwapTxJson.gasPrice.toBigInteger() *
+                                    (kyberSwapTxJson.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+                        }
+
+                        val estimatedTokenFees = TokenValue(
+                            value = value ?: BigInteger.ZERO,
+                            token = nativeToken
+                        )
+                        val estimatedFee = convertTokenValueToFiat(
+                            nativeToken,
+                            estimatedTokenFees,
+                            currency
+                        )
+
+                        val swapTransaction = SwapTransactionUiModel(
+                            src = ValuedToken(
+                                value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                token = srcToken,
+                                fiatValue = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(
+                                        srcToken,
+                                        srcTokenValue,
+                                        currency
+                                    )
+                                ),
+                            ),
+
+                            dst = ValuedToken(
+                                value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                token = dstToken,
+                                fiatValue = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(
+                                        dstToken,
+                                        dstTokenValue,
+                                        currency
+                                    )
+                                ),
+                            ),
+
+                            totalFee = fiatValueToStringMapper.map(
+                                estimatedFee + networkGasFeeFiatValue
+                            ),
+                        )
+
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
+
+                        verifyUiModel.value = VerifyUiModel.Swap(
+                            VerifySwapUiModel(
+                                tx = swapTransaction
+                            )
+                        )
+                    }
                     is SwapPayload.OneInch -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
                         //if swapFee is not null then it provider is Lifi otherwise 1inch
@@ -499,6 +559,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -510,6 +571,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             providerFee = ValuedToken(
                                 token = feeToken,
                                 value = value.toString(),
@@ -566,6 +628,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -577,6 +640,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
@@ -635,7 +699,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
-
+                            srcNativeLogo = tokenRepository.getNativeLogo(srcToken),
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
@@ -647,6 +711,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            dstNativeLogo = tokenRepository.getNativeLogo(dstToken),
                             providerFee = ValuedToken(
                                 token = dstToken,
                                 value = quote.fees.value.toString(),
