@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -56,7 +57,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
-
+            srcNativeLogo = from.srcToken.getNativeLogo(),
             dst = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                 token = from.dstToken,
@@ -68,6 +69,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     )
                 ),
             ),
+            dstNativeLogo = from.dstToken.getNativeLogo(),
             hasConsentAllowance = from.isApprovalRequired,
             providerFee = ValuedToken(
                 token = tokenValue,
@@ -83,5 +85,12 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
         )
+    }
+
+    private suspend fun Coin.getNativeLogo(): String {
+        if (!this.isNativeToken) {
+            tokenRepository.getNativeToken(this.chain.id).logo
+        }
+        return this.logo
     }
 }

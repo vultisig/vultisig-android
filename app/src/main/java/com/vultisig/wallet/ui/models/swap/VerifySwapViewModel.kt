@@ -29,6 +29,9 @@ internal data class SwapTransactionUiModel(
     val src: ValuedToken = ValuedToken.Empty,
     val dst: ValuedToken = ValuedToken.Empty,
 
+    val srcNativeLogo: String = "",
+    val dstNativeLogo: String = "",
+
     val networkFee: ValuedToken = ValuedToken.Empty,
     val providerFee: ValuedToken = ValuedToken.Empty,
 
@@ -72,7 +75,6 @@ internal class VerifySwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: SwapTransactionToUiModelMapper,
-
     private val swapTransactionRepository: SwapTransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
@@ -99,6 +101,7 @@ internal class VerifySwapViewModel @Inject constructor(
                     )
                 }
             }
+
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
