@@ -6,12 +6,12 @@ import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
@@ -30,6 +30,26 @@ class SecurityScannerTransactionFactory(
             TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
             else -> error("Not supported")
         }
+    }
+
+    override suspend fun createSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+        val chain = transaction.srcToken.chain
+        return when (chain.standard) {
+            TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
+            else -> error("Not supported")
+        }
+    }
+
+    private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+        error(transaction)
+        /*return SecurityScannerTransaction(
+            chain = transaction.token.chain,
+            type = transferType,
+            from = transaction.srcAddress,
+            to = to,
+            amount = amount,
+            data = data,
+        ) */
     }
 
     private fun createEVMSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {

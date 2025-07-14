@@ -99,6 +99,8 @@ internal fun VerifySwapScreen(
                 authorize()
             }
         },
+        onContinueAnyway = {},
+        onDismissRequest = {},
     )
 }
 
@@ -114,6 +116,8 @@ internal fun VerifySwapScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    onContinueAnyway: () -> Unit = {},
+    onDismissRequest: () -> Unit = {},
 ) {
     VerifySwapScreen(
         showToolbar = showToolbar,
@@ -133,6 +137,8 @@ internal fun VerifySwapScreen(
         onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
         onBackClick = onBackClick,
+        onContinueAnyway = onContinueAnyway,
+        onDismissRequest = onDismissRequest,
     )
 }
 
@@ -155,6 +161,8 @@ private fun VerifySwapScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    onContinueAnyway: () -> Unit,
+    onDismissRequest: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -295,8 +303,8 @@ private fun VerifySwapScreen(
                     scanStatus is TransactionScanStatus.Scanned) {
                     SecurityScannerBottomSheet(
                         securityScannerModel = scanStatus.result,
-                        onContinueAnyway = onConfirmScanning,
-                        onDismissRequest = onDismissScanning,
+                        onContinueAnyway = onContinueAnyway,
+                        onDismissRequest = onDismissRequest,
                     )
                 }
 
@@ -476,5 +484,7 @@ private fun VerifySwapScreenPreview() {
         onConsentAllowance = {},
         onFastSignClick = {},
         onConfirm = {},
+        onContinueAnyway = {},
+        onDismissRequest = {},
     )
 }

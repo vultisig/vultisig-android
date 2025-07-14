@@ -27,4 +27,27 @@ object EthereumFunction {
             throw IllegalArgumentException("Failed to encode ERC-20 transfer: ${e.message}", e)
         }
     }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun createDepositWithExpiryFunction(
+        vaultAddress: String,
+        contractAddress: String,
+        fromAmount: BigInteger,
+        memo: String,
+        expirationTime: BigInteger
+    ): String {
+        val encodedFunction = EthereumAbiFunction("depositWithExpiry").apply {
+            addParamAddress(vaultAddress.data(), false)
+            addParamAddress(contractAddr.data(), false)
+            addParamUInt256(thorChainSwapPayload.data.fromAmount.toByteArray(), false)
+            addParamString(keysignPayload.memo, false)
+            addParamUInt256(
+                BigInteger(thorChainSwapPayload.data.expirationTime.toString()).toByteArray(),
+                false
+            )
+        }
+
+        // Encode the function and return the hex string
+        return EthereumAbi.encode(encodedFunction).toHexString().add0x()
+    }
 }

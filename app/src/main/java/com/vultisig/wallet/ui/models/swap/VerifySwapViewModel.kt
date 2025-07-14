@@ -6,10 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
@@ -20,9 +24,14 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class SwapTransactionUiModel(
@@ -76,6 +85,7 @@ internal class VerifySwapViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val securityScannerService: SecurityScannerContract,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -96,6 +106,7 @@ internal class VerifySwapViewModel @Inject constructor(
                     tx = mapTransactionToUiModel(transaction)
                 )
             }
+            scanTransaction(transaction)
         }
         loadFastSign()
         loadPassword()
@@ -176,6 +187,49 @@ internal class VerifySwapViewModel @Inject constructor(
                 it.copy(
                     hasFastSign = hasFastSign
                 )
+            }
+        }
+    }
+
+    private fun scanTransaction(transaction: SwapTransaction) {
+        viewModelScope.launch {
+            try {
+                val chain = transaction.srcToken.chain
+                val isSupported = securityScannerService
+                    .getSupportedChainsByFeature()
+                    .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+
+                if (!isSupported) return@launch
+
+                state.update {
+                    it.copy(txScanStatus = TransactionScanStatus.Scanning)
+                }
+
+                val securityScannerTransaction =
+                    securityScannerService.createSecurityScannerTransaction(transaction)
+
+                val result = withContext(Dispatchers.IO) {
+                    securityScannerService.scanTransaction(securityScannerTransaction)
+                }
+
+                state.update {
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Scanned(result)
+                    )
+                }
+            } catch (t: Throwable) {
+                val errorMessage = "Security Scanner Failed"
+                Timber.e(t, errorMessage)
+
+                state.update {
+                    val message = t.message ?: errorMessage
+                    it.copy(
+                        txScanStatus = TransactionScanStatus.Error(
+                            message = message,
+                            provider = BLOCKAID_PROVIDER,
+                        )
+                    )
+                }
             }
         }
     }
