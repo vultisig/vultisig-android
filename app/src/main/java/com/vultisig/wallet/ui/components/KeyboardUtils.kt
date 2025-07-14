@@ -32,6 +32,9 @@ internal fun KeyboardDetector(
     onKeyboardIsClose: () -> Unit = {},
 ) {
     val view = LocalView.current
+    if (view.isAttachedToWindow.not()) {
+        return
+    }
     val viewTreeObserver = view.viewTreeObserver
     DisposableEffect(viewTreeObserver) {
         val listener = ViewTreeObserver.OnGlobalLayoutListener {
