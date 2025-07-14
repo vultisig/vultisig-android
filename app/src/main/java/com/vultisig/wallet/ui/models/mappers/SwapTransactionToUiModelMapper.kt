@@ -89,7 +89,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
 
     private suspend fun Coin.getNativeLogo(): String {
         if (!this.isNativeToken) {
-            tokenRepository.getNativeToken(this.chain.id).logo
+            return tokenRepository.getNativeToken(this.chain.id).logo
         }
         return this.logo
     }

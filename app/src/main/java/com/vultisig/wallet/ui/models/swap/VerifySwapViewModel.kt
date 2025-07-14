@@ -103,11 +103,11 @@ internal class VerifySwapViewModel @Inject constructor(
             }
 
             val consentAllowance = !transaction.isApprovalRequired
-            state.update {
+             state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
                     tx = mapTransactionToUiModel(transaction),
-                    vaultName = vaultName?.takeIf { it.isNotEmpty() } ?: "Main Vault",
+                    vaultName = vaultName?.takeIf { name -> name.isNotEmpty() } ?: "Main Vault",
                 )
             }
         }
