@@ -47,12 +47,12 @@ class SecurityScannerTransactionFactory(
         return when (val payload = transaction.payload) {
             is SwapPayload.OneInch ->
                 buildSwapSecurityScannerTransaction(
-                srcToken = transaction.srcToken,
-                from = payload.data.quote.tx.from,
-                to = payload.data.quote.tx.to,
-                amount = payload.data.quote.tx.value,
-                data = payload.data.quote.tx.data,
-                isApprovalRequired = transaction.isApprovalRequired
+                    srcToken = transaction.srcToken,
+                    from = payload.data.quote.tx.from,
+                    to = payload.data.quote.tx.to,
+                    amount = payload.data.quote.tx.value,
+                    data = payload.data.quote.tx.data,
+                    isApprovalRequired = transaction.isApprovalRequired
             )
             is SwapPayload.Kyber ->
                 buildSwapSecurityScannerTransaction(
