@@ -44,6 +44,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -196,7 +198,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.src,
-                        chainLogo = tx.srcNativeLogo,
+                        hasToShowOnNativeChain = true,
                     )
 
                     Row(
@@ -249,7 +251,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
-                        chainLogo = tx.dstNativeLogo,
+                        hasToShowOnNativeChain = true,
                         isDestinationToken = true,
                     )
 
@@ -348,11 +350,13 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
-    chainLogo: String? = null,
+    hasToShowOnNativeChain: Boolean = false,
     isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
+    val shouldShowOnChainLogo = hasToShowOnNativeChain
+            && (!token.isNativeToken || token.chain.isLayer2)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -404,12 +408,12 @@ internal fun SwapToken(
             )
         }
 
-        if (!valuedToken.token.isNativeToken && !chainLogo.isNullOrEmpty()) {
+        if (shouldShowOnChainLogo) {
             UiSpacer(1f)
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TokenLogo(
-                    logo = Tokens.getCoinLogo(chainLogo),
+                    logo = token.chain.logo,
                     title = token.ticker,
                     errorLogoModifier = Modifier
                         .size(16.dp),

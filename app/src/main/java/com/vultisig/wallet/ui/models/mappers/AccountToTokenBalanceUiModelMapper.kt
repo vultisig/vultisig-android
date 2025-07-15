@@ -40,5 +40,4 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
             Chain.BscChain -> "BEP20"
             else -> null
         }
-
 }
