@@ -70,6 +70,7 @@ import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -102,7 +103,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 state = state,
                 onBackClick = model::back,
                 onHelpClick = {
-                    uriHandler.openUri("https://docs.vultisig.com/vultisig-user-actions/creating-a-vault")
+                    uriHandler.openUri(VsAuxiliaryLinks.CREATE_VAULT)
                 },
                 onShareQrClick = { model.shareQr(context) },
                 onCloseHintClick = model::closeDevicesHint,

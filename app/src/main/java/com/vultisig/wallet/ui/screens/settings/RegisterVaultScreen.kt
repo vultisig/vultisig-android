@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.Theme.montserrat
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
 import kotlinx.coroutines.flow.receiveAsFlow
 
@@ -103,7 +104,7 @@ internal fun RegisterVaultScreen(
     ) {
         Box(modifier = Modifier.padding(it)) {
             RegisterVaultScreen {
-                uriHandler.openUri("https://airdrop.vultisig.com")
+                uriHandler.openUri(VsAuxiliaryLinks.AIRDROP)
             }
 
         }

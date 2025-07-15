@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.browser)
 
     // compose
     implementation(platform(libs.androidx.compose.bom))
