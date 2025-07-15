@@ -6,17 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
-import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
-import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
@@ -28,6 +23,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -42,8 +38,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import wallet.core.jni.Base58
-import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -76,7 +70,7 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount && consentDst
 }
 
-internal sealed class TransactionScanStatus {
+sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
     data object Scanning : TransactionScanStatus()
     data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
@@ -154,46 +148,30 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun handleSigningFlow(
-        onSign: () -> Unit,
-        onSignAndSkipWarnings: () -> Unit
-    ) {
-        when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> {
-                if (!status.result.isSecure) {
-                    uiState.update { it.copy(showScanningWarning = true) }
-                } else {
-                    onSignAndSkipWarnings()
-                }
-            }
-            is TransactionScanStatus.Error,
-            TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> onSign()
-        }
-    }
-
     fun joinKeySign() {
         _fastSign = false
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
-            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
         )
     }
 
-    fun joinKeySignAndSkipWarnings() {
+    private fun joinKeySignAndSkipWarnings() {
         uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
     }
 
     fun fastSign() {
         _fastSign = true
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
-            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
         )
     }
 
-    fun fastSignAndSkipWarnings() {
+    private fun fastSignAndSkipWarnings() {
         uiState.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
