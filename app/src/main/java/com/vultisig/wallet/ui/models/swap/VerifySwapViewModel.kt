@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -219,6 +220,7 @@ internal class VerifySwapViewModel @Inject constructor(
                         transaction.payload is SwapPayload.MayaChain
 
                 val isSupported = !isThorchainOrMaya
+                        && chain.standard == TokenStandard.EVM
                         && securityScannerService.getSupportedChainsByFeature().isChainSupported(chain)
                         && securityScannerService.isSecurityServiceEnabled()
 
