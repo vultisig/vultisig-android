@@ -2,16 +2,21 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
@@ -41,15 +46,45 @@ class SecurityScannerTransactionFactory(
     }
 
     private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
-        error(transaction)
-        /*return SecurityScannerTransaction(
-            chain = transaction.token.chain,
-            type = transferType,
-            from = transaction.srcAddress,
-            to = to,
-            amount = amount,
-            data = data,
-        ) */
+        val payload = transaction.payload
+        val chain = transaction.srcToken.chain
+        return when (payload) {
+            is SwapPayload.OneInch -> buildOneInchTransaction(payload.data, chain)
+            is SwapPayload.Kyber -> buildKyberTransaction(payload.data, chain)
+            else -> throw SecurityScannerException("Not supported provider for EVM")
+        }
+    }
+
+    private fun buildOneInchTransaction(
+        payloadJson: OneInchSwapPayloadJson,
+        chain: Chain
+    ): SecurityScannerTransaction {
+        val tx = payloadJson.quote.tx
+
+        return SecurityScannerTransaction(
+            chain = chain,
+            type = SecurityTransactionType.SWAP,
+            from = tx.from,
+            to = tx.to,
+            amount = tx.value.toBigInteger(),
+            data = tx.data,
+        )
+    }
+
+    private fun buildKyberTransaction(
+        payloadJson: KyberSwapPayloadJson,
+        chain: Chain
+    ): SecurityScannerTransaction {
+        val tx = payloadJson.quote.tx
+
+        return SecurityScannerTransaction(
+            chain = chain,
+            type = SecurityTransactionType.SWAP,
+            from = tx.from,
+            to = tx.to,
+            amount = tx.value.toBigInteger(),
+            data = tx.data,
+        )
     }
 
     private fun createEVMSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
