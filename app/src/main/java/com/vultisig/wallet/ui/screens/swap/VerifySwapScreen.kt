@@ -198,7 +198,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.src,
-                        hasToShowOnNativeChain = true,
+                        isSwap = true,
                     )
 
                     Row(
@@ -251,7 +251,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
-                        hasToShowOnNativeChain = true,
+                        isSwap = true,
                         isDestinationToken = true,
                     )
 
@@ -350,12 +350,12 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
-    hasToShowOnNativeChain: Boolean = false,
+    isSwap: Boolean = false,
     isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
-    val shouldShowOnChainLogo = hasToShowOnNativeChain
+    val shouldShowOnChainLogo = isSwap
             && (!token.isNativeToken || token.chain.isLayer2)
 
     Row(
