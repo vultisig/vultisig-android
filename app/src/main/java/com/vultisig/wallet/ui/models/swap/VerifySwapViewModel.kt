@@ -29,8 +29,6 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -216,8 +214,8 @@ internal class VerifySwapViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val chain = transaction.srcToken.chain
-                val isThorchainOrMaya = transaction.payload is SwapPayload.ThorChain ||
-                        transaction.payload is SwapPayload.MayaChain
+                val isThorchainOrMaya =
+                    transaction.payload is SwapPayload.ThorChain || transaction.payload is SwapPayload.MayaChain
 
                 val isSupported = !isThorchainOrMaya
                         && chain.standard == TokenStandard.EVM

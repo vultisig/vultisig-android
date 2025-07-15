@@ -190,8 +190,9 @@ private fun VerifySwapScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-
-                SecurityScannerBadget(scanStatus)
+                Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)){
+                    SecurityScannerBadget(scanStatus)
+                }
 
                 Column(
                     modifier = Modifier
