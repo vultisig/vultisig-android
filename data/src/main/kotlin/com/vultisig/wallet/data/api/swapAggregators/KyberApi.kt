@@ -119,13 +119,15 @@ class KyberApiImpl @Inject constructor(
             }
 
             if (!response.status.isSuccess()) {
+                val errorResponse = runCatching {
+                    json.decodeFromString<KyberSwapErrorResponse>(response.body<String>())
+                }.getOrNull()
                 return KyberSwapQuoteDeserialized.Error(
-                    KyberSwapErrorResponse(
-                        message = HttpStatusCode.fromValue(response.status.value).description,
+                    errorResponse ?: KyberSwapErrorResponse(
+                        message = HttpStatusCode.fromValue(response.status.value).description
                     )
                 )
             }
-
 
             return json.decodeFromString(
                 kyberSwapQuoteResponseJsonSerializer,

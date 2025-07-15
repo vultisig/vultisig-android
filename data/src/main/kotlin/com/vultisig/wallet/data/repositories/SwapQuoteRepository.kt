@@ -447,7 +447,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         dstToken
                     )
                 )
-                    it != SwapProvider.ONEINCH
+                    it != SwapProvider.ONEINCH && it != SwapProvider.KYBER
                 else true
             }
     }
