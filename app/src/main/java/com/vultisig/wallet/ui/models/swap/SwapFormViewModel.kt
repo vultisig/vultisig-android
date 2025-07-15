@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.quotes.dstAmount
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -27,6 +29,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -148,6 +151,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
 
+    private val gasEstimatedToken = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
     private val gasFeeFiat = MutableStateFlow<FiatValue?>(null)
@@ -309,6 +313,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             isApprovalRequired = isApprovalRequired,
                             memo = quote.data.memo,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -362,6 +367,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -387,6 +393,44 @@ internal class SwapFormViewModel @Inject constructor(
                         regularSwapTransaction
                     }
 
+                    is SwapQuote.Kyber -> {
+                        val dstAddress = quote.data.tx.to
+
+                        val allowance = allowanceRepository.getAllowance(
+                            chain = srcToken.chain,
+                            contractAddress = srcToken.contractAddress,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                        )
+                        val isApprovalRequired =
+                            allowance != null && allowance < srcTokenValue.value
+
+                        RegularSwapTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = srcToken,
+                            srcTokenValue = srcTokenValue,
+                            dstToken = dstToken,
+                            dstAddress = dstAddress,
+                            expectedDstTokenValue = dstTokenValue,
+                            blockChainSpecific = specificAndUtxo,
+                            estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
+                            memo = null,
+                            isApprovalRequired = isApprovalRequired,
+                            gasFeeFiatValue = gasFeeFiatValue,
+                            payload = SwapPayload.Kyber(
+                                KyberSwapPayloadJson(
+                                    fromCoin = srcToken,
+                                    toCoin = dstToken,
+                                    fromAmount = srcTokenValue.value,
+                                    toAmountDecimal = dstTokenValue.decimal,
+                                    quote = quote.data,
+                                )
+                            )
+                        )
+                    }
+
                     is SwapQuote.OneInch -> {
                         val dstAddress = quote.data.tx.to
 
@@ -409,6 +453,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            gasFees = gasEstimatedToken.value ?: gasFee,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -686,6 +731,7 @@ internal class SwapFormViewModel @Inject constructor(
                         )
 
                         gasFeeFiat.value = estimatedFee.fiatValue
+                        gasEstimatedToken.value = estimatedFee.tokenValue
 
                         uiState.update {
                             it.copy(
@@ -829,6 +875,69 @@ internal class SwapFormViewModel @Inject constructor(
                                             R.string.swap_form_provider_mayachain.asUiText()
                                         else
                                             R.string.swap_form_provider_thorchain.asUiText(),
+                                        srcFiatValue = srcFiatValueText,
+                                        estimatedDstTokenValue = estimatedDstTokenValue,
+                                        estimatedDstFiatValue = fiatValueToString.map(
+                                            estimatedDstFiatValue
+                                        ),
+                                        fee = fiatValueToString.map(fiatFees),
+                                        formError = null,
+                                        isSwapDisabled = false,
+                                        isLoading = false,
+                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
+                                    )
+                                }
+                            }
+
+
+                            SwapProvider.KYBER ->{
+                                val srcUsdFiatValue = convertTokenValueToFiat(
+                                    srcToken,
+                                    tokenValue,
+                                    AppCurrency.USD,
+                                )
+                                val isAffiliate =
+                                    srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                                val quote = swapQuoteRepository.getKyberSwapQuote(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    isAffiliate = isAffiliate,
+                                )
+                                val expectedDstValue = TokenValue(
+                                    value = quote.dstAmount.toBigInteger(),
+                                    token = dstToken,
+                                )
+                                val tokenFees = TokenValue(
+                                    value = quote.tx.gasPrice.toBigInteger() *
+                                            (quote.tx.gas.takeIf { it != 0L }
+                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+                                    token = srcNativeToken
+                                )
+
+                                this@SwapFormViewModel.quote = SwapQuote.Kyber(
+                                    expectedDstValue = expectedDstValue,
+                                    fees = tokenFees,
+                                    data = quote,
+                                    expiredAt = Clock.System.now() + expiredAfter
+                                )
+
+                                val fiatFees =
+                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+                                swapFeeFiat.value = fiatFees
+
+                                val estimatedDstTokenValue =
+                                    mapTokenValueToDecimalUiString(expectedDstValue)
+
+                                val estimatedDstFiatValue = convertTokenValueToFiat(
+                                    dstToken,
+                                    expectedDstValue,
+                                    currency
+                                )
+
+                                uiState.update {
+                                    it.copy(
+                                        provider = R.string.swap_for_provider_kyber.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
                                         estimatedDstFiatValue = fiatValueToString.map(

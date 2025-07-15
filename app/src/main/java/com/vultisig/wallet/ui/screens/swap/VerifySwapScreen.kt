@@ -6,11 +6,14 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -56,6 +60,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
+import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -131,6 +136,7 @@ internal fun VerifySwapScreen(
         confirmTitle = confirmTitle,
         isConsentsEnabled = isConsentsEnabled,
         hasFastSign = state.hasFastSign,
+        vaultName = state.vaultName,
         onConsentReceiveAmount = onConsentReceiveAmount,
         onConsentAmount = onConsentAmount,
         onConsentAllowance = onConsentAllowance,
@@ -155,6 +161,7 @@ private fun VerifySwapScreen(
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     hasFastSign: Boolean,
+    vaultName: String,
     onConsentReceiveAmount: (Boolean) -> Unit,
     onConsentAmount: (Boolean) -> Unit,
     onConsentAllowance: (Boolean) -> Unit,
@@ -206,6 +213,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.src,
+                        chainLogo = tx.srcNativeLogo,
                     )
 
                     Row(
@@ -243,6 +251,12 @@ private fun VerifySwapScreen(
                             )
                         }
 
+                        Text(
+                            "To",
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.colors.text.extraLight,
+                        )
+
                         HorizontalDivider(
                             thickness = 1.dp,
                             color = Theme.colors.borders.light,
@@ -252,10 +266,36 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
+                        chainLogo = tx.dstNativeLogo,
+                        isDestinationToken = true,
                     )
 
                     VerifyCardDivider(
                         size = 20.dp,
+                    )
+
+                    VerifyVaultDetails(
+                        title = stringResource(R.string.swap_form_vault),
+                        subtitle = vaultName ?: "Main Vault",
+                        metadata = tx.src.token.address,
+                    )
+
+                    VerifyCardDivider(
+                        size = 20.dp,
+                    )
+
+                    EstimatedNetworkFee(
+                        tokenGas = tx.networkFeeFormatted,
+                        fiatGas = tx.networkFee.fiatValue,
+                    )
+
+                    VerifyCardDetails(
+                        title = stringResource(R.string.swap_form_estimated_fees_title),
+                        subtitle = tx.providerFee.fiatValue,
+                    )
+
+                    VerifyCardDivider(
+                        size = 10.dp,
                     )
 
                     VerifyCardDetails(
@@ -335,6 +375,8 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
+    chainLogo: String? = null,
+    isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
@@ -368,6 +410,14 @@ internal fun SwapToken(
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (isDestinationToken) {
+                Text(
+                    text = stringResource(R.string.swap_form_min_pay),
+                    style = Theme.brockmann.supplementary.captionSmall,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+
             Text(
                 text = text,
                 style = Theme.brockmann.headings.title3,
@@ -379,6 +429,34 @@ internal fun SwapToken(
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.colors.text.extraLight,
             )
+        }
+
+        if (!valuedToken.token.isNativeToken && !chainLogo.isNullOrEmpty()) {
+            UiSpacer(1f)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TokenLogo(
+                    logo = Tokens.getCoinLogo(chainLogo),
+                    title = token.ticker,
+                    errorLogoModifier = Modifier
+                        .size(16.dp),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.borders.light,
+                            shape = CircleShape,
+                        )
+                )
+
+                UiSpacer(8.dp)
+
+                Text(
+                    text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
     }
 }
@@ -431,6 +509,59 @@ internal fun VerifyCardDetails(
 }
 
 @Composable
+internal fun VerifyVaultDetails(
+    title: String,
+    subtitle: String,
+    metadata: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = title,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.extraLight,
+            maxLines = 1,
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.widthIn(max = 200.dp)
+        ) {
+            Text(
+                text = subtitle,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.colors.text.primary,
+                textAlign = TextAlign.End,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+
+            if (metadata.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(4.dp))
+
+                val display = when {
+                    metadata.length > 8 -> "(${metadata.take(4)}...${metadata.takeLast(4)})"
+                    metadata.isNotEmpty() -> "($metadata)"
+                    else -> ""
+                }
+
+                Text(
+                    text = display,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.extraLight,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 internal fun VerifyCardJsonDetails(
     title: String,
     subtitle: String,
@@ -479,6 +610,7 @@ private fun VerifySwapScreenPreview() {
         consentAllowance = true,
         confirmTitle = "Sign",
         hasFastSign = false,
+        vaultName = "Main Vault",
         onConsentReceiveAmount = {},
         onConsentAmount = {},
         onConsentAllowance = {},

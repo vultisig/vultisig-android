@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="deposit_option_leave">Leave</string>
@@ -161,6 +161,9 @@
     <string name="swap_screen_title">Swap</string>
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
+    <string name="swap_form_vault" translatable="false">Vault</string>
+    <string name="swap_form_min_pay">min. payout</string>
+    <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
@@ -168,7 +171,7 @@
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
-    <string name="verify_swap_sign_button">Sign</string>
+    <string name="verify_swap_sign_button">Sign Transaction</string>
     <string-array name="digit_words">
         <item>zero</item>
         <item>one</item>
@@ -201,6 +204,7 @@
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
     <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1$s %2$s "</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
+    <string name="swap_for_provider_kyber" translatable="false">Kyber</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="swap_for_provider_jupiter" translatable="false">Jupiter</string>
     <string name="verify_approve_amount_title">Amount to approve</string>
@@ -371,7 +375,7 @@
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
     <string name="register_vault_screen_save_qr_code">Save QR Code</string>
-    <string name="verify_swap_screen_total_fees">Total Fees</string>
+    <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
@@ -387,6 +391,7 @@
     <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be Zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
+    <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="backup_password_screen_skip">Skip Password</string>
     <string name="backup_password_screen_empty_password">Please use &#8220;Skip Password&#8221; to save without password</string>
     <string name="edit_address_title">Edit Address</string>

@@ -23,6 +23,7 @@
     <string name="vault_settings_security_screen_title_bottomsheet">Segurança on-chain desativada</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Desativar a segurança on-chain significa que a Blockaid não consegue verificar as transações. Você estará menos protegido.</string>
     <string name="choose_tokens">Escolha os Tokens</string>
+    <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
@@ -98,6 +99,7 @@
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
     <string name="verify_swap_sign_button">Sign</string>
+    <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>
@@ -113,6 +115,7 @@
     <string name="token_settings_supply">Fornecimento: %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="scan_qr_screen_return_vault">Retornar ao Cofre</string>
+    <string name="swap_form_min_pay">pagamento mín.</string>
     <string name="plus_icon">Ícone de mais</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, verifique todos os consentimentos</string>
     <string name="settings_screen_others">Outras</string>
