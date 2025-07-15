@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -90,22 +91,26 @@ internal fun VerifySwapScreen(
         )
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.fastSignFlow.collect { shouldShowPrompt ->
+            if (shouldShowPrompt) {
+                authorize()
+            }
+        }
+    }
+
     VerifySwapScreen(
         state = state,
         showToolbar = true,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
-        onConfirm = viewModel::confirm,
+        onConfirm = viewModel::joinKeySign,
         onConsentAllowance = viewModel::consentAllowance,
         onBackClick = viewModel::back,
-        onFastSignClick = {
-            if (!viewModel.tryToFastSignWithPassword()) {
-                authorize()
-            }
-        },
-        onContinueAnyway = {},
-        onDismissRequest = {},
+        onFastSignClick = viewModel::fastSign,
+        onContinueAnyway = viewModel::onConfirmScanning,
+        onDismissRequest = viewModel::onDismissSecurityScanner,
     )
 }
 

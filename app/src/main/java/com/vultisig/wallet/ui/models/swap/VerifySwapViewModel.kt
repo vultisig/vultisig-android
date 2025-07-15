@@ -15,7 +15,9 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -28,7 +30,9 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -100,6 +104,10 @@ internal class VerifySwapViewModel @Inject constructor(
     private val args = savedStateHandle.toRoute<Route.VerifySwap>()
     private val vaultId: VaultId = args.vaultId
     private val transactionId: String = args.transactionId
+    private var _fastSign = false
+
+    private val _fastSignFlow = Channel<Boolean>()
+    val fastSignFlow = _fastSignFlow.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -116,7 +124,7 @@ internal class VerifySwapViewModel @Inject constructor(
             }
 
             val consentAllowance = !transaction.isApprovalRequired
-             state.update {
+            state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
                     tx = mapTransactionToUiModel(transaction),
@@ -149,23 +157,6 @@ internal class VerifySwapViewModel @Inject constructor(
 
     fun dismissError() {
         state.update { it.copy(errorText = null) }
-    }
-
-    fun confirm() {
-        keysign(KeysignInitType.QR_CODE)
-    }
-
-    fun authFastSign() {
-        keysign(KeysignInitType.BIOMETRY)
-    }
-
-    fun tryToFastSignWithPassword(): Boolean {
-        if (password.value != null) {
-            return false
-        } else {
-            keysign(KeysignInitType.PASSWORD)
-            return true
-        }
     }
 
     private fun keysign(
@@ -219,7 +210,8 @@ internal class VerifySwapViewModel @Inject constructor(
 
                 val isSupported = !isThorchainOrMaya
                         && chain.standard == TokenStandard.EVM
-                        && securityScannerService.getSupportedChainsByFeature().isChainSupported(chain)
+                        && securityScannerService.getSupportedChainsByFeature()
+                    .isChainSupported(chain)
                         && securityScannerService.isSecurityServiceEnabled()
 
                 if (!isSupported) return@launch
@@ -254,6 +246,84 @@ internal class VerifySwapViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun onDismissSecurityScanner() {
+        state.update {
+            it.copy(
+                showScanningWarning = false,
+            )
+        }
+    }
+
+    fun joinKeySign() {
+        _fastSign = false
+        handleSigningFlow(
+            onSign = { keysign(KeysignInitType.QR_CODE) },
+            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
+        )
+    }
+
+    fun authFastSign() {
+        keysign(KeysignInitType.BIOMETRY)
+    }
+
+    private fun tryToFastSignWithPassword(): Boolean {
+        if (password.value != null) {
+            return false
+        } else {
+            keysign(KeysignInitType.PASSWORD)
+            return true
+        }
+    }
+
+    fun fastSign() {
+        _fastSign = true
+        handleSigningFlow(
+            onSign = { fastSignAndSkipWarnings() },
+            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
+        )
+    }
+
+    private fun fastSignAndSkipWarnings() {
+        state.update { it.copy(showScanningWarning = false) }
+
+        if (!tryToFastSignWithPassword()) {
+            viewModelScope.launch {
+                _fastSignFlow.send(true)
+            }
+        }
+    }
+
+    fun joinKeySignAndSkipWarnings() {
+        state.update { it.copy(showScanningWarning = false) }
+        keysign(KeysignInitType.QR_CODE)
+    }
+
+    fun onConfirmScanning() {
+        if (!_fastSign) {
+            joinKeySignAndSkipWarnings()
+        } else {
+            fastSignAndSkipWarnings()
+        }
+    }
+
+    private fun handleSigningFlow(
+        onSign: () -> Unit,
+        onSignAndSkipWarnings: () -> Unit
+    ) {
+        when (val status = state.value.txScanStatus) {
+            is TransactionScanStatus.Scanned -> {
+                if (!status.result.isSecure) {
+                    state.update { it.copy(showScanningWarning = true) }
+                } else {
+                    onSignAndSkipWarnings()
+                }
+            }
+            is TransactionScanStatus.Error,
+            TransactionScanStatus.NotStarted,
+            TransactionScanStatus.Scanning -> onSign()
         }
     }
 }

@@ -76,7 +76,7 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount && consentDst
 }
 
-internal sealed class TransactionScanStatus {
+sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
     data object Scanning : TransactionScanStatus()
     data class Scanned(val result: SecurityScannerResult) : TransactionScanStatus()
@@ -180,7 +180,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         )
     }
 
-    fun joinKeySignAndSkipWarnings() {
+    private fun joinKeySignAndSkipWarnings() {
         uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
     }
@@ -193,7 +193,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         )
     }
 
-    fun fastSignAndSkipWarnings() {
+    private fun fastSignAndSkipWarnings() {
         uiState.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
