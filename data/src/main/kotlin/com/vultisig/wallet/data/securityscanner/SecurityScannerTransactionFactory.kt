@@ -8,14 +8,12 @@ import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
@@ -33,7 +31,7 @@ class SecurityScannerTransactionFactory(
             TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             TokenStandard.SUI -> createSUISecurityScannerTransaction(transaction)
             TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
-            else -> error("Not supported")
+            else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }
 
@@ -41,74 +39,62 @@ class SecurityScannerTransactionFactory(
         val chain = transaction.srcToken.chain
         return when (chain.standard) {
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
-            else -> error("Not supported")
+            else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }
 
     private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
-        val payload = transaction.payload
-        val isApprovalRequired = transaction.isApprovalRequired
-        return when (payload) {
-            is SwapPayload.OneInch -> buildOneInchTransaction(payload.data, transaction.srcToken, isApprovalRequired)
-            is SwapPayload.Kyber -> buildKyberTransaction(payload.data, transaction.srcToken, isApprovalRequired)
+        return when (val payload = transaction.payload) {
+            is SwapPayload.OneInch ->
+                buildSwapSecurityScannerTransaction(
+                srcToken = transaction.srcToken,
+                from = payload.data.quote.tx.from,
+                to = payload.data.quote.tx.to,
+                amount = payload.data.quote.tx.value,
+                data = payload.data.quote.tx.data,
+                isApprovalRequired = transaction.isApprovalRequired
+            )
+            is SwapPayload.Kyber ->
+                buildSwapSecurityScannerTransaction(
+                    srcToken = transaction.srcToken,
+                    from = payload.data.quote.tx.from,
+                    to = payload.data.quote.tx.to,
+                    amount = payload.data.quote.tx.value,
+                    data = payload.data.quote.tx.data,
+                    isApprovalRequired = transaction.isApprovalRequired
+                )
+
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
     }
 
-    private fun buildOneInchTransaction(
-        payloadJson: OneInchSwapPayloadJson,
+    private fun buildSwapSecurityScannerTransaction(
         srcToken: Coin,
+        from: String,
+        to: String,
+        amount: String,
+        data: String,
         isApprovalRequired: Boolean,
     ): SecurityScannerTransaction {
-        val tx = payloadJson.quote.tx
         val chain = srcToken.chain
 
         return if (isApprovalRequired) {
             SecurityScannerTransaction(
                 chain = chain,
                 type = SecurityTransactionType.SWAP,
-                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // from,
                 to = srcToken.contractAddress,
                 amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20(tx.to, tx.value.toBigInteger()),
+                data = EthereumFunction.approvalErc20(to, amount.toBigInteger()),
             )
         } else {
             SecurityScannerTransaction(
                 chain = chain,
                 type = SecurityTransactionType.SWAP,
                 from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
-                to = tx.to,
-                amount = tx.value.toBigInteger(),
-                data = tx.data,
-            )
-        }
-    }
-
-    private fun buildKyberTransaction(
-        payloadJson: KyberSwapPayloadJson,
-        srcToken: Coin,
-        isApprovalRequired: Boolean,
-    ): SecurityScannerTransaction {
-        val tx = payloadJson.quote.tx
-        val chain = srcToken.chain
-
-        return if (isApprovalRequired) {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
-                to = srcToken.contractAddress,
-                amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20(tx.to, tx.value.toBigInteger()),
-            )
-        } else {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
-                to = tx.to,
-                amount = tx.value.toBigInteger(),
-                data = tx.data,
+                to = to,
+                amount = amount.toBigInteger(),
+                data = data,
             )
         }
     }
