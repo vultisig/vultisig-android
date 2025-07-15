@@ -43,7 +43,7 @@ object EthereumFunction {
             }
             return EthereumAbi.encode(encodedFunction).toHexString().add0x()
         } catch (e: Exception) {
-            throw IllegalArgumentException("Failed to encode ERC-20 transfer: ${e.message}", e)
+            throw IllegalArgumentException("Failed to encode ERC-20 approval: ${e.message}", e)
         }
     }
 }

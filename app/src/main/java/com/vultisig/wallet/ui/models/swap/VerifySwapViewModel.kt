@@ -15,9 +15,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
-import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
-import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionScanStatus
@@ -28,6 +26,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -259,7 +258,9 @@ internal class VerifySwapViewModel @Inject constructor(
 
     fun joinKeySign() {
         _fastSign = false
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = state.value.txScanStatus,
+            showWarning = { state.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
             onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
         )
@@ -280,7 +281,9 @@ internal class VerifySwapViewModel @Inject constructor(
 
     fun fastSign() {
         _fastSign = true
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = state.value.txScanStatus,
+            showWarning = { state.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
             onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
         )
@@ -306,24 +309,6 @@ internal class VerifySwapViewModel @Inject constructor(
             joinKeySignAndSkipWarnings()
         } else {
             fastSignAndSkipWarnings()
-        }
-    }
-
-    private fun handleSigningFlow(
-        onSign: () -> Unit,
-        onSignAndSkipWarnings: () -> Unit
-    ) {
-        when (val status = state.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> {
-                if (!status.result.isSecure) {
-                    state.update { it.copy(showScanningWarning = true) }
-                } else {
-                    onSignAndSkipWarnings()
-                }
-            }
-            is TransactionScanStatus.Error,
-            TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> onSign()
         }
     }
 }

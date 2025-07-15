@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -42,8 +43,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import wallet.core.jni.Base58
-import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -154,27 +153,11 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun handleSigningFlow(
-        onSign: () -> Unit,
-        onSignAndSkipWarnings: () -> Unit
-    ) {
-        when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> {
-                if (!status.result.isSecure) {
-                    uiState.update { it.copy(showScanningWarning = true) }
-                } else {
-                    onSignAndSkipWarnings()
-                }
-            }
-            is TransactionScanStatus.Error,
-            TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> onSign()
-        }
-    }
-
     fun joinKeySign() {
         _fastSign = false
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
             onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
         )
@@ -187,7 +170,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     fun fastSign() {
         _fastSign = true
-        handleSigningFlow(
+        handleSigningFlowCommon(
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
             onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
         )
