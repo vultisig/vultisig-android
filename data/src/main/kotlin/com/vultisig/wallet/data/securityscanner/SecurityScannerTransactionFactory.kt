@@ -82,7 +82,7 @@ class SecurityScannerTransactionFactory(
             SecurityScannerTransaction(
                 chain = chain,
                 type = SecurityTransactionType.SWAP,
-                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // from,
+                from = from,
                 to = srcToken.contractAddress,
                 amount = BigInteger.ZERO,
                 data = EthereumFunction.approvalErc20(to, amount.toBigInteger()),
@@ -91,7 +91,7 @@ class SecurityScannerTransactionFactory(
             SecurityScannerTransaction(
                 chain = chain,
                 type = SecurityTransactionType.SWAP,
-                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                from = from,
                 to = to,
                 amount = amount.toBigInteger(),
                 data = data,
