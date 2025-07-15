@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
-import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
@@ -47,44 +47,70 @@ class SecurityScannerTransactionFactory(
 
     private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
         val payload = transaction.payload
-        val chain = transaction.srcToken.chain
+        val isApprovalRequired = transaction.isApprovalRequired
         return when (payload) {
-            is SwapPayload.OneInch -> buildOneInchTransaction(payload.data, chain)
-            is SwapPayload.Kyber -> buildKyberTransaction(payload.data, chain)
+            is SwapPayload.OneInch -> buildOneInchTransaction(payload.data, transaction.srcToken, isApprovalRequired)
+            is SwapPayload.Kyber -> buildKyberTransaction(payload.data, transaction.srcToken, isApprovalRequired)
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
     }
 
     private fun buildOneInchTransaction(
         payloadJson: OneInchSwapPayloadJson,
-        chain: Chain
+        srcToken: Coin,
+        isApprovalRequired: Boolean,
     ): SecurityScannerTransaction {
         val tx = payloadJson.quote.tx
+        val chain = srcToken.chain
 
-        return SecurityScannerTransaction(
-            chain = chain,
-            type = SecurityTransactionType.SWAP,
-            from = tx.from,
-            to = tx.to,
-            amount = tx.value.toBigInteger(),
-            data = tx.data,
-        )
+        return if (isApprovalRequired) {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                to = srcToken.contractAddress,
+                amount = BigInteger.ZERO,
+                data = EthereumFunction.approvalErc20(tx.to, tx.value.toBigInteger()),
+            )
+        } else {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                to = tx.to,
+                amount = tx.value.toBigInteger(),
+                data = tx.data,
+            )
+        }
     }
 
     private fun buildKyberTransaction(
         payloadJson: KyberSwapPayloadJson,
-        chain: Chain
+        srcToken: Coin,
+        isApprovalRequired: Boolean,
     ): SecurityScannerTransaction {
         val tx = payloadJson.quote.tx
+        val chain = srcToken.chain
 
-        return SecurityScannerTransaction(
-            chain = chain,
-            type = SecurityTransactionType.SWAP,
-            from = tx.from,
-            to = tx.to,
-            amount = tx.value.toBigInteger(),
-            data = tx.data,
-        )
+        return if (isApprovalRequired) {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                to = srcToken.contractAddress,
+                amount = BigInteger.ZERO,
+                data = EthereumFunction.approvalErc20(tx.to, tx.value.toBigInteger()),
+            )
+        } else {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = "0xd231BC5Be61817A0DE9E86E6DE62F50863111427", // tx.from,
+                to = tx.to,
+                amount = tx.value.toBigInteger(),
+                data = tx.data,
+            )
+        }
     }
 
     private fun createEVMSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
