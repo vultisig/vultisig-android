@@ -150,9 +150,7 @@ val Chain.isDepositSupported: Boolean
 
 val Chain.isLayer2: Boolean
     get() = when (this) {
-        Chain.Arbitrum, Chain.Avalanche, Chain.CronosChain, Chain.Base, Chain.Blast,
-        Chain.Optimism, Chain.Polygon, Chain.BscChain, Chain.ZkSync -> true
-
+        Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.Optimism, Chain.ZkSync -> true
         else -> false
     }
 

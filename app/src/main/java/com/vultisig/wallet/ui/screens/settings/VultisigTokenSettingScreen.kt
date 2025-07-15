@@ -31,6 +31,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 @Composable
 fun VultisigTokenScreen(navController: NavHostController) {
@@ -67,7 +68,7 @@ fun VultisigTokenScreen(navController: NavHostController) {
                 text = stringResource(R.string.feature_item_learn_more),
                 icon = R.drawable.share
             ) {
-                uriHandler.openUri("https://vultisig.com/vult")
+                uriHandler.openUri(VsAuxiliaryLinks.VULT)
             }
         }
 

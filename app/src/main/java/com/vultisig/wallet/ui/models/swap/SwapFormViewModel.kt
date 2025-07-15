@@ -104,6 +104,7 @@ internal data class SwapFormUiModel(
     val formError: UiText? = null,
     val isSwapDisabled: Boolean = false,
     val isLoading: Boolean = false,
+    val isLoadingNextScreen: Boolean = false,
     val expiredAt: Instant? = null,
 )
 
@@ -172,6 +173,14 @@ internal class SwapFormViewModel @Inject constructor(
             }
         }
 
+    private var isLoadingNextScreen: Boolean
+        get() = uiState.value.isLoadingNextScreen
+        set(value) {
+            uiState.update {
+                it.copy(isLoadingNextScreen = value)
+            }
+        }
+
     init {
         viewModelScope.launch {
             loadData(
@@ -199,8 +208,7 @@ internal class SwapFormViewModel @Inject constructor(
     fun swap() {
         try {
             // TODO verify swap info
-
-            isLoading = true
+            isLoadingNextScreen = true
             val vaultId = vaultId ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_no_vault)
             )
@@ -478,10 +486,10 @@ internal class SwapFormViewModel @Inject constructor(
                         vaultId = vaultId,
                     )
                 )
-                isLoading = false
+                isLoadingNextScreen = false
             }
         } catch (e: InvalidTransactionDataException) {
-            isLoading = false
+            isLoadingNextScreen = false
             showError(e.text)
             return
         }

@@ -42,9 +42,6 @@ internal data class SwapTransactionUiModel(
     val src: ValuedToken = ValuedToken.Empty,
     val dst: ValuedToken = ValuedToken.Empty,
 
-    val srcNativeLogo: String = "",
-    val dstNativeLogo: String = "",
-
     val networkFee: ValuedToken = ValuedToken.Empty,
     val providerFee: ValuedToken = ValuedToken.Empty,
 

@@ -21,6 +21,13 @@
             android:name="android.permission.READ_EXTERNAL_STORAGE"
             android:maxSdkVersion="28" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
     <application
             android:name="com.vultisig.wallet.app.VultisigApplication"
             android:allowBackup="false"
