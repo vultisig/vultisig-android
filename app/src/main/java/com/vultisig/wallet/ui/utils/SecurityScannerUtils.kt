@@ -6,14 +6,13 @@ fun handleSigningFlowCommon(
     txScanStatus: TransactionScanStatus,
     showWarning: () -> Unit,
     onSign: () -> Unit,
-    onSignAndSkipWarnings: () -> Unit
 ) {
     when (txScanStatus) {
         is TransactionScanStatus.Scanned -> {
             if (!txScanStatus.result.isSecure) {
                 showWarning()
             } else {
-                onSignAndSkipWarnings()
+                onSign()
             }
         }
         is TransactionScanStatus.Error,

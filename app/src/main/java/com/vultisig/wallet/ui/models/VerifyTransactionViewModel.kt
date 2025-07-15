@@ -6,17 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
-import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
-import com.vultisig.wallet.data.securityscanner.SecurityTransactionType
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
@@ -159,7 +154,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
             txScanStatus = uiState.value.txScanStatus,
             showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
-            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
         )
     }
 
@@ -174,7 +168,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
             txScanStatus = uiState.value.txScanStatus,
             showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
-            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
         )
     }
 

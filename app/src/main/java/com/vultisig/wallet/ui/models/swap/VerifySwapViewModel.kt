@@ -259,7 +259,6 @@ internal class VerifySwapViewModel @Inject constructor(
             txScanStatus = state.value.txScanStatus,
             showWarning = { state.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
-            onSignAndSkipWarnings = { keysign(KeysignInitType.QR_CODE) }
         )
     }
 
@@ -282,7 +281,6 @@ internal class VerifySwapViewModel @Inject constructor(
             txScanStatus = state.value.txScanStatus,
             showWarning = { state.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
-            onSignAndSkipWarnings = { fastSignAndSkipWarnings() }
         )
     }
 
