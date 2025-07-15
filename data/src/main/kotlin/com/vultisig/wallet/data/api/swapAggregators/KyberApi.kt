@@ -181,7 +181,7 @@ class KyberApiImpl @Inject constructor(
             if (respone.bodyAsText().contains("TransferHelper") == true && respone.bodyAsText()
                     .contains("execution reverted") == true
             ) {
-                getKyberSwapQuote(
+                return getKyberSwapQuote(
                     chain = chain,
                     routeSummary = routeSummary,
                     from = from,
