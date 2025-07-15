@@ -21,23 +21,3 @@ fun handleSigningFlowCommon(
         TransactionScanStatus.Scanning -> onSign()
     }
 }
-
-/*
-    private fun handleSigningFlow(
-        onSign: () -> Unit,
-        onSignAndSkipWarnings: () -> Unit
-    ) {
-        when (val status = uiState.value.txScanStatus) {
-            is TransactionScanStatus.Scanned -> {
-                if (!status.result.isSecure) {
-                    uiState.update { it.copy(showScanningWarning = true) }
-                } else {
-                    onSignAndSkipWarnings()
-                }
-            }
-            is TransactionScanStatus.Error,
-            TransactionScanStatus.NotStarted,
-            TransactionScanStatus.Scanning -> onSign()
-        }
-    }
- */
