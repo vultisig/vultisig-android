@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -214,9 +215,12 @@ internal class VerifySwapViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val chain = transaction.srcToken.chain
-                val isSupported = securityScannerService
-                    .getSupportedChainsByFeature()
-                    .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+                val isThorchainOrMaya = transaction.payload is SwapPayload.ThorChain ||
+                        transaction.payload is SwapPayload.MayaChain
+
+                val isSupported = !isThorchainOrMaya
+                        && securityScannerService.getSupportedChainsByFeature().isChainSupported(chain)
+                        && securityScannerService.isSecurityServiceEnabled()
 
                 if (!isSupported) return@launch
 
