@@ -530,7 +530,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransaction
+                                tx = swapTransaction,
+                                vaultName = vaultName,
                             )
                         )
                     }
