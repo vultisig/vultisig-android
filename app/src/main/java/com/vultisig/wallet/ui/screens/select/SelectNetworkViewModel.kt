@@ -27,6 +27,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -97,25 +97,20 @@ internal class SelectNetworkViewModel @Inject constructor(
     private fun collectSearchResults() {
         combine(
             vaultRepository.getEnabledChains(vaultId),
-            searchFieldState.textAsFlow()
-                .map { it.toString() },
-        ) { chains, query ->
+            searchFieldState.textAsFlow().map { it.toString() },
+            loadAddressesWithBalances(),
+        ) { chains, query, balanceModels ->
             val filteredChains = chains
                 .asSequence()
-                .filter {
-                    it.raw.contains(query, ignoreCase = true)
-                            || it.coinType.symbol.contains(query, ignoreCase = true)
-                }
-                .let {
-                    when (args.filters) {
-                        Filters.SwapAvailable ->
-                            it.filter { it.IsSwapSupported }
-
-                        Filters.DisableNetworkSelection ->
-                            it.filter { it.id == selectedNetwork.id }
-
-                        Filters.None -> it
+                .filter { chain ->
+                    val matchesQuery = chain.raw.contains(query, ignoreCase = true) ||
+                            chain.coinType.symbol.contains(query, ignoreCase = true)
+                    val matchesFilter = when (args.filters) {
+                        Filters.SwapAvailable -> chain.IsSwapSupported
+                        Filters.DisableNetworkSelection -> chain.id == selectedNetwork.id
+                        Filters.None -> true
                     }
+                    matchesQuery && matchesFilter
                 }
                 .sortedWith(compareBy { it.raw })
                 .map { chain ->
@@ -127,44 +122,42 @@ internal class SelectNetworkViewModel @Inject constructor(
                 }
                 .toList()
 
+            val chainsWithPrice =
+                balanceModels.mapNotNull { filteredChainWithBalance ->
+                    val chain = filteredChainWithBalance.chain
+                    filteredChains.find { it.chain == chain }
+                        ?.copy(value = filteredChainWithBalance.value)
+                }
+
             this.state.update {
-                it.copy(networks = filteredChains)
-            }
-
-            if (balanceCaches != null) {
-                accountRepository.loadAddresses(vaultId = vaultId)
-                    .catch { Timber.e(it) }
-                    .collect { addresses ->
-                        val filteredChainsWithBalance = coroutineScope {
-                            addresses.map { address ->
-                                async {
-                                    val totalFiatValue =
-                                        address.accounts.calculateAccountsTotalFiatValue()
-                                            ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
-                                    NetworkUiModel(
-                                        chain = address.chain,
-                                        logo = address.chain.logo,
-                                        title = address.chain.raw,
-                                        value = fiatValueToStringMapper.map(totalFiatValue),
-                                    )
-                                }
-                            }
-                        }.awaitAll()
-
-                        val chainsWithPrice =
-                            filteredChainsWithBalance.mapNotNull { filteredChainWithBalance ->
-                                val chain = filteredChainWithBalance.chain
-                                filteredChains.find { it.chain == chain }
-                                    ?.copy(value = filteredChainWithBalance.value)
-                            }
-
-                        balanceCaches = chainsWithPrice
-
-                        this.state.update {
-                            it.copy(networks = chainsWithPrice)
-                        }
-                    }
+                it.copy(networks = chainsWithPrice)
             }
         }.launchIn(viewModelScope)
+    }
+
+
+    private fun loadAddressesWithBalances(): Flow<List<NetworkUiModel>> {
+        return accountRepository.loadAddresses(vaultId = vaultId)
+            .catch {
+                Timber.e(it)
+                emit(emptyList())
+            }
+            .map { addresses ->
+                coroutineScope {
+                    addresses.map { address ->
+                        async {
+                            val totalFiatValue =
+                                address.accounts.calculateAccountsTotalFiatValue()
+                                    ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+                            NetworkUiModel(
+                                chain = address.chain,
+                                logo = address.chain.logo,
+                                title = address.chain.raw,
+                                value = fiatValueToStringMapper.map(totalFiatValue),
+                            )
+                        }
+                    }.awaitAll()
+                }
+            }
     }
 }
