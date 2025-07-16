@@ -122,7 +122,6 @@ private fun SelectNetworkScreen(
                     NetworkItem(
                         logo = item.logo,
                         title = item.title,
-                        isSelected = isSelected,
                         value = item.value ?: "",
                         modifier = Modifier
                             .clickable(onClick = {
@@ -176,7 +175,6 @@ private fun NetworkItem(
     logo: ImageModel,
     title: String,
     value: String,
-    isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -205,13 +203,15 @@ private fun NetworkItem(
             color = Theme.colors.text.primary,
         )
 
-        UiSpacer(1f)
+        if (value.isNotEmpty()) {
+            UiSpacer(1f)
 
-        Text(
-            text = value,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.extraLight,
-        )
+            Text(
+                text = value,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.colors.text.extraLight,
+            )
+        }
     }
 }
 

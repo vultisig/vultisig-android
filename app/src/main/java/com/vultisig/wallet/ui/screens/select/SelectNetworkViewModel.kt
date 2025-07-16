@@ -78,27 +78,6 @@ internal class SelectNetworkViewModel @Inject constructor(
 
     init {
         collectSearchResults()
-        loadBalances()
-    }
-
-    private fun loadBalances() {
-        viewModelScope.launch {
-            accountRepository.loadAddresses(
-                vaultId = vaultId,
-            ).catch {
-                Timber.e(it)
-            }.collect { addresses ->
-                supervisorScope {
-                    val result = addresses.map { address ->
-                        async {
-                            val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
-                            address.chain to totalFiatValue
-                        }
-                    }.awaitAll()
-
-                }
-            }
-        }
     }
 
     fun selectNetwork(model: NetworkUiModel) {
@@ -152,7 +131,7 @@ internal class SelectNetworkViewModel @Inject constructor(
                 it.copy(networks = filteredChains)
             }
 
-            if (balanceCaches == null) {
+            if (balanceCaches != null) {
                 accountRepository.loadAddresses(vaultId = vaultId)
                     .catch { Timber.e(it) }
                     .collect { addresses ->
@@ -178,7 +157,6 @@ internal class SelectNetworkViewModel @Inject constructor(
                                 filteredChains.find { it.chain == chain }
                                     ?.copy(value = filteredChainWithBalance.value)
                             }
-
 
                         balanceCaches = chainsWithPrice
 
