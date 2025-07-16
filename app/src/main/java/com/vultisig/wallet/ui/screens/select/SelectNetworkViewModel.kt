@@ -31,8 +31,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -66,7 +68,6 @@ internal class SelectNetworkViewModel @Inject constructor(
 
     private val vaultId = args.vaultId
     private val selectedNetwork = Chain.fromRaw(args.selectedNetworkId)
-    private var balanceCaches: List<NetworkUiModel>? = null
 
     val searchFieldState = TextFieldState()
 
@@ -99,7 +100,7 @@ internal class SelectNetworkViewModel @Inject constructor(
             vaultRepository.getEnabledChains(vaultId),
             searchFieldState.textAsFlow().map { it.toString() },
             loadAddressesWithBalances(),
-        ) { chains, query, balanceModels ->
+        ) { chains, query, chainBalances ->
             val filteredChains = chains
                 .asSequence()
                 .filter { chain ->
@@ -118,25 +119,18 @@ internal class SelectNetworkViewModel @Inject constructor(
                         chain = chain,
                         logo = chain.logo,
                         title = chain.raw,
+                        value = chainBalances[chain] ?: ""
                     )
                 }
                 .toList()
 
-            val chainsWithPrice =
-                balanceModels.mapNotNull { filteredChainWithBalance ->
-                    val chain = filteredChainWithBalance.chain
-                    filteredChains.find { it.chain == chain }
-                        ?.copy(value = filteredChainWithBalance.value)
-                }
-
             this.state.update {
-                it.copy(networks = chainsWithPrice)
+                it.copy(networks = filteredChains)
             }
         }.launchIn(viewModelScope)
     }
 
-
-    private fun loadAddressesWithBalances(): Flow<List<NetworkUiModel>> {
+    private fun loadAddressesWithBalances(): Flow<Map<Chain, String>> {
         return accountRepository.loadAddresses(vaultId = vaultId)
             .catch {
                 Timber.e(it)
@@ -146,17 +140,12 @@ internal class SelectNetworkViewModel @Inject constructor(
                 coroutineScope {
                     addresses.map { address ->
                         async {
-                            val totalFiatValue =
-                                address.accounts.calculateAccountsTotalFiatValue()
-                                    ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
-                            NetworkUiModel(
-                                chain = address.chain,
-                                logo = address.chain.logo,
-                                title = address.chain.raw,
-                                value = fiatValueToStringMapper.map(totalFiatValue),
-                            )
+                            val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
+                                ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+                            val formattedValue = fiatValueToStringMapper.map(totalFiatValue)
+                            address.chain to formattedValue
                         }
-                    }.awaitAll()
+                    }.awaitAll().associate { it.first to it.second }
                 }
             }
     }
