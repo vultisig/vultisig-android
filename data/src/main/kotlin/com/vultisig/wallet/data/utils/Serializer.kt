@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
+import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
@@ -14,6 +15,9 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -163,6 +167,29 @@ class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val
         } else {
             OneInchSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<String>(jsonObject)
+            )
+        }
+    }
+}
+
+interface KyberSwapQuoteResponseJsonSerializer : DefaultSerializer<KyberSwapQuoteDeserialized>
+
+class KyberSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
+    KyberSwapQuoteResponseJsonSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("KyberSwapQouteResponseJsonSerializer")
+
+    override fun deserialize(decoder: Decoder): KyberSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("data")) {
+            KyberSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<KyberSwapRouteResponse>(jsonObject)
+            )
+        } else {
+            KyberSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<KyberSwapErrorResponse>(jsonObject)
             )
         }
     }

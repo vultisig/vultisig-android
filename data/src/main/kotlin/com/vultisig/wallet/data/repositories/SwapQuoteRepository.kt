@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
@@ -124,7 +125,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): KyberSwapQuoteJson {
-        val routeResponse = kyberApi.getSwapQuote(
+        val kyberSwapQuote = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
@@ -132,29 +133,26 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             srcAddress = srcToken.address,
             isAffiliate = isAffiliate
         )
+        when (kyberSwapQuote) {
+            is KyberSwapQuoteDeserialized.Error ->
+                throw SwapException.handleSwapException(kyberSwapQuote.error.message)
 
-        val buildTransactionWithGasOption: suspend (Boolean) -> KyberSwapQuoteJson =
-            { enableGasEstimation: Boolean ->
-                buildTransaction(
+            is KyberSwapQuoteDeserialized.Result -> {
+
+                return buildTransaction(
                     chain = srcToken.chain,
-                    routeSummary = routeResponse.data.routeSummary,
+                    routeSummary = kyberSwapQuote.result.data.routeSummary,
                     response = kyberApi.getKyberSwapQuote(
                         chain = srcToken.chain,
-                        routeSummary = routeResponse.data.routeSummary,
+                        routeSummary = kyberSwapQuote.result.data.routeSummary,
                         from = srcToken.address,
-                        enableGasEstimation = enableGasEstimation,
+                        enableGasEstimation = true,
                         isAffiliate = isAffiliate
                     ),
                 )
-        }
-
-        return try {
-            buildTransactionWithGasOption(true)
-        } catch (_: Exception) {
-            buildTransactionWithGasOption(false)
+            }
         }
     }
-
 
 
     private fun buildTransaction(
@@ -174,7 +172,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         // If you want to update a fee field inside data, do so like this (assuming 'fee' is a String or BigInteger):
         val newFee = finalGas.toBigInteger() * finalGasPrice
 
-      return response.copy(
+        return response.copy(
             data = response.data.copy(
                 gasPrice = gasPrice,
                 fee = newFee,
@@ -322,7 +320,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                     // adapted from vultisig-windows:
                     // https://github.com/vultisig/vultisig-windows/blob/5cb9748bc88efa8b375132c93ba1906e1ccccebe/core/chain/swap/general/lifi/api/getLifiSwapQuote.ts#L70
                     .find {
-                        it.name.equals("LIFI Fixed Fee", ignoreCase = true)
+                        it.name.equals(
+                            "LIFI Fixed Fee",
+                            ignoreCase = true
+                        )
                     }
 
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
@@ -371,7 +372,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
 
         val swapFee = jupiterQuote.routePlan
-                .firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount ?: "0"
+            .firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount ?: "0"
 
 
         return OneInchSwapQuoteJson(
@@ -433,12 +434,20 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-        if (hasNotProvider(srcToken, dstToken)) return null
+        if (hasNotProvider(
+                srcToken,
+                dstToken
+            )
+        ) return null
         return srcToken.swapProviders
             .intersect(dstToken.swapProviders)
             .firstOrNull {
-                if (isCrossChainSwap(srcToken, dstToken))
-                    it != SwapProvider.ONEINCH
+                if (isCrossChainSwap(
+                        srcToken,
+                        dstToken
+                    )
+                )
+                    it != SwapProvider.ONEINCH && it != SwapProvider.KYBER
                 else true
             }
     }
@@ -473,8 +482,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         "DPI",
         "SNX"
     )
-    private val thorBscTokens = listOf("BNB", "USDT", "USDC")
-    private val thorAvaxTokens = listOf("AVAX", "USDC", "USDT", "SOL")
+    private val thorBscTokens = listOf(
+        "BNB",
+        "USDT",
+        "USDC"
+    )
+    private val thorAvaxTokens = listOf(
+        "AVAX",
+        "USDC",
+        "USDT",
+        "SOL"
+    )
     private val mayaEthTokens = listOf("ETH")
     private val mayaArbTokens = listOf(
         "ETH",
@@ -541,7 +559,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             )
 
             Chain.Optimism, Chain.Polygon, Chain.ZkSync -> setOf(
-                SwapProvider.ONEINCH, SwapProvider.LIFI
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI
             )
 
             Chain.ThorChain -> setOf(
@@ -568,7 +587,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             ) else setOf(SwapProvider.LIFI)
 
             Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
-            Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+            Chain.Solana -> setOf(
+                SwapProvider.JUPITER,
+                SwapProvider.LIFI
+            )
+
             Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
             Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Tron, Chain.Cardano

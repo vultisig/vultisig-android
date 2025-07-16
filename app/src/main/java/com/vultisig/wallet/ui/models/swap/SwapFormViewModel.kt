@@ -1088,6 +1088,7 @@ internal class SwapFormViewModel @Inject constructor(
                             }
                         }
                     } catch (e: SwapException) {
+                        this@SwapFormViewModel.quote = null
                         val formError = when (e) {
                             is SwapException.SwapIsNotSupported ->
                                 UiText.StringResource(R.string.swap_route_not_available)
@@ -1130,6 +1131,7 @@ internal class SwapFormViewModel @Inject constructor(
                         }
                         Timber.e("swapError $e")
                     } catch (e: Exception) {
+                        this@SwapFormViewModel.quote = null
                         // TODO handle error
                         isLoading = false
                         Timber.e(e)
