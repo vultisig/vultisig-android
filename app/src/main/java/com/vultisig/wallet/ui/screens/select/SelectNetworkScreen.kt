@@ -1,21 +1,20 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.vultisig.wallet.ui.screens.select
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -24,6 +23,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -67,7 +69,7 @@ private fun SelectNetworkScreen(
         topBar = {
             Column {
                 Text(
-                    text = stringResource(R.string.select_network_title),
+                    text = stringResource(R.string.select_chain_title),
                     style = Theme.brockmann.body.l.medium,
                     color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
@@ -90,12 +92,23 @@ private fun SelectNetworkScreen(
                     .padding(contentPadding),
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.select_network_network_title),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.colors.text.extraLight,
-                    )
+                    Row {
+                        Text(
+                            text = stringResource(R.string.select_chain_chain_title),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.colors.text.extraLight,
+                        )
 
+                        UiSpacer(1f)
+
+                        Text(
+                            text = stringResource(R.string.select_chain_balance_title),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.colors.text.extraLight,
+                        )
+
+                        UiSpacer(20.dp)
+                    }
                     UiSpacer(16.dp)
                 }
 
@@ -110,6 +123,7 @@ private fun SelectNetworkScreen(
                         logo = item.logo,
                         title = item.title,
                         isSelected = isSelected,
+                        value = item.value ?: "",
                         modifier = Modifier
                             .clickable(onClick = {
                                 onNetworkClick(item)
@@ -140,9 +154,28 @@ private fun SelectNetworkScreen(
 }
 
 @Composable
+fun GradientDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        Theme.colors.borders.light,
+                        Color.Transparent
+                    )
+                )
+            )
+    )
+}
+
+@Composable
 private fun NetworkItem(
     logo: ImageModel,
     title: String,
+    value: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -170,11 +203,15 @@ private fun NetworkItem(
             text = title,
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
-            modifier = Modifier
-                .weight(1f)
         )
 
+        UiSpacer(1f)
 
+        Text(
+            text = value,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.colors.text.extraLight,
+        )
     }
 }
 

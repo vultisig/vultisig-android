@@ -12,17 +12,18 @@ import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal data class SelectNetworkUiModel(
@@ -46,7 +48,7 @@ internal data class NetworkUiModel(
     val chain: Chain,
     val logo: ImageModel,
     val title: String,
-    val value: FiatValue? = null,
+    val value: String? = null,
 )
 
 
@@ -57,6 +59,7 @@ internal class SelectNetworkViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
     private val accountRepository: AccountsRepository,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectNetwork>()
@@ -158,11 +161,12 @@ internal class SelectNetworkViewModel @Inject constructor(
                                 async {
                                     val totalFiatValue =
                                         address.accounts.calculateAccountsTotalFiatValue()
+                                            ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
                                     NetworkUiModel(
                                         chain = address.chain,
                                         logo = address.chain.logo,
                                         title = address.chain.raw,
-                                        value = totalFiatValue,
+                                        value = fiatValueToStringMapper.map(totalFiatValue),
                                     )
                                 }
                             }
