@@ -760,6 +760,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         is BlockChainSpecific.THORChain -> specific.fee
                         else -> error("BlockChainSpecific $specific is not supported")
                     }
+                    val feeCurrency = tokenRepository.getNativeToken(payload.coin.chain.id)
 
                     val depositTransactionUiModel = DepositTransactionUiModel(
                         fromAddress = payload.coin.address,
@@ -777,7 +778,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         estimatedFees = mapTokenValueToStringWithUnit(
                             TokenValue(
                                 value = fee,
-                                token = payload.coin,
+                                token = feeCurrency,
                             )
                         ),
                         memo = payload.memo ?: "",
