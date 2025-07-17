@@ -17,6 +17,8 @@
     <string name="vault_settings_backup_subtitle">Back-up van uw kluis delen</string>
     <string name="vault_settings_rename_title">Hernoemen</string>
     <string name="swap_form_on_chain">op</string>
+    <string name="select_chain_chain_title">Keten</string>
+    <string name="select_chain_balance_title">Saldo</string>
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
     <string name="vault_settings_reshare_title">Opnieuw delen</string>
     <string name="vault_settings_reshare_subtitle">Deel de kluis opnieuw met een nieuwe commissie</string>
