@@ -1043,7 +1043,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
-                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmptyContract()) {
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
                                     tokenRepository.getTokenByContract(chainId, tokenContract)
@@ -1185,6 +1185,11 @@ internal class SwapFormViewModel @Inject constructor(
         uiState.update {
             it.copy(error = error)
         }
+    }
+
+    private fun String.isNotEmptyContract(): Boolean {
+        return this.isNotEmpty() &&
+                !this.equals("0x0000000000000000000000000000000000000000", ignoreCase = true)
     }
 
     private fun getGasLimit(
