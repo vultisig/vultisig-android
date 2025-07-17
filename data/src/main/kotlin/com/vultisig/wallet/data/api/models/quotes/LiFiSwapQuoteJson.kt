@@ -58,4 +58,12 @@ data class LiFiSwapFeeCostJson(
     val included: Boolean,
     @SerialName("name")
     val name: String,
+    @SerialName("token")
+    val token: LiFiSwapTokenJson?,
+)
+
+@Serializable
+data class LiFiSwapTokenJson(
+    @SerialName("address")
+    val address: String,
 )
