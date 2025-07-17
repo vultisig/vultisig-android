@@ -326,6 +326,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         )
                     }
 
+                val swapFeeToken = swapFee?.token?.address ?: ""
+
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
                 return OneInchSwapQuoteJson(
                     dstAmount = liFiQuote.estimate.toAmount,
@@ -341,6 +343,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
                             ?.hexToLong()?.toString() ?: "0",
                         swapFee = swapFee?.amount ?: "0",
+                        swapFeeTokenContract = swapFeeToken,
                     )
                 )
             }
