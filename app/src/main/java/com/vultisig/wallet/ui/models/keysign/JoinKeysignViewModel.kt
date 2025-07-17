@@ -508,6 +508,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     )
                                 ),
                             ),
+                            providerFee = ValuedToken(
+                                token = nativeToken,
+                                value = value.toString(),
+                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                            ),
+                            networkFee = ValuedToken(
+                                token = srcToken,
+                                value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                            ),
+                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
+                                    " ${estimatedNetworkGasFee.tokenValue.unit}",
 
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + networkGasFeeFiatValue
@@ -518,7 +530,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
-                                tx = swapTransaction
+                                tx = swapTransaction,
+                                vaultName = vaultName,
                             )
                         )
                     }

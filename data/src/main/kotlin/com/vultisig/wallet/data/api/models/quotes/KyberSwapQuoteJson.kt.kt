@@ -1,11 +1,23 @@
 package com.vultisig.wallet.data.api.models.quotes
 
+import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.models.Chain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.text.toLongOrNull
 
+
+sealed class KyberSwapQuoteDeserialized {
+    data class Result(val result: KyberSwapRouteResponse) : KyberSwapQuoteDeserialized()
+    data class Error(val error: KyberSwapErrorResponse) : KyberSwapQuoteDeserialized()
+}
+
+@Serializable
+data class KyberSwapErrorResponse(
+//    val code: Int,
+    val message: String,
+)
 
 @Serializable
 data class KyberSwapQuoteJson(
