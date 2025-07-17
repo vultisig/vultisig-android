@@ -327,12 +327,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         )
                     }
 
-                val swapFeeTokenResponse = swapFee?.token?.address ?: ""
-                val swapFeeToken = if (swapFeeTokenResponse.isNotEmptyContract()){
-                    swapFeeTokenResponse
-                } else {
-                    ""
-                }
+                val swapFeeToken = swapFee?.token?.address
+                    ?.takeIf { it.isNotEmptyContract() }
+                    ?: ""
 
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
                 return OneInchSwapQuoteJson(
