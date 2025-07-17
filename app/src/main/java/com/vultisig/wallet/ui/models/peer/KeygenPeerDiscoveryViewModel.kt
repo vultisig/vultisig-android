@@ -148,7 +148,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
-    private var hasConnection: Boolean = true
+    private val  hasConnection = MutableStateFlow(true)
 
     // fast vault data
     private val email = args.email
@@ -169,12 +169,12 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             state.map { it.network }.distinctUntilChanged(),
             context.observeConnectivityAsFlow()
         ) { networkOption, connectionStatus->
-            val isConnected = connectionStatus
+            val isConnected = connectionStatus ?: false
             networkOption to isConnected
         }
             .onEach { (networkOption, isConnected) ->
                 if (networkOption == NetworkOption.Internet) {
-                    hasConnection = isConnected == true
+                    hasConnection.value = isConnected == true
                     if (isConnected == true) {
                         loadData()
                     } else {
@@ -182,7 +182,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         clearQr()
                     }
                 } else {
-                    hasConnection = true
+                    hasConnection.value = true
                     loadData()
                 }
             }
@@ -258,7 +258,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     }
 
     fun onTryAgainClick() {
-        if (hasConnection)
+        if (hasConnection.value)
             loadData()
         else {
             viewModelScope.launch {
@@ -350,7 +350,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     }
 
     private suspend fun startPeerDiscovery() {
-        if (hasConnection.not()) {
+        if (hasConnection.value.not()) {
             showConnectionErrorMessage()
             return
         }
