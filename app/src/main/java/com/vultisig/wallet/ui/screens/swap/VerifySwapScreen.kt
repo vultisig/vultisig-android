@@ -284,7 +284,7 @@ private fun VerifySwapScreen(
 
                     VerifyVaultDetails(
                         title = stringResource(R.string.swap_form_vault),
-                        subtitle = vaultName ?: "Main Vault",
+                        subtitle = vaultName,
                         metadata = tx.src.token.address,
                     )
 

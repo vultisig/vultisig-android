@@ -1,11 +1,8 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.vultisig.wallet.ui.screens.select
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,12 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +20,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
@@ -71,7 +64,7 @@ private fun SelectNetworkScreen(
         topBar = {
             Column {
                 Text(
-                    text = stringResource(R.string.select_network_title),
+                    text = stringResource(R.string.select_chain_title),
                     style = Theme.brockmann.body.l.medium,
                     color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
@@ -94,12 +87,23 @@ private fun SelectNetworkScreen(
                     .padding(contentPadding),
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.select_network_network_title),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.colors.text.extraLight,
-                    )
+                    Row {
+                        Text(
+                            text = stringResource(R.string.select_chain_chain_title),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.colors.text.extraLight,
+                        )
 
+                        UiSpacer(1f)
+
+                        Text(
+                            text = stringResource(R.string.select_chain_balance_title),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.colors.text.extraLight,
+                        )
+
+                        UiSpacer(20.dp)
+                    }
                     UiSpacer(16.dp)
                 }
 
@@ -109,19 +113,22 @@ private fun SelectNetworkScreen(
                     val isLast = index == networks.size - 1
                     val rounding = 12.dp
                     val isSelected = state.selectedNetwork == item.chain
+                    val selectedColor = if (isSelected) {
+                        Theme.colors.backgrounds.tertiary
+                    } else {
+                        Theme.colors.backgrounds.secondary
+                    }
 
                     NetworkItem(
                         logo = item.logo,
                         title = item.title,
-                        isSelected = isSelected,
+                        value = item.value ?: "",
                         modifier = Modifier
                             .clickable(onClick = {
                                 onNetworkClick(item)
                             })
                             .background(
-                                color = if (isSelected)
-                                    Theme.colors.backgrounds.tertiary
-                                else Theme.colors.backgrounds.secondary,
+                                color = selectedColor,
                                 shape = RoundedCornerShape(
                                     topStart = if (isFirst) rounding else 0.dp,
                                     topEnd = if (isFirst) rounding else 0.dp,
@@ -132,9 +139,9 @@ private fun SelectNetworkScreen(
                     )
 
                     if (!isLast) {
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Theme.colors.borders.light,
+                        UiGradientDivider(
+                            initialColor = selectedColor,
+                            endColor = selectedColor,
                         )
                     }
                 }
@@ -147,7 +154,7 @@ private fun SelectNetworkScreen(
 private fun NetworkItem(
     logo: ImageModel,
     title: String,
-    isSelected: Boolean,
+    value: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -174,27 +181,16 @@ private fun NetworkItem(
             text = title,
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
-            modifier = Modifier
-                .weight(1f)
         )
 
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = Theme.colors.backgrounds.secondary,
-                        shape = CircleShape
-                    )
-                    .padding(4.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null,
-                    tint = Theme.colors.alerts.success,
-                    modifier = Modifier
-                        .size(16.dp)
-                )
-            }
+        if (value.isNotEmpty()) {
+            UiSpacer(1f)
+
+            Text(
+                text = value,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.colors.text.extraLight,
+            )
         }
     }
 }
