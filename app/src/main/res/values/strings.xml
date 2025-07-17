@@ -560,8 +560,9 @@
     <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
     <string name="select_asset_title" translatable="false">Select asset</string>
     <string name="select_asset_chain_title" translatable="false">Chain</string>
-    <string name="select_network_network_title" translatable="false">Network</string>
-    <string name="select_network_title" translatable="false">Select network</string>
+    <string name="select_chain_chain_title">Chain</string>
+    <string name="select_chain_balance_title">Balance</string>
+    <string name="select_chain_title" translatable="false">Select Chain</string>
     <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
     <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
     <string name="backup_password_request_title" translatable="false">Do you want to add a password to your device vault shares?</string>

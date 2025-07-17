@@ -12,6 +12,8 @@
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
     <string name="vault_settings_delete_title">Löschen</string>
+    <string name="select_chain_chain_title">Kette</string>
+    <string name="select_chain_balance_title">Guthaben</string>
     <string name="vault_settings_security_title">On-Chain-Sicherheit</string>
     <string name="vault_settings_security_subtitle">Verwalten Sie Ihre On-Chain-Sicherheit</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
