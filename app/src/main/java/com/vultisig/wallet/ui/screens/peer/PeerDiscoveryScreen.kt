@@ -90,7 +90,7 @@ internal fun KeygenPeerDiscoveryScreen(
         error != null -> {
             Error(
                 state = error,
-                onTryAgainClick = model::tryAgain,
+                onTryAgainClick = model::onTryAgainClick,
             )
         }
 
@@ -101,7 +101,7 @@ internal fun KeygenPeerDiscoveryScreen(
         else -> {
             PeerDiscoveryScreen(
                 state = state,
-                onBackClick = model::back,
+                onBackClick = model::onBackClick,
                 onHelpClick = {
                     uriHandler.openUri(VsAuxiliaryLinks.CREATE_VAULT)
                 },
@@ -109,7 +109,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 onCloseHintClick = model::closeDevicesHint,
                 onSwitchModeClick = model::switchMode,
                 onDeviceClick = model::selectDevice,
-                onNextClick = model::next,
+                onNextClick = model::onNextClick,
                 onDismissQrHelpModal = model::dismissQrHelpModal
             )
         }

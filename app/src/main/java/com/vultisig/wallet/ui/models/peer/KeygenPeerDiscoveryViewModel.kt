@@ -52,7 +52,9 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.observeConnectivityAsFlow
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -64,7 +66,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -107,6 +114,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
+    private val snackbarFlow: SnackbarFlow,
 
     private val generateQrBitmap: GenerateQrBitmap,
     private val compressQr: CompressQrUseCase,
@@ -140,6 +148,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
+    private var hasConnection: Boolean = true
 
     // fast vault data
     private val email = args.email
@@ -152,10 +161,42 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var serverUrl: String = VULTISIG_RELAY_URL
 
     init {
-        loadData()
+        monitorNetworkAndLoadData()
     }
 
-    fun back() {
+    private fun monitorNetworkAndLoadData() {
+        combine(
+            state.map { it.network }.distinctUntilChanged(),
+            context.observeConnectivityAsFlow()
+        ) { networkOption, connectionStatus->
+            val isConnected = connectionStatus
+            networkOption to isConnected
+        }
+            .onEach { (networkOption, isConnected) ->
+                if (networkOption == NetworkOption.Internet) {
+                    hasConnection = isConnected == true
+                    if (isConnected == true) {
+                        loadData()
+                    } else {
+                        showConnectionErrorMessage()
+                        clearQr()
+                    }
+                } else {
+                    hasConnection = true
+                    loadData()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+
+    private suspend fun showConnectionErrorMessage() {
+        snackbarFlow.showMessage(
+            "You are currently offline. Please connect to the internet or switch to local mode."
+        )
+    }
+
+    fun onBackClick() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
@@ -216,11 +257,17 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    fun tryAgain() {
-        loadData()
+    fun onTryAgainClick() {
+        if (hasConnection)
+            loadData()
+        else {
+            viewModelScope.launch {
+                showConnectionErrorMessage()
+            }
+        }
     }
 
-    fun next() {
+    fun onNextClick() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
             val existingVault = args.vaultId?.let {
@@ -296,7 +343,18 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
+    private fun clearQr() {
+        state.update {
+            it.copy(qr = null)
+        }
+    }
+
     private suspend fun startPeerDiscovery() {
+        if (hasConnection.not()) {
+            showConnectionErrorMessage()
+            return
+        }
+
         checkQrHelperModalIsVisited()
 
         val isRelayEnabled = state.value.network == NetworkOption.Internet
@@ -344,7 +402,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
                         delay(2.seconds)
 
-                        next()
+                        onNextClick()
                     }
                 }
             )
@@ -586,7 +644,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             false
         }
     }
-
 
 
 }
