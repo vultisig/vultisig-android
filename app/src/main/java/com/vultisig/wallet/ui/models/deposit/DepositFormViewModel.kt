@@ -1347,6 +1347,8 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(sharesBalance = amountText.asUiText())
         }
+
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amountText)
     }
 
     private fun requireTokenAmount(
