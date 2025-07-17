@@ -19,6 +19,8 @@
     <string name="vault_settings_backup_subtitle">Сделать резервную копию вашего хранилища</string>
     <string name="vault_settings_rename_title">Переименовать</string>
     <string name="swap_form_on_chain">на</string>
+    <string name="select_chain_chain_title">Сеть</string>
+    <string name="select_chain_balance_title">Баланс</string>
     <string name="vault_settings_rename_subtitle">Редактировать имя вашего хранилища</string>
     <string name="vault_settings_reshare_title">Повторное совместное использование</string>
     <string name="vault_settings_security_screen_title">Безопасность</string>
