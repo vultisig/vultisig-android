@@ -530,7 +530,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ) {
                             oneInchSwapTxJson.swapFee.toBigInteger()
                         } else {
-                            oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()?: BigInteger.ZERO *
+                            (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO) *
                                     (oneInchSwapTxJson.gas.takeIf { it != 0L }
                                         ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
                         }
