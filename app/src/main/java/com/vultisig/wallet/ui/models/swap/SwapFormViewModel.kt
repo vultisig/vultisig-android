@@ -13,7 +13,6 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.common.isNotEmptyContract
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -1044,7 +1043,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
-                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmptyContract()) {
+                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
                                     tokenRepository.getTokenByContract(chainId, tokenContract)

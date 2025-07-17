@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.common.isNotEmptyContract
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
@@ -326,7 +327,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         )
                     }
 
-                val swapFeeToken = swapFee?.token?.address ?: ""
+                val swapFeeTokenResponse = swapFee?.token?.address ?: ""
+                val swapFeeToken = if (swapFeeTokenResponse.isNotEmptyContract()){
+                    swapFeeTokenResponse
+                } else {
+                    ""
+                }
 
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
                 return OneInchSwapQuoteJson(
