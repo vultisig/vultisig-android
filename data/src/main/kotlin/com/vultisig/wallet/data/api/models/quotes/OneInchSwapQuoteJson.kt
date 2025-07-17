@@ -43,4 +43,6 @@ data class OneInchSwapTxJson(
     val gasPrice: String,
     @SerialName("swapFee")
     val swapFee: String = "",
+    @SerialName("swapFeeTokenContract")
+    val swapFeeTokenContract: String = "",
 )

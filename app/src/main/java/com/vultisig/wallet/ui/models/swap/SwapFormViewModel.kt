@@ -1043,9 +1043,18 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
+                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                    val tokenContract = quote.tx.swapFeeTokenContract
+                                    val chainId = srcNativeToken.chain.id
+                                    tokenRepository.getTokenByContract(chainId, tokenContract)
+                                        ?: srcNativeToken
+                                } else {
+                                    srcNativeToken
+                                }
+
                                 val tokenFees = TokenValue(
                                     value = quote.tx.swapFee.toBigInteger(),
-                                    token = srcNativeToken
+                                    token = feeCoin
                                 )
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -1056,7 +1065,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val fiatFees =
-                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+                                    convertTokenValueToFiat(feeCoin, tokenFees, currency)
                                 swapFeeFiat.value = fiatFees
                                 val estimatedDstTokenValue =
                                     mapTokenValueToDecimalUiString(expectedDstValue)
@@ -1113,6 +1122,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.NetworkConnection ->
                                 UiText.StringResource(R.string.network_connection_lost)
+
                             is SwapException.SmallSwapAmount ->
                                 UiText.StringResource(R.string.swap_error_small_swap_amount)
                         }
@@ -1147,7 +1157,7 @@ internal class SwapFormViewModel @Inject constructor(
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob = viewModelScope.launch {
-            withContext (Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 delay(expiredAt - Clock.System.now())
                 refreshQuoteState.value++
             }
