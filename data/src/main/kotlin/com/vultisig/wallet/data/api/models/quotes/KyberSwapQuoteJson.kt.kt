@@ -34,8 +34,7 @@ data class KyberSwapQuoteJson(
 fun KyberSwapQuoteJson.gasForChain(chain: Chain): Long {
     val baseGas = data.gas?.toLongOrNull() ?: 600_000L
     val gasMultiplierTimes10 = when (chain) {
-        Chain.Ethereum -> 14L
-        Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
+        Chain.Ethereum, Chain.Arbitrum, Chain.Optimism, Chain.Base, Chain.Polygon, Chain.Avalanche, Chain.BscChain -> 20L
         else -> 16L
     }
     return (baseGas * gasMultiplierTimes10) / 10
