@@ -352,7 +352,6 @@ internal sealed class Route {
     }
 
     // send
-
     @Serializable
     data class Send(
         val vaultId: VaultId,

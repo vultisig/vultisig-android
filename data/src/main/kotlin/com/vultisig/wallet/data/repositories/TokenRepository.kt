@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isLayer2
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -43,8 +44,6 @@ interface TokenRepository {
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
     suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
-
-    suspend fun getNativeLogo(coin: Coin): String
 
     val builtInTokens: Flow<List<Coin>>
 
@@ -259,13 +258,6 @@ internal class TokenRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun getNativeLogo(coin: Coin): String {
-        if (!coin.isNativeToken) {
-            return getNativeToken(coin.chain.id).logo
-        }
-        return coin.logo
-    }
-
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
         val (supportedCoinsAndContracts, unsupportedCoins) = extractCoinsFromJson(
             this@toCoins,
@@ -395,9 +387,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val enabledByDefaultTokens = listOf(Tokens.tcy)
         .groupBy { it.chain }
 
-
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
     }
-
 }

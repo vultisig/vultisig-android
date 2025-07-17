@@ -274,7 +274,7 @@ internal fun SwapScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         AnimatedContent(
-                            targetState = state.isLoading,
+                            targetState = state.isLoading || state.isLoadingNextScreen,
                             transitionSpec = {
                                 fadeIn(animationSpec = tween(150)) togetherWith
                                         fadeOut(animationSpec = tween(150))

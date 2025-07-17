@@ -3,6 +3,7 @@
 package com.vultisig.wallet.app.activity
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,6 +29,8 @@ import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
+import com.vultisig.wallet.ui.utils.openCct
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -61,7 +64,20 @@ class MainActivity : AppCompatActivity() {
 
         val uri = intent.data
         if (uri != null) {
-            mainViewModel.openUri(uri)
+            when (uri.toString()) {
+                VsAuxiliaryLinks.PRIVACY,
+                VsAuxiliaryLinks.TERMS_OF_SERVICE,
+                VsAuxiliaryLinks.VULT,
+                    -> openCct(
+                    uri = uri,
+                    onError = {
+                        Toast.makeText(
+                             this, "Chrome browser is required to open this link. Please install it from the Play Store", Toast.LENGTH_SHORT
+                        ).show()
+                    })
+
+                else -> mainViewModel.openUri(uri)
+            }
         }
 
         val systemBarStyle = SystemBarStyle.auto(

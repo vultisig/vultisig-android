@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -52,7 +55,10 @@ import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -87,20 +93,26 @@ internal fun VerifySwapScreen(
         )
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.fastSignFlow.collect { shouldShowPrompt ->
+            if (shouldShowPrompt) {
+                authorize()
+            }
+        }
+    }
+
     VerifySwapScreen(
         state = state,
         showToolbar = true,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
-        onConfirm = viewModel::confirm,
+        onConfirm = viewModel::joinKeySign,
         onConsentAllowance = viewModel::consentAllowance,
         onBackClick = viewModel::back,
-        onFastSignClick = {
-            if (!viewModel.tryToFastSignWithPassword()) {
-                authorize()
-            }
-        },
+        onFastSignClick = viewModel::fastSign,
+        onContinueAnyway = viewModel::onConfirmScanning,
+        onDismissRequest = viewModel::onDismissSecurityScanner,
     )
 }
 
@@ -116,10 +128,14 @@ internal fun VerifySwapScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    onContinueAnyway: () -> Unit = {},
+    onDismissRequest: () -> Unit = {},
 ) {
     VerifySwapScreen(
         showToolbar = showToolbar,
         tx = state.tx,
+        scanStatus = state.txScanStatus,
+        hasToShowWarningScanning = state.showScanningWarning,
         hasAllConsents = state.hasAllConsents,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
@@ -134,6 +150,8 @@ internal fun VerifySwapScreen(
         onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
         onBackClick = onBackClick,
+        onContinueAnyway = onContinueAnyway,
+        onDismissRequest = onDismissRequest,
     )
 }
 
@@ -141,6 +159,8 @@ internal fun VerifySwapScreen(
 private fun VerifySwapScreen(
     showToolbar: Boolean,
     tx: SwapTransactionUiModel,
+    scanStatus: TransactionScanStatus,
+    hasToShowWarningScanning: Boolean,
     hasAllConsents: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
@@ -155,6 +175,8 @@ private fun VerifySwapScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    onContinueAnyway: () -> Unit,
+    onDismissRequest: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -175,6 +197,9 @@ private fun VerifySwapScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
+                Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)){
+                    SecurityScannerBadget(scanStatus)
+                }
 
                 Column(
                     modifier = Modifier
@@ -196,7 +221,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.src,
-                        chainLogo = tx.srcNativeLogo,
+                        isSwap = true,
                     )
 
                     Row(
@@ -249,7 +274,7 @@ private fun VerifySwapScreen(
 
                     SwapToken(
                         valuedToken = tx.dst,
-                        chainLogo = tx.dstNativeLogo,
+                        isSwap = true,
                         isDestinationToken = true,
                     )
 
@@ -259,7 +284,7 @@ private fun VerifySwapScreen(
 
                     VerifyVaultDetails(
                         title = stringResource(R.string.swap_form_vault),
-                        subtitle = vaultName ?: "Main Vault",
+                        subtitle = vaultName,
                         metadata = tx.src.token.address,
                     )
 
@@ -321,6 +346,16 @@ private fun VerifySwapScreen(
                         vertical = 12.dp,
                     )
             ) {
+
+                if (hasToShowWarningScanning &&
+                    scanStatus is TransactionScanStatus.Scanned) {
+                    SecurityScannerBottomSheet(
+                        securityScannerModel = scanStatus.result,
+                        onContinueAnyway = onContinueAnyway,
+                        onDismissRequest = onDismissRequest,
+                    )
+                }
+
                 if (hasFastSign) {
                     VsButton(
                         label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
@@ -348,11 +383,13 @@ private fun VerifySwapScreen(
 @Composable
 internal fun SwapToken(
     valuedToken: ValuedToken,
-    chainLogo: String? = null,
+    isSwap: Boolean = false,
     isDestinationToken: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
+    val shouldShowOnChainLogo = isSwap
+            && (!token.isNativeToken || token.chain.isLayer2)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -404,12 +441,12 @@ internal fun SwapToken(
             )
         }
 
-        if (!valuedToken.token.isNativeToken && !chainLogo.isNullOrEmpty()) {
+        if (shouldShowOnChainLogo) {
             UiSpacer(1f)
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TokenLogo(
-                    logo = Tokens.getCoinLogo(chainLogo),
+                    logo = token.chain.logo,
                     title = token.ticker,
                     errorLogoModifier = Modifier
                         .size(16.dp),
@@ -572,6 +609,8 @@ private fun VerifySwapScreenPreview() {
         showToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
+        hasToShowWarningScanning = false,
+        scanStatus = TransactionScanStatus.NotStarted,
         consentAmount = true,
         consentReceiveAmount = false,
         tx = SwapTransactionUiModel(
@@ -587,5 +626,7 @@ private fun VerifySwapScreenPreview() {
         onConsentAllowance = {},
         onFastSignClick = {},
         onConfirm = {},
+        onContinueAnyway = {},
+        onDismissRequest = {},
     )
 }

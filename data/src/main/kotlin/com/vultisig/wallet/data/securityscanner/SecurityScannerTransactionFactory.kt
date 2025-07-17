@@ -2,16 +2,19 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.Base58
 import wallet.core.jni.CoinType
@@ -28,7 +31,71 @@ class SecurityScannerTransactionFactory(
             TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             TokenStandard.SUI -> createSUISecurityScannerTransaction(transaction)
             TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
-            else -> error("Not supported")
+            else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
+        }
+    }
+
+    override suspend fun createSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+        val chain = transaction.srcToken.chain
+        return when (chain.standard) {
+            TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
+            else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
+        }
+    }
+
+    private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
+        return when (val payload = transaction.payload) {
+            is SwapPayload.OneInch ->
+                buildSwapSecurityScannerTransaction(
+                    srcToken = transaction.srcToken,
+                    from = payload.data.quote.tx.from,
+                    to = payload.data.quote.tx.to,
+                    amount = payload.data.quote.tx.value,
+                    data = payload.data.quote.tx.data,
+                    isApprovalRequired = transaction.isApprovalRequired
+            )
+            is SwapPayload.Kyber ->
+                buildSwapSecurityScannerTransaction(
+                    srcToken = transaction.srcToken,
+                    from = payload.data.quote.tx.from,
+                    to = payload.data.quote.tx.to,
+                    amount = payload.data.quote.tx.value,
+                    data = payload.data.quote.tx.data,
+                    isApprovalRequired = transaction.isApprovalRequired
+                )
+
+            else -> throw SecurityScannerException("Not supported provider for EVM")
+        }
+    }
+
+    private fun buildSwapSecurityScannerTransaction(
+        srcToken: Coin,
+        from: String,
+        to: String,
+        amount: String,
+        data: String,
+        isApprovalRequired: Boolean,
+    ): SecurityScannerTransaction {
+        val chain = srcToken.chain
+
+        return if (isApprovalRequired) {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = from,
+                to = srcToken.contractAddress,
+                amount = BigInteger.ZERO,
+                data = EthereumFunction.approvalErc20(to, amount.toBigInteger()),
+            )
+        } else {
+            SecurityScannerTransaction(
+                chain = chain,
+                type = SecurityTransactionType.SWAP,
+                from = from,
+                to = to,
+                amount = amount.toBigInteger(),
+                data = data,
+            )
         }
     }
 

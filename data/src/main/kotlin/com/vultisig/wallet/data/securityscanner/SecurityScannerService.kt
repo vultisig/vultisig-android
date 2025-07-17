@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.securityscanner
 
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import timber.log.Timber
@@ -31,6 +32,10 @@ class SecurityScannerService(
     }
 
     override suspend fun createSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
+        return factory.createSecurityScannerTransaction(transaction)
+    }
+
+    override suspend fun createSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
         return factory.createSecurityScannerTransaction(transaction)
     }
 
