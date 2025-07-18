@@ -33,10 +33,10 @@ interface AccountsRepository {
         chain: Chain,
     ): Flow<Address>
 
-    suspend fun loadAddress(
+    suspend fun loadAccount(
         vaultId: String,
         token: Coin
-    ): Address
+    ): Account
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -194,36 +194,43 @@ internal class AccountsRepositoryImpl @Inject constructor(
             ))
     }
 
-    override suspend fun loadAddress(vaultId: String, token: Coin): Address = coroutineScope {
+    override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
         val vault = getVault(vaultId)
         val chain = token.chain
-        val nativeCoin =
-            Coins.coins[token.chain]?.find { it.isNativeToken } ?: error("No SOL Chain found")
-        val coins = listOf(nativeCoin, token)
+        val nativeCoin = Coins.coins[chain]?.find { it.isNativeToken }
+            ?: error("Missing native token for chain: $chain")
+        val coins = if (token.isNativeToken) listOf(token) else listOf(nativeCoin, token)
 
-        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-            ?: error("")
+        val initialAccount = chainAndTokensToAddressMapper
+            .map(ChainAndTokens(chain, coins))
+            ?: error("Failed to map address for chain: $chain with coins: $coins")
 
-        val (updatedCoins, updatedAccounts) = if (chain == Chain.Solana) {
-            val newCoins = coins + getSPLCoins(coins, vault)
-            val newAccounts = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, newCoins))
-                ?: error("")
-            newCoins to newAccounts
+        val (finalCoins, finalAccount) = if (chain == Chain.Solana) {
+            val splCoins = getSPLCoins(coins, vault)
+            val combinedCoins = coins + splCoins
+            val remappedAccount = chainAndTokensToAddressMapper
+                .map(ChainAndTokens(chain, combinedCoins))
+                ?: error("Failed to map updated Solana account with SPL tokens")
+            combinedCoins to remappedAccount
         } else {
-            coins to account
+            coins to initialAccount
         }
 
         runCatching {
-            tokenPriceRepository.refresh(updatedCoins)
-        }.getOrElse { Timber.e("Can't update token price: $it") }
+            tokenPriceRepository.refresh(finalCoins)
+        }.onFailure {
+            Timber.e(it, "Failed to refresh token prices for chain: $chain")
+        }
 
-        val balance = balanceRepository.getTokenBalance(updatedAccounts.address, token).first()
+        val accountToUpdate = finalAccount.accounts
+            .firstOrNull { it.token.id == token.id }
+            ?: error("Account for token ${token.id} not found in mapped address")
 
-        return@coroutineScope updatedAccounts.copy(
-            accounts = updatedAccounts.accounts
-                .filter { !it.token.isNativeToken }
-                .map { account -> account.applyBalance(balance) }
-        )
+        val balance = balanceRepository
+            .getTokenBalance(finalAccount.address, token)
+            .first()
+
+        accountToUpdate.applyBalance(balance)
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
