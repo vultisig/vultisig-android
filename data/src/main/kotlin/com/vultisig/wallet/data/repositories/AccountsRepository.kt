@@ -205,8 +205,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             ?: error("Failed to map address for chain: $chain with coins: $coins")
 
         val (finalCoins, finalAccount) = if (chain == Chain.Solana) {
-            val splCoins = getSPLCoins(coins, vault)
-            val combinedCoins = coins + splCoins
+            val combinedCoins = coins + getSPLCoins(coins, vault)
             val remappedAccount = chainAndTokensToAddressMapper
                 .map(ChainAndTokens(chain, combinedCoins))
                 ?: error("Failed to map updated Solana account with SPL tokens")
