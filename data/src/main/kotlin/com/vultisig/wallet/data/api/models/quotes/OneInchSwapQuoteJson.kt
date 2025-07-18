@@ -20,6 +20,14 @@ data class OneInchSwapQuoteJson(
 )
 
 @Serializable
+data class OneInchQuoteJson(
+    @SerialName("dstAmount")
+    val dstAmount: String,
+    @SerialName("gas")
+    val gas: Long,
+)
+
+@Serializable
 data class OneInchSwapTxJson(
     @SerialName("from")
     val from: String,

@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
@@ -154,16 +155,17 @@ interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<OneInchSwap
 class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
     OneInchSwapQuoteResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("OnceInchSwapQouteResponseJsonSerializer")
+        buildClassSerialDescriptor("OneInchSwapQuoteResponseJsonSerializer")
 
     override fun deserialize(decoder: Decoder): OneInchSwapQuoteDeserialized {
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
-
-        return if (jsonObject.containsKey("dstAmount")) {
-            OneInchSwapQuoteDeserialized.Result(
-                json.decodeFromJsonElement<OneInchSwapQuoteJson>(jsonObject)
-            )
+        val swapJsonObject = jsonObject["swap"]?.jsonObject
+        val quoteJsonObject = jsonObject["quote"]?.jsonObject
+        return if (swapJsonObject != null && quoteJsonObject != null) {
+            val swapJson = json.decodeFromJsonElement<OneInchSwapQuoteJson>(swapJsonObject)
+            val quoteJson = json.decodeFromJsonElement<OneInchQuoteJson>(quoteJsonObject)
+            OneInchSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas)))
         } else {
             OneInchSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<String>(jsonObject)

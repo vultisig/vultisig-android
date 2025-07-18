@@ -8,11 +8,16 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -56,37 +61,70 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized {
+    ): OneInchSwapQuoteDeserialized = coroutineScope {
         try {
-            val response =
-                httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/swap") {
-                    parameter(
-                        "src",
-                        srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
-                    parameter(
-                        "dst",
-                        dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
-                    parameter("amount", amount)
-                    parameter("from", srcAddress)
-                    parameter("slippage", "0.5")
-                    parameter("disableEstimate", true)
-                    parameter("includeGas", true)
-                    parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-                    parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
-
-                }
-            if (!response.status.isSuccess()) {
-                return OneInchSwapQuoteDeserialized.Error(
-                    error = HttpStatusCode.fromValue(response.status.value).description
+            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}"
+            val requestParams: HttpRequestBuilder.() -> Unit = {
+                createQuoteParams(
+                    srcTokenContractAddress,
+                    dstTokenContractAddress,
+                    amount,
+                    srcAddress,
+                    isAffiliate
                 )
             }
-            return json.decodeFromString(
+            val swapResponseAsync = async {
+                httpClient.get("$baseSwapQuoteUrl/swap", block = requestParams)
+            }
+            val quoteResponseAsync = async {
+                httpClient.get("$baseSwapQuoteUrl/quote", block = requestParams)
+            }
+
+            val (swapResponse, quoteResponse) =
+                listOf(swapResponseAsync, quoteResponseAsync)
+                    .awaitAll()
+                    .also { responses ->
+                        responses.forEach { response ->
+                            if (!response.status.isSuccess()) {
+                                return@coroutineScope OneInchSwapQuoteDeserialized.Error(
+                                    error = HttpStatusCode.fromValue(response.status.value).description
+                                )
+                            }
+                        }
+                    }
+
+            json.decodeFromJsonElement(
                 oneInchSwapQuoteResponseJsonSerializer,
-                response.body<String>()
+                buildJsonObject {
+                    put("swap", swapResponse.body())
+                    put("quote", quoteResponse.body())
+                }
             )
         } catch (e: Exception) {
-            return OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
+            OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
         }
+    }
+
+    private fun HttpRequestBuilder.createQuoteParams(
+        srcTokenContractAddress: String,
+        dstTokenContractAddress: String,
+        amount: String,
+        srcAddress: String,
+        isAffiliate: Boolean,
+    ) {
+        parameter(
+            "src",
+            srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
+        parameter(
+            "dst",
+            dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
+        parameter("amount", amount)
+        parameter("from", srcAddress)
+        parameter("slippage", "0.5")
+        parameter("disableEstimate", true)
+        parameter("includeGas", true)
+        parameter("referrer", ONEINCH_REFERRER_ADDRESS)
+        parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
     }
 
 
