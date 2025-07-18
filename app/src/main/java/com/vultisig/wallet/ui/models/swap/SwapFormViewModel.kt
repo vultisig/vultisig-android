@@ -624,17 +624,10 @@ internal class SwapFormViewModel @Inject constructor(
         loadedAddress: String,
         loadedAccount: Account
     ) {
-        addresses.update { currentAddresses ->
-            currentAddresses.map { address ->
-                if (address.address == loadedAddress) {
-                    val updatedAccounts = address.accounts.map { account ->
-                        if (account.token.id == loadedAccount.token.id) {
-                            loadedAccount
-                        } else {
-                            account
-                        }
-                    }
-                    address.copy(accounts = updatedAccounts)
+        addresses.update { listOfAddreses ->
+            listOfAddreses.map { address ->
+                if (address.chain == loadedAccount.token.chain) {
+                    address.copy(accounts = address.accounts + listOf(loadedAccount))
                 } else {
                     address
                 }
