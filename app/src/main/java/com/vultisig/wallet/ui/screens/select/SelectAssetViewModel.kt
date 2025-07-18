@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -16,6 +17,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -64,6 +66,7 @@ internal class SelectAssetViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
     private val tokenRepository: TokenRepository,
     private val vaultRepository: VaultRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectAsset>()
@@ -97,6 +100,9 @@ internal class SelectAssetViewModel @Inject constructor(
 
     fun selectAsset(asset: AssetUiModel) {
         viewModelScope.launch {
+            if (asset.isDisabled) {
+                enableTokenUseCase.invoke(vaultId, asset.token)
+            }
             requestResultRepository.respond(args.requestId, asset.token)
             navigator.navigate(Destination.Back)
         }
@@ -169,7 +175,7 @@ internal class SelectAssetViewModel @Inject constructor(
                 .accounts
                 .asSequence()
                 .filter { it.token.id.contains(query, ignoreCase = true) }
-                .sortedWith(compareBy { it.token.ticker })
+                .sortedWith(compareByDescending<Account> { it.token.isNativeToken }.thenBy { it.token.ticker })
                 .map {
                     AssetUiModel(
                         token = it.token,
