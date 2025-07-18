@@ -613,9 +613,10 @@ internal class SwapFormViewModel @Inject constructor(
             }
         }
 
-        when (targetArg) {
-            ARG_SELECTED_SRC_TOKEN_ID -> selectedSrcId.value = result.token.id
-            else -> selectedDstId.value = result.token.id
+        if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
+            selectedSrcId.value = result.token.id
+        } else {
+            selectedDstId.value = result.token.id
         }
     }
 
