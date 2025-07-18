@@ -142,7 +142,7 @@ internal class SelectAssetViewModel @Inject constructor(
     private fun loadAllAssets() {
         if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
             viewModelScope.launch {
-                val vault = vaultRepository.get(vaultId) ?: error("Can't load vault")
+                val vault = vaultRepository.get(vaultId) ?: return@launch
                 tokenRepository.getChainTokens(state.value.selectedChain, vault)
                     .map { coinList ->
                         coinList
