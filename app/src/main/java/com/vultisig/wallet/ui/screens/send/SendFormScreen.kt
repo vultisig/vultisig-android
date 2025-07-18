@@ -673,15 +673,15 @@ private fun SendFormScreen(
                                 AnimatedVisibility(
                                     visible = isMemoExpanded,
                                 ) {
-                                    val clipBoardData = VsClipboardService.getClipboardData()
+                                    val clipboardData = VsClipboardService.getClipboardData()
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
                                         hint = "Enter Memo",
                                         trailingIcon = R.drawable.ic_paste,
                                         onTrailingIconClick = {
-                                            clipBoardData.value?.let {
-                                                memoFieldState.setTextAndPlaceCursorAtEnd(text = it)
-                                            }
+                                            clipboardData.value
+                                                ?.takeIf { it.isNotEmpty() }
+                                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth(),

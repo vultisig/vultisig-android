@@ -20,8 +20,7 @@ internal fun PasteIcon(
         size = size,
         onClick = {
             val value = clipboardData.value
-            if (value == null)
-                return@UiIcon
+            if (value.isNullOrEmpty()) return@UiIcon
             onPaste(value)
         }
     )

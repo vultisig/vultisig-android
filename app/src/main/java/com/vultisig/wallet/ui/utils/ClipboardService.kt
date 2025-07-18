@@ -24,18 +24,24 @@ internal object VsClipboardService {
 
     @Composable
     fun getClipboardData(): MutableState<String?> {
-        var text = remember {
+        val text = remember {
             mutableStateOf<String?>(null)
         }
 
         val clipboardManager =
-            LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                ?: return text
 
         LaunchedEffect(Unit) {
-            val clipData: ClipData? = clipboardManager.primaryClip
-            clipData?.let {
-                text.value = clipData.getItemAt(0).text?.toString()
+            try {
+                val clipData: ClipData? = clipboardManager.primaryClip
+                clipData?.let {
+                    text.value = clipData.getItemAt(0).text?.toString()
+                }
+            } catch (e: Exception) {
+                text.value = null
             }
+            
         }
 
         return text
