@@ -56,7 +56,7 @@ internal data class AssetUiModel(
     val isDisabled: Boolean = false,
 )
 
-//TODO : Refactor current implementation for now it will only load all tokens for swap,
+//TODO : Refactor current implementation
 @HiltViewModel
 internal class SelectAssetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
