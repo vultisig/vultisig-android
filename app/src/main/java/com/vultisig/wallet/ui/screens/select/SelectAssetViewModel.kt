@@ -103,10 +103,12 @@ internal class SelectAssetViewModel @Inject constructor(
 
     fun selectAsset(asset: AssetUiModel) {
         viewModelScope.launch {
-            if (asset.isDisabled) {
+            val isDisabled = asset.isDisabled
+            if (isDisabled) {
                 enableTokenUseCase.invoke(vaultId, asset.token)
             }
-            requestResultRepository.respond(args.requestId, asset.token)
+            val callbackAsset = AssetSelected(asset.token, isDisabled)
+            requestResultRepository.respond(args.requestId, callbackAsset)
             navigator.navigate(Destination.Back)
         }
     }
@@ -206,3 +208,8 @@ internal class SelectAssetViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 }
+
+data class AssetSelected(
+    val token: Coin,
+    val isDisabled: Boolean,
+)

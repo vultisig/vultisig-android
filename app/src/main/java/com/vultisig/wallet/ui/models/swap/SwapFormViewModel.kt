@@ -666,7 +666,6 @@ internal class SwapFormViewModel @Inject constructor(
                     addresses.filter { it.chain.IsSwapSupported }
                 }
                 .catch {
-                    // TODO handle error
                     Timber.e(it)
                 }.collect(addresses)
         }
