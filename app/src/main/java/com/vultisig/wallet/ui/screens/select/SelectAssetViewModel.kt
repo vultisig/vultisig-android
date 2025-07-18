@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -82,6 +83,16 @@ internal class SelectAssetViewModel @Inject constructor(
     init {
         loadAllAssets()
         collectSearchResults()
+        observeSelectedChainChanges()
+    }
+
+    private fun observeSelectedChainChanges() {
+        state.map { it.selectedChain }
+            .distinctUntilChanged()
+            .onEach {
+                loadAllAssets()
+            }
+            .launchIn(viewModelScope)
     }
 
     fun selectAsset(asset: AssetUiModel) {
@@ -173,9 +184,10 @@ internal class SelectAssetViewModel @Inject constructor(
 
             val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
             val additionalAssets =
-                allTokens.filter { it.token.id.contains(query, ignoreCase = true) }
-                    .sortedWith(compareBy { it.token.ticker })
-                    .filter { it.token.id !in filteredTokenIds }
+                allTokens.filter {
+                    it.token.id.contains(query, ignoreCase = true)
+                            && it.token.id !in filteredTokenIds
+                }
 
             state.update {
                 it.copy(assets = filteredAssets + additionalAssets)
