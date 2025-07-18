@@ -56,6 +56,7 @@ internal data class AssetUiModel(
     val isDisabled: Boolean = false,
 )
 
+//TODO : Refactor current implementation for now it will only load all tokens for swap,
 @HiltViewModel
 internal class SelectAssetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -70,8 +71,8 @@ internal class SelectAssetViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectAsset>()
-
     private val vaultId = args.vaultId
+    private val filter = args.networkFilters
 
     val searchFieldState = TextFieldState()
 
@@ -90,12 +91,14 @@ internal class SelectAssetViewModel @Inject constructor(
     }
 
     private fun observeSelectedChainChanges() {
-        state.map { it.selectedChain }
-            .distinctUntilChanged()
-            .onEach {
-                loadAllAssets()
-            }
-            .launchIn(viewModelScope)
+        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
+            state.map { it.selectedChain }
+                .distinctUntilChanged()
+                .onEach {
+                    loadAllAssets()
+                }
+                .launchIn(viewModelScope)
+        }
     }
 
     fun selectAsset(asset: AssetUiModel) {
@@ -137,26 +140,28 @@ internal class SelectAssetViewModel @Inject constructor(
     }
 
     private fun loadAllAssets() {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: error("Can't load vault")
-            tokenRepository.getChainTokens(state.value.selectedChain, vault)
-                .map { coinList ->
-                    coinList
-                        .filter { !it.isNativeToken }
-                        .map { coin ->
-                            AssetUiModel(
-                                token = coin,
-                                logo = Tokens.getCoinLogo(coin.logo),
-                                title = coin.ticker,
-                                subtitle = coin.chain.raw,
-                                amount = "0",
-                                value = "0",
-                                isDisabled = true,
-                            )
-                        }
-                }.collect { assets ->
-                    allTokens.value = assets
-                }
+        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
+            viewModelScope.launch {
+                val vault = vaultRepository.get(vaultId) ?: error("Can't load vault")
+                tokenRepository.getChainTokens(state.value.selectedChain, vault)
+                    .map { coinList ->
+                        coinList
+                            .filter { !it.isNativeToken }
+                            .map { coin ->
+                                AssetUiModel(
+                                    token = coin,
+                                    logo = Tokens.getCoinLogo(coin.logo),
+                                    title = coin.ticker,
+                                    subtitle = coin.chain.raw,
+                                    amount = "0",
+                                    value = "0",
+                                    isDisabled = true,
+                                )
+                            }
+                    }.collect { assets ->
+                        allTokens.value = assets
+                    }
+            }
         }
     }
 
