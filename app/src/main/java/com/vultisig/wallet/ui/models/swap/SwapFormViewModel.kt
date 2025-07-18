@@ -1076,9 +1076,18 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
+                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                    val tokenContract = quote.tx.swapFeeTokenContract
+                                    val chainId = srcNativeToken.chain.id
+                                    tokenRepository.getTokenByContract(chainId, tokenContract)
+                                        ?: srcNativeToken
+                                } else {
+                                    srcNativeToken
+                                }
+
                                 val tokenFees = TokenValue(
                                     value = quote.tx.swapFee.toBigInteger(),
-                                    token = srcNativeToken
+                                    token = feeCoin
                                 )
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -1089,7 +1098,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val fiatFees =
-                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+                                    convertTokenValueToFiat(feeCoin, tokenFees, currency)
                                 swapFeeFiat.value = fiatFees
                                 val estimatedDstTokenValue =
                                     mapTokenValueToDecimalUiString(expectedDstValue)

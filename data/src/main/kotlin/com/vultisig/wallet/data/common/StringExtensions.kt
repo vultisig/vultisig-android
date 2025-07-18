@@ -42,3 +42,8 @@ fun String.add0x(): String {
     }
     return "0x$this"
 }
+
+fun String.isNotEmptyContract(): Boolean {
+    val zeroAddress = "0x0000000000000000000000000000000000000000"
+    return isNotEmpty() && !equals(zeroAddress, ignoreCase = true)
+}
