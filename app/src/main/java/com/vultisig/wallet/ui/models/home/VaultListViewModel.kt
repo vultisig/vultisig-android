@@ -79,8 +79,8 @@ internal class VaultListViewModel @Inject constructor(
         reIndexJob = viewModelScope.launch {
             delay(500)
             val midOrder = updatedPositionsList[newOrder].id.toString()
-            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.id.toString()
-            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id.toString()
+            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.id?.toString()
+            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id?.toString()
             folderOrderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
         }
     }
