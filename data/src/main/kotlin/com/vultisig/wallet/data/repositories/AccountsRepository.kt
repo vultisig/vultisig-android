@@ -196,7 +196,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
     override suspend fun loadAccount(vaultId: String, token: Coin): Pair<String, Account> = coroutineScope {
         val vault = getVault(vaultId)
         val chain = token.chain
-        val nativeCoin = Coins.coins[chain]?.find { it.isNativeToken }
+        val vaultCoins = vault.coins.filter { it.chain == chain }
+        val nativeCoin = vaultCoins.find { it.isNativeToken }
             ?: error("Missing native token for chain: $chain")
         val coins = if (token.isNativeToken) listOf(token) else listOf(nativeCoin, token)
 
