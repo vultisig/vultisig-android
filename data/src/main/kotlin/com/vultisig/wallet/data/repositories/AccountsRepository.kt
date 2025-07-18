@@ -36,7 +36,7 @@ interface AccountsRepository {
     suspend fun loadAccount(
         vaultId: String,
         token: Coin
-    ): Account
+    ): Pair<String, Account>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -193,7 +193,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
-    override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
+    override suspend fun loadAccount(vaultId: String, token: Coin): Pair<String, Account> = coroutineScope {
         val vault = getVault(vaultId)
         val chain = token.chain
         val nativeCoin = Coins.coins[chain]?.find { it.isNativeToken }
@@ -228,7 +228,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             .getTokenBalance(finalAccount.address, token)
             .first()
 
-        accountToUpdate.applyBalance(balance)
+        finalAccount.address to accountToUpdate.applyBalance(balance)
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(

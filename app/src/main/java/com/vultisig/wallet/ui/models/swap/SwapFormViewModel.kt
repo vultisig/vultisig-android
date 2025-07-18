@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -602,9 +603,8 @@ internal class SwapFormViewModel @Inject constructor(
             uiState.update { it.copy(isLoading = true) }
             vaultId?.let {
                 try {
-                    val address =
-                        accountsRepository.loadAddress(vaultId!!, result.token.chain).last()
-                    addresses.update { currentList -> currentList + address }
+                    val (address, account) = accountsRepository.loadAccount(vaultId!!, result.token)
+                    updateAccountInAddresses(address, account)
                     uiState.update { it.copy(isLoading = false) }
                 } catch (t: Throwable) {
                     uiState.update { it.copy(isLoading = false) }
@@ -617,6 +617,28 @@ internal class SwapFormViewModel @Inject constructor(
             selectedSrcId.value = result.token.id
         } else {
             selectedDstId.value = result.token.id
+        }
+    }
+
+    private fun updateAccountInAddresses(
+        loadedAddress: String,
+        loadedAccount: Account
+    ) {
+        addresses.update { currentAddresses ->
+            currentAddresses.map { address ->
+                if (address.address == loadedAddress) {
+                    val updatedAccounts = address.accounts.map { account ->
+                        if (account.token.id == loadedAccount.token.id) {
+                            loadedAccount
+                        } else {
+                            account
+                        }
+                    }
+                    address.copy(accounts = updatedAccounts)
+                } else {
+                    address
+                }
+            }
         }
     }
 
