@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -594,7 +595,7 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
-        val result = requestResultRepository.request<Coin>(targetArg)?.id
+        val result = requestResultRepository.request<AssetSelected>(targetArg)?.token?.id
         if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
             selectedSrcId.value = result
         } else {
