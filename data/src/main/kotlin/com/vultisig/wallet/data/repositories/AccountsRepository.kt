@@ -183,15 +183,14 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         loadPrices.await()
 
-        emit(
-            account.copy(
-                accounts = account.accounts.map {
-                    val balance = balanceRepository.getTokenBalance(address, it.token)
-                        .first()
+        emit(account.copy(
+            accounts = account.accounts.map {
+                val balance = balanceRepository.getTokenBalance(address, it.token)
+                    .first()
 
-                    it.applyBalance(balance)
-                }
-            ))
+                it.applyBalance(balance)
+            }
+        ))
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
