@@ -146,6 +146,7 @@ internal class SelectAssetViewModel @Inject constructor(
             viewModelScope.launch {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
                 tokenRepository.getChainTokens(state.value.selectedChain, vault)
+                    .catch { Timber.e(it) }
                     .map { coinList ->
                         coinList
                             .filter { !it.isNativeToken }
