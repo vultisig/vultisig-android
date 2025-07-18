@@ -14,6 +14,8 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -48,8 +50,8 @@ internal data class AssetUiModel(
     val subtitle: String,
     val amount: String,
     val value: String,
+    val isDisabled: Boolean = false,
 )
-
 
 @HiltViewModel
 internal class SelectAssetViewModel @Inject constructor(
@@ -57,9 +59,10 @@ internal class SelectAssetViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
-
     private val accountRepository: AccountsRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val tokenRepository: TokenRepository,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectAsset>()
@@ -68,6 +71,8 @@ internal class SelectAssetViewModel @Inject constructor(
 
     val searchFieldState = TextFieldState()
 
+    private val allTokens = MutableStateFlow(emptyList<AssetUiModel>())
+
     val state = MutableStateFlow(
         SelectAssetUiModel(
             selectedChain = Chain.fromRaw(args.preselectedNetworkId),
@@ -75,6 +80,7 @@ internal class SelectAssetViewModel @Inject constructor(
     )
 
     init {
+        loadAllAssets()
         collectSearchResults()
     }
 
@@ -113,22 +119,41 @@ internal class SelectAssetViewModel @Inject constructor(
         }
     }
 
+    private fun loadAllAssets() {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: error("Can't load vault")
+            tokenRepository.getChainTokens(state.value.selectedChain, vault)
+                .map { coinList ->
+                    coinList
+                        .filter { !it.isNativeToken }
+                        .map { coin ->
+                            AssetUiModel(
+                                token = coin,
+                                logo = Tokens.getCoinLogo(coin.logo),
+                                title = coin.ticker,
+                                subtitle = coin.chain.raw,
+                                amount = "0",
+                                value = "0",
+                                isDisabled = true,
+                            )
+                        }
+                }.collect { assets ->
+                    allTokens.value = assets
+                }
+        }
+    }
+
     private fun collectSearchResults() {
         combine(
-            state
-                .map {
-                    it.selectedChain
-                }
+            state.map { it.selectedChain }
                 .distinctUntilChanged()
                 .flatMapConcat { selectedChain ->
                     accountRepository.loadAddress(vaultId, selectedChain)
                 }
-                .catch {
-                    Timber.e(it)
-                },
-            searchFieldState.textAsFlow()
-                .map { it.toString() },
-        ) { account, query ->
+                .catch { Timber.e(it) },
+            searchFieldState.textAsFlow().map { it.toString() },
+            allTokens,
+        ) { account, query, allTokens ->
             val filteredAssets = account
                 .accounts
                 .asSequence()
@@ -146,10 +171,15 @@ internal class SelectAssetViewModel @Inject constructor(
                 }
                 .toList()
 
-            this.state.update {
-                it.copy(assets = filteredAssets)
+            val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+            val additionalAssets =
+                allTokens.filter { it.token.id.contains(query, ignoreCase = true) }
+                    .sortedWith(compareBy { it.token.ticker })
+                    .filter { it.token.id !in filteredTokenIds }
+
+            state.update {
+                it.copy(assets = filteredAssets + additionalAssets)
             }
         }.launchIn(viewModelScope)
     }
-
 }

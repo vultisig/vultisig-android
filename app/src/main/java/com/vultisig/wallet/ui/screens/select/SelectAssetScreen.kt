@@ -31,6 +31,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
@@ -128,9 +129,9 @@ private fun SelectAssetScreen(
                     )
 
                     if (!isLast) {
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Theme.colors.borders.light,
+                        UiGradientDivider(
+                            initialColor = Theme.colors.backgrounds.secondary,
+                            endColor = Theme.colors.backgrounds.secondary,
                         )
                     }
                 }
