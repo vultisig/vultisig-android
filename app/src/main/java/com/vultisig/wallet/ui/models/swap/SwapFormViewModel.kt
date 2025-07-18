@@ -70,6 +70,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -595,11 +596,26 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
-        val result = requestResultRepository.request<AssetSelected>(targetArg)?.token?.id
-        if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
-            selectedSrcId.value = result
-        } else {
-            selectedDstId.value = result
+        val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
+
+        if (result.isDisabled) {
+            uiState.update { it.copy(isLoading = true) }
+            vaultId?.let {
+                try {
+                    val address =
+                        accountsRepository.loadAddress(vaultId!!, result.token.chain).last()
+                    addresses.update { currentList -> currentList + address }
+                    uiState.update { it.copy(isLoading = false) }
+                } catch (t: Throwable) {
+                    uiState.update { it.copy(isLoading = false) }
+                    return
+                }
+            }
+        }
+
+        when (targetArg) {
+            ARG_SELECTED_SRC_TOKEN_ID -> selectedSrcId.value = result.token.id
+            else -> selectedDstId.value = result.token.id
         }
     }
 
@@ -772,7 +788,8 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }
                 .distinctUntilChanged()
-                .combine(srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
+                .combine(
+                    srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
                     address to srcAmount
                 }
                 .combine(refreshQuoteState) { it, _ -> it }
@@ -898,7 +915,7 @@ internal class SwapFormViewModel @Inject constructor(
                             }
 
 
-                            SwapProvider.KYBER ->{
+                            SwapProvider.KYBER -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken,
                                     tokenValue,
@@ -1113,6 +1130,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.NetworkConnection ->
                                 UiText.StringResource(R.string.network_connection_lost)
+
                             is SwapException.SmallSwapAmount ->
                                 UiText.StringResource(R.string.swap_error_small_swap_amount)
                         }
@@ -1147,7 +1165,7 @@ internal class SwapFormViewModel @Inject constructor(
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob = viewModelScope.launch {
-            withContext (Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 delay(expiredAt - Clock.System.now())
                 refreshQuoteState.value++
             }
