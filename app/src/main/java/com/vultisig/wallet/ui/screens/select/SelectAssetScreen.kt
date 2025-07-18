@@ -113,6 +113,7 @@ private fun SelectAssetScreen(
                         subtitle = item.subtitle,
                         amount = item.amount,
                         value = item.value,
+                        isDisabled = item.isDisabled,
                         modifier = Modifier
                             .clickable(onClick = {
                                 onAssetClick(item)
@@ -148,6 +149,7 @@ private fun AssetItem(
     subtitle: String,
     amount: String,
     value: String,
+    isDisabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -191,22 +193,26 @@ private fun AssetItem(
                 ),
         )
 
+
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.weight(1f),
         ) {
-            Text(
-                text = amount,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary,
-            )
+            if (!isDisabled) {
+                Text(
+                    text = amount,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.primary,
+                )
 
-            Text(
-                text = value,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
-            )
+                Text(
+                    text = value,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
+
     }
 }
 
