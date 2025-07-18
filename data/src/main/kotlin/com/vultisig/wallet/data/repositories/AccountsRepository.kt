@@ -6,11 +6,13 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -31,6 +33,10 @@ interface AccountsRepository {
         chain: Chain,
     ): Flow<Address>
 
+    suspend fun loadAddress(
+        vaultId: String,
+        token: Coin
+    ): Address
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -177,19 +183,51 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         loadPrices.await()
 
-        emit(account.copy(
-            accounts = account.accounts.map {
-                val balance = balanceRepository.getTokenBalance(address, it.token)
-                    .first()
+        emit(
+            account.copy(
+                accounts = account.accounts.map {
+                    val balance = balanceRepository.getTokenBalance(address, it.token)
+                        .first()
 
-                it.applyBalance(balance)
-            }
-        ))
+                    it.applyBalance(balance)
+                }
+            ))
+    }
+
+    override suspend fun loadAddress(vaultId: String, token: Coin): Address = coroutineScope {
+        val vault = getVault(vaultId)
+        val chain = token.chain
+        val nativeCoin =
+            Coins.coins[token.chain]?.find { it.isNativeToken } ?: error("No SOL Chain found")
+        val coins = listOf(nativeCoin, token)
+
+        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            ?: error("")
+
+        val (updatedCoins, updatedAccounts) = if (chain == Chain.Solana) {
+            val newCoins = coins + getSPLCoins(coins, vault)
+            val newAccounts = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, newCoins))
+                ?: error("")
+            newCoins to newAccounts
+        } else {
+            coins to account
+        }
+
+        runCatching {
+            tokenPriceRepository.refresh(updatedCoins)
+        }.getOrElse { Timber.e("Can't update token price: $it") }
+
+        val balance = balanceRepository.getTokenBalance(updatedAccounts.address, token).first()
+
+        return@coroutineScope updatedAccounts.copy(
+            accounts = updatedAccounts.accounts
+                .filter { !it.token.isNativeToken }
+                .map { account -> account.applyBalance(balance) }
+        )
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
     )
-
 }
