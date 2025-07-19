@@ -610,6 +610,8 @@ internal class SwapFormViewModel @Inject constructor(
                     uiState.update { it.copy(isLoading = false) }
                     return
                 }
+            } ?: run {
+                uiState.update { it.copy(isLoading = false) }
             }
         }
 
