@@ -7,7 +7,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.vultisig.wallet.ui.utils.VsClipboardService
@@ -16,21 +16,19 @@ import com.vultisig.wallet.ui.utils.VsClipboardService
 internal fun rememberClipboardText(
     filter: (String?) -> Boolean = { true },
 ): State<String?> {
-    val context = LocalContext.current
+
+    val currentText = VsClipboardService.getClipboardData()
+
     val text = remember {
-        val clipText = VsClipboardService.getClipboardData(context)
-        mutableStateOf(
-            if (filter(clipText)) {
-                clipText
-            } else null
-        )
+        derivedStateOf {
+            val value = currentText.value
+            value.takeIf { filter(value) }
+        }
     }
 
     onClipDataChanged {
-        val clipText = VsClipboardService.getClipboardData(context)
-        if (filter(clipText)) {
-            text.value = clipText
-        }
+        val clipText = this?.getItemAt(0)?.text?.toString()
+        currentText.value = clipText.takeIf { filter(clipText) }
     }
 
     return text

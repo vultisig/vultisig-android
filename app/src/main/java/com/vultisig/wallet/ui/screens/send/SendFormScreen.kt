@@ -51,7 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -674,15 +673,15 @@ private fun SendFormScreen(
                                 AnimatedVisibility(
                                     visible = isMemoExpanded,
                                 ) {
-                                    val context = LocalContext.current
+                                    val clipboardData = VsClipboardService.getClipboardData()
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
                                         hint = "Enter Memo",
                                         trailingIcon = R.drawable.ic_paste,
                                         onTrailingIconClick = {
-                                            memoFieldState.setTextAndPlaceCursorAtEnd(
-                                                text = VsClipboardService.getClipboardData(context)
-                                            )
+                                            clipboardData.value
+                                                ?.takeIf { it.isNotEmpty() }
+                                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth(),
