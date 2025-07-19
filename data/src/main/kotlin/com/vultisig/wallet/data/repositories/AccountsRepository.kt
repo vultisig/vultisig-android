@@ -199,7 +199,14 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val vaultCoins = vault.coins.filter { it.chain == chain }
         val nativeCoin = vaultCoins.find { it.isNativeToken }
             ?: error("Missing native token for chain: $chain")
-        val coins = if (token.isNativeToken) listOf(token) else listOf(nativeCoin, token)
+
+        val (coins, updatedToken) = if (token.isNativeToken) {
+            listOf(nativeCoin) to nativeCoin
+        } else {
+            val updatedCoin =
+                vaultCoins.firstOrNull { it.id.equals(token.id, true) } ?: token
+            listOf(nativeCoin, updatedCoin) to updatedCoin
+        }
 
         val initialAccount = chainAndTokensToAddressMapper
             .map(ChainAndTokens(chain, coins))
@@ -222,11 +229,11 @@ internal class AccountsRepositoryImpl @Inject constructor(
         }
 
         val accountToUpdate = finalAccount.accounts
-            .firstOrNull { it.token.id == token.id }
-            ?: error("Account for token ${token.id} not found in mapped address")
+            .firstOrNull { it.token.id == updatedToken.id }
+            ?: error("Account for token ${updatedToken.id} not found in mapped address")
 
         val balance = balanceRepository
-            .getTokenBalance(finalAccount.address, token)
+            .getTokenBalance(finalAccount.address, updatedToken)
             .first()
 
         finalAccount.address to accountToUpdate.applyBalance(balance)
