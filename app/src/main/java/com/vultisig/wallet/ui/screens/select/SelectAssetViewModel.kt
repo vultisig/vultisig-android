@@ -142,6 +142,7 @@ internal class SelectAssetViewModel @Inject constructor(
     }
 
     private fun loadAllAssets() {
+        // TODO: Enable for Send, Deposit in upcoming update
         if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
             viewModelScope.launch {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
