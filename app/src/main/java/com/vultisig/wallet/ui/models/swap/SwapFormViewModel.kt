@@ -603,8 +603,8 @@ internal class SwapFormViewModel @Inject constructor(
             uiState.update { it.copy(isLoading = true) }
             vaultId?.let {
                 try {
-                    val (address, account) = accountsRepository.loadAccount(vaultId!!, result.token)
-                    updateAccountInAddresses(address, account)
+                    val account = accountsRepository.loadAccount(vaultId!!, result.token)
+                    updateAccountInAddresses(account)
                     uiState.update { it.copy(isLoading = false) }
                 } catch (t: Throwable) {
                     uiState.update { it.copy(isLoading = false) }
@@ -621,7 +621,6 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private fun updateAccountInAddresses(
-        loadedAddress: String,
         loadedAccount: Account
     ) {
         addresses.update { listOfAddreses ->
