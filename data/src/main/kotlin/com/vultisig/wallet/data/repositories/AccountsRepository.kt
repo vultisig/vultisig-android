@@ -208,22 +208,12 @@ internal class AccountsRepositoryImpl @Inject constructor(
             listOf(nativeCoin, updatedCoin) to updatedCoin
         }
 
-        val initialAccount = chainAndTokensToAddressMapper
+        val finalAccount = chainAndTokensToAddressMapper
             .map(ChainAndTokens(chain, coins))
             ?: error("Failed to map address for chain: $chain with coins: $coins")
 
-        val (finalCoins, finalAccount) = if (chain == Chain.Solana) {
-            val combinedCoins = coins + getSPLCoins(coins, vault)
-            val remappedAccount = chainAndTokensToAddressMapper
-                .map(ChainAndTokens(chain, combinedCoins))
-                ?: error("Failed to map updated Solana account with SPL tokens")
-            combinedCoins to remappedAccount
-        } else {
-            coins to initialAccount
-        }
-
         runCatching {
-            tokenPriceRepository.refresh(finalCoins)
+            tokenPriceRepository.refresh(coins)
         }.onFailure {
             Timber.e(it, "Failed to refresh token prices for chain: $chain")
         }
