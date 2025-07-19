@@ -62,7 +62,6 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
-
     val searchTextFieldState = TextFieldState()
 
     init {

@@ -325,8 +325,6 @@ internal sealed class Route {
     data object ScanError
 
 
-    // transactions
-
     // select asset / network
     @Serializable
     data class SelectAsset(

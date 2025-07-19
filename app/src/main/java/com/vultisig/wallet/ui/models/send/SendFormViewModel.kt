@@ -62,6 +62,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -368,7 +369,8 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            val newToken = requestResultRepository.request<Coin?>(requestId)
+            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
+            val newToken = newAssetSelected?.token
 
             if (newToken != null) {
                 selectToken(newToken)

@@ -6,11 +6,13 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -31,6 +33,10 @@ interface AccountsRepository {
         chain: Chain,
     ): Flow<Address>
 
+    suspend fun loadAccount(
+        vaultId: String,
+        token: Coin
+    ): Account
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -187,9 +193,44 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
+    override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
+        val vault = getVault(vaultId)
+        val chain = token.chain
+        val vaultCoins = vault.coins.filter { it.chain == chain }
+        val nativeCoin = vaultCoins.find { it.isNativeToken }
+            ?: error("Missing native token for chain: $chain")
+
+        val (coins, updatedToken) = if (token.isNativeToken) {
+            listOf(nativeCoin) to nativeCoin
+        } else {
+            val updatedCoin =
+                vaultCoins.firstOrNull { it.id.equals(token.id, true) } ?: token
+            listOf(nativeCoin, updatedCoin) to updatedCoin
+        }
+
+        val finalAccount = chainAndTokensToAddressMapper
+            .map(ChainAndTokens(chain, coins))
+            ?: error("Failed to map address for chain: $chain with coins: $coins")
+
+        runCatching {
+            tokenPriceRepository.refresh(coins)
+        }.onFailure {
+            Timber.e(it, "Failed to refresh token prices for chain: $chain")
+        }
+
+        val accountToUpdate = finalAccount.accounts
+            .firstOrNull { it.token.id == updatedToken.id }
+            ?: error("Account for token ${updatedToken.id} not found in mapped address")
+
+        val balance = balanceRepository
+            .getTokenBalance(finalAccount.address, updatedToken)
+            .first()
+
+        accountToUpdate.applyBalance(balance)
+    }
+
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
     )
-
 }

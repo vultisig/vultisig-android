@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -316,7 +317,9 @@ internal class DepositFormViewModel @Inject constructor(
                     networkFilters = Route.SelectNetwork.Filters.DisableNetworkSelection
                 )
             )
-            val selectedToken = requestResultRepository.request<Coin?>(requestId)
+            val selectedAsset = requestResultRepository.request<AssetSelected?>(requestId)
+            val selectedToken = selectedAsset?.token
+
             if (selectedToken != null) {
                 state.update {
                     it.copy(
