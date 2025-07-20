@@ -131,7 +131,7 @@ internal class SelectNetworkViewModel @Inject constructor(
     }
 
     private fun loadAddressesWithBalances(): Flow<Map<Chain, String>> {
-        return accountRepository.loadAddresses(vaultId = vaultId)
+        return accountRepository.loadCachedAddresses(vaultId = vaultId)
             .catch {
                 Timber.e(it)
                 emit(emptyList())
