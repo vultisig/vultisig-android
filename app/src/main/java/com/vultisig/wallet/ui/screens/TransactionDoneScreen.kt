@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -38,6 +37,7 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 
 @Composable
 internal fun TransactionDoneView(
@@ -50,7 +50,7 @@ internal fun TransactionDoneView(
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean,
 ) {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = LocalVsUriHandler.current
     BackHandler(onBack = onBack)
 
     Scaffold(

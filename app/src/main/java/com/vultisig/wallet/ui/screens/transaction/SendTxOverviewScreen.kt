@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,6 +36,7 @@ import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -209,7 +209,7 @@ private fun TxDetails(
     hash: String,
     link: String,
 ) {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = LocalVsUriHandler.current
 
     Details(
         title = title

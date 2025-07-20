@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -49,6 +48,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 @Composable
@@ -56,7 +56,7 @@ fun SettingsScreen(navController: NavHostController) {
     val colors = Theme.colors
     val viewModel = hiltViewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsState()
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = LocalVsUriHandler.current
     val context: Context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
