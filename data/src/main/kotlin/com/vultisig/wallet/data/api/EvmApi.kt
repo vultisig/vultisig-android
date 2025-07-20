@@ -31,7 +31,8 @@ import timber.log.Timber
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-
+import wallet.core.jni.EthereumAbi
+import wallet.core.jni.EthereumAbiFunction
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -164,8 +165,10 @@ class EvmApiImp(
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        return rpcResp.result.convertToBigIntegerOrZero()
-
+        return rpcResp.result?.parseBalance() ?: run {
+            Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: response is null")
+            BigInteger.ZERO
+        }
     }
 
     private suspend fun getETHBalance(address: String): BigInteger {
@@ -528,6 +531,21 @@ class EvmApiImp(
         )
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
+    }
+
+    private fun String.parseBalance(): BigInteger {
+        val fn = EthereumAbiFunction("balanceOf")
+        fn.addParamUInt256(ByteArray(32), true)
+        val dataHex = removePrefix("0x")
+        val encodedBytes = dataHex.chunked(2)
+            .map { it.toInt(16).toByte() }
+            .toByteArray()
+
+        if (!EthereumAbi.decodeOutput(fn, encodedBytes)) {
+            Timber.d("parse balance: ABI decoding failed")
+            return BigInteger.ZERO
+        }
+        return BigInteger(1, fn.getParamUInt256(0, true))
     }
 
 
