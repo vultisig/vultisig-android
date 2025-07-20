@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
@@ -47,12 +48,17 @@ class SolanaSwap(
         if (keysignPayload.coin.chain != Chain.Solana)
             error("Chain is not Solana")
 
+        val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
+            ?: error("Invalid blockChainSpecific")
+
         val updatedTxData = Base64.decode(quote.tx.data)
         val decodedData = TransactionDecoder.decode(SOLANA, updatedTxData)
+        val recentBlockHash = solanaSpecific.recentBlockHash
 
         val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData).checkError()
         val input = Solana.SigningInput.newBuilder()
             .setRawMessage(decodedOutput.transaction)
+            .setRecentBlockhash(recentBlockHash)
 
         return input.build().toByteArray()
     }
