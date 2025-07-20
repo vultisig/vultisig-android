@@ -62,7 +62,7 @@ import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 import kotlinx.coroutines.launch
 
@@ -247,7 +247,7 @@ private fun ChainAccountInfo(
     onCopy: (String) -> Unit,
 ) {
     val appColor = Theme.colors
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),

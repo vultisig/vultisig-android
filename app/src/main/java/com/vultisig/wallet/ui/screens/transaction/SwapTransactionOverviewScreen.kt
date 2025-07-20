@@ -48,7 +48,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun SwapTransactionOverviewScreen(
@@ -62,7 +62,7 @@ internal fun SwapTransactionOverviewScreen(
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
 ) {
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -254,7 +254,7 @@ private fun TxDetails(
     hash: String,
     link: String,
 ) {
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
 
     Details(
         title = title

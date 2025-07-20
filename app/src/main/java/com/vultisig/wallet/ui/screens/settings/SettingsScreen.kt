@@ -48,15 +48,15 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
     val colors = Theme.colors
     val viewModel = hiltViewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsState()
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
     val context: Context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {

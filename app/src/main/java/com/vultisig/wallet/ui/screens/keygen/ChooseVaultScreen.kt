@@ -66,8 +66,8 @@ import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import kotlinx.coroutines.launch
 
 @Composable
@@ -75,7 +75,7 @@ internal fun ChooseVaultScreen(
     model: ChooseVaultViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
     val helpLink = stringResource(R.string.link_docs_create_vault)
     ChooseVaultScreen(
         state = state,

@@ -30,13 +30,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 fun VultisigTokenScreen(navController: NavHostController) {
     val colors = Theme.colors
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
 
     Scaffold(
         modifier = Modifier

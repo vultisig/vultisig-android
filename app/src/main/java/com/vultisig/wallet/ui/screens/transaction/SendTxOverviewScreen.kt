@@ -36,7 +36,7 @@ import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -209,7 +209,7 @@ private fun TxDetails(
     hash: String,
     link: String,
 ) {
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
 
     Details(
         title = title

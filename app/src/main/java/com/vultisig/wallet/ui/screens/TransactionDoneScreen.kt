@@ -37,7 +37,7 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun TransactionDoneView(
@@ -50,7 +50,7 @@ internal fun TransactionDoneView(
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean,
 ) {
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
     BackHandler(onBack = onBack)
 
     Scaffold(

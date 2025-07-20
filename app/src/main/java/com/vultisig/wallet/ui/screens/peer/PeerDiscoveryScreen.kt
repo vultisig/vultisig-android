@@ -69,9 +69,9 @@ import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun KeygenPeerDiscoveryScreen(
@@ -82,7 +82,7 @@ internal fun KeygenPeerDiscoveryScreen(
     val state by model.state.collectAsState()
 
     val context = LocalContext.current
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
 
     val connectingToServer = state.connectingToServer
     val error = state.error

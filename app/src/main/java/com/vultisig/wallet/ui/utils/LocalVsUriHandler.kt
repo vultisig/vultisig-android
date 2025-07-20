@@ -1,25 +1,22 @@
 package com.vultisig.wallet.ui.utils
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
 
-internal val LocalVsUriHandler: ProvidableCompositionLocal<UriHandler>
-    @Composable
-    get() {
-        val activity = LocalContext.current.closestActivityOrNull()
-        val uriHandler = LocalUriHandler.current
-        return staticCompositionLocalOf {
-            VsUriHandler(requireNotNull(activity), uriHandler)
-        }
-    }
+@SuppressLint("ComposableNaming")
+@Composable
+internal fun VsUriHandler(): UriHandler {
+    val activity = LocalContext.current.closestActivityOrNull()
+    val uriHandler = LocalUriHandler.current
+    return VsUriHandler(requireNotNull(activity), uriHandler)
+}
 
-internal class VsUriHandler(
+private class VsUriHandler(
     private val activity: Activity,
     private val uriHandler: UriHandler,
 ) : UriHandler {

@@ -40,9 +40,9 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.Theme.montserrat
-import com.vultisig.wallet.ui.utils.LocalVsUriHandler
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import kotlinx.coroutines.flow.receiveAsFlow
 
 @Composable
@@ -50,7 +50,7 @@ internal fun RegisterVaultScreen(
     navController: NavHostController,
     viewModel: RegisterVaultViewModel = hiltViewModel(),
 ) {
-    val uriHandler = LocalVsUriHandler.current
+    val uriHandler = VsUriHandler()
     val mainColor = colors.neutral0
     val backgroundColor = colors.transparent
     val context = LocalContext.current
