@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -54,6 +55,7 @@ import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -69,6 +71,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -594,11 +597,42 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
-        val result = requestResultRepository.request<Coin>(targetArg)?.id
+        val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
+
+        if (result.isDisabled) {
+            uiState.update { it.copy(isLoading = true) }
+            vaultId?.let {
+                try {
+                    val account = accountsRepository.loadAccount(vaultId!!, result.token)
+                    updateAccountInAddresses(account)
+                    uiState.update { it.copy(isLoading = false) }
+                } catch (t: Throwable) {
+                    uiState.update { it.copy(isLoading = false) }
+                    return
+                }
+            } ?: run {
+                uiState.update { it.copy(isLoading = false) }
+            }
+        }
+
         if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
-            selectedSrcId.value = result
+            selectedSrcId.value = result.token.id
         } else {
-            selectedDstId.value = result
+            selectedDstId.value = result.token.id
+        }
+    }
+
+    private fun updateAccountInAddresses(
+        loadedAccount: Account
+    ) {
+        addresses.update { listOfAddreses ->
+            listOfAddreses.map { address ->
+                if (address.chain == loadedAccount.token.chain) {
+                    address.copy(accounts = address.accounts + listOf(loadedAccount))
+                } else {
+                    address
+                }
+            }
         }
     }
 
@@ -666,7 +700,6 @@ internal class SwapFormViewModel @Inject constructor(
                     addresses.filter { it.chain.IsSwapSupported }
                 }
                 .catch {
-                    // TODO handle error
                     Timber.e(it)
                 }.collect(addresses)
         }
@@ -772,7 +805,8 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }
                 .distinctUntilChanged()
-                .combine(srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
+                .combine(
+                    srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
                     address to srcAmount
                 }
                 .combine(refreshQuoteState) { it, _ -> it }
@@ -898,7 +932,7 @@ internal class SwapFormViewModel @Inject constructor(
                             }
 
 
-                            SwapProvider.KYBER ->{
+                            SwapProvider.KYBER -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken,
                                     tokenValue,
