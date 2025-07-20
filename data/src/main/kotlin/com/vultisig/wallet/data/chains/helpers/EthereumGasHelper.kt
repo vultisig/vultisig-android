@@ -26,18 +26,31 @@ object EthereumGasHelper {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
         }
-        if(keysignPayload.coin.chain == Chain.BscChain) {
-            signingInputBuilder.apply  {
+        if (keysignPayload.coin.chain == Chain.BscChain) {
+            signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Legacy
-                setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
-                gasLimit =ByteString.copyFrom(gas.toByteArray())
+                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT && gasPrice != BigInteger.ZERO) {
+                    gasLimit = ByteString.copyFrom(gas.toByteArray())
+                    setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
+                } else {
+                    gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+                    setGasPrice(ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray()))
+                }
             }
         } else {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Enveloped
-                gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
-                maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
-                maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT && gasPrice != BigInteger.ZERO) {
+                    gasLimit = ByteString.copyFrom(gas.toByteArray())
+                    maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
+                    maxInclusionFeePerGas =
+                        ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+                } else {
+                    gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+                    maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+                    maxInclusionFeePerGas =
+                        ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
+                }
             }
         }
         return signingInputBuilder
