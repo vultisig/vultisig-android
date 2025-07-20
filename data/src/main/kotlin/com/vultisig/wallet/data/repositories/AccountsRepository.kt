@@ -22,10 +22,13 @@ import timber.log.Timber
 import javax.inject.Inject
 
 interface AccountsRepository {
-
     fun loadAddresses(
         vaultId: String,
         isRefresh: Boolean = false,
+    ): Flow<List<Address>>
+
+    fun loadCachedAddresses(
+        vaultId: String,
     ): Flow<List<Address>>
 
     fun loadAddress(
@@ -54,12 +57,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
     override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
         supervisorScope {
-            val vault = getVault(vaultId)
-            val vaultCoins = vault.coins
-            val coins = vaultCoins.groupBy { it.chain }
-            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-            }
+            val (vaultCoins, addresses) = buildCacheAddresses(vaultId)
+
             val loadPrices =
                 async { tokenPriceRepository.refresh(vaultCoins) }
 
@@ -97,6 +96,27 @@ internal class AccountsRepositoryImpl @Inject constructor(
             send(addresses)
         }
         awaitClose()
+        }
+
+    override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+        val addresses = buildCacheAddresses(vaultId).addresses
+        addresses.fetchAccountFromDb()
+        send(addresses)
+    }
+
+    private suspend fun buildCacheAddresses(vaultId: String): CachedAddresses {
+        val vault = getVault(vaultId)
+        val vaultCoins = vault.coins
+
+        val coins = vaultCoins.groupBy { it.chain }
+        val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+        }
+
+        return CachedAddresses(
+            vaultCoins = vaultCoins,
+            addresses = addresses
+        )
     }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb(){
@@ -234,3 +254,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
         fiatValue = balance.fiatValue,
     )
 }
+
+private data class CachedAddresses(
+    val vaultCoins: List<Coin>,
+    val addresses: MutableList<Address>
+)
