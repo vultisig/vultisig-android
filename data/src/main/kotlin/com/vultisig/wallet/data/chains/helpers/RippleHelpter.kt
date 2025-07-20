@@ -48,7 +48,7 @@ object RippleHelper {
             .setDestination(keysignPayload.toAddress)
             .setAmount(keysignPayload.toAmount.toLong())
 
-        if (memoValue != null) {
+        if (!memoValue.isNullOrBlank()) {
             val memoAsLong = memoValue.toLongOrNull()
             if (memoAsLong != null) {
                 operation
