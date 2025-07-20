@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -39,6 +40,7 @@ internal class AddressBookBottomSheetViewModel @Inject constructor(
     private val addressBookRepository: AddressBookRepository,
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.AddressBook>()
@@ -47,7 +49,15 @@ internal class AddressBookBottomSheetViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val entries = addressBookRepository.getEntries()
+            val entries = addressBookRepository
+                .getEntries()
+                .filter {
+                    chainAccountAddressRepository
+                        .isValid(
+                            chain = Chain.fromRaw(args.chainId),
+                            address = it.address
+                        )
+                }
                 .map {
                     AddressEntryUiModel(
                         model = it,
