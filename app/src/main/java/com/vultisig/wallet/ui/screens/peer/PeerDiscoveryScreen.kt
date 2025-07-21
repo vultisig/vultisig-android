@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -72,6 +71,7 @@ import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun KeygenPeerDiscoveryScreen(
@@ -82,7 +82,7 @@ internal fun KeygenPeerDiscoveryScreen(
     val state by model.state.collectAsState()
 
     val context = LocalContext.current
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = VsUriHandler()
 
     val connectingToServer = state.connectingToServer
     val error = state.error
