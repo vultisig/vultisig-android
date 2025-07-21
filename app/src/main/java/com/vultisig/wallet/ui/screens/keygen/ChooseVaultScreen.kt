@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.LookaheadScope
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,6 +67,7 @@ import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import kotlinx.coroutines.launch
 
 @Composable
@@ -75,7 +75,7 @@ internal fun ChooseVaultScreen(
     model: ChooseVaultViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = VsUriHandler()
     val helpLink = stringResource(R.string.link_docs_create_vault)
     ChooseVaultScreen(
         state = state,

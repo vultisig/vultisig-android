@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +42,7 @@ import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.Theme.montserrat
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import kotlinx.coroutines.flow.receiveAsFlow
 
 @Composable
@@ -50,7 +50,7 @@ internal fun RegisterVaultScreen(
     navController: NavHostController,
     viewModel: RegisterVaultViewModel = hiltViewModel(),
 ) {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = VsUriHandler()
     val mainColor = colors.neutral0
     val backgroundColor = colors.transparent
     val context = LocalContext.current
