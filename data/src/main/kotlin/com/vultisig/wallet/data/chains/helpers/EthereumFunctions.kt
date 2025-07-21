@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.common.add0x
 import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.utils.toSafeByteArray
+import okio.ByteString.Companion.decodeHex
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.EthereumAbi
@@ -49,16 +50,13 @@ object EthereumFunction {
         }
     }
 
-    fun balanceDecoder(hexBalance: String): BigInteger {
+    fun balanceErc20Decoder(hexBalance: String): BigInteger {
         val fn = EthereumAbiFunction("balanceOf")
         fn.addParamUInt256(ByteArray(32), true)
         val dataHex = hexBalance.remove0x()
-        val encodedBytes = dataHex.chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
-
+        val encodedBytes = dataHex.decodeHex().toByteArray()
         if (!EthereumAbi.decodeOutput(fn, encodedBytes)) {
-            throw IllegalArgumentException("parse balance: ABI decoding failed")
+            throw IllegalArgumentException(": ABI decoding failed")
         }
         return fn.getParamUInt256(0, true)
             .toHexString()

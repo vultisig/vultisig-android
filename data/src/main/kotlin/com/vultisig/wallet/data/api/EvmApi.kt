@@ -33,8 +33,6 @@ import timber.log.Timber
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-import wallet.core.jni.EthereumAbi
-import wallet.core.jni.EthereumAbiFunction
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -169,7 +167,7 @@ class EvmApiImp(
         }
         return rpcResp.result?.let {
             try {
-                EthereumFunction.balanceDecoder(it)
+                EthereumFunction.balanceErc20Decoder(it)
             } catch (e: Exception) {
                 Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
                 BigInteger.ZERO
