@@ -1994,7 +1994,7 @@ object Coins {
                 address = "",
                 decimal = 8,
                 hexPublicKey = "",
-                priceProviderID = "kuji",
+                priceProviderID = "kujira",
                 contractAddress = "thor.kuji",
                 isNativeToken = false,
             ),
