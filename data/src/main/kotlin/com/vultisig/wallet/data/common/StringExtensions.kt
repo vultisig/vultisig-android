@@ -61,9 +61,13 @@ fun String?.convertToBigIntegerOrZero(): BigInteger {
     return if (cleanedInput.isNullOrEmpty()) {
         BigInteger.ZERO
     } else {
-        BigInteger(
-            cleanedInput,
-            16
-        )
+        try {
+            BigInteger(
+                cleanedInput,
+                16
+            )
+        } catch (e: NumberFormatException) {
+            BigInteger.ZERO
+        }
     }
 }
