@@ -13,6 +13,7 @@ import wallet.core.jni.Base64
 import wallet.core.jni.CoinType.SOLANA
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
+import wallet.core.jni.proto.Solana.SigningInput
 
 class SolanaSwap(
     private val vaultHexPublicKey: String,
@@ -40,7 +41,6 @@ class SolanaSwap(
         return helper.getSwapSignedTransaction(inputData, signatures)
     }
 
-
     private fun getPreSignedInputData(
         quote: OneInchSwapQuoteJson,
         keysignPayload: KeysignPayload,
@@ -51,15 +51,34 @@ class SolanaSwap(
         val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
             ?: error("Invalid blockChainSpecific")
 
-        val updatedTxData = Base64.decode(quote.tx.data)
-        val decodedData = TransactionDecoder.decode(SOLANA, updatedTxData)
         val recentBlockHash = solanaSpecific.recentBlockHash
+        val updatedTxData = Base64.decode(quote.tx.data)
 
+        val decodedData = TransactionDecoder.decode(SOLANA, updatedTxData)
         val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData).checkError()
-        val input = Solana.SigningInput.newBuilder()
-            .setRawMessage(decodedOutput.transaction)
-            .setRecentBlockhash(recentBlockHash)
 
-        return input.build().toByteArray()
+        val rawMessage = when {
+            decodedOutput.transaction.hasLegacy() -> {
+                decodedOutput.transaction.toBuilder().apply {
+                    legacy = decodedOutput.transaction.legacy
+                        .toBuilder()
+                        .setRecentBlockhash(recentBlockHash)
+                        .build()
+                }.build()
+            }
+
+            decodedOutput.transaction.hasV0() -> {
+                decodedOutput.transaction.toBuilder().apply {
+                    v0 = decodedOutput.transaction.v0
+                        .toBuilder()
+                        .setRecentBlockhash(recentBlockHash)
+                        .build()
+                }.build()
+            }
+
+            else -> error("Can't decode swap transact")
+        }
+
+        return SigningInput.newBuilder().setRawMessage(rawMessage).build().toByteArray()
     }
 }
