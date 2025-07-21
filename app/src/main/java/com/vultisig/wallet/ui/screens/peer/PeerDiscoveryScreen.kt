@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.WarningView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
@@ -86,10 +87,19 @@ internal fun KeygenPeerDiscoveryScreen(
 
     val connectingToServer = state.connectingToServer
     val error = state.error
+    val warning = state.warning
     when {
         error != null -> {
             Error(
                 state = error,
+                onTryAgainClick = model::tryAgain,
+            )
+        }
+
+        warning != null -> {
+            WarningView(
+                title = warning.title.asString(),
+                description = warning.description.asString(),
                 onTryAgainClick = model::tryAgain,
             )
         }
