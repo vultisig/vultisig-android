@@ -51,10 +51,10 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
-import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.observeConnectivityAsFlow
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,12 +66,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -99,6 +94,7 @@ data class PeerDiscoveryUiModel(
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
     val error: ErrorUiModel? = null,
+    val warning: ErrorUiModel? = null,
 )
 
 data class ConnectingToServerUiModel(
@@ -114,7 +110,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
-    private val snackbarFlow: SnackbarFlow,
 
     private val generateQrBitmap: GenerateQrBitmap,
     private val compressQr: CompressQrUseCase,
@@ -148,7 +143,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
-    private val  hasConnection = MutableStateFlow(true)
 
     // fast vault data
     private val email = args.email
@@ -161,42 +155,23 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     private var serverUrl: String = VULTISIG_RELAY_URL
 
     init {
-        monitorNetworkAndLoadData()
+        loadData()
     }
 
-    private fun monitorNetworkAndLoadData() {
-        combine(
-            state.map { it.network }.distinctUntilChanged(),
-            context.observeConnectivityAsFlow()
-        ) { networkOption, connectionStatus->
-            val isConnected = connectionStatus ?: false
-            networkOption to isConnected
+    private fun showNetworkWarning() {
+        state.update {
+            it.copy(
+                warning = ErrorUiModel(
+                    title = "No Connection available".asUiText(),
+                    description = "Please enable WiFi or mobile to sign transaction".asUiText()
+                )
+            )
         }
-            .onEach { (networkOption, isConnected) ->
-                if (networkOption == NetworkOption.Internet) {
-                    hasConnection.value = isConnected == true
-                    if (isConnected == true) {
-                        loadData()
-                    } else {
-                        showConnectionErrorMessage()
-                        clearQr()
-                    }
-                } else {
-                    hasConnection.value = true
-                    loadData()
-                }
-            }
-            .launchIn(viewModelScope)
     }
 
+    private fun isConnected() = NetworkUtils.isNetworkAvailable(context)
 
-    private suspend fun showConnectionErrorMessage() {
-        snackbarFlow.showMessage(
-            "You are currently offline. Please connect to the internet or switch to local mode."
-        )
-    }
-
-    fun onBackClick() {
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
@@ -257,17 +232,11 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    fun onTryAgainClick() {
-        if (hasConnection.value)
-            loadData()
-        else {
-            viewModelScope.launch {
-                showConnectionErrorMessage()
-            }
-        }
+    fun tryAgain() {
+        loadData()
     }
 
-    fun onNextClick() {
+    fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
             val existingVault = args.vaultId?.let {
@@ -308,6 +277,10 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     }
 
     private fun loadData() {
+        if (isConnected().not()) {
+            showNetworkWarning()
+            return
+        }
         viewModelScope.launch {
             setupLibType()
 
@@ -333,7 +306,12 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             }
 
-            state.update { it.copy(error = null) }
+            state.update {
+                it.copy(
+                    error = null,
+                    warning = null
+                )
+            }
 
             if (email != null && password != null) {
                 startVultiServerConnection()
@@ -343,18 +321,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    private fun clearQr() {
-        state.update {
-            it.copy(qr = null)
-        }
-    }
-
     private suspend fun startPeerDiscovery() {
-        if (hasConnection.value.not()) {
-            showConnectionErrorMessage()
-            return
-        }
-
         checkQrHelperModalIsVisited()
 
         val isRelayEnabled = state.value.network == NetworkOption.Internet
@@ -402,7 +369,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
                         delay(2.seconds)
 
-                        onNextClick()
+                        next()
                     }
                 }
             )
@@ -644,6 +611,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             false
         }
     }
+
 
 
 }
