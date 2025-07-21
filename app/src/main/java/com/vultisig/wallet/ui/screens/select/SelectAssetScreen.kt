@@ -31,6 +31,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
@@ -112,6 +113,7 @@ private fun SelectAssetScreen(
                         subtitle = item.subtitle,
                         amount = item.amount,
                         value = item.value,
+                        isDisabled = item.isDisabled,
                         modifier = Modifier
                             .clickable(onClick = {
                                 onAssetClick(item)
@@ -128,9 +130,9 @@ private fun SelectAssetScreen(
                     )
 
                     if (!isLast) {
-                        HorizontalDivider(
-                            thickness = 1.dp,
-                            color = Theme.colors.borders.light,
+                        UiGradientDivider(
+                            initialColor = Theme.colors.backgrounds.secondary,
+                            endColor = Theme.colors.backgrounds.secondary,
                         )
                     }
                 }
@@ -147,6 +149,7 @@ private fun AssetItem(
     subtitle: String,
     amount: String,
     value: String,
+    isDisabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -190,22 +193,26 @@ private fun AssetItem(
                 ),
         )
 
+
         Column(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.weight(1f),
         ) {
-            Text(
-                text = amount,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary,
-            )
+            if (!isDisabled) {
+                Text(
+                    text = amount,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.primary,
+                )
 
-            Text(
-                text = value,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
-            )
+                Text(
+                    text = value,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
+
     }
 }
 
