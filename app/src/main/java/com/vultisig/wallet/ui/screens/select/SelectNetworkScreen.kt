@@ -88,6 +88,8 @@ private fun SelectNetworkScreen(
             ) {
                 item {
                     Row {
+                        UiSpacer(18.dp)
+
                         Text(
                             text = stringResource(R.string.select_chain_chain_title),
                             style = Theme.brockmann.supplementary.caption,

@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -14,6 +15,9 @@ import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -29,6 +33,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -48,25 +53,30 @@ internal data class AssetUiModel(
     val subtitle: String,
     val amount: String,
     val value: String,
+    val isDisabled: Boolean = false,
 )
 
-
+//TODO : Refactor current implementation
 @HiltViewModel
 internal class SelectAssetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
-
     private val accountRepository: AccountsRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val tokenRepository: TokenRepository,
+    private val vaultRepository: VaultRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectAsset>()
-
     private val vaultId = args.vaultId
+    private val filter = args.networkFilters
 
     val searchFieldState = TextFieldState()
+
+    private val allTokens = MutableStateFlow(emptyList<AssetUiModel>())
 
     val state = MutableStateFlow(
         SelectAssetUiModel(
@@ -75,12 +85,30 @@ internal class SelectAssetViewModel @Inject constructor(
     )
 
     init {
+        loadAllAssets()
         collectSearchResults()
+        observeSelectedChainChanges()
+    }
+
+    private fun observeSelectedChainChanges() {
+        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
+            state.map { it.selectedChain }
+                .distinctUntilChanged()
+                .onEach {
+                    loadAllAssets()
+                }
+                .launchIn(viewModelScope)
+        }
     }
 
     fun selectAsset(asset: AssetUiModel) {
         viewModelScope.launch {
-            requestResultRepository.respond(args.requestId, asset.token)
+            val isDisabled = asset.isDisabled
+            if (isDisabled) {
+                enableTokenUseCase.invoke(vaultId, asset.token)
+            }
+            val callbackAsset = AssetSelected(asset.token, isDisabled)
+            requestResultRepository.respond(args.requestId, callbackAsset)
             navigator.navigate(Destination.Back)
         }
     }
@@ -113,27 +141,50 @@ internal class SelectAssetViewModel @Inject constructor(
         }
     }
 
+    private fun loadAllAssets() {
+        // TODO: Enable for Send, Deposit in upcoming update
+        if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
+            viewModelScope.launch {
+                val vault = vaultRepository.get(vaultId) ?: return@launch
+                tokenRepository.getChainTokens(state.value.selectedChain, vault)
+                    .catch { Timber.e(it) }
+                    .map { coinList ->
+                        coinList
+                            .filter { !it.isNativeToken }
+                            .map { coin ->
+                                AssetUiModel(
+                                    token = coin,
+                                    logo = Tokens.getCoinLogo(coin.logo),
+                                    title = coin.ticker,
+                                    subtitle = coin.chain.raw,
+                                    amount = "0",
+                                    value = "0",
+                                    isDisabled = true,
+                                )
+                            }
+                    }.collect { assets ->
+                        allTokens.value = assets
+                    }
+            }
+        }
+    }
+
     private fun collectSearchResults() {
         combine(
-            state
-                .map {
-                    it.selectedChain
-                }
+            state.map { it.selectedChain }
                 .distinctUntilChanged()
                 .flatMapConcat { selectedChain ->
                     accountRepository.loadAddress(vaultId, selectedChain)
                 }
-                .catch {
-                    Timber.e(it)
-                },
-            searchFieldState.textAsFlow()
-                .map { it.toString() },
-        ) { account, query ->
+                .catch { Timber.e(it) },
+            searchFieldState.textAsFlow().map { it.toString() },
+            allTokens,
+        ) { account, query, allTokens ->
             val filteredAssets = account
                 .accounts
                 .asSequence()
                 .filter { it.token.id.contains(query, ignoreCase = true) }
-                .sortedWith(compareBy { it.token.ticker })
+                .sortedWith(compareByDescending<Account> { it.token.isNativeToken }.thenBy { it.token.ticker })
                 .map {
                     AssetUiModel(
                         token = it.token,
@@ -146,10 +197,21 @@ internal class SelectAssetViewModel @Inject constructor(
                 }
                 .toList()
 
-            this.state.update {
-                it.copy(assets = filteredAssets)
+            val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+            val additionalAssets =
+                allTokens.filter {
+                    it.token.id.contains(query, ignoreCase = true)
+                            && it.token.id !in filteredTokenIds
+                }
+
+            state.update {
+                it.copy(assets = filteredAssets + additionalAssets)
             }
         }.launchIn(viewModelScope)
     }
-
 }
+
+data class AssetSelected(
+    val token: Coin,
+    val isDisabled: Boolean,
+)

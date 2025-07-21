@@ -80,7 +80,10 @@ private fun FastVaultVerificationScreen(
     onPasteClick: (String) -> Unit,
     onChangeEmailClick: () -> Unit,
 ) {
-    val textToPaste by rememberClipboardText { it?.isDigitsOnly() == true }
+    val textToPaste by rememberClipboardText {
+        // isDigitsOnly return true for empty string! ("".isDigitsOnly == true)
+        it?.isNotEmpty() == true && it.isDigitsOnly() == true
+    }
     val hasClipContent = textToPaste != null
 
     Scaffold(

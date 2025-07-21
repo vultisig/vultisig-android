@@ -76,6 +76,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     sequence = specific.sequence.toString().toULong(),
                     fee = specific.fee.toString().toULong(),
                     isDeposit = specific.isDeposit,
+                    transactionType = specific.transactionType,
                 )
             } else null,
             mayaSpecific = if (specific is BlockChainSpecific.MayaChain) {

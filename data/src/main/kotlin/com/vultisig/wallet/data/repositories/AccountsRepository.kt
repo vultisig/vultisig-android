@@ -6,11 +6,13 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -20,10 +22,13 @@ import timber.log.Timber
 import javax.inject.Inject
 
 interface AccountsRepository {
-
     fun loadAddresses(
         vaultId: String,
         isRefresh: Boolean = false,
+    ): Flow<List<Address>>
+
+    fun loadCachedAddresses(
+        vaultId: String,
     ): Flow<List<Address>>
 
     fun loadAddress(
@@ -31,6 +36,10 @@ interface AccountsRepository {
         chain: Chain,
     ): Flow<Address>
 
+    suspend fun loadAccount(
+        vaultId: String,
+        token: Coin
+    ): Account
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -48,12 +57,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
     override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
         supervisorScope {
-            val vault = getVault(vaultId)
-            val vaultCoins = vault.coins
-            val coins = vaultCoins.groupBy { it.chain }
-            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-            }
+            val (vaultCoins, addresses) = buildCacheAddresses(vaultId)
+
             val loadPrices =
                 async { tokenPriceRepository.refresh(vaultCoins) }
 
@@ -91,6 +96,27 @@ internal class AccountsRepositoryImpl @Inject constructor(
             send(addresses)
         }
         awaitClose()
+        }
+
+    override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+        val addresses = buildCacheAddresses(vaultId).addresses
+        addresses.fetchAccountFromDb()
+        send(addresses)
+    }
+
+    private suspend fun buildCacheAddresses(vaultId: String): CachedAddresses {
+        val vault = getVault(vaultId)
+        val vaultCoins = vault.coins
+
+        val coins = vaultCoins.groupBy { it.chain }
+        val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+        }
+
+        return CachedAddresses(
+            vaultCoins = vaultCoins,
+            addresses = addresses
+        )
     }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb(){
@@ -187,9 +213,49 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
+    override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
+        val vault = getVault(vaultId)
+        val chain = token.chain
+        val vaultCoins = vault.coins.filter { it.chain == chain }
+        val nativeCoin = vaultCoins.find { it.isNativeToken }
+            ?: error("Missing native token for chain: $chain")
+
+        val (coins, updatedToken) = if (token.isNativeToken) {
+            listOf(nativeCoin) to nativeCoin
+        } else {
+            val updatedCoin =
+                vaultCoins.firstOrNull { it.id.equals(token.id, true) } ?: token
+            listOf(nativeCoin, updatedCoin) to updatedCoin
+        }
+
+        val finalAccount = chainAndTokensToAddressMapper
+            .map(ChainAndTokens(chain, coins))
+            ?: error("Failed to map address for chain: $chain with coins: $coins")
+
+        runCatching {
+            tokenPriceRepository.refresh(coins)
+        }.onFailure {
+            Timber.e(it, "Failed to refresh token prices for chain: $chain")
+        }
+
+        val accountToUpdate = finalAccount.accounts
+            .firstOrNull { it.token.id == updatedToken.id }
+            ?: error("Account for token ${updatedToken.id} not found in mapped address")
+
+        val balance = balanceRepository
+            .getTokenBalance(finalAccount.address, updatedToken)
+            .first()
+
+        accountToUpdate.applyBalance(balance)
+    }
+
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
     )
-
 }
+
+private data class CachedAddresses(
+    val vaultCoins: List<Coin>,
+    val addresses: MutableList<Address>
+)

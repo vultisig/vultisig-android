@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,6 +48,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun SwapTransactionOverviewScreen(
@@ -62,7 +62,7 @@ internal fun SwapTransactionOverviewScreen(
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
 ) {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = VsUriHandler()
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -254,7 +254,7 @@ private fun TxDetails(
     hash: String,
     link: String,
 ) {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler = VsUriHandler()
 
     Details(
         title = title
