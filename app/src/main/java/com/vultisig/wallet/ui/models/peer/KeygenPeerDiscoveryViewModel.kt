@@ -51,8 +51,10 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -92,6 +94,7 @@ data class PeerDiscoveryUiModel(
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
     val error: ErrorUiModel? = null,
+    val warning: ErrorUiModel? = null,
 )
 
 data class ConnectingToServerUiModel(
@@ -154,6 +157,19 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     init {
         loadData()
     }
+
+    private fun showNetworkWarning() {
+        state.update {
+            it.copy(
+                warning = ErrorUiModel(
+                    title = "No Connection available".asUiText(),
+                    description = "Please enable WiFi or mobile to sign transaction".asUiText()
+                )
+            )
+        }
+    }
+
+    private fun isConnected() = NetworkUtils.isNetworkAvailable(context)
 
     fun back() {
         viewModelScope.launch {
@@ -261,6 +277,10 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     }
 
     private fun loadData() {
+        if (isConnected().not()) {
+            showNetworkWarning()
+            return
+        }
         viewModelScope.launch {
             setupLibType()
 
@@ -286,7 +306,12 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             }
 
-            state.update { it.copy(error = null) }
+            state.update {
+                it.copy(
+                    error = null,
+                    warning = null
+                )
+            }
 
             if (email != null && password != null) {
                 startVultiServerConnection()
