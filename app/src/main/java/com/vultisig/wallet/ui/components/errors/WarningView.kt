@@ -50,7 +50,7 @@ internal fun WarningView(
 
         Image(
             imageVector = ImageVector.vectorResource(id = R.drawable.warning),
-            contentDescription = null,
+            contentDescription = "Warning",
             modifier = Modifier
                 .size(24.dp)
                 .drawBehind {
