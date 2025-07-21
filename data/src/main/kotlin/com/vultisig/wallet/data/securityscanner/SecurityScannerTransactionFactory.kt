@@ -85,7 +85,7 @@ class SecurityScannerTransactionFactory(
                 from = from,
                 to = srcToken.contractAddress,
                 amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20(to, amount.toBigInteger()),
+                data = EthereumFunction.approvalErc20Encoder(to, amount.toBigInteger()),
             )
         } else {
             SecurityScannerTransaction(
@@ -109,7 +109,7 @@ class SecurityScannerTransactionFactory(
             val tokenAmount = transaction.tokenValue.value
             transferType = SecurityTransactionType.TOKEN_TRANSFER
             amount = BigInteger.ZERO
-            data = EthereumFunction.transferErc20(transaction.dstAddress, tokenAmount)
+            data = EthereumFunction.transferErc20Encoder(transaction.dstAddress, tokenAmount)
             to = transaction.token.contractAddress
         } else {
             transferType = SecurityTransactionType.COIN_TRANSFER

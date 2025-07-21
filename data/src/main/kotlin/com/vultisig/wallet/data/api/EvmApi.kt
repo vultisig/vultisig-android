@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
+import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
@@ -165,7 +167,14 @@ class EvmApiImp(
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        return rpcResp.result?.parseBalance() ?: run {
+        return rpcResp.result?.let {
+            try {
+                EthereumFunction.balanceDecoder(it)
+            } catch (e: Exception) {
+                Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
+                BigInteger.ZERO
+            }
+        } ?: run {
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: response is null")
             BigInteger.ZERO
         }
@@ -531,34 +540,6 @@ class EvmApiImp(
         )
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
-    }
-
-    private fun String.parseBalance(): BigInteger {
-        val fn = EthereumAbiFunction("balanceOf")
-        fn.addParamUInt256(ByteArray(32), true)
-        val dataHex = removePrefix("0x")
-        val encodedBytes = dataHex.chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
-
-        if (!EthereumAbi.decodeOutput(fn, encodedBytes)) {
-            Timber.d("parse balance: ABI decoding failed")
-            return BigInteger.ZERO
-        }
-        return BigInteger(1, fn.getParamUInt256(0, true))
-    }
-
-
-    private fun String?.convertToBigIntegerOrZero(): BigInteger {
-        val cleanedInput = this?.removePrefix("0x")
-        return if (cleanedInput.isNullOrEmpty()) {
-            BigInteger.ZERO
-        } else {
-            BigInteger(
-                cleanedInput,
-                16
-            )
-        }
     }
 
     companion object {
