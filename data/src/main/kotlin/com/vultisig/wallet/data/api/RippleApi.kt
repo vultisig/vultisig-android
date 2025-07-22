@@ -90,16 +90,14 @@ internal class RippleApiImp @Inject constructor(
 
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
         try {
-            val accountInfoDeferred = async { fetchAccountsInfo(coin.address) }
+            val accountInfoDeferred = async { fetchAccountsInfo("rhhh49pFH96roGyuC4E5P4CHaNjS1k8gzM") }
             val reservedBalanceDeferred = async { serverState() }
-            // TODO: Create extensions
             val balance =
                 accountInfoDeferred.await()?.result?.accountData?.balance?.toBigInteger()
                     ?: BigInteger.ZERO
             val reservedBalance =
                 reservedBalanceDeferred.await().result?.state?.validateLedger?.reservedBase?.toBigInteger()
                     ?: BigInteger.ZERO
-            // TODO: Calculate number of slots * reserve_inc in case we support tokens
             maxOf(balance - reservedBalance, BigInteger.ZERO)
         } catch (e: Exception) {
             Timber.e("Error in getBalance: ${e.message}")
@@ -143,7 +141,8 @@ internal class RippleApiImp @Inject constructor(
             method = "server_state",
             params = buildJsonArray { }
         )
-        http.post(rpcUrl2) {
+
+        return http.post(rpcUrl2) {
             setBody(payload)
         }.bodyOrThrow<RippleServerStateResponseJson>()
     }
@@ -190,7 +189,7 @@ data class RippleServerStateResultJson(
 ) {
     @Serializable
     data class RippleStateJson(
-        @SerialName("validateLedger")
+        @SerialName("validated_ledger")
         val validateLedger: RippleValidateLedger,
     ) {
         @Serializable
