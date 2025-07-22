@@ -9,7 +9,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,7 +24,7 @@ interface RippleApi {
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getBalance(coin: Coin): BigInteger
     suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
-    suspend fun serverState(): RippleServerStateResponseJson
+    suspend fun fetchServerState(): RippleServerStateResponseJson
 }
 
 internal class RippleApiImp @Inject constructor(
@@ -91,7 +90,7 @@ internal class RippleApiImp @Inject constructor(
             val accountInfoDeferred =
                 async { fetchAccountsInfo("rhhh49pFH96roGyuC4E5P4CHaNjS1k8gzM") }
             val reservedBalanceDeferred =
-                async { serverState() }
+                async { fetchServerState() }
 
             val accountInfo = accountInfoDeferred.await()
             val reservedBalance = reservedBalanceDeferred.await()
@@ -139,16 +138,33 @@ internal class RippleApiImp @Inject constructor(
         }
     }
 
-    override suspend fun serverState(): RippleServerStateResponseJson {
-        val payload = RpcPayload(
-            method = "server_state",
-            params = buildJsonArray { }
-        )
+    override suspend fun fetchServerState(): RippleServerStateResponseJson {
+        return try {
+            val payload = RpcPayload(
+                method = "server_state",
+                params = buildJsonArray { }
+            )
 
-        return http.post(BASE_XRP_CLUSTER) {
-            setBody(payload)
-        }.bodyOrThrow<RippleServerStateResponseJson>()
+            return http.post(BASE_XRP_CLUSTER) {
+                setBody(payload)
+            }.bodyOrThrow<RippleServerStateResponseJson>()
+        } catch (t: Throwable) {
+            getDefaultRippleStateServer()
+        }
     }
+
+    // Returning these default values is acceptable if the RPC call fails. Reserve balances change
+    // infrequently, and fetching them (even if it sometimes fails) is preferable to hardcoding them
+    private fun getDefaultRippleStateServer() = RippleServerStateResponseJson(
+        result = RippleServerStateResultJson(
+            state = RippleServerStateResultJson.RippleStateJson(
+                validateLedger = RippleServerStateResultJson.RippleStateJson.RippleValidateLedger(
+                    reservedBase = 1000000,
+                    reserveInc = 200000,
+                )
+            )
+        )
+    )
 
     private companion object {
         const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
