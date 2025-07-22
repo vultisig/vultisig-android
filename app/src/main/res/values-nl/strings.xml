@@ -387,4 +387,9 @@
     <string name="security_scanner_transaction_scanned_by">Transactie gescand door</string>
     <string name="security_scanner_transaction_scanning">Scannen…</string>
     <string name="security_scanner_transaction_not_scanned">Transactie niet gescand door</string>
+    <string name="keygen_step_generating_ecdsa">ECDSA-sleutel genereren</string>
+    <string name="reshare_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="keygen_connecting_with_server">ECDSA-sleutel genereren</string>
+    <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
 </resources>

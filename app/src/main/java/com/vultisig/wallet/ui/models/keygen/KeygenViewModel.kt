@@ -547,6 +547,16 @@ internal class KeygenViewModel @Inject constructor(
                             true
                         )
 
+                        is KeygenState.ReshareECDSA -> KeygenStepUiModel(
+                            UiText.StringResource(R.string.reshare_step_generating_ecdsa),
+                            true
+                        )
+
+                        is KeygenState.ReshareEdDSA -> KeygenStepUiModel(
+                            UiText.StringResource(R.string.reshare_step_generating_eddsa),
+                            true
+                        )
+
                         else -> null
                     }
                 )
