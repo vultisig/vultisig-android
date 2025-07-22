@@ -62,13 +62,14 @@ internal class QrAddressViewModel @Inject constructor(
     }
 
     internal fun saveShareQrBitmap(
+        context: Context,
         bitmap: Bitmap,
         color: Int,
         title: String,
         logo: Bitmap,
     ) = viewModelScope.launch {
         val qrBitmap = withContext(Dispatchers.IO) {
-            makeQrCodeBitmapShareFormat(bitmap, color, logo, title, null)
+            makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, null)
         }
         shareQrBitmap.value?.recycle()
         shareQrBitmap.value = qrBitmap

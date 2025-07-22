@@ -90,6 +90,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
                             .extractBitmap { bitmap ->
                                 if (bitmapPainter != null) {
                                     viewModel.saveShareQrBitmap(
+                                        context,
                                         bitmap,
                                         background.toArgb(),
                                         title,

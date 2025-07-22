@@ -115,6 +115,7 @@ internal fun KeysignPeerDiscovery(
 
     LaunchedEffect(bitmapPainter) {
         sharedViewModel.saveShareQrBitmap(
+            context,
             qrShareBackground.toArgb(),
             qrShareTitle,
             qrShareDescription,
