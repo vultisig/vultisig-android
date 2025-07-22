@@ -9,10 +9,10 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
@@ -31,8 +31,6 @@ interface RippleApi {
 internal class RippleApiImp @Inject constructor(
     private val http: HttpClient,
 ) : RippleApi {
-    private val rpcUrl: String = "https://api.vultisig.com/ripple"
-    private val rpcUrl2: String = "https://xrplcluster.com"
 
     override suspend fun broadcastTransaction(hex: String): String {
         try {
@@ -47,7 +45,7 @@ internal class RippleApiImp @Inject constructor(
                     }
                 }
             )
-            val response = http.post(rpcUrl2) {
+            val response = http.post(BASE_XRP_CLUSTER) {
                 setBody(payload)
             }
 
@@ -90,15 +88,20 @@ internal class RippleApiImp @Inject constructor(
 
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
         try {
-            val accountInfoDeferred = async { fetchAccountsInfo("rhhh49pFH96roGyuC4E5P4CHaNjS1k8gzM") }
-            val reservedBalanceDeferred = async { serverState() }
-            val balance =
-                accountInfoDeferred.await()?.result?.accountData?.balance?.toBigInteger()
-                    ?: BigInteger.ZERO
-            val reservedBalance =
-                reservedBalanceDeferred.await().result?.state?.validateLedger?.reservedBase?.toBigInteger()
-                    ?: BigInteger.ZERO
-            maxOf(balance - reservedBalance, BigInteger.ZERO)
+            val accountInfoDeferred =
+                async { fetchAccountsInfo("rhhh49pFH96roGyuC4E5P4CHaNjS1k8gzM") }
+            val reservedBalanceDeferred =
+                async { serverState() }
+
+            val accountInfo = accountInfoDeferred.await()
+            val reservedBalance = reservedBalanceDeferred.await()
+
+            val balance = accountInfo?.getBalance() ?: BigInteger.ZERO
+            val ownerCount = accountInfo?.getOwnerCount() ?: BigInteger.ZERO
+            val accountReservedBalance =
+                reservedBalance.getBaseReserve() + (ownerCount * reservedBalance.getIncReserve())
+
+            maxOf(balance - accountReservedBalance, BigInteger.ZERO)
         } catch (e: Exception) {
             Timber.e("Error in getBalance: ${e.message}")
             BigInteger.ZERO
@@ -126,7 +129,7 @@ internal class RippleApiImp @Inject constructor(
                     }
                 }
             )
-            val response = http.post(rpcUrl2) {
+            val response = http.post(BASE_XRP_CLUSTER) {
                 setBody(payload)
             }
             response.body<RippleAccountInfoResponseJson>()
@@ -142,11 +145,28 @@ internal class RippleApiImp @Inject constructor(
             params = buildJsonArray { }
         )
 
-        return http.post(rpcUrl2) {
+        return http.post(BASE_XRP_CLUSTER) {
             setBody(payload)
         }.bodyOrThrow<RippleServerStateResponseJson>()
     }
+
+    private companion object {
+        const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
+        const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
+    }
 }
+
+private fun RippleAccountInfoResponseJson.getBalance(): BigInteger =
+    this.result?.accountData?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+private fun RippleAccountInfoResponseJson.getOwnerCount(): BigInteger =
+    this.result?.accountData?.ownerCount?.toBigInteger() ?: BigInteger.ZERO
+
+private fun RippleServerStateResponseJson.getBaseReserve(): BigInteger =
+    this.result?.state?.validateLedger?.reservedBase?.toBigInteger() ?: BigInteger.ZERO
+
+private fun RippleServerStateResponseJson.getIncReserve(): BigInteger =
+    this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
 
 
 @Serializable
@@ -174,7 +194,7 @@ data class RippleAccountInfoResponseAccountDataJson(
     @SerialName("Sequence")
     val sequence: Int? = null,
     @SerialName("OwnerCount")
-    val ownerCount: Int? = null,
+    val ownerCount: Int = 0,
 )
 
 @Serializable
@@ -185,6 +205,7 @@ data class RippleServerStateResponseJson(
 
 @Serializable
 data class RippleServerStateResultJson(
+    @SerialName("state")
     val state: RippleStateJson
 ) {
     @Serializable
@@ -195,9 +216,9 @@ data class RippleServerStateResultJson(
         @Serializable
         data class RippleValidateLedger(
             @SerialName("reserve_base")
-            val reservedBase: String,
+            val reservedBase: Long,
             @SerialName("reserve_inc")
-            val reserveInc: String
+            val reserveInc: Long
         )
     }
 }
