@@ -86,8 +86,11 @@ internal class FastVaultVerificationViewModel @Inject constructor(
     fun changeEmail() {
         viewModelScope.launch {
             navigator.route(
-                route = Route.VaultInfo.Name(
-                    vaultType = Route.VaultInfo.VaultType.Fast,
+                route = Route.VaultInfo.Email(
+                    name = args.vaultName,
+                    action = args.tssAction,
+                    vaultId = args.vaultId,
+                    password = args.password
                 ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.Onboarding.VaultBackup::class,
