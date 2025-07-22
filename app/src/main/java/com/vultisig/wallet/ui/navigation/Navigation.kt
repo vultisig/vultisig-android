@@ -297,6 +297,8 @@ internal sealed class Route {
             val email: String?,
             val vaultType: VaultInfo.VaultType,
             val action: TssAction,
+            val vaultName: String,
+            val password: String?,
         )
     }
 
@@ -514,6 +516,8 @@ internal sealed class Route {
         val pubKeyEcdsa: String,
         val email: String,
         val tssAction: TssAction,
+        val vaultName: String,
+        val password: String?,
     )
 
     @Serializable

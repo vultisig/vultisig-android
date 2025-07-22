@@ -457,6 +457,8 @@ internal class KeygenViewModel @Inject constructor(
                         email = args.email,
                         vaultType = vaultType,
                         action = action,
+                        vaultName = args.vaultName,
+                        password = args.password,
                     )
 
                 TssAction.Migrate -> if (vault.isFastVault()) {
@@ -466,6 +468,8 @@ internal class KeygenViewModel @Inject constructor(
                         email = args.email,
                         vaultType = vaultType,
                         action = action,
+                        vaultName = args.vaultName,
+                        password = args.password,
                     )
                 } else {
                     Route.BackupVault(
