@@ -3,7 +3,10 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.common.add0x
+import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
+import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.utils.toSafeByteArray
+import okio.ByteString.Companion.decodeHex
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.EthereumAbi
@@ -11,7 +14,7 @@ import wallet.core.jni.EthereumAbiFunction
 import java.math.BigInteger
 
 object EthereumFunction {
-    fun transferErc20(address: String, amount: BigInteger): String {
+    fun transferErc20Encoder(address: String, amount: BigInteger): String {
         require(amount >= BigInteger.ZERO) { "Amount must be non-negative" }
         require(address.isNotBlank()) { "Address cannot be blank" }
 
@@ -29,7 +32,7 @@ object EthereumFunction {
         }
     }
 
-    fun approvalErc20(address: String, amount: BigInteger): String {
+    fun approvalErc20Encoder(address: String, amount: BigInteger): String {
         require(amount >= BigInteger.ZERO) { "Amount must be non-negative" }
         require(address.isNotBlank()) { "Address cannot be blank" }
 
@@ -45,5 +48,18 @@ object EthereumFunction {
         } catch (e: Exception) {
             throw IllegalArgumentException("Failed to encode ERC-20 approval: ${e.message}", e)
         }
+    }
+
+    fun balanceErc20Decoder(hexBalance: String): BigInteger {
+        val fn = EthereumAbiFunction("balanceOf")
+        fn.addParamUInt256(ByteArray(32), true)
+        val dataHex = hexBalance.remove0x()
+        val encodedBytes = dataHex.decodeHex().toByteArray()
+        if (!EthereumAbi.decodeOutput(fn, encodedBytes)) {
+            throw IllegalArgumentException(": ABI decoding failed")
+        }
+        return fn.getParamUInt256(0, true)
+            .toHexString()
+            .convertToBigIntegerOrZero()
     }
 }

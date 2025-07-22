@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.common
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
 
 fun String.toHexBytes(): ByteArray {
     return Numeric.hexStringToByteArray(this)
@@ -43,7 +44,30 @@ fun String.add0x(): String {
     return "0x$this"
 }
 
+fun String.remove0x(): String {
+    if (startsWith("0x")) {
+        return removePrefix("0x")
+    }
+    return this
+}
+
 fun String.isNotEmptyContract(): Boolean {
     val zeroAddress = "0x0000000000000000000000000000000000000000"
     return isNotEmpty() && !equals(zeroAddress, ignoreCase = true)
+}
+
+fun String?.convertToBigIntegerOrZero(): BigInteger {
+    val cleanedInput = this?.removePrefix("0x")
+    return if (cleanedInput.isNullOrEmpty()) {
+        BigInteger.ZERO
+    } else {
+        try {
+            BigInteger(
+                cleanedInput,
+                16
+            )
+        } catch (e: NumberFormatException) {
+            BigInteger.ZERO
+        }
+    }
 }

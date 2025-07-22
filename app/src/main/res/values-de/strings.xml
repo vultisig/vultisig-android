@@ -378,4 +378,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaktion gescannt von</string>
     <string name="security_scanner_transaction_scanning">Wird gescannt…</string>
     <string name="security_scanner_transaction_not_scanned">Transaktion nicht gescannt von</string>
+    <string name="keygen_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
+    <string name="reshare_step_generating_eddsa">Generieren eines EDDSA-Schlüssels</string>
+    <string name="keygen_connecting_with_server">Generieren des ECDSA-Schlüssels</string>
+    <string name="keygen_step_generating_eddsa">Generieren eines EDDSA-Schlüssels</string>
+    <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
 </resources>

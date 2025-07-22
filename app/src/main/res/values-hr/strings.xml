@@ -378,4 +378,9 @@
     <string name="security_scanner_transaction_scanned_by">Transakcija skenirana od</string>
     <string name="security_scanner_transaction_scanning">Skeniranje…</string>
     <string name="security_scanner_transaction_not_scanned">Transakcija nije skenirana od</string>
+    <string name="keygen_step_generating_ecdsa">Generiranje ECDSA ključa</string>
+    <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="keygen_connecting_with_server">Generiranje ECDSA ključa</string>
+    <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
+    <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
 </resources>
