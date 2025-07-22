@@ -18,6 +18,8 @@ private const val VULTISIG_ADDRESS = "vultisig.com"
 interface MakeQrCodeBitmapShareFormat : (Context, Bitmap, Int, Bitmap, String, String?) -> Bitmap
 
 private const val QR_CODE_MIN_SIZE_DP = 200
+private const val QR_CODE_MAX_SIZE_DP = 400
+
 private const val SHARE_QR_CODE_PADDING_DP = 16
 private const val SHARE_QR_CODE_TITLE_TEXT_SIZE_DP = 16
 private const val SHARE_QR_CODE_DESCRIPTION_TEXT_SIZE_DP = 14
@@ -36,6 +38,176 @@ fun Int.dpToPx(context: Context): Int {
 internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
 ) : MakeQrCodeBitmapShareFormat {
     override fun invoke(
+        context: Context,
+        qrCodeBitmap: Bitmap,
+        color: Int,
+        logo: Bitmap,
+        title: String,
+        description: String?,
+    ): Bitmap {
+        val minQrCodePx = QR_CODE_MIN_SIZE_DP.dpToPx(context)
+        val maxQrCodePx = QR_CODE_MAX_SIZE_DP.dpToPx(context)
+
+        val qrBitmap = when {
+            qrCodeBitmap.width < minQrCodePx -> {
+                qrCodeBitmap.scale(minQrCodePx, minQrCodePx, false)
+            }
+            qrCodeBitmap.width > maxQrCodePx -> {
+                qrCodeBitmap.scale(maxQrCodePx, maxQrCodePx, false)
+            }
+            else -> {
+                qrCodeBitmap
+            }
+        }
+
+        val width = qrBitmap.width
+        val height = qrBitmap.height
+        val config = qrBitmap.config
+        val padding = (width * SHARE_QR_CODE_REGULAR_PADDING_WIDTH_SCALE).toInt()
+        val textSize = width * SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE
+        val logoWidth = (width * SHARE_QR_CODE_LOGO_SCALE_SCALE).toInt()
+        val descLines = description?.split("\n")
+        val scaledLogo = logo.scale(logoWidth, logoWidth)
+        val textColor = Color.WHITE
+
+        var finalHeight = height + 2 * padding
+        finalHeight += (textSize * 2).toInt()
+        if (description != null) {
+            val descNumberLines = descLines?.size ?: 0
+            finalHeight += (textSize * 3 / 2 * descNumberLines).toInt()
+        }
+        finalHeight += logoWidth + padding
+        finalHeight += (textSize * 2).toInt()
+
+        val finalWidth = width + 2 * padding
+        val bitmap = createBitmap(finalWidth, finalHeight, config ?: Bitmap.Config.ARGB_8888)
+
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(color)
+        canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
+
+        val paint = Paint().apply {
+            this.textSize = textSize
+            this.color = textColor
+            this.textAlign = Paint.Align.CENTER
+            this.isAntiAlias = true
+        }
+
+        canvas.drawText(
+            title,
+            finalWidth / 2f,
+            padding + height + textSize * 3 / 2,
+            paint
+        )
+
+        descLines?.forEachIndexed { index, line ->
+            canvas.drawText(
+                line,
+                finalWidth / 2f,
+                padding + height + textSize * 3 + textSize / 2 + index * textSize * 3 / 2,
+                paint
+            )
+        }
+
+        canvas.drawBitmap(
+            scaledLogo,
+            (finalWidth - logoWidth) / 2f,
+            finalHeight - padding - 2 * textSize - logoWidth,
+            null
+        )
+
+        canvas.drawText(
+            VULTISIG_ADDRESS,
+            finalWidth / 2f,
+            finalHeight - padding - textSize / 2,
+            paint
+        )
+
+        return bitmap
+    }
+}
+
+
+/*fun invoke(
+    qrCodeBitmap: Bitmap,
+    color: Int,
+    logo: Bitmap,
+    title: String,
+    description: String?,
+): Bitmap {
+    val qrBitmap = if (qrCodeBitmap.width < 600)
+        qrCodeBitmap.scale(600, 600, false)
+    else qrCodeBitmap
+
+    val width = qrBitmap.width
+    val height = qrBitmap.height
+    val config = qrBitmap.config
+    val padding = (width * SHARE_QR_CODE_REGULAR_PADDING_WIDTH_SCALE).toInt()
+    val textSize = width * SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE
+    val logoWidth = (width * SHARE_QR_CODE_LOGO_SCALE_SCALE).toInt()
+    val descLines = description?.split("\n")
+    val scaledLogo = logo.scale(logoWidth, logoWidth)
+    val textColor = Color.WHITE
+
+    var finalHeight = height + 2 * padding
+    finalHeight += (textSize * 2).toInt()
+    if (description != null) {
+        val descNumberLines = descLines?.size ?: 0
+        finalHeight += (textSize * 3 / 2 * descNumberLines).toInt()
+    }
+    finalHeight += logoWidth + padding
+    finalHeight += (textSize * 2).toInt()
+
+    val finalWidth = width + 2 * padding
+    val bitmap = createBitmap(finalWidth, finalHeight, config ?: Bitmap.Config.ARGB_8888)
+
+    val canvas = Canvas(bitmap)
+    canvas.drawColor(color)
+    canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
+
+    val paint = Paint()
+    paint.textSize = textSize
+    paint.color = textColor
+    paint.textAlign = android.graphics.Paint.Align.CENTER
+    canvas.drawText(
+        title,
+        finalWidth / 2f,
+        padding + height + textSize * 3 / 2,
+        paint
+    )
+
+    if (description != null) {
+        descLines?.forEachIndexed { index, line ->
+            canvas.drawText(
+                line,
+                finalWidth / 2f,
+                padding + height + textSize * 3 + textSize / 2 + index * textSize * 3 / 2,
+                paint
+            )
+        }
+    }
+
+    canvas.drawBitmap(
+        scaledLogo,
+        (finalWidth - logoWidth) / 2f,
+        finalHeight - padding - 2 * textSize - logoWidth,
+        null
+    )
+
+    canvas.drawText(
+        VULTISIG_ADDRESS,
+        finalWidth / 2f,
+        finalHeight - padding - textSize / 2,
+        paint
+    )
+
+    return bitmap
+}
+ */
+
+/*
+
+override fun invoke(
         context: Context,
         qrCodeBitmap: Bitmap,
         color: Int,
@@ -178,161 +350,4 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
 
         return bitmap
     }
-}
-
-
-/*fun invoke(
-    qrCodeBitmap: Bitmap,
-    color: Int,
-    logo: Bitmap,
-    title: String,
-    description: String?,
-): Bitmap {
-    val qrBitmap = if (qrCodeBitmap.width < 600)
-        qrCodeBitmap.scale(600, 600, false)
-    else qrCodeBitmap
-
-    val width = qrBitmap.width
-    val height = qrBitmap.height
-    val config = qrBitmap.config
-    val padding = (width * SHARE_QR_CODE_REGULAR_PADDING_WIDTH_SCALE).toInt()
-    val textSize = width * SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE
-    val logoWidth = (width * SHARE_QR_CODE_LOGO_SCALE_SCALE).toInt()
-    val descLines = description?.split("\n")
-    val scaledLogo = logo.scale(logoWidth, logoWidth)
-    val textColor = Color.WHITE
-
-    var finalHeight = height + 2 * padding
-    finalHeight += (textSize * 2).toInt()
-    if (description != null) {
-        val descNumberLines = descLines?.size ?: 0
-        finalHeight += (textSize * 3 / 2 * descNumberLines).toInt()
-    }
-    finalHeight += logoWidth + padding
-    finalHeight += (textSize * 2).toInt()
-
-    val finalWidth = width + 2 * padding
-    val bitmap = createBitmap(finalWidth, finalHeight, config ?: Bitmap.Config.ARGB_8888)
-
-    val canvas = Canvas(bitmap)
-    canvas.drawColor(color)
-    canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
-
-    val paint = Paint()
-    paint.textSize = textSize
-    paint.color = textColor
-    paint.textAlign = android.graphics.Paint.Align.CENTER
-    canvas.drawText(
-        title,
-        finalWidth / 2f,
-        padding + height + textSize * 3 / 2,
-        paint
-    )
-
-    if (description != null) {
-        descLines?.forEachIndexed { index, line ->
-            canvas.drawText(
-                line,
-                finalWidth / 2f,
-                padding + height + textSize * 3 + textSize / 2 + index * textSize * 3 / 2,
-                paint
-            )
-        }
-    }
-
-    canvas.drawBitmap(
-        scaledLogo,
-        (finalWidth - logoWidth) / 2f,
-        finalHeight - padding - 2 * textSize - logoWidth,
-        null
-    )
-
-    canvas.drawText(
-        VULTISIG_ADDRESS,
-        finalWidth / 2f,
-        finalHeight - padding - textSize / 2,
-        paint
-    )
-
-    return bitmap
-}
- */
-/*
-internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCodeBitmapShareFormat {
-    override fun invoke(
-        qrCodeBitmap: Bitmap,
-        color: Int,
-        logo: Bitmap,
-        title: String,
-        description: String?,
-    ): Bitmap {
-        val qrBitmap = if (qrCodeBitmap.width < 600)
-            qrCodeBitmap.scale(600, 600, false)
-        else qrCodeBitmap
-
-        val width = qrBitmap.width
-        val height = qrBitmap.height
-        val config = qrBitmap.config
-        val padding = (width * SHARE_QR_CODE_REGULAR_PADDING_WIDTH_SCALE).toInt()
-        val textSize = width * SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE
-        val logoWidth = (width * SHARE_QR_CODE_LOGO_SCALE_SCALE).toInt()
-        val descLines = description?.split("\n")
-        val scaledLogo = logo.scale(logoWidth, logoWidth)
-        val textColor = Color.WHITE
-
-        var finalHeight = height + 2 * padding
-        finalHeight += (textSize * 2).toInt()
-        if (description != null) {
-            val descNumberLines = descLines?.size ?: 0
-            finalHeight += (textSize * 3 / 2 * descNumberLines).toInt()
-        }
-        finalHeight += logoWidth + padding
-        finalHeight += (textSize * 2).toInt()
-
-        val finalWidth = width + 2 * padding
-        val bitmap = createBitmap(finalWidth, finalHeight, config ?: Bitmap.Config.ARGB_8888)
-
-        val canvas = android.graphics.Canvas(bitmap)
-        canvas.drawColor(color)
-        canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
-
-        val paint = android.graphics.Paint()
-        paint.textSize = textSize
-        paint.color = textColor
-        paint.textAlign = android.graphics.Paint.Align.CENTER
-        canvas.drawText(
-            title,
-            finalWidth / 2f,
-            padding + height + textSize * 3 / 2,
-            paint
-        )
-
-        if (description != null) {
-            descLines?.forEachIndexed { index, line ->
-                canvas.drawText(
-                    line,
-                    finalWidth / 2f,
-                    padding + height + textSize * 3 + textSize / 2 + index * textSize * 3 / 2,
-                    paint
-                )
-            }
-        }
-
-        canvas.drawBitmap(
-            scaledLogo,
-            (finalWidth - logoWidth) / 2f,
-            finalHeight - padding - 2 * textSize - logoWidth,
-            null
-        )
-
-        canvas.drawText(
-            VULTISIG_ADDRESS,
-            finalWidth / 2f,
-            finalHeight - padding - textSize / 2,
-            paint
-        )
-
-        return bitmap
-    }
-}
  */
