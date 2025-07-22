@@ -34,6 +34,13 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
         title: String,
         description: String?,
     ): Bitmap {
+        // Ensure QR code rendering is independent of screen pixel density.
+        // By using DP for sizing, the QR code maintains a consistent physical
+        // size across devices with varying densities.
+        // This prevents issues where the QR code appears too small on high-density
+        // screens or too large on low-density screens, which could otherwise lead
+        // to scanning difficulties with ML or QR code libraries.
+
         val minQrCodePx = QR_CODE_MIN_SIZE_DP.dpToPx(context)
         val maxQrCodePx = QR_CODE_MAX_SIZE_DP.dpToPx(context)
 
