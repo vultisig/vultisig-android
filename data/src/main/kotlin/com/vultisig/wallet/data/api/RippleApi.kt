@@ -88,7 +88,7 @@ internal class RippleApiImp @Inject constructor(
     override suspend fun getBalance(coin: Coin): BigInteger = supervisorScope {
         try {
             val accountInfoDeferred =
-                async { fetchAccountsInfo("rhhh49pFH96roGyuC4E5P4CHaNjS1k8gzM") }
+                async { fetchAccountsInfo(coin.address) }
             val reservedBalanceDeferred =
                 async { fetchServerState() }
 
