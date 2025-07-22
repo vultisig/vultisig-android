@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
+import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
@@ -31,7 +33,6 @@ import timber.log.Timber
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -164,8 +165,17 @@ class EvmApiImp(
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        return rpcResp.result.convertToBigIntegerOrZero()
-
+        return rpcResp.result?.let {
+            try {
+                EthereumFunction.balanceErc20Decoder(it)
+            } catch (e: Exception) {
+                Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
+                BigInteger.ZERO
+            }
+        } ?: run {
+            Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: response is null")
+            BigInteger.ZERO
+        }
     }
 
     private suspend fun getETHBalance(address: String): BigInteger {
@@ -528,19 +538,6 @@ class EvmApiImp(
         )
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
-    }
-
-
-    private fun String?.convertToBigIntegerOrZero(): BigInteger {
-        val cleanedInput = this?.removePrefix("0x")
-        return if (cleanedInput.isNullOrEmpty()) {
-            BigInteger.ZERO
-        } else {
-            BigInteger(
-                cleanedInput,
-                16
-            )
-        }
     }
 
     companion object {
