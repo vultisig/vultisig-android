@@ -35,6 +35,7 @@ internal class CreateQrCodeSharingBitmapUseCaseImpl @Inject constructor(
         )
 
         return makeQrCodeBitmapShareFormat(
+            context,
             qr,
             Colors.Default.oxfordBlue800.toArgb(),
             logo,

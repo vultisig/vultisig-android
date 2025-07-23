@@ -213,6 +213,7 @@ internal class KeysignShareViewModel @Inject constructor(
     }
 
     internal fun saveShareQrBitmap(
+        context: Context,
         color: Int,
         title: String,
         description: String,
@@ -220,7 +221,7 @@ internal class KeysignShareViewModel @Inject constructor(
     ) = viewModelScope.launch {
         val bitmap = qrBitmap ?: return@launch
         val qrBitmap = withContext(Dispatchers.IO) {
-            makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
+            makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, description)
         }
         shareQrBitmap.value = qrBitmap
     }
