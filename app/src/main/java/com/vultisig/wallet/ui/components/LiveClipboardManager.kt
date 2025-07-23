@@ -43,6 +43,8 @@ private fun onClipDataChanged(onPrimaryClipChanged: ClipData?.() -> Unit) {
     val isWindowFocused = windowInfo.isWindowFocused
 
     LaunchedEffect(context, isWindowFocused) {
+        if (isWindowFocused.not())
+            return@LaunchedEffect
         val clipboardManager =
             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         onPrimaryClipChanged(clipboardManager.primaryClip)
