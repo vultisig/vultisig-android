@@ -15,6 +15,9 @@ import com.vultisig.wallet.ui.screens.util.password.InputPasswordViewModelDelega
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,6 +50,14 @@ internal class KeysignPasswordViewModel @Inject constructor(
     val state = MutableStateFlow(KeysignPasswordUiModel())
 
     val passwordFieldState = delegate.passwordFieldState
+
+    init {
+        delegate.state
+            .onEach { newState ->
+                state.update { newState }
+            }
+            .launchIn(viewModelScope)
+    }
 
     fun togglePasswordVisibility() {
         delegate.togglePasswordVisibility()
