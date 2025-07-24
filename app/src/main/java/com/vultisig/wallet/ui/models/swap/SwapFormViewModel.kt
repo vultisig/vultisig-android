@@ -46,6 +46,8 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -120,6 +122,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val resolveProvider: ResolveProviderUseCase,
 
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -830,13 +833,12 @@ internal class SwapFormViewModel @Inject constructor(
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
 
-                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
-
-                        this@SwapFormViewModel.provider = provider
-
-
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+
+                        val provider =
+                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
+                                ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+                        this@SwapFormViewModel.provider = provider
 
                         val currency = appCurrencyRepository.currency.first()
 
