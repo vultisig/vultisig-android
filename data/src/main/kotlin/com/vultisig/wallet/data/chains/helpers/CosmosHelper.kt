@@ -180,7 +180,7 @@ class CosmosHelper(
                     .setAccountNumber(atomData.accountNumber.toLong())
                     .setSequence(atomData.sequence.toLong())
                     .setMode(Cosmos.BroadcastMode.SYNC)
-                    .addAllMessages(listOf(buildCosmosWasmGenericMsg(keysignPayload))) // Filled with generic message
+                    .addAllMessages(listOf(buildCosmosWasmGenericMsg(keysignPayload)))
                     .setFee(buildCosmosFee(atomData))
                     .build()
 
