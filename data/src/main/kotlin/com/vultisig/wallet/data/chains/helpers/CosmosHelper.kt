@@ -170,6 +170,7 @@ class CosmosHelper(
 
                 input.toByteArray()
             }
+
             TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
                 val input = Cosmos.SigningInput.newBuilder()
                     .setPublicKey(ByteString.copyFrom(publicKey.data()))
@@ -184,6 +185,7 @@ class CosmosHelper(
 
                 return input.toByteArray()
             }
+
             else -> {
                 var input = Cosmos.SigningInput.newBuilder()
                     .setPublicKey(ByteString.copyFrom(publicKey.data()))
@@ -203,7 +205,12 @@ class CosmosHelper(
                                             listOf(
                                                 Cosmos.Amount.newBuilder()
                                                     .setDenom(
-                                                        if (keysignPayload.coin.contractAddress.contains("factory/") || keysignPayload.coin.contractAddress.contains("ibc/"))
+                                                        if (keysignPayload.coin.contractAddress.contains(
+                                                                "factory/"
+                                                            ) || keysignPayload.coin.contractAddress.contains(
+                                                                "ibc/"
+                                                            )
+                                                        )
                                                             keysignPayload.coin.contractAddress
                                                         else
                                                             denom
@@ -234,15 +241,14 @@ class CosmosHelper(
         }
 
         // TODO: Filled with data
-        val wasmContractMessage = Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
-            senderAddress = keysignPayload.coin.address
-            contractAddress = keysignPayload.toAddress
-            executeMsg = ""
-            addAllCoins(listOf())
-        }.build()
-
         return Cosmos.Message.newBuilder().apply {
-            wasmExecuteContractGeneric = wasmContractMessage
+            wasmExecuteContractGeneric =
+                Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
+                    senderAddress = keysignPayload.coin.address
+                    contractAddress = keysignPayload.toAddress
+                    executeMsg = ""
+                    addAllCoins(listOf())
+                }.build()
         }.build()
     }
 
