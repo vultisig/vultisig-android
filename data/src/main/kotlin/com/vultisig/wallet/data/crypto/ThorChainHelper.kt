@@ -334,9 +334,9 @@ class ThorChainHelper(
     }
 }
 
-internal fun TransactionType.genericMessage(): Boolean =
+private fun TransactionType.genericMessage(): Boolean =
     this.mergeOrUnMerge() || this == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
 
-internal fun TransactionType.mergeOrUnMerge(): Boolean =
+private fun TransactionType.mergeOrUnMerge(): Boolean =
     this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
             this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
