@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class NameVaultUiModel(
-    val hint: UiText,
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
 )
@@ -48,12 +47,8 @@ internal class NameVaultViewModel @Inject constructor(
 
     val nameFieldState = TextFieldState()
 
-    val hint = when (args.vaultType) {
-        VaultType.Fast -> R.string.naming_vault_placeholder_fast_vault
-        VaultType.Secure -> R.string.naming_vault_placeholder_secure_vault
-    }
 
-    val state = MutableStateFlow(NameVaultUiModel(hint = hint.asUiText()))
+    val state = MutableStateFlow(NameVaultUiModel())
 
     private var vaultNamesList = emptyList<String>()
 
