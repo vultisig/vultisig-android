@@ -204,6 +204,12 @@ class ThorChainHelper(
                         executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
                     }
 
+                    // TODO: Fill with the new common data type
+                    TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
+                        executeMsg = ""
+                        addAllCoins(listOf())
+                    }
+
                     else -> error("Unsupported type ${transactionType.name}")
                 }
             }.build()
