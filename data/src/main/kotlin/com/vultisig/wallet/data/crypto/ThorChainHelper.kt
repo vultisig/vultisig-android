@@ -118,7 +118,7 @@ class ThorChainHelper(
         val memo = keysignPayload.memo
 
         val message = if (isDeposit) {
-            if (transactionType.isMergeOrUnMerge()) {
+            if (transactionType.genericMessage()) {
                 val message = Cosmos.Message.newBuilder().apply {
                     wasmExecuteContractGeneric =
                         buildThorchainWasmGenericMessage(keysignPayload, transactionType)
@@ -128,11 +128,17 @@ class ThorChainHelper(
                     gas = 20_000_000L
                 }.build()
 
+                val updatedMemo = if (transactionType.mergeOrUnMerge()) {
+                    keysignPayload.memo
+                } else {
+                    ""
+                }
+
                 val input = Cosmos.SigningInput.newBuilder().apply {
                     this.signingMode = Cosmos.SigningMode.Protobuf
                     this.accountNumber = accountNumber.toLong()
                     this.chainId = networkId
-                    this.memo = keysignPayload.memo
+                    this.memo = updatedMemo
                     this.sequence = sequence.toLong()
                     this.addMessages(message)
                     this.fee = fee
@@ -204,7 +210,7 @@ class ThorChainHelper(
                         executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
                     }
 
-                    // TODO: Fill with the new common data type
+                    // TODO: Fill with the new common data type, and format message
                     TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
                         executeMsg = ""
                         addAllCoins(listOf())
@@ -326,8 +332,11 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
-
-    private fun TransactionType.isMergeOrUnMerge() =
-        this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
-                this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
 }
+
+internal fun TransactionType.genericMessage(): Boolean =
+    this.mergeOrUnMerge() || this == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
+
+internal fun TransactionType.mergeOrUnMerge(): Boolean =
+    this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
+            this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
