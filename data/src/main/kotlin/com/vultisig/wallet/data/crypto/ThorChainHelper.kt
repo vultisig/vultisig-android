@@ -129,17 +129,11 @@ class ThorChainHelper(
                     gas = 20_000_000L
                 }.build()
 
-                val updatedMemo = if (transactionType.mergeOrUnMerge()) {
-                    keysignPayload.memo
-                } else {
-                    ""
-                }
-
                 val input = Cosmos.SigningInput.newBuilder().apply {
                     this.signingMode = Cosmos.SigningMode.Protobuf
                     this.accountNumber = accountNumber.toLong()
                     this.chainId = networkId
-                    this.memo = updatedMemo
+                    this.memo = keysignPayload.memo
                     this.sequence = sequence.toLong()
                     this.addMessages(message)
                     this.fee = fee
