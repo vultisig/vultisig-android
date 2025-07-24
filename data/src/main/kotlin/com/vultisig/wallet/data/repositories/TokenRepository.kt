@@ -139,6 +139,10 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     override suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin? {
         val chain = Chain.fromRaw(chainId)
+        if (chain == Chain.Solana)
+            return splTokenRepository.getTokenByContract(
+                contractAddress
+            ) ?: return null
         val rpcResponses = evmApiFactory.createEvmApi(chain)
             .findCustomToken(contractAddress)
         if (rpcResponses.isEmpty())
