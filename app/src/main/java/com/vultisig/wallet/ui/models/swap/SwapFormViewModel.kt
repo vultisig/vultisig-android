@@ -45,7 +45,8 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
-import com.vultisig.wallet.data.usecases.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -832,8 +833,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
-                        val provider = resolveProvider(srcToken, dstToken, tokenValue)
-
+                        val provider =
+                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
+                                ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
                         this@SwapFormViewModel.provider = provider
 
                         val currency = appCurrencyRepository.currency.first()

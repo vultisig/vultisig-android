@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCaseImpl
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCaseImpl
 import dagger.Binds

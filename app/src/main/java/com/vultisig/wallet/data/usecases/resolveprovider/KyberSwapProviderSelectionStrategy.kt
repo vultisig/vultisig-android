@@ -1,32 +1,30 @@
-package com.vultisig.wallet.data.usecases
+package com.vultisig.wallet.data.usecases.resolveprovider
 
-import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import java.math.BigDecimal
 import javax.inject.Inject
 
+internal interface KyberSwapProviderSelectionStrategy : SwapProviderSelectionStrategy
 
-internal interface ResolveProviderUseCase : suspend (Coin, Coin, TokenValue, ) -> SwapProvider
-
-internal class ResolveProviderUseCaseImpl @Inject constructor(
+internal class KyberSwapProviderSelectionStrategyImpl @Inject constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
-) : ResolveProviderUseCase {
+) : KyberSwapProviderSelectionStrategy {
 
-    override suspend fun invoke(
-        srcToken: Coin,
-        dstToken: Coin,
-        value: TokenValue,
-    ): SwapProvider {
-        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+    override val priority = 1
 
-        return switchToKyberIfNecessary(provider, srcToken, dstToken, value)
+    override suspend fun selectProvider(context: SwapSelectionContext): SwapProvider? {
+
+        val provider = swapQuoteRepository
+            .resolveProvider(context.srcToken, context.dstToken) ?: return null
+
+        return switchToKyberIfNecessary(provider, context.srcToken, context.dstToken, context.value)
     }
 
 
@@ -36,23 +34,21 @@ internal class ResolveProviderUseCaseImpl @Inject constructor(
         dstToken: Coin,
         value: TokenValue,
     ): SwapProvider {
-        if (provider != SwapProvider.THORCHAIN || isErc20Swap(srcToken, dstToken).not())
+        if (provider != SwapProvider.THORCHAIN ||
+            isErc20Swap(src = srcToken, dst = dstToken).not()
+        )
             return provider
 
         val tokenValueInDollar = convertTokenValueToFiat(
-            srcToken,
-            value,
-            AppCurrency.USD
+            srcToken, value, AppCurrency.USD
         )
 
-        // If the swap amount is below $100, use Kyber as the provider; otherwise, use THORChain.
         return if (tokenValueInDollar.value < BigDecimal.valueOf(AMOUNT_FOR_THORCHAIN_OR_KYBER))
             SwapProvider.KYBER
-
         else provider
     }
 
-    private fun isErc20Swap(src: Coin, dst: Coin): Boolean =
+    private fun isErc20Swap(src: Coin, dst: Coin) =
         src.chain.standard == TokenStandard.EVM
                 && dst.chain.standard == TokenStandard.EVM
                 && src.chain == dst.chain && !src.isNativeToken
@@ -62,5 +58,3 @@ internal class ResolveProviderUseCaseImpl @Inject constructor(
         private const val AMOUNT_FOR_THORCHAIN_OR_KYBER = 100L
     }
 }
-
-

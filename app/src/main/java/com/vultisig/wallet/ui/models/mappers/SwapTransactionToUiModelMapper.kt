@@ -6,7 +6,8 @@ import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
-import com.vultisig.wallet.data.usecases.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import kotlinx.coroutines.flow.first
@@ -26,10 +27,13 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
     override suspend fun invoke(from: SwapTransaction): SwapTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
         val provider = resolveProviderUseCase(
-            from.srcToken,
-            from.dstToken,
-            from.srcTokenValue
-        )
+            SwapSelectionContext(
+                from.srcToken,
+                from.dstToken,
+                from.srcTokenValue
+            )
+        ) ?: error("provider not found")
+
         val tokenValue = when (provider) {
             SwapProvider.THORCHAIN, SwapProvider.MAYA ->
                 from.dstToken
