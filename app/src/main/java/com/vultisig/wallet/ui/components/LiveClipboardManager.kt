@@ -5,11 +5,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
@@ -37,17 +38,15 @@ internal fun rememberClipboardText(
 @SuppressLint("ComposableNaming")
 @Composable
 private fun onClipDataChanged(onPrimaryClipChanged: ClipData?.() -> Unit) {
-    val clipboardManager =
-        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val callback = remember {
-        ClipboardManager.OnPrimaryClipChangedListener {
-            onPrimaryClipChanged(clipboardManager.primaryClip)
-        }
-    }
-    DisposableEffect(clipboardManager) {
-        clipboardManager.addPrimaryClipChangedListener(callback)
-        onDispose {
-            clipboardManager.removePrimaryClipChangedListener(callback)
-        }
+    val context = LocalContext.current
+    val windowInfo = LocalWindowInfo.current
+    val isWindowFocused = windowInfo.isWindowFocused
+
+    LaunchedEffect(context, isWindowFocused) {
+        if (isWindowFocused.not())
+            return@LaunchedEffect
+        val clipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        onPrimaryClipChanged(clipboardManager.primaryClip)
     }
 }
