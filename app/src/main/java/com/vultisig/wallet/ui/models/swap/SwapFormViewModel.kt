@@ -45,6 +45,8 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -71,7 +73,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -120,6 +121,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val resolveProvider: ResolveProviderUseCase,
 
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -829,13 +831,12 @@ internal class SwapFormViewModel @Inject constructor(
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
 
-                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
-
-                        this@SwapFormViewModel.provider = provider
-
-
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+
+                        val provider =
+                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
+                                ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+                        this@SwapFormViewModel.provider = provider
 
                         val currency = appCurrencyRepository.currency.first()
 
