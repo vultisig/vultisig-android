@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -71,7 +72,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -132,6 +132,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val searchToken: SearchTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -1080,7 +1081,10 @@ internal class SwapFormViewModel @Inject constructor(
                                 val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
-                                    tokenRepository.getTokenByContract(chainId, tokenContract)
+                                    searchToken(
+                                        chainId,
+                                        tokenContract
+                                    )?.coin
                                         ?: srcNativeToken
                                 } else {
                                     srcNativeToken

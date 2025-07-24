@@ -13,7 +13,6 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.isLayer2
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -39,7 +38,7 @@ interface TokenRepository {
 
     suspend fun getNativeToken(chainId: String): Coin
 
-    suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
+    suspend fun getEVMTokenByContract(chainId: String, contractAddress: String): Coin?
 
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
@@ -137,12 +136,8 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
 
-    override suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin? {
+    override suspend fun getEVMTokenByContract(chainId: String, contractAddress: String): Coin? {
         val chain = Chain.fromRaw(chainId)
-        if (chain == Chain.Solana)
-            return splTokenRepository.getTokenByContract(
-                contractAddress
-            ) ?: return null
         val rpcResponses = evmApiFactory.createEvmApi(chain)
             .findCustomToken(contractAddress)
         if (rpcResponses.isEmpty())
@@ -284,7 +279,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     ) = coroutineScope {
         validContractAddress.map { contractAddress ->
             async {
-                getTokenByContract(chain.id, contractAddress)
+                getEVMTokenByContract(chain.id, contractAddress)
             }
         }
     }.awaitAll().filterNotNull()
