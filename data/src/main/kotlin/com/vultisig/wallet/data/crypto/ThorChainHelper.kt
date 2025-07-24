@@ -118,7 +118,7 @@ class ThorChainHelper(
         val memo = keysignPayload.memo
 
         val message = if (isDeposit) {
-            if (transactionType.genericMessage()) {
+            if (transactionType.genericWasmMessage()) {
                 val message = Cosmos.Message.newBuilder().apply {
                     wasmExecuteContractGeneric =
                         buildThorchainWasmGenericMessage(keysignPayload, transactionType)
@@ -334,7 +334,7 @@ class ThorChainHelper(
     }
 }
 
-private fun TransactionType.genericMessage(): Boolean =
+private fun TransactionType.genericWasmMessage(): Boolean =
     this.mergeOrUnMerge() || this == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
 
 private fun TransactionType.mergeOrUnMerge(): Boolean =
