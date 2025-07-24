@@ -21,6 +21,7 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
+import wallet.core.jni.proto.Cosmos.Amount
 import java.math.BigInteger
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -210,10 +211,27 @@ class ThorChainHelper(
                         executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
                     }
 
-                    // TODO: Fill with the new common data type, and format message
                     TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
-                        executeMsg = ""
-                        addAllCoins(listOf())
+                        requireNotNull(keysignPayload.wasmExecuteContractPayload) {
+                            "Invalid empty WasmExecuteContractPayload"
+                        }
+
+                        val contractPayload = keysignPayload.wasmExecuteContractPayload
+                        val formattedMessage = contractPayload.executeMsg
+                            .replace(Regex("^\\{"), "{ ")
+                            .replace(Regex("}$"), " }")
+                            .replace(":", ": ")
+                        val coins = contractPayload.coins.filterNotNull().map { coin ->
+                            Amount.newBuilder().apply {
+                                denom = coin.contractAddress.lowercase()
+                                amount = keysignPayload.toAmount.toString()
+                            }.build()
+                        }
+
+                        executeMsg = formattedMessage
+                        senderAddress = contractPayload.senderAddress
+                        contractAddress = contractPayload.contractAddress
+                        addAllCoins(coins)
                     }
 
                     else -> error("Unsupported type ${transactionType.name}")

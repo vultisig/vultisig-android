@@ -22,6 +22,7 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler.compileWithSignatures
 import wallet.core.jni.TransactionCompiler.preImageHashes
 import wallet.core.jni.proto.Cosmos
+import wallet.core.jni.proto.Cosmos.Amount
 import wallet.core.jni.proto.TransactionCompiler
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -239,15 +240,30 @@ class CosmosHelper(
         require(coinType.validate(keysignPayload.coin.address)) {
             "Invalid Address type: ${keysignPayload.coin.address}"
         }
+        requireNotNull(keysignPayload.wasmExecuteContractPayload) {
+            "Invalid empty WasmExecuteContractPayload"
+        }
+        val contractPayload = keysignPayload.wasmExecuteContractPayload
 
-        // TODO: Filled with data
+        val formattedMessage = contractPayload.executeMsg
+            .replace(Regex("^\\{"), "{ ")
+            .replace(Regex("}$"), " }")
+            .replace(":", ": ")
+
+        val coins = contractPayload.coins.filterNotNull().map { coin ->
+            Amount.newBuilder().apply {
+                denom = coin.contractAddress.lowercase()
+                amount = keysignPayload.toAmount.toString()
+            }.build()
+        }
+
         return Cosmos.Message.newBuilder().apply {
             wasmExecuteContractGeneric =
                 Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
                     senderAddress = keysignPayload.coin.address
                     contractAddress = keysignPayload.toAddress
-                    executeMsg = ""
-                    addAllCoins(listOf())
+                    executeMsg = formattedMessage
+                    addAllCoins(coins)
                 }.build()
         }.build()
     }
