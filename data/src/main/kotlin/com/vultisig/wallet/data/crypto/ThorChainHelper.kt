@@ -117,49 +117,11 @@ class ThorChainHelper(
 
         val memo = keysignPayload.memo
 
-        val msgSend = if (isDeposit) {
-            if (transactionType == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
-                transactionType == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE) {
-
-                val mergeToken = keysignPayload.memo?.lowercase()
-                    ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
-
-                // Validate the sender address
-                val fromAddr = try {
-                    AnyAddress(keysignPayload.coin.address, CoinType.THORCHAIN)
-                } catch (e: Exception) {
-                    throw Exception("${keysignPayload.coin.address} is invalid")
-                }
-
-                // Create the WASM execute contract message
-                val wasmGenericMessage =
-                    Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
-                        senderAddress = fromAddr.description()
-                        contractAddress = keysignPayload.toAddress
-                        when (transactionType) {
-                            TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
-                                executeMsg = """{ "deposit": {} }"""
-                                addCoins(
-                                    Cosmos.Amount.newBuilder().apply {
-                                        denom = mergeToken.removePrefix("merge:")
-                                        amount = keysignPayload.toAmount.toString()
-                                    }.build()
-                                )
-                            }
-                            TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
-                                val sharesAmount = keysignPayload.memo
-                                    .takeIf { it.startsWith("unmerge:") }
-                                    ?.split(":")
-                                    ?.getOrNull(2)
-                                    ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
-                                executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
-                            }
-                            else -> error("Unsupported type ${transactionType.name}")
-                        }
-                    }.build()
-
+        val message = if (isDeposit) {
+            if (transactionType.isMergeOrUnMerge()) {
                 val message = Cosmos.Message.newBuilder().apply {
-                    wasmExecuteContractGeneric = wasmGenericMessage
+                    wasmExecuteContractGeneric =
+                        buildThorchainWasmGenericMessage(keysignPayload, transactionType)
                 }.build()
 
                 val fee = Cosmos.Fee.newBuilder().apply {
@@ -167,12 +129,12 @@ class ThorChainHelper(
                 }.build()
 
                 val input = Cosmos.SigningInput.newBuilder().apply {
-                    signingMode = Cosmos.SigningMode.Protobuf
+                    this.signingMode = Cosmos.SigningMode.Protobuf
                     this.accountNumber = accountNumber.toLong()
-                    chainId = networkId
+                    this.chainId = networkId
                     this.memo = keysignPayload.memo
                     this.sequence = sequence.toLong()
-                    addMessages(message)
+                    this.addMessages(message)
                     this.fee = fee
                     this.publicKey = ByteString.copyFrom(
                         PublicKey(
@@ -180,57 +142,14 @@ class ThorChainHelper(
                             PublicKeyType.SECP256K1
                         ).data()
                     )
-                    mode = Cosmos.BroadcastMode.SYNC
+                    this.mode = Cosmos.BroadcastMode.SYNC
                 }.build()
 
                 return input.toByteArray()
             }
-            val symbol = getTicker(keysignPayload.coin)
-            val assetTicker = getTicker(keysignPayload.coin)
-            val coin = Cosmos.THORChainCoin.newBuilder()
-                .setAsset(
-                    Cosmos.THORChainAsset.newBuilder()
-                        .setChain(chainName)
-                        .setSymbol(symbol)
-                        .setTicker(assetTicker)
-                        .setSynth(false)
-                        .build()
-                )
-                .let {
-                    if (keysignPayload.toAmount > BigInteger.ZERO) {
-                        it.setAmount(keysignPayload.toAmount.toString())
-                            .setDecimals(keysignPayload.coin.decimal.toLong())
-                    } else it
-                }
-
-            Cosmos.Message.newBuilder().apply {
-                thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
-                    this.signer = ByteString.copyFrom(fromAddress)
-                    this.memo = memo
-                    this.addCoins(coin)
-                }.build()
-            }.build()
+            buildThorchainDepositMessage(keysignPayload, fromAddress, memo)
         } else {
-            val toAddress = if (hrp != null) {
-                AnyAddress(keysignPayload.toAddress, coinType, hrp)
-            } else {
-                AnyAddress(keysignPayload.toAddress, coinType)
-            }.data()
-
-            val sendAmount = Cosmos.Amount.newBuilder().apply {
-                this.denom = if (keysignPayload.coin.isNativeToken)
-                    keysignPayload.coin.ticker.lowercase()
-                else keysignPayload.coin.contractAddress
-                this.amount = keysignPayload.toAmount.toString()
-            }.build()
-
-            Cosmos.Message.newBuilder().apply {
-                thorchainSendMessage = Cosmos.Message.THORChainSend.newBuilder().apply {
-                    this.fromAddress = ByteString.copyFrom(fromAddress)
-                    this.toAddress = ByteString.copyFrom(toAddress)
-                    this.addAllAmounts(listOf(sendAmount))
-                }.build()
-            }.build()
+            buildThorchainSendMessage(keysignPayload, fromAddress)
         }
 
         val input = Cosmos.SigningInput.newBuilder().apply {
@@ -240,17 +159,113 @@ class ThorChainHelper(
             this.accountNumber = accountNumber.toLong()
             this.sequence = sequence.toLong()
             this.mode = Cosmos.BroadcastMode.SYNC
-            keysignPayload.memo?.let {
-                this.memo = it
-            }
-
-            this.addAllMessages(listOf(msgSend))
-
+            keysignPayload.memo?.let { this.memo = it }
+            this.addAllMessages(listOf(message))
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = gasUnit
             }.build()
         }.build()
         return input.toByteArray()
+    }
+
+    private fun buildThorchainWasmGenericMessage(
+        keysignPayload: KeysignPayload,
+        transactionType: TransactionType,
+    ): Cosmos.Message.WasmExecuteContractGeneric? {
+        val fromAddr = try {
+            AnyAddress(keysignPayload.coin.address, CoinType.THORCHAIN)
+        } catch (e: Exception) {
+            throw Exception("${keysignPayload.coin.address} is invalid")
+        }
+        val memo = keysignPayload.memo?.lowercase()
+            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
+
+        val wasmGenericMessage =
+            Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
+                senderAddress = fromAddr.description()
+                contractAddress = keysignPayload.toAddress
+                when (transactionType) {
+                    TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
+                        executeMsg = """{ "deposit": {} }"""
+                        addCoins(
+                            Cosmos.Amount.newBuilder().apply {
+                                denom = memo.removePrefix("merge:")
+                                amount = keysignPayload.toAmount.toString()
+                            }.build()
+                        )
+                    }
+
+                    TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
+                        val sharesAmount = memo
+                            .takeIf { it.startsWith("unmerge:") }
+                            ?.split(":")
+                            ?.getOrNull(2)
+                            ?: error("Invalid unmerge memo format ${keysignPayload.memo}")
+                        executeMsg = """{ "withdraw": { "share_amount": "$sharesAmount" } }"""
+                    }
+
+                    else -> error("Unsupported type ${transactionType.name}")
+                }
+            }.build()
+        return wasmGenericMessage
+    }
+
+    private fun buildThorchainDepositMessage(
+        keysignPayload: KeysignPayload,
+        fromAddress: ByteArray?,
+        memo: String?
+    ): Cosmos.Message? {
+        val symbol = getTicker(keysignPayload.coin)
+        val assetTicker = getTicker(keysignPayload.coin)
+        val coin = Cosmos.THORChainCoin.newBuilder()
+            .setAsset(
+                Cosmos.THORChainAsset.newBuilder()
+                    .setChain(chainName)
+                    .setSymbol(symbol)
+                    .setTicker(assetTicker)
+                    .setSynth(false)
+                    .build()
+            )
+            .let {
+                if (keysignPayload.toAmount > BigInteger.ZERO) {
+                    it.setAmount(keysignPayload.toAmount.toString())
+                        .setDecimals(keysignPayload.coin.decimal.toLong())
+                } else it
+            }
+
+        return Cosmos.Message.newBuilder().apply {
+            thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
+                this.signer = ByteString.copyFrom(fromAddress)
+                this.memo = memo
+                this.addCoins(coin)
+            }.build()
+        }.build()
+    }
+
+    private fun buildThorchainSendMessage(
+        keysignPayload: KeysignPayload,
+        fromAddress: ByteArray?
+    ): Cosmos.Message {
+        val toAddress = if (hrp != null) {
+            AnyAddress(keysignPayload.toAddress, coinType, hrp)
+        } else {
+            AnyAddress(keysignPayload.toAddress, coinType)
+        }.data()
+
+        val sendAmount = Cosmos.Amount.newBuilder().apply {
+            this.denom = if (keysignPayload.coin.isNativeToken)
+                keysignPayload.coin.ticker.lowercase()
+            else keysignPayload.coin.contractAddress
+            this.amount = keysignPayload.toAmount.toString()
+        }.build()
+
+        return Cosmos.Message.newBuilder().apply {
+            thorchainSendMessage = Cosmos.Message.THORChainSend.newBuilder().apply {
+                this.fromAddress = ByteString.copyFrom(fromAddress)
+                this.toAddress = ByteString.copyFrom(toAddress)
+                this.addAllAmounts(listOf(sendAmount))
+            }.build()
+        }.build()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -305,4 +320,8 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
+
+    private fun TransactionType.isMergeOrUnMerge() =
+        this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
+                this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
 }

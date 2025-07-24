@@ -42,11 +42,12 @@ class CosmosHelper(
     }
 
     fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload): ByteArray {
+        keysignPayload: KeysignPayload
+    ): ByteArray {
         val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
-        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain ?:
-            throw Exception("Invalid swap payload for THORChain")
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
+            ?: throw Exception("Invalid swap payload for THORChain")
         require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
