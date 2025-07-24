@@ -39,13 +39,13 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
-internal fun SendTxOverviewScreen(
+internal fun TransactionOverviewScreen(
     showToolbar: Boolean = true,
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    tx: SendTxUiModel,
+    transaction: SendTxUiModel,
 ) {
     BackHandler(onBack = onBack)
 
@@ -95,7 +95,7 @@ internal fun SendTxOverviewScreen(
                 }
 
                 SwapToken(
-                    valuedToken = tx.token,
+                    valuedToken = transaction.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -128,7 +128,7 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "From",
-                        subtitle = tx.srcAddress,
+                        subtitle = transaction.srcAddress,
                     )
 
                     VerifyCardDivider(
@@ -137,7 +137,7 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "To",
-                        subtitle = tx.dstAddress,
+                        subtitle = transaction.dstAddress,
                     )
 
                     VerifyCardDivider(
@@ -152,7 +152,7 @@ internal fun SendTxOverviewScreen(
                             horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val chain = tx.token.token.chain
+                            val chain = transaction.token.token.chain
 
                             Image(
                                 painter = painterResource(chain.logo),
@@ -179,8 +179,8 @@ internal fun SendTxOverviewScreen(
                     UiSpacer(12.dp)
 
                     EstimatedNetworkFee(
-                        tokenGas = tx.networkFeeTokenValue,
-                        fiatGas = tx.networkFeeFiatValue,
+                        tokenGas = transaction.networkFeeTokenValue,
+                        fiatGas = transaction.networkFeeFiatValue,
                     )
                 }
             }
@@ -245,10 +245,14 @@ private fun TxDetails(
 @Preview
 @Composable
 private fun PreviewSendTxOverviewScreen() {
-    SendTxOverviewScreen(
+    TransactionOverviewScreen(
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel()
+        transaction = SendTxUiModel()
     )
 }
+
+internal data class TransactionOverviewData(
+    val from: String,
+)
