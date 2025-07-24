@@ -206,12 +206,7 @@ class CosmosHelper(
                                             listOf(
                                                 Cosmos.Amount.newBuilder()
                                                     .setDenom(
-                                                        if (keysignPayload.coin.contractAddress.contains(
-                                                                "factory/"
-                                                            ) || keysignPayload.coin.contractAddress.contains(
-                                                                "ibc/"
-                                                            )
-                                                        )
+                                                        if (keysignPayload.coin.contractAddress.contains("factory/") || keysignPayload.coin.contractAddress.contains("ibc/"))
                                                             keysignPayload.coin.contractAddress
                                                         else
                                                             denom
