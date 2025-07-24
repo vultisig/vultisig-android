@@ -102,4 +102,10 @@ internal interface UseCasesModule {
         impl: RequestQrScanUseCaseImpl
     ): RequestQrScanUseCase
 
+    @Binds
+    @Singleton
+    fun bindResolveProviderUseCase(
+        impl: ResolveProviderUseCaseImpl
+    ): ResolveProviderUseCase
+
 }
