@@ -110,7 +110,7 @@ private fun NameVaultScreen(
                 focusRequester = focusRequester,
                 footNote = state.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                hint = state.hint.asString(),
+                hint = stringResource(R.string.enter_email_screen_hint),
                 onKeyboardAction = {
                     onNextClick()
                 },
@@ -128,7 +128,7 @@ private fun NameVaultScreen(
 @Composable
 private fun FastVaultNameScreenPreview() {
     NameVaultScreen(
-        state = NameVaultUiModel(hint = UiText.DynamicString("Fast Vault")),
+        state = NameVaultUiModel(),
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},

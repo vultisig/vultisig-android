@@ -521,6 +521,7 @@
     <string name="fast_vault_name_screen_title" translatable="false">Name your vault</string>
     <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
     <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>
+    <string name="enter_email_screen_hint" translatable="false">Email</string>
     <string name="enter_email_screen_desc" translatable="false">This email is only used to send the server backup</string>
     <string name="fast_vault_password_screen_title" translatable="false">Vultiserver Password</string>
     <string name="fast_vault_password_screen_hint" translatable="false">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
