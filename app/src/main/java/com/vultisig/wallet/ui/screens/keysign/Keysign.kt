@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
+import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 
 @Composable
 internal fun KeysignView(
@@ -67,7 +68,7 @@ internal fun KeysignView(
                             transactionLink = transactionLink,
                             onComplete = onComplete,
                             onBack = onBack,
-                            tx = transactionTypeUiModel.tx,
+                            tx = transactionTypeUiModel.tx.toUiTransactionInfo(),
                             showToolbar = showToolbar,
                         )
                     }

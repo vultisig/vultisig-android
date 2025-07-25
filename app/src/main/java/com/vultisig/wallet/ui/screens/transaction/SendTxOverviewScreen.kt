@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -45,7 +46,7 @@ internal fun SendTxOverviewScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    tx: SendTxUiModel,
+    tx: UiTransactionInfo,
 ) {
     BackHandler(onBack = onBack)
 
@@ -128,7 +129,7 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "From",
-                        subtitle = tx.srcAddress,
+                        subtitle = tx.from,
                     )
 
                     VerifyCardDivider(
@@ -137,7 +138,7 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "To",
-                        subtitle = tx.dstAddress,
+                        subtitle = tx.to,
                     )
 
                     VerifyCardDivider(
@@ -249,6 +250,15 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel()
+        tx = SendTxUiModel().toUiTransactionInfo()
     )
 }
+
+internal data class UiTransactionInfo(
+    val token: ValuedToken,
+    val from: String,
+    val to: String,
+    val memo: String,
+    val networkFeeTokenValue: String,
+    val networkFeeFiatValue: String,
+)
