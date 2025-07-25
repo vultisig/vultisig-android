@@ -12,7 +12,7 @@ internal class SearchEvmTokenUseCaseImpl @Inject constructor(
 ) : SearchEvmTokenUseCase {
 
     override suspend operator fun invoke(chainId: String, contractAddress: String): CoinAndPrice? {
-        val searchedToken = tokenRepository.getTokenByContract(
+        val searchedToken = tokenRepository.getEVMTokenByContract(
             chainId, contractAddress
         ) ?: return null
         val rawPrice = calculateEvmPrice(chainId, searchedToken.contractAddress)

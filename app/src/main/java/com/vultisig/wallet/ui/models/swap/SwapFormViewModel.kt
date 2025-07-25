@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -134,6 +135,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val searchToken: SearchTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -1081,7 +1083,10 @@ internal class SwapFormViewModel @Inject constructor(
                                 val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
-                                    tokenRepository.getTokenByContract(chainId, tokenContract)
+                                    searchToken(
+                                        chainId,
+                                        tokenContract
+                                    )?.coin
                                         ?: srcNativeToken
                                 } else {
                                     srcNativeToken
