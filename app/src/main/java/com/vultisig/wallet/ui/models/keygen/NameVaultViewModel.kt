@@ -57,7 +57,13 @@ internal class NameVaultViewModel @Inject constructor(
             vaultNamesList = vaultRepository.getAll().map { it.name }
 
             nameFieldState.textAsFlow().collectLatest {
-                validate()
+                if (it.isNotEmpty()) {
+                    validate()
+                } else {
+                    state.update { currentState ->
+                        currentState.copy(errorMessage = null, isNextButtonEnabled = false)
+                    }
+                }
             }
         }
     }
@@ -89,6 +95,7 @@ internal class NameVaultViewModel @Inject constructor(
 
     fun navigateToEmail() {
         val name = nameFieldState.text.toString()
+
         if (!(isNameValid(name) && isNameAvailable(name)))
             return
         viewModelScope.launch {

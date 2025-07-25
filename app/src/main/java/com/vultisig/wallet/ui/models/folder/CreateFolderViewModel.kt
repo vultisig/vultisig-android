@@ -61,7 +61,9 @@ internal class CreateFolderViewModel @Inject constructor(
 
     private fun validateEachTextChange() = viewModelScope.launch {
         textFieldState.textAsFlow().collectLatest {
-            validate()
+            if (it.isNotEmpty()) {
+                validate()
+            }
         }
     }
 
