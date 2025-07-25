@@ -17,7 +17,14 @@ internal class DepositTransactionUiModelMapperImpl @Inject constructor(
             fromAddress = from.srcAddress,
             srcTokenValue = mapTokenValueToStringWithUnit(from.srcTokenValue),
             estimatedFees = mapTokenValueToStringWithUnit(from.estimatedFees),
+            estimateFeesFiat = ,
             memo = from.memo,
             nodeAddress = from.dstAddress,
         )
 }
+
+/*
+                value = mapTokenValueToDecimalUiString(from.tokenValue),
+                token = from.token,
+                fiatValue = fiatValueToStringMapper.map(from.fiatValue),
+ */

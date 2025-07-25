@@ -761,7 +761,6 @@ internal class SendFormViewModel @Inject constructor(
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
-
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memo,

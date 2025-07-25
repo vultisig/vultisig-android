@@ -22,6 +22,7 @@ internal data class DepositTransactionUiModel(
     val fromAddress: String = "",
     val srcTokenValue: String = "",
     val estimatedFees: String = "",
+    val estimateFeesFiat: String = "",
     val memo: String = "",
     val nodeAddress: String = "",
 )

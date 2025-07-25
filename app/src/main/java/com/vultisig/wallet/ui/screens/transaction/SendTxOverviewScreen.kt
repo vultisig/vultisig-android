@@ -141,6 +141,17 @@ internal fun SendTxOverviewScreen(
                         subtitle = tx.to,
                     )
 
+                    if (tx.memo.isNotEmpty()) {
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+
+                        TextDetails(
+                            title = "Memo",
+                            subtitle = tx.memo,
+                        )
+                    }
+
                     VerifyCardDivider(
                         size = 1.dp,
                     )
@@ -250,11 +261,12 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel().toUiTransactionInfo()
+        tx = SendTxUiModel(memo = "holaaaaasdafsdfsdfsdf").toUiTransactionInfo()
     )
 }
 
 internal data class UiTransactionInfo(
+    val type: UiTransactionInfoType,
     val token: ValuedToken,
     val from: String,
     val to: String,
@@ -262,3 +274,5 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
 )
+
+internal enum class UiTransactionInfoType { Transfer, Deposit }
