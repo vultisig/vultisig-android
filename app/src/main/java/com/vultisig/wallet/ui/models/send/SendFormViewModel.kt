@@ -820,6 +820,7 @@ internal class SendFormViewModel @Inject constructor(
             vaultLocalPartyID = vault.localPartyID,
             utxos = specific.utxos,
             libType = vault.libType,
+            wasmExecuteContractPayload = null,
         )
 
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
