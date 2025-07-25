@@ -137,12 +137,7 @@ class ThorChainHelper(
                     this.sequence = sequence.toLong()
                     this.addMessages(message)
                     this.fee = fee
-                    this.publicKey = ByteString.copyFrom(
-                        PublicKey(
-                            keysignPayload.coin.hexPublicKey.hexToByteArray(),
-                            PublicKeyType.SECP256K1
-                        ).data()
-                    )
+                    this.publicKey = ByteString.copyFrom(publicKey.data())
                     this.mode = Cosmos.BroadcastMode.SYNC
                 }.build()
 
@@ -150,7 +145,32 @@ class ThorChainHelper(
             }
             buildThorchainDepositMessage(keysignPayload, fromAddress, memo)
         } else {
-            buildThorchainSendMessage(keysignPayload, fromAddress)
+            if (transactionType == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT) {
+                val message = Cosmos.Message.newBuilder().apply {
+                    wasmExecuteContractGeneric =
+                        buildThorchainWasmGenericMessage(keysignPayload, transactionType)
+                }.build()
+
+                val fee = Cosmos.Fee.newBuilder().apply {
+                    gas = 20_000_000L
+                }.build()
+
+                val input = Cosmos.SigningInput.newBuilder().apply {
+                    this.signingMode = Cosmos.SigningMode.Protobuf
+                    this.accountNumber = accountNumber.toLong()
+                    this.chainId = networkId
+                    this.memo = keysignPayload.memo
+                    this.sequence = sequence.toLong()
+                    this.addMessages(message)
+                    this.fee = fee
+                    this.publicKey = ByteString.copyFrom(publicKey.data())
+                    this.mode = Cosmos.BroadcastMode.SYNC
+                }.build()
+
+                return input.toByteArray()
+            } else {
+                buildThorchainSendMessage(keysignPayload, fromAddress)
+            }
         }
 
         val input = Cosmos.SigningInput.newBuilder().apply {
@@ -213,7 +233,7 @@ class ThorChainHelper(
                         val contractPayload = keysignPayload.wasmExecuteContractPayload
                         val formattedMessage = contractPayload.executeMsg
                             .replace(Regex("^\\{"), "{ ")
-                            .replace(Regex("}$"), " }")
+                            .replace(Regex("\\}\$"), " }")
                             .replace(":", ": ")
                         val coins = contractPayload.coins.filterNotNull().map { coin ->
                             Amount.newBuilder().apply {

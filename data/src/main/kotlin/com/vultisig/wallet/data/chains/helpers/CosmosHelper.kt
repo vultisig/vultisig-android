@@ -242,7 +242,7 @@ class CosmosHelper(
 
         val formattedMessage = contractPayload.executeMsg
             .replace(Regex("^\\{"), "{ ")
-            .replace(Regex("}$"), " }")
+            .replace(Regex("\\}\$"), " }")
             .replace(":", ": ")
 
         val coins = contractPayload.coins.filterNotNull().map { coin ->
