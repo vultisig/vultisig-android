@@ -59,9 +59,9 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
@@ -87,7 +87,6 @@ internal fun ScanQrScreen(
 @Composable
 internal fun ScanQrScreen(
     onDismiss: () -> Unit,
-    roundedCorners: Boolean = false,
     onScanSuccess: (qr: String) -> Unit,
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -153,14 +152,19 @@ internal fun ScanQrScreen(
                 )
 
         },
+        topBar = {
+            VsTopAppBar(
+                onBackClick = onDismiss,
+                title = stringResource(R.string.scan_qr_screen_title)
+            )
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
-                .padding(if (roundedCorners) PaddingValues(0.dp) else paddingValues)
+                .padding(paddingValues)
         ) {
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
-                    roundedCorners = roundedCorners,
                     onSuccess = onSuccess,
                     executor = executor,
                 )
@@ -228,7 +232,6 @@ internal fun ScanQrScreen(
 
 @Composable
 private fun QrCameraScreen(
-    roundedCorners: Boolean = false,
     onSuccess: (List<Barcode>) -> Unit,
     executor: Executor,
 ) {
@@ -246,10 +249,7 @@ private fun QrCameraScreen(
 
     AndroidView(
         modifier = Modifier
-            .fillMaxSize()
-            .let {
-                if (roundedCorners) it.clip(RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp)) else it
-            },
+            .fillMaxSize(),
         factory = { context ->
             val previewView = PreviewView(context)
             val resolutionStrategy = ResolutionStrategy(
