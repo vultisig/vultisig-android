@@ -198,8 +198,6 @@ class ThorChainHelper(
         } catch (e: Exception) {
             throw Exception("${keysignPayload.coin.address} is invalid")
         }
-        val memo = keysignPayload.memo?.lowercase()
-            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
 
         val wasmGenericMessage =
             Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
@@ -207,6 +205,9 @@ class ThorChainHelper(
                 contractAddress = keysignPayload.toAddress
                 when (transactionType) {
                     TransactionType.TRANSACTION_TYPE_THOR_MERGE -> {
+                        val memo = keysignPayload.memo?.lowercase()
+                            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
+
                         executeMsg = """{ "deposit": {} }"""
                         addCoins(
                             Cosmos.Amount.newBuilder().apply {
@@ -217,6 +218,9 @@ class ThorChainHelper(
                     }
 
                     TransactionType.TRANSACTION_TYPE_THOR_UNMERGE -> {
+                        val memo = keysignPayload.memo?.lowercase()
+                            ?: throw IllegalArgumentException("Missing memo for ${transactionType.name}")
+
                         val sharesAmount = memo
                             .takeIf { it.startsWith("unmerge:") }
                             ?.split(":")
@@ -229,7 +233,6 @@ class ThorChainHelper(
                         requireNotNull(keysignPayload.wasmExecuteContractPayload) {
                             "Invalid empty WasmExecuteContractPayload"
                         }
-
                         val contractPayload = keysignPayload.wasmExecuteContractPayload
                         val formattedMessage = contractPayload.executeMsg
                             .replace(Regex("^\\{"), "{ ")
