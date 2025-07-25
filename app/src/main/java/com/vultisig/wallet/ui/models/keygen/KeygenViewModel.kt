@@ -138,7 +138,9 @@ internal class KeygenViewModel @Inject constructor(
     }
 
     fun tryAgain() {
-        generateKey()
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 
     private fun generateKey() {
