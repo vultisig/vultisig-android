@@ -142,7 +142,7 @@ internal class SelectNetworkViewModel @Inject constructor(
                         async {
                             val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
                                 ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
-                            val formattedValue = fiatValueToStringMapper.map(totalFiatValue)
+                            val formattedValue = fiatValueToStringMapper(totalFiatValue)
                             address.chain to formattedValue
                         }
                     }.awaitAll().associate { it.first to it.second }

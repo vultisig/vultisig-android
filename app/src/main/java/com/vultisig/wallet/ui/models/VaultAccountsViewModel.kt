@@ -200,10 +200,12 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.chain.raw
         }))
 
-    private fun List<Address>.updateUiStateFromList() {
+    private suspend fun List<Address>.updateUiStateFromList() {
         val totalFiatValue = this.calculateAddressesTotalFiatValue()
-            ?.let(fiatValueToStringMapper::map)
-        val accountsUiModel = this.map(addressToUiModelMapper::map)
+            ?.let { fiatValueToStringMapper(it) }
+        val accountsUiModel = this.map {
+            addressToUiModelMapper(it)
+        }
 
         uiState.update {
             it.copy(
