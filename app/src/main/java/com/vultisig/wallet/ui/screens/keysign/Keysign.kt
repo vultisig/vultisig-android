@@ -62,13 +62,14 @@ internal fun KeysignView(
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
                         )
                     }
+                    is TransactionTypeUiModel.Deposit,
                     is TransactionTypeUiModel.Send -> {
                         SendTxOverviewScreen(
                             transactionHash = txHash,
                             transactionLink = transactionLink,
                             onComplete = onComplete,
                             onBack = onBack,
-                            tx = transactionTypeUiModel.tx.toUiTransactionInfo(),
+                            tx = transactionTypeUiModel.toUiTransactionInfo(),
                             showToolbar = showToolbar,
                         )
                     }

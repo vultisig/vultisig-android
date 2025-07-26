@@ -62,9 +62,7 @@ internal sealed class KeysignState {
 internal sealed interface TransactionTypeUiModel {
     data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
-        TransactionTypeUiModel
-
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
 
