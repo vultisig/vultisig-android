@@ -106,6 +106,7 @@ private fun FastVaultEmailScreen(
             VsTextInputField(
                 textFieldState = textFieldState,
                 innerState = state.innerState,
+                hint = stringResource(R.string.enter_email_screen_hint),
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onClearClick,
                 footNote = state.errorMessage?.asString(),

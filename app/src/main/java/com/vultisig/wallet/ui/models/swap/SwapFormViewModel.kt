@@ -45,6 +45,9 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -71,7 +74,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -99,8 +101,8 @@ internal data class SwapFormUiModel(
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
     val minimumAmount: String = BigInteger.ZERO.toString(),
-    val gas: String = "",
-    val fiatGas: String = "",
+    val networkFee: String = "",
+    val networkFeeFiat: String = "",
     val totalFee: String = "0",
     val fee: String = "",
     val error: UiText? = null,
@@ -120,6 +122,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val resolveProvider: ResolveProviderUseCase,
 
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -132,6 +135,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val searchToken: SearchTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -155,10 +159,10 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
 
-    private val gasEstimatedToken = MutableStateFlow<TokenValue?>(null)
+    private val estimatedNetworkFeeTokenValue = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
-    private val gasFeeFiat = MutableStateFlow<FiatValue?>(null)
+    private val estimatedNetworkFeeFiatValue = MutableStateFlow<FiatValue?>(null)
 
     private val addresses = MutableStateFlow<List<Address>>(emptyList())
 
@@ -225,7 +229,7 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFee = gasFee.value ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
             )
-            val gasFeeFiatValue = gasFeeFiat.value ?: throw InvalidTransactionDataException(
+            val gasFeeFiatValue = estimatedNetworkFeeFiatValue.value ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
             )
 
@@ -266,7 +270,9 @@ internal class SwapFormViewModel @Inject constructor(
                 quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
 
             if (srcToken.isNativeToken) {
-                if (srcAmountInt + gasFee.value + swapFee > selectedSrcBalance) {
+                if (srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO) + swapFee > selectedSrcBalance
+                ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
@@ -280,7 +286,8 @@ internal class SwapFormViewModel @Inject constructor(
                     )
 
                 if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < gasFee.value + swapFee
+                    || nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO) + swapFee
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -324,7 +331,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            gasFees = gasEstimatedToken.value ?: gasFee,
+                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                             isApprovalRequired = isApprovalRequired,
                             memo = quote.data.memo,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -378,7 +385,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            gasFees = gasEstimatedToken.value ?: gasFee,
+                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                             memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -426,7 +433,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            gasFees = gasEstimatedToken.value ?: gasFee,
+                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -464,7 +471,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            gasFees = gasEstimatedToken.value ?: gasFee,
+                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
@@ -654,7 +661,7 @@ internal class SwapFormViewModel @Inject constructor(
             quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
 
         val maxUsableTokenAmount =
-            srcTokenValue.value - swapFee - (gasFee.value?.value?.takeIf { srcToken.isNativeToken }
+            srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
@@ -759,7 +766,7 @@ internal class SwapFormViewModel @Inject constructor(
                     try {
                         val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
 
-                        val estimatedFee = gasFeeToEstimatedFee(
+                        val estimatedNetworkFee = gasFeeToEstimatedFee(
                             GasFeeParams(
                                 gasLimit = if (chain.standard == TokenStandard.EVM) {
                                     (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
@@ -771,13 +778,13 @@ internal class SwapFormViewModel @Inject constructor(
                             )
                         )
 
-                        gasFeeFiat.value = estimatedFee.fiatValue
-                        gasEstimatedToken.value = estimatedFee.tokenValue
+                        estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
+                        estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
 
                         uiState.update {
                             it.copy(
-                                gas = estimatedFee.formattedTokenValue,
-                                fiatGas = estimatedFee.formattedFiatValue,
+                                networkFee = estimatedNetworkFee.formattedTokenValue,
+                                networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
                             )
                         }
                     } catch (e: Exception) {
@@ -789,7 +796,7 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private fun collectTotalFee() {
-        gasFeeFiat.filterNotNull().combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
+        estimatedNetworkFeeFiatValue.filterNotNull().combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
             gasFeeFiat + swapFeeFiat
         }.onEach { totalFee ->
             uiState.update {
@@ -829,13 +836,12 @@ internal class SwapFormViewModel @Inject constructor(
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
 
-                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
-
-                        this@SwapFormViewModel.provider = provider
-
-
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+
+                        val provider =
+                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
+                                ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+                        this@SwapFormViewModel.provider = provider
 
                         val currency = appCurrencyRepository.currency.first()
 
@@ -1080,7 +1086,10 @@ internal class SwapFormViewModel @Inject constructor(
                                 val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
-                                    tokenRepository.getTokenByContract(chainId, tokenContract)
+                                    searchToken(
+                                        chainId,
+                                        tokenContract
+                                    )?.coin
                                         ?: srcNativeToken
                                 } else {
                                     srcNativeToken

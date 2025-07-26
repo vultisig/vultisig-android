@@ -50,7 +50,7 @@ internal class FastVaultEmailViewModel @Inject constructor(
             emailFieldState.textAsFlow().collect { typingEmail ->
                 val isEmailValid = validateEmail(typingEmail)
                 val errorMessage =
-                    UiText.StringResource(R.string.keygen_email_caption)
+                    UiText.StringResource(R.string.keygen_email_error)
                         .takeIf { typingEmail.isNotEmpty() && !isEmailValid } ?: UiText.Empty
                 val innerState = getInnerState(
                     email = typingEmail.toString(),

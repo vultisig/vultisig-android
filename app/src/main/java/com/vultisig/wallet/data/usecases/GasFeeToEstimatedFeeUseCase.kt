@@ -47,8 +47,8 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
         tokenValue = when {
             chain.standard == TokenStandard.EVM ->
                 tokenValue.copy(
-                    value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
                     unit = nativeToken.ticker,
+                    decimals = nativeToken.decimal
                 )
 
             chain == Chain.Bitcoin && from.perUnit->

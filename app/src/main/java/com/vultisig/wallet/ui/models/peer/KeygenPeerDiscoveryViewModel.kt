@@ -270,7 +270,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.Keygen.PeerDiscovery::class,
-                    inclusive = true,
+                    inclusive = false,
                 )
             )
         }

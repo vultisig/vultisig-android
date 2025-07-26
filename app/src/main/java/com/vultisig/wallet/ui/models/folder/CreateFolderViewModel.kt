@@ -61,7 +61,9 @@ internal class CreateFolderViewModel @Inject constructor(
 
     private fun validateEachTextChange() = viewModelScope.launch {
         textFieldState.textAsFlow().collectLatest {
-            validate()
+            if (it.isNotEmpty()) {
+                validate()
+            }
         }
     }
 
@@ -86,18 +88,18 @@ internal class CreateFolderViewModel @Inject constructor(
     }
 
     fun createFolder() = viewModelScope.launch {
-        val currntState = state.value
-        if (currntState.errorText != null)
+        val currentState = state.value
+        if (currentState.errorText != null)
             return@launch
-        val name = generateUniqueName(
-            textFieldState.text.toString()
-                .ifEmpty { context.getString(R.string.create_folder_placeholder) },
-            currntState.folderNames
-        )
+
+        val targetName = textFieldState.text.toString()
+            .ifEmpty { context.getString(R.string.create_folder_placeholder) }
+        val name = generateUniqueName(targetName, currentState.folderNames)
         val folderId = folderRepository.insertFolder(name)
+
         vaultOrderRepository.updateList(
             folderId.toString(),
-            currntState.checkedVaults.filterValues { it }.keys.map { it.id }
+            currentState.checkedVaults.filterValues { it }.keys.map { it.id }
         )
 
         navigator.navigate(Destination.Back)
