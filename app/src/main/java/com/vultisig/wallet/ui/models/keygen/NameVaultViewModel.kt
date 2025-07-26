@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -51,22 +52,25 @@ internal class NameVaultViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
-
             generateVaultName()
+        }
 
-            nameFieldState.textAsFlow().collectLatest {
-                if (it.isNotEmpty()) {
-                    validate()
-                } else {
-                    state.update { currentState ->
-                        currentState.copy(errorMessage = null, isNextButtonEnabled = false)
-                    }
+        observeNameFieldChanges()
+    }
+
+    private fun observeNameFieldChanges() = viewModelScope.launch {
+        nameFieldState.textAsFlow().collectLatest {
+            if (it.isNotEmpty()) {
+                validate()
+            } else {
+                state.update { currentState ->
+                    currentState.copy(errorMessage = null, isNextButtonEnabled = false)
                 }
             }
         }
     }
 
-    private fun generateVaultName() = viewModelScope.launch {
+    private suspend fun generateVaultName() {
         val proposeName = withContext(Dispatchers.IO) {
             val baseName = if (args.vaultType == VaultType.Fast) {
                 "Fast Vault"
