@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,12 +35,14 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.closestActivityOrNull
 
 @Composable
 fun LanguageSettingScreen(navController: NavHostController) {
     val colors = Theme.colors
     val viewModel = hiltViewModel<LanguageSettingViewModel>()
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.initSelectedLanguage()
@@ -68,7 +71,7 @@ fun LanguageSettingScreen(navController: NavHostController) {
                     englishName = language.englishName,
                     isSelected = language == state.selectedLanguage,
                     onClick = {
-                        viewModel.changeLanguage(language)
+                        viewModel.changeLanguage(language, context.closestActivityOrNull())
                         navController.popBackStack()
                     }
                 )
