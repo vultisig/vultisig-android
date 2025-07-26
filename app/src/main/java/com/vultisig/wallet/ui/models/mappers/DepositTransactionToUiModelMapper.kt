@@ -11,20 +11,15 @@ internal interface DepositTransactionToUiModelMapper :
 
 internal class DepositTransactionUiModelMapperImpl @Inject constructor(
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : DepositTransactionToUiModelMapper {
     override fun invoke(from: DepositTransaction): DepositTransactionUiModel =
         DepositTransactionUiModel(
             fromAddress = from.srcAddress,
             srcTokenValue = mapTokenValueToStringWithUnit(from.srcTokenValue),
             estimatedFees = mapTokenValueToStringWithUnit(from.estimatedFees),
-            estimateFeesFiat = ,
+            estimateFeesFiat = "0",
             memo = from.memo,
             nodeAddress = from.dstAddress,
         )
 }
-
-/*
-                value = mapTokenValueToDecimalUiString(from.tokenValue),
-                token = from.token,
-                fiatValue = fiatValueToStringMapper.map(from.fiatValue),
- */

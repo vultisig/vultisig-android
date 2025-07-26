@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
+    val token: ValuedToken = ValuedToken.Empty,
     val fromAddress: String = "",
     val srcTokenValue: String = "",
     val estimatedFees: String = "",
