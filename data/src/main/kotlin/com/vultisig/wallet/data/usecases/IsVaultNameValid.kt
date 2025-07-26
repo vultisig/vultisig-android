@@ -7,6 +7,6 @@ interface IsVaultNameValid : (String) -> Boolean
 
 internal class IsVaultNameValidImpl @Inject constructor() : IsVaultNameValid {
     override fun invoke(name: String): Boolean {
-        return (name.length <= TextFieldUtils.VAULT_NAME_MAX_LENGTH && name.isNotEmpty())
+        return name.length <= TextFieldUtils.VAULT_NAME_MAX_LENGTH
     }
 }
