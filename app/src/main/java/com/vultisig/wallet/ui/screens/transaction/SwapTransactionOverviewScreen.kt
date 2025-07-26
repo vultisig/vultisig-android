@@ -115,6 +115,7 @@ internal fun SwapTransactionOverviewScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         SwapToken(
+                            header = "From",
                             valuedToken = transactionTypeUiModel.src,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.End,
@@ -126,6 +127,7 @@ internal fun SwapTransactionOverviewScreen(
                         )
 
                         SwapToken(
+                            header = "To",
                             valuedToken = transactionTypeUiModel.dst,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.Start,
@@ -289,6 +291,7 @@ private fun TxDetails(
 
 @Composable
 internal fun SwapToken(
+    header: String,
     valuedToken: ValuedToken,
     shape: Shape,
     modifier: Modifier = Modifier,
@@ -313,6 +316,16 @@ internal fun SwapToken(
                 vertical = 24.dp,
             )
     ) {
+        Text(
+            text = header,
+            style = Theme.brockmann.supplementary.captionSmall,
+            color = Theme.colors.text.extraLight,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
+
+        UiSpacer(12.dp)
+
         TokenLogo(
             logo = Tokens.getCoinLogo(token.logo),
             title = token.ticker,

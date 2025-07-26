@@ -96,6 +96,7 @@ internal fun SendTxOverviewScreen(
                 }
 
                 SwapToken(
+                    header = "Sent",
                     valuedToken = tx.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
