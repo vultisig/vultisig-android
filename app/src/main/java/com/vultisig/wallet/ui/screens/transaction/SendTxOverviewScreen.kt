@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
@@ -267,7 +268,9 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel(memo = "holaaaaasdafsdfsdfsdf").toUiTransactionInfo()
+        tx = TransactionTypeUiModel.Send(
+            tx = SendTxUiModel()
+        ).toUiTransactionInfo()
     )
 }
 
