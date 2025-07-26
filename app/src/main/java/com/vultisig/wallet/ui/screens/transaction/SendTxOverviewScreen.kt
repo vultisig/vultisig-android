@@ -28,6 +28,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -78,7 +79,6 @@ internal fun SendTxOverviewScreen(
                             .padding(horizontal = 48.dp)
                             .fillMaxWidth(),
                     )
-
                     Text(
                         text = "Transaction successful",
                         textAlign = TextAlign.Center,
@@ -95,8 +95,13 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                SwapToken(
-                    header = "Sent",
+                val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
+                    "Send"
+                } else {
+                    "Deposit"
+                }
+                VsOverviewToken(
+                    header = tokenTitle,
                     valuedToken = tx.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
@@ -276,4 +281,4 @@ internal data class UiTransactionInfo(
     val networkFeeFiatValue: String,
 )
 
-internal enum class UiTransactionInfoType { Transfer, Deposit, Swap }
+internal enum class UiTransactionInfoType { Send, Deposit, Swap }

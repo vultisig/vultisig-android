@@ -7,7 +7,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
     return when (this) {
         is TransactionTypeUiModel.Send -> {
             UiTransactionInfo(
-                type = UiTransactionInfoType.Transfer,
+                type = UiTransactionInfoType.Send,
                 token = this.tx.token,
                 from = this.tx.srcAddress,
                 to = this.tx.dstAddress,
