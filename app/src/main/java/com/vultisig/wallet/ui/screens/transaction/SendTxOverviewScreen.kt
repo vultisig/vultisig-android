@@ -275,4 +275,4 @@ internal data class UiTransactionInfo(
     val networkFeeFiatValue: String,
 )
 
-internal enum class UiTransactionInfoType { Transfer, Deposit }
+internal enum class UiTransactionInfoType { Transfer, Deposit, Swap }

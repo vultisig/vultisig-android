@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.transaction
 
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 
 internal fun SendTxUiModel.toUiTransactionInfo(): UiTransactionInfo {
     return UiTransactionInfo(
@@ -18,11 +19,11 @@ internal fun SendTxUiModel.toUiTransactionInfo(): UiTransactionInfo {
 internal fun DepositTransactionUiModel.toUiTransactionInfo(): UiTransactionInfo {
     return UiTransactionInfo(
         type = UiTransactionInfoType.Deposit,
-        token = ,
+        token = ValuedToken.Empty,
         from = this.fromAddress,
         to = this.nodeAddress,
         memo = this.memo,
-        networkFeeFiatValue = this.networkFeeFiatValue,
-        networkFeeTokenValue = this.networkFeeTokenValue,
+        networkFeeFiatValue = this.estimatedFees,
+        networkFeeTokenValue = this.estimateFeesFiat,
     )
 }
