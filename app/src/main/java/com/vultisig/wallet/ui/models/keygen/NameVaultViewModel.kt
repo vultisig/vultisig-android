@@ -111,9 +111,9 @@ internal class NameVaultViewModel @Inject constructor(
 
     fun navigateToEmail() {
         val name = nameFieldState.text.toString()
-
         if (!(isNameValid(name) && isNameAvailable(name)))
             return
+
         viewModelScope.launch {
             when (args.vaultType) {
                 VaultType.Fast -> {
