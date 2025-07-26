@@ -110,7 +110,6 @@ private fun NameVaultScreen(
                 focusRequester = focusRequester,
                 footNote = state.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
-                hint = stringResource(R.string.enter_email_screen_hint),
                 onKeyboardAction = {
                     onNextClick()
                 },
