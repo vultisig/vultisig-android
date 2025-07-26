@@ -58,7 +58,6 @@ internal sealed class KeysignState {
     data class Error(val errorMessage: String) : KeysignState()
 }
 
-
 internal sealed interface TransactionTypeUiModel {
     data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel

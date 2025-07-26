@@ -11,5 +11,6 @@ data class DepositTransaction(
     val memo: String,
     val dstAddress: String,
     val estimatedFees: TokenValue,
+    val estimateFeesFiat: String,
     val blockChainSpecific: BlockChainSpecific,
 )
