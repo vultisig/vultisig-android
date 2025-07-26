@@ -55,7 +55,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             src = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.srcTokenValue),
                 token = from.srcToken,
-                fiatValue = fiatValueToStringMapper.map(
+                fiatValue = fiatValueToStringMapper(
                     convertTokenValueToFiat(
                         from.srcToken,
                         from.srcTokenValue,
@@ -66,7 +66,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             dst = ValuedToken(
                 value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                 token = from.dstToken,
-                fiatValue = fiatValueToStringMapper.map(
+                fiatValue = fiatValueToStringMapper(
                     convertTokenValueToFiat(
                         from.dstToken,
                         from.expectedDstTokenValue,
@@ -78,16 +78,16 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             providerFee = ValuedToken(
                 token = tokenValue,
                 value = from.estimatedFees.value.toString(),
-                fiatValue = fiatValueToStringMapper.map(quotesFeesFiat),
+                fiatValue = fiatValueToStringMapper(quotesFeesFiat),
             ),
             networkFee = ValuedToken(
                 token = from.srcToken,
                 value = mapTokenValueToDecimalUiString(from.gasFees),
-                fiatValue = fiatValueToStringMapper.map(from.gasFeeFiatValue),
+                fiatValue = fiatValueToStringMapper(from.gasFeeFiatValue),
             ),
             networkFeeFormatted = mapTokenValueToDecimalUiString(from.gasFees)
                     + " ${from.gasFees.unit}",
-            totalFee = fiatValueToStringMapper.map(quotesFeesFiat + from.gasFeeFiatValue),
+            totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
         )
     }
 }

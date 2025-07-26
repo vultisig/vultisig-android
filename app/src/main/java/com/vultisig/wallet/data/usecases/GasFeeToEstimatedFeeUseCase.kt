@@ -63,7 +63,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
         }
 
         return EstimatedGasFee(
-            formattedFiatValue = fiatValueToStringMapper.map(fiatFees),
+            formattedFiatValue = fiatValueToStringMapper(fiatFees),
             formattedTokenValue = convertTokenValueToString(tokenValue),
             tokenValue = tokenValue,
             fiatValue = fiatFees,

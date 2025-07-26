@@ -87,7 +87,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                     Timber.e(it)
                 }.collect { accounts ->
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let(fiatValueToStringMapper::map)
+                        ?.let { fiatValueToStringMapper(it) }
 
                     uiModel.update {
                         it.copy(
