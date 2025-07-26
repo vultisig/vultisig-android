@@ -15,7 +15,6 @@ internal interface TokenValueToDecimalUiStringMapper : MapperFunc<TokenValue, St
 internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
     TokenValueToDecimalUiStringMapper {
 
-
     override fun invoke(from: TokenValue): String {
         try {
             val decimal = from.decimal
@@ -65,5 +64,4 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
         private val ONE_BILLION = BigDecimal(1_000_000_000)
         private val ONE_MILLION = BigDecimal(1_000_000)
     }
-
 }

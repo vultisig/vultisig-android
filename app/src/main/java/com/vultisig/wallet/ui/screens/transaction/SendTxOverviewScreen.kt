@@ -28,11 +28,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -45,7 +48,7 @@ internal fun SendTxOverviewScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    tx: SendTxUiModel,
+    tx: UiTransactionInfo,
 ) {
     BackHandler(onBack = onBack)
 
@@ -77,7 +80,6 @@ internal fun SendTxOverviewScreen(
                             .padding(horizontal = 48.dp)
                             .fillMaxWidth(),
                     )
-
                     Text(
                         text = "Transaction successful",
                         textAlign = TextAlign.Center,
@@ -94,7 +96,13 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                SwapToken(
+                val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
+                    "Send"
+                } else {
+                    "Deposit"
+                }
+                VsOverviewToken(
+                    header = tokenTitle,
                     valuedToken = tx.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
@@ -128,7 +136,7 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "From",
-                        subtitle = tx.srcAddress,
+                        subtitle = tx.from,
                     )
 
                     VerifyCardDivider(
@@ -137,8 +145,19 @@ internal fun SendTxOverviewScreen(
 
                     TextDetails(
                         title = "To",
-                        subtitle = tx.dstAddress,
+                        subtitle = tx.to,
                     )
+
+                    if (tx.memo.isNotEmpty()) {
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+
+                        TextDetails(
+                            title = "Memo",
+                            subtitle = tx.memo,
+                        )
+                    }
 
                     VerifyCardDivider(
                         size = 1.dp,
@@ -249,6 +268,20 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel()
+        tx = TransactionTypeUiModel.Send(
+            tx = SendTxUiModel()
+        ).toUiTransactionInfo()
     )
 }
+
+internal data class UiTransactionInfo(
+    val type: UiTransactionInfoType,
+    val token: ValuedToken,
+    val from: String,
+    val to: String,
+    val memo: String,
+    val networkFeeTokenValue: String,
+    val networkFeeFiatValue: String,
+)
+
+internal enum class UiTransactionInfoType { Send, Deposit, Swap }

@@ -17,16 +17,22 @@ import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
 import com.vultisig.wallet.data.models.DepositMemo.Unbond
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.EstimatedGasFee
+import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.toUnit
@@ -127,6 +133,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val thorChainApi: ThorChainApi,
     private val balanceRepository: BalanceRepository,
+    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -297,6 +304,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                         selectDstChain(dstChainList.first())
                     }
+
                     else -> Unit
                 }
             }.collect {}
@@ -375,7 +383,8 @@ internal class DepositFormViewModel @Inject constructor(
                     if (addressValue != null) {
                         viewModelScope.launch {
                             try {
-                                val unstakable = balanceRepository.getUnstakableTcyAmount(addressValue)
+                                val unstakable =
+                                    balanceRepository.getUnstakableTcyAmount(addressValue)
                                 val formattedAmount = formatUnstakableTcyAmount(unstakable)
                                 state.update {
                                     it.copy(unstakableTcyAmount = formattedAmount)
@@ -519,10 +528,13 @@ internal class DepositFormViewModel @Inject constructor(
                     val percentageText = tokenAmountFieldState.text.toString()
                     val percentage = percentageText.toFloatOrNull()
                         ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
-                    
+
                     if (percentage <= 0f || percentage > 100f) {
                         throw InvalidTransactionDataException(
-                            UiText.FormattedText(R.string.send_error_no_amount, listOf("Percentage must be between 0 and 100"))
+                            UiText.FormattedText(
+                                R.string.send_error_no_amount,
+                                listOf("Percentage must be between 0 and 100")
+                            )
                         )
                     }
                 }
@@ -542,8 +554,10 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
                         val percentageText = tokenAmountFieldState.text.toString()
-                        val percentage = percentageText.toFloatOrNull() ?: 100f // Default to 100% if invalid
-                        val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000) // Convert to basis points (0-10000)
+                        val percentage =
+                            percentageText.toFloatOrNull() ?: 100f // Default to 100% if invalid
+                        val basisPoints = (percentage * 100).toInt()
+                            .coerceIn(0, 10000) // Convert to basis points (0-10000)
                         createTcyStakeTx("TCY-:$basisPoints")
                     }
                 }
@@ -573,7 +587,12 @@ internal class DepositFormViewModel @Inject constructor(
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
         val unMergeAccountBalance = rujiBalances.value
-            ?.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true) }
+            ?.firstOrNull {
+                it.pool?.mergeAsset?.metadata?.symbol.equals(
+                    unmergeToken.ticker,
+                    true
+                )
+            }
         val maxShares = unMergeAccountBalance?.shares?.toBigInteger() ?: BigInteger.ZERO
 
         // transform amount back to share units
@@ -594,8 +613,8 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         val chain = chain ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
+            UiText.StringResource(R.string.send_error_no_address)
+        )
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
@@ -623,6 +642,8 @@ internal class DepositFormViewModel @Inject constructor(
                 transactionType = TransactionType.TRANSACTION_TYPE_THOR_UNMERGE,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, account.token)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -637,6 +658,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = account.token,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -737,6 +759,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -751,6 +775,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -857,6 +882,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -872,6 +899,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -915,6 +943,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -931,6 +961,7 @@ internal class DepositFormViewModel @Inject constructor(
             ),
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
         )
     }
 
@@ -978,6 +1009,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -992,6 +1025,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1013,7 +1047,7 @@ internal class DepositFormViewModel @Inject constructor(
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        
+
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
         val tokenAmountInt = if (stakeMemo.startsWith("TCY-")) {
@@ -1037,6 +1071,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -1051,6 +1087,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1113,6 +1150,8 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -1127,6 +1166,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1179,6 +1219,8 @@ internal class DepositFormViewModel @Inject constructor(
                 transactionType = TransactionType.TRANSACTION_TYPE_THOR_MERGE,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -1193,6 +1235,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1234,6 +1277,8 @@ internal class DepositFormViewModel @Inject constructor(
                 transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -1248,6 +1293,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1296,6 +1342,8 @@ internal class DepositFormViewModel @Inject constructor(
                 transactionType = TransactionType.TRANSACTION_TYPE_IBC_TRANSFER,
             )
 
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -1310,6 +1358,7 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
@@ -1390,13 +1439,13 @@ internal class DepositFormViewModel @Inject constructor(
                     ?.toBigDecimalOrNull()
                     ?.movePointRight(selectedToken.decimal)
                     ?.toBigInteger() ?: BigInteger.ZERO
-                
+
                 if (tokenAmountInt <= unstakableAmount) {
                     // Amount is valid for unstaking
                     return tokenAmountInt
                 }
             }
-            
+
             // For all other operations, or if the unstakable check failed
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -1453,16 +1502,16 @@ internal class DepositFormViewModel @Inject constructor(
         if (unstakableAmount.isNullOrEmpty()) return null
         return try {
             val amount = unstakableAmount.toBigDecimalOrNull() ?: return null
-            
+
             // TCY has 8 decimal places, so divide by 10^8 to get the human-readable amount
             val humanReadableAmount = amount.movePointLeft(8)
-            
+
             // Use the same decimal formatting as the rest of the app
             val decimalFormat = DecimalFormat(
                 "#,###.########", // 8 decimal places max, consistent with app standard
                 DecimalFormatSymbols(Locale.getDefault())
             )
-            
+
             // Format and strip trailing zeros
             decimalFormat.format(humanReadableAmount)
         } catch (e: Exception) {
@@ -1492,6 +1541,24 @@ internal class DepositFormViewModel @Inject constructor(
                 else null
             )
         }
+    }
+
+    private suspend fun getFeesFiatValue(
+        specific: BlockChainSpecificAndUtxo,
+        gasFee: TokenValue,
+        selectedToken: Coin,
+    ): EstimatedGasFee {
+        return gasFeeToEstimatedFee(
+            GasFeeParams(
+                gasLimit = if (chain?.standard == TokenStandard.EVM) {
+                    (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                } else {
+                    BigInteger.valueOf(1)
+                },
+                gasFee = gasFee,
+                selectedToken = selectedToken,
+            )
+        )
     }
 
     private fun isLpUnitCharsValid(lpUnits: String) =
