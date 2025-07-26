@@ -241,6 +241,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     }
                 )
             } else null,
+            wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             erc20ApprovePayload = if (approvePayload is ERC20ApprovePayload) {
                 Erc20ApprovePayload(
                     spender = approvePayload.spender,

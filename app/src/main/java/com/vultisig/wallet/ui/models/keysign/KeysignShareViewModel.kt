@@ -86,6 +86,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 libType = vault.libType,
+                wasmExecuteContractPayload = null,
             )
         }
     }
@@ -148,6 +149,7 @@ internal class KeysignShareViewModel @Inject constructor(
                         )
                         else null,
                         libType = vault.libType,
+                        wasmExecuteContractPayload = null,
                     )
                 }
             }
@@ -185,6 +187,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
                 libType = vault.libType,
+                wasmExecuteContractPayload = null,
             )
         }
     }
