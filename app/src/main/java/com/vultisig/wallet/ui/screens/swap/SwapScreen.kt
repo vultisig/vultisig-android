@@ -338,7 +338,7 @@ internal fun SwapScreen(
                                     color = Theme.colors.neutral100,
                                 )
                             ) {
-                                append(state.gas)
+                                append(state.networkFee)
                             }
                             append(" ")
                             withStyle(
@@ -347,8 +347,8 @@ internal fun SwapScreen(
                                 )
                             ) {
                                 append(
-                                    if (state.fiatGas.isNotEmpty())
-                                        "(~${state.fiatGas})"
+                                    if (state.networkFeeFiat.isNotEmpty())
+                                        "(~${state.networkFeeFiat})"
                                     else ""
                                 )
                             }
