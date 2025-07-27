@@ -605,4 +605,12 @@
     <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
+
+    <string name="tx_overview_screen_title" translatable="false">Overview</string>
+    <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
+    <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
+    <string name="tx_overview_screen_tx_from" translatable="false">From</string>
+    <string name="tx_overview_screen_tx_to" translatable="false">To</string>
+    <string name="tx_overview_screen_tx_memo" translatable="false">Memo</string>
+    <string name="tx_overview_screen_tx_network" translatable="false">Network</string>
 </resources>
