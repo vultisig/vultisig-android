@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,7 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
@@ -57,7 +58,7 @@ internal fun SendTxOverviewScreen(
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
-                    title = "Overview",
+                    title = stringResource(R.string.tx_overview_screen_title),
                     onBackClick = onBack,
                 )
             }
@@ -81,7 +82,7 @@ internal fun SendTxOverviewScreen(
                             .fillMaxWidth(),
                     )
                     Text(
-                        text = "Transaction successful",
+                        text = stringResource(R.string.tx_overview_screen_title),
                         textAlign = TextAlign.Center,
                         style = Theme.brockmann.body.l.medium
                             .copy(
@@ -125,7 +126,7 @@ internal fun SendTxOverviewScreen(
                         .padding(all = 24.dp),
                 ) {
                     TxDetails(
-                        title = "Transaction Hash",
+                        title = stringResource(R.string.tx_overview_screen_tx_hash),
                         hash = transactionHash,
                         link = transactionLink,
                     )
@@ -135,7 +136,7 @@ internal fun SendTxOverviewScreen(
                     )
 
                     TextDetails(
-                        title = "From",
+                        title = stringResource(R.string.tx_overview_screen_tx_from),
                         subtitle = tx.from,
                     )
 
@@ -144,7 +145,7 @@ internal fun SendTxOverviewScreen(
                     )
 
                     TextDetails(
-                        title = "To",
+                        title = stringResource(R.string.tx_overview_screen_tx_to),
                         subtitle = tx.to,
                     )
 
@@ -154,7 +155,7 @@ internal fun SendTxOverviewScreen(
                         )
 
                         TextDetails(
-                            title = "Memo",
+                            title = stringResource(R.string.tx_overview_screen_tx_memo),
                             subtitle = tx.memo,
                         )
                     }
@@ -164,7 +165,7 @@ internal fun SendTxOverviewScreen(
                     )
 
                     Details(
-                        title = "Network"
+                        title = stringResource(R.string.tx_overview_screen_tx_network)
                     ) {
                         Row(
                             modifier = Modifier.weight(1f),
@@ -268,8 +269,15 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = TransactionTypeUiModel.Send(
-            tx = SendTxUiModel()
+        tx = TransactionTypeUiModel.Deposit(
+            depositTransactionUiModel = DepositTransactionUiModel(
+                token = ValuedToken.Empty,
+                fromAddress = "abx123abx123abx123abx123ab",
+                srcTokenValue = "1231232",
+                estimateFeesFiat = "",
+                memo = "sdfsdfsdfsdfs",
+                nodeAddress = "abx123abx123abx123abx123ab"
+            )
         ).toUiTransactionInfo()
     )
 }
