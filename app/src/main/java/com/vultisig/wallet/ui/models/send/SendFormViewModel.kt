@@ -761,7 +761,6 @@ internal class SendFormViewModel @Inject constructor(
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
-
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memo,
@@ -994,12 +993,9 @@ internal class SendFormViewModel @Inject constructor(
                 gasSettings,
                 specific,
             )
-            { gasFee, gasSettings, specific ->
+            {
+            gasFee, gasSettings, specific ->
                 this@SendFormViewModel.gasFee.value = adjustGasFee(gasFee, gasSettings, specific)
-
-//                    uiState.update {
-//                        it.copy(gasFee = mapGasFeeToString(gasFee))
-//                    }
             }.collect()
         }
     }
