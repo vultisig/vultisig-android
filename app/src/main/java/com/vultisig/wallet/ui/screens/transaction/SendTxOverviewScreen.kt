@@ -98,9 +98,9 @@ internal fun SendTxOverviewScreen(
                 }
 
                 val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
-                    "Send"
+                    stringResource(R.string.tx_overview_screen_tx_send)
                 } else {
-                    "Deposit"
+                    stringResource(R.string.tx_overview_screen_tx_deposit)
                 }
                 VsOverviewToken(
                     header = tokenTitle,
