@@ -20,15 +20,11 @@ internal class TransactionToUiModelMapperImpl @Inject constructor(
                 token = from.token,
                 fiatValue = fiatValueToStringMapper.map(from.fiatValue),
             ),
-
             srcAddress = from.srcAddress,
             dstAddress = from.dstAddress,
-
             memo = from.memo,
-
             networkFeeFiatValue = from.estimatedFee,
             networkFeeTokenValue = from.totalGass,
         )
     }
-
 }

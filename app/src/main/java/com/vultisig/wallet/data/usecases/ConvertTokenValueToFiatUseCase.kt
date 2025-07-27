@@ -52,5 +52,4 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
         private val ONE_GWEI = BigDecimal.valueOf(1_000_000_000L)
         private const val GWEI_UNIT = "Gwei"
     }
-
 }
