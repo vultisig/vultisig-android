@@ -647,11 +647,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = account.token,
             srcAddress = srcAddress,
             dstAddress = dstAddr,
-
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenShares,
@@ -764,11 +762,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = nodeAddress,
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
@@ -887,11 +883,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = nodeAddress,
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = (chain == Chain.MayaChain)
@@ -948,11 +942,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = nodeAddress,
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = (chain == Chain.MayaChain)
@@ -1014,11 +1006,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = "",
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
@@ -1076,11 +1066,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = "",
-
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
@@ -1155,11 +1143,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = nodeAddress,
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
@@ -1224,11 +1210,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = dstAddr,
-
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
@@ -1282,11 +1266,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = dstAddr,
-
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
@@ -1347,11 +1329,9 @@ internal class DepositFormViewModel @Inject constructor(
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
-
             srcToken = selectedToken,
             srcAddress = srcAddress,
             dstAddress = dstAddr,
-
             memo = memo.toString(),
             srcTokenValue = TokenValue(
                 value = tokenAmount,

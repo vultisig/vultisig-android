@@ -19,7 +19,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
         is TransactionTypeUiModel.Deposit -> {
             UiTransactionInfo(
                 type = UiTransactionInfoType.Deposit,
-                token = ValuedToken.Empty,
+                token = this.depositTransactionUiModel.token,
                 from = this.depositTransactionUiModel.fromAddress,
                 to = this.depositTransactionUiModel.nodeAddress,
                 memo = this.depositTransactionUiModel.memo,

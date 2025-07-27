@@ -613,4 +613,6 @@
     <string name="tx_overview_screen_tx_to" translatable="false">To</string>
     <string name="tx_overview_screen_tx_memo" translatable="false">Memo</string>
     <string name="tx_overview_screen_tx_network" translatable="false">Network</string>
+    <string name="tx_overview_screen_tx_send" translatable="false">Send</string>
+    <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
 </resources>
