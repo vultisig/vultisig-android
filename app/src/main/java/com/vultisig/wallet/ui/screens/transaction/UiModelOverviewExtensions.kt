@@ -27,6 +27,18 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 networkFeeTokenValue = this.depositTransactionUiModel.estimateFeesFiat,
             )
         }
+        is TransactionTypeUiModel.SignMessage -> {
+            UiTransactionInfo(
+                type = UiTransactionInfoType.SignMessage,
+                token = ValuedToken.Empty,
+                from = "",
+                to = "",
+                memo = this.model.message,
+                signMethod = this.model.method,
+                networkFeeFiatValue = "",
+                networkFeeTokenValue = "",
+            )
+        }
         else -> error("Not supported $this")
     }
 }

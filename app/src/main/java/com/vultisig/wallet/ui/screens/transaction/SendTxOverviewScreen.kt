@@ -290,6 +290,7 @@ internal data class UiTransactionInfo(
     val memo: String,
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
+    val signMethod: String = "",
 )
 
-internal enum class UiTransactionInfoType { Send, Deposit, Swap }
+internal enum class UiTransactionInfoType { Send, Deposit, Swap, SignMessage }
