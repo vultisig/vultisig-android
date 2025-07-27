@@ -1,8 +1,8 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.GenerateRandomUniqueName
+import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -18,14 +18,15 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.*
-import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class NameVaultUiModel(
@@ -38,28 +39,49 @@ internal class NameVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val uniqueName: GenerateRandomUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
-    @ApplicationContext private val context: Context,
+    private val generateUniqueName: GenerateUniqueName,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
 
     val nameFieldState = TextFieldState()
-
-
     val state = MutableStateFlow(NameVaultUiModel())
-
     private var vaultNamesList = emptyList<String>()
 
     init {
         viewModelScope.launch {
             vaultNamesList = vaultRepository.getAll().map { it.name }
+            generateVaultName()
+        }
 
-            nameFieldState.textAsFlow().collectLatest {
+        observeNameFieldChanges()
+    }
+
+    private fun observeNameFieldChanges() = viewModelScope.launch {
+        nameFieldState.textAsFlow().collectLatest {
+            if (it.isNotEmpty()) {
                 validate()
+            } else {
+                state.update { currentState ->
+                    currentState.copy(errorMessage = null, isNextButtonEnabled = false)
+                }
             }
         }
+    }
+
+    private suspend fun generateVaultName() {
+        val proposeName = withContext(Dispatchers.IO) {
+            val baseName = if (args.vaultType == VaultType.Fast) {
+                "Fast Vault"
+            } else {
+                "Secure Vault"
+            }
+
+            generateUniqueName(baseName, vaultNamesList)
+        }
+
+        nameFieldState.setTextAndPlaceCursorAtEnd(proposeName)
     }
 
     private fun validate() = viewModelScope.launch {
@@ -91,6 +113,7 @@ internal class NameVaultViewModel @Inject constructor(
         val name = nameFieldState.text.toString()
         if (!(isNameValid(name) && isNameAvailable(name)))
             return
+
         viewModelScope.launch {
             when (args.vaultType) {
                 VaultType.Fast -> {

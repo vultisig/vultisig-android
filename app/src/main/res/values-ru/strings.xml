@@ -370,6 +370,7 @@
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
+    <string name="scan_qr_screen_title">Сканировать QR-код</string>
     <string name="verify_transaction_function_inputs_title">Входные данные функции</string>
     <string name="send_shares_currency_hint">Введите доли</string>
     <string name="send_error_max_shares">Сумма не должна превышать баланс</string>
@@ -392,4 +393,5 @@
     <string name="keygen_connecting_with_server">Генерация ключа ECDSA</string>
     <string name="keygen_step_generating_eddsa">Генерация ключа EDDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
+    <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
 </resources>
