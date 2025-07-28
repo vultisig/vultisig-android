@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
 import com.vultisig.wallet.data.models.DepositMemo.Unbond
@@ -126,7 +127,6 @@ internal data class DepositFormUiModel(
 internal class DepositFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
-
     private val requestQrScan: RequestQrScanUseCase,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val gasFeeRepository: GasFeeRepository,
@@ -265,7 +265,7 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
 
-                    DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                    DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
@@ -406,6 +406,14 @@ internal class DepositFormViewModel @Inject constructor(
                                 }
                             }
                         }
+                    }
+                }
+
+                DepositOption.StakeRuji -> {
+                    val rujiToken =
+                        Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
+                    state.update {
+                        it.copy(selectedToken = rujiToken)
                     }
                 }
 
