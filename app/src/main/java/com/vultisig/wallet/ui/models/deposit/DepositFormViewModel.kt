@@ -267,7 +267,7 @@ internal class DepositFormViewModel @Inject constructor(
                         }
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                    DepositOption.Custom ->
+                    DepositOption.UnstakeRuji, DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
                     else -> address.accounts.find { it.token.isNativeToken }
@@ -1489,7 +1489,9 @@ internal class DepositFormViewModel @Inject constructor(
                 val addressString = address.value?.address
                     ?: throw RuntimeException("Invalid address: cannot fetch balance")
 
-                rujiBalances.value = thorChainApi.getRujiMergeBalances(addressString)
+                rujiBalances.value = withContext(Dispatchers.IO) {
+                    thorChainApi.getRujiMergeBalances(addressString)
+                }
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {

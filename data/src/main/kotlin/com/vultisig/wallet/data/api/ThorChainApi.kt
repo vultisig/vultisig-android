@@ -78,6 +78,7 @@ interface ThorChainApi {
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
+    suspend fun getRujiStakeBalance(address: String): BigInteger
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -294,7 +295,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    private suspend fun getRujiStakeBalance(address: String): BigInteger {
+    override suspend fun getRujiStakeBalance(address: String): BigInteger {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
 
         val query = """
