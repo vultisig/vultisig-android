@@ -18,5 +18,6 @@ data class KeysignPayload(
     val vaultPublicKeyECDSA: String,
     val vaultLocalPartyID: String,
     val libType: SigningLibType?,
-    val wasmExecuteContractPayload: WasmExecuteContractPayload? ,
+    val wasmExecuteContractPayload: WasmExecuteContractPayload?,
+    val skipBroadcast: Boolean = false,
 )

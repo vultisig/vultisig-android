@@ -54,6 +54,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 )
             },
             wasmExecuteContractPayload = from.wasmExecuteContractPayload,
+            skipBroadcast = from.skipBroadcast ?: false,
             swapPayload = when {
                 from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let { it ->
                     SwapPayload.OneInch(
