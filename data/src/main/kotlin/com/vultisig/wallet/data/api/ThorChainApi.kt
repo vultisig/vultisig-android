@@ -77,7 +77,7 @@ interface ThorChainApi {
 
     suspend fun getPools(): List<ThorChainPoolJson>
 
-    suspend fun getRujiBalances(address: String): List<MergeAccount>
+    suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -88,9 +88,10 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return try {
-            val response = httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
-                header(xClientID, xClientIDValue)
-            }
+            val response =
+                httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
+                    header(xClientID, xClientIDValue)
+                }
             if (!response.status.isSuccess()) {
                 null
             } else {
@@ -130,7 +131,10 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
                 parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter("affiliate_bps", if(isAffiliate) THORChainSwaps.AFFILIATE_FEE_RATE else "0")
+                parameter(
+                    "affiliate_bps",
+                    if (isAffiliate) THORChainSwaps.AFFILIATE_FEE_RATE else "0"
+                )
             }
         return try {
             json.decodeFromString(
@@ -229,7 +233,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
-       val response =  httpClient
+        val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
             }
@@ -248,7 +252,7 @@ internal class ThorChainApiImpl @Inject constructor(
             .body()
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun getRujiBalances(address: String): List<MergeAccount> {
+    override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
 
         val query = """
@@ -289,6 +293,40 @@ internal class ThorChainApiImpl @Inject constructor(
         return response.data?.node?.merge?.accounts ?: emptyList()
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
+    private suspend fun getRujiStakeBalance(address: String): BigInteger {
+        val accountBase64 = Base64.encode("Account:$address".toByteArray())
+
+        val query = """
+        {
+          node(id:"$accountBase64") {
+            ... on Account {
+              stakingV2 {
+                account
+                bonded {
+                  amount
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject {
+                put("query", query)
+            })
+        }.body<GraphQLResponse<RootData>>()
+
+        if (!response.errors.isNullOrEmpty()) {
+            throw Exception("Could not fetch balances: ${response.errors}")
+        }
+
+        return response.data?.node?.stakingV2?.firstOrNull()?.bonded?.amount?.toBigIntegerOrNull()
+            ?: BigInteger.ZERO
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
     }
@@ -317,6 +355,7 @@ data class ThorChainTransactionJson(
     @SerialName("raw_log")
     val rawLog: String,
 )
+
 @Serializable
 data class THORChainInboundAddress(
     @SerialName("chain")
@@ -330,7 +369,7 @@ data class THORChainInboundAddress(
     @SerialName("chain_trading_paused")
     val chainTradingPaused: Boolean,
     @SerialName("chain_lp_actions_paused")
-    val chainLPActionsPaused : Boolean,
+    val chainLPActionsPaused: Boolean,
     @SerialName("gas_rate")
     val gasRate: String,
     @SerialName("gas_rate_units")
@@ -355,7 +394,8 @@ data class RootData(
 
 @Serializable
 data class AccountNode(
-    val merge: MergeInfo?
+    val merge: MergeInfo?,
+    val stakingV2: List<StakingV2?>?,
 )
 
 @Serializable
@@ -388,4 +428,15 @@ data class Metadata(
 @Serializable
 data class Size(
     val amount: String?
+)
+
+@Serializable
+data class StakingV2(
+    val account: String,
+    val bonded: Bonded
+)
+
+@Serializable
+data class Bonded(
+    val amount: String,
 )

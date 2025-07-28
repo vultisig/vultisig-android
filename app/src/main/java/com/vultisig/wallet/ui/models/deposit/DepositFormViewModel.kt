@@ -62,7 +62,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
-import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1490,7 +1489,7 @@ internal class DepositFormViewModel @Inject constructor(
                 val addressString = address.value?.address
                     ?: throw RuntimeException("Invalid address: cannot fetch balance")
 
-                rujiBalances.value = thorChainApi.getRujiBalances(addressString)
+                rujiBalances.value = thorChainApi.getRujiMergeBalances(addressString)
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
