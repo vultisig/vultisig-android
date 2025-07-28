@@ -582,8 +582,6 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.WithdrawRujiRewards -> createWithdrawRuji()
                 }
 
-
-
                 transactionRepository.addTransaction(transaction)
 
                 sendNavigator.navigate(
@@ -612,8 +610,25 @@ internal class DepositFormViewModel @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    private fun createStakeRuji(): DepositTransaction {
-        TODO("Not yet implemented")
+    private suspend fun createStakeRuji(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+
+        error("")
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
