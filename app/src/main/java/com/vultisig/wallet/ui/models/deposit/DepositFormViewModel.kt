@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -56,6 +57,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
@@ -79,7 +81,10 @@ internal enum class DepositOption {
     Merge,
     UnMerge,
     StakeTcy,
-    UnstakeTcy
+    UnstakeTcy,
+    StakeRuji,
+    UnstakeRuji,
+    WithdrawRujiRewards,
 }
 
 @Immutable
@@ -179,6 +184,9 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.UnMerge,
                 DepositOption.StakeTcy,
                 DepositOption.UnstakeTcy,
+                DepositOption.StakeRuji,
+                DepositOption.UnstakeRuji,
+                DepositOption.WithdrawRujiRewards,
             )
 
             Chain.MayaChain -> listOf(
@@ -383,8 +391,9 @@ internal class DepositFormViewModel @Inject constructor(
                     if (addressValue != null) {
                         viewModelScope.launch {
                             try {
-                                val unstakable =
+                                val unstakable = withContext(Dispatchers.IO) {
                                     balanceRepository.getUnstakableTcyAmount(addressValue)
+                                }
                                 val formattedAmount = formatUnstakableTcyAmount(unstakable)
                                 state.update {
                                     it.copy(unstakableTcyAmount = formattedAmount)
@@ -560,6 +569,9 @@ internal class DepositFormViewModel @Inject constructor(
                             .coerceIn(0, 10000) // Convert to basis points (0-10000)
                         createTcyStakeTx("TCY-:$basisPoints")
                     }
+                    DepositOption.StakeRuji -> TODO()
+                    DepositOption.UnstakeRuji -> TODO()
+                    DepositOption.WithdrawRujiRewards -> TODO()
                 }
 
 
