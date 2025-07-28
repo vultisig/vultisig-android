@@ -125,15 +125,17 @@ internal fun SendTxOverviewScreen(
                         )
                         .padding(all = 24.dp),
                 ) {
-                    TxDetails(
-                        title = stringResource(R.string.tx_overview_screen_tx_hash),
-                        hash = transactionHash,
-                        link = transactionLink,
-                    )
+                    if (transactionHash.isNotEmpty()) {
+                        TxDetails(
+                            title = stringResource(R.string.tx_overview_screen_tx_hash),
+                            hash = transactionHash,
+                            link = transactionLink,
+                        )
 
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+                    }
 
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_from),
@@ -266,7 +268,7 @@ private fun TxDetails(
 @Composable
 private fun PreviewSendTxOverviewScreen() {
     SendTxOverviewScreen(
-        transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
+        transactionHash = "",
         transactionLink = "",
         onComplete = {},
         tx = TransactionTypeUiModel.Deposit(
