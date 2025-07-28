@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
+import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -577,6 +578,7 @@ internal class DepositFormViewModel @Inject constructor(
                             .coerceIn(0, 10000) // Convert to basis points (0-10000)
                         createTcyStakeTx("TCY-:$basisPoints")
                     }
+
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
                     DepositOption.WithdrawRujiRewards -> createWithdrawRuji()
@@ -627,8 +629,49 @@ internal class DepositFormViewModel @Inject constructor(
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        error("")
+        val memo = "stake:${selectedToken.contractAddress}:$tokenAmount"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = STAKING_RUJI_CONTRACT,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmount,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = WasmExecuteContractPayload(
+                senderAddress = srcAddress,
+                contractAddress = STAKING_RUJI_CONTRACT,
+                executeMsg = """{ "account": { "bond": {} } }""",
+                coins = listOf(
+                    vultisig.keysign.v1.Coin(
+                        contractAddress = selectedToken.contractAddress,
+                    )
+                )
+            )
+        )
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
@@ -1630,3 +1673,6 @@ private val tokensToMerge = listOf(
         contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf"
     ),
 )
+
+private const val STAKING_RUJI_CONTRACT =
+    "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
