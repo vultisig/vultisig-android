@@ -11,12 +11,19 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
     if (route == Destination.Back.route) {
         popBackStack()
     } else {
-      try {
+        try {
             navigate(route) {
-                buildOptions(this, opts)
+                buildOptions(
+                    this,
+                    opts
+                )
             }
         } catch (e: IllegalArgumentException) {
-          error( "Navigation failed for route: $route")
+            Timber.e(
+                e,
+                "Navigation failed for route: $route"
+            )
+            error("Navigation failed for route: $route")
         }
     }
 }
@@ -26,8 +33,21 @@ internal fun NavController.route(route: NavigateAction<Any>) {
 
     val (dst, opts) = route
 
-    navigate(dst) {
-        buildOptions(this, opts)
+    try {
+        navigate(dst) {
+            buildOptions(
+                this,
+                opts
+            )
+        }
+    } catch (e: IllegalArgumentException) {
+        Timber.e(
+            e,
+            "Navigation failed for route: $dst"
+        )
+        error(
+            "Navigation failed for route: $dst"
+        )
     }
 }
 
