@@ -18,5 +18,4 @@ internal class KeysignMessageFromProtoMapperImpl @Inject constructor(
         useVultisigRelay = from.useVultisigRelay,
         customMessagePayload = from.customMessagePayload,
     )
-
 }

@@ -31,7 +31,7 @@ class THORChainSwaps(
     ): ByteArray {
         when (swapPayload.fromCoin.chain) {
              Chain.ThorChain -> {
-                return THORCHainHelper()
+                return ThorchainSwapHelper()
                     .getSwapPreSignedInputData(keysignPayload)
             }
 
