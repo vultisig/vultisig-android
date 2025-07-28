@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -410,7 +411,7 @@ internal class DepositFormViewModel @Inject constructor(
                     }
                 }
 
-                DepositOption.StakeRuji -> {
+                DepositOption.StakeRuji, DepositOption.UnstakeRuji -> {
                     val rujiToken =
                         Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
                     state.update {
@@ -608,8 +609,62 @@ internal class DepositFormViewModel @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    private fun createUnstakeRuji(): DepositTransaction {
-        TODO("Not yet implemented")
+    private suspend fun createUnstakeRuji(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+
+        val memo = "unstake:${selectedToken.contractAddress}:$tokenAmount"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = STAKING_RUJI_CONTRACT,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmount,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.unstakeRUJI(
+                fromAddress = srcAddress,
+                stakingContract = STAKING_RUJI_CONTRACT,
+                amount = tokenAmount.toString(),
+                denom = selectedToken.contractAddress,
+            )
+        )
     }
 
     private suspend fun createStakeRuji(): DepositTransaction {
@@ -661,15 +716,10 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = WasmExecuteContractPayload(
-                senderAddress = srcAddress,
-                contractAddress = STAKING_RUJI_CONTRACT,
-                executeMsg = """{ "account": { "bond": {} } }""",
-                coins = listOf(
-                    vultisig.keysign.v1.Coin(
-                        contractAddress = selectedToken.contractAddress,
-                    )
-                )
+            wasmExecuteContractPayload = ThorchainFunctions.stakeRUJI(
+                srcAddress,
+                STAKING_RUJI_CONTRACT,
+                selectedToken.contractAddress
             )
         )
     }
@@ -1674,5 +1724,5 @@ private val tokensToMerge = listOf(
     ),
 )
 
-private const val STAKING_RUJI_CONTRACT =
+const val STAKING_RUJI_CONTRACT =
     "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
