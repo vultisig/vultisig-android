@@ -569,9 +569,9 @@ internal class DepositFormViewModel @Inject constructor(
                             .coerceIn(0, 10000) // Convert to basis points (0-10000)
                         createTcyStakeTx("TCY-:$basisPoints")
                     }
-                    DepositOption.StakeRuji -> TODO()
-                    DepositOption.UnstakeRuji -> TODO()
-                    DepositOption.WithdrawRujiRewards -> TODO()
+                    DepositOption.StakeRuji -> createStakeRuji()
+                    DepositOption.UnstakeRuji -> createUnstakeRuji()
+                    DepositOption.WithdrawRujiRewards -> createWithdrawRuji()
                 }
 
 
@@ -594,6 +594,18 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = false
             }
         }
+    }
+
+    private fun createWithdrawRuji(): DepositTransaction {
+        TODO("Not yet implemented")
+    }
+
+    private fun createUnstakeRuji(): DepositTransaction {
+        TODO("Not yet implemented")
+    }
+
+    private fun createStakeRuji(): DepositTransaction {
+        TODO("Not yet implemented")
     }
 
     private suspend fun createUnMergeTx(): DepositTransaction {

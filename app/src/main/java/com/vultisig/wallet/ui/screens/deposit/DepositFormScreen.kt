@@ -202,6 +202,9 @@ internal fun DepositFormScreen(
                         DepositOption.UnMerge -> stringResource(R.string.deposit_option_unmerge)
                         DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
                         DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
+                        DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
+                        DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
+                        DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_withdraw_ruji_rewards)
                     }
                 })
 
@@ -284,7 +287,8 @@ internal fun DepositFormScreen(
                 else -> {
                     if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                            DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                            DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
+                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                         )
                     ) {
                         FormCard {
@@ -314,7 +318,8 @@ internal fun DepositFormScreen(
                         isTcyOption ||
                         (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
-                        depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
+                        depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
+                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -328,7 +333,8 @@ internal fun DepositFormScreen(
 
                     if (depositOption !in arrayOf(
                             DepositOption.Custom, DepositOption.StakeTcy,
-                            DepositOption.UnstakeTcy
+                            DepositOption.UnstakeTcy, DepositOption.StakeRuji,
+                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                         )
                     ) {
                         FormTextFieldCard(
