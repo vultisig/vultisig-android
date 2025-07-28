@@ -11,8 +11,12 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
     if (route == Destination.Back.route) {
         popBackStack()
     } else {
-        navigate(route) {
-            buildOptions(this, opts)
+      try {
+            navigate(route) {
+                buildOptions(this, opts)
+            }
+        } catch (e: IllegalArgumentException) {
+          error( "Navigation failed for route: $route")
         }
     }
 }
