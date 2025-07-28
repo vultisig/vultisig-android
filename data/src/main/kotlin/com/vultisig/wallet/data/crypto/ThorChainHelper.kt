@@ -234,10 +234,7 @@ class ThorChainHelper(
                             "Invalid empty WasmExecuteContractPayload"
                         }
                         val contractPayload = keysignPayload.wasmExecuteContractPayload
-                        val formattedMessage = contractPayload.executeMsg
-                            .replace(Regex("^\\{"), "{ ")
-                            .replace(Regex("\\}\$"), " }")
-                            .replace(":", ": ")
+
                         val coins = contractPayload.coins.filterNotNull().map { coin ->
                             Amount.newBuilder().apply {
                                 denom = coin.contractAddress.lowercase()
@@ -245,7 +242,7 @@ class ThorChainHelper(
                             }.build()
                         }
 
-                        executeMsg = formattedMessage
+                        executeMsg = contractPayload.executeMsg
                         senderAddress = contractPayload.senderAddress
                         contractAddress = contractPayload.contractAddress
                         addAllCoins(coins)

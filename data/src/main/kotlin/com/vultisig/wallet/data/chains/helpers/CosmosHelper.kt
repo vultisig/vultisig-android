@@ -240,11 +240,6 @@ class CosmosHelper(
         }
         val contractPayload = keysignPayload.wasmExecuteContractPayload
 
-        val formattedMessage = contractPayload.executeMsg
-            .replace(Regex("^\\{"), "{ ")
-            .replace(Regex("\\}\$"), " }")
-            .replace(":", ": ")
-
         val coins = contractPayload.coins.filterNotNull().map { coin ->
             Amount.newBuilder().apply {
                 denom = coin.contractAddress.lowercase()
@@ -257,7 +252,7 @@ class CosmosHelper(
                 Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
                     senderAddress = keysignPayload.coin.address
                     contractAddress = keysignPayload.toAddress
-                    executeMsg = formattedMessage
+                    executeMsg = contractPayload.executeMsg
                     addAllCoins(coins)
                 }.build()
         }.build()
