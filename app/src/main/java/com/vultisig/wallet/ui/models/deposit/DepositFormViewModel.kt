@@ -266,9 +266,25 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
 
-                    DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                    DepositOption.UnstakeRuji, DepositOption.Custom ->
+                    DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                    DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
+
+                    DepositOption.UnstakeRuji -> {
+                        // TODO: Refactor
+                        val balance = withContext(Dispatchers.IO) {
+                            thorChainApi.getRujiStakeBalance(address = address.address)
+                        }
+                        Account(
+                            token = Coins.coins[Chain.ThorChain]?.get(2) ?: error(""),
+                            tokenValue = TokenValue(
+                                value = balance,
+                                unit = "XX",
+                                decimals = 8,
+                            ),
+                            fiatValue = null,
+                        )
+                    }
 
                     else -> address.accounts.find { it.token.isNativeToken }
                 }?.tokenValue
