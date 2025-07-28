@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,11 +29,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.SendTxUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -45,7 +49,7 @@ internal fun SendTxOverviewScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    tx: SendTxUiModel,
+    tx: UiTransactionInfo,
 ) {
     BackHandler(onBack = onBack)
 
@@ -54,7 +58,7 @@ internal fun SendTxOverviewScreen(
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
-                    title = "Overview",
+                    title = stringResource(R.string.tx_overview_screen_title),
                     onBackClick = onBack,
                 )
             }
@@ -77,9 +81,8 @@ internal fun SendTxOverviewScreen(
                             .padding(horizontal = 48.dp)
                             .fillMaxWidth(),
                     )
-
                     Text(
-                        text = "Transaction successful",
+                        text = stringResource(R.string.tx_overview_screen_title),
                         textAlign = TextAlign.Center,
                         style = Theme.brockmann.body.l.medium
                             .copy(
@@ -94,7 +97,13 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                SwapToken(
+                val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
+                    stringResource(R.string.tx_overview_screen_tx_send)
+                } else {
+                    stringResource(R.string.tx_overview_screen_tx_deposit)
+                }
+                VsOverviewToken(
+                    header = tokenTitle,
                     valuedToken = tx.token,
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
@@ -117,7 +126,7 @@ internal fun SendTxOverviewScreen(
                         .padding(all = 24.dp),
                 ) {
                     TxDetails(
-                        title = "Transaction Hash",
+                        title = stringResource(R.string.tx_overview_screen_tx_hash),
                         hash = transactionHash,
                         link = transactionLink,
                     )
@@ -127,8 +136,8 @@ internal fun SendTxOverviewScreen(
                     )
 
                     TextDetails(
-                        title = "From",
-                        subtitle = tx.srcAddress,
+                        title = stringResource(R.string.tx_overview_screen_tx_from),
+                        subtitle = tx.from,
                     )
 
                     VerifyCardDivider(
@@ -136,16 +145,27 @@ internal fun SendTxOverviewScreen(
                     )
 
                     TextDetails(
-                        title = "To",
-                        subtitle = tx.dstAddress,
+                        title = stringResource(R.string.tx_overview_screen_tx_to),
+                        subtitle = tx.to,
                     )
+
+                    if (tx.memo.isNotEmpty()) {
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+
+                        TextDetails(
+                            title = stringResource(R.string.tx_overview_screen_tx_memo),
+                            subtitle = tx.memo,
+                        )
+                    }
 
                     VerifyCardDivider(
                         size = 1.dp,
                     )
 
                     Details(
-                        title = "Network"
+                        title = stringResource(R.string.tx_overview_screen_tx_network)
                     ) {
                         Row(
                             modifier = Modifier.weight(1f),
@@ -249,6 +269,28 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         transactionLink = "",
         onComplete = {},
-        tx = SendTxUiModel()
+        tx = TransactionTypeUiModel.Deposit(
+            depositTransactionUiModel = DepositTransactionUiModel(
+                token = ValuedToken.Empty,
+                fromAddress = "abx123abx123abx123abx123ab",
+                srcTokenValue = "1231232",
+                estimateFeesFiat = "",
+                memo = "sdfsdfsdfsdfs",
+                nodeAddress = "abx123abx123abx123abx123ab"
+            )
+        ).toUiTransactionInfo()
     )
 }
+
+internal data class UiTransactionInfo(
+    val type: UiTransactionInfoType,
+    val token: ValuedToken,
+    val from: String,
+    val to: String,
+    val memo: String,
+    val networkFeeTokenValue: String,
+    val networkFeeFiatValue: String,
+    val signMethod: String = "",
+)
+
+internal enum class UiTransactionInfoType { Send, Deposit, Swap, SignMessage }
