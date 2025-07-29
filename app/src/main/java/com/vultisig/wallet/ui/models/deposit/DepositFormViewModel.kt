@@ -160,6 +160,7 @@ internal class DepositFormViewModel @Inject constructor(
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
     val thorAddressFieldState = TextFieldState()
+    val rewardsAmountFieldState = TextFieldState()
 
     val state = MutableStateFlow(DepositFormUiModel())
     var isLoading: Boolean
@@ -479,6 +480,8 @@ internal class DepositFormViewModel @Inject constructor(
         basisPointsFieldState.clearText()
         lpUnitsFieldState.clearText()
         assetsFieldState.clearText()
+        rewardsAmountFieldState.clearText()
+        state.update { it.copy(tokenAmountError = null) }
     }
 
     fun validateNodeAddress() {
@@ -1807,6 +1810,9 @@ internal class DepositFormViewModel @Inject constructor(
                         val rewardsTicker = balances.rewardsTicker
                         state.update {
                             it.copy(rewardsAmount = "$formattedAmount $rewardsTicker")
+                        }
+                        if (balances.rewardsAmount > BigInteger.ZERO) {
+                            rewardsAmountFieldState.setTextAndPlaceCursorAtEnd(formattedAmount)
                         }
                     }
 
