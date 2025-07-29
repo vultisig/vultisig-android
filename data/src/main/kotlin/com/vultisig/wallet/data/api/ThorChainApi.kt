@@ -484,5 +484,5 @@ data class RujiStakeBalances(
     val stakeAmount: BigInteger = BigInteger.ZERO,
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
-    val rewardsTicker: String = "",
+    val rewardsTicker: String = "USDC",
 )
