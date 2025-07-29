@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
 object ThorchainFunctions {
@@ -18,8 +19,8 @@ object ThorchainFunctions {
             contractAddress = stakingContract,
             executeMsg = """{ "account": { "bond": {} } }""",
             coins = listOf(
-                vultisig.keysign.v1.Coin(
-                    contractAddress = denom,
+                CosmosCoin(
+                    denom = denom,
                 )
             )
         )
