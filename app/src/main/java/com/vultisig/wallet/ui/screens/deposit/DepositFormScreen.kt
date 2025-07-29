@@ -300,14 +300,18 @@ internal fun DepositFormScreen(
                         }
                     }
 
-                    val isRujiUnstake = depositOption == DepositOption.UnstakeRuji
+                    val isRujiWithdraw = depositOption == DepositOption.UnstakeRuji
+                    val isRujiWithdrawRewards = depositOption == DepositOption.WithdrawRujiRewards
+
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
                     val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
-                        isRujiUnstake -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isRujiWithdraw -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isRujiWithdrawRewards -> stringResource(R.string.deposit_form_rewards_title, rewardsBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
 

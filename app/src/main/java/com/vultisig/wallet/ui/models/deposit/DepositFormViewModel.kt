@@ -124,6 +124,8 @@ internal data class DepositFormUiModel(
     val coinList: List<TokenMergeInfo> = tokensToMerge,
 
     val unstakableAmount: String? = null,
+
+    val rewardsAmount: String? = null,
 )
 
 @HiltViewModel
@@ -270,7 +272,8 @@ internal class DepositFormViewModel @Inject constructor(
                         }
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                    DepositOption.UnstakeRuji, DepositOption.Custom ->
+                    DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                    DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
                     else -> address.accounts.find { it.token.isNativeToken }
@@ -421,46 +424,16 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 DepositOption.UnstakeRuji -> {
-                    val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return@launch
-                    state.update {
-                        it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
-                    }
-                    val addressValue = address.value?.address
+                    handleRujiDepositOption(DepositOption.UnstakeRuji)
+                }
 
-                    if (addressValue != null) {
-                        try {
-                            val unstakable = fetchRujiStakeBalances(addressValue)
-                            val formattedAmount =
-                                CoinType.THORCHAIN.toValue(unstakable.stakeAmount).toString()
-                            state.update {
-                                it.copy(unstakableAmount = formattedAmount + " ${rujiToken.ticker}")
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e)
-                            state.update {
-                                it.copy(unstakableAmount = null)
-                            }
-                        }
-                    }
+                DepositOption.WithdrawRujiRewards -> {
+                    handleRujiDepositOption(DepositOption.WithdrawRujiRewards)
                 }
 
                 else -> Unit
             }
         }
-    }
-
-    private suspend fun fetchRujiStakeBalances(address: String): RujiStakeBalances {
-        if (rujiStakeBalances.value != null) {
-            return rujiStakeBalances.value!!
-        }
-
-        val balances = withContext(Dispatchers.IO) {
-            thorChainApi.getRujiStakeBalance(address)
-        }
-
-        rujiStakeBalances.update { balances }
-
-        return balances
     }
 
     fun selectDstChain(chain: Chain) {
@@ -1787,6 +1760,60 @@ internal class DepositFormViewModel @Inject constructor(
         lpUnits.toIntOrNull() != null &&
                 lpUnits.all { it.isDigit() } &&
                 lpUnits.toInt() > 0
+
+    private suspend fun fetchRujiStakeBalances(address: String): RujiStakeBalances {
+        if (rujiStakeBalances.value != null) {
+            return rujiStakeBalances.value!!
+        }
+
+        val balances = withContext(Dispatchers.IO) {
+            thorChainApi.getRujiStakeBalance(address)
+        }
+
+        rujiStakeBalances.update { balances }
+
+        return balances
+    }
+
+    private suspend fun handleRujiDepositOption(depositOption: DepositOption) {
+        val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return
+        state.update {
+            it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
+        }
+        val addressValue = address.value?.address
+
+        if (addressValue != null) {
+            try {
+                val balances = fetchRujiStakeBalances(addressValue)
+
+                when (depositOption) {
+                    DepositOption.UnstakeRuji -> {
+                        val formattedAmount =
+                            CoinType.THORCHAIN.toValue(balances.stakeAmount).toString()
+                        state.update {
+                            it.copy(unstakableAmount = formattedAmount + " ${rujiToken.ticker}")
+                        }
+                    }
+
+                    DepositOption.WithdrawRujiRewards -> {
+                        val formattedAmount =
+                            CoinType.THORCHAIN.toValue(balances.rewardsAmount).toString()
+                        val rewardsTicker = balances.rewardsTicker
+                        state.update {
+                            it.copy(rewardsAmount = "$formattedAmount $rewardsTicker")
+                        }
+                    }
+
+                    else -> error("Deposit type not supported for RUJI: $depositOption")
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+                state.update {
+                    it.copy(unstakableAmount = null, rewardsAmount = null)
+                }
+            }
+        }
+    }
 }
 
 internal data class TokenMergeInfo(

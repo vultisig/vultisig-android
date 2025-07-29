@@ -306,9 +306,19 @@ internal class ThorChainApiImpl @Inject constructor(
                 account
                 bonded {
                   amount
+                  asset {
+                    metadata {
+                      symbol
+                    }
+                  }
                 }
                 pendingRevenue {
                   amount
+                  asset {
+                    metadata {
+                      symbol
+                    }
+                  }
                 }
               }
             }
