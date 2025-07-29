@@ -78,7 +78,7 @@ interface ThorChainApi {
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
-    suspend fun getRujiStakeBalance(address: String): BigInteger
+    suspend fun getRujiStakeBalance(address: String): StakeBalances
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -295,7 +295,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun getRujiStakeBalance(address: String): BigInteger {
+    override suspend fun getRujiStakeBalance(address: String): StakeBalances {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
 
         val query = """
@@ -305,6 +305,9 @@ internal class ThorChainApiImpl @Inject constructor(
               stakingV2 {
                 account
                 bonded {
+                  amount
+                }
+                pendingRevenue {
                   amount
                 }
               }
@@ -324,8 +327,16 @@ internal class ThorChainApiImpl @Inject constructor(
             throw Exception("Could not fetch balances: ${response.errors}")
         }
 
-        return response.data?.node?.stakingV2?.firstOrNull()?.bonded?.amount?.toBigIntegerOrNull()
-            ?: BigInteger.ZERO
+        val stake =
+            response.data?.node?.stakingV2?.firstOrNull() ?: return StakeBalances()
+
+        val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+        return StakeBalances(
+            stakeAmount = stakeAmount,
+            rewardsAmount = rewardsAmount,
+        )
     }
 
     companion object {
@@ -434,10 +445,21 @@ data class Size(
 @Serializable
 data class StakingV2(
     val account: String,
-    val bonded: Bonded
+    val bonded: Bonded,
+    val pendingRevenue: PendingRevenue?
 )
 
 @Serializable
 data class Bonded(
     val amount: String,
+)
+
+@Serializable
+data class PendingRevenue(
+    val amount: String,
+)
+
+data class StakeBalances(
+    val stakeAmount: BigInteger = BigInteger.ZERO,
+    val rewardsAmount: BigInteger = BigInteger.ZERO,
 )
