@@ -394,4 +394,9 @@
     <string name="keygen_step_generating_eddsa">Генерация ключа EDDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
+    <string name="deposit_option_stake_ruji">Стейк RUJI</string>
+    <string name="deposit_option_unstake_ruji">Разстейк RUJI</string>
+    <string name="deposit_option_withdraw_ruji_rewards">Вывести награды RUJI</string>
+    <string name="deposit_form_rewards_title">Ожидаемые вознаграждения (Баланс: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Ожидаемые вознаграждения</string>
 </resources>

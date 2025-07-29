@@ -165,7 +165,8 @@ class SecurityScannerTransactionFactory(
                 memo = transaction.memo,
                 vaultPublicKeyECDSA = "", // no need for SOL prehash
                 vaultLocalPartyID = "", // no need for SOL prehash
-                libType = null, // no need for SOL prehash
+                libType = null, // no need for SOL prehash,
+                wasmExecuteContractPayload = null,
             )
 
             val transactionZeroX = solanaHelper.getZeroSignedTransaction(keySignPayload)
@@ -203,6 +204,7 @@ class SecurityScannerTransactionFactory(
             vaultPublicKeyECDSA = "", // no need for SUI prehash
             vaultLocalPartyID = "", // no need for SUI prehash
             libType = null, // no need for SUI prehash
+            wasmExecuteContractPayload = null,
         )
 
         val serializedTransaction = SuiHelper.getZeroSignedTransaction(keySignPayload)
@@ -229,6 +231,7 @@ class SecurityScannerTransactionFactory(
             vaultPublicKeyECDSA = "", // no need for BTC
             vaultLocalPartyID = "", // no need for BTC
             libType = null, // no need for BTC
+            wasmExecuteContractPayload = null,
         )
 
         val btcHelper = UtxoHelper.getHelper(Vault("", ""), CoinType.BITCOIN)

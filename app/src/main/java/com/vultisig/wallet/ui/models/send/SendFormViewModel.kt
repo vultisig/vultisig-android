@@ -819,6 +819,7 @@ internal class SendFormViewModel @Inject constructor(
             vaultLocalPartyID = vault.localPartyID,
             utxos = specific.utxos,
             libType = vault.libType,
+            wasmExecuteContractPayload = null,
         )
 
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
@@ -1163,7 +1164,7 @@ internal class SendFormViewModel @Inject constructor(
                 val address = token.address
                 val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
 
-                val uiModel = accountToTokenBalanceUiModelMapper.map(
+                val uiModel = accountToTokenBalanceUiModelMapper(
                     SendSrc(
                         Address(
                             chain = token.chain,
@@ -1175,7 +1176,8 @@ internal class SendFormViewModel @Inject constructor(
                             tokenValue = null,
                             fiatValue = null,
                         )
-                    ))
+                    )
+                )
 
                 advanceGasUiRepository.updateTokenStandard(token.chain.standard)
                 uiState.update {

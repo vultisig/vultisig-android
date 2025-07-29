@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -21,6 +22,7 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler.compileWithSignatures
 import wallet.core.jni.TransactionCompiler.preImageHashes
 import wallet.core.jni.proto.Cosmos
+import wallet.core.jni.proto.Cosmos.Amount
 import wallet.core.jni.proto.TransactionCompiler
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -42,11 +44,12 @@ class CosmosHelper(
     }
 
     fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload): ByteArray {
+        keysignPayload: KeysignPayload
+    ): ByteArray {
         val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
-        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain ?:
-            throw Exception("Invalid swap payload for THORChain")
+        val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
+            ?: throw Exception("Invalid swap payload for THORChain")
         require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
@@ -81,16 +84,7 @@ class CosmosHelper(
                 )
             )
             .setFee(
-                Cosmos.Fee.newBuilder()
-                    .setGas(gasLimit)
-                    .addAllAmounts(
-                        listOf(
-                            Cosmos.Amount.newBuilder()
-                                .setDenom(denom)
-                                .setAmount(atomData.gas.toString())
-                                .build()
-                        )
-                    )
+                buildCosmosFee(atomData)
 
             ).build()
 
@@ -167,18 +161,7 @@ class CosmosHelper(
                             .setTransferTokensMessage(transferMessage)
                             .build()
                     )
-                    .setFee(
-                        Cosmos.Fee.newBuilder()
-                            .setGas(gasLimit)
-                            .addAllAmounts(
-                                listOf(
-                                    Cosmos.Amount.newBuilder()
-                                        .setDenom(denom)
-                                        .setAmount(atomData.gas.toString())
-                                        .build()
-                                )
-                            )
-                    )
+                    .setFee(buildCosmosFee(atomData))
                     .apply {
                         if (memo.isNotEmpty()) {
                             this.memo = memo
@@ -188,6 +171,22 @@ class CosmosHelper(
 
                 input.toByteArray()
             }
+
+            TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT -> {
+                val input = Cosmos.SigningInput.newBuilder()
+                    .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                    .setSigningMode(Cosmos.SigningMode.Protobuf)
+                    .setChainId(coinType.chainId())
+                    .setAccountNumber(atomData.accountNumber.toLong())
+                    .setSequence(atomData.sequence.toLong())
+                    .setMode(Cosmos.BroadcastMode.SYNC)
+                    .addAllMessages(listOf(buildCosmosWasmGenericMsg(keysignPayload)))
+                    .setFee(buildCosmosFee(atomData))
+                    .build()
+
+                return input.toByteArray()
+            }
+
             else -> {
                 var input = Cosmos.SigningInput.newBuilder()
                     .setPublicKey(ByteString.copyFrom(publicKey.data()))
@@ -221,18 +220,7 @@ class CosmosHelper(
                                 .build()
                         )
                     )
-                    .setFee(
-                        Cosmos.Fee.newBuilder()
-                            .setGas(gasLimit)
-                            .addAllAmounts(
-                                listOf(
-                                    Cosmos.Amount.newBuilder()
-                                        .setDenom(denom)
-                                        .setAmount(atomData.gas.toString())
-                                        .build()
-                                )
-                            )
-                    )
+                    .setFee(buildCosmosFee(atomData))
                 keysignPayload.memo?.let {
                     input = input.setMemo(it)
                 }
@@ -241,6 +229,46 @@ class CosmosHelper(
             }
         }
     }
+
+    private fun buildCosmosWasmGenericMsg(keysignPayload: KeysignPayload): Cosmos.Message {
+        val coinType = keysignPayload.coin.chain.coinType
+        require(coinType.validate(keysignPayload.coin.address)) {
+            "Invalid Address type: ${keysignPayload.coin.address}"
+        }
+        requireNotNull(keysignPayload.wasmExecuteContractPayload) {
+            "Invalid empty WasmExecuteContractPayload"
+        }
+        val contractPayload = keysignPayload.wasmExecuteContractPayload
+
+        val coins = contractPayload.coins.filterNotNull().map { coin ->
+            Amount.newBuilder().apply {
+                denom = coin.denom.lowercase()
+                amount = keysignPayload.toAmount.toString()
+            }.build()
+        }
+
+        return Cosmos.Message.newBuilder().apply {
+            wasmExecuteContractGeneric =
+                Cosmos.Message.WasmExecuteContractGeneric.newBuilder().apply {
+                    senderAddress = keysignPayload.coin.address
+                    contractAddress = keysignPayload.toAddress
+                    executeMsg = contractPayload.executeMsg
+                    addAllCoins(coins)
+                }.build()
+        }.build()
+    }
+
+    private fun buildCosmosFee(atomData: BlockChainSpecific.Cosmos): Cosmos.Fee.Builder? =
+        Cosmos.Fee.newBuilder()
+            .setGas(gasLimit)
+            .addAllAmounts(
+                listOf(
+                    Cosmos.Amount.newBuilder()
+                        .setDenom(denom)
+                        .setAmount(atomData.gas.toString())
+                        .build()
+                )
+            )
 
     fun getSignedTransaction(
         input: ByteArray,

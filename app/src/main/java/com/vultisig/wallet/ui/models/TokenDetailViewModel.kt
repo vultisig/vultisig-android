@@ -136,7 +136,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?.let(mapTokenValueToDecimalUiString)
                                 ?: "",
                             fiatBalance = account.fiatValue
-                                ?.let(fiatValueToStringMapper::map),
+                                ?.let { fiatValueToStringMapper(it) },
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                         )
