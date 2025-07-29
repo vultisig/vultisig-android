@@ -385,4 +385,9 @@
     <string name="keygen_step_generating_eddsa">Generiranje EDDSA ključa</string>
     <string name="reshare_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="keygen_email_error">Netočna e-pošta, molimo provjerite</string>
+    <string name="deposit_option_stake_ruji">Uložiti RUJI</string>
+    <string name="deposit_option_unstake_ruji">Povući ulog RUJI</string>
+    <string name="deposit_option_withdraw_ruji_rewards">Podignuti RUJI nagrade</string>
+    <string name="deposit_form_rewards_title">Nagrade na čekanju (Stanje: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Nagrade na čekanju</string>
 </resources>

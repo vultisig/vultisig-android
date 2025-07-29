@@ -2053,6 +2053,17 @@ object Coins {
                 contractAddress = "thor.rkuji",
                 isNativeToken = false,
             ),
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "USDC",
+                logo = "usdc",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "usd-coin",
+                contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                isNativeToken = false,
+            )
         ),
 
         Chain.Ton to listOf(

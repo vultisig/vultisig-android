@@ -394,4 +394,9 @@
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="keygen_email_error">Onjuist e-mailadres, controleer dit</string>
+    <string name="deposit_option_stake_ruji">RUJI staken</string>
+    <string name="deposit_option_unstake_ruji">RUJI unstaken</string>
+    <string name="deposit_option_withdraw_ruji_rewards">RUJI-beloningen opnemen</string>
+    <string name="deposit_form_rewards_title">In afwachting van beloningen (Saldo: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">In afwachting van beloningen</string>
 </resources>
