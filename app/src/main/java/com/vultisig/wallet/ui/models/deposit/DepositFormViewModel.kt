@@ -622,7 +622,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
-                    DepositOption.WithdrawRujiRewards -> createWithdrawRuji()
+                    DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -645,8 +645,56 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private fun createWithdrawRuji(): DepositTransaction {
-        TODO("Not yet implemented")
+    private suspend fun createWithdrawRewardsRuji(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
+        val tokenAmount = fetchRujiStakeBalances(srcAddress).rewardsAmount
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val memo = "claim:${selectedToken.contractAddress}:$tokenAmount"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = STAKING_RUJI_CONTRACT,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmount,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.claimRujiRewards(
+                fromAddress = srcAddress,
+                stakingContract = STAKING_RUJI_CONTRACT,
+            )
+        )
     }
 
     private suspend fun createUnstakeRuji(): DepositTransaction {
@@ -681,7 +729,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val memo = "unstake:${selectedToken.contractAddress}:$tokenAmount"
+        val memo = "withdraw:${selectedToken.contractAddress}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -715,7 +763,6 @@ internal class DepositFormViewModel @Inject constructor(
                 fromAddress = srcAddress,
                 stakingContract = STAKING_RUJI_CONTRACT,
                 amount = tokenAmount.toString(),
-                denom = selectedToken.contractAddress,
             )
         )
     }
@@ -739,7 +786,7 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        val memo = "stake:${selectedToken.contractAddress}:$tokenAmount"
+        val memo = "bond:${selectedToken.contractAddress}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
             .getSpecific(

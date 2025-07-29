@@ -29,11 +29,9 @@ object ThorchainFunctions {
         fromAddress: String,
         amount: String,
         stakingContract: String,
-        denom: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "fromAddress Cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract Cannot be empty" }
-        require(denom.isNotEmpty()) { "Denom Cannot be empty" }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
@@ -46,11 +44,9 @@ object ThorchainFunctions {
     fun claimRujiRewards(
         fromAddress: String,
         stakingContract: String,
-        denom: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
-        require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,

@@ -331,11 +331,15 @@ internal class ThorChainApiImpl @Inject constructor(
             response.data?.node?.stakingV2?.firstOrNull() ?: return RujiStakeBalances()
 
         val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: ""
 
         return RujiStakeBalances(
             stakeAmount = stakeAmount,
+            stakeTicker = stakeTicker,
             rewardsAmount = rewardsAmount,
+            rewardsTicker = rewardsTicker,
         )
     }
 
@@ -452,14 +456,23 @@ data class StakingV2(
 @Serializable
 data class Bonded(
     val amount: String,
+    val asset: Asset,
 )
 
 @Serializable
 data class PendingRevenue(
     val amount: String,
+    val asset: Asset,
+)
+
+@Serializable
+data class Asset(
+    val metadata: Metadata? = null,
 )
 
 data class RujiStakeBalances(
     val stakeAmount: BigInteger = BigInteger.ZERO,
+    val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
+    val rewardsTicker: String = "",
 )
