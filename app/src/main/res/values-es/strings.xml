@@ -385,4 +385,7 @@
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
     <string name="keygen_email_error">Correo electrónico incorrecto, por favor verifique</string>
+    <string name="deposit_option_stake_ruji">Stake RUJI</string>
+    <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
+    <string name="deposit_option_withdraw_ruji_rewards">Retirar recompensas RUJI</string>
 </resources>
