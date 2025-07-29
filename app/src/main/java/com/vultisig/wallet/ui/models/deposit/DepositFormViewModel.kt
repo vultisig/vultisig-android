@@ -654,9 +654,6 @@ internal class DepositFormViewModel @Inject constructor(
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
 
         val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
@@ -665,9 +662,25 @@ internal class DepositFormViewModel @Inject constructor(
         val selectedToken = selectedAccount.token
         val srcAddress = selectedToken.address
 
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        val stakeBalance = fetchRujiStakeBalances(srcAddress).stakeAmount
 
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()?.let { CoinType.THORCHAIN.toUnit(it) }
+
+        if (tokenAmount == null || tokenAmount <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        if (tokenAmount > stakeBalance) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_max_shares)
+            )
+        }
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val memo = "unstake:${selectedToken.contractAddress}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
@@ -1544,16 +1557,6 @@ internal class DepositFormViewModel @Inject constructor(
             } finally {
                 isLoading = false
             }
-        }
-    }
-
-    private fun onLoadRujiStakeBalances(address: String) {
-        viewModelScope.launch {
-            val stakeBalances = withContext(Dispatchers.IO) {
-                thorChainApi.getRujiStakeBalance(address = address)
-            }
-
-            rujiStakeBalances.update { stakeBalances }
         }
     }
 
