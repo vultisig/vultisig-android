@@ -424,7 +424,7 @@ internal class DepositFormViewModel @Inject constructor(
                     val rujiToken =
                         Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
                     state.update {
-                        it.copy(selectedToken = rujiToken)
+                        it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
                     }
                     val addressValue = address.value?.address
 
