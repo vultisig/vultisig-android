@@ -631,6 +631,12 @@ internal class DepositFormViewModel @Inject constructor(
         val srcAddress = selectedToken.address
         val tokenAmount = fetchRujiStakeBalances(srcAddress).rewardsAmount
 
+        if (tokenAmount <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val memo = "claim:${selectedToken.contractAddress}:$tokenAmount"
 
