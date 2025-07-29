@@ -388,4 +388,6 @@
     <string name="deposit_option_stake_ruji">Stake RUJI</string>
     <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
     <string name="deposit_option_withdraw_ruji_rewards">Retirar recompensas RUJI</string>
+    <string name="deposit_form_rewards_title">Recompensas Pendientes (Saldo: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
 </resources>
