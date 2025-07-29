@@ -1,9 +1,6 @@
 package com.vultisig.wallet.ui.screens.transaction
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,29 +9,23 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -54,231 +45,148 @@ internal fun SwapTransactionOverviewScreen(
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
 ) {
-    val uriHandler = VsUriHandler()
-    BackHandler(onBack = onBack)
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            if (showToolbar) {
-                VsTopAppBar(
-                    title = "Overview",
-                    onBackClick = onBack,
+    TxDoneScaffold(
+        transactionHash = transactionHash,
+        showToolbar = showToolbar,
+        transactionLink = transactionLink,
+        onBack = onBack,
+        tokenContent = {
+            Box {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    VsOverviewToken(
+                        header = "From",
+                        valuedToken = transactionTypeUiModel.src,
+                        shape = RoundedWithCutoutShape(
+                            cutoutPosition = CutoutPosition.End,
+                            cutoutOffsetX = (-4).dp,
+                            cutoutRadius = 18.dp,
+                        ),
+                        modifier = Modifier
+                            .weight(1f),
+                    )
+
+                    VsOverviewToken(
+                        header = "To",
+                        valuedToken = transactionTypeUiModel.dst,
+                        shape = RoundedWithCutoutShape(
+                            cutoutPosition = CutoutPosition.Start,
+                            cutoutOffsetX = (-4).dp,
+                            cutoutRadius = 18.dp,
+                        ),
+                        modifier = Modifier
+                            .weight(1f),
+                    )
+                }
+
+                Icon(
+                    painter = painterResource(R.drawable.ic_caret_right),
+                    contentDescription = null,
+                    tint = Theme.colors.text.button.disabled,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = Theme.colors.borders.light,
+                            shape = CircleShape,
+                        )
+                        .padding(6.dp)
+                        .align(Alignment.Center)
+                )
+
+            }
+        },
+        detailContent = {
+            Column {
+                TxDetails(
+                    title = "Swap Tx Hash",
+                    hash = transactionHash,
+                    link = transactionLink,
+                    modifier = Modifier.padding(
+                        vertical = 12.dp,
+                    )
+                )
+
+                VerifyCardDivider(
+                    size = 1.dp,
+                )
+
+                // TODO make check more sane
+                if (approveTransactionHash.isNotEmpty()) {
+                    TxDetails(
+                        title = "Approval Tx Hash",
+                        hash = approveTransactionHash,
+                        link = approveTransactionLink,
+                        modifier = Modifier.padding(
+                            vertical = 12.dp,
+                        )
+                    )
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+                }
+
+                TextDetails(
+                    title = "From",
+                    subtitle = transactionTypeUiModel.src.token.address,
+                )
+
+                VerifyCardDivider(
+                    size = 1.dp,
+                )
+
+                TextDetails(
+                    title = "To",
+                    subtitle = transactionTypeUiModel.dst.token.address,
+                )
+
+                VerifyCardDivider(
+                    size = 1.dp,
+                )
+
+                TextDetails(
+                    title = "Total Fees",
+                    subtitle = transactionTypeUiModel.totalFee,
                 )
             }
         },
-        content = { contentPadding ->
-            Column(
+        bottomBarContent = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(contentPadding)
+                    .fillMaxWidth()
                     .padding(
-                        all = 16.dp,
+                        horizontal = 24.dp,
+                        vertical = 12.dp,
                     ),
             ) {
-                Box {
-                    Image(
-                        painter = painterResource(R.drawable.img_tx_overview_bg),
-                        contentDescription = null,
-                        alignment = Alignment.Center,
+                if (progressLink != null && progressLink.isNotEmpty()) {
+                    val uriHandler = VsUriHandler()
+                    VsButton(
+                        label = "Track",
+                        variant = VsButtonVariant.Secondary,
+                        size = VsButtonSize.Small,
                         modifier = Modifier
-                            .padding(horizontal = 48.dp)
-                            .fillMaxWidth(),
-                    )
-
-                    Text(
-                        text = "Transaction successful",
-                        textAlign = TextAlign.Center,
-                        style = Theme.brockmann.body.l.medium
-                            .copy(
-                                brush = Theme.colors.gradients.primary,
-                            ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .padding(
-                                bottom = 48.dp,
-                            ),
-                    )
-                }
-
-                Box {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        VsOverviewToken(
-                            header = "From",
-                            valuedToken = transactionTypeUiModel.src,
-                            shape = RoundedWithCutoutShape(
-                                cutoutPosition = CutoutPosition.End,
-                                cutoutOffsetX = (-4).dp,
-                                cutoutRadius = 18.dp,
-                            ),
-                            modifier = Modifier
-                                .weight(1f),
-                        )
-
-                        VsOverviewToken(
-                            header = "To",
-                            valuedToken = transactionTypeUiModel.dst,
-                            shape = RoundedWithCutoutShape(
-                                cutoutPosition = CutoutPosition.Start,
-                                cutoutOffsetX = (-4).dp,
-                                cutoutRadius = 18.dp,
-                            ),
-                            modifier = Modifier
-                                .weight(1f),
-                        )
-                    }
-
-                    Icon(
-                        painter = painterResource(R.drawable.ic_caret_right),
-                        contentDescription = null,
-                        tint = Theme.colors.text.button.disabled,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                color = Theme.colors.borders.light,
-                                shape = CircleShape,
-                            )
-                            .padding(6.dp)
-                            .align(Alignment.Center)
-                    )
-
-                }
-
-                UiSpacer(8.dp)
-
-                Column(
-                    modifier = Modifier
-                        .background(
-                            color = Theme.colors.backgrounds.disabled,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Theme.colors.borders.light,
-                            shape = RoundedCornerShape(16.dp),
-                        )
-                        .padding(all = 24.dp),
-                ) {
-                    TxDetails(
-                        title = "Swap Tx Hash",
-                        hash = transactionHash,
-                        link = transactionLink,
-                    )
-
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
-
-                    // TODO make check more sane
-                    if (approveTransactionHash.isNotEmpty()) {
-                        TxDetails(
-                            title = "Approval Tx Hash",
-                            hash = approveTransactionHash,
-                            link = approveTransactionLink,
-                        )
-
-                        VerifyCardDivider(
-                            size = 1.dp,
-                        )
-                    }
-
-                    TextDetails(
-                        title = "From",
-                        subtitle = transactionTypeUiModel.src.token.address,
-                    )
-
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
-
-                    TextDetails(
-                        title = "To",
-                        subtitle = transactionTypeUiModel.dst.token.address,
-                    )
-
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
-
-                    TextDetails(
-                        title = "Total Fees",
-                        subtitle = transactionTypeUiModel.totalFee,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (progressLink != null && progressLink.isNotEmpty()) {
-                            VsButton(
-                                label = "Track",
-                                variant = VsButtonVariant.Secondary,
-                                size = VsButtonSize.Small,
-                                modifier = Modifier
-                                    .weight(1f),
-                                onClick = {
-                                    uriHandler.openUri(progressLink)
-                                }
-                            )
+                            .weight(1f),
+                        onClick = {
+                            uriHandler.openUri(progressLink)
                         }
-
-                        VsButton(
-                            label = "Done",
-                            variant = VsButtonVariant.Primary,
-                            size = VsButtonSize.Small,
-                            modifier = Modifier
-                                .weight(1f),
-                            onClick = onComplete,
-                        )
-                    }
+                    )
                 }
-            }
 
+                VsButton(
+                    label = "Done",
+                    variant = VsButtonVariant.Primary,
+                    size = VsButtonSize.Small,
+                    modifier = Modifier
+                        .weight(1f),
+                    onClick = onComplete,
+                )
+            }
         }
     )
-}
-
-@Composable
-private fun TxDetails(
-    title: String,
-    hash: String,
-    link: String,
-) {
-    val uriHandler = VsUriHandler()
-
-    Details(
-        title = title
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .weight(1f),
-        ) {
-            Text(
-                text = hash,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                modifier = Modifier
-                    .weight(1f),
-            )
-
-            UiIcon(
-                drawableResId = R.drawable.ic_square_arrow_top_right,
-                size = 16.dp,
-                tint = Theme.colors.text.primary,
-                onClick = {
-                    uriHandler.openUri(link)
-                }
-            )
-        }
-    }
 }
 
 @Composable
@@ -287,7 +195,10 @@ internal fun TextDetails(
     subtitle: String,
 ) {
     Details(
-        title = title
+        title = title,
+        modifier = Modifier.padding(
+            vertical = 12.dp,
+        ),
     ) {
         Text(
             text = subtitle,
@@ -305,20 +216,19 @@ internal fun TextDetails(
 internal fun Details(
     title: String,
     modifier: Modifier = Modifier,
+    titleColor: Color? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(
-                vertical = 12.dp,
-            )
+
     ) {
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = titleColor ?: Theme.colors.text.extraLight,
         )
 
         content()
