@@ -78,7 +78,7 @@ interface ThorChainApi {
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
-    suspend fun getRujiStakeBalance(address: String): StakeBalances
+    suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -295,7 +295,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun getRujiStakeBalance(address: String): StakeBalances {
+    override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
 
         val query = """
@@ -328,12 +328,12 @@ internal class ThorChainApiImpl @Inject constructor(
         }
 
         val stake =
-            response.data?.node?.stakingV2?.firstOrNull() ?: return StakeBalances()
+            response.data?.node?.stakingV2?.firstOrNull() ?: return RujiStakeBalances()
 
         val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-        return StakeBalances(
+        return RujiStakeBalances(
             stakeAmount = stakeAmount,
             rewardsAmount = rewardsAmount,
         )
@@ -459,7 +459,7 @@ data class PendingRevenue(
     val amount: String,
 )
 
-data class StakeBalances(
+data class RujiStakeBalances(
     val stakeAmount: BigInteger = BigInteger.ZERO,
     val rewardsAmount: BigInteger = BigInteger.ZERO,
 )

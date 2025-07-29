@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MergeAccount
+import com.vultisig.wallet.data.api.RujiStakeBalances
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
@@ -121,7 +122,7 @@ internal data class DepositFormUiModel(
     val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
 
-    val unstakableTcyAmount: String? = null,
+    val unstakableAmount: String? = null,
 )
 
 @HiltViewModel
@@ -144,7 +145,8 @@ internal class DepositFormViewModel @Inject constructor(
 
     private lateinit var vaultId: String
     private var chain: Chain? = null
-    private var rujiBalances = MutableStateFlow<List<MergeAccount>?>(null)
+    private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
+    private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -267,22 +269,8 @@ internal class DepositFormViewModel @Inject constructor(
                         }
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                    DepositOption.Custom ->
+                    DepositOption.UnstakeRuji, DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
-
-                    DepositOption.UnstakeRuji -> {
-                        val balance = withContext(Dispatchers.IO) {
-                            thorChainApi.getRujiStakeBalance(address = address.address)
-                        }
-
-                        address.accounts.find { it.token.id == selectedToken.id }?.copy(
-                            tokenValue = TokenValue(
-                                value = balance.stakeAmount,
-                                unit = "XX",
-                                decimals = 8,
-                            )
-                        ) ?: return@combine
-                    }
 
                     else -> address.accounts.find { it.token.isNativeToken }
                 }?.tokenValue
@@ -394,12 +382,12 @@ internal class DepositFormViewModel @Inject constructor(
 
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave ->
                     state.update {
-                        it.copy(selectedToken = Tokens.rune, unstakableTcyAmount = null)
+                        it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
                     }
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy, unstakableTcyAmount = null)
+                        it.copy(selectedToken = Tokens.tcy, unstakableAmount = null)
                     }
                     // Fetch unstakable TCY amount
                     val addressValue = address.value?.address
@@ -411,20 +399,20 @@ internal class DepositFormViewModel @Inject constructor(
                                 }
                                 val formattedAmount = formatUnstakableTcyAmount(unstakable)
                                 state.update {
-                                    it.copy(unstakableTcyAmount = formattedAmount)
+                                    it.copy(unstakableAmount = formattedAmount)
                                 }
                             } catch (e: Exception) {
                                 Timber.e(e)
                                 // Failed to fetch unstakable TCY amount
                                 state.update {
-                                    it.copy(unstakableTcyAmount = null)
+                                    it.copy(unstakableAmount = null)
                                 }
                             }
                         }
                     }
                 }
 
-                DepositOption.StakeRuji, DepositOption.UnstakeRuji -> {
+                DepositOption.StakeRuji -> {
                     val rujiToken =
                         Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
                     state.update {
@@ -432,9 +420,48 @@ internal class DepositFormViewModel @Inject constructor(
                     }
                 }
 
+                DepositOption.UnstakeRuji -> {
+                    val rujiToken =
+                        Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
+                    state.update {
+                        it.copy(selectedToken = rujiToken)
+                    }
+                    val addressValue = address.value?.address
+
+                    if (addressValue != null) {
+                        try {
+                            val unstakable = fetchRujiStakeBalances(addressValue)
+                            val formattedAmount =
+                                CoinType.THORCHAIN.toValue(unstakable.stakeAmount).toString()
+                            state.update {
+                                it.copy(unstakableAmount = formattedAmount + " ${rujiToken.ticker}")
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            state.update {
+                                it.copy(unstakableAmount = null)
+                            }
+                        }
+                    }
+                }
+
                 else -> Unit
             }
         }
+    }
+
+    private suspend fun fetchRujiStakeBalances(address: String): RujiStakeBalances {
+        if (rujiStakeBalances.value != null) {
+            return rujiStakeBalances.value!!
+        }
+
+        val balances = withContext(Dispatchers.IO) {
+            thorChainApi.getRujiStakeBalance(address)
+        }
+
+        rujiStakeBalances.update { balances }
+
+        return balances
     }
 
     fun selectDstChain(chain: Chain) {
@@ -464,8 +491,8 @@ internal class DepositFormViewModel @Inject constructor(
         state.update {
             it.copy(selectedUnMergeCoin = unmergeInfo)
         }
-        if (rujiBalances.value == null) {
-            onLoadRujiBalances()
+        if (rujiMergeBalances.value == null) {
+            onLoadRujiMergeBalances()
         } else {
             setUnMergeTokenSharesField(unmergeInfo)
         }
@@ -739,7 +766,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
-        val unMergeAccountBalance = rujiBalances.value
+        val unMergeAccountBalance = rujiMergeBalances.value
             ?.firstOrNull {
                 it.pool?.mergeAsset?.metadata?.symbol.equals(
                     unmergeToken.ticker,
@@ -1496,15 +1523,16 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    fun onLoadRujiBalances() {
+    fun onLoadRujiMergeBalances() {
         viewModelScope.launch {
             try {
                 val selectedToken = state.value.selectedUnMergeCoin
                 val addressString = address.value?.address
                     ?: throw RuntimeException("Invalid address: cannot fetch balance")
 
-                rujiBalances.value = withContext(Dispatchers.IO) {
-                    thorChainApi.getRujiMergeBalances(addressString)
+                withContext(Dispatchers.IO) {
+                    val newBalances = thorChainApi.getRujiMergeBalances(addressString)
+                    rujiMergeBalances.update { newBalances }
                 }
 
                 setUnMergeTokenSharesField(selectedToken)
@@ -1519,9 +1547,19 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
+    private fun onLoadRujiStakeBalances(address: String) {
+        viewModelScope.launch {
+            val stakeBalances = withContext(Dispatchers.IO) {
+                thorChainApi.getRujiStakeBalance(address = address)
+            }
+
+            rujiStakeBalances.update { stakeBalances }
+        }
+    }
+
     private fun setUnMergeTokenSharesField(selectedToken: TokenMergeInfo) {
         val selectedSymbol = selectedToken.ticker
-        val selectedMergeAccount = rujiBalances.value
+        val selectedMergeAccount = rujiMergeBalances.value
             ?.firstOrNull {
                 it.pool?.mergeAsset?.metadata?.symbol.equals(selectedSymbol, true)
             } ?: return
@@ -1570,7 +1608,7 @@ internal class DepositFormViewModel @Inject constructor(
             // For UnstakeTCY operations, check against the unstakable amount instead of the wallet balance
             if (state.value.depositOption == DepositOption.UnstakeTcy && selectedToken.ticker == "TCY") {
                 // Convert the unstakable amount string to BigInteger for comparison
-                val unstakableAmount = state.value.unstakableTcyAmount
+                val unstakableAmount = state.value.unstakableAmount
                     ?.toBigDecimalOrNull()
                     ?.movePointRight(selectedToken.decimal)
                     ?.toBigInteger() ?: BigInteger.ZERO

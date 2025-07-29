@@ -99,7 +99,7 @@ internal fun DepositFormScreen(
 
         onOpenSelectToken = model::selectToken,
 
-        onLoadRujiBalances = model::onLoadRujiBalances,
+        onLoadRujiBalances = model::onLoadRujiMergeBalances,
     )
 }
 
@@ -300,12 +300,14 @@ internal fun DepositFormScreen(
                         }
                     }
 
+                    val isRujiUnstake = depositOption == DepositOption.UnstakeRuji
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
-                    val unstakableBalance = state.unstakableTcyAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isRujiUnstake -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
 
