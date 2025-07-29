@@ -63,32 +63,30 @@ internal class KeysignShareViewModel @Inject constructor(
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    fun loadTransaction(transactionId: TransactionId) {
-        runBlocking {
-            val transaction = transactionRepository.getTransaction(transactionId).first()
+    suspend fun loadTransaction(transactionId: TransactionId) {
+        val transaction = transactionRepository.getTransaction(transactionId).first()
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val coin =
-                vault.coins.find { it.id == transaction.token.id && it.chain.id == transaction.chainId }!!
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val coin =
+            vault.coins.find { it.id == transaction.token.id && it.chain.id == transaction.chainId }!!
 
-            this@KeysignShareViewModel.vault = vault
-            amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
-            customMessagePayload = null
-            keysignPayload = KeysignPayload(
-                coin = coin,
-                toAddress = transaction.dstAddress,
-                toAmount = transaction.tokenValue.value,
-                blockChainSpecific = transaction.blockChainSpecific,
-                memo = transaction.memo,
-                vaultPublicKeyECDSA = pubKeyECDSA,
-                utxos = transaction.utxos,
-                vaultLocalPartyID = vault.localPartyID,
-                libType = vault.libType,
-                wasmExecuteContractPayload = null,
-            )
-        }
+        this@KeysignShareViewModel.vault = vault
+        amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
+        customMessagePayload = null
+        keysignPayload = KeysignPayload(
+            coin = coin,
+            toAddress = transaction.dstAddress,
+            toAmount = transaction.tokenValue.value,
+            blockChainSpecific = transaction.blockChainSpecific,
+            memo = transaction.memo,
+            vaultPublicKeyECDSA = pubKeyECDSA,
+            utxos = transaction.utxos,
+            vaultLocalPartyID = vault.localPartyID,
+            libType = vault.libType,
+            wasmExecuteContractPayload = null,
+        )
     }
 
     fun loadSignMessageTx(id: String) {
@@ -105,53 +103,51 @@ internal class KeysignShareViewModel @Inject constructor(
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    fun loadSwapTransaction(transactionId: TransactionId) {
-        runBlocking {
-            val transaction = swapTransactionRepository.getTransaction(transactionId)
+    suspend fun loadSwapTransaction(transactionId: TransactionId) {
+        val transaction = swapTransactionRepository.getTransaction(transactionId)
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val srcToken = transaction.srcToken
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val srcToken = transaction.srcToken
 
-            val specific = transaction.blockChainSpecific
+        val specific = transaction.blockChainSpecific
 
-            this@KeysignShareViewModel.vault = vault
+        this@KeysignShareViewModel.vault = vault
 
-            amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
-            toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
+        amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
+        toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
-            customMessagePayload = null
-            keysignPayload = when (transaction) {
+        customMessagePayload = null
+        keysignPayload = when (transaction) {
 
-                is SwapTransaction.RegularSwapTransaction -> {
-                    var swapPayload: SwapPayload = transaction.payload
-                    var dstToken = swapPayload.dstToken
-                    if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
-                        dstToken = dstToken.adjustBitcoinCashAddressFormat()
-                        swapPayload =
-                            swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
-                    }
-
-                    KeysignPayload(
-                        coin = srcToken,
-                        toAddress = transaction.dstAddress,
-                        toAmount = transaction.srcTokenValue.value,
-                        blockChainSpecific = specific.blockChainSpecific,
-                        swapPayload = swapPayload,
-                        vaultPublicKeyECDSA = pubKeyECDSA,
-                        utxos = specific.utxos,
-                        vaultLocalPartyID = vault.localPartyID,
-                        memo = transaction.memo,
-                        approvePayload = if (transaction.isApprovalRequired) ERC20ApprovePayload(
-                            amount = transaction.srcTokenValue.value,
-                            spender = transaction.dstAddress,
-                        )
-                        else null,
-                        libType = vault.libType,
-                        wasmExecuteContractPayload = null,
-                    )
+            is SwapTransaction.RegularSwapTransaction -> {
+                var swapPayload: SwapPayload = transaction.payload
+                var dstToken = swapPayload.dstToken
+                if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
+                    dstToken = dstToken.adjustBitcoinCashAddressFormat()
+                    swapPayload =
+                        swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
                 }
+
+                KeysignPayload(
+                    coin = srcToken,
+                    toAddress = transaction.dstAddress,
+                    toAmount = transaction.srcTokenValue.value,
+                    blockChainSpecific = specific.blockChainSpecific,
+                    swapPayload = swapPayload,
+                    vaultPublicKeyECDSA = pubKeyECDSA,
+                    utxos = specific.utxos,
+                    vaultLocalPartyID = vault.localPartyID,
+                    memo = transaction.memo,
+                    approvePayload = if (transaction.isApprovalRequired) ERC20ApprovePayload(
+                        amount = transaction.srcTokenValue.value,
+                        spender = transaction.dstAddress,
+                    )
+                    else null,
+                    libType = vault.libType,
+                    wasmExecuteContractPayload = null,
+                )
             }
         }
     }
@@ -163,33 +159,31 @@ internal class KeysignShareViewModel @Inject constructor(
     )
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    fun loadDepositTransaction(transactionId: TransactionId) {
-        runBlocking {
-            val transaction = depositTransaction.getTransaction(transactionId)
+    suspend fun loadDepositTransaction(transactionId: TransactionId) {
+        val transaction = depositTransaction.getTransaction(transactionId)
 
-            val vault = vaultRepository.get(transaction.vaultId)!!
+        val vault = vaultRepository.get(transaction.vaultId)!!
 
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val srcToken = transaction.srcToken
+        val pubKeyECDSA = vault.pubKeyECDSA
+        val srcToken = transaction.srcToken
 
-            val specific = transaction.blockChainSpecific
+        val specific = transaction.blockChainSpecific
 
-            this@KeysignShareViewModel.vault = vault
+        this@KeysignShareViewModel.vault = vault
 
-            customMessagePayload = null
-            keysignPayload = KeysignPayload(
-                coin = srcToken,
-                toAddress = transaction.dstAddress,
-                toAmount = transaction.srcTokenValue.value,
-                blockChainSpecific = specific,
-                vaultPublicKeyECDSA = pubKeyECDSA,
-                utxos = emptyList(),
-                vaultLocalPartyID = vault.localPartyID,
-                memo = transaction.memo,
-                libType = vault.libType,
-                wasmExecuteContractPayload = null,
-            )
-        }
+        customMessagePayload = null
+        keysignPayload = KeysignPayload(
+            coin = srcToken,
+            toAddress = transaction.dstAddress,
+            toAmount = transaction.srcTokenValue.value,
+            blockChainSpecific = specific,
+            vaultPublicKeyECDSA = pubKeyECDSA,
+            utxos = emptyList(),
+            vaultLocalPartyID = vault.localPartyID,
+            memo = transaction.memo,
+            libType = vault.libType,
+            wasmExecuteContractPayload = null,
+        )
     }
 
     fun loadQrPainter(address: String) =

@@ -31,11 +31,16 @@ internal fun KeysignScreen(
     keysignShareViewModel: KeysignShareViewModel =
         hiltViewModel(LocalActivity.current as MainActivity)
 ) {
-    when (txType) {
-        Send -> keysignShareViewModel.loadTransaction(transactionId)
-        Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
-        Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
-        Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
+    LaunchedEffect(
+        txType,
+        transactionId
+    ) {
+        when (txType) {
+            Send -> keysignShareViewModel.loadTransaction(transactionId)
+            Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
+            Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
+            Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
+        }
     }
 
     KeysignScreen()
