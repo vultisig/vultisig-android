@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.getCoinBy
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -413,16 +414,14 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 DepositOption.StakeRuji -> {
-                    val rujiToken =
-                        Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
+                    val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return@launch
                     state.update {
                         it.copy(selectedToken = rujiToken)
                     }
                 }
 
                 DepositOption.UnstakeRuji -> {
-                    val rujiToken =
-                        Coins.coins[Chain.ThorChain]?.first { it.ticker == "RUJI" } ?: return@launch
+                    val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return@launch
                     state.update {
                         it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
                     }
