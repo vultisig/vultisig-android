@@ -1967,7 +1967,7 @@ private val slippageOptions = listOf(
     "Slippage 1%",
     "Slippage 2%",
     "Slippage 5%",
-    "Slippage 7,5%"
+    "Slippage 7.5%"
 )
 
 const val STAKING_RUJI_CONTRACT =
