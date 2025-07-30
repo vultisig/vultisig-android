@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
+import com.vultisig.wallet.ui.screens.function.SellYTokensFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
@@ -152,6 +153,8 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
+
+    onSelectSlippage: (String) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -209,6 +212,8 @@ internal fun DepositFormScreen(
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_withdraw_ruji_rewards)
                         DepositOption.ReceiveYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
                         DepositOption.ReceiveYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
+                        DepositOption.SellYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
+                        DepositOption.SellYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
                     }
                 })
 
@@ -285,6 +290,15 @@ internal fun DepositFormScreen(
                         onAmountLostFocus = onAmountLostFocus,
                         amountError = state.amountError,
                         onLoadRujiBalances = onLoadRujiBalances,
+                    )
+                }
+
+                DepositOption.SellYRUNE, DepositOption.SellYTCY -> {
+                    SellYTokensFunctionScreen(
+                        selectedSlippage = state.selectedSlippage,
+                        slippageOptions = state.slippageList,
+                        onSelectSlippage = onSelectSlippage,
+                        onAmountLostFocus = {},
                     )
                 }
 
@@ -450,7 +464,6 @@ internal fun DepositFormScreen(
                 .padding(all = 16.dp),
         )
     }
-
 }
 
 @Preview

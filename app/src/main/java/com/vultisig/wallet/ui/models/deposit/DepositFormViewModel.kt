@@ -91,6 +91,8 @@ internal enum class DepositOption {
     WithdrawRujiRewards,
     ReceiveYTCY,
     ReceiveYRUNE,
+    SellYRUNE,
+    SellYTCY,
 }
 
 @Immutable
@@ -128,6 +130,9 @@ internal data class DepositFormUiModel(
     val unstakableAmount: String? = null,
 
     val rewardsAmount: String? = null,
+
+    val selectedSlippage: String = slippageOptions.first(),
+    val slippageList: List<String> = slippageOptions
 )
 
 @HiltViewModel
@@ -198,6 +203,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.WithdrawRujiRewards,
                 DepositOption.ReceiveYTCY,
                 DepositOption.ReceiveYRUNE,
+                DepositOption.SellYTCY,
+                DepositOption.SellYRUNE,
             )
 
             Chain.MayaChain -> listOf(
@@ -611,6 +618,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
                     DepositOption.ReceiveYTCY -> createReceiveYToken(DepositOption.ReceiveYTCY)
                     DepositOption.ReceiveYRUNE -> createReceiveYToken(DepositOption.ReceiveYRUNE)
+                    DepositOption.SellYRUNE -> TODO()
+                    DepositOption.SellYTCY -> TODO()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -1938,6 +1947,13 @@ private val tokensToMerge = listOf(
         ticker = "LVN",
         contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf"
     ),
+)
+
+private val slippageOptions = listOf(
+    "Slippage 1%",
+    "Slippage 2%",
+    "Slippage 5%",
+    "Slippage 7,5%"
 )
 
 const val STAKING_RUJI_CONTRACT =
