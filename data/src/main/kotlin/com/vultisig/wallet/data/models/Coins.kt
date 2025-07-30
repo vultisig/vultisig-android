@@ -2063,7 +2063,29 @@ object Coins {
                 priceProviderID = "usd-coin",
                 contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                 isNativeToken = false,
-            )
+            ),
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "yRUNE",
+                logo = "yrune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "thorchain",
+                contractAddress = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y", // TODO: Change
+                isNativeToken = false
+            ),
+            Coin(
+                chain = Chain.ThorChain,
+                ticker = "yTCY",
+                logo = "ytcy",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "tcy",
+                contractAddress = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z", // TODO: Change
+                isNativeToken = false
+            ),
         ),
 
         Chain.Ton to listOf(
