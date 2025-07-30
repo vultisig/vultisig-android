@@ -207,6 +207,8 @@ internal fun DepositFormScreen(
                         DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
                         DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_withdraw_ruji_rewards)
+                        DepositOption.ReceiveYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
+                        DepositOption.ReceiveYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
                     }
                 })
 
@@ -291,6 +293,7 @@ internal fun DepositFormScreen(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                            DepositOption.ReceiveYRUNE, DepositOption.ReceiveYTCY,
                         )
                     ) {
                         FormCard {
@@ -328,7 +331,8 @@ internal fun DepositFormScreen(
                         (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
-                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji
+                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
+                        depositOption == DepositOption.ReceiveYRUNE || depositOption == DepositOption.ReceiveYTCY
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -344,6 +348,7 @@ internal fun DepositFormScreen(
                             DepositOption.Custom, DepositOption.StakeTcy,
                             DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                            DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
                         )
                     ) {
                         FormTextFieldCard(

@@ -89,6 +89,8 @@ internal enum class DepositOption {
     StakeRuji,
     UnstakeRuji,
     WithdrawRujiRewards,
+    ReceiveYTCY,
+    ReceiveYRUNE,
 }
 
 @Immutable
@@ -194,6 +196,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.StakeRuji,
                 DepositOption.UnstakeRuji,
                 DepositOption.WithdrawRujiRewards,
+                DepositOption.ReceiveYTCY,
+                DepositOption.ReceiveYRUNE,
             )
 
             Chain.MayaChain -> listOf(
@@ -274,6 +278,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                    DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
                     DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
@@ -385,9 +390,15 @@ internal class DepositFormViewModel @Inject constructor(
 
                 }
 
-                DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave ->
+                DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
+                DepositOption.ReceiveYRUNE->
                     state.update {
                         it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
+                    }
+
+                DepositOption.ReceiveYTCY ->
+                    state.update {
+                        it.copy(selectedToken = Tokens.tcy)
                     }
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
@@ -598,6 +609,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
+                    DepositOption.ReceiveYTCY -> createReceiveYToken()
+                    DepositOption.ReceiveYRUNE -> createReceiveYToken()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -618,6 +631,10 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = false
             }
         }
+    }
+
+    private suspend fun createReceiveYToken(): DepositTransaction {
+        error("")
     }
 
     private suspend fun createWithdrawRewardsRuji(): DepositTransaction {
