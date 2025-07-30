@@ -185,6 +185,7 @@ internal class SelectAssetViewModel @Inject constructor(
                 .asSequence()
                 .filter { it.token.id.contains(query, ignoreCase = true) }
                 .sortedWith(compareByDescending<Account> { it.token.isNativeToken }.thenBy { it.token.ticker })
+                .toList()
                 .map {
                     AssetUiModel(
                         token = it.token,
@@ -192,10 +193,9 @@ internal class SelectAssetViewModel @Inject constructor(
                         title = it.token.ticker,
                         subtitle = it.token.chain.raw,
                         amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
-                        value = it.fiatValue?.let(fiatValueToString::map) ?: "0",
+                        value = it.fiatValue?.let { fiatValueToString.invoke(it) } ?: "0",
                     )
                 }
-                .toList()
 
             val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
             val additionalAssets =

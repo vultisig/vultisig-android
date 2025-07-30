@@ -488,7 +488,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         srcToken,
                                         srcTokenValue,
@@ -500,7 +500,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         dstToken,
                                         dstTokenValue,
@@ -511,17 +511,17 @@ internal class JoinKeysignViewModel @Inject constructor(
                             providerFee = ValuedToken(
                                 token = nativeToken,
                                 value = value.toString(),
-                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                                fiatValue = fiatValueToStringMapper(estimatedFee),
                             ),
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
                             networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                     " ${estimatedNetworkGasFee.tokenValue.unit}",
 
-                            totalFee = fiatValueToStringMapper.map(
+                            totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
                         )
@@ -566,7 +566,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         srcToken,
                                         srcTokenValue,
@@ -577,7 +577,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         dstToken,
                                         dstTokenValue,
@@ -588,16 +588,16 @@ internal class JoinKeysignViewModel @Inject constructor(
                             providerFee = ValuedToken(
                                 token = feeToken,
                                 value = value.toString(),
-                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                                fiatValue = fiatValueToStringMapper(estimatedFee),
                             ),
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
                             networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)+
                                     " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper.map(
+                            totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
                         )
@@ -633,7 +633,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         srcToken,
                                         srcTokenValue,
@@ -644,7 +644,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         dstToken,
                                         dstTokenValue,
@@ -655,17 +655,17 @@ internal class JoinKeysignViewModel @Inject constructor(
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
                             providerFee = ValuedToken(
                                 token = dstToken,
                                 value = quote.fees.value.toString(),
-                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                                fiatValue = fiatValueToStringMapper(estimatedFee),
                             ),
                             networkFeeFormatted =
                                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                         " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper.map(
+                            totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
                         )
@@ -702,7 +702,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
                                 token = srcToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         srcToken,
                                         srcTokenValue,
@@ -713,7 +713,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             dst = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
                                 token = dstToken,
-                                fiatValue = fiatValueToStringMapper.map(
+                                fiatValue = fiatValueToStringMapper(
                                     convertTokenValueToFiat(
                                         dstToken,
                                         dstTokenValue,
@@ -724,17 +724,17 @@ internal class JoinKeysignViewModel @Inject constructor(
                             providerFee = ValuedToken(
                                 token = dstToken,
                                 value = quote.fees.value.toString(),
-                                fiatValue = fiatValueToStringMapper.map(estimatedFee),
+                                fiatValue = fiatValueToStringMapper(estimatedFee),
                             ),
                             networkFee = ValuedToken(
                                 token = srcToken,
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                                fiatValue = fiatValueToStringMapper.map(estimatedNetworkGasFee.fiatValue),
+                                fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
                             networkFeeFormatted =
                                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)
                                         + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                            totalFee = fiatValueToStringMapper.map(
+                            totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
                             ),
                         )

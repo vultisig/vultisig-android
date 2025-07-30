@@ -202,7 +202,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?.let(mapTokenValueToDecimalUiString)
                             ?: "",
                         fiatBalance = account.fiatValue
-                            ?.let(fiatValueToStringMapper::map),
+                            ?.let { fiatValueToStringMapper(it) },
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
                     )
@@ -212,7 +212,7 @@ internal class ChainTokensViewModel @Inject constructor(
                 val explorerUrl = explorerLinkRepository
                     .getAddressLink(chain, accountAddress)
                 val totalBalance = totalFiatValue
-                    ?.let(fiatValueToStringMapper::map)
+                    ?.let { fiatValueToStringMapper(it) }
 
 
                 uiState.update {

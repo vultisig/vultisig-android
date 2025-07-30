@@ -58,7 +58,7 @@ internal class CustomTokenViewModel @Inject constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val price = fiatValueToStringMapper.map(searchedToken.fiatValue)
+                val price = fiatValueToStringMapper(searchedToken.fiatValue)
                 uiModel.update {
                     it.copy(
                         isLoading = false,

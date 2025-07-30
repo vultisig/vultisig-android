@@ -237,7 +237,7 @@ class ThorChainHelper(
 
                         val coins = contractPayload.coins.filterNotNull().map { coin ->
                             Amount.newBuilder().apply {
-                                denom = coin.contractAddress.lowercase()
+                                denom = coin.denom.lowercase()
                                 amount = keysignPayload.toAmount.toString()
                             }.build()
                         }
