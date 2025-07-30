@@ -11,6 +11,9 @@
     <string name="deposit_option_unmerge">Unmerge Ruji</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
+    <string name="deposit_option_stake_ruji">Stake RUJI</string>
+    <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
+    <string name="deposit_option_withdraw_ruji_rewards">Withdraw RUJI Rewards</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
@@ -236,6 +239,7 @@
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
     <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
+    <string name="deposit_form_rewards_title">Pending Rewards (Balance: %1$s)</string>
     <string name="deposit_form_amount_title_without_balance" translatable="false">Amount</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
@@ -248,6 +252,7 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
+    <string name="deposit_form_pending_rewards_hint">Pending Rewards</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>

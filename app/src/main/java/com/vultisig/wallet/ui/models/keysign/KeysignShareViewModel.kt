@@ -182,7 +182,7 @@ internal class KeysignShareViewModel @Inject constructor(
             vaultLocalPartyID = vault.localPartyID,
             memo = transaction.memo,
             libType = vault.libType,
-            wasmExecuteContractPayload = null,
+            wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
         )
     }
 
@@ -222,5 +222,4 @@ internal class KeysignShareViewModel @Inject constructor(
         }
         shareQrBitmap.value = qrBitmap
     }
-
 }
