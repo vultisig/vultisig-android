@@ -1798,7 +1798,7 @@ internal class DepositFormViewModel @Inject constructor(
                 when (depositOption) {
                     DepositOption.UnstakeRuji -> {
                         val formattedAmount =
-                            CoinType.THORCHAIN.toValue(balances.stakeAmount).toString()
+                            CoinType.THORCHAIN.toValue(balances.stakeAmount).toPlainString()
                         state.update {
                             it.copy(unstakableAmount = formattedAmount + " ${rujiToken.ticker}")
                         }
@@ -1806,7 +1806,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                     DepositOption.WithdrawRujiRewards -> {
                         val formattedAmount =
-                            CoinType.THORCHAIN.toValue(balances.rewardsAmount).toString()
+                            CoinType.THORCHAIN.toValue(balances.rewardsAmount).toPlainString()
                         val rewardsTicker = balances.rewardsTicker
                         state.update {
                             it.copy(rewardsAmount = "$formattedAmount $rewardsTicker")
