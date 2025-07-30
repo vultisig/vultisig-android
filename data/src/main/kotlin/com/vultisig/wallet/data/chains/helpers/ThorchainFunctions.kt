@@ -92,6 +92,7 @@ object ThorchainFunctions {
         fromAddress: String,
         stakingContract: String,
         slippage: String,
+        denom: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
@@ -109,7 +110,11 @@ object ThorchainFunctions {
             senderAddress = fromAddress,
             contractAddress = stakingContract,
             executeMsg = base64EncodedMsg,
-            coins = listOf(),
+            coins = listOf(
+                CosmosCoin(
+                    denom = denom,
+                ),
+            ),
         )
     }
 }

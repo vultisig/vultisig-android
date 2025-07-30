@@ -573,8 +573,8 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private fun validateSlippage(slippage: String): UiText? {
-        if (slippage.isBlank()) {
+    private fun validateSlippage(slippage: String?): UiText? {
+        if (slippage.isNullOrBlank()) {
             return UiText.StringResource(R.string.slippage_required_error)
         }
 
@@ -701,13 +701,19 @@ internal class DepositFormViewModel @Inject constructor(
             UiText.StringResource(R.string.send_error_no_address)
         )
 
+        val slippage = slippageFieldState.text.toString()
+        val slippageError = validateSlippage(slippage)
+        if (slippageError != null) {
+            throw InvalidTransactionDataException(slippageError)
+        }
+
         val selectedToken = selectedAccount.token
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        // val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        val memo = "sell:${selectedToken.contractAddress}"
+        val memo = "sell:${selectedToken.contractAddress}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -742,7 +748,7 @@ internal class DepositFormViewModel @Inject constructor(
             dstAddress = contractAddress,
             memo = memo,
             srcTokenValue = TokenValue(
-                value = BigInteger.ZERO,
+                value = tokenAmount,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
@@ -751,7 +757,8 @@ internal class DepositFormViewModel @Inject constructor(
             wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
                 fromAddress = srcAddress,
                 stakingContract = contractAddress,
-                slippage = "0.01",
+                slippage = "0.01", // TODO: Format Slippage,
+                denom = selectedToken.contractAddress,
             )
         )
     }
