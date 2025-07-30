@@ -87,6 +87,31 @@ object ThorchainFunctions {
             ),
         )
     }
+
+    fun sellYToken(
+        fromAddress: String,
+        stakingContract: String,
+        slippage: String,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+
+        val executePayload = JSONObject().apply {
+            put("withdraw", JSONObject().apply {
+                put("slippage", slippage)
+            })
+        }
+
+        val jsonString = executePayload.toString()
+        val base64EncodedMsg = Base64.encode(jsonString.toByteArray(Charsets.UTF_8))
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = base64EncodedMsg,
+            coins = listOf(),
+        )
+    }
 }
 
 private const val AFFILIATE_CONTRACT =
