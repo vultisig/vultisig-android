@@ -112,6 +112,7 @@ internal data class DepositFormUiModel(
     val basisPointsError: UiText? = null,
     val assetsError: UiText? = null,
     val lpUnitsError: UiText? = null,
+    val slippageError: UiText? = null,
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = "Loading...".asUiText(),
@@ -130,8 +131,6 @@ internal data class DepositFormUiModel(
     val unstakableAmount: String? = null,
 
     val rewardsAmount: String? = null,
-
-    val selectedSlippage: String = "1.0",
 )
 
 @HiltViewModel
@@ -156,7 +155,6 @@ internal class DepositFormViewModel @Inject constructor(
     private var chain: Chain? = null
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
-    private var slippageSelected = MutableStateFlow<String?>(null)
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -168,6 +166,7 @@ internal class DepositFormViewModel @Inject constructor(
     val assetsFieldState = TextFieldState()
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
+    val slippageFieldState = TextFieldState()
 
     val state = MutableStateFlow(DepositFormUiModel())
     var isLoading: Boolean
@@ -404,16 +403,18 @@ internal class DepositFormViewModel @Inject constructor(
                         it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
                     }
 
-                DepositOption.ReceiveYTCY ->
+                DepositOption.ReceiveYTCY -> {
                     state.update {
                         it.copy(selectedToken = Tokens.tcy)
                     }
+                }
 
                 DepositOption.SellYTCY -> {
                     val yTCY = Coins.getCoinBy(Chain.ThorChain, "yTCY") ?: return@launch
                     state.update {
                         it.copy(selectedToken = yTCY)
                     }
+                    setSlippage(DEFAULT_SLIPPAGE)
                 }
 
                 DepositOption.SellYRUNE -> {
@@ -421,6 +422,7 @@ internal class DepositFormViewModel @Inject constructor(
                     state.update {
                         it.copy(selectedToken = yRUNE)
                     }
+                    setSlippage(DEFAULT_SLIPPAGE)
                 }
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
@@ -563,12 +565,41 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
+    fun validateSlippage() {
+        val text = slippageFieldState.text.toString()
+        val errorText = validateSlippage(text)
+        state.update {
+            it.copy(slippageError = errorText)
+        }
+    }
+
+    private fun validateSlippage(slippage: String): UiText? {
+        if (slippage.isBlank()) {
+            return UiText.StringResource(R.string.slippage_required_error)
+        }
+
+        return try {
+            val value = slippage.toBigDecimal()
+            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
+                UiText.StringResource(R.string.slippage_invalid_error)
+            } else {
+                null
+            }
+        } catch (e: NumberFormatException) {
+            UiText.StringResource(R.string.slippage_format_error)
+        }
+    }
+
     fun setProvider(provider: String) {
         providerFieldState.setTextAndPlaceCursorAtEnd(provider)
     }
 
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    private fun setSlippage(slippage: String) {
+        slippageFieldState.setTextAndPlaceCursorAtEnd(slippage)
     }
 
     fun scan() {
@@ -720,7 +751,7 @@ internal class DepositFormViewModel @Inject constructor(
             wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
                 fromAddress = srcAddress,
                 stakingContract = contractAddress,
-                slippage = slippageSelected.value ?: "0.01",
+                slippage = "0.01",
             )
         )
     }
@@ -1737,19 +1768,6 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    fun onSelectedSlippage(slippageOption: String) {
-        val slippageValue = slippageOption
-            .substringAfter("Slippage ")
-            .substringBefore("%")
-            .toBigDecimal()
-            .divide(BigDecimal(100))
-            .toPlainString()
-
-        slippageSelected.update {
-            slippageValue
-        }
-    }
-
     fun onLoadRujiMergeBalances() {
         viewModelScope.launch {
             try {
@@ -2051,8 +2069,10 @@ private val tokensToMerge = listOf(
     ),
 )
 
-const val STAKING_RUJI_CONTRACT =
+private const val STAKING_RUJI_CONTRACT =
     "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
 
-const val RECEIVE_YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
-const val RECEIVE_YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
+private const val RECEIVE_YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
+private const val RECEIVE_YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
+
+private const val DEFAULT_SLIPPAGE = "1.0"

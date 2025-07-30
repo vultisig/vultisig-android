@@ -68,6 +68,7 @@ internal fun DepositFormScreen(
         assetsFieldState = model.assetsFieldState,
         lpUnitsFieldState = model.lpUnitsFieldState,
         rewardsAmountFieldState = model.rewardsAmountFieldState,
+        slippageFieldState = model.slippageFieldState,
         onAssetsLostFocus = model::validateAssets,
         onLpUnitsLostFocus = model::validateLpUnits,
         onTokenAmountLostFocus = model::validateTokenAmount,
@@ -78,6 +79,7 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
+        onSlippageLostFocus = model::validateSlippage,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -102,7 +104,6 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
-        onSelectSlippage = model::onSelectedSlippage,
     )
 }
 
@@ -117,6 +118,7 @@ internal fun DepositFormScreen(
     assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
     rewardsAmountFieldState: TextFieldState,
+    slippageFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
     onAssetsLostFocus: () -> Unit = {},
     onLpUnitsLostFocus: () -> Unit = {},
@@ -124,6 +126,7 @@ internal fun DepositFormScreen(
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
     onCustomMemoLostFocus: () -> Unit = {},
+    onSlippageLostFocus: () -> Unit = {},
     basisPointsFieldState: TextFieldState,
     onBasisPointsLostFocus: () -> Unit = {},
     onSelectDepositOption: (DepositOption) -> Unit = {},
@@ -154,8 +157,6 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
-
-    onSelectSlippage: (String) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -438,6 +439,18 @@ internal fun DepositFormScreen(
                             error = state.tokenAmountError,
                         )
                     }
+
+                    if (depositOption == DepositOption.SellYRUNE ||
+                        depositOption == DepositOption.SellYTCY) {
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_operator_slippage_title),
+                                hint = "Slippage percentage",
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = slippageFieldState,
+                                onLostFocus = onSlippageLostFocus,
+                                error = state.slippageError,
+                            )
+                    }
                 }
             }
             UiSpacer(size = 80.dp)
@@ -478,5 +491,6 @@ internal fun DepositFormScreenPreview() {
         memoFieldState = TextFieldState(),
         thorAddress = TextFieldState(),
         rewardsAmountFieldState = TextFieldState(),
+        slippageFieldState = TextFieldState(),
     )
 }
