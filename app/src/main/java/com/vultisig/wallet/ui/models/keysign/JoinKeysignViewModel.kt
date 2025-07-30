@@ -774,10 +774,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                         token = payload.coin,
                     )
 
-                    val srcTokenValue = mapTokenValueAndChainMapperWithUnit(
-                        Pair(tokenValue, payload.coin.chain)
-                    )
-
                     val depositTransactionUiModel = DepositTransactionUiModel(
                         token = ValuedToken(
                             token = payload.coin,
@@ -786,7 +782,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         fromAddress = payload.coin.address,
                         nodeAddress = payload.toAddress,
-                        srcTokenValue = srcTokenValue,
+                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
+                            Pair(tokenValue, payload.coin.chain)
+                        ),
                         estimatedFees = mapTokenValueToStringWithUnit(estimatedTokenFees),
                         estimateFeesFiat = fiatValueToStringMapper(
                             convertTokenValueToFiat(
