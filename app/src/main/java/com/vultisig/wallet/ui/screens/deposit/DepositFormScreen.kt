@@ -102,6 +102,7 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
+        onSelectSlippage = model::onSelectedSlippage,
     )
 }
 

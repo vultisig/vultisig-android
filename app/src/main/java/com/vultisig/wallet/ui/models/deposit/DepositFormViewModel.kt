@@ -157,6 +157,7 @@ internal class DepositFormViewModel @Inject constructor(
     private var chain: Chain? = null
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
+    private var slippageSelected = MutableStateFlow<String?>(null)
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -1646,6 +1647,19 @@ internal class DepositFormViewModel @Inject constructor(
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    fun onSelectedSlippage(slippageOption: String) {
+        val slippageValue = slippageOption
+            .substringAfter("Slippage ")
+            .substringBefore("%")
+            .toBigDecimal()
+            .divide(BigDecimal(100))
+            .toPlainString()
+
+        slippageSelected.update {
+            slippageValue
+        }
     }
 
     fun onLoadRujiMergeBalances() {
