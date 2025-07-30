@@ -20,18 +20,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +38,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -240,6 +240,7 @@ private fun QrCameraScreen(
     val cameraProviderFuture = remember {
         ProcessCameraProvider.getInstance(localContext)
     }
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -251,50 +252,78 @@ private fun QrCameraScreen(
         modifier = Modifier
             .fillMaxSize(),
         factory = { context ->
-            val previewView = PreviewView(context)
-            val resolutionStrategy = ResolutionStrategy(
-                Size(1200, 1200),
-                ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-            )
-            val resolutionSelector = ResolutionSelector.Builder()
-                .setResolutionStrategy(resolutionStrategy)
-                .build()
-
-            val preview = Preview.Builder()
-                .setResolutionSelector(resolutionSelector)
-                .build()
-            val selector = CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
-
-            preview.surfaceProvider = previewView.surfaceProvider
-
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setResolutionSelector(resolutionSelector)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-            imageAnalysis.setAnalyzer(
-                executor,
-                BarcodeAnalyzer {
-                    unbindCameraListener(cameraProviderFuture, localContext)
-                    onSuccess(it)
-                }
-            )
-
-            try {
-                cameraProviderFuture.get().bindToLifecycle(
+            PreviewView(context)
+        },
+        update = { previewView ->
+            if (lifecycleState == Lifecycle.State.RESUMED) {
+                println("bind camera")
+                bindCamera(
+                    cameraProviderFuture,
+                    localContext,
                     lifecycleOwner,
-                    selector,
-                    preview,
-                    imageAnalysis,
+                    executor,
+                    onSuccess,
+                    previewView
                 )
-            } catch (e: Throwable) {
-                Timber.e(context.getString(R.string.camera_bind_error, e.localizedMessage), e)
             }
-
-            previewView
         }
     )
+}
+
+private fun bindCamera(
+    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
+    context: Context,
+    lifecycleOwner: LifecycleOwner,
+    executor: Executor,
+    onSuccess: (List<Barcode>) -> Unit,
+    previewView: PreviewView? = null,
+) {
+
+    try {
+        val cameraProvider = cameraProviderFuture.get()
+        cameraProvider.unbindAll()
+
+        val resolutionStrategy = ResolutionStrategy(
+            Size(1200, 1200),
+            ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+        )
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setResolutionStrategy(resolutionStrategy)
+            .build()
+
+        val preview = Preview.Builder()
+            .setResolutionSelector(resolutionSelector)
+            .build()
+
+        previewView?.let { preview.surfaceProvider = it.surfaceProvider }
+
+        val selector = CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build()
+
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setResolutionSelector(resolutionSelector)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+
+        imageAnalysis.setAnalyzer(
+            executor,
+            BarcodeAnalyzer {
+                unbindCameraListener(cameraProviderFuture, context)
+                onSuccess(it)
+            }
+        )
+
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            selector,
+            preview,
+            imageAnalysis,
+        )
+    } catch (e: Throwable) {
+        println(e)
+        Timber.e(e, context.getString(R.string.camera_bind_error, e.localizedMessage))
+    }
 }
 
 private fun unbindCameraListener(
