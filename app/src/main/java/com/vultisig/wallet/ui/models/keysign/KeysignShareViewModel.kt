@@ -32,10 +32,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
 import javax.inject.Inject
+
+internal data class KeysignShareUiState(
+    val isLoading: Boolean = true,
+)
 
 @HiltViewModel
 internal class KeysignShareViewModel @Inject constructor(
@@ -52,6 +55,14 @@ internal class KeysignShareViewModel @Inject constructor(
     var keysignPayload: KeysignPayload? = null
     var customMessagePayload: CustomMessagePayload? = null
 
+    val uiState = MutableStateFlow(KeysignShareUiState())
+
+    var isLoading: Boolean
+        get() = uiState.value.isLoading
+        set(value) {
+            uiState.value = uiState.value.copy(isLoading = value)
+        }
+
     val hasAllData: Boolean
         get() = vault != null && (keysignPayload != null || customMessagePayload != null)
 
@@ -64,6 +75,8 @@ internal class KeysignShareViewModel @Inject constructor(
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadTransaction(transactionId: TransactionId) {
+        isLoading = true
+
         val transaction = transactionRepository.getTransaction(transactionId).first()
 
         val vault = vaultRepository.get(transaction.vaultId)!!
@@ -87,23 +100,25 @@ internal class KeysignShareViewModel @Inject constructor(
             libType = vault.libType,
             wasmExecuteContractPayload = null,
         )
+        isLoading = false
     }
 
-    fun loadSignMessageTx(id: String) {
-        runBlocking {
-            val dto = customMessagePayloadRepo.get(id)
-                ?: return@runBlocking
-
-            val vault = vaultRepository.get(dto.vaultId)!!
-
-            this@KeysignShareViewModel.vault = vault
-            keysignPayload = null
-            customMessagePayload = dto.payload
+    suspend fun loadSignMessageTx(id: String) {
+        isLoading = true
+        val dto = customMessagePayloadRepo.get(id) ?: run {
+            isLoading = false
+            return
         }
+        val vault = vaultRepository.get(dto.vaultId)!!
+        this@KeysignShareViewModel.vault = vault
+        keysignPayload = null
+        customMessagePayload = dto.payload
+        isLoading = false
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadSwapTransaction(transactionId: TransactionId) {
+        isLoading = true
         val transaction = swapTransactionRepository.getTransaction(transactionId)
 
         val vault = vaultRepository.get(transaction.vaultId)!!
@@ -150,6 +165,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 )
             }
         }
+        isLoading = false
     }
 
     private fun Coin.adjustBitcoinCashAddressFormat() = copy(
@@ -160,6 +176,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     suspend fun loadDepositTransaction(transactionId: TransactionId) {
+        isLoading = true
         val transaction = depositTransaction.getTransaction(transactionId)
 
         val vault = vaultRepository.get(transaction.vaultId)!!
@@ -184,6 +201,7 @@ internal class KeysignShareViewModel @Inject constructor(
             libType = vault.libType,
             wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
         )
+        isLoading = false
     }
 
     fun loadQrPainter(address: String) =
