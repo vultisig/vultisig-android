@@ -826,7 +826,7 @@ internal class DepositFormViewModel @Inject constructor(
             wasmExecuteContractPayload = ThorchainFunctions.receiveYToken(
                 fromAddress = srcAddress,
                 stakingContract = contractAddress,
-                denom = selectedToken.contractAddress,
+                denom = selectedToken.ticker.lowercase(),
             )
         )
     }

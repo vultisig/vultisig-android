@@ -68,18 +68,24 @@ object ThorchainFunctions {
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
-        val executePayload = JSONObject().apply {
+        val depositMsg = JSONObject().apply {
             put("deposit", JSONObject())
-            put("affiliate", listOf(AFFILIATE_CONTRACT, 10))
+        }
+        val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
+        val fullPayload = JSONObject().apply {
+            put("execute", JSONObject().apply {
+                put("contract_addr", stakingContract)
+                put("msg", base64Msg)
+                put("affiliate", listOf(AFFILIATE_CONTRACT, 10))
+            })
         }
 
-        val jsonString = executePayload.toString()
-        val base64EncodedMsg = Base64.encode(jsonString.toByteArray(Charsets.UTF_8))
+        val executeMsgPayload = Base64.encode(fullPayload.toString().toByteArray(Charsets.UTF_8))
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = base64EncodedMsg,
+            executeMsg = executeMsgPayload,
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
