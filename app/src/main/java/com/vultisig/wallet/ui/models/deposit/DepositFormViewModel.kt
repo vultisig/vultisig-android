@@ -399,12 +399,12 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                DepositOption.ReceiveYRUNE->
+                DepositOption.ReceiveYRUNE, DepositOption.SellYRUNE ->
                     state.update {
                         it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
                     }
 
-                DepositOption.ReceiveYTCY ->
+                DepositOption.ReceiveYTCY, DepositOption.SellYTCY ->
                     state.update {
                         it.copy(selectedToken = Tokens.tcy)
                     }
@@ -619,8 +619,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
                     DepositOption.ReceiveYTCY -> createReceiveYToken(DepositOption.ReceiveYTCY)
                     DepositOption.ReceiveYRUNE -> createReceiveYToken(DepositOption.ReceiveYRUNE)
-                    DepositOption.SellYRUNE -> TODO()
-                    DepositOption.SellYTCY -> TODO()
+                    DepositOption.SellYRUNE -> createSellYToken(DepositOption.SellYRUNE)
+                    DepositOption.SellYTCY -> createSellYToken(DepositOption.SellYTCY)
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -643,6 +643,74 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
+    private suspend fun createSellYToken(depositOption: DepositOption): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        // val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+
+        val memo = "sell:${selectedToken.contractAddress}"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+        val contractAddress = when (depositOption) {
+            DepositOption.SellYTCY -> {
+                RECEIVE_YRUNE_CONTRACT
+            }
+            DepositOption.SellYRUNE -> {
+                RECEIVE_YTCY_CONTRACT
+            }
+            else -> {
+                throw RuntimeException("Invalid Deposit Parameter ")
+            }
+        }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = contractAddress,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = BigInteger.ZERO,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
+                fromAddress = srcAddress,
+                stakingContract = contractAddress,
+                slippage = slippageSelected.value ?: "0.01",
+            )
+        )
+    }
+
     private suspend fun createReceiveYToken(depositOption: DepositOption): DepositTransaction {
         val chain = chain
             ?: throw InvalidTransactionDataException(
@@ -662,7 +730,7 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        val memo = "received:${selectedToken.contractAddress}:$tokenAmount"
+        val memo = "receive:${selectedToken.contractAddress}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -677,10 +745,16 @@ internal class DepositFormViewModel @Inject constructor(
             )
 
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-        val contractAddress = if (depositOption == DepositOption.ReceiveYRUNE) {
-            RECEIVE_YRUNE_CONTRACT
-        } else {
-            RECEIVE_YTCY_CONTRACT
+        val contractAddress = when (depositOption) {
+            DepositOption.ReceiveYRUNE -> {
+                RECEIVE_YRUNE_CONTRACT
+            }
+            DepositOption.ReceiveYTCY -> {
+                RECEIVE_YTCY_CONTRACT
+            }
+            else -> {
+                throw RuntimeException("Invalid Deposit Parameter ")
+            }
         }
 
         return DepositTransaction(
