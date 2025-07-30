@@ -294,21 +294,13 @@ internal fun DepositFormScreen(
                     )
                 }
 
-                DepositOption.SellYRUNE, DepositOption.SellYTCY -> {
-                    SellYTokensFunctionScreen(
-                        selectedSlippage = state.selectedSlippage,
-                        slippageOptions = state.slippageList,
-                        onSelectSlippage = onSelectSlippage,
-                        onAmountLostFocus = {},
-                    )
-                }
-
                 else -> {
                     if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                            DepositOption.ReceiveYRUNE, DepositOption.ReceiveYTCY,
+                            DepositOption.ReceiveYRUNE, DepositOption.ReceiveYTCY, DepositOption.SellYTCY,
+                            DepositOption.SellYRUNE,
                         )
                     ) {
                         FormCard {
@@ -364,6 +356,7 @@ internal fun DepositFormScreen(
                             DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
+                            DepositOption.SellYRUNE, DepositOption.SellYTCY,
                         )
                     ) {
                         FormTextFieldCard(

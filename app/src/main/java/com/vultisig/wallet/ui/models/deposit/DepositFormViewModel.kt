@@ -131,8 +131,7 @@ internal data class DepositFormUiModel(
 
     val rewardsAmount: String? = null,
 
-    val selectedSlippage: String = slippageOptions.first(),
-    val slippageList: List<String> = slippageOptions
+    val selectedSlippage: String = "1.0",
 )
 
 @HiltViewModel
@@ -287,6 +286,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                     DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
+                    DepositOption.SellYTCY, DepositOption.SellYRUNE,
                     DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
@@ -399,15 +399,29 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                DepositOption.ReceiveYRUNE, DepositOption.SellYRUNE ->
+                DepositOption.ReceiveYRUNE ->
                     state.update {
                         it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
                     }
 
-                DepositOption.ReceiveYTCY, DepositOption.SellYTCY ->
+                DepositOption.ReceiveYTCY ->
                     state.update {
                         it.copy(selectedToken = Tokens.tcy)
                     }
+
+                DepositOption.SellYTCY -> {
+                    val yTCY = Coins.getCoinBy(Chain.ThorChain, "yTCY") ?: return@launch
+                    state.update {
+                        it.copy(selectedToken = yTCY)
+                    }
+                }
+
+                DepositOption.SellYRUNE -> {
+                    val yRUNE = Coins.getCoinBy(Chain.ThorChain, "yRUNE") ?: return@launch
+                    state.update {
+                        it.copy(selectedToken = yRUNE)
+                    }
+                }
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
                     state.update {
@@ -2035,13 +2049,6 @@ private val tokensToMerge = listOf(
         ticker = "LVN",
         contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf"
     ),
-)
-
-private val slippageOptions = listOf(
-    "Slippage 1%",
-    "Slippage 2%",
-    "Slippage 5%",
-    "Slippage 7.5%"
 )
 
 const val STAKING_RUJI_CONTRACT =
