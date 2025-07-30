@@ -764,24 +764,36 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
                     val feeCurrency = tokenRepository.getNativeToken(payload.coin.chain.id)
 
+                    val estimatedTokenFees = TokenValue(
+                        value = fee,
+                        token = feeCurrency
+                    )
+
+                    val tokenValue = TokenValue(
+                        value = payload.toAmount,
+                        token = payload.coin,
+                    )
+
+                    val srcTokenValue = mapTokenValueAndChainMapperWithUnit(
+                        Pair(tokenValue, payload.coin.chain)
+                    )
+
                     val depositTransactionUiModel = DepositTransactionUiModel(
-                        fromAddress = payload.coin.address,
-                        // TODO toAddress is empty on ios, get node address from memo
-                        nodeAddress = payload.toAddress,
-                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
-                            Pair(
-                                TokenValue(
-                                    value = payload.toAmount,
-                                    token = payload.coin,
-                                ),
-                                payload.coin.chain
-                            )
+                        token = ValuedToken(
+                            token = payload.coin,
+                            value = mapTokenValueToDecimalUiString(tokenValue),
+                            fiatValue = "",
                         ),
-                        estimatedFees = mapTokenValueToStringWithUnit(
-                            TokenValue(
-                                value = fee,
-                                token = feeCurrency,
-                            )
+                        fromAddress = payload.coin.address,
+                        nodeAddress = payload.toAddress,
+                        srcTokenValue = srcTokenValue,
+                        estimatedFees = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        estimateFeesFiat = fiatValueToStringMapper(
+                            convertTokenValueToFiat(
+                                feeCurrency,
+                                estimatedTokenFees,
+                                currency
+                            ),
                         ),
                         memo = payload.memo ?: "",
                     )
