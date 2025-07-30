@@ -609,8 +609,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
-                    DepositOption.ReceiveYTCY -> createReceiveYToken()
-                    DepositOption.ReceiveYRUNE -> createReceiveYToken()
+                    DepositOption.ReceiveYTCY -> createReceiveYToken(DepositOption.ReceiveYTCY)
+                    DepositOption.ReceiveYRUNE -> createReceiveYToken(DepositOption.ReceiveYRUNE)
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -633,8 +633,66 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createReceiveYToken(): DepositTransaction {
-        error("")
+    private suspend fun createReceiveYToken(depositOption: DepositOption): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+
+        val memo = "received:${selectedToken.contractAddress}:$tokenAmount"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+        val contractAddress = if (depositOption == DepositOption.ReceiveYRUNE) {
+            RECEIVE_YRUNE_CONTRACT
+        } else {
+            RECEIVE_YTCY_CONTRACT
+        }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = contractAddress,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmount,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.receiveYToken(
+                fromAddress = srcAddress,
+                stakingContract = contractAddress,
+                denom = selectedToken.contractAddress,
+            )
+        )
     }
 
     private suspend fun createWithdrawRewardsRuji(): DepositTransaction {
@@ -1884,3 +1942,6 @@ private val tokensToMerge = listOf(
 
 const val STAKING_RUJI_CONTRACT =
     "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
+
+const val RECEIVE_YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
+const val RECEIVE_YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
