@@ -390,4 +390,12 @@
     <string name="deposit_option_withdraw_ruji_rewards">Retirar recompensas RUJI</string>
     <string name="deposit_form_rewards_title">Recompensas Pendientes (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
+    <string name="deposit_option_receive_yrune">Recibir yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Recibir yTCY</string>
+    <string name="deposit_option_sell_yrune">Vender yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Vender yTCY</string>
+    <string name="deposit_form_operator_slippage_title">Deslizamiento (1 % recomendado)</string>
+    <string name="slippage_required_error">Se requiere deslizamiento</string>
+    <string name="slippage_invalid_error">El deslizamiento debe estar entre 1 y 100</string>
+    <string name="slippage_format_error">Formato de número no válido</string>
 </resources>
