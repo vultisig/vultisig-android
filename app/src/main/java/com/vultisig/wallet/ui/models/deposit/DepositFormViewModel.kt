@@ -67,6 +67,7 @@ import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -757,10 +758,22 @@ internal class DepositFormViewModel @Inject constructor(
             wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
                 fromAddress = srcAddress,
                 tokenContract = contractAddress,
-                slippage = "0.01", // TODO: Format Slippage,
+                slippage = slippage.formatSlippage(),
                 denom = selectedToken.contractAddress,
             )
         )
+    }
+
+    private fun String.formatSlippage(): String {
+        val divider = "100".toBigDecimal()
+        return try {
+            this.toBigDecimal()
+                .setScale(2, RoundingMode.HALF_UP)
+                .divide(divider)
+                .toPlainString()
+        } catch (t: Throwable) {
+            "0.01" // Default slippage for safety
+        }
     }
 
     private suspend fun createReceiveYToken(depositOption: DepositOption): DepositTransaction {
