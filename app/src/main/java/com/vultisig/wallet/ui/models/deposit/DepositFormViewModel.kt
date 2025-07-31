@@ -730,10 +730,10 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
         val contractAddress = when (depositOption) {
             DepositOption.SellYTCY -> {
-                YRUNE_CONTRACT
+                YTCY_CONTRACT
             }
             DepositOption.SellYRUNE -> {
-                YTCY_CONTRACT
+                YRUNE_CONTRACT
             }
             else -> {
                 throw RuntimeException("Invalid Deposit Parameter ")
