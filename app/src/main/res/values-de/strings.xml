@@ -109,6 +109,7 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-Token werden den Benutzern per Airdrop zugeschickt.</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG-TOKEN</string>
     <string name="vultisig_app_version">VULTISIG APP V%1$s</string>
+    <string name="tx_done_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="settings_screen_vault_settings">Tresoreinstellungen</string>
     <string name="token_logo">Token-Logo</string>
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
