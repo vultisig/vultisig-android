@@ -176,6 +176,7 @@
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
+    <string name="tx_done_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
     <string name="verify_swap_sign_button">Sign Transaction</string>
@@ -623,6 +624,7 @@
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
     <string name="tx_overview_screen_title" translatable="false">Overview</string>
+    <string name="tx_transaction_succesful_screen_title" translatable="false">Transaction succesful</string>
     <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
     <string name="tx_overview_screen_tx_from" translatable="false">From</string>

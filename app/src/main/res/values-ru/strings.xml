@@ -157,6 +157,7 @@
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="chain_account_item_address_copied">%1$s скопировано в буфер обмена</string>
+    <string name="tx_done_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="settings_screen_vault_settings">Настройки хранилища</string>
     <string name="home_scree_done">Готово</string>
     <string name="verify_swap_sign_button">Подписать транзакцию</string>

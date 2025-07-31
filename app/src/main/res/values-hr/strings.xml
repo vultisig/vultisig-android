@@ -109,6 +109,7 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokeni se ispuštaju korisnicima.</string>
     <string name="vultisig_token_setting_screen_title">ŽETON VULTISIG</string>
     <string name="vultisig_app_version">VULTISIG APLIKACIJA V%1$s</string>
+    <string name="tx_done_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="settings_screen_vault_settings">Postavke trezora</string>
     <string name="token_logo">Logo tokena</string>
     <string name="vault_edit_this_name_already_exist">ovo ime već postoji</string>

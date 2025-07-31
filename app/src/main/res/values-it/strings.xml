@@ -109,6 +109,7 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">I token VULT vengono distribuiti agli utenti tramite airdrop.</string>
     <string name="vultisig_token_setting_screen_title">GETTONE VULTISIG</string>
     <string name="vultisig_app_version">APPLICAZIONE VULTISIG V%1$s</string>
+    <string name="tx_done_address_copied">%1$s copiato negli appunti</string>
     <string name="settings_screen_vault_settings">Impostazioni del caveau</string>
     <string name="token_logo">Logo del gettone</string>
     <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>

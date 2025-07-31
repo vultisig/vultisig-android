@@ -108,6 +108,7 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Os tokens VULT são distribuídos aos usuários.</string>
     <string name="vultisig_token_setting_screen_title">TOKEN VULTISIG</string>
     <string name="vultisig_app_version">APLICATIVO VULTISIG V%1$s</string>
+    <string name="tx_done_address_copied">%1$s copiado para a área de transferência</string>
     <string name="settings_screen_vault_settings">Configurações do cofre</string>
     <string name="token_logo">Logotipo do token</string>
     <string name="vault_edit_this_name_already_exist">esse nome já existe</string>
