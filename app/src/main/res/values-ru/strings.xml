@@ -407,4 +407,5 @@
     <string name="slippage_required_error">Проскальзывание обязательно</string>
     <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>
     <string name="slippage_format_error">Неверный формат числа</string>
+    <string name="slippage_hint">Процент проскальзывания</string>
 </resources>

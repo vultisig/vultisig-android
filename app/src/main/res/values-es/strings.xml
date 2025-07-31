@@ -398,4 +398,5 @@
     <string name="slippage_required_error">Se requiere deslizamiento</string>
     <string name="slippage_invalid_error">El deslizamiento debe estar entre 1 y 100</string>
     <string name="slippage_format_error">Formato de número no válido</string>
+    <string name="slippage_hint">Porcentaje de deslizamiento</string>
 </resources>

@@ -257,6 +257,7 @@
     <string name="slippage_required_error">Slippage is required</string>
     <string name="slippage_invalid_error">Slippage must be between 1 and 100</string>
     <string name="slippage_format_error">Invalid number format</string>
+    <string name="slippage_hint">Slippage percentage</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>

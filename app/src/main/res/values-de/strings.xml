@@ -398,4 +398,5 @@
     <string name="slippage_required_error">Slippage ist erforderlich</string>
     <string name="slippage_invalid_error">Slippage muss zwischen 1 und 100 liegen</string>
     <string name="slippage_format_error">Ungültiges Zahlenformat</string>
+    <string name="slippage_hint">Slippage-Prozentsatz</string>
 </resources>

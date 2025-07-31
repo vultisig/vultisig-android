@@ -444,7 +444,7 @@ internal fun DepositFormScreen(
                         depositOption == DepositOption.SellYTCY) {
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_operator_slippage_title),
-                                hint = "Slippage percentage",
+                                hint = stringResource(R.string.slippage_hint),
                                 keyboardType = KeyboardType.Number,
                                 textFieldState = slippageFieldState,
                                 onLostFocus = onSlippageLostFocus,

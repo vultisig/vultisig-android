@@ -407,4 +407,5 @@
     <string name="slippage_required_error">Slippage is vereist</string>
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
     <string name="slippage_format_error">Ongeldig nummerformaat</string>
+    <string name="slippage_hint">Slippage percentage</string>
 </resources>

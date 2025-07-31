@@ -398,4 +398,5 @@
     <string name="slippage_required_error">Proklizavanje je obavezno</string>
     <string name="slippage_invalid_error">Proklizavanje mora biti između 1 i 100</string>
     <string name="slippage_format_error">Nevažeći format broja</string>
+    <string name="slippage_hint">Postotak proklizavanja</string>
 </resources>
