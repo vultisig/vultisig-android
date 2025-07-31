@@ -141,6 +141,7 @@
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
     <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
+    <string name="tx_done_address_copied">%1$s copiada al portapapeles</string>
     <string name="settings_screen_vault_settings">Configuración Bóvedas</string>
     <string name="home_scree_done">hecho</string>
     <string name="verify_swap_sign_button">Firmar Transación</string>
