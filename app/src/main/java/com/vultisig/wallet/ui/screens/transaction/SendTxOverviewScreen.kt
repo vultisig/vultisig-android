@@ -1,13 +1,20 @@
 package com.vultisig.wallet.ui.screens.transaction
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +33,7 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -43,13 +51,164 @@ internal fun SendTxOverviewScreen(
     onBack: () -> Unit = {},
     tx: UiTransactionInfo,
 ) {
+    BackHandler(onBack = onBack)
 
-    TxDoneScaffold(
-        transactionHash = transactionHash,
-        transactionLink = transactionLink,
-        showToolbar = showToolbar,
-        onBack = onBack,
-        bottomBarContent = {
+    Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            if (showToolbar) {
+                VsTopAppBar(
+                    title = stringResource(R.string.tx_overview_screen_title),
+                    onBackClick = onBack,
+                )
+            }
+        },
+        content = { contentPadding ->
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(contentPadding)
+                    .padding(
+                        all = 16.dp,
+                    ),
+            ) {
+                Box {
+                    Image(
+                        painter = painterResource(R.drawable.img_tx_overview_bg),
+                        contentDescription = null,
+                        alignment = Alignment.Center,
+                        modifier = Modifier
+                            .padding(horizontal = 48.dp)
+                            .fillMaxWidth(),
+                    )
+                    Text(
+                        text = stringResource(R.string.tx_overview_screen_title),
+                        textAlign = TextAlign.Center,
+                        style = Theme.brockmann.body.l.medium
+                            .copy(
+                                brush = Theme.colors.gradients.primary,
+                            ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = 48.dp,
+                            ),
+                    )
+                }
+
+                val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
+                    stringResource(R.string.tx_overview_screen_tx_send)
+                } else {
+                    stringResource(R.string.tx_overview_screen_tx_deposit)
+                }
+                VsOverviewToken(
+                    header = tokenTitle,
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
+
+                UiSpacer(8.dp)
+
+                Column(
+                    modifier = Modifier
+                        .background(
+                            color = Theme.colors.backgrounds.disabled,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.borders.light,
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .padding(all = 24.dp),
+                ) {
+                    if (transactionHash.isNotEmpty()) {
+                        TxDetails(
+                            title = stringResource(R.string.tx_overview_screen_tx_hash),
+                            hash = transactionHash,
+                            link = transactionLink,
+                        )
+
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+                    }
+
+                    TextDetails(
+                        title = stringResource(R.string.tx_overview_screen_tx_from),
+                        subtitle = tx.from,
+                    )
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    TextDetails(
+                        title = stringResource(R.string.tx_overview_screen_tx_to),
+                        subtitle = tx.to,
+                    )
+
+                    if (tx.memo.isNotEmpty()) {
+                        VerifyCardDivider(
+                            size = 1.dp,
+                        )
+
+                        TextDetails(
+                            title = stringResource(R.string.tx_overview_screen_tx_memo),
+                            subtitle = tx.memo,
+                        )
+                    }
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    Details(
+                        title = stringResource(R.string.tx_overview_screen_tx_network)
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val chain = tx.token.token.chain
+
+                            Image(
+                                painter = painterResource(chain.logo),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp),
+                            )
+
+                            Text(
+                                text = chain.raw,
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.colors.text.primary,
+                                textAlign = TextAlign.End,
+                                maxLines = 1,
+                                overflow = TextOverflow.MiddleEllipsis,
+                            )
+                        }
+                    }
+
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    EstimatedNetworkFee(
+                        tokenGas = tx.networkFeeTokenValue,
+                        fiatGas = tx.networkFeeFiatValue,
+                    )
+                }
+            }
+
+        },
+        bottomBar = {
             VsButton(
                 label = "Done",
                 variant = VsButtonVariant.Primary,
@@ -62,113 +221,19 @@ internal fun SendTxOverviewScreen(
                     ),
                 onClick = onComplete,
             )
-        },
-        tokenContent = {
-            val tokenTitle = if (tx.type == UiTransactionInfoType.Send) {
-                stringResource(R.string.tx_overview_screen_tx_send)
-            } else {
-                stringResource(R.string.tx_overview_screen_tx_deposit)
-            }
-            VsOverviewToken(
-                header = tokenTitle,
-                valuedToken = tx.token,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-            )
-        },
-        detailContent = {
-            Column {
-
-                TextDetails(
-                    title = stringResource(R.string.tx_overview_screen_tx_from),
-                    subtitle = tx.from,
-                )
-
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
-
-                TextDetails(
-                    title = stringResource(R.string.tx_overview_screen_tx_to),
-                    subtitle = tx.to,
-                )
-
-                if (tx.memo.isNotEmpty()) {
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
-
-                    TextDetails(
-                        title = stringResource(R.string.tx_overview_screen_tx_memo),
-                        subtitle = tx.memo,
-                    )
-                }
-
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
-
-                Details(
-                    modifier = Modifier.padding(
-                        vertical = 12.dp,
-                    ),
-                    title = stringResource(R.string.tx_overview_screen_tx_network)
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            4.dp,
-                            Alignment.End
-                        ),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val chain = tx.token.token.chain
-
-                        Image(
-                            painter = painterResource(chain.logo),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(16.dp),
-                        )
-
-                        Text(
-                            text = chain.raw,
-                            style = Theme.brockmann.body.s.medium,
-                            color = Theme.colors.text.primary,
-                            textAlign = TextAlign.End,
-                            maxLines = 1,
-                            overflow = TextOverflow.MiddleEllipsis,
-                        )
-                    }
-                }
-
-                VerifyCardDivider(
-                    size = 1.dp,
-                )
-
-                UiSpacer(12.dp)
-
-                EstimatedNetworkFee(
-                    tokenGas = tx.networkFeeTokenValue,
-                    fiatGas = tx.networkFeeFiatValue,
-                )
-            }
         }
     )
 }
 
 @Composable
-internal fun TxDetails(
+private fun TxDetails(
     title: String,
     hash: String,
     link: String,
-    modifier: Modifier = Modifier,
 ) {
     val uriHandler = VsUriHandler()
 
     Details(
-        modifier = modifier,
         title = title
     ) {
         Row(
