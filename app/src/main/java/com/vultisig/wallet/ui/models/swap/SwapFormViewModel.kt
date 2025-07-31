@@ -720,9 +720,19 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedSrcId,
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
-                val chain = chain
-                selectedSrc.updateSrc(srcTokenId, addresses, chain)
-                selectedDst.updateSrc(dstTokenId, addresses, chain)
+                if (addresses.isNotEmpty()) {
+                    try {
+                        val chain = chain
+                        selectedSrc.updateSrc(srcTokenId, addresses, chain)
+                        selectedDst.updateSrc(dstTokenId, addresses, chain)
+                    } catch (e: Exception) {
+                        uiState.update {
+                            it.copy(
+                                formError = UiText.StringResource(R.string.swap_screen_invalid_no_src_error)
+                            )
+                        }
+                    }
+                }
             }.collect()
         }
     }
@@ -1276,18 +1286,18 @@ internal fun MutableStateFlow<SendSrc?>.updateSrc(
 internal fun List<Address>.firstSendSrc(
     selectedTokenId: String?,
     filterByChain: Chain?,
-): SendSrc {
+): SendSrc? {
     val address = when {
-        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
-        filterByChain != null -> first { it.chain == filterByChain }
-        else -> first()
-    }
+        selectedTokenId != null -> firstOrNull { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        filterByChain != null -> firstOrNull { it.chain == filterByChain }
+        else -> firstOrNull()
+    } ?: return null
 
     val account = when {
-        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
-        filterByChain != null -> address.accounts.first { it.token.isNativeToken }
-        else -> address.accounts.first()
-    }
+        selectedTokenId != null -> address.accounts.firstOrNull { it.token.id == selectedTokenId }
+        filterByChain != null -> address.accounts.firstOrNull { it.token.isNativeToken }
+        else -> address.accounts.firstOrNull()
+    } ?: return null
 
     return SendSrc(address, account)
 }
@@ -1295,20 +1305,20 @@ internal fun List<Address>.firstSendSrc(
 internal fun List<Address>.findCurrentSrc(
     selectedTokenId: String?,
     currentSrc: SendSrc,
-): SendSrc {
+): SendSrc? {
     if (selectedTokenId == null) {
         val selectedAddress = currentSrc.address
         val selectedAccount = currentSrc.account
-        val address = first {
+        val address = firstOrNull {
             it.chain == selectedAddress.chain &&
                     it.address == selectedAddress.address
-        }
-        return SendSrc(
-            address,
-            address.accounts.first {
-                it.token.ticker == selectedAccount.token.ticker
-            },
-        )
+        } ?: return null
+
+        val account = address.accounts.firstOrNull {
+            it.token.ticker == selectedAccount.token.ticker
+        } ?: return null
+
+        return SendSrc(address, account)
     } else {
         return firstSendSrc(selectedTokenId, null)
     }
