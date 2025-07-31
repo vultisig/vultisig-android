@@ -90,10 +90,10 @@ internal enum class DepositOption {
     StakeRuji,
     UnstakeRuji,
     WithdrawRujiRewards,
-    ReceiveYTCY,
-    ReceiveYRUNE,
-    SellYRUNE,
-    SellYTCY,
+    MintYTCY,
+    MintYRUNE,
+    RedeemYRUNE,
+    RedeemYTCY,
 }
 
 @Immutable
@@ -201,10 +201,10 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.StakeRuji,
                 DepositOption.UnstakeRuji,
                 DepositOption.WithdrawRujiRewards,
-                DepositOption.ReceiveYTCY,
-                DepositOption.ReceiveYRUNE,
-                DepositOption.SellYTCY,
-                DepositOption.SellYRUNE,
+                DepositOption.MintYTCY,
+                DepositOption.MintYRUNE,
+                DepositOption.RedeemYTCY,
+                DepositOption.RedeemYRUNE,
             )
 
             Chain.MayaChain -> listOf(
@@ -285,8 +285,8 @@ internal class DepositFormViewModel @Inject constructor(
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                    DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
-                    DepositOption.SellYTCY, DepositOption.SellYRUNE,
+                    DepositOption.MintYTCY, DepositOption.MintYRUNE,
+                    DepositOption.RedeemYTCY, DepositOption.RedeemYRUNE,
                     DepositOption.Custom ->
                         address.accounts.find { it.token.id == selectedToken.id }
 
@@ -399,18 +399,18 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                DepositOption.ReceiveYRUNE ->
+                DepositOption.MintYRUNE ->
                     state.update {
                         it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
                     }
 
-                DepositOption.ReceiveYTCY -> {
+                DepositOption.MintYTCY -> {
                     state.update {
                         it.copy(selectedToken = Tokens.tcy)
                     }
                 }
 
-                DepositOption.SellYTCY -> {
+                DepositOption.RedeemYTCY -> {
                     val yTCY = Coins.getCoinBy(Chain.ThorChain, "yTCY") ?: return@launch
                     state.update {
                         it.copy(selectedToken = yTCY)
@@ -418,7 +418,7 @@ internal class DepositFormViewModel @Inject constructor(
                     setSlippage(DEFAULT_SLIPPAGE)
                 }
 
-                DepositOption.SellYRUNE -> {
+                DepositOption.RedeemYRUNE -> {
                     val yRUNE = Coins.getCoinBy(Chain.ThorChain, "yRUNE") ?: return@launch
                     state.update {
                         it.copy(selectedToken = yRUNE)
@@ -663,10 +663,10 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
-                    DepositOption.ReceiveYTCY -> createReceiveYToken(DepositOption.ReceiveYTCY)
-                    DepositOption.ReceiveYRUNE -> createReceiveYToken(DepositOption.ReceiveYRUNE)
-                    DepositOption.SellYRUNE -> createSellYToken(DepositOption.SellYRUNE)
-                    DepositOption.SellYTCY -> createSellYToken(DepositOption.SellYTCY)
+                    DepositOption.MintYTCY -> createReceiveYToken(DepositOption.MintYTCY)
+                    DepositOption.MintYRUNE -> createReceiveYToken(DepositOption.MintYRUNE)
+                    DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
+                    DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -730,10 +730,10 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
         val contractAddress = when (depositOption) {
-            DepositOption.SellYTCY -> {
+            DepositOption.RedeemYTCY -> {
                 YTCY_CONTRACT
             }
-            DepositOption.SellYRUNE -> {
+            DepositOption.RedeemYRUNE -> {
                 YRUNE_CONTRACT
             }
             else -> {
@@ -755,7 +755,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
+            wasmExecuteContractPayload = ThorchainFunctions.redeemYToken(
                 fromAddress = srcAddress,
                 tokenContract = contractAddress,
                 slippage = slippage.formatSlippage(),
@@ -812,11 +812,11 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
 
         val tokenContract = when (depositOption) {
-            DepositOption.ReceiveYRUNE -> {
+            DepositOption.MintYRUNE -> {
                 YRUNE_CONTRACT
             }
 
-            DepositOption.ReceiveYTCY -> {
+            DepositOption.MintYTCY -> {
                 YTCY_CONTRACT
             }
 
@@ -838,7 +838,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.receiveYToken(
+            wasmExecuteContractPayload = ThorchainFunctions.mintYToken(
                 fromAddress = srcAddress,
                 stakingContract = AFFILIATE_CONTRACT,
                 tokenContract = tokenContract,

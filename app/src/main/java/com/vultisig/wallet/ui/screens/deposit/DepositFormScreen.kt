@@ -39,7 +39,6 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
-import com.vultisig.wallet.ui.screens.function.SellYTokensFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
@@ -212,10 +211,10 @@ internal fun DepositFormScreen(
                         DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
                         DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_withdraw_ruji_rewards)
-                        DepositOption.ReceiveYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
-                        DepositOption.ReceiveYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
-                        DepositOption.SellYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
-                        DepositOption.SellYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
+                        DepositOption.MintYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
+                        DepositOption.MintYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
+                        DepositOption.RedeemYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
+                        DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
                     }
                 })
 
@@ -300,8 +299,8 @@ internal fun DepositFormScreen(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                            DepositOption.ReceiveYRUNE, DepositOption.ReceiveYTCY, DepositOption.SellYTCY,
-                            DepositOption.SellYRUNE,
+                            DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
+                            DepositOption.RedeemYRUNE,
                         )
                     ) {
                         FormCard {
@@ -340,7 +339,7 @@ internal fun DepositFormScreen(
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
                         depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
-                        depositOption == DepositOption.ReceiveYRUNE || depositOption == DepositOption.ReceiveYTCY
+                        depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -356,8 +355,8 @@ internal fun DepositFormScreen(
                             DepositOption.Custom, DepositOption.StakeTcy,
                             DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                            DepositOption.ReceiveYTCY, DepositOption.ReceiveYRUNE,
-                            DepositOption.SellYRUNE, DepositOption.SellYTCY,
+                            DepositOption.MintYTCY, DepositOption.MintYRUNE,
+                            DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
                         )
                     ) {
                         FormTextFieldCard(
@@ -440,8 +439,8 @@ internal fun DepositFormScreen(
                         )
                     }
 
-                    if (depositOption == DepositOption.SellYRUNE ||
-                        depositOption == DepositOption.SellYTCY) {
+                    if (depositOption == DepositOption.RedeemYRUNE ||
+                        depositOption == DepositOption.RedeemYTCY) {
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_operator_slippage_title),
                                 hint = stringResource(R.string.slippage_hint),

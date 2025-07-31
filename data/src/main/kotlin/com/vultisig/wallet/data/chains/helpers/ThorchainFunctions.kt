@@ -59,7 +59,7 @@ object ThorchainFunctions {
         )
     }
 
-    fun receiveYToken(
+    fun mintYToken(
         fromAddress: String,
         stakingContract: String,
         tokenContract: String,
@@ -96,7 +96,7 @@ object ThorchainFunctions {
         )
     }
 
-    fun sellYToken(
+    fun redeemYToken(
         fromAddress: String,
         tokenContract: String,
         slippage: String,
