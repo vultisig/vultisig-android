@@ -62,6 +62,7 @@ object ThorchainFunctions {
     fun receiveYToken(
         fromAddress: String,
         stakingContract: String,
+        tokenContract: String,
         denom: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
@@ -74,9 +75,9 @@ object ThorchainFunctions {
         val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
         val fullPayload = JSONObject().apply {
             put("execute", JSONObject().apply {
-                put("contract_addr", stakingContract)
+                put("contract_addr", tokenContract)
                 put("msg", base64Msg)
-                put("affiliate", listOf(AFFILIATE_CONTRACT, 10))
+                put("affiliate", listOf(VULTISIG_AFFILIATE_ADDRESS, 10))
             })
         }
 
@@ -96,12 +97,12 @@ object ThorchainFunctions {
 
     fun sellYToken(
         fromAddress: String,
-        stakingContract: String,
+        tokenContract: String,
         slippage: String,
         denom: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
-        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
 
         val executePayload = JSONObject().apply {
             put("withdraw", JSONObject().apply {
@@ -114,7 +115,7 @@ object ThorchainFunctions {
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
-            contractAddress = stakingContract,
+            contractAddress = tokenContract,
             executeMsg = base64EncodedMsg,
             coins = listOf(
                 CosmosCoin(
@@ -125,5 +126,5 @@ object ThorchainFunctions {
     }
 }
 
-private const val AFFILIATE_CONTRACT =
-    "sthor1m4pk0kyc5xln5uznsur0d6frlvteghs0v6fyt8pw4vxfhfgskzts2g8ln6"
+private const val VULTISIG_AFFILIATE_ADDRESS =
+    "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"

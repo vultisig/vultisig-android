@@ -730,10 +730,10 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
         val contractAddress = when (depositOption) {
             DepositOption.SellYTCY -> {
-                RECEIVE_YRUNE_CONTRACT
+                YRUNE_CONTRACT
             }
             DepositOption.SellYRUNE -> {
-                RECEIVE_YTCY_CONTRACT
+                YTCY_CONTRACT
             }
             else -> {
                 throw RuntimeException("Invalid Deposit Parameter ")
@@ -797,24 +797,26 @@ internal class DepositFormViewModel @Inject constructor(
             )
 
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-        val contractAddress = when (depositOption) {
+
+        val tokenContract = when (depositOption) {
             DepositOption.ReceiveYRUNE -> {
-                RECEIVE_YRUNE_CONTRACT
+                YRUNE_CONTRACT
             }
+
             DepositOption.ReceiveYTCY -> {
-                RECEIVE_YTCY_CONTRACT
+                YTCY_CONTRACT
             }
+
             else -> {
                 throw RuntimeException("Invalid Deposit Parameter ")
             }
         }
-
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = contractAddress,
+            dstAddress = AFFILIATE_CONTRACT,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
@@ -825,7 +827,8 @@ internal class DepositFormViewModel @Inject constructor(
             blockChainSpecific = specific.blockChainSpecific,
             wasmExecuteContractPayload = ThorchainFunctions.receiveYToken(
                 fromAddress = srcAddress,
-                stakingContract = contractAddress,
+                stakingContract = AFFILIATE_CONTRACT,
+                tokenContract = tokenContract,
                 denom = selectedToken.ticker.lowercase(),
             )
         )
@@ -2079,7 +2082,8 @@ private val tokensToMerge = listOf(
 private const val STAKING_RUJI_CONTRACT =
     "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
 
-private const val RECEIVE_YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
-private const val RECEIVE_YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
-
+private const val YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
+private const val YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
+private const val AFFILIATE_CONTRACT =
+    "sthor1m4pk0kyc5xln5uznsur0d6frlvteghs0v6fyt8pw4vxfhfgskzts2g8ln6"
 private const val DEFAULT_SLIPPAGE = "1.0"
