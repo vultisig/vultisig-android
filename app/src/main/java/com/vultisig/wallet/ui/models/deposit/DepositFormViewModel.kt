@@ -756,7 +756,7 @@ internal class DepositFormViewModel @Inject constructor(
             blockChainSpecific = specific.blockChainSpecific,
             wasmExecuteContractPayload = ThorchainFunctions.sellYToken(
                 fromAddress = srcAddress,
-                stakingContract = contractAddress,
+                tokenContract = contractAddress,
                 slippage = "0.01", // TODO: Format Slippage,
                 denom = selectedToken.contractAddress,
             )
