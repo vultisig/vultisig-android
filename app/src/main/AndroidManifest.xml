@@ -44,7 +44,7 @@
                 android:name=".app.activity.MainActivity"
                 android:exported="true"
                 android:windowSoftInputMode="adjustResize"
-                android:configChanges="layoutDirection|locale"
+                android:configChanges="orientation|screenSize|layoutDirection|locale"
                 android:screenOrientation="portrait"
                 tools:ignore="DiscouragedApi,LockedOrientationActivity">
 
