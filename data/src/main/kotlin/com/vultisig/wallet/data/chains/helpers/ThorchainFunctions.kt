@@ -67,6 +67,7 @@ object ThorchainFunctions {
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
+        require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
         val depositMsg = JSONObject().apply {
@@ -103,6 +104,8 @@ object ThorchainFunctions {
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
+        require(slippage.isNotEmpty()) { "slippage cannot be empty" }
+        require(denom.isNotEmpty()) { "denom cannot be empty" }
 
         val executePayload = JSONObject().apply {
             put("withdraw", JSONObject().apply {
