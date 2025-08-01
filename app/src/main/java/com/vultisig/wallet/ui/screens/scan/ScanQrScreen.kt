@@ -253,7 +253,7 @@ private fun QrCameraScreen(
         factory = { context ->
             val previewView = PreviewView(context)
             val resolutionStrategy = ResolutionStrategy(
-                Size(1200, 1200),
+                Size(1920, 1080),
                 ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
             )
             val resolutionSelector = ResolutionSelector.Builder()
