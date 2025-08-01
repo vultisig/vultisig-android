@@ -90,6 +90,8 @@ internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
 ) {
+    var focusPoint by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
+
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -178,6 +180,7 @@ internal fun ScanQrScreen(
                     painter = painterResource(id = R.drawable.vs_camera_frame),
                     contentDescription = null,
                 )
+
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -293,6 +296,8 @@ private fun QrCameraScreen(
                     imageAnalysis,
                 )
 
+                // In some devices auto-focus does not work very well
+                // We should allow user to touch square and perform autofocus too
                 previewView.setOnTouchListener { _, event ->
                     if (event.action == MotionEvent.ACTION_UP) {
                         val factory = previewView.meteringPointFactory
