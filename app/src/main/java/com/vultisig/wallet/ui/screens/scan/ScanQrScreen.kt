@@ -2,13 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.scan
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
+import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -20,13 +23,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -230,6 +231,7 @@ internal fun ScanQrScreen(
     }
 }
 
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
@@ -282,12 +284,27 @@ private fun QrCameraScreen(
             )
 
             try {
-                cameraProviderFuture.get().bindToLifecycle(
+                val cameraProvider = cameraProviderFuture.get()
+
+                val camera = cameraProvider.bindToLifecycle(
                     lifecycleOwner,
                     selector,
                     preview,
                     imageAnalysis,
                 )
+
+                previewView.setOnTouchListener { _, event ->
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        val factory = previewView.meteringPointFactory
+                        val point = factory.createPoint(event.x, event.y)
+                        val action = FocusMeteringAction.Builder(point)
+                            .disableAutoCancel()
+                            .build()
+                        camera.cameraControl.startFocusAndMetering(action)
+                    }
+                    true
+                }
+
             } catch (e: Throwable) {
                 Timber.e(context.getString(R.string.camera_bind_error, e.localizedMessage), e)
             }
