@@ -297,7 +297,9 @@ private fun QrCameraScreen(
                 )
 
                 // In some devices auto-focus does not work very well
-                // We should allow user to touch square and perform autofocus too
+                // We should allow user to touch and perform focus,
+                // the autofocus initiated by a tap will "stick" at that point until
+                // another tap occurs
                 previewView.setOnTouchListener { _, event ->
                     if (event.action == MotionEvent.ACTION_UP) {
                         val factory = previewView.meteringPointFactory
