@@ -6,9 +6,24 @@ import com.vultisig.wallet.data.common.decrypt
 import com.vultisig.wallet.data.common.encrypt
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.sha256
+import org.junit.Assert.assertEquals
 import org.junit.Test
+import wallet.core.jni.CoinType
 
 class EncryptionTest{
+    init {
+        try {
+            System.loadLibrary("TrustWalletCore")
+        } catch (e: UnsatisfiedLinkError) {
+            println("Wallet-Core native library not loaded: ${e.message}")
+        }
+    }
+
+    @Test
+    fun test1234() {
+        assertEquals(CoinType.THORCHAIN.validate("XXX"), true)
+    }
+
     @Test
     fun testEncryption(){
         val encryptionKey = Utils.encryptionKeyHex
