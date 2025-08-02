@@ -39,29 +39,14 @@ internal fun KeysignScreen(
         hiltViewModel(LocalActivity.current as MainActivity)
 ) {
 
-    val uiState by keysignShareViewModel.uiState.collectAsState()
-
-    LaunchedEffect(txType, transactionId) {
-        when (txType) {
-            Send -> keysignShareViewModel.loadTransaction(transactionId)
-            Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
-            Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
-            Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
-        }
+    when (txType) {
+        Send -> keysignShareViewModel.loadTransaction(transactionId)
+        Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
+        Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
+        Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
     }
 
-
-
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            VsCircularLoading(modifier = Modifier.size(32.dp))
-        }
-    } else {
-        KeysignScreen()
-    }
+    KeysignScreen()
 }
 
 @Composable
