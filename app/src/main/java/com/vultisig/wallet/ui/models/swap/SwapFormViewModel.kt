@@ -664,6 +664,11 @@ internal class SwapFormViewModel @Inject constructor(
             srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
+        if(maxUsableTokenAmount <= BigInteger.ZERO) {
+            srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            return
+        }
+
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
             .multiply(percentage.toBigDecimal())
             .setScale(6, RoundingMode.DOWN)
