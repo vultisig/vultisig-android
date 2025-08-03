@@ -713,6 +713,7 @@ internal class SwapFormViewModel @Inject constructor(
                 }
                 .catch {
                     Timber.e(it)
+                    emit(emptyList())
                 }.collect(addresses)
         }
     }
@@ -721,7 +722,7 @@ internal class SwapFormViewModel @Inject constructor(
         selectTokensJob?.cancel()
         selectTokensJob = viewModelScope.launch {
             combine(
-                addresses,
+                addresses.filter { it.isNotEmpty() }, // Only proceed when addresses loaded
                 selectedSrcId,
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
