@@ -22,6 +22,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -64,7 +65,8 @@ private fun BackupVaultScreen(
 
                 RiveAnimation(
                     animation = R.raw.riv_backupvault_splash,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    fit = Fit.COVER
                 )
 
                 UiSpacer(24.dp)

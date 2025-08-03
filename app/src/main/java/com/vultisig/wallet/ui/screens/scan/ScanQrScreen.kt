@@ -2,13 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.scan
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
+import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -20,13 +23,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +40,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.Executor
@@ -89,6 +90,8 @@ internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
 ) {
+    var isFrameHighlighted by remember { mutableStateOf(false) }
+
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -167,6 +170,13 @@ internal fun ScanQrScreen(
                 QrCameraScreen(
                     onSuccess = onSuccess,
                     executor = executor,
+                    onAutoFocusTriggered =  {
+                        isFrameHighlighted = true
+                        coroutineScope.launch {
+                            delay(300)
+                            isFrameHighlighted = false
+                        }
+                    }
                 )
 
                 Image(
@@ -174,9 +184,14 @@ internal fun ScanQrScreen(
                         .align(Alignment.Center)
                         .fillMaxWidth()
                         .padding(40.dp),
-                    painter = painterResource(id = R.drawable.vs_camera_frame),
+                    painter = if (isFrameHighlighted) {
+                        painterResource(id = R.drawable.vs_camera_frame_highlight)
+                    } else {
+                        painterResource(id = R.drawable.vs_camera_frame)
+                    },
                     contentDescription = null,
                 )
+
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -230,10 +245,12 @@ internal fun ScanQrScreen(
     }
 }
 
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
     executor: Executor,
+    onAutoFocusTriggered: () -> Unit,
 ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -253,7 +270,7 @@ private fun QrCameraScreen(
         factory = { context ->
             val previewView = PreviewView(context)
             val resolutionStrategy = ResolutionStrategy(
-                Size(1200, 1200),
+                Size(1920, 1080),
                 ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
             )
             val resolutionSelector = ResolutionSelector.Builder()
@@ -282,12 +299,33 @@ private fun QrCameraScreen(
             )
 
             try {
-                cameraProviderFuture.get().bindToLifecycle(
+                val cameraProvider = cameraProviderFuture.get()
+
+                val camera = cameraProvider.bindToLifecycle(
                     lifecycleOwner,
                     selector,
                     preview,
                     imageAnalysis,
                 )
+
+                // In some devices auto-focus does not work very well
+                // We should allow user to touch and perform focus,
+                // the autofocus initiated by a tap will "stick" at that point until
+                // another tap occurs
+                previewView.setOnTouchListener { _, event ->
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        Timber.d("Auto-focus requested : ${event.x} ${event.y}")
+                        val factory = previewView.meteringPointFactory
+                        val point = factory.createPoint(event.x, event.y)
+                        val action = FocusMeteringAction.Builder(point)
+                            .disableAutoCancel()
+                            .build()
+                        camera.cameraControl.startFocusAndMetering(action)
+                        onAutoFocusTriggered()
+                    }
+                    true
+                }
+
             } catch (e: Throwable) {
                 Timber.e(context.getString(R.string.camera_bind_error, e.localizedMessage), e)
             }
