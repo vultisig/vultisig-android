@@ -713,6 +713,7 @@ internal class SwapFormViewModel @Inject constructor(
                 }
                 .catch {
                     Timber.e(it)
+                    emit(emptyList())
                 }.collect(addresses)
         }
     }
