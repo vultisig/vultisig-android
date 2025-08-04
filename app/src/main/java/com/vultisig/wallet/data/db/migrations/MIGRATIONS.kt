@@ -409,8 +409,6 @@ internal val MIGRATION_21_22 = object : Migration(21, 22) {
 
         // Rename the new table to the original table name
         db.execSQL("ALTER TABLE `vaultMetadata_new` RENAME TO `vaultMetadata`")
-
-
     }
 }
 
@@ -427,5 +425,11 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
             )
         """.trimIndent()
         )
+    }
+}
+
+internal val MIGRATION_23_24 = object : Migration(22, 24) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE tokenValue ADD COLUMN stakeValue TEXT NOT NULL DEFAULT '0'")
     }
 }

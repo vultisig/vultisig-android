@@ -14,10 +14,10 @@ data class TokenValueEntity(
     val address: String,
     @ColumnInfo("ticker")
     val ticker: String,
-
-
     @ColumnInfo("tokenValue")
-    val tokenValue: String, // BigInteger
+    val tokenValue: String,
+    @ColumnInfo("mergedValue")
+    val mergedValue: String = "0",
 ){
     val tokenId: String
         get() = "$ticker-$chain"
