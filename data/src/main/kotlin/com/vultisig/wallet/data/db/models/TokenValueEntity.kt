@@ -16,8 +16,6 @@ data class TokenValueEntity(
     val ticker: String,
     @ColumnInfo("tokenValue")
     val tokenValue: String,
-    @ColumnInfo("mergedValue")
-    val mergedValue: String = "0",
 ){
     val tokenId: String
         get() = "$ticker-$chain"
