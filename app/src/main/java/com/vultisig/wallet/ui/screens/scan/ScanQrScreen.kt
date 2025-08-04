@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.screens.scan
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Size
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +59,10 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.common.HybridBinarizer
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -290,13 +295,33 @@ private fun QrCameraScreen(
                 .setResolutionSelector(resolutionSelector)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
-            imageAnalysis.setAnalyzer(
+
+            /*imageAnalysis.setAnalyzer(
                 executor,
                 BarcodeAnalyzer {
                     unbindCameraListener(cameraProviderFuture, localContext)
                     onSuccess(it)
                 }
-            )
+            ) */
+
+            imageAnalysis.setAnalyzer(executor) { imageProxy ->
+                val mediaImage = imageProxy.image
+                if (mediaImage != null) {
+                    val bitmap = mediaImage.toBitmap()
+                    val qrText = decodeQRCodeFromImage(bitmap)
+                    if (!qrText.isNullOrEmpty()) {
+                        onSuccess(
+                            listOf(
+                                BarcodeScannerOptions.Builder()
+                                    .setRawValue(qrText)
+                                    .setFormat(Barcode.FORMAT_QR_CODE)
+                                    .build()
+                            )
+                        )
+                    }
+                }
+                imageProxy.close()
+            }
 
             try {
                 val cameraProvider = cameraProviderFuture.get()
@@ -333,6 +358,20 @@ private fun QrCameraScreen(
             previewView
         }
     )
+}
+
+fun decodeQRCodeFromImage(bitmap: Bitmap): String? {
+    val intArray = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(intArray, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    val source = RGBLuminanceSource(bitmap.width, bitmap.height, intArray)
+    val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
+
+    return try {
+        val result = MultiFormatReader().decode(binaryBitmap)
+        result.text
+    } catch (e: Exception) {
+        null
+    }
 }
 
 private fun unbindCameraListener(

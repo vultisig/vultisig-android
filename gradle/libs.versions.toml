@@ -49,6 +49,7 @@ update = "2.1.0"
 review = "2.0.2"
 security = "1.0.0"
 coreKtxVersion = "1.6.1"
+zxing = "3.5.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -72,6 +73,8 @@ hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref =
 hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hilt" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
+
+zxing-core = { module = "com.google.zxing:core", version = "zxing" }
 
 apache-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-compress" }
 apache-compress-xz = { module = "org.tukaani:xz", version.ref = "apache-compress-xz" }
