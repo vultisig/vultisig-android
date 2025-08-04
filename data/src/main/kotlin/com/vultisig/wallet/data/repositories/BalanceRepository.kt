@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -88,6 +89,7 @@ interface BalanceRepository {
         coin: Coin,
     ): Flow<TokenValue>
 
+    suspend fun getMergeBalances(address: String): List<MergeAccount>
 }
 
 internal class BalanceRepositoryImpl @Inject constructor(
@@ -324,4 +326,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun getMergeBalances(address: String): List<MergeAccount> {
+        return thorChainApi.getRujiMergeBalances(address)
+    }
 }

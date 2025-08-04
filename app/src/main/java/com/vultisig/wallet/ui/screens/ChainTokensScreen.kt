@@ -425,7 +425,7 @@ internal fun CoinItem(
                 UiSpacer(1f)
 
                 ToggleVisibilityText(
-                    text = stakeBalance,
+                    text = "$stakeBalance Merged",
                     isVisible = isBalanceVisible,
                     style = Theme.menlo.subtitle1,
                     color = appColor.neutral100,

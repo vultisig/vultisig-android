@@ -213,6 +213,12 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
+    private suspend fun fetchStakeBalance(chain: Chain) {
+        if (chain == Chain.ThorChain) {
+
+        }
+    }
+
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
         val vault = getVault(vaultId)
         val chain = token.chain
@@ -252,6 +258,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
+        stakeValue = balance.tokenStakeValue,
     )
 }
 
