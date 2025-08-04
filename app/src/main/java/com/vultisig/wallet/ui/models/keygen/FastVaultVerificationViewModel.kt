@@ -90,7 +90,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                     name = args.vaultName,
                     action = args.tssAction,
                     vaultId = args.vaultId,
-                    password = args.password
+                    password = null
                 ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.Onboarding.VaultBackup::class,
