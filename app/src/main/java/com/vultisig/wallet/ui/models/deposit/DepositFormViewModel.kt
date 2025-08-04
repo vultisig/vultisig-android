@@ -800,7 +800,8 @@ internal class DepositFormViewModel @Inject constructor(
             wasmExecuteContractPayload = ThorchainFunctions.stakeRUJI(
                 srcAddress,
                 STAKING_RUJI_CONTRACT,
-                selectedToken.contractAddress
+                selectedToken.contractAddress,
+                tokenAmount
             )
         )
     }
