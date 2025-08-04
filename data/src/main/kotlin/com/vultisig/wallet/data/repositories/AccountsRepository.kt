@@ -41,6 +41,8 @@ interface AccountsRepository {
         vaultId: String,
         token: Coin
     ): Account
+
+    suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -187,10 +189,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
             async { tokenPriceRepository.refresh(updatedCoins) }
         }
 
-        val mergeAccounts = supervisorScope {
-            async { fetchMergeBalance(chain, account.address) }
-        }
-
         val address = account.address
 
         emit(
@@ -213,24 +211,13 @@ internal class AccountsRepositoryImpl @Inject constructor(
             accounts = account.accounts.map {
                 val balance = balanceRepository.getTokenBalance(address, it.token)
                     .first()
-                val mergeBalance = mergeAccounts.await().findMergeBalance(it.token)
 
-                it.applyBalance(balance, mergeBalance)
+                it.applyBalance(balance)
             }
         ))
     }
 
-    private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
-        val ticker = coin.ticker.lowercase()
-
-        val mergeBalance = this.firstOrNull {
-            it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true)
-        }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
-
-        return mergeBalance
-    }
-
-    private suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount> {
+    override suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount> {
         return runCatching { balanceRepository.getMergeTokenValue(address, chain) }.getOrNull()
             ?: emptyList()
     }
@@ -271,14 +258,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
         accountToUpdate.applyBalance(balance)
     }
 
-    private fun Account.applyBalance(balance: TokenBalance, mergeBalance: BigInteger = BigInteger.ZERO): Account = copy(
+    private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
-        mergeValue = mergeBalance
-    )
-
-    private fun Account.applyMergerBalance(balance: BigInteger): Account = copy(
-        mergeValue = balance,
     )
 }
 
