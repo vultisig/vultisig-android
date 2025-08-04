@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -198,7 +199,7 @@ private fun ChainTokensScreen(
                                             )
                                         )
                                     }
-                                   onShowReviewPopUp()
+                                    onShowReviewPopUp()
                                 },
                                 isBalanceVisible = uiModel.isBalanceVisible,
                                 onQrBtnClick = onQrBtnClick,
@@ -215,6 +216,7 @@ private fun ChainTokensScreen(
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
                                     onClick = clickOnce { onTokenClick(token) },
+                                    stakeBalance = token.stakeBalance,
                                 )
                             }
                         }
@@ -329,6 +331,7 @@ internal fun CoinItem(
     tokenLogo: ImageModel,
     @DrawableRes chainLogo: Int?,
     onClick: () -> Unit = {},
+    stakeBalance: String? = null,
 ) {
     val appColor = Theme.colors
 
@@ -403,18 +406,31 @@ internal fun CoinItem(
 
         UiSpacer(size = 12.dp)
 
-        if (balance != null) {
-            ToggleVisibilityText(
-                text = balance,
-                isVisible = isBalanceVisible,
-                style = Theme.menlo.subtitle1,
-                color = appColor.neutral100,
-            )
-        } else {
-            UiPlaceholderLoader(
-                modifier = Modifier
-                    .width(48.dp)
-            )
+        Row {
+            if (balance != null) {
+                ToggleVisibilityText(
+                    text = balance,
+                    isVisible = isBalanceVisible,
+                    style = Theme.menlo.subtitle1,
+                    color = appColor.neutral100,
+                )
+            } else {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .width(48.dp)
+                )
+            }
+
+            if (stakeBalance != null) {
+                UiSpacer(1f)
+
+                ToggleVisibilityText(
+                    text = stakeBalance,
+                    isVisible = isBalanceVisible,
+                    style = Theme.menlo.subtitle1,
+                    color = appColor.neutral100,
+                )
+            }
         }
     }
 }
