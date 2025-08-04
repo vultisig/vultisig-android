@@ -427,9 +427,3 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
         )
     }
 }
-
-internal val MIGRATION_23_24 = object : Migration(22, 24) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL("ALTER TABLE tokenValue ADD COLUMN stakeValue TEXT NOT NULL DEFAULT '0'")
-    }
-}

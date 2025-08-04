@@ -44,6 +44,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
@@ -65,6 +66,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 import kotlinx.coroutines.launch
+import wallet.core.jni.CoinType
 
 @Composable
 internal fun ChainTokensScreen(
@@ -215,7 +217,7 @@ private fun ChainTokensScreen(
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
                                     onClick = clickOnce { onTokenClick(token) },
-                                    stakeBalance = token.mergeBalance,
+                                    mergedBalance = token.mergeBalance,
                                 )
                             }
                         }
@@ -330,7 +332,7 @@ internal fun CoinItem(
     tokenLogo: ImageModel,
     @DrawableRes chainLogo: Int?,
     onClick: () -> Unit = {},
-    stakeBalance: String? = null,
+    mergedBalance: String? = null,
 ) {
     val appColor = Theme.colors
 
@@ -420,11 +422,11 @@ internal fun CoinItem(
                 )
             }
 
-            if (stakeBalance != null) {
+            if (mergedBalance != null && mergedBalance != "0") {
                 UiSpacer(1f)
 
                 ToggleVisibilityText(
-                    text = "$stakeBalance Merged",
+                    text = "${CoinType.THORCHAIN.toValue(mergedBalance.toBigInteger())} Merged",
                     isVisible = isBalanceVisible,
                     style = Theme.menlo.subtitle1,
                     color = appColor.neutral100,

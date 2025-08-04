@@ -215,8 +215,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                     .first()
                 val mergeBalance = mergeAccounts.await().findMergeBalance(it.token)
 
-                it.applyBalance(balance)
-                it.applyMergerBalance(mergeBalance)
+                it.applyBalance(balance, mergeBalance)
             }
         ))
     }
@@ -272,9 +271,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
         accountToUpdate.applyBalance(balance)
     }
 
-    private fun Account.applyBalance(balance: TokenBalance): Account = copy(
+    private fun Account.applyBalance(balance: TokenBalance, mergeBalance: BigInteger = BigInteger.ZERO): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
+        mergeValue = mergeBalance
     )
 
     private fun Account.applyMergerBalance(balance: BigInteger): Account = copy(
