@@ -137,7 +137,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?.let { fiatValueToStringMapper(it) },
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
-                            stakeBalance = account.stakeValue.toString(),
+                            mergeBalance = account.mergeValue.toString(),
                         )
                     }
 

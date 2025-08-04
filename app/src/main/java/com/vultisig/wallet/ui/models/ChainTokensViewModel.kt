@@ -60,7 +60,7 @@ internal data class ChainTokenUiModel(
     val fiatBalance: String? = null,
     val tokenLogo: ImageModel = "",
     @DrawableRes val chainLogo: Int? = null,
-    val stakeBalance: String? = null,
+    val mergeBalance: String? = null,
 )
 
 @HiltViewModel
@@ -206,7 +206,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?.let { fiatValueToStringMapper(it) },
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
-                        stakeBalance = "10000",
+                        mergeBalance = account.mergeValue.toString(),
                     )
                 }
 

@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 interface AccountsRepository {
@@ -186,6 +187,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
             async { tokenPriceRepository.refresh(updatedCoins) }
         }
 
+        val mergeAccounts = supervisorScope {
+            async { fetchMergeBalance(chain, account.address) }
+        }
+
         val address = account.address
 
         emit(
@@ -203,20 +208,32 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         loadPrices.await()
 
-        emit(account.copy(
+        emit(
+            account.copy(
             accounts = account.accounts.map {
                 val balance = balanceRepository.getTokenBalance(address, it.token)
                     .first()
+                val mergeBalance = mergeAccounts.await().findMergeBalance(it.token)
 
                 it.applyBalance(balance)
+                it.applyMergerBalance(mergeBalance)
             }
         ))
     }
 
-    private suspend fun fetchStakeBalance(chain: Chain) {
-        if (chain == Chain.ThorChain) {
+    private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
+        val ticker = coin.ticker.lowercase()
 
-        }
+        val mergeBalance = this.firstOrNull {
+            it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true)
+        }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+        return mergeBalance
+    }
+
+    private suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount> {
+        return runCatching { balanceRepository.getMergeTokenValue(address, chain) }.getOrNull()
+            ?: emptyList()
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
@@ -258,7 +275,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
-        stakeValue = balance.tokenStakeValue,
+    )
+
+    private fun Account.applyMergerBalance(balance: BigInteger): Account = copy(
+        mergeValue = balance,
     )
 }
 

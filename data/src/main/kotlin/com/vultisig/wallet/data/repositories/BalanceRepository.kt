@@ -59,6 +59,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -89,7 +90,7 @@ interface BalanceRepository {
         coin: Coin,
     ): Flow<TokenValue>
 
-    suspend fun getMergeBalances(address: String): List<MergeAccount>
+    suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
 }
 
 internal class BalanceRepositoryImpl @Inject constructor(
@@ -228,7 +229,37 @@ internal class BalanceRepositoryImpl @Inject constructor(
         address: String,
         coin: Coin,
     ): Flow<TokenValue> = flow {
-        emit(TokenValue(when (coin.chain) {
+        emit(getTokenValues(address, coin))
+    }.onEach { tokenValue ->
+        tokenValueDao.insertTokenValue(
+            TokenValueEntity(
+                chain = coin.chain.id,
+                address = address,
+                ticker = coin.ticker,
+                tokenValue = tokenValue.value.toString(),
+            )
+        )
+    }
+
+    override suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount> {
+        if (chain == ThorChain) {
+            thorChainApi.getRujiMergeBalances(address)
+        }
+        return emptyList()
+    }
+
+    private suspend fun getTokenValues(address: String, coin: Coin): TokenValue {
+        val availableBalance = getAvailableBalances(address, coin)
+
+        return TokenValue(
+            value = availableBalance,
+            unit = coin.ticker,
+            decimals = coin.decimal,
+        )
+    }
+
+    private suspend fun getAvailableBalances(address: String, coin: Coin): BigInteger {
+        return when (coin.chain) {
             ThorChain -> {
                 val listCosmosBalance = thorChainApi.getBalance(address)
                 val balance = listCosmosBalance
@@ -314,19 +345,6 @@ internal class BalanceRepositoryImpl @Inject constructor(
             Chain.Ripple -> rippleApi.getBalance(coin)
             Chain.Tron -> tronApi.getBalance(coin)
             Chain.Cardano -> cardanoApi.getBalance(coin)
-        }, coin.ticker, coin.decimal))
-    }.onEach { tokenValue ->
-        tokenValueDao.insertTokenValue(
-            TokenValueEntity(
-                chain = coin.chain.id,
-                address = address,
-                ticker = coin.ticker,
-                tokenValue = tokenValue.value.toString(),
-            )
-        )
-    }
-
-    override suspend fun getMergeBalances(address: String): List<MergeAccount> {
-        return thorChainApi.getRujiMergeBalances(address)
+        }
     }
 }
