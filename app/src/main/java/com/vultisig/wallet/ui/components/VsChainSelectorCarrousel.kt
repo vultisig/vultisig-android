@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,14 +24,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.screens.select.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun ChainSelectionScreen(
-    onSelectChain: () -> Unit = {}
+    onSelectChain: (Chain) -> Unit = {},
+    chains: List<NetworkUiModel>,
 ) {
     Box(
         modifier = Modifier
@@ -56,36 +61,12 @@ fun ChainSelectionScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                item {
+                items(chains) { network ->
                     ChainItem(
-                        iconRes = R.drawable.ton,
-                        name = "Ton",
-                        isSelected = false,
-                        onClick = {}
-                    )
-                }
-                item {
-                    ChainItem(
-                        iconRes = R.drawable.ethereum,
-                        name = "Ethereum",
-                        isSelected = true,
-                        onClick = {},
-                    )
-                }
-                item {
-                    ChainItem(
-                        iconRes = R.drawable.bitcoin,
-                        name = "Bitcoin",
-                        isSelected = false,
-                        onClick = {},
-                    )
-                }
-                item {
-                    ChainItem(
-                        iconRes = R.drawable.bitcoincash,
-                        name = "Bitcoin Cash",
-                        isSelected = false,
-                        onClick = {}
+                        chain = network.chain,
+                        logo = network.logo,
+                        isSelected = network.title.equals("ethereum", true),
+                        onClick = { onSelectChain(it) },
                     )
                 }
             }
@@ -95,10 +76,10 @@ fun ChainSelectionScreen(
 
 @Composable
 fun ChainItem(
-    iconRes: Int,
-    name: String,
+    chain: Chain,
+    logo: ImageModel,
     isSelected: Boolean,
-    onClick: (String) -> Unit,
+    onClick: (Chain) -> Unit,
 ) {
     val borderColor = if (isSelected) {
         Brush.horizontalGradient(
@@ -115,19 +96,25 @@ fun ChainItem(
             .clip(RoundedCornerShape(30.dp))
             .background(Theme.colors.backgrounds.secondary)
             .border(2.dp, borderColor, RoundedCornerShape(30.dp))
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .clickable { onClick(chain) },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
     ) {
-        Image(
-            painter = painterResource(id = iconRes),
-            contentDescription = "$name logo",
-            modifier = Modifier.size(26.dp)
+        TokenLogo(
+            errorLogoModifier = Modifier
+                .size(32.dp)
+                .background(Theme.colors.neutral100),
+            logo = logo,
+            title = "${chain.name} logo",
+            modifier = Modifier
+                .size(26.dp)
         )
+
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
-            text = name,
+            text = chain.name,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
         )

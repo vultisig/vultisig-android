@@ -139,7 +139,10 @@ private fun SelectAssetScreen(
             }
         },
         bottomBar = {
-            ChainSelectionScreen()
+            ChainSelectionScreen(
+                onSelectChain = {},
+                chains = state.chains,
+            )
         }
     )
 }
