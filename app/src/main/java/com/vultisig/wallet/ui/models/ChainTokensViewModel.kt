@@ -5,7 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -20,7 +20,6 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
-import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -28,15 +27,19 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -86,7 +89,6 @@ internal class ChainTokensViewModel @Inject constructor(
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
-    var lastAddress: Address? = null
 
     init {
         viewModelScope.launch {
@@ -176,16 +178,16 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).catch {
-                // TODO handle error
+            ).combine(fetchMergeBalanceFlow(chain)){ address, mergeBalance ->
+                address to mergeBalance
+            }.catch {
                 updateRefreshing(false)
                 Timber.e(it)
-            }.onEach { address ->
-                lastAddress = address
-
+            }.onEach { (address, mergeBalances) ->
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
@@ -209,7 +211,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?.let { fiatValueToStringMapper(it) },
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
-                        mergeBalance = account.mergeValue.toString(),
+                        mergeBalance = mergeBalances.findMergeBalance(token).toString(),
                     )
                 }
 
@@ -235,28 +237,27 @@ internal class ChainTokensViewModel @Inject constructor(
                 }
             }.onCompletion {
                 updateRefreshing(false)
-                if (chain == Chain.ThorChain && lastAddress != null) {
-                    launch {
-                        try {
-                            flowOf(accountsRepository.fetchMergeBalance(chain, lastAddress!!.address))
-                                .collect { mergeBalance ->
-                                    uiState.update { currentState ->
-                                        val updatedTokens = currentState.tokens.map { token ->
-                                            token.copy(mergeBalance = "10000")
-                                        }
-                                        currentState.copy(tokens = updatedTokens)
-                                    }
-                                }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Error fetching merge balance after main load")
-                        }
-                    }
-                }
             }.collect()
         }
     }
 
+    private fun fetchMergeBalanceFlow(
+        chain: Chain,
+    ): Flow<List<MergeAccount>> = flow {
+        emit(accountsRepository.fetchMergeBalance(chain, vaultId))
+    }
+
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
+    }
+
+    private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
+        val ticker = coin.ticker.lowercase()
+
+        val mergeBalance = this.firstOrNull {
+            it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true)
+        }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+        return mergeBalance
     }
 }

@@ -42,7 +42,7 @@ interface AccountsRepository {
         token: Coin
     ): Account
 
-    suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount>
+    suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -217,9 +217,18 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
-    override suspend fun fetchMergeBalance(chain: Chain, address: String): List<MergeAccount> {
-        return runCatching { balanceRepository.getMergeTokenValue(address, chain) }.getOrNull()
-            ?: emptyList()
+    override suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount> {
+        if (chain == Chain.ThorChain) {
+            val address = vaultRepository.get(vaultId)
+                ?.coins
+                ?.firstOrNull { it.chain == chain }
+                ?.address
+                ?: return emptyList()
+
+            return runCatching { balanceRepository.getMergeTokenValue(address, chain) }.getOrNull()
+                ?: emptyList()
+        }
+        return emptyList()
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {

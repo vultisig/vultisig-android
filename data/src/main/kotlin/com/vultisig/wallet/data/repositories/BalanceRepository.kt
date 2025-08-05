@@ -327,9 +327,6 @@ internal class BalanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount> {
-        if (chain == ThorChain) {
-            return thorChainApi.getRujiMergeBalances(address)
-        }
-        return emptyList()
+        return thorChainApi.getRujiMergeBalances(address)
     }
 }
