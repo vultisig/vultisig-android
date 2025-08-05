@@ -244,6 +244,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private fun fetchMergeBalanceFlow(
         chain: Chain,
     ): Flow<List<MergeAccount>> = flow {
+        emit(emptyList())
         emit(accountsRepository.fetchMergeBalance(chain, vaultId))
     }
 
