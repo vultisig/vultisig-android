@@ -23,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.screens.select.NetworkUiModel
@@ -49,7 +51,7 @@ fun ChainSelectionScreen(
             )
 
             Text(
-                text = "Select Chain",
+                text = stringResource(R.string.select_chain_title),
                 color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.m.medium,
                 modifier = Modifier.padding(vertical = 16.dp)
