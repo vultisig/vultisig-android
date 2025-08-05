@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
+import java.math.BigInteger
 
 data class Address(
     val chain: Chain,
@@ -12,7 +13,7 @@ data class Address(
 data class Account(
     val token: Coin,
     val tokenValue: TokenValue?,
-    val fiatValue: FiatValue?
+    val fiatValue: FiatValue?,
 )
 
 fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =
