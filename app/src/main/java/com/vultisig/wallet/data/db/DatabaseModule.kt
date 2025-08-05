@@ -138,6 +138,5 @@ internal interface DatabaseModule {
         fun provideVaultMetadataDao(
             appDatabase: AppDatabase,
         ): VaultMetadataDao = appDatabase.vaultMetadataDao()
-
     }
 }
