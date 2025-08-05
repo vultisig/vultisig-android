@@ -49,9 +49,8 @@ internal fun SelectAssetScreen(
             SelectAssetScreen(
                 state = state,
                 searchFieldState = model.searchFieldState,
-                onSelectNetworkClick = model::selectNetwork,
                 onAssetClick = model::selectAsset,
-                onSelectChain = {}, // TODO: FILED
+                onSelectChain = model::selectChain,
             )
         }
     )
@@ -61,7 +60,6 @@ internal fun SelectAssetScreen(
 private fun SelectAssetScreen(
     state: SelectAssetUiModel,
     searchFieldState: TextFieldState,
-    onSelectNetworkClick: () -> Unit,
     onAssetClick: (AssetUiModel) -> Unit,
     onSelectChain: (Chain) -> Unit,
 ) {
@@ -239,7 +237,6 @@ private fun SelectAssetScreenPreview() {
             )
         ),
         searchFieldState = TextFieldState(),
-        onSelectNetworkClick = {},
         onAssetClick = {},
         onSelectChain = {},
     )

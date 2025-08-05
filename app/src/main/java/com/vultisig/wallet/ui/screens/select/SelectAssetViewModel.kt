@@ -117,24 +117,9 @@ internal class SelectAssetViewModel @Inject constructor(
         }
     }
 
-    fun selectNetwork() {
-        viewModelScope.launch {
-            val requestId = Uuid.random().toString()
-            navigator.route(
-                Route.SelectNetwork(
-                    vaultId = vaultId,
-                    selectedNetworkId = state.value.selectedChain.id,
-                    requestId = requestId,
-                    filters = args.networkFilters,
-                )
-            )
-
-            val chain: Chain = requestResultRepository.request(requestId)
-                ?: return@launch
-
-            state.update {
-                it.copy(selectedChain = chain)
-            }
+    fun selectChain(chain: Chain) {
+        state.update {
+            it.copy(selectedChain = chain)
         }
     }
 
