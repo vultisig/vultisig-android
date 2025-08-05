@@ -54,7 +54,7 @@ internal class TokenDetailViewModel @Inject constructor(
     private val tokenId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_TOKEN_ID))
     private val mergedBalance: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_MERGE_ID))
+        savedStateHandle.get<String>(Destination.ARG_MERGE_ID) ?: "0"
 
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
