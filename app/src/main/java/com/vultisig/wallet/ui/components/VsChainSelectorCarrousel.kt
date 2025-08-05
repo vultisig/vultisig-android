@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.screens.select.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -35,6 +33,7 @@ import com.vultisig.wallet.ui.theme.Theme
 fun ChainSelectionScreen(
     onSelectChain: (Chain) -> Unit = {},
     chains: List<NetworkUiModel>,
+    selectedChain: Chain,
 ) {
     Box(
         modifier = Modifier
@@ -65,7 +64,7 @@ fun ChainSelectionScreen(
                     ChainItem(
                         chain = network.chain,
                         logo = network.logo,
-                        isSelected = network.title.equals("ethereum", true),
+                        isSelected = network.chain.id == selectedChain.id,
                         onClick = { onSelectChain(it) },
                     )
                 }
