@@ -207,7 +207,7 @@ internal class SelectAssetViewModel @Inject constructor(
                     logo = chain.logo,
                     title = chain.name,
                 )
-            }
+            }.sortedByDescending { it.chain.id == state.value.selectedChain.id }
 
             state.update {
                 it.copy(chains = availableChains)
