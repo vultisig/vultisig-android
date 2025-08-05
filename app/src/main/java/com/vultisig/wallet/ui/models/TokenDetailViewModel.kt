@@ -53,6 +53,8 @@ internal class TokenDetailViewModel @Inject constructor(
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
     private val tokenId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_TOKEN_ID))
+    private val mergedBalance: String =
+        requireNotNull(savedStateHandle.get<String>(Destination.ARG_MERGE_ID))
 
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
@@ -137,7 +139,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?.let { fiatValueToStringMapper(it) },
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
-                            mergeBalance = account.mergeValue.toString(),
+                            mergeBalance = mergedBalance,
                         )
                     }
 

@@ -166,6 +166,7 @@ internal class ChainTokensViewModel @Inject constructor(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     tokenId = model.id,
+                    mergeId = model.mergeBalance ?: "0",
                 )
             )
         }

@@ -14,7 +14,6 @@ data class Account(
     val token: Coin,
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
-    val mergeValue: BigInteger = BigInteger.ZERO, // TODO: Introduce sealed class with balance types
 )
 
 fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =
