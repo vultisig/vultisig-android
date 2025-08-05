@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 interface AccountsRepository {
@@ -40,6 +41,8 @@ interface AccountsRepository {
         vaultId: String,
         token: Coin
     ): Account
+
+    suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -203,7 +206,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         loadPrices.await()
 
-        emit(account.copy(
+        emit(
+            account.copy(
             accounts = account.accounts.map {
                 val balance = balanceRepository.getTokenBalance(address, it.token)
                     .first()
@@ -211,6 +215,20 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 it.applyBalance(balance)
             }
         ))
+    }
+
+    override suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount> {
+        if (chain == Chain.ThorChain) {
+            val address = vaultRepository.get(vaultId)
+                ?.coins
+                ?.firstOrNull { it.chain == chain }
+                ?.address
+                ?: return emptyList()
+
+            return runCatching { balanceRepository.getMergeTokenValue(address, chain) }.getOrNull()
+                ?: emptyList()
+        }
+        return emptyList()
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
