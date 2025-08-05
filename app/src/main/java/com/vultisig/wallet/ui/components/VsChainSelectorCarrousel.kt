@@ -29,6 +29,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.screens.select.NetworkUiModel
+import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -46,8 +47,8 @@ fun ChainSelectionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             UiGradientDivider(
-                initialColor = Theme.colors.backgrounds.secondary,
-                endColor = Theme.colors.backgrounds.secondary,
+                initialColor = Theme.colors.backgrounds.primary,
+                endColor = Theme.colors.backgrounds.primary,
             )
 
             Text(
@@ -56,7 +57,6 @@ fun ChainSelectionScreen(
                 style = Theme.brockmann.body.m.medium,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
-
 
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -84,7 +84,7 @@ fun ChainItem(
 ) {
     val borderColor = if (isSelected) {
         Brush.horizontalGradient(
-            listOf(Color(0xFF3333F2), Color(0xFF6A97E4))
+            listOf(Colors.Default.persianBlue200,Colors.Default.persianBlue400)
         )
     } else {
         Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
