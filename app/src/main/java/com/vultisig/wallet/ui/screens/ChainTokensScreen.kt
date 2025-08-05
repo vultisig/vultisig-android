@@ -422,7 +422,7 @@ internal fun CoinItem(
                 )
             }
 
-            if (mergedBalance != null && mergedBalance != "0") {
+            if (balance != null && mergedBalance != null && mergedBalance != "0") {
                 UiSpacer(1f)
 
                 ToggleVisibilityText(
