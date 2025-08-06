@@ -3,14 +3,16 @@ package com.vultisig.wallet.data.blockchain
 import JsonReader
 import TransactionData
 import android.content.Context
+import androidx.room.Ignore
 import androidx.test.platform.app.InstrumentationRegistry
+import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import wallet.core.jni.CoinType
 
-class ChainHelpers {
+class ChainHelpersTest {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -32,8 +34,27 @@ class ChainHelpers {
         }
     }
 
+    @Test
+    @Ignore
+    fun sendCosmosTest() {
+        val appContext: Context = InstrumentationRegistry.getInstrumentation().context
+        val data = JsonReader.readJsonFromAsset(appContext, COSMOS_JSON_FILE)
+            ?: error("Failed sendBSCTest can't load payload $COSMOS_JSON_FILE")
+
+        val transactions: List<TransactionData> = json.decodeFromString(data)
+        val helper = CosmosHelper(CoinType.COSMOS, "")
+
+        transactions.forEach { transaction ->
+            val preImageHashes =
+                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
     private companion object {
         private const val BSC_JSON_FILE = "bsc.json"
+        private const val COSMOS_JSON_FILE = "cosmos.json"
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

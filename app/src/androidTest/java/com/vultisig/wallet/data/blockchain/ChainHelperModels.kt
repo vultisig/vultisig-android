@@ -49,7 +49,9 @@ data class Coin(
 @Serializable
 data class BlockchainSpecific(
     @SerialName("EthereumSpecific")
-    val ethereumSpecific: EthereumSpecific
+    val ethereumSpecific: EthereumSpecific? = null,
+    @SerialName("CosmosSpecific")
+    val cosmosSpecific: CosmosSpecific? = null
 )
 
 @Serializable
@@ -61,4 +63,24 @@ data class EthereumSpecific(
     val nonce: Int,
     @SerialName("gas_limit")
     val gasLimit: String
+)
+
+@Serializable
+data class CosmosSpecific(
+    @SerialName("account_number")
+    val accountNumber: Long,
+    val gas: Long,
+    val sequence: Int,
+    @SerialName("transaction_type")
+    val transactionType: Int,
+    @SerialName("ibc_denom_trace")
+    val ibcDenomTrace: IbcDenomTrace? = null
+)
+
+@Serializable
+data class IbcDenomTrace(
+    @SerialName("base_denom")
+    val baseDenom: String,
+    val path: String,
+    val height: String
 )
