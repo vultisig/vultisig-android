@@ -105,7 +105,14 @@ fun BlockchainSpecific.toBlockChainSpecific(
         }
 
         TokenStandard.THORCHAIN -> {
-
+            val thorchainSpecific = this.thorchainSpecific ?: error("Specific empty $this")
+            BlockChainSpecific.THORChain(
+                accountNumber = thorchainSpecific.accountNumber.toBigInteger(),
+                sequence = thorchainSpecific.sequence.toBigInteger(),
+                fee = thorchainSpecific.fee.toBigInteger(),
+                isDeposit = thorchainSpecific.isDeposit,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
         }
 
         TokenStandard.UTXO -> TODO()

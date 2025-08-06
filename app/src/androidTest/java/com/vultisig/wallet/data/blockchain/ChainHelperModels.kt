@@ -125,6 +125,7 @@ data class ThorchainSpecific(
     val fee: Long,
     @SerialName("is_deposit")
     val isDeposit: Boolean,
+    @SerialName("transaction_type")
     val transactionType: Int,
 )
 
