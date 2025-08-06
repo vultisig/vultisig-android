@@ -192,7 +192,13 @@ class KyberApiImpl @Inject constructor(
                 )
             }
             if (!respone.status.isSuccess()) {
-                throw SwapException.handleSwapException(HttpStatusCode.fromValue(respone.status.value).description)
+                val errorResponse = runCatching {
+                    json.decodeFromString<KyberSwapErrorResponse>(respone.body<String>())
+                }.getOrNull()
+                throw SwapException.handleSwapException(
+                    errorResponse?.message
+                        ?: HttpStatusCode.fromValue(respone.status.value).description
+                )
             }
             return respone.bodyOrThrow<KyberSwapQuoteJson>()
         } catch (e: Exception) {
