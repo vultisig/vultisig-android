@@ -6,6 +6,8 @@ import android.content.Context
 import androidx.room.Ignore
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
+import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
+import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -25,11 +27,14 @@ class ChainHelpersTest {
         val transactions: List<TransactionData> = json.decodeFromString(data)
 
         val helper = EvmHelper(CoinType.SMARTCHAIN, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+        val erc20Helper = ERC20Helper(CoinType.SMARTCHAIN, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+
         transactions.forEach { transaction ->
-
-            val preImageHashes =
+            val preImageHashes = if (transaction.keysignPayload.coin.isNativeToken) {
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-
+            } else {
+                erc20Helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+            }
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
@@ -42,7 +47,7 @@ class ChainHelpersTest {
             ?: error("Failed sendBSCTest can't load payload $COSMOS_JSON_FILE")
 
         val transactions: List<TransactionData> = json.decodeFromString(data)
-        val helper = CosmosHelper(CoinType.COSMOS, "")
+        val helper = CosmosHelper(CoinType.COSMOS, ATOM_DENOM)
 
         transactions.forEach { transaction ->
             val preImageHashes =
@@ -51,6 +56,7 @@ class ChainHelpersTest {
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
+
 
     private companion object {
         private const val BSC_JSON_FILE = "bsc.json"
