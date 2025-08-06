@@ -44,6 +44,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
@@ -65,6 +66,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 import kotlinx.coroutines.launch
+import wallet.core.jni.CoinType
 
 @Composable
 internal fun ChainTokensScreen(
@@ -198,7 +200,7 @@ private fun ChainTokensScreen(
                                             )
                                         )
                                     }
-                                   onShowReviewPopUp()
+                                    onShowReviewPopUp()
                                 },
                                 isBalanceVisible = uiModel.isBalanceVisible,
                                 onQrBtnClick = onQrBtnClick,
@@ -215,6 +217,7 @@ private fun ChainTokensScreen(
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
                                     onClick = clickOnce { onTokenClick(token) },
+                                    mergedBalance = token.mergeBalance,
                                 )
                             }
                         }
@@ -329,6 +332,7 @@ internal fun CoinItem(
     tokenLogo: ImageModel,
     @DrawableRes chainLogo: Int?,
     onClick: () -> Unit = {},
+    mergedBalance: String? = null,
 ) {
     val appColor = Theme.colors
 
@@ -403,18 +407,31 @@ internal fun CoinItem(
 
         UiSpacer(size = 12.dp)
 
-        if (balance != null) {
-            ToggleVisibilityText(
-                text = balance,
-                isVisible = isBalanceVisible,
-                style = Theme.menlo.subtitle1,
-                color = appColor.neutral100,
-            )
-        } else {
-            UiPlaceholderLoader(
-                modifier = Modifier
-                    .width(48.dp)
-            )
+        Row {
+            if (balance != null) {
+                ToggleVisibilityText(
+                    text = balance,
+                    isVisible = isBalanceVisible,
+                    style = Theme.menlo.subtitle1,
+                    color = appColor.neutral100,
+                )
+            } else {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .width(48.dp)
+                )
+            }
+
+            if (balance != null && mergedBalance != null && mergedBalance != "0") {
+                UiSpacer(1f)
+
+                ToggleVisibilityText(
+                    text = "${CoinType.THORCHAIN.toValue(mergedBalance.toBigInteger())} Merged",
+                    isVisible = isBalanceVisible,
+                    style = Theme.menlo.subtitle1,
+                    color = appColor.neutral100,
+                )
+            }
         }
     }
 }

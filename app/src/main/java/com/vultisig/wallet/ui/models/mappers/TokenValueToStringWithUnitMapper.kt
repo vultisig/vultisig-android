@@ -12,5 +12,4 @@ internal class TokenValueToStringWithUnitMapperImpl @Inject constructor(
 
     override fun invoke(from: TokenValue): String =
         "${mapTokenValueToDecimalUiString(from)} ${from.unit}"
-
 }

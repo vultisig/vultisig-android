@@ -13,7 +13,6 @@ interface DepositTransactionRepository {
     suspend fun addTransaction(transaction: DepositTransaction)
 
     suspend fun getTransaction(id: TransactionId): DepositTransaction
-
 }
 
 internal class DepositTransactionRepositoryImpl @Inject constructor() :
@@ -31,5 +30,4 @@ internal class DepositTransactionRepositoryImpl @Inject constructor() :
         transactions.map {
             it[id] ?: error("Transaction with id $id not found")
         }.first()
-
 }

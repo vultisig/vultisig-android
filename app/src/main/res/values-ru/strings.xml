@@ -157,6 +157,7 @@
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="chain_account_item_address_copied">%1$s скопировано в буфер обмена</string>
+    <string name="tx_done_address_copied">%1$s скопировано в буфер обмена</string>
     <string name="settings_screen_vault_settings">Настройки хранилища</string>
     <string name="home_scree_done">Готово</string>
     <string name="verify_swap_sign_button">Подписать транзакцию</string>
@@ -366,7 +367,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_unmerge">Unmerge Ruji</string>
+    <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
@@ -394,4 +395,9 @@
     <string name="keygen_step_generating_eddsa">Генерация ключа EDDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
+    <string name="deposit_option_stake_ruji">Стейк RUJI</string>
+    <string name="deposit_option_unstake_ruji">Разстейк RUJI</string>
+    <string name="deposit_option_collect_ruji">Собрать награды за стейкинг RUJI</string>
+    <string name="deposit_form_rewards_title">Ожидаемые вознаграждения (Баланс: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Ожидаемые вознаграждения</string>
 </resources>

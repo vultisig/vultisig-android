@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -43,6 +45,7 @@ import kotlin.uuid.Uuid
 
 internal data class SelectAssetUiModel(
     val selectedChain: Chain = Chain.ThorChain,
+    val chains: List<NetworkUiModel> = emptyList(),
     val assets: List<AssetUiModel> = emptyList(),
 )
 
@@ -88,6 +91,7 @@ internal class SelectAssetViewModel @Inject constructor(
         loadAllAssets()
         collectSearchResults()
         observeSelectedChainChanges()
+        loadAllAvailableNetworks()
     }
 
     private fun observeSelectedChainChanges() {
@@ -113,24 +117,9 @@ internal class SelectAssetViewModel @Inject constructor(
         }
     }
 
-    fun selectNetwork() {
-        viewModelScope.launch {
-            val requestId = Uuid.random().toString()
-            navigator.route(
-                Route.SelectNetwork(
-                    vaultId = vaultId,
-                    selectedNetworkId = state.value.selectedChain.id,
-                    requestId = requestId,
-                    filters = args.networkFilters,
-                )
-            )
-
-            val chain: Chain = requestResultRepository.request(requestId)
-                ?: return@launch
-
-            state.update {
-                it.copy(selectedChain = chain)
-            }
+    fun selectChain(chain: Chain) {
+        state.update {
+            it.copy(selectedChain = chain)
         }
     }
 
@@ -208,6 +197,22 @@ internal class SelectAssetViewModel @Inject constructor(
                 it.copy(assets = filteredAssets + additionalAssets)
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun loadAllAvailableNetworks() {
+        viewModelScope.launch {
+            val availableChains = vaultRepository.getEnabledChains(vaultId).first().map { chain ->
+                NetworkUiModel(
+                    chain = chain,
+                    logo = chain.logo,
+                    title = chain.name,
+                )
+            }.sortedByDescending { it.chain.id == state.value.selectedChain.id }
+
+            state.update {
+                it.copy(chains = availableChains)
+            }
+        }
     }
 }
 

@@ -764,24 +764,34 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
                     val feeCurrency = tokenRepository.getNativeToken(payload.coin.chain.id)
 
+                    val estimatedTokenFees = TokenValue(
+                        value = fee,
+                        token = feeCurrency
+                    )
+
+                    val tokenValue = TokenValue(
+                        value = payload.toAmount,
+                        token = payload.coin,
+                    )
+
                     val depositTransactionUiModel = DepositTransactionUiModel(
+                        token = ValuedToken(
+                            token = payload.coin,
+                            value = mapTokenValueToDecimalUiString(tokenValue),
+                            fiatValue = "",
+                        ),
                         fromAddress = payload.coin.address,
-                        // TODO toAddress is empty on ios, get node address from memo
                         nodeAddress = payload.toAddress,
                         srcTokenValue = mapTokenValueAndChainMapperWithUnit(
-                            Pair(
-                                TokenValue(
-                                    value = payload.toAmount,
-                                    token = payload.coin,
-                                ),
-                                payload.coin.chain
-                            )
+                            Pair(tokenValue, payload.coin.chain)
                         ),
-                        estimatedFees = mapTokenValueToStringWithUnit(
-                            TokenValue(
-                                value = fee,
-                                token = feeCurrency,
-                            )
+                        estimatedFees = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        estimateFeesFiat = fiatValueToStringMapper(
+                            convertTokenValueToFiat(
+                                feeCurrency,
+                                estimatedTokenFees,
+                                currency
+                            ),
                         ),
                         memo = payload.memo ?: "",
                     )

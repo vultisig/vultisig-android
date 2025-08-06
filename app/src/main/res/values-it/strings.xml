@@ -109,6 +109,7 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">I token VULT vengono distribuiti agli utenti tramite airdrop.</string>
     <string name="vultisig_token_setting_screen_title">GETTONE VULTISIG</string>
     <string name="vultisig_app_version">APPLICAZIONE VULTISIG V%1$s</string>
+    <string name="tx_done_address_copied">%1$s copiato negli appunti</string>
     <string name="settings_screen_vault_settings">Impostazioni del caveau</string>
     <string name="token_logo">Logo del gettone</string>
     <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>
@@ -355,7 +356,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_unmerge">Unmerge Ruji</string>
+    <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
@@ -385,4 +386,9 @@
     <string name="keygen_step_generating_eddsa">Generazione della chiave EDDSA</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>
+    <string name="deposit_option_stake_ruji">Metti in stake RUJI</string>
+    <string name="deposit_option_unstake_ruji">Togli dallo stake RUJI</string>
+    <string name="deposit_option_collect_ruji">Raccogli ricompense staking RUJII</string>
+    <string name="deposit_form_rewards_title">Premi in Sospeso (Saldo: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Premi in Sospeso</string>
 </resources>

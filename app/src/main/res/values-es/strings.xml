@@ -141,6 +141,7 @@
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
     <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
+    <string name="tx_done_address_copied">%1$s copiada al portapapeles</string>
     <string name="settings_screen_vault_settings">Configuración Bóvedas</string>
     <string name="home_scree_done">hecho</string>
     <string name="verify_swap_sign_button">Firmar Transación</string>
@@ -355,7 +356,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_unmerge">Unmerge Ruji</string>
+    <string name="deposit_option_withdraw_ruji">Retirar RUJI</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
@@ -385,4 +386,9 @@
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
     <string name="keygen_email_error">Correo electrónico incorrecto, por favor verifique</string>
+    <string name="deposit_option_stake_ruji">Stake RUJI</string>
+    <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
+    <string name="deposit_option_collect_ruji">Reúne recompensas de staking de RUJI</string>
+    <string name="deposit_form_rewards_title">Recompensas Pendientes (Saldo: %1$s)</string>
+    <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
 </resources>

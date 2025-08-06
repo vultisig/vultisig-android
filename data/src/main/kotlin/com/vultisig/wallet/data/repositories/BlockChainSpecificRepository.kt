@@ -56,7 +56,6 @@ interface BlockChainSpecificRepository {
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
     ): BlockChainSpecificAndUtxo
-
 }
 
 internal class BlockChainSpecificRepositoryImpl @Inject constructor(
