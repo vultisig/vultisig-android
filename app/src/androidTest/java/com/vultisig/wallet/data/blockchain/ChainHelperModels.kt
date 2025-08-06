@@ -1,5 +1,6 @@
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import vultisig.keysign.v1.TransactionType
 
 @Serializable
 data class TransactionData(
@@ -26,7 +27,9 @@ data class KeysignPayload(
     @SerialName("vault_public_key_ecdsa")
     val vaultPublicKeyEcdsa: String,
     @SerialName("lib_type")
-    val libType: String
+    val libType: String,
+    @SerialName("memo")
+    val memo: String? = null,
 )
 
 @Serializable
@@ -51,7 +54,15 @@ data class BlockchainSpecific(
     @SerialName("EthereumSpecific")
     val ethereumSpecific: EthereumSpecific? = null,
     @SerialName("CosmosSpecific")
-    val cosmosSpecific: CosmosSpecific? = null
+    val cosmosSpecific: CosmosSpecific? = null,
+    @SerialName("RippleSpecific")
+    val rippleSpecific: RippleSpecific? = null,
+    @SerialName("TonSpecific")
+    val tonSpecific: TonSpecific? = null,
+    @SerialName("SolanaSpecific")
+    val solanaSpecific: SolanaSpecific? = null,
+    @SerialName("ThorchainSpecific")
+    val thorchainSpecific: ThorchainSpecific? = null,
 )
 
 @Serializable
@@ -75,6 +86,46 @@ data class CosmosSpecific(
     val transactionType: Int,
     @SerialName("ibc_denom_trace")
     val ibcDenomTrace: IbcDenomTrace? = null
+)
+
+@Serializable
+data class RippleSpecific(
+    val sequence: Long,
+    val gas: Long,
+    @SerialName("last_ledger_sequence")
+    val lastLedgerSequence: Long,
+)
+
+@Serializable
+data class TonSpecific(
+    @SerialName("send_max_amount")
+    val senMaxAmount: Boolean,
+    @SerialName("sequence_number")
+    val sequenceNumber: Long,
+    @SerialName("expire_at")
+    val expireAt: Long,
+    val bounceable: Boolean,
+)
+
+@Serializable
+data class SolanaSpecific(
+    @SerialName("recent_block_hash")
+    val recentBlockHash: String,
+    @SerialName("priority_fee")
+    val priorityFee: String,
+    @SerialName("has_program_id")
+    val hasProgramId: Boolean,
+)
+
+@Serializable
+data class ThorchainSpecific(
+    @SerialName("account_number")
+    val accountNumber: Long,
+    val sequence: Long,
+    val fee: Long,
+    @SerialName("is_deposit")
+    val isDeposit: Boolean,
+    val transactionType: Int,
 )
 
 @Serializable
