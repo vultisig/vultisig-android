@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.TerraHelper
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import kotlinx.serialization.json.Json
@@ -133,7 +134,17 @@ class ChainHelpersTest {
 
     @Test
     fun sendUTXO() {
+        val transactions: List<TransactionData> = loadTransactionData(UTXO_JSON_FILE)
+        transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val coin = payload.coin.coinType
 
+            val helper = UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+            val preImageHashes =
+                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
     }
 
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {

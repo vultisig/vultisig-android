@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
 import java.math.BigInteger
@@ -18,8 +19,14 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
         coin = coin,
         toAddress = this.toAddress,
         toAmount = this.toAmount.toBigInteger(),
-        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(coin,this.toAddress),
-        utxos = emptyList(),
+        blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(coin, this.toAddress),
+        utxos = this.utxoInfo?.map {
+            UtxoInfo(
+                hash = it.hash,
+                amount = it.amount,
+                index = it.index.toUInt(),
+            )
+        } ?: emptyList(),
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
@@ -115,9 +122,14 @@ fun BlockchainSpecific.toBlockChainSpecific(
             )
         }
 
-        TokenStandard.UTXO -> TODO()
-        TokenStandard.SUBSTRATE -> TODO()
-        TokenStandard.SUI -> TODO()
-        TokenStandard.TRC20 -> TODO()
+        TokenStandard.UTXO -> {
+            val utxoSpecific = this.utxoSpecific ?: error("Specific empty $this")
+            BlockChainSpecific.UTXO(
+                byteFee = utxoSpecific.byteFee.toBigInteger(),
+                sendMaxAmount = utxoSpecific.sendMaxAmount,
+            )
+        }
+
+        else -> error("No supported ")
     }
 }

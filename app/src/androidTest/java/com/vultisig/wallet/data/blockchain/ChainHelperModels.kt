@@ -21,7 +21,7 @@ data class KeysignPayload(
     @SerialName("BlockchainSpecific")
     val blockchainSpecific: BlockchainSpecific,
     @SerialName("utxo_info")
-    val utxoInfo: List<String>? = null,
+    val utxoInfo: List<UtxoInfo>? = null,
     @SerialName("SwapPayload")
     val swapPayload: String? = null,
     @SerialName("vault_public_key_ecdsa")
@@ -63,6 +63,8 @@ data class BlockchainSpecific(
     val solanaSpecific: SolanaSpecific? = null,
     @SerialName("ThorchainSpecific")
     val thorchainSpecific: ThorchainSpecific? = null,
+    @SerialName("UtxoSpecific")
+    val utxoSpecific: UtxoSpecific? = null,
 )
 
 @Serializable
@@ -130,9 +132,24 @@ data class ThorchainSpecific(
 )
 
 @Serializable
+data class UtxoSpecific(
+    @SerialName("byte_fee")
+    val byteFee: String,
+    @SerialName("send_max_amount")
+    val sendMaxAmount: Boolean = false,
+)
+
+@Serializable
 data class IbcDenomTrace(
     @SerialName("base_denom")
     val baseDenom: String,
     val path: String,
     val height: String
+)
+
+@Serializable
+data class UtxoInfo(
+    val hash: String,
+    val index: Long,
+    val amount: Long,
 )
