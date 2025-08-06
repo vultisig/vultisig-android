@@ -39,7 +39,6 @@ import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
-
 @Composable
 internal fun TokenSelectionScreen(
     navController: NavHostController,

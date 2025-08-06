@@ -46,13 +46,12 @@ internal data class SelectNetworkUiModel(
     val networks: List<NetworkUiModel> = emptyList(),
 )
 
-internal data class NetworkUiModel(
+data class NetworkUiModel(
     val chain: Chain,
     val logo: ImageModel,
     val title: String,
     val value: String? = null,
 )
-
 
 @HiltViewModel
 internal class SelectNetworkViewModel @Inject constructor(
