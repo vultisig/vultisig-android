@@ -4,21 +4,26 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.KyberSwapBuildRequest
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
-import io.ktor.client.*
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.request.accept
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.*
-import kotlinx.serialization.json.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import io.ktor.http.path
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
-import kotlin.text.lowercase
 
 interface KyberApi {
 
@@ -58,9 +63,9 @@ class KyberApiImpl @Inject constructor(
     ): KyberSwapQuoteDeserialized {
         try {
             val sourceAddress =
-                if (srcTokenContractAddress.isEmpty()) NULL_ADDRESS else srcTokenContractAddress
+                srcTokenContractAddress.ifEmpty { NULL_ADDRESS }
             val destinationAddress =
-                if (dstTokenContractAddress.isEmpty()) NULL_ADDRESS else dstTokenContractAddress
+                dstTokenContractAddress.ifEmpty { NULL_ADDRESS }
 
             val response = httpClient.get(aggregatorApiBaseUrl) {
                 url {
@@ -180,8 +185,8 @@ class KyberApiImpl @Inject constructor(
                 }
                 setBody(json.encodeToString(request))
             }
-            if (respone.bodyAsText().contains("TransferHelper") == true && respone.bodyAsText()
-                    .contains("execution reverted") == true
+            if (respone.bodyAsText().contains("TransferHelper") && respone.bodyAsText()
+                    .contains("execution reverted")
             ) {
                 return getKyberSwapQuote(
                     chain = chain,
@@ -193,12 +198,11 @@ class KyberApiImpl @Inject constructor(
             }
             if (!respone.status.isSuccess()) {
                 val errorResponse = runCatching {
-                    json.decodeFromString<KyberSwapErrorResponse>(respone.body<String>())
-                }.getOrNull()
-                throw SwapException.handleSwapException(
-                    errorResponse?.message
-                        ?: HttpStatusCode.fromValue(respone.status.value).description
+                    json.decodeFromString<KyberSwapErrorResponse>(respone.bodyAsText())
+                }.getOrNull() ?: KyberSwapErrorResponse(
+                    message = HttpStatusCode.fromValue(respone.status.value).description
                 )
+                throw SwapException.handleSwapException(errorResponse.message)
             }
             return respone.bodyOrThrow<KyberSwapQuoteJson>()
         } catch (e: Exception) {
