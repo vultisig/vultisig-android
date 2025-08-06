@@ -43,9 +43,14 @@ internal class TokenRefreshWorker @AssistedInject constructor(
             }
 
             val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
-            val enabledCoinIds = vaultRepository
-                .getEnabledTokens(vaultId = vault.id)
-                .first()
+            val enabledCoinIds = try {
+                vaultRepository
+                    .getEnabledTokens(vaultId = vault.id)
+                    .first()
+            } catch (e: Exception) {
+                Timber.e(e)
+                return Result.failure()
+            }
 
             for (chain in chains) {
                 try {
