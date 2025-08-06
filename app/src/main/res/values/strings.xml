@@ -624,4 +624,5 @@
     <string name="tx_overview_screen_tx_network" translatable="false">Network</string>
     <string name="tx_overview_screen_tx_send" translatable="false">Send</string>
     <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
+    <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 </resources>
