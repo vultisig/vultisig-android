@@ -270,11 +270,9 @@ private fun QrCameraScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
+                Lifecycle.Event.ON_PAUSE -> {
                     // Force AndroidView to recreate by changing the key
                     viewKey++
-                }
-                Lifecycle.Event.ON_PAUSE -> {
                     try {
                         cameraProviderFuture.get().unbindAll()
                     } catch (e: Exception) {
