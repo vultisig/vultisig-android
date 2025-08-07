@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
@@ -111,6 +112,13 @@ fun SettingsScreen(navController: NavHostController) {
                 title = stringResource(R.string.address_book_settings_title),
             ) {
                 viewModel.navigateTo(Destination.AddressBook())
+            }
+
+            AppSettingItem(
+                logo = R.drawable.ic_bookmark,
+                title = stringResource(R.string.referral_code_settings_title),
+            ) {
+                viewModel.navigateTo(Destination.ReferralCode())
             }
 
             AppSettingItem(
@@ -229,6 +237,11 @@ fun SettingsScreen(navController: NavHostController) {
                 modifier = Modifier
                     .padding(top = 12.dp, bottom = 24.dp)
                     .clickable(onClick = viewModel::clickSecret)
+            )
+
+            ReferralCodeBottomSheet(
+                onContinue = {},
+                onDismissRequest = {},
             )
         }
 

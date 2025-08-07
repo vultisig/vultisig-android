@@ -258,6 +258,7 @@
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>
+    <string name="referral_code_settings_title">Referral Code</string>
     <string name="address_book_edit_mode_done">Done</string>
     <string name="address_book_add_address_button">Add Address</string>
     <string name="add_address_title">Add Address</string>

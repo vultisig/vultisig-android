@@ -139,6 +139,18 @@ internal sealed class Destination(
         }
     }
 
+    data class ReferralCode(
+        val chain: Chain? = null,
+        val requestId: String? = null,
+    ) : Destination(
+        route = "referral_code?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
+    ) {
+        companion object {
+            const val STATIC_ROUTE =
+                "referral_code?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+        }
+    }
+
     data class AddressEntry(
         val chainId: String? = null,
         val address: String? = null,
