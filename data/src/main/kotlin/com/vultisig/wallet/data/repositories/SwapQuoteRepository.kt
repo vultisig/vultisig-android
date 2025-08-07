@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import androidx.compose.ui.text.toUpperCase
 import com.vultisig.wallet.data.api.JupiterApi
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
