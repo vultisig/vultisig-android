@@ -21,7 +21,7 @@ import androidx.room.Index
     indices = [Index(value = ["vaultId"])]
 )
 data class CoinEntity(
-    @ColumnInfo("id", collate = ColumnInfo.NOCASE)
+    @ColumnInfo("id")
     val id: String,
 
     @ColumnInfo("vaultId")

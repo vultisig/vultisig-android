@@ -12,7 +12,7 @@ data class TokenValueEntity(
     val chain: String,
     @ColumnInfo("address")
     val address: String,
-    @ColumnInfo("ticker", collate = ColumnInfo.NOCASE)
+    @ColumnInfo("ticker")
     val ticker: String,
     @ColumnInfo("tokenValue")
     val tokenValue: String,

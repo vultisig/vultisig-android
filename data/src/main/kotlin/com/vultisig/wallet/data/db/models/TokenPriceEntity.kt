@@ -8,7 +8,7 @@ import androidx.room.Entity
     primaryKeys = ["tokenId", "currency"],
 )
 data class TokenPriceEntity(
-    @ColumnInfo("tokenId", collate = ColumnInfo.NOCASE)
+    @ColumnInfo("tokenId")
     val tokenId: String,
     @ColumnInfo("currency")
     val currency: String,
