@@ -28,8 +28,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew clean build test --parallel --build-cache --no-daemon
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
       - name: Start Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
