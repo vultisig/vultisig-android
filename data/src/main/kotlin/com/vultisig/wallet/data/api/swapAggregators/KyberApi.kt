@@ -168,7 +168,7 @@ class KyberApiImpl @Inject constructor(
                 ignoreCappedSlippage = false
             )
 
-            val respone = httpClient.post(aggregatorApiBaseUrl) {
+            val response = httpClient.post(aggregatorApiBaseUrl) {
                 url {
                     path(
                         chain.raw.lowercase(),
@@ -185,7 +185,7 @@ class KyberApiImpl @Inject constructor(
                 }
                 setBody(json.encodeToString(request))
             }
-            if (respone.bodyAsText().contains("TransferHelper") && respone.bodyAsText()
+            if (response.bodyAsText().contains("TransferHelper") && response.bodyAsText()
                     .contains("execution reverted")
             ) {
                 return getKyberSwapQuote(
@@ -196,15 +196,15 @@ class KyberApiImpl @Inject constructor(
                     isAffiliate = isAffiliate
                 )
             }
-            if (!respone.status.isSuccess()) {
+            if (!response.status.isSuccess()) {
                 val errorResponse = runCatching {
-                    json.decodeFromString<KyberSwapErrorResponse>(respone.bodyAsText())
+                    json.decodeFromString<KyberSwapErrorResponse>(response.bodyAsText())
                 }.getOrNull() ?: KyberSwapErrorResponse(
-                    message = HttpStatusCode.fromValue(respone.status.value).description
+                    message = HttpStatusCode.fromValue(response.status.value).description
                 )
                 throw SwapException.handleSwapException(errorResponse.message)
             }
-            return respone.bodyOrThrow<KyberSwapQuoteJson>()
+            return response.bodyOrThrow<KyberSwapQuoteJson>()
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message.toString())
         }
