@@ -1,6 +1,5 @@
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
-import vultisig.keysign.v1.TransactionType
 
 @Serializable
 data class TransactionData(
@@ -101,7 +100,7 @@ data class RippleSpecific(
 @Serializable
 data class TonSpecific(
     @SerialName("send_max_amount")
-    val senMaxAmount: Boolean,
+    val sendMaxAmount: Boolean,
     @SerialName("sequence_number")
     val sequenceNumber: Long,
     @SerialName("expire_at")

@@ -93,7 +93,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
         TokenStandard.TON -> {
             val tonSpecific = this.tonSpecific ?: error("Specific empty $this")
             BlockChainSpecific.Ton(
-                sendMaxAmount = tonSpecific.senMaxAmount,
+                sendMaxAmount = tonSpecific.sendMaxAmount,
                 expireAt = tonSpecific.expireAt.toULong(),
                 bounceable = tonSpecific.bounceable,
                 sequenceNumber = tonSpecific.sequenceNumber.toULong(),
