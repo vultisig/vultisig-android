@@ -23,7 +23,7 @@ data class DisabledCoinEntity(
     @ColumnInfo("id")
     val id: Long = 0,
 
-    @ColumnInfo("coinId")
+    @ColumnInfo("coinId", collate = ColumnInfo.NOCASE)
     val coinId: String,
 
     @ColumnInfo("chain")
