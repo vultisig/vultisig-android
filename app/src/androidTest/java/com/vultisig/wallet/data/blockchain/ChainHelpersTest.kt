@@ -152,7 +152,7 @@ class ChainHelpersTest {
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data = JsonReader.readJsonFromAsset(appContext, jsonFile)
-            ?: error("Failed sendBSCTest can't load payload $jsonFile")
+            ?: error("Failed can't load payload $jsonFile")
         return json.decodeFromString(data)
     }
 
