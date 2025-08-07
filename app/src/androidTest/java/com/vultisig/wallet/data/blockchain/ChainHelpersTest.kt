@@ -105,13 +105,15 @@ class ChainHelpersTest {
         }
     }
 
-    @Test // TODO: Review it fails
-    @Ignore
+    @Test
     fun sendTerra() {
         val transactions: List<TransactionData> = loadTransactionData(TERRA_JSON_FILE)
-        val helper = TerraHelper(CoinType.TERRAV2, "uluna", 300000L)
 
         transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val coin = payload.coin.coinType
+            val helper = TerraHelper(coin, "uluna", 300000L)
+
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
