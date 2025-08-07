@@ -115,7 +115,7 @@ class ChainHelpersTest {
             val helper = TerraHelper(coin, "uluna", 300000L)
 
             val preImageHashes =
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
+                helper.getPreSignedImageHash(payload)
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
