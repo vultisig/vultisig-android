@@ -1174,6 +1174,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.SmallSwapAmount ->
                                 UiText.StringResource(R.string.swap_error_small_swap_amount)
+
+                            is SwapException.InsufficientFunds ->
+                                UiText.StringResource(R.string.swap_error_small_insufficient_funds)
                         }
                         uiState.update {
                             it.copy(
