@@ -501,7 +501,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     )
     private val mayaEthTokens = listOf("ETH","USDC")
     private val mayaArbTokens = listOf(
-        "ETH",
+        "ETH","DAI"
     )
 
     private val Coin.swapProviders: Set<SwapProvider>
