@@ -264,29 +264,51 @@ internal class DepositFormViewModel @Inject constructor(
                 state.map { it.depositOption }.distinctUntilChanged(),
                 state.map { it.selectedToken }.distinctUntilChanged(),
             ) { selectedMergeToken, address, depositOption, selectedToken ->
-                when (depositOption) {
-                    DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge ->
+
+                var tickerToActivate : String?
+
+                val account = when (depositOption) {
+                    DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge -> {
+                        tickerToActivate = selectedMergeToken.ticker
                         address.accounts.find {
                             it.token.ticker.equals(
                                 selectedMergeToken.ticker, ignoreCase = true
                             )
                         }
+                    }
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                    DepositOption.Custom ->
+                    DepositOption.Custom -> {
+                        tickerToActivate = selectedToken.ticker
                         address.accounts.find { it.token.id == selectedToken.id }
-
-                    else -> address.accounts.find { it.token.isNativeToken }
-                }?.tokenValue
-                    ?.let(mapTokenValueToStringWithUnit)
-                    .let { tokenValue ->
-                        state.update {
-                            it.copy(
-                                balance = tokenValue?.asUiText() ?: UiText.Empty
-                            )
-                        }
                     }
+
+                    else -> {
+                        val account = address.accounts.find { it.token.isNativeToken }
+                        tickerToActivate = account?.token?.ticker
+                        account
+                    }
+                }
+
+                val tokenValue = account?.tokenValue
+                if (tokenValue == null) {
+                    state.update {
+                        it.copy(
+                            balance = UiText.Empty,
+                            amountError ="$tickerToActivate must be enabled before proceeding.".asUiText()
+                        )
+                    }
+                } else {
+                    val value = mapTokenValueToStringWithUnit(tokenValue)
+                    state.update { state ->
+                        state.copy(
+                            amountError = null,
+                            balance = value.asUiText()
+                        )
+                    }
+                }
+
             }.collect {}
         }
 
