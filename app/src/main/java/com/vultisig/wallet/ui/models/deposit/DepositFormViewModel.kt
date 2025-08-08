@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -58,7 +59,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,6 +75,7 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.first
 
 internal enum class DepositOption {
     Bond,
@@ -144,6 +148,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val enableCoin: EnableTokenUseCase,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -242,20 +247,18 @@ internal class DepositFormViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, chain)
-                    .collect { address ->
-                        this@DepositFormViewModel.address.value = address
-                        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-                        state.update {
-                            it.copy(selectedToken = selectedToken)
-                        }
-                    }
-            } catch (e: Exception) {
-                Timber.e(e)
+        loadAddress(vaultId, chain)
+
+
+        address.filterNotNull()
+            .onEach { address ->
+                val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+                state.update {
+                    it.copy(selectedToken = selectedToken)
+                }
             }
-        }
+            .launchIn(viewModelScope)
+
 
         viewModelScope.launch {
             combine(
@@ -291,23 +294,7 @@ internal class DepositFormViewModel @Inject constructor(
                     }
                 }
 
-                val tokenValue = account?.tokenValue
-                if (tokenValue == null) {
-                    state.update {
-                        it.copy(
-                            balance = UiText.Empty,
-                            amountError ="$tickerToActivate must be enabled before proceeding.".asUiText()
-                        )
-                    }
-                } else {
-                    val value = mapTokenValueToStringWithUnit(tokenValue)
-                    state.update { state ->
-                        state.copy(
-                            amountError = null,
-                            balance = value.asUiText()
-                        )
-                    }
-                }
+                updateTokenAmount(account, chain, tickerToActivate, vaultId)
 
             }.collect {}
         }
@@ -346,6 +333,51 @@ internal class DepositFormViewModel @Inject constructor(
                     else -> Unit
                 }
             }.collect {}
+        }
+    }
+
+    private suspend fun updateTokenAmount(
+        account: Account?,
+        chain: Chain,
+        tickerToActivate: String?,
+        vaultId: String
+    ) {
+        if (account != null) {
+            account.tokenValue?.let { tokenValue ->
+                val value = mapTokenValueToStringWithUnit(tokenValue)
+                state.update { state ->
+                    state.copy(
+                        amountError = null,
+                        balance = value.asUiText()
+                    )
+                }
+            }
+        } else {
+            val token = findCoin(chain, tickerToActivate)
+            token?.let {
+                enableCoin(vaultId, token)
+                loadAddress(vaultId, chain)
+            } ?: run {
+                state.update {
+                    it.copy(
+                        balance = UiText.Empty,
+                        amountError = "$tickerToActivate must be enabled before proceeding.".asUiText()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadAddress(vaultId: String, chain: Chain) {
+        viewModelScope.launch {
+            try {
+                accountsRepository.loadAddress(vaultId, chain)
+                    .collect { address ->
+                        this@DepositFormViewModel.address.value = address
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
         }
     }
 
@@ -1849,6 +1881,11 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
     }
+
+
+    private fun findCoin(chain: Chain, ticker: String?) =
+        Coins.coins[chain]?.find { it.ticker.equals(ticker, ignoreCase = true) }
+
 }
 
 internal data class TokenMergeInfo(
