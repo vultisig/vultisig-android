@@ -42,5 +42,4 @@ object TestVaults {
         ),
         libType = SigningLibType.DKLS,
     )
-
 }
