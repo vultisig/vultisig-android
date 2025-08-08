@@ -63,7 +63,7 @@ class OneInchApiImpl @Inject constructor(
         isAffiliate: Boolean,
     ): OneInchSwapQuoteDeserialized = coroutineScope {
         try {
-            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}"
+            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
             val requestParams: HttpRequestBuilder.() -> Unit = {
                 createQuoteParams(
                     srcTokenContractAddress,
@@ -121,7 +121,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("amount", amount)
         parameter("from", srcAddress)
         parameter("slippage", "0.5")
-        parameter("disableEstimate", true)
+        parameter("disableEstimate", false)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
         parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
