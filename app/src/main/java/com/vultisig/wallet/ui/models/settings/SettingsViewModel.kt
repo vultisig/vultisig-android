@@ -40,7 +40,7 @@ internal class SettingsViewModel @Inject constructor(
 
     val state = MutableStateFlow(SettingsUiModel())
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
-    val usedReferral = MutableStateFlow(false)
+    private var hasUsedReferral = false
 
     private val multipleClicksDetector = MultipleClicksDetector()
 
@@ -54,8 +54,7 @@ internal class SettingsViewModel @Inject constructor(
 
     private fun loadWasReferralUsed() {
         viewModelScope.launch {
-            val hasUsedReferral = referralRepository.hasUsedReferralCode()
-            usedReferral.update { hasUsedReferral }
+            hasUsedReferral = referralRepository.hasUsedReferralCode()
         }
     }
 
@@ -98,7 +97,23 @@ internal class SettingsViewModel @Inject constructor(
         state.update {
             it.copy(hasToShowReferralCodeSheet = false)
         }
-        navigateTo(Destination.ReferralCode())
+        navigateTo(Destination.DefaultChainSetting)
+    }
+
+    fun onClickReferralCode() {
+        if (hasUsedReferral) {
+            navigateTo(Destination.DefaultChainSetting)
+        } else {
+            state.update {
+                it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+            }
+        }
+    }
+
+    fun onDismissReferralBottomSheet() {
+        state.update {
+            it.copy(hasToShowReferralCodeSheet = false)
+        }
     }
 
     private fun AppCurrency.toUiModel() = CurrencyUnit(name)

@@ -62,7 +62,6 @@ fun SettingsScreen(navController: NavHostController) {
     val state by viewModel.state.collectAsState()
     val uriHandler = VsUriHandler()
     val context: Context = LocalContext.current
-    var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadSettings()
@@ -121,11 +120,7 @@ fun SettingsScreen(navController: NavHostController) {
                 logo = R.drawable.ic_bookmark,
                 title = stringResource(R.string.referral_code_settings_title),
             ) {
-                if (state.hasToShowReferralCodeSheet) {
-                    showBottomSheet = true
-                } else {
-                    viewModel.navigateTo(Destination.ReferralCode())
-                }
+                viewModel.onClickReferralCode()
             }
 
             AppSettingItem(
@@ -247,7 +242,7 @@ fun SettingsScreen(navController: NavHostController) {
             if (state.hasToShowReferralCodeSheet) {
                 ReferralCodeBottomSheet(
                     onContinue = { viewModel.onContinueReferralBottomSheet() },
-                    onDismissRequest = { showBottomSheet = false },
+                    onDismissRequest = { viewModel.onDismissReferralBottomSheet() },
                 )
             }
         }

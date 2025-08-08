@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import jakarta.inject.Inject
+import androidx.core.content.edit
 
 interface ReferralCodeSettingsRepositoryContract {
     fun hasUsedReferralCode(): Boolean
@@ -18,7 +19,7 @@ class ReferralCodeSettingsRepository @Inject constructor(
 
     @SuppressLint("CommitPrefEdits")
     override fun useReferralCode() {
-        encryptedSharedPreferences.edit().putBoolean(REFERRAL_CODE_KEY, true)
+        encryptedSharedPreferences.edit { putBoolean(REFERRAL_CODE_KEY, true) }
     }
 
     private companion object {
