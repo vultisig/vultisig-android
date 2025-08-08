@@ -440,11 +440,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-        if (hasNotProvider(
-                srcToken,
-                dstToken
-            )
-        ) return null
         return srcToken.swapProviders
             .intersect(dstToken.swapProviders)
             .firstOrNull {
@@ -460,14 +455,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     private fun isCrossChainSwap(srcToken: Coin, dstToken: Coin) =
         srcToken.chain != dstToken.chain
-
-    private fun hasNotProvider(
-        srcToken: Coin,
-        dstToken: Coin,
-    ) = !srcToken.isNativeToken && srcToken.chain in listOf(
-        Chain.Ethereum,
-        Chain.Arbitrum
-    ) && dstToken.chain == Chain.MayaChain
 
     private val thorEthTokens = listOf(
         "ETH",
@@ -486,7 +473,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         "AAVE",
         "FOX",
         "DPI",
-        "SNX"
+        "LLD",
     )
     private val thorBscTokens = listOf(
         "BNB",
@@ -499,16 +486,30 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         "USDT",
         "SOL"
     )
-    private val mayaEthTokens = listOf("ETH")
+    private val mayaEthTokens = listOf(
+        "ETH",
+        "USDC",
+        "LLD",
+    )
     private val mayaArbTokens = listOf(
         "ETH",
+        "ARB",
+        "WSTETH",
+        "LINK",
+        "PEPE",
+        "WBTC",
+        "GLD",
+        "TGT",
+        "LEO",
+        "YUM",
+        "USDC"
     )
 
     private val Coin.swapProviders: Set<SwapProvider>
         get() = when (chain) {
             Chain.MayaChain, Chain.Dash, Chain.Kujira -> setOf(SwapProvider.MAYA)
             Chain.Ethereum -> when {
-                ticker in thorEthTokens && ticker in mayaEthTokens -> setOf(
+                ticker.uppercase() in thorEthTokens && ticker.uppercase() in mayaEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
                     SwapProvider.KYBER,
@@ -516,14 +517,14 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                     SwapProvider.MAYA,
                 )
 
-                ticker in thorEthTokens -> setOf(
+                ticker.uppercase() in thorEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
                     SwapProvider.KYBER,
                     SwapProvider.LIFI,
                 )
 
-                ticker in mayaEthTokens -> setOf(
+                ticker.uppercase() in mayaEthTokens -> setOf(
                     SwapProvider.ONEINCH,
                     SwapProvider.KYBER,
                     SwapProvider.LIFI,
@@ -587,7 +588,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Zcash -> setOf(SwapProvider.MAYA)
 
-            Chain.Arbitrum -> if (ticker in mayaArbTokens) setOf(
+            Chain.Arbitrum -> if (ticker.uppercase() in mayaArbTokens) setOf(
                 SwapProvider.LIFI,
                 SwapProvider.MAYA
             ) else setOf(SwapProvider.LIFI)
