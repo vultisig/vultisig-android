@@ -2,14 +2,12 @@
 
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -31,7 +29,6 @@ import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -114,22 +111,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    override fun attachBaseContext(newBase: Context) {
-        val locale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-        val context = wrapContext(newBase, locale)
-        super.attachBaseContext(context)
-    }
-
-    private fun wrapContext(context: Context, language: String): Context {
-        val locale = Locale.forLanguageTag(language)
-        Locale.setDefault(locale)
-
-        val config = context.resources.configuration
-        config.setLocale(locale)
-
-        return context.createConfigurationContext(config)
     }
 
 }

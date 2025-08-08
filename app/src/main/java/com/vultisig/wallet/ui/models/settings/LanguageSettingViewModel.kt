@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.settings
 
-import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
 import android.os.Build
@@ -51,11 +50,10 @@ internal class LanguageSettingViewModel @Inject constructor(
         }
     }
 
-    fun changeLanguage(language: Language, activity: Activity?) {
+    fun changeLanguage(language: Language) {
         changeAppLanguage(language.mainName.fromName().toString())
         viewModelScope.launch {
             appLocaleRepository.setLocale(language)
-            activity?.recreate()
         }
     }
 
