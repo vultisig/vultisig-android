@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 
 @HiltWorker
@@ -40,6 +43,14 @@ internal class TokenRefreshWorker @AssistedInject constructor(
             }
 
             val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
+            val enabledCoinIds = try {
+                vaultRepository
+                    .getEnabledTokens(vaultId = vault.id)
+                    .first()
+            } catch (e: Exception) {
+                Timber.e(e)
+                return Result.failure()
+            }
 
             for (chain in chains) {
                 try {
@@ -49,8 +60,8 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                                 disabledId == it.id
                             }
                         }
-                        .forEach {
-                            vaultRepository.addTokenToVault(vault.id, it)
+                        .forEach { refreshToken ->
+                            addRefreshTokenToVault(enabledCoinIds, refreshToken, vault)
                         }
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -61,6 +72,19 @@ internal class TokenRefreshWorker @AssistedInject constructor(
             }
         }
         return Result.success()
+    }
+
+    private suspend fun addRefreshTokenToVault(
+        enabledCoinIds: List<Coin>,
+        refreshToken: Coin,
+        vault: Vault
+    ) {
+        val isTokenExist = enabledCoinIds.any { enabledCoinId ->
+            enabledCoinId.id.equals(refreshToken.id, ignoreCase = true)
+        }
+        if (isTokenExist)
+            return
+        vaultRepository.addTokenToVault(vault.id, refreshToken)
     }
 
 

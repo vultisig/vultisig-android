@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.models.SigningLibType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import java.math.BigInteger
 
-
 data class KeysignPayload(
     val coin: Coin,
     val toAddress: String,
