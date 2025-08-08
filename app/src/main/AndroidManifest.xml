@@ -31,7 +31,6 @@
     <application
             android:name="com.vultisig.wallet.app.VultisigApplication"
             android:allowBackup="false"
-            android:configChanges="layoutDirection|locale"
             android:dataExtractionRules="@xml/data_extraction_rules"
             android:fullBackupContent="@xml/backup_rules"
             android:icon="@mipmap/ic_launcher"
@@ -44,7 +43,6 @@
                 android:name=".app.activity.MainActivity"
                 android:exported="true"
                 android:windowSoftInputMode="adjustResize"
-                android:configChanges="layoutDirection|locale"
                 android:screenOrientation="portrait"
                 tools:ignore="DiscouragedApi,LockedOrientationActivity">
 
