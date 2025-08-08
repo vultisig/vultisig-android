@@ -10,8 +10,13 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
     steps:
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
       - uses: actions/checkout@v4
       - name: set up JDK 21
         uses: actions/setup-java@v4
@@ -27,7 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew clean build test --parallel --build-cache --no-daemon
+        run: ./gradlew build test --parallel --build-cache --no-daemon
       - name: Archive code analysis reports
         if: always()
         uses: actions/upload-artifact@v4
