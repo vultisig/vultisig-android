@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -18,27 +19,28 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 internal data class SettingsUiModel(
     val selectedCurrency: CurrencyUnit = CurrencyUnit(),
-    val selectedLocal: Language = Language()
+    val selectedLocal: Language = Language(),
+    val hasToShowReferralCodeSheet: Boolean = false,
 )
 
 internal data class CurrencyUnit(
     val name: String = "",
 )
 
-
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val appLocaleRepository: AppLocaleRepository,
+    private val referralRepository: ReferralCodeSettingsRepositoryContract,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     val state = MutableStateFlow(SettingsUiModel())
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
+    val usedReferral = MutableStateFlow(false)
 
     private val multipleClicksDetector = MultipleClicksDetector()
 
@@ -46,6 +48,14 @@ internal class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             loadCurrency()
             loadAppLocale()
+            loadWasReferralUsed()
+        }
+    }
+
+    private fun loadWasReferralUsed() {
+        viewModelScope.launch {
+            val hasUsedReferral = referralRepository.hasUsedReferralCode()
+            usedReferral.update { hasUsedReferral }
         }
     }
 
@@ -83,10 +93,15 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onContinueReferralBottomSheet() {
+        referralRepository.useReferralCode()
+        state.update {
+            it.copy(hasToShowReferralCodeSheet = false)
+        }
+        navigateTo(Destination.ReferralCode())
+    }
+
     private fun AppCurrency.toUiModel() = CurrencyUnit(name)
 
-
     private fun AppLanguage.toUiModel() = Language(mainName, engName)
-
-
 }

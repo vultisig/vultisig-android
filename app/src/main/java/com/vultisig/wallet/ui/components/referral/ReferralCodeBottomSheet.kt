@@ -12,11 +12,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -37,6 +39,7 @@ internal fun ReferralCodeBottomSheet(
         onDismissRequest = onDismissRequest,
         containerColor = Theme.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
         ReferralCodeBottomSheetContent(
@@ -58,16 +61,16 @@ internal fun ReferralCodeBottomSheetContent(
         verticalArrangement = Arrangement.Top
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 painter = painterResource(id = R.drawable.referralcodeiphone),
                 contentDescription = "ReferralImage",
-                modifier =  Modifier.fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(24.dp))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(24.dp))
             )
         }
 
@@ -83,23 +86,25 @@ internal fun ReferralCodeBottomSheetContent(
         UiSpacer(32.dp)
 
         Text(
-            text = "Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault.",
+            text = stringResource(R.string.referral_invite_sheet_description),
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .fillMaxWidth()
         )
 
         UiSpacer(32.dp)
 
         VsButton(
-            label = "Next",
+            label = stringResource(R.string.referral_invite_next),
             variant = Primary,
             state = Enabled,
             size = Medium,
             onClick = onContinue,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
         )
-
-        UiSpacer(32.dp)
     }
 }

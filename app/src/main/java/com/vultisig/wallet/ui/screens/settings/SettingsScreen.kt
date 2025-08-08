@@ -28,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +62,7 @@ fun SettingsScreen(navController: NavHostController) {
     val state by viewModel.state.collectAsState()
     val uriHandler = VsUriHandler()
     val context: Context = LocalContext.current
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadSettings()
@@ -98,7 +102,6 @@ fun SettingsScreen(navController: NavHostController) {
                 viewModel.navigateTo(Destination.LanguageSetting)
             }
 
-
             AppSettingItem(
                 R.drawable.settings_dollar,
                 stringResource(R.string.settings_screen_currency),
@@ -118,7 +121,11 @@ fun SettingsScreen(navController: NavHostController) {
                 logo = R.drawable.ic_bookmark,
                 title = stringResource(R.string.referral_code_settings_title),
             ) {
-                viewModel.navigateTo(Destination.ReferralCode())
+                if (state.hasToShowReferralCodeSheet) {
+                    showBottomSheet = true
+                } else {
+                    viewModel.navigateTo(Destination.ReferralCode())
+                }
             }
 
             AppSettingItem(
@@ -189,14 +196,12 @@ fun SettingsScreen(navController: NavHostController) {
                 textAlign = TextAlign.Start
             )
 
-
             AppSettingItem(
                 R.drawable.shield_check,
                 stringResource(R.string.settings_screen_privacy_policy)
             ) {
                 uriHandler.openUri(VsAuxiliaryLinks.PRIVACY)
             }
-
 
             AppSettingItem(
                 R.drawable.note,
@@ -239,12 +244,13 @@ fun SettingsScreen(navController: NavHostController) {
                     .clickable(onClick = viewModel::clickSecret)
             )
 
-            ReferralCodeBottomSheet(
-                onContinue = {},
-                onDismissRequest = {},
-            )
+            if (state.hasToShowReferralCodeSheet) {
+                ReferralCodeBottomSheet(
+                    onContinue = { viewModel.onContinueReferralBottomSheet() },
+                    onDismissRequest = { showBottomSheet = false },
+                )
+            }
         }
-
     }
 }
 
