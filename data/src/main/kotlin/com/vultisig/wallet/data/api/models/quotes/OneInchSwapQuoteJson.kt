@@ -46,3 +46,17 @@ data class OneInchSwapTxJson(
     @SerialName("swapFeeTokenContract")
     val swapFeeTokenContract: String = "",
 )
+
+@Serializable
+data class OneInchSwapQuoteErrorResponse(
+    @SerialName("statusCode")
+    val statusCode: Int,
+    @SerialName("description")
+    val description: String,
+    @SerialName("error")
+    val error: String
+) {
+    override fun toString(): String {
+        return "OneInchSwapQuoteErrorResponse(code=$statusCode, message='$description')"
+    }
+}
