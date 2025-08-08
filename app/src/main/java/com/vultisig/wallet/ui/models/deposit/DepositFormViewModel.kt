@@ -53,6 +53,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -177,6 +178,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
+    private var addressJob: Job? = null
 
     fun loadData(
         vaultId: String,
@@ -252,9 +254,11 @@ internal class DepositFormViewModel @Inject constructor(
 
         address.filterNotNull()
             .onEach { address ->
-                val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-                state.update {
-                    it.copy(selectedToken = selectedToken)
+                val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
+                selectedToken?.let {
+                    state.update {
+                        it.copy(selectedToken = selectedToken)
+                    }
                 }
             }
             .launchIn(viewModelScope)
@@ -369,7 +373,8 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private fun loadAddress(vaultId: String, chain: Chain) {
-        viewModelScope.launch {
+        addressJob?.cancel()
+        addressJob = viewModelScope.launch {
             try {
                 accountsRepository.loadAddress(vaultId, chain)
                     .collect { address ->
