@@ -66,6 +66,7 @@ internal fun DepositFormScreen(
         customMemoFieldState = model.customMemoFieldState,
         assetsFieldState = model.assetsFieldState,
         lpUnitsFieldState = model.lpUnitsFieldState,
+        rewardsAmountFieldState = model.rewardsAmountFieldState,
         onAssetsLostFocus = model::validateAssets,
         onLpUnitsLostFocus = model::validateLpUnits,
         onTokenAmountLostFocus = model::validateTokenAmount,
@@ -99,7 +100,7 @@ internal fun DepositFormScreen(
 
         onOpenSelectToken = model::selectToken,
 
-        onLoadRujiBalances = model::onLoadRujiBalances,
+        onLoadRujiBalances = model::onLoadRujiMergeBalances,
     )
 }
 
@@ -113,6 +114,7 @@ internal fun DepositFormScreen(
     customMemoFieldState: TextFieldState,
     assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
+    rewardsAmountFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
     onAssetsLostFocus: () -> Unit = {},
     onLpUnitsLostFocus: () -> Unit = {},
@@ -199,9 +201,12 @@ internal fun DepositFormScreen(
                         DepositOption.TransferIbc -> stringResource(R.string.deposit_option_ibc_transfer)
                         DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
                         DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
-                        DepositOption.UnMerge -> stringResource(R.string.deposit_option_unmerge)
+                        DepositOption.UnMerge -> stringResource(R.string.deposit_option_withdraw_ruji)
                         DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
                         DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
+                        DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
+                        DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
+                        DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_collect_ruji)
                     }
                 })
 
@@ -284,7 +289,8 @@ internal fun DepositFormScreen(
                 else -> {
                     if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                            DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                            DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
+                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                         )
                     ) {
                         FormCard {
@@ -296,25 +302,33 @@ internal fun DepositFormScreen(
                         }
                     }
 
+                    val isRujiWithdraw = depositOption == DepositOption.UnstakeRuji
+                    val isRujiWithdrawRewards = depositOption == DepositOption.WithdrawRujiRewards
+
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
-                    val unstakableBalance = state.unstakableTcyAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isRujiWithdraw -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isRujiWithdrawRewards -> stringResource(R.string.deposit_form_rewards_title, rewardsBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
 
                     val amountHint = when {
                         isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
+                        isRujiWithdrawRewards -> stringResource(R.string.deposit_form_pending_rewards_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
 
                     if (
                         isTcyOption ||
-                        (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain) ||
+                        (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
-                        depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
+                        depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
+                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -328,7 +342,8 @@ internal fun DepositFormScreen(
 
                     if (depositOption !in arrayOf(
                             DepositOption.Custom, DepositOption.StakeTcy,
-                            DepositOption.UnstakeTcy
+                            DepositOption.UnstakeTcy, DepositOption.StakeRuji,
+                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                         )
                     ) {
                         FormTextFieldCard(
@@ -358,7 +373,6 @@ internal fun DepositFormScreen(
                         }
 
                         if (depositChain == Chain.MayaChain) {
-
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_assets),
                                 hint = "Enter Assets",
@@ -399,7 +413,17 @@ internal fun DepositFormScreen(
                             onLostFocus = onCustomMemoLostFocus,
                             error = state.customMemoError,
                         )
+                    }
 
+                    if (depositOption == DepositOption.WithdrawRujiRewards) {
+                        FormTextFieldCard(
+                            title = amountLabel,
+                            hint = amountHint,
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = rewardsAmountFieldState,
+                            onLostFocus = onTokenAmountLostFocus,
+                            error = state.tokenAmountError,
+                        )
                     }
                 }
             }
@@ -441,5 +465,6 @@ internal fun DepositFormScreenPreview() {
         amountFieldState = TextFieldState(),
         memoFieldState = TextFieldState(),
         thorAddress = TextFieldState(),
+        rewardsAmountFieldState = TextFieldState(),
     )
 }

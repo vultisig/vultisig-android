@@ -58,13 +58,10 @@ internal sealed class KeysignState {
     data class Error(val errorMessage: String) : KeysignState()
 }
 
-
 internal sealed interface TransactionTypeUiModel {
     data class Send(val tx: SendTxUiModel) : TransactionTypeUiModel
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
-        TransactionTypeUiModel
-
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
 
@@ -181,9 +178,10 @@ internal class KeysignViewModel(
             }
 
             Timber.d("All messages signed, broadcasting transaction")
-
-            broadcastTransaction()
-            checkThorChainTxResult()
+            if (!skipBroadcast()) {
+                broadcastTransaction()
+                checkThorChainTxResult()
+            }
 
             currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
@@ -191,6 +189,12 @@ internal class KeysignViewModel(
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message ?: "Unknown error")
         }
+    }
+
+    private fun skipBroadcast(): Boolean {
+        val flag = keysignPayload?.skipBroadcast ?: false
+        Timber.d("SkipBroadcastFlag, value: $flag")
+        return flag
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")

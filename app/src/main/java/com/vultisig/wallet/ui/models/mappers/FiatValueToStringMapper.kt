@@ -1,20 +1,21 @@
 package com.vultisig.wallet.ui.models.mappers
 
-import com.vultisig.wallet.data.mappers.Mapper
+import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.FiatValue
-import java.text.NumberFormat
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import java.util.Currency
-import java.util.Locale
 import javax.inject.Inject
 
-internal interface FiatValueToStringMapper : Mapper<FiatValue, String>
+internal interface FiatValueToStringMapper : SuspendMapperFunc<FiatValue, String>
 
-internal class FiatValueToStringMapperImpl @Inject constructor() : FiatValueToStringMapper {
+internal class FiatValueToStringMapperImpl @Inject constructor(
+    private val appCurrencyRepository: AppCurrencyRepository
+) : FiatValueToStringMapper {
 
-    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
-
-    override fun map(from: FiatValue): String = from.let {
+    override suspend fun invoke(from: FiatValue): String = from.let {
+        val currencyFormat = appCurrencyRepository.getCurrencyFormat()
         currencyFormat.currency = Currency.getInstance(it.currency)
         currencyFormat.format(it.value)
     }
+
 }

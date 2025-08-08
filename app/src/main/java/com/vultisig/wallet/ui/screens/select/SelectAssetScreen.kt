@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,14 +27,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.ui.components.ChainSelectionScreen
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
-import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -50,8 +49,8 @@ internal fun SelectAssetScreen(
             SelectAssetScreen(
                 state = state,
                 searchFieldState = model.searchFieldState,
-                onSelectNetworkClick = model::selectNetwork,
                 onAssetClick = model::selectAsset,
+                onSelectChain = model::selectChain,
             )
         }
     )
@@ -61,8 +60,8 @@ internal fun SelectAssetScreen(
 private fun SelectAssetScreen(
     state: SelectAssetUiModel,
     searchFieldState: TextFieldState,
-    onSelectNetworkClick: () -> Unit,
     onAssetClick: (AssetUiModel) -> Unit,
+    onSelectChain: (Chain) -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -91,16 +90,6 @@ private fun SelectAssetScreen(
                 modifier = Modifier
                     .padding(contentPadding),
             ) {
-                item {
-                    ChainSelector(
-                        title = stringResource(R.string.select_asset_chain_title),
-                        chain = state.selectedChain,
-                        onClick = onSelectNetworkClick
-                    )
-
-                    UiSpacer(16.dp)
-                }
-
                 val assets = state.assets
                 itemsIndexed(assets) { index, item ->
                     val isFirst = index == 0
@@ -137,6 +126,13 @@ private fun SelectAssetScreen(
                     }
                 }
             }
+        },
+        bottomBar = {
+            ChainSelectionScreen(
+                onSelectChain = { onSelectChain(it) },
+                chains = state.chains,
+                selectedChain = state.selectedChain,
+            )
         }
     )
 }
@@ -241,7 +237,7 @@ private fun SelectAssetScreenPreview() {
             )
         ),
         searchFieldState = TextFieldState(),
-        onSelectNetworkClick = {},
         onAssetClick = {},
+        onSelectChain = {},
     )
 }

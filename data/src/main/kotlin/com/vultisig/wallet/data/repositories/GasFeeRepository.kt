@@ -16,12 +16,10 @@ import java.math.BigInteger
 import javax.inject.Inject
 
 interface GasFeeRepository {
-
     suspend fun getGasFee(
         chain: Chain,
         address: String,
     ): TokenValue
-
 }
 
 internal class GasFeeRepositoryImpl @Inject constructor(

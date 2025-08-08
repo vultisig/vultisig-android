@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.swapAggregators
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteErrorResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
@@ -11,7 +12,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -63,7 +63,7 @@ class OneInchApiImpl @Inject constructor(
         isAffiliate: Boolean,
     ): OneInchSwapQuoteDeserialized = coroutineScope {
         try {
-            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}"
+            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
             val requestParams: HttpRequestBuilder.() -> Unit = {
                 createQuoteParams(
                     srcTokenContractAddress,
@@ -86,8 +86,9 @@ class OneInchApiImpl @Inject constructor(
                     .also { responses ->
                         responses.forEach { response ->
                             if (!response.status.isSuccess()) {
+                                val resp = response.body<OneInchSwapQuoteErrorResponse>()
                                 return@coroutineScope OneInchSwapQuoteDeserialized.Error(
-                                    error = HttpStatusCode.fromValue(response.status.value).description
+                                    error = resp.description
                                 )
                             }
                         }
@@ -121,7 +122,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("amount", amount)
         parameter("from", srcAddress)
         parameter("slippage", "0.5")
-        parameter("disableEstimate", true)
+        parameter("disableEstimate", false)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
         parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
@@ -131,7 +132,7 @@ class OneInchApiImpl @Inject constructor(
     override suspend fun getTokens(
         chain: Chain,
     ): OneInchTokensJson =
-        httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/tokens")
+        httpClient.get("https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}/tokens")
             .body()
 
     override suspend fun getContractsWithBalance(chain: Chain, address: String): List<String> {

@@ -8,9 +8,12 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_unmerge">Unmerge Ruji</string>
+    <string name="deposit_option_withdraw_ruji">Withdraw RUJI</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
+    <string name="deposit_option_stake_ruji">Stake RUJI</string>
+    <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
+    <string name="deposit_option_collect_ruji">Collect RUJI staking rewards</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
@@ -169,6 +172,7 @@
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
+    <string name="tx_done_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
     <string name="verify_swap_sign_button">Sign Transaction</string>
@@ -236,6 +240,7 @@
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
     <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
+    <string name="deposit_form_rewards_title">Pending Rewards (Balance: %1$s)</string>
     <string name="deposit_form_amount_title_without_balance" translatable="false">Amount</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
@@ -248,6 +253,7 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
+    <string name="deposit_form_pending_rewards_hint">Pending Rewards</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
@@ -607,4 +613,16 @@
     <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
+
+    <string name="tx_overview_screen_title" translatable="false">Overview</string>
+    <string name="tx_transaction_succesful_screen_title" translatable="false">Transaction succesful</string>
+    <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
+    <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
+    <string name="tx_overview_screen_tx_from" translatable="false">From</string>
+    <string name="tx_overview_screen_tx_to" translatable="false">To</string>
+    <string name="tx_overview_screen_tx_memo" translatable="false">Memo</string>
+    <string name="tx_overview_screen_tx_network" translatable="false">Network</string>
+    <string name="tx_overview_screen_tx_send" translatable="false">Send</string>
+    <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
+    <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 </resources>

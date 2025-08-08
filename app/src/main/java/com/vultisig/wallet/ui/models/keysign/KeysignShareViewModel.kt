@@ -62,7 +62,6 @@ internal class KeysignShareViewModel @Inject constructor(
     private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadTransaction(transactionId: TransactionId) {
         runBlocking {
             val transaction = transactionRepository.getTransaction(transactionId).first()
@@ -86,6 +85,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 libType = vault.libType,
+                wasmExecuteContractPayload = null,
             )
         }
     }
@@ -148,6 +148,7 @@ internal class KeysignShareViewModel @Inject constructor(
                         )
                         else null,
                         libType = vault.libType,
+                        wasmExecuteContractPayload = null,
                     )
                 }
             }
@@ -185,6 +186,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
                 libType = vault.libType,
+                wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
             )
         }
     }
@@ -225,5 +227,4 @@ internal class KeysignShareViewModel @Inject constructor(
         }
         shareQrBitmap.value = qrBitmap
     }
-
 }

@@ -14,7 +14,7 @@ import wallet.core.jni.proto.Cosmos
 import java.math.BigInteger
 
 @OptIn(ExperimentalStdlibApi::class)
-class THORCHainHelper {
+class ThorchainSwapHelper {
     private fun getTicker(coin: Coin): String {
         return  if(coin.ticker.startsWith("x/",true)) {
                 coin.ticker.drop(2)

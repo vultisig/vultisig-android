@@ -2,13 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.scan
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
+import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -20,26 +23,25 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -66,6 +70,7 @@ import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.Executor
@@ -89,6 +94,8 @@ internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
 ) {
+    var isFrameHighlighted by remember { mutableStateOf(false) }
+
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -167,6 +174,13 @@ internal fun ScanQrScreen(
                 QrCameraScreen(
                     onSuccess = onSuccess,
                     executor = executor,
+                    onAutoFocusTriggered =  {
+                        isFrameHighlighted = true
+                        coroutineScope.launch {
+                            delay(300)
+                            isFrameHighlighted = false
+                        }
+                    }
                 )
 
                 Image(
@@ -174,9 +188,14 @@ internal fun ScanQrScreen(
                         .align(Alignment.Center)
                         .fillMaxWidth()
                         .padding(40.dp),
-                    painter = painterResource(id = R.drawable.vs_camera_frame),
+                    painter = if (isFrameHighlighted) {
+                        painterResource(id = R.drawable.vs_camera_frame_highlight)
+                    } else {
+                        painterResource(id = R.drawable.vs_camera_frame)
+                    },
                     contentDescription = null,
                 )
+
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -230,10 +249,12 @@ internal fun ScanQrScreen(
     }
 }
 
+@SuppressLint("ClickableViewAccessibility")
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
     executor: Executor,
+    onAutoFocusTriggered: () -> Unit,
 ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -241,60 +262,106 @@ private fun QrCameraScreen(
         ProcessCameraProvider.getInstance(localContext)
     }
 
-    DisposableEffect(Unit) {
+    // Key to force AndroidView recreation when returning from background
+    var viewKey by remember {
+        mutableIntStateOf(0)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    // Force AndroidView to recreate by changing the key
+                    viewKey++
+                    try {
+                        cameraProviderFuture.get().unbindAll()
+                    } catch (e: Exception) {
+                        // Provider might not be ready yet
+                        Timber.e(e)
+                    }
+                }
+                else -> {}
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
             unbindCameraListener(cameraProviderFuture, localContext)
         }
     }
 
-    AndroidView(
-        modifier = Modifier
-            .fillMaxSize(),
-        factory = { context ->
-            val previewView = PreviewView(context)
-            val resolutionStrategy = ResolutionStrategy(
-                Size(1200, 1200),
-                ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-            )
-            val resolutionSelector = ResolutionSelector.Builder()
-                .setResolutionStrategy(resolutionStrategy)
-                .build()
-
-            val preview = Preview.Builder()
-                .setResolutionSelector(resolutionSelector)
-                .build()
-            val selector = CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
-
-            preview.surfaceProvider = previewView.surfaceProvider
-
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setResolutionSelector(resolutionSelector)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-            imageAnalysis.setAnalyzer(
-                executor,
-                BarcodeAnalyzer {
-                    unbindCameraListener(cameraProviderFuture, localContext)
-                    onSuccess(it)
-                }
-            )
-
-            try {
-                cameraProviderFuture.get().bindToLifecycle(
-                    lifecycleOwner,
-                    selector,
-                    preview,
-                    imageAnalysis,
+    key(viewKey) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { context ->
+                val previewView = PreviewView(context)
+                val resolutionStrategy = ResolutionStrategy(
+                    Size(1920, 1080),
+                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
                 )
-            } catch (e: Throwable) {
-                Timber.e(context.getString(R.string.camera_bind_error, e.localizedMessage), e)
-            }
+                val resolutionSelector = ResolutionSelector.Builder()
+                    .setResolutionStrategy(resolutionStrategy)
+                    .build()
 
-            previewView
-        }
-    )
+                val preview = Preview.Builder()
+                    .setResolutionSelector(resolutionSelector)
+                    .build()
+                val selector = CameraSelector.Builder()
+                    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                    .build()
+
+                preview.surfaceProvider = previewView.surfaceProvider
+
+                val imageAnalysis = ImageAnalysis.Builder()
+                    .setResolutionSelector(resolutionSelector)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                imageAnalysis.setAnalyzer(
+                    executor,
+                    BarcodeAnalyzer {
+                        unbindCameraListener(cameraProviderFuture, localContext)
+                        onSuccess(it)
+                    }
+                )
+
+                try {
+                    val cameraProvider = cameraProviderFuture.get()
+                    cameraProvider.unbindAll()
+
+                    val camera = cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        selector,
+                        preview,
+                        imageAnalysis,
+                    )
+
+                    // In some devices auto-focus does not work very well
+                    // We should allow user to touch and perform focus,
+                    // the autofocus initiated by a tap will "stick" at that point until
+                    // another tap occurs
+                    previewView.setOnTouchListener { _, event ->
+                        if (event.action == MotionEvent.ACTION_UP) {
+                            Timber.d("Auto-focus requested : ${event.x} ${event.y}")
+                            val factory = previewView.meteringPointFactory
+                            val point = factory.createPoint(event.x, event.y)
+                            val action = FocusMeteringAction.Builder(point)
+                                .disableAutoCancel()
+                                .build()
+                            camera.cameraControl.startFocusAndMetering(action)
+                            onAutoFocusTriggered()
+                        }
+                        true
+                    }
+
+                } catch (e: Throwable) {
+                    Timber.e(e)
+                }
+
+                previewView
+            }
+        )
+    }
 }
 
 private fun unbindCameraListener(

@@ -664,6 +664,11 @@ internal class SwapFormViewModel @Inject constructor(
             srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
+        if(maxUsableTokenAmount <= BigInteger.ZERO) {
+            srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            return
+        }
+
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
             .multiply(percentage.toBigDecimal())
             .setScale(6, RoundingMode.DOWN)
@@ -708,6 +713,7 @@ internal class SwapFormViewModel @Inject constructor(
                 }
                 .catch {
                     Timber.e(it)
+                    emit(emptyList())
                 }.collect(addresses)
         }
     }
@@ -716,7 +722,7 @@ internal class SwapFormViewModel @Inject constructor(
         selectTokensJob?.cancel()
         selectTokensJob = viewModelScope.launch {
             combine(
-                addresses,
+                addresses.filter { it.isNotEmpty() }, // Only proceed when addresses loaded
                 selectedSrcId,
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
@@ -733,8 +739,8 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedSrc,
                 selectedDst,
             ) { src, dst ->
-                val srcUiModel = src?.let(accountToTokenBalanceUiModelMapper::map)
-                val dstUiModel = dst?.let(accountToTokenBalanceUiModelMapper::map)
+                val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
+                val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
 
                 uiState.update {
                     it.copy(
@@ -800,7 +806,7 @@ internal class SwapFormViewModel @Inject constructor(
             gasFeeFiat + swapFeeFiat
         }.onEach { totalFee ->
             uiState.update {
-                it.copy(totalFee = fiatValueToString.map(totalFee))
+                it.copy(totalFee = fiatValueToString(totalFee))
             }
         }.launchIn(viewModelScope)
     }
@@ -849,7 +855,7 @@ internal class SwapFormViewModel @Inject constructor(
                             convertTokenValueToFiat(srcToken, tokenValue, currency)
 
                         val srcFiatValueText = srcFiatValue.let {
-                            fiatValueToString.map(it)
+                            fiatValueToString(it)
                         }
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
@@ -925,10 +931,10 @@ internal class SwapFormViewModel @Inject constructor(
                                             R.string.swap_form_provider_thorchain.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue = fiatValueToString(
                                             estimatedDstFiatValue
                                         ),
-                                        fee = fiatValueToString.map(fiatFees),
+                                        fee = fiatValueToString(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
@@ -988,10 +994,10 @@ internal class SwapFormViewModel @Inject constructor(
                                         provider = R.string.swap_for_provider_kyber.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue = fiatValueToString(
                                             estimatedDstFiatValue
                                         ),
-                                        fee = fiatValueToString.map(fiatFees),
+                                        fee = fiatValueToString(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
@@ -1051,10 +1057,10 @@ internal class SwapFormViewModel @Inject constructor(
                                         provider = R.string.swap_for_provider_1inch.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue = fiatValueToString(
                                             estimatedDstFiatValue
                                         ),
-                                        fee = fiatValueToString.map(fiatFees),
+                                        fee = fiatValueToString(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
@@ -1127,10 +1133,10 @@ internal class SwapFormViewModel @Inject constructor(
                                         },
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue = fiatValueToString(
                                             estimatedDstFiatValue
                                         ),
-                                        fee = fiatValueToString.map(fiatFees),
+                                        fee = fiatValueToString(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
@@ -1168,6 +1174,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.SmallSwapAmount ->
                                 UiText.StringResource(R.string.swap_error_small_swap_amount)
+
+                            is SwapException.InsufficientFunds ->
+                                UiText.StringResource(R.string.swap_error_small_insufficient_funds)
                         }
                         uiState.update {
                             it.copy(
