@@ -29,7 +29,7 @@ object EthereumGasHelper {
         if (keysignPayload.coin.chain == Chain.BscChain) {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Legacy
-                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT && gasPrice != BigInteger.ZERO) {
+                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT || gasPrice != BigInteger.ZERO) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
                 } else {
