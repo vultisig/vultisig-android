@@ -40,7 +40,7 @@ object EthereumGasHelper {
         } else {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Enveloped
-                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT && gasPrice != BigInteger.ZERO) {
+                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT || gasPrice != BigInteger.ZERO) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
                     maxInclusionFeePerGas =
