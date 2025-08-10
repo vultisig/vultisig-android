@@ -51,9 +51,9 @@ internal class LanguageSettingViewModel @Inject constructor(
     }
 
     fun changeLanguage(language: Language) {
-        changeAppLanguage(language.mainName.fromName().toString())
         viewModelScope.launch {
             appLocaleRepository.setLocale(language)
+            changeAppLanguage(language.mainName.fromName().toString())
         }
     }
 
