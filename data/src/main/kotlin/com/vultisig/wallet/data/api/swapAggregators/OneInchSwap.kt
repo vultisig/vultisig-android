@@ -64,8 +64,8 @@ class OneInchSwap(
             )
 
         val gasPrice = quote.tx.gasPrice.toBigInteger()
-        val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+        val gas = quote.tx.gas.takeIf { it != 0L }
+            ?.toBigInteger()
         return EthereumGasHelper.setGasParameters(
             gas = gas,
             gasPrice = gasPrice,

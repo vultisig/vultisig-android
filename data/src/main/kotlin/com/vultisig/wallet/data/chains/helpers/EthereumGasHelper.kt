@@ -14,8 +14,8 @@ object EthereumGasHelper {
             ?: error("BlockChainSpecific is not Ethereum for EVM chain")
 
     fun setGasParameters(
-        gas: BigInteger,
-        gasPrice: BigInteger,
+        gas: BigInteger?,
+        gasPrice: BigInteger?,
         signingInput: Ethereum.SigningInput.Builder,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger = BigInteger.ZERO,
@@ -29,7 +29,7 @@ object EthereumGasHelper {
         if (keysignPayload.coin.chain == Chain.BscChain) {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Legacy
-                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT || gasPrice != BigInteger.ZERO) {
+                if (gas != null && gasPrice != null) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
                 } else {
@@ -40,7 +40,7 @@ object EthereumGasHelper {
         } else {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Enveloped
-                if (gas.toLong() != EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT || gasPrice != BigInteger.ZERO) {
+                if (gas != null && gasPrice != null) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
                     maxInclusionFeePerGas =
