@@ -626,5 +626,5 @@
     <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
     <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 
-    <string name="deposit_error_max_amount">Only up to 100% can be unstaked</string>
+    <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
 </resources>
