@@ -563,13 +563,20 @@ internal class DepositFormViewModel @Inject constructor(
                     val percentage = percentageText.toFloatOrNull()
                         ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
 
-                    if (percentage <= 0f || percentage > 100f) {
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.send_error_no_amount,
-                                listOf("Percentage must be between 0 and 100")
-                            )
-                        )
+                    val error = when {
+                        percentage <= 0 -> {
+                            UiText.StringResource(R.string.send_error_no_amount)
+                        }
+
+                        percentage > 100 -> {
+                            UiText.StringResource(R.string.deposit_error_max_amount)
+                        }
+
+                        else -> null
+                    }
+
+                    error?.let {
+                        throw InvalidTransactionDataException(it)
                     }
                 }
 
