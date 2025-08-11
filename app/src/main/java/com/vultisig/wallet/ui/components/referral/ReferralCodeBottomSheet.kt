@@ -79,7 +79,6 @@ internal fun ReferralCodeBottomSheetContent(
 
         UiSpacer(32.dp)
 
-
         SequenceOfGradientText(
             listTextItems = listOf(
                 PartiallyGradientTextItem(

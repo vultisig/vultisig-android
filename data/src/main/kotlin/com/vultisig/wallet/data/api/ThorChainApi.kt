@@ -79,6 +79,7 @@ interface ThorChainApi {
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
     suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
+    suspend fun existsReferralCode(code: String): Boolean
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -353,10 +354,37 @@ internal class ThorChainApiImpl @Inject constructor(
         )
     }
 
+    override suspend fun existsReferralCode(code: String): Boolean {
+        val response = httpClient
+            .get("https://thornode.ninerealms.com/thorchain/thorname/$code") {
+                header(xClientID, xClientIDValue)
+            }
+
+        return response.status.isSuccess()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
     }
 }
+
+@Serializable
+private data class ThorOwnerData(
+    @SerialName("name")
+    val name: String,
+    @SerialName("expire_block_height")
+    val expireBlockHeight: Long,
+    @SerialName("owner")
+    val owner: String,
+    @SerialName("preferred_asset")
+    val preferredAsset: String,
+    @SerialName("preferred_asset_swap_threshold_rune")
+    val preferredAssetSwapThresholdRune: String,
+    @SerialName("affiliate_collector_rune")
+    val affilateCollectorRune: String,
+    @SerialName("aliases")
+    val aliases: List<String>?
+)
 
 @Serializable
 private data class ThorNameEntryJson(
