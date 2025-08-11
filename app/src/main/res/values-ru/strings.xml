@@ -401,5 +401,5 @@
     <string name="deposit_form_rewards_title">Ожидаемые вознаграждения (Баланс: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Ожидаемые вознаграждения</string>
     <string name="swap_error_small_insufficient_funds">Недостаточно средств</string>
-    <string name="deposit_error_max_amount">Только до 100% может быть отыграно.</string>
+    <string name="deposit_error_max_amount">Вывести из стейкинга можно не более 100%</string>
 </resources>

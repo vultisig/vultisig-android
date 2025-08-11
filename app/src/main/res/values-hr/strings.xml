@@ -392,5 +392,5 @@
     <string name="deposit_form_rewards_title">Nagrade na čekanju (Stanje: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Nagrade na čekanju</string>
     <string name="swap_error_small_insufficient_funds">Nedovoljno sredstava</string>
-    <string name="deposit_error_max_amount">Apenas até 100% podem ser desbloqueados</string>
+    <string name="deposit_error_max_amount">Moguće je deblokirati najviše 100%</string>
 </resources>
