@@ -615,7 +615,7 @@
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
     <string name="tx_overview_screen_title" translatable="false">Overview</string>
-    <string name="tx_transaction_succesful_screen_title" translatable="false">Transaction succesful</string>
+    <string name="tx_transaction_successful_screen_title" translatable="false">Transaction successful</string>
     <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
     <string name="tx_overview_screen_tx_from" translatable="false">From</string>
