@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -89,6 +90,8 @@ internal fun VsOverviewToken(
                     modifier = Modifier
                         .offset(x = 5.dp, y = 5.dp)
                         .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Theme.colors.neutral100, CircleShape)
                         .border(
                             width = 2.dp,
                             color = Theme.colors.buttons.secondary,
