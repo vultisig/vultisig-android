@@ -29,7 +29,7 @@ object EthereumGasHelper {
         if (keysignPayload.coin.chain == Chain.BscChain) {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Legacy
-                if (gas != null && gasPrice != null) {
+                if (gas != null && gas != BigInteger.ZERO && gasPrice != null && gasPrice != BigInteger.ZERO) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
                 } else {
@@ -40,7 +40,7 @@ object EthereumGasHelper {
         } else {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Enveloped
-                if (gas != null && gasPrice != null) {
+                if (gas != null && gas != BigInteger.ZERO && gasPrice != null && gasPrice != BigInteger.ZERO) {
                     gasLimit = ByteString.copyFrom(gas.toByteArray())
                     maxFeePerGas = ByteString.copyFrom(gasPrice.toByteArray())
                     maxInclusionFeePerGas =
