@@ -117,7 +117,7 @@ fun SettingsScreen(navController: NavHostController) {
             }
 
             AppSettingItem(
-                logo = R.drawable.ic_bookmark,
+                logo = R.drawable.handshake,
                 title = stringResource(R.string.referral_code_settings_title),
             ) {
                 viewModel.onClickReferralCode()

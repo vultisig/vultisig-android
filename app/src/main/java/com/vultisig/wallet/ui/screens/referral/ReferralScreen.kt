@@ -17,18 +17,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun ReferralScreen(
+internal fun ReferralScreen(
     navController: NavController,
+    model: ReferralViewModel = hiltViewModel(),
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -36,7 +39,7 @@ fun ReferralScreen(
             VsTopAppBar(
                 title = stringResource(R.string.referral_screen_title),
                 onBackClick = {
-
+                    navController.popBackStack()
                 },
             )
         },
@@ -72,23 +75,30 @@ internal fun ReferralContent(paddingValues: PaddingValues) {
         UiSpacer(16.dp)
 
         // TODO: This can be shown or hide
+
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(
                     color = Theme.colors.text.primary,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    fontFamily = Theme.brockmann.body.m.medium.fontFamily,
+                    fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )) {
                     append("Save ")
                 }
                 withStyle(style = SpanStyle(
                     color = Theme.colors.primary.accent4,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    fontFamily = Theme.brockmann.body.m.medium.fontFamily,
+                    fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )) {
                     append("10%")
                 }
                 withStyle(style = SpanStyle(
                     color = Theme.colors.text.primary,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    fontFamily = Theme.brockmann.body.m.medium.fontFamily,
+                    fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )) {
                     append(" on swaps - Add a Referral")
                 }
@@ -96,13 +106,13 @@ internal fun ReferralContent(paddingValues: PaddingValues) {
             color = Theme.colors.text.primary,
 
             /*
-            medium = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 24.sp,
-                            fontFamily = fontFamily,
-                            lineHeightStyle = lineHeightStyle,
-                        )
+                medium = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        fontFamily = fontFamily,
+                        lineHeightStyle = lineHeightStyle,
+                    )
              */
         )
     }
