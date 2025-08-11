@@ -51,13 +51,13 @@ internal class LanguageSettingViewModel @Inject constructor(
     }
 
     fun changeLanguage(language: Language) {
-        changeAppLanguage(language.mainName.fromName().toString())
         viewModelScope.launch {
             appLocaleRepository.setLocale(language)
+            changeAppLanguage(language.mainName.fromName().toString())
         }
     }
 
-    private fun changeAppLanguage(locale:String) {
+    private fun changeAppLanguage(locale: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getSystemService(LocaleManager::class.java).applicationLocales =
                 LocaleList.forLanguageTags(locale)
@@ -68,6 +68,6 @@ internal class LanguageSettingViewModel @Inject constructor(
         }
     }
 
-    private fun AppLanguage.toUiModel() = Language(mainName,engName)
+    private fun AppLanguage.toUiModel() = Language(mainName, engName)
 
 }
