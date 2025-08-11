@@ -390,4 +390,6 @@
     <string name="deposit_form_rewards_title">Recompensas Pendentes (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendentes</string>
     <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
+    <string name="deposit_option_add_cacao_pool">Adicionar ao Pool CACAO</string>
+    <string name="deposit_option_remove_cacao_pool">Remover do Pool CACAO</string>
 </resources>

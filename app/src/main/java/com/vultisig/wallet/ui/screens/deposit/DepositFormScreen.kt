@@ -207,6 +207,8 @@ internal fun DepositFormScreen(
                         DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
                         DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_collect_ruji)
+                        DepositOption.Add -> stringResource(R.string.deposit_option_add_cacao_pool)
+                        DepositOption.Remove -> stringResource(R.string.deposit_option_remove_cacao_pool)
                     }
                 })
 

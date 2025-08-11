@@ -74,6 +74,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 internal enum class DepositOption {
+    Add,
     Bond,
     Unbond,
     Leave,
@@ -83,6 +84,7 @@ internal enum class DepositOption {
     TransferIbc,
     Switch,
     Merge,
+    Remove,
     UnMerge,
     StakeTcy,
     UnstakeTcy,
@@ -157,6 +159,8 @@ internal class DepositFormViewModel @Inject constructor(
     val operatorFeeFieldState = TextFieldState()
     val customMemoFieldState = TextFieldState()
     val basisPointsFieldState = TextFieldState()
+    val affiliateFieldState = TextFieldState()
+    val affiliateFeeFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
     val thorAddressFieldState = TextFieldState()
@@ -201,6 +205,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Unbond,
                 DepositOption.Leave,
                 DepositOption.Custom,
+                DepositOption.Add,
+                DepositOption.Remove,
             )
 
             Chain.Kujira, Chain.Osmosis -> listOf(
@@ -574,6 +580,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 val transaction = when (depositOption) {
+                    DepositOption.Add -> createAddTransaction()
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
                     DepositOption.Leave -> createLeaveTransaction()
@@ -598,6 +605,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.StakeRuji -> createStakeRuji()
                     DepositOption.UnstakeRuji -> createUnstakeRuji()
                     DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
+                    DepositOption.Remove -> createRemoveTransaction()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -881,6 +889,160 @@ internal class DepositFormViewModel @Inject constructor(
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    private suspend fun createAddTransaction(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val address = accountsRepository.loadAddress(
+            vaultId,
+            chain
+        )
+            .first()
+
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(
+            chain,
+            srcAddress
+        )
+        val memo = DepositMemo.DepositPool
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(
+            specific,
+            gasFee,
+            selectedToken
+        )
+
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+    }
+
+    private suspend fun createRemoveTransaction(): DepositTransaction {
+
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val address = accountsRepository.loadAddress(
+            vaultId,
+            chain
+        )
+            .first()
+
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(
+            chain,
+            srcAddress
+        )
+
+        val basisPoints = basisPointsFieldState.text.toString().toIntOrNull()
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+
+        val affiliate = affiliateFieldState.text.toString().takeIf { it.isNotBlank() }
+        if (affiliate != null) {
+            validateDstAddress(affiliate)
+        }
+        val affiliateFee = affiliateFeeFieldState.text.toString().takeIf { it.isNotBlank() }
+        if (affiliateFee != null) {
+            validateTokenAmount(affiliateFee)
+        }
+
+        val memo = DepositMemo.WithdrawPool(
+            basisPoints = basisPoints,
+            affiliate = affiliate,
+            affiliateFee = affiliateFee,
+        )
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+        val gasFeeFiat = getFeesFiatValue(
+            specific,
+            gasFee,
+            selectedToken
+        )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(
+                value = BigInteger.ZERO,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
