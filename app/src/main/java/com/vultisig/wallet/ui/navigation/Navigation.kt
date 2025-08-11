@@ -139,18 +139,6 @@ internal sealed class Destination(
         }
     }
 
-    data class ReferralCode(
-        val chain: Chain? = null,
-        val requestId: String? = null,
-    ) : Destination(
-        route = "referral_code?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "referral_code?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
-        }
-    }
-
     data class AddressEntry(
         val chainId: String? = null,
         val address: String? = null,
@@ -229,6 +217,9 @@ internal sealed class Destination(
     data object VultisigToken : Destination(route = "settings/vultisig_token")
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
+
+    data object ReferralOnboarding: Destination(route = "referral/onboarding")
+    data object ReferralCode: Destination(route = "referral/referral_screen")
 
     data class QrAddressScreen(
         val vaultId: String? = null,
@@ -428,7 +419,6 @@ internal sealed class Route {
     }
 
     // vault creation / keygen
-
     @Serializable
     data class ImportVault(
         val uri: String? = null,
@@ -573,7 +563,6 @@ internal sealed class Route {
     // vault migration
 
     object Migration {
-
         @Serializable
         data class Onboarding(
             val vaultId: VaultId,
@@ -583,11 +572,9 @@ internal sealed class Route {
         data class Password(
             val vaultId: VaultId,
         )
-
     }
 
     // address book
-
     @Serializable
     data class AddressBook(
         val requestId: String,
@@ -595,4 +582,15 @@ internal sealed class Route {
         val excludeVaultId: VaultId,
     )
 
+    /* @Serializable
+    data object ReferralOnboarding
+
+    @Serializable
+    data object Referral
+
+    @Serializable
+    data object ReferralCreation
+
+    @Serializable
+    data object ReferralEdit */
 }
