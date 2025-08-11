@@ -630,7 +630,10 @@
     <string name="referral_invite_sheet_description">Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault</string>
     <string name="referral_invite_next">Next</string>
 
-    <string name="referall_invite_onboarding_1" translatable="false">Invite friends.</string>
-    <string name="referall_invite_onboarding_2" translatable="false">Earn rewards.</string>
-    <string name="referall_invite_onboarding_3" translatable="false">Save on fees.</string>
+    <string name="referral_invite_onboarding_1" translatable="false">Invite friends.</string>
+    <string name="referral_invite_onboarding_2" translatable="false">Earn rewards.</string>
+    <string name="referral_invite_onboarding_3" translatable="false">Save on fees.</string>
+
+    <string name="referral_screen_title" translatable="false">Vultisig - Referral</string>
+
 </resources>

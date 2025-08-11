@@ -82,15 +82,15 @@ internal fun ReferralCodeBottomSheetContent(
         SequenceOfGradientText(
             listTextItems = listOf(
                 PartiallyGradientTextItem(
-                    resId = R.string.referall_invite_onboarding_1,
+                    resId = R.string.referral_invite_onboarding_1,
                     coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
                 PartiallyGradientTextItem(
-                    resId = R.string.referall_invite_onboarding_2,
+                    resId = R.string.referral_invite_onboarding_2,
                     coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                 ),
                 PartiallyGradientTextItem(
-                    resId = R.string.referall_invite_onboarding_3,
+                    resId = R.string.referral_invite_onboarding_3,
                     coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
             ),
