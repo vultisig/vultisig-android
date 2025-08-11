@@ -244,7 +244,7 @@ fun SettingsScreen(navController: NavHostController) {
                     onContinue = { viewModel.onContinueReferralBottomSheet() },
                     onDismissRequest = { viewModel.onDismissReferralBottomSheet() },
                 )
-            }
+             }
         }
     }
 }

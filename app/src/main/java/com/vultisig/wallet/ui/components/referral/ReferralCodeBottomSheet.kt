@@ -27,6 +27,9 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
+import com.vultisig.wallet.ui.components.util.GradientColoring
+import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
+import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,11 +79,23 @@ internal fun ReferralCodeBottomSheetContent(
 
         UiSpacer(32.dp)
 
-        Text(
-            text = "Invite friends. Earn rewards. Save on fees.",
+
+        SequenceOfGradientText(
+            listTextItems = listOf(
+                PartiallyGradientTextItem(
+                    resId = R.string.referall_invite_onboarding_1,
+                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                ),
+                PartiallyGradientTextItem(
+                    resId = R.string.referall_invite_onboarding_2,
+                    coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                ),
+                PartiallyGradientTextItem(
+                    resId = R.string.referall_invite_onboarding_3,
+                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                ),
+            ),
             style = Theme.brockmann.headings.title2,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
         )
 
         UiSpacer(32.dp)
