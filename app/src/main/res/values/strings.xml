@@ -14,7 +14,6 @@
     <string name="deposit_option_stake_ruji">Stake RUJI</string>
     <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
     <string name="deposit_option_collect_ruji">Collect RUJI staking rewards</string>
-    <string name="deposit_option_withdraw_ruji_rewards">Withdraw RUJI Rewards</string>
     <string name="deposit_option_receive_yrune">Mint yRUNE</string>
     <string name="deposit_option_receive_ytcy">Mint yTCY</string>
     <string name="deposit_option_sell_yrune">Redeem yRUNE</string>
