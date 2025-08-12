@@ -218,13 +218,43 @@ internal sealed class Destination(
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
-    data object ReferralOnboarding: Destination(route = "referral/onboarding")
+    data class ReferralOnboarding(
+        val vaultId: String,
+    ): Destination(route = "referral/onboarding/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/onboarding/{$ARG_VAULT_ID}"
+        }
+    }
 
     data class ReferralCode(
         val vaultId: String
     ): Destination(route = "referral/referral_screen/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralCreation(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_creation/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_creation/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralEdition(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_edition/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralExternalEdition(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_external_edition/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}"
         }
     }
 
