@@ -51,7 +51,7 @@ class ReferralCodeSettingsRepository @Inject constructor(
     }
 
     private companion object {
-        const val HAS_VISIT_REFERRAL_CODE_KEY = "has_visit_referral_code"
+        const val HAS_VISIT_REFERRAL_CODE_KEY = "has_visit_referral_code_"
         const val VAULT_REFERRAL_CODE_KEY = "referral_code_"
         const val EXTERNAL_REFERRAL_CODE_KEY = "external_referral_code_"
     }

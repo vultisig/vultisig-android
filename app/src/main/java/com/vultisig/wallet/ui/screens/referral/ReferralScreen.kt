@@ -97,7 +97,7 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsTextInputField(
-                    textFieldState = TextFieldState(),
+                    textFieldState = model.referralCodeTextFieldState,
                     innerState = VsTextInputFieldInnerState.Default,
                     hint = stringResource(R.string.referral_screen_code_hint),
                     trailingIcon = R.drawable.clipboard_paste,
