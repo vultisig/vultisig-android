@@ -2072,7 +2072,7 @@ object Coins {
                 decimal = 8,
                 hexPublicKey = "",
                 priceProviderID = "thorchain",
-                contractAddress = "x/nami-index-nav-sthor1552fjtt2u6evfxwmnx0w68kh7u4fqt7e6vv0du3vj5rwggumy5jsmwzjsr-rcpt", // TODO: Change
+                contractAddress = "x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
                 isNativeToken = false
             ),
             Coin(
@@ -2083,7 +2083,7 @@ object Coins {
                 decimal = 8,
                 hexPublicKey = "",
                 priceProviderID = "tcy",
-                contractAddress = "x/nami-index-nav-sthor14t7ns0zs8tfnxe8e0zke96y54g07tlwywgpms4h3aaftvdtlparskcaflv-rcpt", // TODO: Change
+                contractAddress = "x/nami-index-nav-thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px-rcpt",
                 isNativeToken = false
             ),
         ),

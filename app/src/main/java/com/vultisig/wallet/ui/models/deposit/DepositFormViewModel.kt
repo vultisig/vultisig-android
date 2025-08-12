@@ -2103,8 +2103,8 @@ private val tokensToMerge = listOf(
 private const val STAKING_RUJI_CONTRACT =
     "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
 
-private const val YRUNE_CONTRACT = "sthor1qv8n2kz3j4h7w9v5k5w2c5g9q2v7e6xw5g0n6y"
-private const val YTCY_CONTRACT = "sthor1zv9m3kq2v6n8w4x8k8w3c6g0q3v8e7xw9g1n7z"
+private const val YRUNE_CONTRACT = "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
+private const val YTCY_CONTRACT = "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
 private const val AFFILIATE_CONTRACT =
-    "sthor1m4pk0kyc5xln5uznsur0d6frlvteghs0v6fyt8pw4vxfhfgskzts2g8ln6"
+    "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"
 private const val DEFAULT_SLIPPAGE = "1.0"
