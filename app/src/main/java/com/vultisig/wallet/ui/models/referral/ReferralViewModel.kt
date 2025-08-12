@@ -131,10 +131,13 @@ internal class ReferralViewModel @Inject constructor(
             } else {
                 "Referral code does not exist" to VsTextInputFieldInnerState.Error
             }
+            val isSavedEnabled = innerState != VsTextInputFieldInnerState.Success
+
             state.update {
                 it.copy(
                     referralMessage = message,
-                    referralMessageState = innerState
+                    referralMessageState = innerState,
+                    isSaveEnabled = isSavedEnabled
                 )
             }
         }.onFailure {

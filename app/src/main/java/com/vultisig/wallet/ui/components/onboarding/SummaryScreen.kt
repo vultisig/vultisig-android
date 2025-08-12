@@ -48,7 +48,6 @@ internal fun SummaryScreen(
                 animation = animationRes,
                 onInit = onAnimationInit
             )
-
         }
         VsCheckField(
             modifier = Modifier.padding(20.dp)

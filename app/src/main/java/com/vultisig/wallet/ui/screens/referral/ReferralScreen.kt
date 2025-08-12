@@ -178,6 +178,8 @@ internal fun ReferralScreen(
                     state = VsButtonState.Enabled,
                     onClick = model::onCreateOrEditReferral,
                 )
+
+                UiSpacer(16.dp)
             }
         },
     )
