@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +36,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -110,10 +110,9 @@ internal fun ReferralScreen(
                     },
                     footNote = state.referralMessage,
                     focusRequester = null, //focusRequester,
-                    imeAction = ImeAction.Done,
-                    onKeyboardAction = {
-
-                    },
+                    imeAction = ImeAction.Go,
+                    keyboardType = KeyboardType.Text,
+                    enabled = state.isSaveEnabled,
                 )
 
                 UiSpacer(16.dp)

@@ -80,6 +80,9 @@ internal class ReferralViewModel @Inject constructor(
                     isCreateEnabled = vaultReferral.isNullOrEmpty(),
                 )
             }
+            if (!externalReferral.isNullOrEmpty()) {
+                referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(externalReferral)
+            }
         }
     }
 
