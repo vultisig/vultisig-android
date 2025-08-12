@@ -56,11 +56,14 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
         builtInTokens: List<Coin>,
     ) {
         runCatching { oneInchApi.getTokens(chain) }
-            .onSuccess { oneInchTokens  ->
+            .onSuccess { oneInchTokens ->
                 emitUniqueTokens(
                     refreshedTokens,
                     builtInTokens,
-                    oneInchToCoins(oneInchTokens.tokens, chain),
+                    oneInchToCoins(
+                        oneInchTokens.tokens,
+                        chain
+                    ),
                 )
             }
             .onFailure {
@@ -69,12 +72,6 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
                     builtInTokens,
                 )
             }
-
-        emitUniqueTokens(
-            refreshedTokens,
-            builtInTokens,
-            oneInchToCoins(oneInchTokens.tokens, chain),
-        )
     }
 
     private suspend fun FlowCollector<List<Coin>>.emitSolTokens(
