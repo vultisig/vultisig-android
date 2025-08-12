@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class BackupPasswordState(
+    var isMoreInfoVisible: Boolean = false,
     val passwordErrorMessage: UiText? = null,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
@@ -71,6 +72,12 @@ internal class BackupPasswordViewModel @Inject constructor(
     val state = MutableStateFlow(BackupPasswordState())
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
+
+    private var isMoreInfoVisible: Boolean
+        get() = state.value.isMoreInfoVisible
+        set(value) = state.update {
+            it.copy(isMoreInfoVisible = value)
+        }
 
     init {
         viewModelScope.launch {
@@ -115,6 +122,13 @@ internal class BackupPasswordViewModel @Inject constructor(
             val fileName = createVaultBackupFileName(vault)
             createDocumentRequestFlow.emit(fileName)
         }
+    }
+    fun showMoreInfo() {
+        isMoreInfoVisible = true
+    }
+
+    fun hideMoreInfo() {
+        isMoreInfoVisible = false
     }
 
     fun togglePasswordVisibility() {

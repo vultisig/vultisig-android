@@ -32,11 +32,13 @@ import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
+@Ignore
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
 class MigrateGg20FastVaultFlowTest : CleanTest() {

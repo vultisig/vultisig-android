@@ -18,6 +18,7 @@ class EnableChainFlowTest : VaultTest() {
 
     @Test
     fun testEnableThenDisableChain() {
+
         val scenario = launchMainActivity()
 
         val chainName = "Cosmos"
