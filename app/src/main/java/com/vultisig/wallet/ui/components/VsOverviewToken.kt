@@ -1,22 +1,16 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -25,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -37,14 +30,13 @@ internal fun VsOverviewToken(
     modifier: Modifier = Modifier,
 ) {
     val token: Coin = valuedToken.token
-    val chainLogo = token.chain.logo
     val value: String = valuedToken.value
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .background(
-                color = Theme.colors.backgrounds.secondary,
+                color = Theme.colors.backgrounds.disabled,
                 shape = shape,
             )
             .border(
@@ -67,40 +59,19 @@ internal fun VsOverviewToken(
 
         UiSpacer(12.dp)
 
-        Box {
-            TokenLogo(
-                logo = Tokens.getCoinLogo(token.logo),
-                title = token.ticker,
-                modifier = Modifier
-                    .size(36.dp)
-                    .border(
-                        width = 1.dp,
-                        color = Theme.colors.borders.light,
-                        shape = CircleShape,
-                    )
-                    .align(Alignment.Center),
-                errorLogoModifier = Modifier
-                    .size(36.dp)
-            )
-
-            chainLogo.takeIf { it != Tokens.getCoinLogo(token.logo) }?.let {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .offset(x = 5.dp, y = 5.dp)
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(Theme.colors.neutral100, CircleShape)
-                        .border(
-                            width = 2.dp,
-                            color = Theme.colors.buttons.secondary,
-                            shape = CircleShape
-                        )
-                        .align(BottomEnd)
-                )
-            }
-        }
+        TokenLogo(
+            logo = Tokens.getCoinLogo(token.logo),
+            title = token.ticker,
+            errorLogoModifier = Modifier
+                .size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .border(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light,
+                    shape = CircleShape,
+                ),
+        )
 
         UiSpacer(12.dp)
 

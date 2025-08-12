@@ -46,7 +46,6 @@ internal fun BackupPasswordScreen(
     FastVaultPasswordScreen(
         title = stringResource(R.string.backup_password_topbar_title),
         state = FastVaultPasswordUiModel(
-            isMoreInfoVisible = state.isMoreInfoVisible,
             isPasswordVisible = state.isPasswordVisible,
             isConfirmPasswordVisible = state.isConfirmPasswordVisible,
             isNextButtonEnabled = state.isNextButtonEnabled,
@@ -59,8 +58,9 @@ internal fun BackupPasswordScreen(
         confirmPasswordTextFieldState = model.confirmPasswordTextFieldState,
         onBackClick = model::back,
         onNextClick = model::backupEncryptedVault,
-        onShowMoreInfo =model::showMoreInfo,
-        onHideMoreInfo = model::hideMoreInfo,
+        // TODO more info for backup password screen
+        onShowMoreInfo = {},
+        onHideMoreInfo = {},
         onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
         onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility
     )
