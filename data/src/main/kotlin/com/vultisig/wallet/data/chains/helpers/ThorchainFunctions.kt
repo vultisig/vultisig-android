@@ -91,12 +91,10 @@ object ThorchainFunctions {
             })
         }
 
-        val executeMsgPayload = fullPayload.toString()
-
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = executeMsgPayload,
+            executeMsg = fullPayload.toString(),
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
@@ -124,13 +122,10 @@ object ThorchainFunctions {
             })
         }
 
-        val jsonString = executePayload.toString()
-        val base64EncodedMsg = Base64.encode(jsonString.toByteArray(Charsets.UTF_8))
-
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = tokenContract,
-            executeMsg = base64EncodedMsg,
+            executeMsg = executePayload.toString(),
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
