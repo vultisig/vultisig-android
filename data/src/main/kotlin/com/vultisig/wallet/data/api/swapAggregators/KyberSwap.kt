@@ -74,8 +74,9 @@ class KyberSwap(
                     ).setData(quote.tx.data.removePrefix("0x").toByteStringOrHex())
                 ).build()
             )
-        var gasPrice = quote.tx.gasPrice.toBigIntegerOrNull()
-        val gas = quote.tx.gas.takeIf { it != 0L }?.toBigInteger()
+        var gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val gas = (quote.tx.gas.takeIf { it != 0L }
+            ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
         return EthereumGasHelper.setGasParameters(
             gas = gas,
