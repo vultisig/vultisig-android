@@ -21,18 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.StyledText
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -168,35 +164,6 @@ internal fun ReferralScreen(
                 )
             }
         },
-    )
-}
-
-@Composable
-private fun StyledText(
-    parts: List<StyledTextPart>,
-    fontSize: TextUnit,
-    fontFamily: androidx.compose.ui.text.font.FontFamily?,
-    fontWeight: FontWeight?,
-    textAlign: TextAlign = TextAlign.Center,
-    defaultColor: Color = Theme.colors.text.primary
-) {
-    Text(
-        text = buildAnnotatedString {
-            parts.forEach { part ->
-                withStyle(
-                    style = SpanStyle(
-                        color = part.color ?: defaultColor,
-                        fontSize = fontSize,
-                        fontFamily = fontFamily,
-                        fontWeight = fontWeight
-                    )
-                ) {
-                    append(part.text)
-                }
-            }
-        },
-        color = defaultColor,
-        textAlign = textAlign
     )
 }
 
