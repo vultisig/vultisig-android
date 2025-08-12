@@ -28,9 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,11 +113,13 @@ fun SettingsScreen(navController: NavHostController) {
                 viewModel.navigateTo(Destination.AddressBook())
             }
 
-            AppSettingItem(
-                logo = R.drawable.handshake,
-                title = stringResource(R.string.referral_code_settings_title),
-            ) {
-                viewModel.onClickReferralCode()
+            if (REFERRAL_FEATURE_FLAG) {
+                AppSettingItem(
+                    logo = R.drawable.handshake,
+                    title = stringResource(R.string.referral_code_settings_title),
+                ) {
+                    viewModel.onClickReferralCode()
+                }
             }
 
             AppSettingItem(
@@ -239,7 +238,7 @@ fun SettingsScreen(navController: NavHostController) {
                     .clickable(onClick = viewModel::clickSecret)
             )
 
-            if (state.hasToShowReferralCodeSheet) {
+            if (state.hasToShowReferralCodeSheet && REFERRAL_FEATURE_FLAG) {
                 ReferralCodeBottomSheet(
                     onContinue = { viewModel.onContinueReferralBottomSheet() },
                     onDismissRequest = { viewModel.onDismissReferralBottomSheet() },
@@ -312,3 +311,5 @@ private fun AppSettingItem(
         }
     }
 }
+
+private const val REFERRAL_FEATURE_FLAG = true

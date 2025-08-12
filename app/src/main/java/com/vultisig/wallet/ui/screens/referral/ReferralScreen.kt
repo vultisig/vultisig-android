@@ -3,35 +3,35 @@ package com.vultisig.wallet.ui.screens.referral
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -59,158 +59,148 @@ internal fun ReferralScreen(
             )
         },
         content = { contentPadding ->
-            ReferralContent(contentPadding)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .navigationBarsPadding()
+                    .padding(contentPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.crypto_natives),
+                        contentDescription = "ReferralImage",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
+
+                UiSpacer(16.dp)
+
+                StyledText(
+                    parts = listOf(
+                        StyledTextPart("Save "),
+                        StyledTextPart("10%", Theme.colors.primary.accent4),
+                        StyledTextPart(" on swaps - Add a Referral")
+                    ),
+                    fontSize = 16.sp,
+                    fontFamily = Theme.brockmann.body.m.medium.fontFamily,
+                    fontWeight = Theme.brockmann.body.m.medium.fontWeight,
+                )
+
+                UiSpacer(16.dp)
+
+                VsTextInputField(
+                    textFieldState = TextFieldState(),
+                    innerState = VsTextInputFieldInnerState.Default,
+                    hint = stringResource(R.string.referral_screen_code_hint),
+                    trailingIcon = R.drawable.clipboard_paste,
+                    onTrailingIconClick = { },
+                    footNote = null, // state.errorMessage?.asString(),
+                    focusRequester = null, //focusRequester,
+                    imeAction = ImeAction.Done,
+                    onKeyboardAction = {
+
+                    },
+                )
+
+                UiSpacer(16.dp)
+
+                VsButton(
+                    label = "Save referral code",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    variant = VsButtonVariant.Secondary,
+                    state = VsButtonState.Enabled,
+                    onClick = {},
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ){
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = Theme.colors.borders.light,
+                    )
+
+                    Text(
+                        text = "OR",
+                        modifier = Modifier.padding(16.dp),
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.supplementary.caption,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = Theme.colors.borders.light,
+                    )
+                }
+
+                StyledText(
+                    parts = listOf(
+                        StyledTextPart("Create your own code and earn  "),
+                        StyledTextPart("20%", Theme.colors.primary.accent4),
+                        StyledTextPart(" on referred swaps")
+                    ),
+                    fontSize = 14.sp,
+                    fontFamily = Theme.brockmann.body.m.regular.fontFamily,
+                    fontWeight = Theme.brockmann.body.m.regular.fontWeight
+                )
+
+                UiSpacer(16.dp)
+
+                VsButton(
+                    label = "Create referral",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    variant = VsButtonVariant.Primary,
+                    state = VsButtonState.Enabled,
+                    onClick = {},
+                )
+            }
         },
     )
 }
 
 @Composable
-internal fun ReferralContent(
-    paddingValues: PaddingValues,
-    onConfirmEditOrSaveExternalReferral: () -> Unit = {},
+private fun StyledText(
+    parts: List<StyledTextPart>,
+    fontSize: TextUnit,
+    fontFamily: androidx.compose.ui.text.font.FontFamily?,
+    fontWeight: FontWeight?,
+    textAlign: TextAlign = TextAlign.Center,
+    defaultColor: Color = Theme.colors.text.primary
 ) {
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .padding(paddingValues)
-            .verticalScroll(scrollState)
-            .imePadding()
-            .navigationBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Image(
-                painter = painterResource(id = R.drawable.crypto_natives),
-                contentDescription = "ReferralImage",
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
-        }
-
-        UiSpacer(16.dp)
-
-        // TODO: This can be shown or hide
-        Text(
-            text = buildAnnotatedString {
+    Text(
+        text = buildAnnotatedString {
+            parts.forEach { part ->
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.colors.text.primary,
-                        fontSize = 16.sp,
-                        fontFamily = Theme.brockmann.body.m.medium.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.medium.fontWeight,
+                        color = part.color ?: defaultColor,
+                        fontSize = fontSize,
+                        fontFamily = fontFamily,
+                        fontWeight = fontWeight
                     )
                 ) {
-                    append("Save ")
+                    append(part.text)
                 }
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.colors.primary.accent4,
-                        fontSize = 16.sp,
-                        fontFamily = Theme.brockmann.body.m.medium.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.medium.fontWeight,
-                    )
-                ) {
-                    append("10%")
-                }
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.colors.text.primary,
-                        fontSize = 16.sp,
-                        fontFamily = Theme.brockmann.body.m.medium.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.medium.fontWeight,
-                    )
-                ) {
-                    append(" on swaps - Add a Referral")
-                }
-            },
-            color = Theme.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
-
-        UiSpacer(16.dp)
-
-        VsTextInputField(
-            textFieldState = TextFieldState(),
-            innerState = VsTextInputFieldInnerState.Default,
-            hint = stringResource(R.string.referral_screen_code_hint),
-            trailingIcon = R.drawable.clipboard_paste,
-            onTrailingIconClick = { },
-            footNote = null, // state.errorMessage?.asString(),
-            focusRequester = null, //focusRequester,
-            imeAction = ImeAction.Done,
-            onKeyboardAction = {
-
-            },
-        )
-
-        UiSpacer(16.dp)
-
-        VsButton(
-            label = "Save referral code",
-            modifier = Modifier
-                .fillMaxWidth(),
-            variant = VsButtonVariant.Secondary,
-            state = VsButtonState.Enabled,
-            onClick = onConfirmEditOrSaveExternalReferral,
-        )
-
-        UiSpacer(16.dp)
-
-        Text(
-            text = buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.colors.text.primary,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.brockmann.body.m.regular.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.regular.fontWeight,
-                    )
-                ) {
-                    append("Create your own code and earn  ")
-                }
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.colors.primary.accent4,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.brockmann.body.m.regular.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.regular.fontWeight,
-                    )
-                ) {
-                    append("20%")
-                }
-                withStyle(
-                    style = SpanStyle(
-                        color = Theme.colors.text.primary,
-                        fontSize = 14.sp,
-                        fontFamily = Theme.brockmann.body.m.regular.fontFamily,
-                        fontWeight = Theme.brockmann.body.m.regular.fontWeight,
-                    )
-                ) {
-                    append(" on referred swaps")
-                }
-            },
-            color = Theme.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
-
-        UiSpacer(16.dp)
-
-        VsButton(
-            label = "Create referral",
-            modifier = Modifier
-                .fillMaxWidth(),
-            variant = VsButtonVariant.Primary,
-            state = VsButtonState.Enabled,
-            onClick = onConfirmEditOrSaveExternalReferral,
-        )
-    }
+            }
+        },
+        color = defaultColor,
+        textAlign = textAlign
+    )
 }
+
+data class StyledTextPart(
+    val text: String,
+    val color: Color? = null
+)
