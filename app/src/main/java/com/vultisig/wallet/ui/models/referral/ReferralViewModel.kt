@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.referral
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -53,15 +54,35 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     fun onCreateOrEditReferral() {
-
+        if (state.value.isSaveEnabled) {
+            // Navigate to save
+        } else {
+            // navigate to edit
+        }
     }
 
-    fun onSaveOrEditReferral() {
-
+    fun onSaveOrEditExternalReferral() {
+        if (state.value.isSaveEnabled) {
+            // Show Loading
+            // Check Thorchain API
+            // Error or success
+        } else {
+            // Got to edit screen
+        }
     }
 
     fun onPasteIconClick(content: String) {
-
+        viewModelScope.launch {
+            referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(content)
+            val validation = validateReferralCode(content)
+            if (validation != null) {
+                state.update {
+                    it.copy(
+                        errorMessage = validation
+                    )
+                }
+            }
+        }
     }
 
     private fun validateReferralCode(code: String): String? {

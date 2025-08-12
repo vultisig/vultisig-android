@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
@@ -122,7 +121,7 @@ internal fun ReferralScreen(
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Secondary,
                     state = VsButtonState.Enabled,
-                    onClick = model::onSaveOrEditReferral,
+                    onClick = model::onSaveOrEditExternalReferral,
                 )
 
                 Row(
