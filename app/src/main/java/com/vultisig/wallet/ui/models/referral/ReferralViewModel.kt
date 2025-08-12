@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -21,7 +22,8 @@ import javax.inject.Inject
 
 internal data class ReferralUiState(
     val referralCode: String = "",
-    val errorMessage: String? = null,
+    val referralMessage: String? = null,
+    val referralMessageState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
     val isLoading: Boolean = false,
     val isSaveEnabled: Boolean = true,
     val isCreateEnabled: Boolean = true,
@@ -49,10 +51,13 @@ internal class ReferralViewModel @Inject constructor(
             referralCodeTextFieldState
                 .textAsFlow()
                 .onEach {
-                    if (state.value.errorMessage != null) {
+                    if (state.value.referralMessage != null) {
                         if (it.length in 1..4) {
                             state.update { current ->
-                                current.copy(errorMessage = null)
+                                current.copy(
+                                    referralMessage = null,
+                                    referralMessageState = VsTextInputFieldInnerState.Default,
+                                )
                             }
                         }
                     }
@@ -88,31 +93,52 @@ internal class ReferralViewModel @Inject constructor(
     fun onSaveOrEditExternalReferral() {
         viewModelScope.launch {
             if (state.value.isSaveEnabled) {
-                val referralCode = referralCodeTextFieldState.text.toString()
-                val validation = validateReferralCode(referralCode)
-                if (validation != null) {
+                state.update {
+                    it.copy(
+                        referralMessageState = VsTextInputFieldInnerState.Default,
+                    )
+                }
+                val referralCode = referralCodeTextFieldState.text.toString().trim()
+                validateReferralCode(referralCode)?.let { validationError ->
                     state.update {
                         it.copy(
-                            errorMessage = validation
+                            referralMessage = validationError,
+                            referralMessageState = VsTextInputFieldInnerState.Error,
                         )
                     }
                     return@launch
                 }
-                withContext(Dispatchers.IO) {
-                    val exists = thorChainApi.existsReferralCode(referralCode)
-                    val existsMessage = if (exists) {
-                        "Referral code successfully linked"
-                    } else {
-                        "Referral code does not exist"
-                    }
-                    state.update {
-                        it.copy(
-                            errorMessage = existsMessage
-                        )
-                    }
-                }
+                checkAndSaveReferredCode(referralCode)
             } else {
                 // Got to edit screen
+            }
+        }
+    }
+
+    private suspend fun checkAndSaveReferredCode(referralCode: String) {
+        runCatching {
+            withContext(Dispatchers.IO) {
+                thorChainApi.existsReferralCode(referralCode)
+            }
+        }.onSuccess { exists ->
+            val (message, innerState) = if (exists) {
+                // referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                "Referral code successfully linked" to VsTextInputFieldInnerState.Success
+            } else {
+                "Referral code does not exist" to VsTextInputFieldInnerState.Error
+            }
+            state.update {
+                it.copy(
+                    referralMessage = message,
+                    referralMessageState = innerState
+                )
+            }
+        }.onFailure {
+            state.update {
+                it.copy(
+                    referralMessage = "Failed to check referral code",
+                    referralMessageState = VsTextInputFieldInnerState.Error
+                )
             }
         }
     }
@@ -124,7 +150,7 @@ internal class ReferralViewModel @Inject constructor(
             if (validation != null) {
                 state.update {
                     it.copy(
-                        errorMessage = validation
+                        referralMessage = validation
                     )
                 }
             }

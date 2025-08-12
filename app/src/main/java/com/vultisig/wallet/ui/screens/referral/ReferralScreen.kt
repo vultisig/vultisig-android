@@ -100,7 +100,7 @@ internal fun ReferralScreen(
 
                 VsTextInputField(
                     textFieldState = model.referralCodeTextFieldState,
-                    innerState = VsTextInputFieldInnerState.Default,
+                    innerState = state.referralMessageState,
                     hint = stringResource(R.string.referral_screen_code_hint),
                     trailingIcon = R.drawable.clipboard_paste,
                     onTrailingIconClick = {
@@ -108,7 +108,7 @@ internal fun ReferralScreen(
                         if (content.isNullOrEmpty()) return@VsTextInputField
                         model.onPasteIconClick(content)
                     },
-                    footNote = state.errorMessage,
+                    footNote = state.referralMessage,
                     focusRequester = null, //focusRequester,
                     imeAction = ImeAction.Done,
                     onKeyboardAction = {
