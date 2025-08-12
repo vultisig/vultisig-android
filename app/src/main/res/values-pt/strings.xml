@@ -399,4 +399,6 @@
     <string name="referral_on_referred_swaps">\u0020em trocas indicadas</string>
     <string name="referral_save">Economize\u0020</string>
     <string name="referral_add_referral">\u0020em trocas - Adicionar uma Indicação</string>
+    <string name="referral_edit_referred">Editar código de indicação</string>
+    <string name="referral_edit_referral">Editar referência</string>
 </resources>

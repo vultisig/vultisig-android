@@ -410,4 +410,6 @@
     <string name="referral_on_referred_swaps">\u0020на рекомендованных обменах</string>
     <string name="referral_save">Сохраните\u0020</string>
     <string name="referral_add_referral">\u0020на свопах - Добавить реферала</string>
+    <string name="referral_edit_referred">Редактировать реферальный код</string>
+    <string name="referral_edit_referral">Редактировать приглашение</string>
 </resources>

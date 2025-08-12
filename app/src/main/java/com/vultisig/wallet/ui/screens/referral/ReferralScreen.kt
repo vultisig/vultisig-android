@@ -15,6 +15,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -45,6 +47,7 @@ internal fun ReferralScreen(
     model: ReferralViewModel = hiltViewModel(),
 ) {
     val clipboardData = VsClipboardService.getClipboardData()
+    val state by model.state.collectAsState()
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -116,7 +119,11 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsButton(
-                    label = stringResource(R.string.referral_save_referral_code),
+                    label = if (state.isSaveEnabled) {
+                        stringResource(R.string.referral_save_referral_code)
+                    } else {
+                        stringResource(R.string.referral_edit_referred)
+                    },
                     modifier = Modifier
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Secondary,
@@ -161,7 +168,11 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsButton(
-                    label = stringResource(R.string.referral_create_referral),
+                    label = if (state.isCreateEnabled) {
+                        stringResource(R.string.referral_create_referral)
+                    } else {
+                        stringResource(R.string.referral_edit_referral)
+                    },
                     modifier = Modifier
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Primary,

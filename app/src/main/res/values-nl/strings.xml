@@ -410,4 +410,6 @@
     <string name="referral_on_referred_swaps">\u0020op doorverwezen swaps</string>
     <string name="referral_save">Bespaar\u0020</string>
     <string name="referral_add_referral">\u0020op swaps - Voeg een referral toe</string>
+    <string name="referral_edit_referred">Bewerk verwijzingscode</string>
+    <string name="referral_edit_referral">Bewerk verwijzing</string>
 </resources>

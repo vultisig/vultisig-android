@@ -401,4 +401,6 @@
     <string name="referral_on_referred_swaps">\u0020bei empfohlenen Swaps</string>
     <string name="referral_save">Sparen\u0020</string>
     <string name="referral_add_referral">\u0020bei Swaps - Empfehlung hinzufügen</string>
+    <string name="referral_edit_referred">Empfehlungscode bearbeiten</string>
+    <string name="referral_edit_referral">Empfehlung bearbeiten</string>
 </resources>

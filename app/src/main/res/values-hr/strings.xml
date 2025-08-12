@@ -401,4 +401,6 @@
     <string name="referral_on_referred_swaps">\u0020na preporučenim zamjenama</string>
     <string name="referral_save">Uštedite\u0020</string>
     <string name="referral_add_referral">\u0020na zamjenama - Dodajte preporuku</string>
+    <string name="referral_edit_referred">Uredi kod za preporuku</string>
+    <string name="referral_edit_referral">Uredi preporuku</string>
 </resources>

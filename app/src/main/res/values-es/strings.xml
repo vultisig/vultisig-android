@@ -401,4 +401,6 @@
     <string name="referral_on_referred_swaps">\u0020en intercambios referidos</string>
     <string name="referral_save">Ahorra\u0020</string>
     <string name="referral_add_referral">\u0020en swaps - Añadir una referencia</string>
+    <string name="referral_edit_referred">Editar código de referido</string>
+    <string name="referral_edit_referral">Editar referencia</string>
 </resources>

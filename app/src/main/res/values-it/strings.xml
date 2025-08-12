@@ -401,4 +401,6 @@
     <string name="referral_on_referred_swaps">\u0020sugli scambi segnalati</string>
     <string name="referral_save">Risparmia\u0020</string>
     <string name="referral_add_referral">\u0020sugli swap - Aggiungi un referral</string>
+    <string name="referral_edit_referred">Modifica codice di riferimento</string>
+    <string name="referral_edit_referral">Modifica referral</string>
 </resources>
