@@ -409,8 +409,6 @@ internal val MIGRATION_21_22 = object : Migration(21, 22) {
 
         // Rename the new table to the original table name
         db.execSQL("ALTER TABLE `vaultMetadata_new` RENAME TO `vaultMetadata`")
-
-
     }
 }
 

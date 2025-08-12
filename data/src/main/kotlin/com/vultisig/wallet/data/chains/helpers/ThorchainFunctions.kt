@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.chains.helpers
 import org.json.JSONObject
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
+import java.math.BigInteger
 import wallet.core.jni.Base64
 
 object ThorchainFunctions {
@@ -11,6 +12,7 @@ object ThorchainFunctions {
         fromAddress: String,
         stakingContract: String,
         denom: String,
+        amount: BigInteger,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
@@ -23,6 +25,7 @@ object ThorchainFunctions {
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
+                    amount = amount.toString(),
                 )
             )
         )

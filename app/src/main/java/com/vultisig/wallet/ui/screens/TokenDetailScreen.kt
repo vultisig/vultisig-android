@@ -147,6 +147,7 @@ private fun TokenDetailScreen(
                                 tokenLogo = token.tokenLogo,
                                 chainLogo = token.chainLogo,
                                 isBalanceVisible = uiModel.isBalanceVisible,
+                                mergedBalance = uiModel.token.mergeBalance,
                             )
                         }
                     }

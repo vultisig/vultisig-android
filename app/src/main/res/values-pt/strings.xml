@@ -356,7 +356,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_unmerge">Unmerge Ruji</string>
+    <string name="deposit_option_withdraw_ruji">Sacar RUJI</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
@@ -386,9 +386,11 @@
     <string name="keygen_email_error">E-mail incorreto, por favor verifique</string>
     <string name="deposit_option_stake_ruji">Fazer stake de RUJI</string>
     <string name="deposit_option_unstake_ruji">Desfazer stake de RUJI</string>
-    <string name="deposit_option_withdraw_ruji_rewards">Retirar recompensas RUJI</string>
+    <string name="deposit_option_collect_ruji">Coletar recompensas de staking de RUJI</string>
     <string name="deposit_form_rewards_title">Recompensas Pendentes (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendentes</string>
+    <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
+    <string name="deposit_error_max_amount">Apenas até 100 % podem ser desbloqueados</string>
     <string name="deposit_option_receive_yrune">Receber yRUNE</string>
     <string name="deposit_option_receive_ytcy">Receber yTCY</string>
     <string name="deposit_option_sell_yrune">Vender yRUNE</string>

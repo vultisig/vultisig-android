@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -108,6 +109,8 @@ internal fun ConfirmDeleteScreen(
         bottomBar = {
             VsButton(
                 onClick = onConfirmClick,
+                state = if (isDeleteButtonActive.not()) VsButtonState.Disabled else
+                    VsButtonState.Enabled,
                 label = stringResource(R.string.confirm_delete_delete_vault),
                 variant = VsButtonVariant.Error,
                 modifier = Modifier

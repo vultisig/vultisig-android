@@ -664,6 +664,11 @@ internal class SwapFormViewModel @Inject constructor(
             srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
+        if(maxUsableTokenAmount <= BigInteger.ZERO) {
+            srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            return
+        }
+
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
             .multiply(percentage.toBigDecimal())
             .setScale(6, RoundingMode.DOWN)
@@ -708,6 +713,7 @@ internal class SwapFormViewModel @Inject constructor(
                 }
                 .catch {
                     Timber.e(it)
+                    emit(emptyList())
                 }.collect(addresses)
         }
     }
@@ -716,7 +722,7 @@ internal class SwapFormViewModel @Inject constructor(
         selectTokensJob?.cancel()
         selectTokensJob = viewModelScope.launch {
             combine(
-                addresses,
+                addresses.filter { it.isNotEmpty() }, // Only proceed when addresses loaded
                 selectedSrcId,
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
@@ -1168,6 +1174,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.SmallSwapAmount ->
                                 UiText.StringResource(R.string.swap_error_small_swap_amount)
+
+                            is SwapException.InsufficientFunds ->
+                                UiText.StringResource(R.string.swap_error_small_insufficient_funds)
                         }
                         uiState.update {
                             it.copy(

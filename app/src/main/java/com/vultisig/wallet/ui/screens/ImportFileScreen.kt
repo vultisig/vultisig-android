@@ -125,7 +125,7 @@ private fun ImportFileScreen(
                                 modifier = Modifier.width(28.dp),
                                 painter = painterResource(
                                     id = if (uiModel.isPasswordObfuscated)
-                                        R.drawable.visible else R.drawable.hidden
+                                        R.drawable.hidden else R.drawable.visible
                                 ),
                                 tint = Theme.colors.neutral0,
                                 contentDescription = "change visibility button"

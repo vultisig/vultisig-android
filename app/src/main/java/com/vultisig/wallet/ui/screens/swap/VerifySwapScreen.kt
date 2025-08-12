@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
@@ -340,6 +341,7 @@ private fun VerifySwapScreen(
         bottomBar = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(
                         horizontal = 24.dp,
@@ -357,24 +359,30 @@ private fun VerifySwapScreen(
                 }
 
                 if (hasFastSign) {
-                    VsButton(
+                    Text(
+                        text = "Hold for paired sign",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.extraLight,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    VsHoldableButton(
                         label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onFastSignClick,
+                        onLongClick = onConfirm,
+                    )
+                } else {
+                    VsButton(
+                        label = confirmTitle,
                         modifier = Modifier
                             .fillMaxWidth(),
                         state = if (isConsentsEnabled && !hasAllConsents)
                             VsButtonState.Disabled else VsButtonState.Enabled,
-                        onClick = onFastSignClick,
+                        onClick = onConfirm,
                     )
                 }
-
-                VsButton(
-                    label = confirmTitle,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    state = if (isConsentsEnabled && !hasAllConsents)
-                        VsButtonState.Disabled else VsButtonState.Enabled,
-                    onClick = onConfirm,
-                )
             }
         }
     )

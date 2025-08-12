@@ -12,6 +12,7 @@ import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.TypeReference
 import org.web3j.abi.datatypes.*
 import org.web3j.abi.datatypes.generated.Uint256
+import timber.log.Timber
 
 interface FourByteRepository {
     suspend fun decodeFunction(memo: String): String?
@@ -33,12 +34,17 @@ internal class FourByteRepositoryImpl @Inject constructor(
     }
 
     override fun decodeFunctionArgs(functionSignature: String, memo: String): String? {
-        val paramsString = functionSignature.substringAfter("(").substringBefore(")")
-        val paramTypes = paramsString.split(",").map { it.trim() }
-        val decodedValues = getTypedReference(paramTypes, memo)
-        return decodeTypedReferences(decodedValues)?.let {
-              json.encodeToString(JsonElement.serializer(), JsonArray(it))
-         }
+        try {
+            val paramsString = functionSignature.substringAfter("(").substringBefore(")")
+            val paramTypes = paramsString.split(",").map { it.trim() }
+            val decodedValues = getTypedReference(paramTypes, memo)
+            return decodeTypedReferences(decodedValues)?.let {
+                json.encodeToString(JsonElement.serializer(), JsonArray(it))
+            }
+        } catch (e: Exception) {
+            Timber.e(e,"decode function args error")
+            return null
+        }
     }
 
 

@@ -94,7 +94,7 @@ internal fun TxDoneScaffold(
                                 .fillMaxWidth(),
                         )
                         Text(
-                            text = stringResource(R.string.tx_transaction_succesful_screen_title),
+                            text = stringResource(R.string.tx_transaction_successful_screen_title),
                             textAlign = TextAlign.Companion.Center,
                             style = Theme.brockmann.body.l.medium
                                 .copy(

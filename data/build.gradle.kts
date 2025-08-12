@@ -117,4 +117,5 @@ dependencies {
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test"))
+    androidTestImplementation(libs.wallet.core)
 }

@@ -114,7 +114,7 @@ private fun BiometricsEnableScreen(
                             modifier = Modifier.size(24.dp),
                             painter = painterResource(
                                 id = if (uiModel.isPasswordVisible)
-                                    R.drawable.hidden else R.drawable.visible
+                                    R.drawable.visible else R.drawable.hidden
                             ),
                             contentDescription = "toggle password visibility"
                         )

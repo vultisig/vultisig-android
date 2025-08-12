@@ -53,6 +53,8 @@ internal class TokenDetailViewModel @Inject constructor(
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
     private val tokenId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_TOKEN_ID))
+    private val mergedBalance: String =
+        savedStateHandle.get<String>(Destination.ARG_MERGE_ID) ?: "0"
 
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
@@ -123,8 +125,6 @@ internal class TokenDetailViewModel @Inject constructor(
                 updateRefreshing(false)
                 Timber.e(it)
             }.onEach { address ->
-
-                
                 val token = address.accounts
                     .first { it.token.id == tokenId }
                     .let { account ->
@@ -139,6 +139,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?.let { fiatValueToStringMapper(it) },
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
+                            mergeBalance = mergedBalance,
                         )
                     }
 
@@ -157,5 +158,4 @@ internal class TokenDetailViewModel @Inject constructor(
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
-
 }
