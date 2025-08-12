@@ -404,4 +404,9 @@
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>
     <string name="referral_save_referral_code">Сохранить реферальный код</string>
+    <string name="referral_or">ИЛИ</string>
+    <string name="referral_create_code_and_earn">Создайте свой код и зарабатывайте\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020на рекомендованных обменах</string>
+    <string name="referral_save">Сохраните\u0020</string>
+    <string name="referral_add_referral">\u0020на свопах - Добавить реферала</string>
 </resources>

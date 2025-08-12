@@ -395,4 +395,9 @@
     <string name="referral_invite_sheet_description">Comparte tu código de referido único para invitar a tus amigos. Ellos obtienen un descuento y cuanto más operen, más ganarás tú, directamente en tu bóveda.</string>
     <string name="referral_create_referral">Crear referencia</string>
     <string name="referral_save_referral_code">Guardar código de referencia</string>
+    <string name="referral_or">O</string>
+    <string name="referral_create_code_and_earn">Crea tu propio código y gana\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020en intercambios referidos</string>
+    <string name="referral_save">Ahorra\u0020</string>
+    <string name="referral_add_referral">\u0020en swaps - Añadir una referencia</string>
 </resources>

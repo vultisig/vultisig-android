@@ -20,4 +20,8 @@ internal class ReferralViewModel @Inject constructor(
     fun onSaveOrEditReferral() {
 
     }
+
+    fun onPasteIconClick(content: String) {
+
+    }
 }

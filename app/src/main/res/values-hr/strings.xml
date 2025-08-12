@@ -395,4 +395,9 @@
     <string name="referral_invite_sheet_description">Podijeli svoj jedinstveni kod preporuke i pozovi prijatelje. Oni dobivaju popust, a što više trguju, više zarađuješ – direktno dostavljeno u tvoj trezor.</string>
     <string name="referral_create_referral">Kreiraj preporuku</string>
     <string name="referral_save_referral_code">Spremi kod preporuke</string>
+    <string name="referral_or">ILI</string>
+    <string name="referral_create_code_and_earn">Kreirajte vlastiti kod i zaradite\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020na preporučenim zamjenama</string>
+    <string name="referral_save">Uštedite\u0020</string>
+    <string name="referral_add_referral">\u0020na zamjenama - Dodajte preporuku</string>
 </resources>

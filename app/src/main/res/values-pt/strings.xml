@@ -393,4 +393,9 @@
     <string name="referral_invite_sheet_description">Compartilhe seu código de referência exclusivo para convidar amigos. Eles recebem um desconto e, quanto mais eles negociarem, mais você ganha — entregue diretamente para o seu cofre.</string>
     <string name="referral_create_referral">Criar indicação</string>
     <string name="referral_save_referral_code">Salvar código de indicação</string>
+    <string name="referral_or">OU</string>
+    <string name="referral_create_code_and_earn">Crie seu próprio código e ganhe\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020em trocas indicadas</string>
+    <string name="referral_save">Economize\u0020</string>
+    <string name="referral_add_referral">\u0020em trocas - Adicionar uma Indicação</string>
 </resources>

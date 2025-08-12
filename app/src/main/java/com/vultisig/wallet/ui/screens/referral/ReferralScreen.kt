@@ -38,12 +38,15 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
 internal fun ReferralScreen(
     navController: NavController,
     model: ReferralViewModel = hiltViewModel(),
 ) {
+    val clipboardData = VsClipboardService.getClipboardData()
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -82,9 +85,9 @@ internal fun ReferralScreen(
 
                 StyledText(
                     parts = listOf(
-                        StyledTextPart("Save "),
+                        StyledTextPart(stringResource(R.string.referral_save)),
                         StyledTextPart("10%", Theme.colors.primary.accent4),
-                        StyledTextPart(" on swaps - Add a Referral")
+                        StyledTextPart(stringResource(R.string.referral_add_referral))
                     ),
                     fontSize = 16.sp,
                     fontFamily = Theme.brockmann.body.m.medium.fontFamily,
@@ -98,7 +101,11 @@ internal fun ReferralScreen(
                     innerState = VsTextInputFieldInnerState.Default,
                     hint = stringResource(R.string.referral_screen_code_hint),
                     trailingIcon = R.drawable.clipboard_paste,
-                    onTrailingIconClick = { },
+                    onTrailingIconClick = {
+                        val content = clipboardData.value
+                        if (content.isNullOrEmpty()) return@VsTextInputField
+                        model.onPasteIconClick(content)
+                    },
                     footNote = null, // state.errorMessage?.asString(),
                     focusRequester = null, //focusRequester,
                     imeAction = ImeAction.Done,
@@ -128,7 +135,7 @@ internal fun ReferralScreen(
                     )
 
                     Text(
-                        text = "OR",
+                        text = stringResource(R.string.referral_or),
                         modifier = Modifier.padding(16.dp),
                         color = Theme.colors.text.primary,
                         style = Theme.brockmann.supplementary.caption,
@@ -143,9 +150,9 @@ internal fun ReferralScreen(
 
                 StyledText(
                     parts = listOf(
-                        StyledTextPart("Create your own code and earn  "),
+                        StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
                         StyledTextPart("20%", Theme.colors.primary.accent4),
-                        StyledTextPart(" on referred swaps")
+                        StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
                     ),
                     fontSize = 14.sp,
                     fontFamily = Theme.brockmann.body.m.regular.fontFamily,

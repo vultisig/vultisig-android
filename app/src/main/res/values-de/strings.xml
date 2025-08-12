@@ -395,4 +395,9 @@
     <string name="referral_invite_sheet_description">Teile deinen einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienst du – direkt in deinen Tresor geliefert.</string>
     <string name="referral_create_referral">Empfehlung erstellen</string>
     <string name="referral_save_referral_code">Empfehlungscode speichern</string>
+    <string name="referral_or">ODER</string>
+    <string name="referral_create_code_and_earn">Erstellen Sie Ihren eigenen Code und verdienen Sie\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020bei empfohlenen Swaps</string>
+    <string name="referral_save">Sparen\u0020</string>
+    <string name="referral_add_referral">\u0020bei Swaps - Empfehlung hinzufügen</string>
 </resources>

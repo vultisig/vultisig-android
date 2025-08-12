@@ -404,4 +404,9 @@
     <string name="referral_invite_sheet_description">Deel je unieke verwijzingscode om vrienden uit te nodigen. Zij krijgen een korting en hoe meer ze handelen, hoe meer jij verdient - direct geleverd in je kluis.</string>
     <string name="referral_create_referral">Verwijzing maken</string>
     <string name="referral_save_referral_code">Verwijzingscode opslaan</string>
+    <string name="referral_or">OF</string>
+    <string name="referral_create_code_and_earn">Maak je eigen code en verdien\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020op doorverwezen swaps</string>
+    <string name="referral_save">Bespaar\u0020</string>
+    <string name="referral_add_referral">\u0020op swaps - Voeg een referral toe</string>
 </resources>

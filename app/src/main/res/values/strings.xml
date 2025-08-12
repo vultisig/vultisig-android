@@ -633,11 +633,13 @@
     <string name="referral_invite_onboarding_1" translatable="false">Invite friends.</string>
     <string name="referral_invite_onboarding_2" translatable="false">Earn rewards.</string>
     <string name="referral_invite_onboarding_3" translatable="false">Save on fees.</string>
-
     <string name="referral_screen_title" translatable="false">Vultisig - Referral</string>
     <string name="referral_screen_code_hint" translatable="false">Enter Up to 4 characters</string>
-
     <string name="referral_create_referral">Create referral</string>
     <string name="referral_save_referral_code">Save referral code</string>
-
+    <string name="referral_or">OR</string>
+    <string name="referral_create_code_and_earn">Create your own code and earn\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
+    <string name="referral_save">Save\u0020</string>
+    <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
 </resources>
