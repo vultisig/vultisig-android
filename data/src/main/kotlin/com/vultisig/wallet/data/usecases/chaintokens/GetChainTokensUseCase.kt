@@ -55,11 +55,25 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
         refreshedTokens: List<Coin>,
         builtInTokens: List<Coin>,
     ) {
-        val oneInchTokens = oneInchApi.getTokens(chain)
+        runCatching { oneInchApi.getTokens(chain) }
+            .onSuccess { oneInchTokens  ->
+                emitUniqueTokens(
+                    refreshedTokens,
+                    builtInTokens,
+                    oneInchToCoins(oneInchTokens.tokens, chain),
+                )
+            }
+            .onFailure {
+                emitUniqueTokens(
+                    refreshedTokens,
+                    builtInTokens,
+                )
+            }
+
         emitUniqueTokens(
-            oneInchToCoins(oneInchTokens.tokens, chain),
             refreshedTokens,
             builtInTokens,
+            oneInchToCoins(oneInchTokens.tokens, chain),
         )
     }
 
@@ -69,15 +83,23 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
         refreshedTokens: List<Coin>,
         builtInTokens: List<Coin>,
     ) {
-        val address = vault.coins.first { it.chain == chain }.address
-        val tokens = splTokenRepository.getTokens(address)
+        val address = vault.coins.firstOrNull { it.chain == chain }?.address ?: run {
+            emitUniqueTokens(
+                refreshedTokens,
+                builtInTokens,
+            )
+            return
+        }
+        val tokens = runCatching { splTokenRepository.getTokens(address) }
+            .getOrElse { emptyList() }
         emitUniqueTokens(
             refreshedTokens,
             builtInTokens,
             tokens,
         )
 
-        val jupiterTokens = splTokenRepository.getJupiterTokens()
+        val jupiterTokens = runCatching { splTokenRepository.getJupiterTokens() }
+            .getOrElse { emptyList() }
         emitUniqueTokens(
             refreshedTokens,
             builtInTokens,
