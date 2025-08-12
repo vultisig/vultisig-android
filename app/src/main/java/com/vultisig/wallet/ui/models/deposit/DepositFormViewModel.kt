@@ -1511,6 +1511,9 @@ internal class DepositFormViewModel @Inject constructor(
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
+        if (nodeAddressFieldState.text.isEmpty()) {
+            throw InvalidTransactionDataException(UiText.StringResource(R.string.deposit_error_destination_address))
+        }
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount = address.accounts
