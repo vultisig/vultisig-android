@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,12 +32,12 @@ internal data class ReferralUiState(
 
 @HiltViewModel
 internal class ReferralViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
     private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
-    private val vaultId: String = ""
+    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     val referralCodeTextFieldState = TextFieldState()
     val state = MutableStateFlow(ReferralUiState())
@@ -122,7 +123,7 @@ internal class ReferralViewModel @Inject constructor(
             }
         }.onSuccess { exists ->
             val (message, innerState) = if (exists) {
-                // referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                referralCodeRepository.saveExternalReferral(vaultId, referralCode)
                 "Referral code successfully linked" to VsTextInputFieldInnerState.Success
             } else {
                 "Referral code does not exist" to VsTextInputFieldInnerState.Error
