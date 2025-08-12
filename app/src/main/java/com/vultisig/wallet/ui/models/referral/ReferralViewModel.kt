@@ -2,16 +2,30 @@ package com.vultisig.wallet.ui.models.referral
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+internal data class ReferralUiState(
+    val referralCode: String = "",
+    val errorMessage: String? = null,
+    val isLoading: Boolean = false,
+    val isSaveEnabled: Boolean = false,
+    val isCreateEnabled: Boolean = true,
+)
+
 @HiltViewModel
 internal class ReferralViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
+
+    init {
+
+    }
 
     fun onCreateOrEditReferral() {
 
@@ -23,5 +37,11 @@ internal class ReferralViewModel @Inject constructor(
 
     fun onPasteIconClick(content: String) {
 
+    }
+
+    private fun validateReferralCode(code: String): String? {
+        if (code.isEmpty()) return "Referral code cannot be empty"
+        if (code.length != 4) return "Referral code must be exactly 4 characters"
+        return null
     }
 }
