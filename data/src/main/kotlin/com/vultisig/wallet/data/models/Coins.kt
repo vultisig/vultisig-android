@@ -2066,7 +2066,7 @@ object Coins {
             ),
             Coin(
                 chain = Chain.ThorChain,
-                ticker = "yRUNE",
+                ticker = "YRUNE",
                 logo = "yrune",
                 address = "",
                 decimal = 8,
@@ -2077,7 +2077,7 @@ object Coins {
             ),
             Coin(
                 chain = Chain.ThorChain,
-                ticker = "yTCY",
+                ticker = "YTCY",
                 logo = "ytcy",
                 address = "",
                 decimal = 8,
