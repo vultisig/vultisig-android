@@ -390,6 +390,7 @@
     <string name="deposit_form_rewards_title">Recompensas Pendentes (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendentes</string>
     <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
+    <string name="deposit_error_max_amount">Apenas até 100 % podem ser desbloqueados</string>
     <string name="referral_invite_sheet_description">Compartilhe seu código de referência exclusivo para convidar amigos. Eles recebem um desconto e, quanto mais eles negociarem, mais você ganha — entregue diretamente para o seu cofre.</string>
     <string name="referral_create_referral">Criar indicação</string>
     <string name="referral_save_referral_code">Salvar código de indicação</string>

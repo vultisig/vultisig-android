@@ -392,6 +392,7 @@
     <string name="deposit_form_rewards_title">Recompensas Pendientes (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
     <string name="swap_error_small_insufficient_funds">Fondos insuficientes</string>
+    <string name="deposit_error_max_amount">Solo se puede desbloquear hasta el 100 %</string>
     <string name="referral_invite_sheet_description">Comparte tu código de referido único para invitar a tus amigos. Ellos obtienen un descuento y cuanto más operen, más ganarás tú, directamente en tu bóveda.</string>
     <string name="referral_create_referral">Crear referencia</string>
     <string name="referral_save_referral_code">Guardar código de referencia</string>

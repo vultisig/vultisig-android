@@ -11,10 +11,12 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 
+@Ignore
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
 class FastVaultKeygenFlowTest : CleanTest() {

@@ -392,6 +392,7 @@
     <string name="deposit_form_rewards_title">Premi in Sospeso (Saldo: %1$s)</string>
     <string name="deposit_form_pending_rewards_hint">Premi in Sospeso</string>
     <string name="swap_error_small_insufficient_funds">Fondi insufficienti</string>
+    <string name="deposit_error_max_amount">Solo fino al 100 % può essere svincolato</string>
     <string name="referral_invite_sheet_description">Condividi il tuo codice di riferimento unico per invitare i tuoi amici. Loro riceveranno uno sconto e più operano, più guadagni tu, direttamente nel tuo deposito.</string>
     <string name="referral_create_referral">Crea referral</string>
     <string name="referral_save_referral_code">Salva codice referral</string>
