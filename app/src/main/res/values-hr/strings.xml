@@ -394,4 +394,5 @@
     <string name="swap_error_small_insufficient_funds">Nedovoljno sredstava</string>
     <string name="deposit_error_max_amount">Moguće je deblokirati najviše 100 %</string>
     <string name="deposit_error_destination_address">Odredišna adresa ne smije biti prazna</string>
+    <string name="deposit_error_invalid_destination_address">Odredišna adresa nije važeća</string>
 </resources>

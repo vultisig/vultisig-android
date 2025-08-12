@@ -392,4 +392,5 @@
     <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
     <string name="deposit_error_max_amount">Apenas até 100 % podem ser desbloqueados</string>
     <string name="deposit_error_destination_address">O endereço de destino não deve estar vazio</string>
+    <string name="deposit_error_invalid_destination_address">O endereço de destino é inválido</string>
 </resources>

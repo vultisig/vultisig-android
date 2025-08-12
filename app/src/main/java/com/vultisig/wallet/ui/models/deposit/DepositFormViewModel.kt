@@ -1577,8 +1577,21 @@ internal class DepositFormViewModel @Inject constructor(
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
-        if (nodeAddressFieldState.text.isEmpty()) {
-            throw InvalidTransactionDataException(UiText.StringResource(R.string.deposit_error_destination_address))
+        val dstAddr = nodeAddressFieldState.text.toString()
+        if (dstAddr.isBlank()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_destination_address)
+            )
+        }
+
+        if (!chainAccountAddressRepository.isValid(
+                state.value.selectedDstChain,
+                dstAddr
+            )
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_destination_address)
+            )
         }
 
         val selectedMergeToken = state.value.selectedCoin
@@ -1590,7 +1603,6 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
-        val dstAddr = nodeAddressFieldState.text.toString()
 
         val memo = DepositMemo.TransferIbc(
             srcChain = chain,

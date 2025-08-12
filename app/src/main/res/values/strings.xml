@@ -628,4 +628,5 @@
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
     <string name="deposit_error_destination_address">Destination address should not be empty</string>
+    <string name="deposit_error_invalid_destination_address">Destination address is invalid</string>
 </resources>
