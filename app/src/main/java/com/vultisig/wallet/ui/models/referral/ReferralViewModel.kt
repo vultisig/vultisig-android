@@ -5,13 +5,18 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class ReferralUiState(
@@ -27,6 +32,7 @@ internal class ReferralViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
     private val vaultId: String = ""
 
@@ -35,6 +41,24 @@ internal class ReferralViewModel @Inject constructor(
 
     init {
         loadStatus()
+        observeReferralTextField()
+    }
+
+    private fun observeReferralTextField() {
+        viewModelScope.launch {
+            referralCodeTextFieldState
+                .textAsFlow()
+                .onEach {
+                    if (state.value.errorMessage != null) {
+                        if (it.length in 1..4) {
+                            state.update { current ->
+                                current.copy(errorMessage = null)
+                            }
+                        }
+                    }
+                }
+                .collect {}
+        }
     }
 
     private fun loadStatus() {
@@ -54,20 +78,42 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     fun onCreateOrEditReferral() {
-        if (state.value.isSaveEnabled) {
-            // Navigate to save
+        if (state.value.isCreateEnabled) {
+            // Navigate to create
         } else {
             // navigate to edit
         }
     }
 
     fun onSaveOrEditExternalReferral() {
-        if (state.value.isSaveEnabled) {
-            // Show Loading
-            // Check Thorchain API
-            // Error or success
-        } else {
-            // Got to edit screen
+        viewModelScope.launch {
+            if (state.value.isSaveEnabled) {
+                val referralCode = referralCodeTextFieldState.text.toString()
+                val validation = validateReferralCode(referralCode)
+                if (validation != null) {
+                    state.update {
+                        it.copy(
+                            errorMessage = validation
+                        )
+                    }
+                    return@launch
+                }
+                withContext(Dispatchers.IO) {
+                    val exists = thorChainApi.existsReferralCode(referralCode)
+                    val existsMessage = if (exists) {
+                        "Referral code successfully linked"
+                    } else {
+                        "Referral code does not exist"
+                    }
+                    state.update {
+                        it.copy(
+                            errorMessage = existsMessage
+                        )
+                    }
+                }
+            } else {
+                // Got to edit screen
+            }
         }
     }
 
@@ -87,7 +133,7 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun validateReferralCode(code: String): String? {
         if (code.isEmpty()) return "Referral code cannot be empty"
-        if (code.length != 4) return "Referral code must be exactly 4 characters"
+        if (code.length > 4) return "Referral code can be up to 4 characters"
         return null
     }
 }

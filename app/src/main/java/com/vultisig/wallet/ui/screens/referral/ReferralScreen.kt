@@ -108,7 +108,7 @@ internal fun ReferralScreen(
                         if (content.isNullOrEmpty()) return@VsTextInputField
                         model.onPasteIconClick(content)
                     },
-                    footNote = null, // state.errorMessage?.asString(),
+                    footNote = state.errorMessage,
                     focusRequester = null, //focusRequester,
                     imeAction = ImeAction.Done,
                     onKeyboardAction = {
