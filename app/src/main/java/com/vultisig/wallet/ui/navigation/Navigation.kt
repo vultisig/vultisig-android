@@ -219,7 +219,14 @@ internal sealed class Destination(
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
     data object ReferralOnboarding: Destination(route = "referral/onboarding")
-    data object ReferralCode: Destination(route = "referral/referral_screen")
+
+    data class ReferralCode(
+        val vaultId: String
+    ): Destination(route = "referral/referral_screen/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
+        }
+    }
 
     data class QrAddressScreen(
         val vaultId: String? = null,

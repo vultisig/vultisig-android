@@ -558,7 +558,14 @@ internal fun SetupNavGraph(
             AddressBookBottomSheet()
         }
 
-        composable(route = Destination.ReferralCode.route) {
+        composable(
+            route = Destination.ReferralCode.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
             ReferralScreen(
                 navController = navController,
             )

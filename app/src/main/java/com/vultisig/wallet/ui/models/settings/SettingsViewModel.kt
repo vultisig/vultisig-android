@@ -97,12 +97,12 @@ internal class SettingsViewModel @Inject constructor(
         state.update {
             it.copy(hasToShowReferralCodeSheet = false)
         }
-        navigateTo(Destination.ReferralCode)
+        navigateTo(Destination.ReferralCode(vaultId))
     }
 
     fun onClickReferralCode() {
         if (hasUsedReferral) {
-            navigateTo(Destination.ReferralCode)
+            navigateTo(Destination.ReferralCode(vaultId))
         } else {
             state.update {
                 it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
