@@ -402,5 +402,4 @@
     <string name="deposit_form_pending_rewards_hint">In afwachting van beloningen</string>
     <string name="swap_error_small_insufficient_funds">Onvoldoende financiële middelen</string>
     <string name="deposit_error_max_amount">Er kan maximaal 100 % worden unstaked</string>
-    <string name="deposit_error_destination_address">Bestemmingsadres mag niet leeg zijn</string>
 </resources>

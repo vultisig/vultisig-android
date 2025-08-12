@@ -627,5 +627,4 @@
     <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
-    <string name="deposit_error_destination_address">Destination address should not be empty</string>
 </resources>

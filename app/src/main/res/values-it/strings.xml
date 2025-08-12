@@ -393,5 +393,4 @@
     <string name="deposit_form_pending_rewards_hint">Premi in Sospeso</string>
     <string name="swap_error_small_insufficient_funds">Fondi insufficienti</string>
     <string name="deposit_error_max_amount">Solo fino al 100 % può essere svincolato</string>
-    <string name="deposit_error_destination_address">L\'indirizzo di destinazione non deve essere vuoto</string>
 </resources>
