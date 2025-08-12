@@ -54,7 +54,7 @@ internal class SettingsViewModel @Inject constructor(
 
     private fun loadWasReferralUsed() {
         viewModelScope.launch {
-            hasUsedReferral = referralRepository.hasUsedReferralCode()
+            hasUsedReferral = referralRepository.hasVisitReferralCode()
         }
     }
 
@@ -93,7 +93,7 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onContinueReferralBottomSheet() {
-        referralRepository.useReferralCode()
+        referralRepository.visitReferralCode()
         state.update {
             it.copy(hasToShowReferralCodeSheet = false)
         }
