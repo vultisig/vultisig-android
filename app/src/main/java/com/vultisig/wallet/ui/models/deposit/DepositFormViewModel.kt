@@ -767,6 +767,7 @@ internal class DepositFormViewModel @Inject constructor(
                 tokenContract = contractAddress,
                 slippage = slippage.formatSlippage(),
                 denom = selectedToken.contractAddress,
+                amount = tokenAmount,
             )
         )
     }
@@ -802,7 +803,7 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
         val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        val memo = "receive:${selectedToken.contractAddress}:$tokenAmount"
+        val memo = "receive:${selectedToken.ticker.lowercase()}:$tokenAmount"
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -831,6 +832,7 @@ internal class DepositFormViewModel @Inject constructor(
                 throw RuntimeException("Invalid Deposit Parameter ")
             }
         }
+
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
@@ -850,6 +852,7 @@ internal class DepositFormViewModel @Inject constructor(
                 stakingContract = AFFILIATE_CONTRACT,
                 tokenContract = tokenContract,
                 denom = selectedToken.ticker.lowercase(),
+                amount = tokenAmount,
             )
         )
     }

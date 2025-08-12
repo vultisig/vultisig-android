@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import org.json.JSONArray
 import org.json.JSONObject
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
@@ -67,6 +68,7 @@ object ThorchainFunctions {
         stakingContract: String,
         tokenContract: String,
         denom: String,
+        amount: BigInteger,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
@@ -77,15 +79,19 @@ object ThorchainFunctions {
             put("deposit", JSONObject())
         }
         val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
+
         val fullPayload = JSONObject().apply {
             put("execute", JSONObject().apply {
                 put("contract_addr", tokenContract)
                 put("msg", base64Msg)
-                put("affiliate", listOf(VULTISIG_AFFILIATE_ADDRESS, 10))
+                put("affiliate", JSONArray().apply {
+                    put(VULTISIG_AFFILIATE_ADDRESS)
+                    put(10)
+                })
             })
         }
 
-        val executeMsgPayload = Base64.encode(fullPayload.toString().toByteArray(Charsets.UTF_8))
+        val executeMsgPayload = fullPayload.toString()
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
@@ -94,6 +100,7 @@ object ThorchainFunctions {
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
+                    amount = amount.toString(),
                 )
             ),
         )
@@ -104,6 +111,7 @@ object ThorchainFunctions {
         tokenContract: String,
         slippage: String,
         denom: String,
+        amount: BigInteger,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
@@ -126,6 +134,7 @@ object ThorchainFunctions {
             coins = listOf(
                 CosmosCoin(
                     denom = denom,
+                    amount = amount.toString(),
                 ),
             ),
         )
