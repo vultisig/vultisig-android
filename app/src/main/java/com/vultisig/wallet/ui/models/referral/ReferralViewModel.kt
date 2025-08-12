@@ -13,4 +13,11 @@ internal class ReferralViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
+    fun onCreateOrEditReferral() {
+
+    }
+
+    fun onSaveOrEditReferral() {
+
+    }
 }

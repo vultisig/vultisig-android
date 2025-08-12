@@ -9,7 +9,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
-import com.vultisig.wallet.ui.screens.referral.StyledTextPart
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -40,3 +39,8 @@ fun StyledText(
         textAlign = textAlign
     )
 }
+
+data class StyledTextPart(
+    val text: String,
+    val color: Color? = null
+)

@@ -393,4 +393,6 @@
     <string name="deposit_form_pending_rewards_hint">Nagrade na čekanju</string>
     <string name="swap_error_small_insufficient_funds">Nedovoljno sredstava</string>
     <string name="referral_invite_sheet_description">Podijeli svoj jedinstveni kod preporuke i pozovi prijatelje. Oni dobivaju popust, a što više trguju, više zarađuješ – direktno dostavljeno u tvoj trezor.</string>
+    <string name="referral_create_referral">Kreiraj preporuku</string>
+    <string name="referral_save_referral_code">Spremi kod preporuke</string>
 </resources>

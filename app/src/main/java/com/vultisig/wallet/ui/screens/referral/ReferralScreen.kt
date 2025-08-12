@@ -18,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -29,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.StyledText
+import com.vultisig.wallet.ui.components.StyledTextPart
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -110,12 +110,12 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsButton(
-                    label = "Save referral code",
+                    label = stringResource(R.string.referral_save_referral_code),
                     modifier = Modifier
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Secondary,
                     state = VsButtonState.Enabled,
-                    onClick = {},
+                    onClick = model::onSaveOrEditReferral,
                 )
 
                 Row(
@@ -155,19 +155,14 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsButton(
-                    label = "Create referral",
+                    label = stringResource(R.string.referral_create_referral),
                     modifier = Modifier
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Primary,
                     state = VsButtonState.Enabled,
-                    onClick = {},
+                    onClick = model::onCreateOrEditReferral,
                 )
             }
         },
     )
 }
-
-data class StyledTextPart(
-    val text: String,
-    val color: Color? = null
-)

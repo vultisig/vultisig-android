@@ -402,4 +402,6 @@
     <string name="deposit_form_pending_rewards_hint">In afwachting van beloningen</string>
     <string name="swap_error_small_insufficient_funds">Onvoldoende financiële middelen</string>
     <string name="referral_invite_sheet_description">Deel je unieke verwijzingscode om vrienden uit te nodigen. Zij krijgen een korting en hoe meer ze handelen, hoe meer jij verdient - direct geleverd in je kluis.</string>
+    <string name="referral_create_referral">Verwijzing maken</string>
+    <string name="referral_save_referral_code">Verwijzingscode opslaan</string>
 </resources>

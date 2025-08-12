@@ -637,4 +637,7 @@
     <string name="referral_screen_title" translatable="false">Vultisig - Referral</string>
     <string name="referral_screen_code_hint" translatable="false">Enter Up to 4 characters</string>
 
+    <string name="referral_create_referral">Create referral</string>
+    <string name="referral_save_referral_code">Save referral code</string>
+
 </resources>
