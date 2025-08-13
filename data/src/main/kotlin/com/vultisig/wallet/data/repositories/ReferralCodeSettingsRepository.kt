@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import jakarta.inject.Inject
 import androidx.core.content.edit
@@ -21,7 +20,6 @@ class ReferralCodeSettingsRepository @Inject constructor(
         return encryptedSharedPreferences.getBoolean(HAS_VISIT_REFERRAL_CODE_KEY, false)
     }
 
-    @SuppressLint("CommitPrefEdits")
     override fun visitReferralCode() {
         encryptedSharedPreferences.edit { putBoolean(HAS_VISIT_REFERRAL_CODE_KEY, true) }
     }
