@@ -262,7 +262,7 @@ internal sealed class Destination(
         val vaultId: String,
     ): Destination(route = "referral/referral_external_edition/$vaultId") {
         companion object {
-            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "referral/referral_external_edition/{$ARG_VAULT_ID}"
         }
     }
 
