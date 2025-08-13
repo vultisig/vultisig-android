@@ -420,4 +420,5 @@
     <string name="referral_external_not_failed">Falha ao verificar o código de referência</string>
     <string name="referral_invite_next">Próximo</string>
     <string name="referral_code_settings_title">Código de referência</string>
+    <string name="referral_screen_code_hint">Insira até 4 caracteres</string>
 </resources>

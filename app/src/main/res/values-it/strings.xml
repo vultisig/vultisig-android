@@ -422,4 +422,5 @@
     <string name="referral_external_not_failed">Impossibile verificare il codice referral</string>
     <string name="referral_invite_next">Avanti</string>
     <string name="referral_code_settings_title">Codice referral</string>
+    <string name="referral_screen_code_hint">Inserisci fino a 4 caratteri</string>
 </resources>
