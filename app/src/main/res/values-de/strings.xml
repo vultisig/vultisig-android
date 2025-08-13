@@ -424,4 +424,5 @@
     <string name="referral_code_settings_title">Empfehlungscode</string>
     <string name="referral_screen_code_hint">Bis zu 4 Zeichen eingeben</string>
     <string name="referral_onboarding_title">Empfehlung</string>
+    <string name="referral_onboarding_get_started">Loslegen</string>
 </resources>

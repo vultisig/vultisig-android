@@ -56,7 +56,7 @@ internal fun ReferralOnboardingScreen(
             onClick = {
                 model.onClickGetStarted()
             },
-            label = "Get Started",
+            label = stringResource(R.string.referral_onboarding_get_started),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)

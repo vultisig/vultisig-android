@@ -664,4 +664,5 @@
     <string name="referral_external_not_linked">Referral code does not exist</string>
     <string name="referral_external_not_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
+    <string name="referral_onboarding_get_started">Get started</string>
 </resources>
