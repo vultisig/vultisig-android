@@ -15,7 +15,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -23,8 +22,6 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun ReferralOnboardingScreen(
     model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
-    BlockBackClick()
-
     Column(
         modifier = Modifier
             .background(Theme.colors.backgrounds.primary)
