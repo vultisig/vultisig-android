@@ -57,8 +57,8 @@ jobs:
             ~/.android/adb*
           key: avd-api-29-headless
       
-      # Run only blockchain data tests with minimal emulator
-      - name: Run blockchain data tests with emulator
+      # Run all instrumented tests with minimal emulator
+      - name: Run instrumented tests with emulator
         uses: reactivecircus/android-emulator-runner@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
@@ -76,8 +76,8 @@ jobs:
             # Build test APKs
             ./gradlew assembleDebug assembleDebugAndroidTest
             
-            # Run ONLY blockchain data tests (no UI tests)
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.vultisig.wallet.data.blockchain --stacktrace
+            # Run ALL instrumented tests
+            ./gradlew connectedDebugAndroidTest --stacktrace
       
       # Archive lint reports
       - name: Archive code analysis reports
