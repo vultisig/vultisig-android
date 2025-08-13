@@ -118,7 +118,7 @@ internal class ReferralViewModel @Inject constructor(
                 }
                 checkAndSaveReferredCode(referralCode)
             } else {
-                // Got to edit screen
+                navigator.navigate(Destination.ReferralExternalEdition(vaultId))
             }
         }
     }

@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -581,6 +582,19 @@ internal fun SetupNavGraph(
             )
         ) {
             ReferralOnboardingScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.ReferralExternalEdition.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralEditExternalScreen(
                 navController = navController,
             )
         }
