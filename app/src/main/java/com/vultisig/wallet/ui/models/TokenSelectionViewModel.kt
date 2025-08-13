@@ -8,9 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -44,9 +44,9 @@ internal class TokenSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
+    private val getChainTokens: GetChainTokensUseCase
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -113,7 +113,7 @@ internal class TokenSelectionViewModel @Inject constructor(
 
             try {
                 val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                val allChainTokens = tokenRepository.getChainTokens(chain, vault)
+                val allChainTokens = getChainTokens(chain, vault)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
                 val enabledTokenIdsLowercase = enabledTokenIds.map { tokenId ->
                     tokenId.lowercase()
