@@ -69,8 +69,12 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun loadStatus() {
         viewModelScope.launch {
-            val vaultReferral = referralCodeRepository.getReferralCreatedBy(vaultId)
-            val externalReferral = referralCodeRepository.getExternalReferralBy(vaultId)
+            state.update { it.copy(isLoading = true) }
+
+            val (vaultReferral, externalReferral) = withContext(Dispatchers.IO) {
+                referralCodeRepository.getReferralCreatedBy(vaultId) to
+                        referralCodeRepository.getExternalReferralBy(vaultId)
+            }
 
             state.update {
                 it.copy(
