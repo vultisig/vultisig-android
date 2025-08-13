@@ -402,4 +402,9 @@
     <string name="slippage_invalid_error">Slippage muss zwischen 1 und 100 liegen</string>
     <string name="slippage_format_error">Ungültiges Zahlenformat</string>
     <string name="slippage_hint">Slippage-Prozentsatz</string>
+    <string name="verify_deposit_function_overview">Funktionsübersicht</string>
+    <string name="verify_deposit_sending">Sie senden</string>
+    <string name="verify_deposit_network">Netzwerk</string>
+    <string name="verify_deposit_hold_paired">Gedrückt halten für gekoppelte Signatur</string>
+    <string name="verify_deposit_sign_transaction">Transaktion signieren</string>
 </resources>

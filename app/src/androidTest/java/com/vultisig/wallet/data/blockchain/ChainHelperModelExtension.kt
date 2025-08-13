@@ -3,11 +3,13 @@ package com.vultisig.wallet.data.blockchain
 import BlockchainSpecific
 import Coin
 import KeysignPayload
+import WasmExecuteContractPayload
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
 import java.math.BigInteger
@@ -31,12 +33,26 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
         libType = SigningLibType.valueOf(this.libType),
-        wasmExecuteContractPayload = null, // Not present in source, handled as null
+        wasmExecuteContractPayload = this.wasmExecuteContractPayload?.toWasmPayload(),
         skipBroadcast = false // Not present in source, handled as default
     )
 }
 
-fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin {
+internal fun WasmExecuteContractPayload.toWasmPayload(): vultisig.keysign.v1.WasmExecuteContractPayload {
+    return vultisig.keysign.v1.WasmExecuteContractPayload(
+        senderAddress = this.senderAddress,
+        contractAddress = this.contractAddress,
+        executeMsg = this.executeMsg,
+        coins = this.coins.map {
+            CosmosCoin(
+                denom = it.denom,
+                amount = it.amount,
+            )
+        }
+    )
+}
+
+internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin {
     return com.vultisig.wallet.data.models.Coin(
         chain = Chain.entries.find { it.raw.equals(this.chain, true) } ?: Chain.Ethereum,
         ticker = this.ticker,

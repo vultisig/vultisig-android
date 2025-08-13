@@ -158,12 +158,12 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
     if (depositTransaction != null) {
         AddressField(
             title = stringResource(R.string.verify_transaction_from_title),
-            address = depositTransaction.fromAddress,
+            address = depositTransaction.srcAddress,
         )
 
         OtherField(
             title = stringResource(R.string.deposit_screen_amount_title),
-            value = depositTransaction.srcTokenValue
+            value = depositTransaction.token.value
         )
 
         AddressField(
@@ -171,16 +171,16 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
             address = depositTransaction.memo,
         )
 
-        if (depositTransaction.nodeAddress.isNotBlank()) {
+        if (depositTransaction.dstAddress.isNotBlank()) {
             AddressField(
                 title = stringResource(R.string.verify_deposit_node_address_title),
-                address = depositTransaction.nodeAddress,
+                address = depositTransaction.dstAddress,
             )
         }
 
         OtherField(
             title = stringResource(R.string.verify_deposit_gas_title),
-            value = depositTransaction.estimatedFees,
+            value = depositTransaction.networkFeeTokenValue,
         )
     }
 }

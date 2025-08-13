@@ -219,11 +219,10 @@ private fun PreviewSendTxOverviewScreen() {
         tx = TransactionTypeUiModel.Deposit(
             depositTransactionUiModel = DepositTransactionUiModel(
                 token = ValuedToken.Empty,
-                fromAddress = "abx123abx123abx123abx123ab",
-                srcTokenValue = "1231232",
-                estimateFeesFiat = "",
+                srcAddress = "abx123abx123abx123abx123ab",
+                networkFeeFiatValue = "",
                 memo = "sdfsdfsdfsdfs",
-                nodeAddress = "abx123abx123abx123abx123ab"
+                dstAddress = "abx123abx123abx123abx123ab"
             )
         ).toUiTransactionInfo()
     )
