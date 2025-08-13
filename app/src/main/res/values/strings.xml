@@ -636,4 +636,9 @@
     <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
+    <string name="verify_deposit_function_overview">Function overview</string>
+    <string name="verify_deposit_sending" >You\'re sending</string>
+    <string name="verify_deposit_network">Network</string>
+    <string name="verify_deposit_hold_paired">Hold for paired sign</string>
+    <string name="verify_deposit_sign_transaction">Sign transaction</string>
 </resources>

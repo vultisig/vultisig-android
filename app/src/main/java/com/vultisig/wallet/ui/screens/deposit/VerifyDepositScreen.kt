@@ -99,7 +99,7 @@ internal fun VerifyDepositScreen(
         topBar = {
             if (hasToolbar) {
                 VsTopAppBar(
-                    title = "Function overview",
+                    title = stringResource(R.string.verify_deposit_function_overview),
                     onBackClick = onBackClick,
                 )
             }
@@ -132,7 +132,7 @@ internal fun VerifyDepositScreen(
                         )
                 ) {
                     Text(
-                        text = "You're sending",
+                        text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.colors.text.light,
                     )
@@ -181,7 +181,7 @@ internal fun VerifyDepositScreen(
                             )
                     ) {
                         Text(
-                            text = "Network",
+                            text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
                             color = Theme.colors.text.extraLight,
                             maxLines = 1,
@@ -239,13 +239,13 @@ internal fun VerifyDepositScreen(
 
                 if (state.hasFastSign) {
                     Text(
-                        text = "Hold for paired sign",
+                        text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
-                        label = "Sign transaction",
+                        label = stringResource(R.string.verify_deposit_sign_transaction),
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
