@@ -426,4 +426,8 @@
     <string name="referral_add_referral">\u0020на свопах - Добавить реферала</string>
     <string name="referral_edit_referred">Редактировать реферальный код</string>
     <string name="referral_edit_referral">Редактировать приглашение</string>
+    <string name="referral_external_linked">Реферальный код успешно привязан</string>
+    <string name="referral_external_not_linked">Реферальный код не существует</string>
+    <string name="referral_external_not_failed">Не удалось проверить реферальный код</string>
+    <string name="referral_invite_next">Далее</string>
 </resources>

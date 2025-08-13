@@ -417,4 +417,8 @@
     <string name="referral_add_referral">\u0020bei Swaps - Empfehlung hinzufügen</string>
     <string name="referral_edit_referred">Empfehlungscode bearbeiten</string>
     <string name="referral_edit_referral">Empfehlung bearbeiten</string>
+    <string name="referral_external_linked">Referral-Code erfolgreich verknüpft</string>
+    <string name="referral_external_not_linked">Referral-Code existiert nicht</string>
+    <string name="referral_external_not_failed">Fehler beim Überprüfen des Referral-Codes</string>
+    <string name="referral_invite_next">Weiter</string>
 </resources>

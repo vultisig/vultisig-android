@@ -417,4 +417,8 @@
     <string name="referral_add_referral">\u0020sugli swap - Aggiungi un referral</string>
     <string name="referral_edit_referred">Modifica codice di riferimento</string>
     <string name="referral_edit_referral">Modifica referral</string>
+    <string name="referral_external_linked">Codice referral collegato con successo</string>
+    <string name="referral_external_not_linked">Il codice referral non esiste</string>
+    <string name="referral_external_not_failed">Impossibile verificare il codice referral</string>
+    <string name="referral_invite_next">Avanti</string>
 </resources>

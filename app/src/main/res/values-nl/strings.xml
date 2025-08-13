@@ -426,4 +426,8 @@
     <string name="referral_add_referral">\u0020op swaps - Voeg een referral toe</string>
     <string name="referral_edit_referred">Bewerk verwijzingscode</string>
     <string name="referral_edit_referral">Bewerk verwijzing</string>
+    <string name="referral_external_linked">Referralcode succesvol gekoppeld</string>
+    <string name="referral_external_not_linked">Referralcode bestaat niet</string>
+    <string name="referral_external_not_failed">Controleren van referralcode mislukt</string>
+    <string name="referral_invite_next">Volgende</string>
 </resources>

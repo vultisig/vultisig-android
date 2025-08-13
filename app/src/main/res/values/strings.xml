@@ -660,4 +660,7 @@
     <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
     <string name="referral_edit_referred">Edit referred code</string>
     <string name="referral_edit_referral">Edit referral</string>
+    <string name="referral_external_linked">Referral code successfully linked</string>
+    <string name="referral_external_not_linked">Referral code does not exist</string>
+    <string name="referral_external_not_failed">Failed to check referral code</string>
 </resources>

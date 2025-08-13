@@ -417,4 +417,8 @@
     <string name="referral_add_referral">\u0020na zamjenama - Dodajte preporuku</string>
     <string name="referral_edit_referred">Uredi kod za preporuku</string>
     <string name="referral_edit_referral">Uredi preporuku</string>
+    <string name="referral_external_linked">Referral kod uspješno povezan</string>
+    <string name="referral_external_not_linked">Referral kod ne postoji</string>
+    <string name="referral_external_not_failed">Neuspjela provjera referral koda</string>
+    <string name="referral_invite_next">Sljedeće</string>
 </resources>
