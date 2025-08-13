@@ -411,4 +411,9 @@
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
     <string name="slippage_format_error">Ongeldig nummerformaat</string>
     <string name="slippage_hint">Slippage percentage</string>
+    <string name="verify_deposit_function_overview">Functieoverzicht</string>
+    <string name="verify_deposit_sending">Je verstuurt</string>
+    <string name="verify_deposit_network">Netwerk</string>
+    <string name="verify_deposit_hold_paired">Lang ingedrukt houden voor gekoppelde ondertekening</string>
+    <string name="verify_deposit_sign_transaction">Transactie ondertekenen</string>
 </resources>

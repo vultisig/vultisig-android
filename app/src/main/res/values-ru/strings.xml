@@ -411,4 +411,9 @@
     <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>
     <string name="slippage_format_error">Неверный формат числа</string>
     <string name="slippage_hint">Процент проскальзывания</string>
+    <string name="verify_deposit_function_overview">Обзор функций</string>
+    <string name="verify_deposit_sending">Вы отправляете</string>
+    <string name="verify_deposit_network">Сеть</string>
+    <string name="verify_deposit_hold_paired">Удерживайте для парной подписи</string>
+    <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
 </resources>

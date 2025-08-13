@@ -402,4 +402,9 @@
     <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>
     <string name="slippage_format_error">Formato numero non valido</string>
     <string name="slippage_hint">Percentuale di slippage</string>
+    <string name="verify_deposit_function_overview">Panoramica delle funzioni</string>
+    <string name="verify_deposit_sending">Stai inviando</string>
+    <string name="verify_deposit_network">Rete</string>
+    <string name="verify_deposit_hold_paired">Tieni premuto per firmare in coppia</string>
+    <string name="verify_deposit_sign_transaction">Firma la transazione</string>
 </resources>
