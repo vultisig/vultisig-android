@@ -152,8 +152,9 @@ internal class ReferralViewModel @Inject constructor(
 
     fun onPasteIconClick(content: String) {
         viewModelScope.launch {
-            referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(content)
-            val validation = validateReferralCode(content)
+            val trimmedContent = content.trim()
+            referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(trimmedContent)
+            val validation = validateReferralCode(trimmedContent)
             if (validation != null) {
                 state.update {
                     it.copy(
