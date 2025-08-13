@@ -7,32 +7,79 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      
       - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+      
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+      
       - name: git submodule update
         run: git submodule update --init --recursive
+      
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build with Gradle
+      
+      # Build and run unit tests (no emulator needed)
+      - name: Build and run unit tests
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew build test --parallel --build-cache --no-daemon
+      
+      # Enable KVM for better emulator performance
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      
+      # Cache AVD for faster builds
+      - name: AVD cache
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api-29-headless
+      
+      # Run only blockchain data tests with minimal emulator
+      - name: Run blockchain data tests with emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
+          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu off -noaudio -no-boot-anim -camera-back none -no-snapshot -no-snapstorage
+          disable-animations: true
+          disable-spellchecker: true
+          script: |
+            # Build test APKs
+            ./gradlew assembleDebug assembleDebugAndroidTest
+            
+            # Run ONLY blockchain data tests (no UI tests)
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.vultisig.wallet.data.blockchain --stacktrace
+      
+      # Archive lint reports
       - name: Archive code analysis reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,3 +88,16 @@ jobs:
           path: |
             app/build/reports/lint-results-debug.html
             app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+      
+      # Upload test results
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            app/build/reports/tests/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            data/build/reports/tests/
+            data/build/reports/androidTests/
