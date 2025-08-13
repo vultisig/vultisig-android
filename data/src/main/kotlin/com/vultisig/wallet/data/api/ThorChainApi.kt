@@ -355,12 +355,16 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun existsReferralCode(code: String): Boolean {
-        val response = httpClient
-            .get("https://thornode.ninerealms.com/thorchain/thorname/$code") {
-                header(xClientID, xClientIDValue)
-            }
-
-        return response.status.isSuccess()
+        try {
+            val response = httpClient
+                .get("$NNRLM_URL/thorname/$code") {
+                    header(xClientID, xClientIDValue)
+                }
+            return response.status.isSuccess()
+        } catch (e: Exception) {
+            Timber.tag("THORChainService").e("Error checking referral code: ${e.message}")
+            return false
+        }
     }
 
     companion object {
