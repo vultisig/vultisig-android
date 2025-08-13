@@ -10,17 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
+import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ReferralOnboardingScreen(
-    navController: NavController,
+    model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
     BlockBackClick()
 
@@ -38,12 +39,14 @@ internal fun ReferralOnboardingScreen(
             RiveAnimation(
                 modifier = Modifier
                     .align(Alignment.Center),
-                animation = R.raw.riv_securevault_summary, // Waiting for designer to provider riv
+                animation = R.raw.riv_securevault_summary, // TODO: Waiting for designer to provider riv
             )
         }
 
         VsButton(
-            onClick = { },
+            onClick = {
+                model.onClickGetStarted()
+            },
             label = "Get Started",
             modifier = Modifier
                 .fillMaxWidth()

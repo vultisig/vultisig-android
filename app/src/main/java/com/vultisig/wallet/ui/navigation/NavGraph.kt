@@ -580,9 +580,7 @@ internal fun SetupNavGraph(
                 }
             )
         ) {
-            ReferralOnboardingScreen(
-                navController = navController,
-            )
+            ReferralOnboardingScreen()
         }
     }
 }

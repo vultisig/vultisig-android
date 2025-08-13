@@ -97,7 +97,7 @@ internal class SettingsViewModel @Inject constructor(
         state.update {
             it.copy(hasToShowReferralCodeSheet = false)
         }
-        navigateTo(Destination.ReferralCode(vaultId))
+        navigateTo(Destination.ReferralOnboarding(vaultId))
     }
 
     fun onClickReferralCode() {
