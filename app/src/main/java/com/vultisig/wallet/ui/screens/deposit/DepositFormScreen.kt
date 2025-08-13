@@ -67,6 +67,7 @@ internal fun DepositFormScreen(
         assetsFieldState = model.assetsFieldState,
         lpUnitsFieldState = model.lpUnitsFieldState,
         rewardsAmountFieldState = model.rewardsAmountFieldState,
+        slippageFieldState = model.slippageFieldState,
         onAssetsLostFocus = model::validateAssets,
         onLpUnitsLostFocus = model::validateLpUnits,
         onTokenAmountLostFocus = model::validateTokenAmount,
@@ -77,6 +78,7 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
+        onSlippageLostFocus = model::validateSlippage,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -115,6 +117,7 @@ internal fun DepositFormScreen(
     assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
     rewardsAmountFieldState: TextFieldState,
+    slippageFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
     onAssetsLostFocus: () -> Unit = {},
     onLpUnitsLostFocus: () -> Unit = {},
@@ -122,6 +125,7 @@ internal fun DepositFormScreen(
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
     onCustomMemoLostFocus: () -> Unit = {},
+    onSlippageLostFocus: () -> Unit = {},
     basisPointsFieldState: TextFieldState,
     onBasisPointsLostFocus: () -> Unit = {},
     onSelectDepositOption: (DepositOption) -> Unit = {},
@@ -207,6 +211,10 @@ internal fun DepositFormScreen(
                         DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
                         DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_collect_ruji)
+                        DepositOption.MintYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
+                        DepositOption.MintYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
+                        DepositOption.RedeemYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
+                        DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
                     }
                 })
 
@@ -291,6 +299,8 @@ internal fun DepositFormScreen(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                            DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
+                            DepositOption.RedeemYRUNE,
                         )
                     ) {
                         FormCard {
@@ -328,7 +338,8 @@ internal fun DepositFormScreen(
                         (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
-                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji
+                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
+                        depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -344,6 +355,8 @@ internal fun DepositFormScreen(
                             DepositOption.Custom, DepositOption.StakeTcy,
                             DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                            DepositOption.MintYTCY, DepositOption.MintYRUNE,
+                            DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
                         )
                     ) {
                         FormTextFieldCard(
@@ -425,6 +438,18 @@ internal fun DepositFormScreen(
                             error = state.tokenAmountError,
                         )
                     }
+
+                    if (depositOption == DepositOption.RedeemYRUNE ||
+                        depositOption == DepositOption.RedeemYTCY) {
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_operator_slippage_title),
+                                hint = stringResource(R.string.slippage_hint),
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = slippageFieldState,
+                                onLostFocus = onSlippageLostFocus,
+                                error = state.slippageError,
+                            )
+                    }
                 }
             }
             UiSpacer(size = 80.dp)
@@ -445,7 +470,6 @@ internal fun DepositFormScreen(
                 .padding(all = 16.dp),
         )
     }
-
 }
 
 @Preview
@@ -466,5 +490,6 @@ internal fun DepositFormScreenPreview() {
         memoFieldState = TextFieldState(),
         thorAddress = TextFieldState(),
         rewardsAmountFieldState = TextFieldState(),
+        slippageFieldState = TextFieldState(),
     )
 }

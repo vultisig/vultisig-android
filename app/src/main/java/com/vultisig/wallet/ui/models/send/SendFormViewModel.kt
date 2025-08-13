@@ -259,6 +259,20 @@ internal class SendFormViewModel @Inject constructor(
         loadVaultName()
         loadGasSettings()
         collectDstAddress()
+        collectAddress()
+    }
+
+    private fun collectAddress() {
+        viewModelScope.launch {
+            addressFieldState.textAsFlow()
+                .combine(selectedToken.filterNotNull()) { address, token ->
+                    val isAddressValid =
+                        chainAccountAddressRepository.isValid(token.chain, address.toString())
+                    if (isAddressValid) {
+                        expandSection(SendSections.Amount)
+                    }
+                }.collect()
+        }
     }
 
     private fun loadGasSettings() {
@@ -374,6 +388,7 @@ internal class SendFormViewModel @Inject constructor(
 
             if (newToken != null) {
                 selectToken(newToken)
+                expandSection(SendSections.Address)
             }
         }
     }
