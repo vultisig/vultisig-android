@@ -393,6 +393,15 @@
     <string name="deposit_form_pending_rewards_hint">Premi in Sospeso</string>
     <string name="swap_error_small_insufficient_funds">Fondi insufficienti</string>
     <string name="deposit_error_max_amount">Solo fino al 100 % può essere svincolato</string>
+    <string name="deposit_option_receive_yrune">Ricevi yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Ricevi yTCY</string>
+    <string name="deposit_option_sell_yrune">Vendi yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Vendi yTCY</string>
+    <string name="deposit_form_operator_slippage_title">Slippage</string>
+    <string name="slippage_required_error">Lo slippage è obbligatorio</string>
+    <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>
+    <string name="slippage_format_error">Formato numero non valido</string>
+    <string name="slippage_hint">Percentuale di slippage</string>
     <string name="deposit_error_destination_address">L\'indirizzo di destinazione non deve essere vuoto</string>
     <string name="deposit_error_invalid_destination_address">L\'indirizzo di destinazione non è valido</string>
 </resources>

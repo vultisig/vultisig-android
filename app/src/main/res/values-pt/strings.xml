@@ -391,6 +391,15 @@
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendentes</string>
     <string name="swap_error_small_insufficient_funds">Fundos insuficientes</string>
     <string name="deposit_error_max_amount">Apenas até 100 % podem ser desbloqueados</string>
+    <string name="deposit_option_receive_yrune">Receber yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Receber yTCY</string>
+    <string name="deposit_option_sell_yrune">Vender yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Vender yTCY</string>
+    <string name="deposit_form_operator_slippage_title">Derrapagem</string>
+    <string name="slippage_required_error">A derrapagem é obrigatória</string>
+    <string name="slippage_invalid_error">A derrapagem deve estar entre 1 e 100</string>
+    <string name="slippage_format_error">Formato de número inválido</string>
+    <string name="slippage_hint">Percentagem de slippage</string>
     <string name="deposit_error_destination_address">O endereço de destino não deve estar vazio</string>
     <string name="deposit_error_invalid_destination_address">O endereço de destino é inválido</string>
 </resources>
