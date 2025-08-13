@@ -120,13 +120,17 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     private suspend fun checkAndSaveReferredCode(referralCode: String) {
+        state.update { it.copy(isLoading = true) }
+
         runCatching {
             withContext(Dispatchers.IO) {
                 thorChainApi.existsReferralCode(referralCode)
             }
         }.onSuccess { exists ->
             val (message, innerState) = if (exists) {
-                referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                withContext(Dispatchers.IO) {
+                    referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                }
                 "Referral code successfully linked" to VsTextInputFieldInnerState.Success
             } else {
                 "Referral code does not exist" to VsTextInputFieldInnerState.Error
@@ -137,14 +141,16 @@ internal class ReferralViewModel @Inject constructor(
                 it.copy(
                     referralMessage = message,
                     referralMessageState = innerState,
-                    isSaveEnabled = isSavedEnabled
+                    isSaveEnabled = isSavedEnabled,
+                    isLoading = false,
                 )
             }
         }.onFailure {
             state.update {
                 it.copy(
                     referralMessage = "Failed to check referral code",
-                    referralMessageState = VsTextInputFieldInnerState.Error
+                    referralMessageState = VsTextInputFieldInnerState.Error,
+                    isLoading = false,
                 )
             }
         }
