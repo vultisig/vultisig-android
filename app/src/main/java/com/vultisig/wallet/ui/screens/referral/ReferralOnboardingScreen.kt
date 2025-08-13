@@ -11,15 +11,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ReferralOnboardingScreen(
+    navController: NavController,
     model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
     Column(
@@ -27,6 +30,14 @@ internal fun ReferralOnboardingScreen(
             .background(Theme.colors.backgrounds.primary)
             .fillMaxSize(),
     ) {
+
+        VsTopAppBar(
+            title = "Referral",
+            onBackClick = {
+                navController.popBackStack()
+            },
+        )
+
         Box(
             modifier = Modifier
                 .background(Theme.colors.backgrounds.primary)
