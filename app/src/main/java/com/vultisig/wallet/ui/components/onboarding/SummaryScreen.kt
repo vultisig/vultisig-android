@@ -49,6 +49,7 @@ internal fun SummaryScreen(
                 onInit = onAnimationInit
             )
         }
+
         VsCheckField(
             modifier = Modifier.padding(20.dp)
                 .testTag("SummaryScreen.agree"),
@@ -56,6 +57,7 @@ internal fun SummaryScreen(
             isChecked = checkState,
             onCheckedChange = onCheckChange,
         )
+
         VsButton(
             onClick = onButtonClicked,
             label = stringResource(id = buttonText),
@@ -65,6 +67,7 @@ internal fun SummaryScreen(
                 .padding(horizontal = 16.dp)
                 .testTag("SummaryScreen.continue")
         )
+
         UiSpacer(32.dp)
     }
 }

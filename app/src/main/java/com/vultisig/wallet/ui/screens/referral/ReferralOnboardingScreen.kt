@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -18,7 +19,9 @@ import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ReferralOnboardingScreen() {
+internal fun ReferralOnboardingScreen(
+    navController: NavController,
+) {
     BlockBackClick()
 
     Column(

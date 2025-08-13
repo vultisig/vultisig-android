@@ -234,6 +234,14 @@ internal sealed class Destination(
         }
     }
 
+    data class ReferralOnboardingCode(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_onboarding/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_onboarding/{$ARG_VAULT_ID}"
+        }
+    }
+
     data class ReferralCreation(
         val vaultId: String,
     ): Destination(route = "referral/referral_creation/$vaultId") {
