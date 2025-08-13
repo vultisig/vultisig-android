@@ -102,6 +102,14 @@ internal class TokenRepositoryImpl @Inject constructor(
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
                             }
+                        } else if (denom.startsWith("x/nami-index-nav", true)) {
+                            // Unfortunately, there is no "yrune" or "tcy" in the denom,
+                            // so the only option is to map it manually with actual contract address
+                            symbol = when {
+                                denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
+                                denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
+                                else -> denom
+                            }
                         } else if (denom.startsWith("x/",true)) {
                             val parts = denom.split("/")
                             if (parts.size >= 2) {
@@ -291,5 +299,8 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
+
+        private const val YRUNE_CONTRACT = "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
+        private const val YTCY_CONTRACT = "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
     }
 }

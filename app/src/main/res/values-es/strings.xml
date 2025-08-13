@@ -393,4 +393,18 @@
     <string name="deposit_form_pending_rewards_hint">Recompensas Pendientes</string>
     <string name="swap_error_small_insufficient_funds">Fondos insuficientes</string>
     <string name="deposit_error_max_amount">Solo se puede desbloquear hasta el 100 %</string>
+    <string name="deposit_option_receive_yrune">Recibir yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Recibir yTCY</string>
+    <string name="deposit_option_sell_yrune">Vender yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Vender yTCY</string>
+    <string name="deposit_form_operator_slippage_title">Deslizamiento</string>
+    <string name="slippage_required_error">Se requiere deslizamiento</string>
+    <string name="slippage_invalid_error">El deslizamiento debe estar entre 1 y 100</string>
+    <string name="slippage_format_error">Formato de número no válido</string>
+    <string name="slippage_hint">Porcentaje de deslizamiento</string>
+    <string name="verify_deposit_function_overview">Descripción general de funciones</string>
+    <string name="verify_deposit_sending">Estás enviando</string>
+    <string name="verify_deposit_network">Red</string>
+    <string name="verify_deposit_hold_paired">Mantener pulsado para señal emparejada</string>
+    <string name="verify_deposit_sign_transaction">Firmar transacción</string>
 </resources>

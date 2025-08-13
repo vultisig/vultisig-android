@@ -402,4 +402,18 @@
     <string name="deposit_form_pending_rewards_hint">Ожидаемые вознаграждения</string>
     <string name="swap_error_small_insufficient_funds">Недостаточно средств</string>
     <string name="deposit_error_max_amount">Вывести из стейкинга можно не более 100 %</string>
+    <string name="deposit_option_receive_yrune">Получить yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Получить yTCY</string>
+    <string name="deposit_option_sell_yrune">Продать yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Продать yTCY</string>
+    <string name="deposit_form_operator_slippage_title">Проскальзывание</string>
+    <string name="slippage_required_error">Проскальзывание обязательно</string>
+    <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>
+    <string name="slippage_format_error">Неверный формат числа</string>
+    <string name="slippage_hint">Процент проскальзывания</string>
+    <string name="verify_deposit_function_overview">Обзор функций</string>
+    <string name="verify_deposit_sending">Вы отправляете</string>
+    <string name="verify_deposit_network">Сеть</string>
+    <string name="verify_deposit_hold_paired">Удерживайте для парной подписи</string>
+    <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
 </resources>

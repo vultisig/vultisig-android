@@ -402,4 +402,18 @@
     <string name="deposit_form_pending_rewards_hint">In afwachting van beloningen</string>
     <string name="swap_error_small_insufficient_funds">Onvoldoende financiële middelen</string>
     <string name="deposit_error_max_amount">Er kan maximaal 100 % worden unstaked</string>
+    <string name="deposit_option_receive_yrune">yRUNE ontvangen</string>
+    <string name="deposit_option_receive_ytcy">yTCY ontvangen</string>
+    <string name="deposit_option_sell_yrune">yRUNE verkopen</string>
+    <string name="deposit_option_sell_ytcy">yTCY verkopen</string>
+    <string name="deposit_form_operator_slippage_title">Slippage</string>
+    <string name="slippage_required_error">Slippage is vereist</string>
+    <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
+    <string name="slippage_format_error">Ongeldig nummerformaat</string>
+    <string name="slippage_hint">Slippage percentage</string>
+    <string name="verify_deposit_function_overview">Functieoverzicht</string>
+    <string name="verify_deposit_sending">Je verstuurt</string>
+    <string name="verify_deposit_network">Netwerk</string>
+    <string name="verify_deposit_hold_paired">Lang ingedrukt houden voor gekoppelde ondertekening</string>
+    <string name="verify_deposit_sign_transaction">Transactie ondertekenen</string>
 </resources>

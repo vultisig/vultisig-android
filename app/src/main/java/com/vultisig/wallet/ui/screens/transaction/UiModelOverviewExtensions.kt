@@ -20,11 +20,11 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
             UiTransactionInfo(
                 type = UiTransactionInfoType.Deposit,
                 token = this.depositTransactionUiModel.token,
-                from = this.depositTransactionUiModel.fromAddress,
-                to = this.depositTransactionUiModel.nodeAddress,
+                from = this.depositTransactionUiModel.srcAddress,
+                to = this.depositTransactionUiModel.dstAddress,
                 memo = this.depositTransactionUiModel.memo,
-                networkFeeFiatValue = this.depositTransactionUiModel.estimateFeesFiat,
-                networkFeeTokenValue = this.depositTransactionUiModel.estimatedFees,
+                networkFeeFiatValue = this.depositTransactionUiModel.networkFeeFiatValue,
+                networkFeeTokenValue = this.depositTransactionUiModel.networkFeeTokenValue,
             )
         }
         is TransactionTypeUiModel.SignMessage -> {

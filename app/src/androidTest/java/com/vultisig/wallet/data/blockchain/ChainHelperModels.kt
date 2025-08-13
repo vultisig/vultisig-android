@@ -29,7 +29,29 @@ data class KeysignPayload(
     val libType: String,
     @SerialName("memo")
     val memo: String? = null,
+    @SerialName("wasm_execute_contract_payload")
+    val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
 )
+
+@Serializable
+data class WasmExecuteContractPayload(
+    @SerialName("sender_address")
+    val senderAddress: String,
+    @SerialName("contract_address")
+    val contractAddress: String,
+    @SerialName("execute_msg")
+    val executeMsg: String,
+    @SerialName("coins")
+    val coins: List<CosmosCoin>
+) {
+    @Serializable
+    data class CosmosCoin(
+        @SerialName("denom")
+        val denom: String,
+        @SerialName("amount")
+        val amount: String,
+    )
+}
 
 @Serializable
 data class Coin(
