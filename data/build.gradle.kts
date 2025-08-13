@@ -115,12 +115,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     
-    // androidTest
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.test.core.ktx)
-    androidTestImplementation("androidx.test:runner:1.6.2")
-    androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation(kotlin("test"))
     androidTestImplementation(libs.wallet.core)
 }
