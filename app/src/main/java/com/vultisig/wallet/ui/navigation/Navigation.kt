@@ -626,16 +626,4 @@ internal sealed class Route {
         val chainId: ChainId,
         val excludeVaultId: VaultId,
     )
-
-    /* @Serializable
-    data object ReferralOnboarding
-
-    @Serializable
-    data object Referral
-
-    @Serializable
-    data object ReferralCreation
-
-    @Serializable
-    data object ReferralEdit */
 }
