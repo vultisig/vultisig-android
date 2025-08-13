@@ -421,4 +421,5 @@
     <string name="referral_external_not_linked">El código de referido no existe</string>
     <string name="referral_external_not_failed">Error al verificar el código de referido</string>
     <string name="referral_invite_next">Siguiente</string>
+    <string name="referral_code_settings_title">Código de referido</string>
 </resources>

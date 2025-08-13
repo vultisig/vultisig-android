@@ -419,4 +419,5 @@
     <string name="referral_external_not_linked">O código de referência não existe</string>
     <string name="referral_external_not_failed">Falha ao verificar o código de referência</string>
     <string name="referral_invite_next">Próximo</string>
+    <string name="referral_code_settings_title">Código de referência</string>
 </resources>

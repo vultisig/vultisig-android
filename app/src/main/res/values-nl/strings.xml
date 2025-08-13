@@ -430,4 +430,5 @@
     <string name="referral_external_not_linked">Referralcode bestaat niet</string>
     <string name="referral_external_not_failed">Controleren van referralcode mislukt</string>
     <string name="referral_invite_next">Volgende</string>
+    <string name="referral_code_settings_title">Referralcode</string>
 </resources>

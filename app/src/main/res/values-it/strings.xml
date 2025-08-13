@@ -421,4 +421,5 @@
     <string name="referral_external_not_linked">Il codice referral non esiste</string>
     <string name="referral_external_not_failed">Impossibile verificare il codice referral</string>
     <string name="referral_invite_next">Avanti</string>
+    <string name="referral_code_settings_title">Codice referral</string>
 </resources>
