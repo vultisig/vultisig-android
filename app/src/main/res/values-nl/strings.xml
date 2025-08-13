@@ -432,4 +432,5 @@
     <string name="referral_invite_next">Volgende</string>
     <string name="referral_code_settings_title">Referralcode</string>
     <string name="referral_screen_code_hint">Voer maximaal 4 tekens in</string>
+    <string name="referral_onboarding_title">Verwijzing</string>
 </resources>

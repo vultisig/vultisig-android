@@ -423,4 +423,5 @@
     <string name="referral_invite_next">Siguiente</string>
     <string name="referral_code_settings_title">Código de referido</string>
     <string name="referral_screen_code_hint">Introduce hasta 4 caracteres</string>
+    <string name="referral_onboarding_title">Referido</string>
 </resources>
