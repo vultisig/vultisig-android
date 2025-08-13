@@ -78,6 +78,7 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
+        affiliateFieldState =model.affiliateFieldState,
         onSlippageLostFocus = model::validateSlippage,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
@@ -215,8 +216,8 @@ internal fun DepositFormScreen(
                         DepositOption.MintYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
                         DepositOption.RedeemYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
                         DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
-                        DepositOption.Add -> stringResource(R.string.deposit_option_add_cacao_pool)
-                        DepositOption.Remove -> stringResource(R.string.deposit_option_remove_cacao_pool)
+                        DepositOption.AddCacaoPool -> stringResource(R.string.deposit_option_add_cacao_pool)
+                        DepositOption.RemoveCacaoPool -> stringResource(R.string.deposit_option_remove_cacao_pool)
                     }
                 })
 
@@ -338,7 +339,7 @@ internal fun DepositFormScreen(
                     if (
                         isTcyOption ||
                         (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
-                        (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
+                        (depositOption == DepositOption.Custom || depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
                         depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
                         depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY

@@ -404,4 +404,5 @@
     <string name="slippage_hint">Slippage-Prozentsatz</string>
     <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
+    <string name="cacaopool_only_cacao_supported">Für Poolvorgänge wird nur das CACAO-Token unterstützt</string>
 </resources>

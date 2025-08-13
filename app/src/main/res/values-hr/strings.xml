@@ -404,4 +404,5 @@
     <string name="slippage_hint">Postotak proklizavanja</string>
     <string name="deposit_option_add_cacao_pool">Dodaj u CACAO bazen</string>
     <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO bazena</string>
+    <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
 </resources>

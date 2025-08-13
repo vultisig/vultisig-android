@@ -75,7 +75,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 internal enum class DepositOption {
-    Add,
+    AddCacaoPool,
     Bond,
     Unbond,
     Leave,
@@ -85,7 +85,7 @@ internal enum class DepositOption {
     TransferIbc,
     Switch,
     Merge,
-    Remove,
+    RemoveCacaoPool,
     UnMerge,
     StakeTcy,
     UnstakeTcy,
@@ -216,8 +216,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Unbond,
                 DepositOption.Leave,
                 DepositOption.Custom,
-                DepositOption.Add,
-                DepositOption.Remove,
+                DepositOption.AddCacaoPool,
+                DepositOption.RemoveCacaoPool,
             )
 
             Chain.Kujira, Chain.Osmosis -> listOf(
@@ -652,7 +652,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 val transaction = when (depositOption) {
-                    DepositOption.Add -> createAddTransaction()
+                    DepositOption.AddCacaoPool -> createAddCacaoPoolTransaction()
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
                     DepositOption.Leave -> createLeaveTransaction()
@@ -681,7 +681,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.MintYRUNE -> createReceiveYToken(DepositOption.MintYRUNE)
                     DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
                     DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
-                    DepositOption.Remove -> createRemoveTransaction()
+                    DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -1128,11 +1128,24 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    private suspend fun createAddTransaction(): DepositTransaction {
+    private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
         val chain = chain
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
+
+        val address = accountsRepository.loadAddress(
+            vaultId,
+            chain
+        )
+            .first()
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        if (selectedToken.ticker != "CACAO") {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.cacaopool_only_cacao_supported)
+            )
+        }
 
         val tokenAmount = tokenAmountFieldState.text
             .toString()
@@ -1143,15 +1156,6 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
         }
-
-        val address = accountsRepository.loadAddress(
-            vaultId,
-            chain
-        )
-            .first()
-
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-
         val tokenAmountInt =
             tokenAmount
                 .movePointRight(selectedToken.decimal)
@@ -1203,7 +1207,7 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    private suspend fun createRemoveTransaction(): DepositTransaction {
+    private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
 
         val chain = chain
             ?: throw InvalidTransactionDataException(
@@ -1229,6 +1233,8 @@ internal class DepositFormViewModel @Inject constructor(
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
+
+
 
         val affiliate = affiliateFieldState.text.toString().takeIf { it.isNotBlank() }
         if (affiliate != null) {
