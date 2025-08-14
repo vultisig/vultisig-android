@@ -41,6 +41,7 @@ class CosmosHelper(
         }
 
         const val ATOM_DENOM = "uatom"
+        const val USDC_DENOM = "uusdc"
     }
 
     fun getSwapPreSignedInputData(

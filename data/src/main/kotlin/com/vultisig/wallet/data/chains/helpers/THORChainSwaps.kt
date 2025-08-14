@@ -56,16 +56,29 @@ class THORChainSwaps(
             Chain.Ripple -> {
                 return RippleHelper.getPreSignedInputData(keysignPayload)
             }
-            Chain.GaiaChain -> {
+            Chain.GaiaChain,Chain.Noble -> {
                 val helper = CosmosHelper(
                     coinType = CoinType.COSMOS,
-                    denom = CosmosHelper.ATOM_DENOM,
+                    denom = when (swapPayload.fromCoin.chain) {
+                        Chain.Noble -> CosmosHelper.USDC_DENOM
+                        else -> CosmosHelper.ATOM_DENOM
+                    },
                 )
                 return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload
                 )
             }
+            Chain.Tron -> {
+                val helper = TronHelper(
+                    coinType = CoinType.TRON,
+                    vaultHexPublicKey = vaultHexPublicKey,
+                    vaultHexChainCode = vaultHexChainCode
+                )
 
+                return helper.getPreSignedInputData(
+                    keysignPayload = keysignPayload,
+                )
+            }
             else -> {
                 throw Exception("Unsupported chain")
             }
