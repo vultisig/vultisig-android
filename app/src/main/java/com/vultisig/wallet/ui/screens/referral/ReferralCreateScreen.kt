@@ -219,6 +219,22 @@ private fun ReferralCreateScreen(
                     initialColor = Theme.colors.backgrounds.primary,
                     endColor = Theme.colors.backgrounds.primary,
                 )
+
+                UiSpacer(16.dp)
+
+                EstimatedNetworkFee(
+                    title = "Registration Fees",
+                    tokenGas = "1231",
+                    fiatGas = "12312"
+                )
+
+                UiSpacer(16.dp)
+
+                EstimatedNetworkFee(
+                    title = "Cost",
+                    tokenGas = "1231",
+                    fiatGas = "12312"
+                )
             }
         },
         bottomBar = {
@@ -316,6 +332,42 @@ fun CounterYearExpiration(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Increase"
+            )
+        }
+    }
+}
+
+// TODO: Abstract away for other places
+@Composable
+internal fun EstimatedNetworkFee(
+    title: String,
+    tokenGas: String,
+    fiatGas: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.extraLight,
+        )
+
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier
+                .weight(1f),
+        ) {
+            Text(
+                text = tokenGas,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.colors.text.primary,
+            )
+
+            Text(
+                text = fiatGas,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.colors.text.extraLight,
             )
         }
     }
