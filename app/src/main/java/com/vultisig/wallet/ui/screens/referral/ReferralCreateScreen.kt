@@ -3,7 +3,10 @@ package com.vultisig.wallet.ui.screens.referral
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -23,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -89,6 +94,7 @@ private fun ReferralCreateScreen(
                     modifier = Modifier
                         .padding(start = 62.dp, end = 8.dp)
                         .offset(y = statusBarHeightDp)
+                        .wrapContentSize()
                         .clickable(onClick = {})
                 )
             }
@@ -152,6 +158,8 @@ private fun ReferralCreateScreen(
                     )
 
                     UiSpacer(1f)
+
+                    SearchReferralTag()
                 }
 
                 UiSpacer(16.dp)
@@ -181,5 +189,32 @@ private fun ReferralCreateScreen(
             )
         }
     )
+}
+
+@Composable
+private fun SearchReferralTag(
+    text: String = "Available",
+    color: Color = Theme.colors.alerts.success,
+){
+    Box(
+        modifier = Modifier
+            .background(
+                color = Theme.colors.backgrounds.secondary,
+                shape = RoundedCornerShape(50)
+            )
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(50)
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Available",
+            color = Theme.colors.alerts.success,
+            style = Theme.brockmann.supplementary.footnote,
+        )
+    }
 }
 
