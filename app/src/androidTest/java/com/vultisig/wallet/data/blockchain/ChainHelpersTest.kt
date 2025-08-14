@@ -201,7 +201,7 @@ class ChainHelpersTest {
     @Test
     fun sendMayaChainTest() {
         val transactions: List<TransactionData> = loadTransactionData(MAYACHAIN_JSON_FILE)
-        MayaChainHelper
+
         val helper = ThorChainHelper.maya(HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
 
         transactions.forEach { transaction ->
@@ -257,7 +257,7 @@ class ChainHelpersTest {
                 val approveImageHashes = swapHelper.getPreSignedApproveImageHash(
                     it, payload
                 )
-                nonceIncrement ++
+                nonceIncrement.add(BigInteger.ONE)
                 preImageHashes = approveImageHashes
             }
             swapPayload.let {

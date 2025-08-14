@@ -205,13 +205,13 @@ fun BlockchainSpecific.toBlockChainSpecific(
             BlockChainSpecific.Tron(
                 timestamp = trc20Specific.timestamp.toULong(),
                 expiration = trc20Specific.expiration.toULong(),
-                blockHeaderTimestamp = tronSpecific.blockHeaderTimestamp.toULong(),
-                blockHeaderNumber = tronSpecific.blockHeaderNumber.toULong(),
-                blockHeaderVersion = tronSpecific.blockHeaderVersion.toULong(),
-                blockHeaderTxTrieRoot = tronSpecific.blockHeaderTxTrieRoot,
-                blockHeaderParentHash = tronSpecific.blockHeaderParentHash,
-                blockHeaderWitnessAddress = tronSpecific.blockHeaderWitnessAddress,
-                gasFeeEstimation = tronSpecific.gasFeeEstimation.toULong()
+                blockHeaderTimestamp = trc20Specific.blockHeaderTimestamp.toULong(),
+                blockHeaderNumber = trc20Specific.blockHeaderNumber.toULong(),
+                blockHeaderVersion = trc20Specific.blockHeaderVersion.toULong(),
+                blockHeaderTxTrieRoot = trc20Specific.blockHeaderTxTrieRoot,
+                blockHeaderParentHash = trc20Specific.blockHeaderParentHash,
+                blockHeaderWitnessAddress = trc20Specific.blockHeaderWitnessAddress,
+                gasFeeEstimation = trc20Specific.gasFeeEstimation.toULong()
             )
         }
 
@@ -266,7 +266,7 @@ fun OneinchTransaction.toInternalOneInchTransaction(): OneInchSwapTxJson {
     return OneInchSwapTxJson(
         from = this.from,
         to = this.to,
-        gas = this.gas.toLong(),
+        gas = this.gas,
         data = this.data,
         value = this.value,
         gasPrice = this.gasPrice,

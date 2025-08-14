@@ -337,7 +337,7 @@ data class OneinchTransaction(
     @SerialName("from")
     val from: String,
     @SerialName("gas")
-    val gas: Int,
+    val gas: Long,
     @SerialName("gas_price")
     val gasPrice: String,
     @SerialName("to")
