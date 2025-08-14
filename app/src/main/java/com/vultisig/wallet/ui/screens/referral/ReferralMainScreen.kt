@@ -137,7 +137,7 @@ private fun ReferralScreen(
                     trailingIcon = R.drawable.clipboard_paste,
                     onTrailingIconClick = {
                         val content = clipboardData.value
-                        if (content.isNullOrEmpty()) return@VsTextInputField
+                        if (content.isNullOrEmpty() || !state.isSaveEnabled) return@VsTextInputField
                         onPasteIcon(content)
                     },
                     footNote = state.referralMessage,
