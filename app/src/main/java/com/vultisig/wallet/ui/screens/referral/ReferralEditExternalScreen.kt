@@ -11,6 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -25,16 +27,19 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.EditExternalReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
 internal fun ReferralEditExternalScreen(
     navController: NavController,
     model: EditExternalReferralViewModel = hiltViewModel(),
 ) {
+    val state by model.state.collectAsState()
+    val clipboardData = VsClipboardService.getClipboardData()
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -66,13 +71,15 @@ internal fun ReferralEditExternalScreen(
 
                 VsTextInputField(
                     textFieldState = model.referralCodeTextFieldState,
-                    innerState = VsTextInputFieldInnerState.Default,
+                    innerState = state.referralMessageState,
                     hint = stringResource(R.string.referral_screen_code_hint),
                     trailingIcon = R.drawable.clipboard_paste,
                     onTrailingIconClick = {
-
+                        val content = clipboardData.value
+                        if (content.isNullOrEmpty()) return@VsTextInputField
+                        model.onPasteIconClick(content)
                     },
-                    footNote = "",
+                    footNote = state.referralMessage,
                     focusRequester = null,
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Text,
