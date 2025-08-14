@@ -191,6 +191,30 @@ private fun ReferralCreateScreen(
 
                 UiSpacer(16.dp)
 
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        color = Theme.colors.text.extraLight,
+                        style = Theme.brockmann.body.s.medium,
+                        text = "Expiration date",
+                        textAlign = TextAlign.Start,
+                    )
+
+                    UiSpacer(1f)
+
+                    Text(
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.body.s.medium,
+                        text = "21 June 2025",
+                        textAlign = TextAlign.Start,
+                    )
+                }
+
+                UiSpacer(16.dp)
+
                 UiGradientDivider(
                     initialColor = Theme.colors.backgrounds.primary,
                     endColor = Theme.colors.backgrounds.primary,
@@ -253,7 +277,9 @@ fun CounterYearExpiration(
                 containerColor = Theme.colors.backgrounds.secondary,
                 contentColor = Theme.colors.text.primary
             ),
-            modifier = Modifier.weight(1f).height(height = 60.dp).border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+            modifier = Modifier.weight(1f)
+                .height(height = 60.dp)
+                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -282,7 +308,10 @@ fun CounterYearExpiration(
                 containerColor = Theme.colors.backgrounds.secondary,
                 contentColor = Theme.colors.text.primary
             ),
-            modifier = Modifier.weight(1f).height(height = 60.dp).border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+            modifier = Modifier
+                .weight(1f)
+                .height(height = 60.dp)
+                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
