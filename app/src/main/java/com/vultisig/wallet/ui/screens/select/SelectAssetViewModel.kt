@@ -16,9 +16,9 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -41,7 +41,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 internal data class SelectAssetUiModel(
     val selectedChain: Chain = Chain.ThorChain,
@@ -68,7 +67,7 @@ internal class SelectAssetViewModel @Inject constructor(
     private val fiatValueToString: FiatValueToStringMapper,
     private val accountRepository: AccountsRepository,
     private val requestResultRepository: RequestResultRepository,
-    private val tokenRepository: TokenRepository,
+    private val getChainTokens: GetChainTokensUseCase,
     private val vaultRepository: VaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
@@ -135,7 +134,7 @@ internal class SelectAssetViewModel @Inject constructor(
         if (filter == Route.SelectNetwork.Filters.SwapAvailable) {
             viewModelScope.launch {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
-                tokenRepository.getChainTokens(state.value.selectedChain, vault)
+                getChainTokens(state.value.selectedChain, vault)
                     .catch { Timber.e(it) }
                     .map { coinList ->
                         coinList
