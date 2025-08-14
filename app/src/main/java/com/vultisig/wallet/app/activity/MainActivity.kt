@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +25,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
+import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
@@ -97,10 +99,15 @@ class MainActivity : AppCompatActivity() {
                         .background(color = Colors.Default.oxfordBlue800)
                         .safeDrawingPadding()
                 ) {
-                    SetupNavGraph(
-                        navController = navController,
-                        startDestination = screen,
-                    )
+
+                    Column{
+                        OfflineBanner(mainViewModel.isOffline.value)
+
+                        SetupNavGraph(
+                            navController = navController,
+                            startDestination = screen,
+                        )
+                    }
 
                     BiometryAuthScreen()
 

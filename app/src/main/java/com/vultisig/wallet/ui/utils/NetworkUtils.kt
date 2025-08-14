@@ -2,7 +2,15 @@ package com.vultisig.wallet.ui.utils
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 
 object NetworkUtils {
 
@@ -16,7 +24,48 @@ object NetworkUtils {
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
+
+    fun Context.observeConnectivityAsFlow(): Flow<Boolean> = callbackFlow {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                trySend(true)
+            }
+
+            override fun onLost(network: Network) {
+                trySend(false)
+            }
+
+            override fun onUnavailable() {
+                trySend(false)
+            }
+        }
+
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .build()
+
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+
+        val currentNetwork = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(currentNetwork)
+        val isConnected =
+            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        trySend(isConnected)
+
+        awaitClose {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
+    }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.IO)
 }
+
+
 
 
 
