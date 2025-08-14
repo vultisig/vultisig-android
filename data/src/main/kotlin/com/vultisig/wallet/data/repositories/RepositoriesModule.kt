@@ -84,6 +84,12 @@ internal interface RepositoriesModule {
         impl: AppLocaleRepositoryImpl,
     ): AppLocaleRepository
 
+   @Binds
+   @Singleton
+   fun bindReferralCodeRepository(
+       impl: ReferralCodeSettingsRepository
+   ): ReferralCodeSettingsRepositoryContract
+
     @Binds
     @Singleton
     fun bindAddressBookEntryRepository(

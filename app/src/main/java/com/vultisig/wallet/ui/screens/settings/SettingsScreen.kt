@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
@@ -97,7 +98,6 @@ fun SettingsScreen(navController: NavHostController) {
                 viewModel.navigateTo(Destination.LanguageSetting)
             }
 
-
             AppSettingItem(
                 R.drawable.settings_dollar,
                 stringResource(R.string.settings_screen_currency),
@@ -111,6 +111,15 @@ fun SettingsScreen(navController: NavHostController) {
                 title = stringResource(R.string.address_book_settings_title),
             ) {
                 viewModel.navigateTo(Destination.AddressBook())
+            }
+
+            if (REFERRAL_FEATURE_FLAG) {
+                AppSettingItem(
+                    logo = R.drawable.handshake,
+                    title = stringResource(R.string.referral_code_settings_title),
+                ) {
+                    viewModel.onClickReferralCode()
+                }
             }
 
             AppSettingItem(
@@ -181,14 +190,12 @@ fun SettingsScreen(navController: NavHostController) {
                 textAlign = TextAlign.Start
             )
 
-
             AppSettingItem(
                 R.drawable.shield_check,
                 stringResource(R.string.settings_screen_privacy_policy)
             ) {
                 uriHandler.openUri(VsAuxiliaryLinks.PRIVACY)
             }
-
 
             AppSettingItem(
                 R.drawable.note,
@@ -230,8 +237,14 @@ fun SettingsScreen(navController: NavHostController) {
                     .padding(top = 12.dp, bottom = 24.dp)
                     .clickable(onClick = viewModel::clickSecret)
             )
-        }
 
+            if (state.hasToShowReferralCodeSheet && REFERRAL_FEATURE_FLAG) {
+                ReferralCodeBottomSheet(
+                    onContinue = { viewModel.onContinueReferralBottomSheet() },
+                    onDismissRequest = { viewModel.onDismissReferralBottomSheet() },
+                )
+             }
+        }
     }
 }
 
@@ -298,3 +311,5 @@ private fun AppSettingItem(
         }
     }
 }
+
+private const val REFERRAL_FEATURE_FLAG = false
