@@ -5,20 +5,42 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MoreInfoBox
+import com.vultisig.wallet.ui.components.UiGradientDivider
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -27,12 +49,13 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun ReferralCreateScreen(
     navController: NavController,
     model: CreateReferralViewModel = hiltViewModel(),
-){
+) {
     ReferralCreateScreen(
         onBackPressed = navController::popBackStack,
         onSearchClick = {},
-        onAddClick = {},
-        onSubtractClick = {}
+        onAddClick = model::onAddExpirationYear,
+        onSubtractClick = model::onSubtractExpirationYear,
+        onCreateReferral = model::onCreateReferralCode,
     )
 }
 
@@ -42,6 +65,7 @@ private fun ReferralCreateScreen(
     onSearchClick: () -> Unit,
     onAddClick: () -> Unit,
     onSubtractClick: () -> Unit,
+    onCreateReferral: () -> Unit,
 ) {
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
@@ -55,24 +79,107 @@ private fun ReferralCreateScreen(
                 iconRight = R.drawable.ic_question_mark,
             )
             AnimatedVisibility(
-                visible = true,
+                visible = false,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                 MoreInfoBox(
+                MoreInfoBox(
                     text = stringResource(R.string.referral_create_info_content),
                     title = stringResource(R.string.referral_create_info_title),
-                     modifier = Modifier
-                         .padding(start = 62.dp, end = 8.dp)
-                         .offset(y = statusBarHeightDp)
-                         .clickable(onClick = {})
+                    modifier = Modifier
+                        .padding(start = 62.dp, end = 8.dp)
+                        .offset(y = statusBarHeightDp)
+                        .clickable(onClick = {})
                 )
             }
         },
         content = { paddingValues ->
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .navigationBarsPadding()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+            ) {
+                Text(
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.body.s.medium,
+                    text = "Pick Referral Code",
+                    textAlign = TextAlign.Start,
+                )
 
+                UiSpacer(8.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    VsTextInputField(
+                        textFieldState = TextFieldState(),
+                        innerState = VsTextInputFieldInnerState.Default,
+                        hint = stringResource(R.string.referral_screen_code_hint),
+                        focusRequester = null, //focusRequester,
+                        imeAction = ImeAction.Go,
+                        keyboardType = KeyboardType.Text,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    UiSpacer(8.dp)
+
+                    VsButton(
+                        label = "Search",
+                        shape = RoundedCornerShape(percent = 20),
+                        variant = VsButtonVariant.Primary,
+                        state = VsButtonState.Enabled,
+                        size = VsButtonSize.Medium,
+                        onClick = onSearchClick,
+                    )
+                }
+
+                UiSpacer(16.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        color = Theme.colors.text.light,
+                        style = Theme.brockmann.body.s.medium,
+                        text = "Status",
+                        textAlign = TextAlign.Start,
+                    )
+
+                    UiSpacer(1f)
+                }
+
+                UiSpacer(16.dp)
+
+                UiGradientDivider(
+                    initialColor = Theme.colors.backgrounds.primary,
+                    endColor = Theme.colors.backgrounds.primary,
+                )
+
+                UiSpacer(16.dp)
+
+                Text(
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.body.s.medium,
+                    text = "Set Expiration (in years)",
+                    textAlign = TextAlign.Start,
+                )
             }
+        },
+        bottomBar = {
+            VsButton(
+                label = "Create referral code",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp).fillMaxWidth(),
+                variant = VsButtonVariant.Primary,
+                state = VsButtonState.Disabled,
+                onClick = onCreateReferral,
+            )
         }
     )
 }
+

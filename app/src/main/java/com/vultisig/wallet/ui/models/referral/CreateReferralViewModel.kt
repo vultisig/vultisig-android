@@ -13,4 +13,19 @@ internal class CreateReferralViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
+    fun onSearchReferralCode() {
+
+    }
+
+    fun onCreateReferralCode() {
+
+    }
+
+    fun onAddExpirationYear() {
+
+    }
+
+    fun onSubtractExpirationYear() {
+
+    }
 }
