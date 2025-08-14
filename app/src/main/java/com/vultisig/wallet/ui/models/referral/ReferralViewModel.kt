@@ -176,12 +176,6 @@ internal class ReferralViewModel @Inject constructor(
         }
     }
 
-    private fun validateReferralCode(code: String): String? {
-        if (code.isEmpty()) return "Referral code cannot be empty"
-        if (code.length > MAX_LENGTH_REFERRAL_CODE) return "Referral code can be up to $MAX_LENGTH_REFERRAL_CODE characters"
-        return null
-    }
-
     internal companion object {
         const val MAX_LENGTH_REFERRAL_CODE = 4
         const val MIN_LENGTH_REFERRAL_CODE = 1
