@@ -78,7 +78,6 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
-        affiliateFieldState =model.affiliateFieldState,
         onSlippageLostFocus = model::validateSlippage,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
@@ -303,8 +302,8 @@ internal fun DepositFormScreen(
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE,
-                        )
+                            DepositOption.RedeemYRUNE,)||
+                            !( depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
                             SelectionCard(
@@ -319,27 +318,29 @@ internal fun DepositFormScreen(
                     val isRujiWithdrawRewards = depositOption == DepositOption.WithdrawRujiRewards
 
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
+                    val isAddingCacaoPool = depositOption == DepositOption.AddCacaoPool
+                    val isRemovingCacaoPool = depositOption == DepositOption.RemoveCacaoPool
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
                     val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
                     val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
-                        isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         isRujiWithdraw -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         isRujiWithdrawRewards -> stringResource(R.string.deposit_form_rewards_title, rewardsBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
 
                     val amountHint = when {
-                        isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
+                        isUnstakeTcy  || isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         isRujiWithdrawRewards -> stringResource(R.string.deposit_form_pending_rewards_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
 
                     if (
-                        isTcyOption ||
+                        isTcyOption || isAddingCacaoPool ||isRemovingCacaoPool ||
                         (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
-                        (depositOption == DepositOption.Custom || depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool && depositChain == Chain.MayaChain) ||
+                        (depositOption == DepositOption.Custom  && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
                         depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
                         depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
@@ -360,6 +361,7 @@ internal fun DepositFormScreen(
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYTCY, DepositOption.MintYRUNE,
                             DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
+                            DepositOption.RemoveCacaoPool,DepositOption.AddCacaoPool,
                         )
                     ) {
                         FormTextFieldCard(

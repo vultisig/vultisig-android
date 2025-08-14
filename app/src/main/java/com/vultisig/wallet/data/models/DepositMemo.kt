@@ -115,21 +115,15 @@ internal interface DepositMemo {
 
     data class WithdrawPool(
         val basisPoints: Int,
-        val affiliate: String?,
-        val affiliateFee: String?,
     ) : DepositMemo {
 
         override fun toString(): String = buildString {
             append("POOL-:")
             append(basisPoints)
-            if (!affiliate.isNullOrBlank()) {
-                append(":")
-                append(affiliate)
-            }
-            if (!affiliateFee.isNullOrBlank()) {
-                append(":")
-                append(affiliateFee)
-            }
+            append(":")
+            append(THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+            append(":")
+            append(THORChainSwaps.AFFILIATE_FEE_RATE)
         }
 
     }

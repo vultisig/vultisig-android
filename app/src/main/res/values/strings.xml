@@ -668,4 +668,6 @@
     <string name="deposit_option_add_cacao_pool">Add to CACAO Pool</string>
     <string name="deposit_option_remove_cacao_pool">Remove from CACAO Pool</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
+    <string name="deposit_form_remove_from_pool">Remove from pool</string>
+    <string name="deposit_form_add_to_pool">Add to pool</string>
 </resources>

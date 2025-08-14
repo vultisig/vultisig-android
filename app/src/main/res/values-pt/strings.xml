@@ -426,4 +426,6 @@
     <string name="deposit_option_add_cacao_pool">Adicionar ao Pool CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Remover do Pool CACAO</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado para operações de pool</string>
+    <string name="deposit_form_remove_from_pool">Remover da piscina</string>
+    <string name="deposit_form_add_to_pool">Adicionar ao pool</string>
 </resources>

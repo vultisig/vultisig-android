@@ -165,8 +165,6 @@ internal class DepositFormViewModel @Inject constructor(
     val operatorFeeFieldState = TextFieldState()
     val customMemoFieldState = TextFieldState()
     val basisPointsFieldState = TextFieldState()
-    val affiliateFieldState = TextFieldState()
-    val affiliateFeeFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
     val thorAddressFieldState = TextFieldState()
@@ -1229,26 +1227,15 @@ internal class DepositFormViewModel @Inject constructor(
             srcAddress
         )
 
-        val basisPoints = basisPointsFieldState.text.toString().toIntOrNull()
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
+        val basisPoints = tokenAmountFieldState.text.toString()
+            .toIntOrNull()
 
-
-
-        val affiliate = affiliateFieldState.text.toString().takeIf { it.isNotBlank() }
-        if (affiliate != null) {
-            validateDstAddress(affiliate)
-        }
-        val affiliateFee = affiliateFeeFieldState.text.toString().takeIf { it.isNotBlank() }
-        if (affiliateFee != null) {
-            validateTokenAmount(affiliateFee)
+        validateBasisPoints(basisPoints)?.let {
+            throw InvalidTransactionDataException(it)
         }
 
         val memo = DepositMemo.WithdrawPool(
-            basisPoints = basisPoints,
-            affiliate = affiliate,
-            affiliateFee = affiliateFee,
+            basisPoints = basisPoints!! * 100, // 10000 BP = 100%; basisPoints in 0..100
         )
 
         val specific = blockChainSpecificRepository
