@@ -176,6 +176,10 @@ internal class ReferralViewModel @Inject constructor(
         }
     }
 
+    fun onNewEditedReferral(newEditedReferral: String) {
+        referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(newEditedReferral)
+    }
+
     internal companion object {
         const val MAX_LENGTH_REFERRAL_CODE = 4
         const val MIN_LENGTH_REFERRAL_CODE = 1

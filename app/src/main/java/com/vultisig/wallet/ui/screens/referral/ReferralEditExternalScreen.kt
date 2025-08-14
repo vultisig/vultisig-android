@@ -46,6 +46,10 @@ internal fun ReferralEditExternalScreen(
             VsTopAppBar(
                 title = "Edit Referred Code",
                 onBackClick = {
+                    val code = model.referralCodeTextFieldState.text.toString()
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NEW_EXTERNAL_REFERRAL_CODE, code)
                     navController.popBackStack()
                 },
             )
@@ -100,3 +104,5 @@ internal fun ReferralEditExternalScreen(
         }
     )
 }
+
+internal const val NEW_EXTERNAL_REFERRAL_CODE = "NEW_EXTERNAL_REFERRAL_CODE"
