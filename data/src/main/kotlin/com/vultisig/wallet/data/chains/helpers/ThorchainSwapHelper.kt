@@ -48,7 +48,7 @@ class ThorchainSwapHelper {
             )
             .let {
                 if (keysignPayload.toAmount > BigInteger.ZERO) {
-                    it.setAmount(keysignPayload.toAmount.toString())
+                    it.setAmount(thorChainSwapPayload.data.fromAmount.toString())
                         .setDecimals(keysignPayload.coin.decimal.toLong())
                 } else it
             }.build()
