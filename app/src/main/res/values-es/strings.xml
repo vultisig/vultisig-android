@@ -425,5 +425,5 @@
     <string name="referral_screen_code_hint">Introduce hasta 4 caracteres</string>
     <string name="referral_onboarding_title">Referido</string>
     <string name="referral_onboarding_get_started">Empezar</string>
-    <string name="offline">Estás desconectado</string>
+    <string name="offline">Sin conexión</string>
 </resources>

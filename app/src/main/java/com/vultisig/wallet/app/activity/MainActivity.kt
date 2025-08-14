@@ -12,6 +12,8 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
@@ -100,13 +102,18 @@ class MainActivity : AppCompatActivity() {
                         .safeDrawingPadding()
                 ) {
 
-                    Column{
+                    Column(modifier = Modifier.fillMaxSize()) {
                         OfflineBanner(mainViewModel.isOffline.value)
-
-                        SetupNavGraph(
-                            navController = navController,
-                            startDestination = screen,
-                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            SetupNavGraph(
+                                navController = navController,
+                                startDestination = screen,
+                            )
+                        }
                     }
 
                     BiometryAuthScreen()

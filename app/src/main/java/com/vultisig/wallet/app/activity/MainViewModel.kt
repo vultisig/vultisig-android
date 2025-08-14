@@ -23,6 +23,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -41,7 +46,7 @@ internal class MainViewModel @Inject constructor(
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
-    private val _isOffline: MutableState<Boolean> = mutableStateOf(true)
+    private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
     val isOffline: State<Boolean> = _isOffline
 
     private val _startDestination: MutableState<String> = mutableStateOf(Destination.Home().route)
@@ -72,11 +77,18 @@ internal class MainViewModel @Inject constructor(
             initializeThorChainNetworkId()
         }
 
-        viewModelScope.launch {
-            context.observeConnectivityAsFlow().collect {
-                _isOffline.value = it.not()
+        context
+            .observeConnectivityAsFlow()
+            .map { !it } // offline = not online
+            .distinctUntilChanged()
+            .onEach { _isOffline.value = it }
+            .catch {
+                Timber.w(
+                    it,
+                    "Connectivity flow failed"
+                )
             }
-        }
+            .launchIn(viewModelScope)
     }
 
     fun openUri(uri: Uri) {

@@ -31,7 +31,8 @@ object NetworkUtils {
 
         val networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                trySend(true)
+                val caps = connectivityManager.getNetworkCapabilities(network)
+                trySend(caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true)
             }
 
             override fun onLost(network: Network) {
@@ -41,20 +42,27 @@ object NetworkUtils {
             override fun onUnavailable() {
                 trySend(false)
             }
+
+            override fun onCapabilitiesChanged(
+                network: Network, networkCapabilities: NetworkCapabilities
+            ) {
+                trySend(networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
+            }
         }
 
         val networkRequest = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
             .build()
 
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        connectivityManager.registerNetworkCallback(
+            networkRequest,
+            networkCallback
+        )
 
         val currentNetwork = connectivityManager.activeNetwork
         val capabilities = connectivityManager.getNetworkCapabilities(currentNetwork)
         val isConnected =
-            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
         trySend(isConnected)
 
         awaitClose {
