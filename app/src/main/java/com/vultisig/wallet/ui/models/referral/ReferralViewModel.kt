@@ -91,10 +91,12 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     fun onCreateOrEditReferral() {
-        if (state.value.isCreateEnabled) {
-            // Navigate to create
-        } else {
-            // navigate to edit
+        viewModelScope.launch {
+            if (state.value.isCreateEnabled) {
+                navigator.navigate(Destination.ReferralCreation(vaultId))
+            } else {
+                // navigate to visit referral
+            }
         }
     }
 
