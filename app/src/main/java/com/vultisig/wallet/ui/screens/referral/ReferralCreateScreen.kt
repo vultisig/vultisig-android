@@ -6,12 +6,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -22,6 +24,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -151,7 +158,7 @@ private fun ReferralCreateScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.colors.text.light,
+                        color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                         text = "Status",
                         textAlign = TextAlign.Start,
@@ -176,6 +183,17 @@ private fun ReferralCreateScreen(
                     style = Theme.brockmann.body.s.medium,
                     text = "Set Expiration (in years)",
                     textAlign = TextAlign.Start,
+                )
+
+                UiSpacer(16.dp)
+
+                CounterYearExpiration(1, {}, {})
+
+                UiSpacer(16.dp)
+
+                UiGradientDivider(
+                    initialColor = Theme.colors.backgrounds.primary,
+                    endColor = Theme.colors.backgrounds.primary,
                 )
             }
         },
@@ -218,3 +236,58 @@ private fun SearchReferralTag(
     }
 }
 
+@Composable
+fun CounterYearExpiration(
+    count: Int,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = onDecrement,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Theme.colors.backgrounds.secondary,
+                contentColor = Theme.colors.text.primary
+            ),
+            modifier = Modifier.weight(1f).height(height = 60.dp).border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Decrease"
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(height = 60.dp)
+                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = count.toString(),
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.body.m.medium,
+            )
+        }
+
+        Button(
+            onClick = onIncrement,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Theme.colors.backgrounds.secondary,
+                contentColor = Theme.colors.text.primary
+            ),
+            modifier = Modifier.weight(1f).height(height = 60.dp).border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Increase"
+            )
+        }
+    }
+}
