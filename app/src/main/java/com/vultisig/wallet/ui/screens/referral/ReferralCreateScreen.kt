@@ -11,10 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -47,14 +43,8 @@ private fun ReferralCreateScreen(
     onAddClick: () -> Unit,
     onSubtractClick: () -> Unit,
 ) {
-    var hintBoxOffset by remember { mutableIntStateOf(0) }
-    val statusBarHeight = WindowInsets.statusBars.getTop(LocalDensity.current)
-
-    // Get the status bar height in pixels (Int)
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
-    // Convert the pixel value to a Dp value
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
-
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -70,10 +60,10 @@ private fun ReferralCreateScreen(
                 exit = fadeOut()
             ) {
                  MoreInfoBox(
-                    text = stringResource(R.string.fast_vault_password_screen_hint),
-                    title = stringResource(R.string.fast_vault_password_screen_hint_title),
+                    text = stringResource(R.string.referral_create_info_content),
+                    title = stringResource(R.string.referral_create_info_title),
                      modifier = Modifier
-                         .padding(start = 16.dp, end = 16.dp)
+                         .padding(start = 62.dp, end = 8.dp)
                          .offset(y = statusBarHeightDp)
                          .clickable(onClick = {})
                 )

@@ -665,4 +665,6 @@
     <string name="referral_external_not_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
     <string name="referral_onboarding_get_started">Get started</string>
+    <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
+    <string name="referral_create_info_title">Referral Program</string>
 </resources>

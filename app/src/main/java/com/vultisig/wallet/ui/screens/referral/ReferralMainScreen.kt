@@ -134,10 +134,10 @@ private fun ReferralScreen(
                     textFieldState = referralState,
                     innerState = state.referralMessageState,
                     hint = stringResource(R.string.referral_screen_code_hint),
-                    trailingIcon = R.drawable.clipboard_paste,
+                    trailingIcon = if (state.isSaveEnabled) R.drawable.clipboard_paste else null,
                     onTrailingIconClick = {
                         val content = clipboardData.value
-                        if (content.isNullOrEmpty() || !state.isSaveEnabled) return@VsTextInputField
+                        if (content.isNullOrEmpty()) return@VsTextInputField
                         onPasteIcon(content)
                     },
                     footNote = state.referralMessage,
