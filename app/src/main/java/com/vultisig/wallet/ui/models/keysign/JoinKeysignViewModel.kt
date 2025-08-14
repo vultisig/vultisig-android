@@ -780,13 +780,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             value = mapTokenValueToDecimalUiString(tokenValue),
                             fiatValue = "",
                         ),
-                        fromAddress = payload.coin.address,
-                        nodeAddress = payload.toAddress,
-                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
-                            Pair(tokenValue, payload.coin.chain)
-                        ),
-                        estimatedFees = mapTokenValueToStringWithUnit(estimatedTokenFees),
-                        estimateFeesFiat = fiatValueToStringMapper(
+                        srcAddress = payload.coin.address,
+                        dstAddress = payload.toAddress,
+
+                        networkFeeTokenValue  = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        networkFeeFiatValue = fiatValueToStringMapper(
                             convertTokenValueToFiat(
                                 feeCurrency,
                                 estimatedTokenFees,

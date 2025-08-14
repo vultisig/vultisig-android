@@ -21,14 +21,15 @@ import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
     val token: ValuedToken = ValuedToken.Empty,
-    val fromAddress: String = "",
-    val srcTokenValue: String = "",
-    val estimatedFees: String = "",
-    val estimateFeesFiat: String = "",
-    val memo: String = "",
-    val nodeAddress: String = "",
-)
 
+    val networkFeeFiatValue: String = "",
+    val networkFeeTokenValue: String = "",
+
+    val srcAddress: String = "",
+    val dstAddress: String = "",
+
+    val memo: String = "",
+)
 internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
@@ -54,10 +55,10 @@ internal class VerifyDepositViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val transaction = depositTransactionRepository.getTransaction(transactionId)
-
+            val depositTransactionUiModel = mapTransactionToUiModel(transaction)
             state.update {
                 it.copy(
-                    depositTransactionUiModel = mapTransactionToUiModel(transaction)
+                    depositTransactionUiModel = depositTransactionUiModel
                 )
             }
         }
