@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
@@ -57,13 +60,34 @@ internal fun ReferralScreen(
         model.onNewEditedReferral(newEditedReferral)
     }
 
+    ReferralScreen(
+        onBackPressed = navController::popBackStack,
+        onPasteIcon = model::onPasteIconClick,
+        onSavedOrEditExternalReferral = model::onSaveOrEditExternalReferral,
+        onCreateOrEditReferral = model::onCreateOrEditReferral,
+        state = state,
+        clipboardData = clipboardData,
+        referralState = model.referralCodeTextFieldState,
+    )
+}
+
+@Composable
+private fun ReferralScreen(
+    onBackPressed: () -> Unit,
+    onPasteIcon: (String) -> Unit,
+    onSavedOrEditExternalReferral: () -> Unit,
+    onCreateOrEditReferral: () -> Unit,
+    state: ReferralUiState,
+    clipboardData: MutableState<String?>,
+    referralState: TextFieldState,
+) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_screen_title),
                 onBackClick = {
-                    navController.popBackStack()
+                    onBackPressed()
                 },
             )
         },
@@ -107,14 +131,14 @@ internal fun ReferralScreen(
                 UiSpacer(16.dp)
 
                 VsTextInputField(
-                    textFieldState = model.referralCodeTextFieldState,
+                    textFieldState = referralState,
                     innerState = state.referralMessageState,
                     hint = stringResource(R.string.referral_screen_code_hint),
                     trailingIcon = R.drawable.clipboard_paste,
                     onTrailingIconClick = {
                         val content = clipboardData.value
                         if (content.isNullOrEmpty()) return@VsTextInputField
-                        model.onPasteIconClick(content)
+                        onPasteIcon(content)
                     },
                     footNote = state.referralMessage,
                     focusRequester = null, //focusRequester,
@@ -135,13 +159,13 @@ internal fun ReferralScreen(
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Secondary,
                     state = VsButtonState.Enabled,
-                    onClick = model::onSaveOrEditExternalReferral,
+                    onClick = onSavedOrEditExternalReferral,
                 )
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
-                ){
+                ) {
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
                         color = Theme.colors.borders.light,
@@ -184,7 +208,7 @@ internal fun ReferralScreen(
                         .fillMaxWidth(),
                     variant = VsButtonVariant.Primary,
                     state = VsButtonState.Enabled,
-                    onClick = model::onCreateOrEditReferral,
+                    onClick = onCreateOrEditReferral,
                 )
 
                 UiSpacer(16.dp)
