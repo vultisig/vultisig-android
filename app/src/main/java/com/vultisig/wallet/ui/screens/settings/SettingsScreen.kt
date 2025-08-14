@@ -312,4 +312,4 @@ private fun AppSettingItem(
     }
 }
 
-private const val REFERRAL_FEATURE_FLAG = true
+private const val REFERRAL_FEATURE_FLAG = false
