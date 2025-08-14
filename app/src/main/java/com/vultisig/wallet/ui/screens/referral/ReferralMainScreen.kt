@@ -128,7 +128,7 @@ private fun ReferralScreen(
                     fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )
 
-                UiSpacer(16.dp)
+                UiSpacer(1f)
 
                 VsTextInputField(
                     textFieldState = referralState,
@@ -210,9 +210,10 @@ private fun ReferralScreen(
                     state = VsButtonState.Enabled,
                     onClick = onCreateOrEditReferral,
                 )
-
-                UiSpacer(16.dp)
             }
         },
+        bottomBar = {
+            UiSpacer(32.dp)
+        }
     )
 }
