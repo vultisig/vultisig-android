@@ -40,5 +40,4 @@ internal class ReshareStartViewModel @Inject constructor(
             navigator.route(Route.ScanQr())
         }
     }
-
 }

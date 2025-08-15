@@ -89,6 +89,7 @@ internal fun VsTextInputField(
     onKeyboardAction: KeyboardActionHandler? = null,
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
+    enabled: Boolean = true,
 ) {
     var focused by remember {
         mutableStateOf(false)
@@ -249,7 +250,8 @@ internal fun VsTextInputField(
                                 hint = hint,
                             )
                             textField()
-                        }
+                        },
+                        enabled = enabled,
                     )
 
                     if (type !is VsTextInputFieldType.MultiLine) {
