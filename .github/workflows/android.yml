@@ -73,9 +73,6 @@ jobs:
           disable-animations: true
           disable-spellchecker: true
           script: |
-            # Build test APKs
-            ./gradlew assembleDebug assembleDebugAndroidTest
-            
             # Run ALL instrumented tests
             ./gradlew app:connectedDebugAndroidTest --stacktrace
       
