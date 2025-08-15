@@ -11,10 +11,12 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -24,6 +26,11 @@ internal data class CreateReferralUiState(
     val searchStatus: SearchStatusType = SearchStatusType.DEFAULT,
     val yearExpiration: Int = 1,
     val formattedYearExpiration: String = "",
+    val isFeesLoading: Boolean = true,
+    val registrationFeesToken: String,
+    val registrationFeesPrice: String,
+    val costFeesToken: String,
+    val costFeesPrice: String,
 )
 
 internal enum class SearchStatusType {
@@ -50,7 +57,16 @@ internal class CreateReferralViewModel @Inject constructor(
 
     init {
         loadYearExpiration()
+        calculateFees()
         observeReferralTextField()
+    }
+
+    private fun calculateFees() {
+        viewModelScope.launch {
+            val referralFees = withContext(Dispatchers.IO) {
+                thorChainApi.getTHORChainReferralFees()
+            }
+        }
     }
 
     private fun loadYearExpiration() {
@@ -119,10 +135,6 @@ internal class CreateReferralViewModel @Inject constructor(
         }
     }
 
-    fun onCreateReferralCode() {
-
-    }
-
     fun onAddExpirationYear() {
         viewModelScope.launch {
             val totalToAdd = state.value.yearExpiration + 1
@@ -145,6 +157,10 @@ internal class CreateReferralViewModel @Inject constructor(
                 formattedYearExpiration = formattedDate,
             )
         }
+    }
+
+    fun onCreateReferralCode() {
+
     }
 
     private fun getFormattedDateByAdding(add: Long): String {

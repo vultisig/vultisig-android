@@ -284,7 +284,11 @@ private fun ReferralCreateScreen(
                     .padding(horizontal = 16.dp, vertical = 32.dp)
                     .fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
-                state = VsButtonState.Disabled,
+                state = if (state.searchStatus == SearchStatusType.SUCCESS) {
+                    VsButtonState.Enabled
+                } else {
+                    VsButtonState.Disabled
+                },
                 onClick = onCreateReferral,
             )
         }
