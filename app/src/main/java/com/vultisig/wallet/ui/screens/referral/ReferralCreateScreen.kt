@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,8 +26,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -173,6 +173,7 @@ private fun ReferralCreateScreen(
                         state = VsButtonState.Enabled,
                         size = VsButtonSize.Medium,
                         onClick = onSearchClick,
+                        modifier = Modifier.fillMaxHeight(),
                     )
                 }
 
@@ -247,7 +248,7 @@ private fun ReferralCreateScreen(
                     Text(
                         color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
-                        text = "21 June 2025",
+                        text = state.formattedYearExpiration,
                         textAlign = TextAlign.Start,
                     )
                 }
@@ -341,7 +342,7 @@ fun CounterYearExpiration(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = onDecrement,
+            onClick = { if (count != 1) onDecrement() },
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Theme.colors.backgrounds.secondary,
@@ -353,7 +354,7 @@ fun CounterYearExpiration(
                 .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
+                painter = painterResource(R.drawable.circle_minus),
                 contentDescription = "Decrease"
             )
         }
@@ -373,7 +374,7 @@ fun CounterYearExpiration(
         }
 
         Button(
-            onClick = onIncrement,
+            onClick = { if (count < 100) onIncrement() },
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Theme.colors.backgrounds.secondary,
@@ -385,7 +386,7 @@ fun CounterYearExpiration(
                 .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
-                imageVector = Icons.Default.Add,
+                painter = painterResource(R.drawable.circle_plus),
                 contentDescription = "Increase"
             )
         }

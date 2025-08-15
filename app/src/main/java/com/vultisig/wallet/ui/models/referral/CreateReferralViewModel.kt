@@ -15,11 +15,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 internal data class CreateReferralUiState(
     val searchStatus: SearchStatusType = SearchStatusType.DEFAULT,
     val yearExpiration: Int = 1,
+    val formattedYearExpiration: String = "",
 )
 
 internal enum class SearchStatusType {
@@ -45,7 +49,18 @@ internal class CreateReferralViewModel @Inject constructor(
     val state = MutableStateFlow(CreateReferralUiState())
 
     init {
+        loadYearExpiration()
         observeReferralTextField()
+    }
+
+    private fun loadYearExpiration() {
+        val formattedDate = getFormattedDateByAdding(1)
+
+        state.update {
+            it.copy(
+                formattedYearExpiration = formattedDate,
+            )
+        }
     }
 
     fun onSearchReferralCode() {
@@ -96,9 +111,11 @@ internal class CreateReferralViewModel @Inject constructor(
     }
 
     fun onCleanReferralClick() {
-        searchReferralTexFieldState.clearText()
-        state.update {
-            it.copy(searchStatus = SearchStatusType.DEFAULT)
+        viewModelScope.launch {
+            searchReferralTexFieldState.clearText()
+            state.update {
+                it.copy(searchStatus = SearchStatusType.DEFAULT)
+            }
         }
     }
 
@@ -107,10 +124,33 @@ internal class CreateReferralViewModel @Inject constructor(
     }
 
     fun onAddExpirationYear() {
-
+        viewModelScope.launch {
+            val totalToAdd = state.value.yearExpiration + 1
+            updateFormattedDate(totalToAdd)
+        }
     }
 
     fun onSubtractExpirationYear() {
+        viewModelScope.launch {
+            val totalToAdd = state.value.yearExpiration - 1
+            updateFormattedDate(totalToAdd)
+        }
+    }
 
+    private fun updateFormattedDate(toAdd: Int) {
+        val formattedDate = getFormattedDateByAdding(toAdd.toLong())
+        state.update {
+            it.copy(
+                yearExpiration = toAdd,
+                formattedYearExpiration = formattedDate,
+            )
+        }
+    }
+
+    private fun getFormattedDateByAdding(add: Long): String {
+        val currentDate = LocalDate.now()
+        val nextYearDate = currentDate.plusYears(add)
+        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
+        return nextYearDate.format(formatter)
     }
 }
