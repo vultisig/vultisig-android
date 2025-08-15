@@ -88,16 +88,3 @@ jobs:
           path: |
             app/build/reports/lint-results-debug.html
             app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
-      
-      # Upload test results
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            app/build/reports/tests/
-            app/build/reports/androidTests/
-            app/build/outputs/androidTest-results/
-            data/build/reports/tests/
-            data/build/reports/androidTests/
