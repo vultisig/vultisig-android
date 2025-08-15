@@ -161,7 +161,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                     sequence = it.sequence.toBigInteger(),
                     fee = it.fee.toBigInteger(),
                     isDeposit = it.isDeposit,
-                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                    transactionType = getTransactionType(thorchainSpecific.transactionType),
                 )
             }
             val mayachainSpecific = this.mayachainSpecific
@@ -271,4 +271,18 @@ fun OneinchTransaction.toInternalOneInchTransaction(): OneInchSwapTxJson {
         value = this.value,
         gasPrice = this.gasPrice,
     )
+}
+fun getTransactionType(txType: Int): TransactionType {
+    return when (txType) {
+        0 -> TransactionType.TRANSACTION_TYPE_UNSPECIFIED
+        1 -> TransactionType.TRANSACTION_TYPE_VOTE
+        2 -> TransactionType.TRANSACTION_TYPE_PROPOSAL
+        3 -> TransactionType.TRANSACTION_TYPE_IBC_TRANSFER
+        4 -> TransactionType.TRANSACTION_TYPE_THOR_MERGE
+        5 -> TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
+        6 -> TransactionType.TRANSACTION_TYPE_TON_DEPOSIT
+        7 -> TransactionType.TRANSACTION_TYPE_TON_WITHDRAW
+        8 -> TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
+        else -> error("Unknown transaction type: $txType")
+    }
 }
