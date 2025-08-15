@@ -119,7 +119,7 @@
           "sequence": 1,
           "fee": 200000,
           "is_deposit": true,
-          "transaction_type": 0
+          "transaction_type": 8
         }
       },
       "memo": "receive:rune:10000000",
@@ -139,7 +139,7 @@
         ]
       }
     },
-    "expected_image_hash": ["5e96d96842ed4fc3e402b23e302c5ad1967cd6c3ed7971b8204e5c1cb8c81ee6"]
+    "expected_image_hash": ["2b7ee69b59f230163c8e4620d46289ec418f20847d336d538cd24292fe5ad86c"]
   },
   {
     "name": "Redeem RUNE",
@@ -163,7 +163,7 @@
           "sequence": 1,
           "fee": 200000,
           "is_deposit": true,
-          "transaction_type": 0
+          "transaction_type": 8
         }
       },
       "memo": "sell:x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt:1000000",
@@ -183,6 +183,6 @@
         ]
       }
     },
-    "expected_image_hash": ["f06a8ff5bd013c4373c7ab6503e34d801383be90cd810fb26dd3d3cf8b7d4863"]
+    "expected_image_hash": ["20f6fb36702198ecf2b5757f391b90ccb8747a6b7e24aa306b40dc6c00ddfdf8"]
   }
 ]
