@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -17,12 +18,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class CreateReferralUiState(
-    val isLoading: Boolean = false,
     val searchStatus: SearchStatusType = SearchStatusType.DEFAULT,
+    val yearExpiration: Int = 1,
 )
 
 internal enum class SearchStatusType {
     DEFAULT,
+    IS_SEARCHING,
     VALIDATION_ERROR,
     SUCCESS,
     ERROR,
@@ -37,6 +39,7 @@ internal class CreateReferralViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
     val searchReferralTexFieldState = TextFieldState()
     val state = MutableStateFlow(CreateReferralUiState())
@@ -56,7 +59,7 @@ internal class CreateReferralViewModel @Inject constructor(
             }
 
             state.update {
-                it.copy(isLoading = true)
+                it.copy(searchStatus = SearchStatusType.IS_SEARCHING)
             }
 
             try {
@@ -67,11 +70,11 @@ internal class CreateReferralViewModel @Inject constructor(
                     SearchStatusType.SUCCESS
                 }
                 state.update {
-                    it.copy(searchStatus = status, isLoading = false)
+                    it.copy(searchStatus = status)
                 }
             } catch (t: Throwable) {
                 state.update {
-                    it.copy(isLoading = false)
+                    it.copy(searchStatus = SearchStatusType.DEFAULT)
                 }
             }
         }

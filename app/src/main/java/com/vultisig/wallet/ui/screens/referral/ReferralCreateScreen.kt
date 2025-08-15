@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -54,13 +56,13 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.CreateReferralUiState
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel
 import com.vultisig.wallet.ui.models.referral.SearchStatusType
 import com.vultisig.wallet.ui.models.referral.isError
 import com.vultisig.wallet.ui.theme.Theme
-import timber.log.Timber
 
 @Composable
 internal fun ReferralCreateScreen(
@@ -101,7 +103,7 @@ private fun ReferralCreateScreen(
             VsTopAppBar(
                 title = "Create Referral",
                 onBackClick = onBackPressed,
-                iconRight = R.drawable.ic_question_mark,
+                iconRight = R.drawable.ic_info,
             )
             AnimatedVisibility(
                 visible = false,
@@ -143,6 +145,7 @@ private fun ReferralCreateScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val isNotEmpty = searchTextFieldState.text.isNotEmpty()
+
                     VsTextInputField(
                         textFieldState = searchTextFieldState,
                         innerState = state.getInnerState(),
@@ -189,7 +192,15 @@ private fun ReferralCreateScreen(
 
                         UiSpacer(1f)
 
-                        SearchReferralTag(state.searchStatus)
+                        if (state.searchStatus == SearchStatusType.IS_SEARCHING) {
+                            UiPlaceholderLoader(
+                                modifier = Modifier
+                                    .height(16.dp)
+                                    .width(80.dp)
+                            )
+                        } else {
+                            SearchReferralTag(state.searchStatus)
+                        }
                     }
                 }
 
@@ -211,7 +222,11 @@ private fun ReferralCreateScreen(
 
                 UiSpacer(16.dp)
 
-                CounterYearExpiration(1, {}, {})
+                CounterYearExpiration(
+                    count = state.yearExpiration,
+                    onIncrement = onAddClick,
+                    onDecrement = onSubtractClick,
+                )
 
                 UiSpacer(16.dp)
 
@@ -264,7 +279,9 @@ private fun ReferralCreateScreen(
         bottomBar = {
             VsButton(
                 label = "Create referral code",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 32.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 32.dp)
+                    .fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
                 state = VsButtonState.Disabled,
                 onClick = onCreateReferral,
@@ -283,7 +300,7 @@ private fun CreateReferralUiState.getInnerState() =
 @Composable
 private fun SearchReferralTag(
     type: SearchStatusType,
-){
+) {
     val (color, text) = when (type) {
         SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, "Invalid")
         SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, "Available")
@@ -317,7 +334,7 @@ private fun SearchReferralTag(
 fun CounterYearExpiration(
     count: Int,
     onIncrement: () -> Unit,
-    onDecrement: () -> Unit
+    onDecrement: () -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -330,7 +347,8 @@ fun CounterYearExpiration(
                 containerColor = Theme.colors.backgrounds.secondary,
                 contentColor = Theme.colors.text.primary
             ),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
                 .height(height = 60.dp)
                 .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
         ) {
@@ -408,4 +426,19 @@ internal fun EstimatedNetworkFee(
             )
         }
     }
+}
+
+@Preview
+@Composable
+internal fun SwapFormScreenPreview() {
+    ReferralCreateScreen(
+        state = CreateReferralUiState(),
+        searchTextFieldState = TextFieldState(),
+        onBackPressed = {},
+        onSearchClick = {},
+        onAddClick = {},
+        onSubtractClick = {},
+        onCreateReferral = {},
+        onCleanReferralClick = {},
+    )
 }
