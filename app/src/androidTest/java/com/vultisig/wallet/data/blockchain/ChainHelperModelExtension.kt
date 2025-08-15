@@ -157,11 +157,11 @@ fun BlockchainSpecific.toBlockChainSpecific(
             val thorchainSpecific = this.thorchainSpecific
             thorchainSpecific?.let {
                 return BlockChainSpecific.THORChain(
-                    accountNumber = thorchainSpecific.accountNumber.toBigInteger(),
-                    sequence = thorchainSpecific.sequence.toBigInteger(),
-                    fee = thorchainSpecific.fee.toBigInteger(),
-                    isDeposit = thorchainSpecific.isDeposit,
-                    transactionType = getTransactionType(thorchainSpecific.transactionType)
+                    accountNumber = it.accountNumber.toBigInteger(),
+                    sequence = it.sequence.toBigInteger(),
+                    fee = it.fee.toBigInteger(),
+                    isDeposit = it.isDeposit,
+                    transactionType = getTransactionType(it.transactionType)
                 )
             }
             val mayachainSpecific = this.mayachainSpecific
