@@ -32,9 +32,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -54,30 +55,42 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.CreateReferralUiState
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel
+import com.vultisig.wallet.ui.models.referral.SearchStatusType
+import com.vultisig.wallet.ui.models.referral.isError
 import com.vultisig.wallet.ui.theme.Theme
+import timber.log.Timber
 
 @Composable
 internal fun ReferralCreateScreen(
     navController: NavController,
     model: CreateReferralViewModel = hiltViewModel(),
 ) {
+    val state by model.state.collectAsState()
+
     ReferralCreateScreen(
+        state = state,
+        searchTextFieldState = model.searchReferralTexFieldState,
         onBackPressed = navController::popBackStack,
-        onSearchClick = {},
+        onSearchClick = model::onSearchReferralCode,
         onAddClick = model::onAddExpirationYear,
         onSubtractClick = model::onSubtractExpirationYear,
         onCreateReferral = model::onCreateReferralCode,
+        onCleanReferralClick = model::onCleanReferralClick,
     )
 }
 
 @Composable
 private fun ReferralCreateScreen(
+    state: CreateReferralUiState,
+    searchTextFieldState: TextFieldState,
     onBackPressed: () -> Unit,
     onSearchClick: () -> Unit,
     onAddClick: () -> Unit,
     onSubtractClick: () -> Unit,
     onCreateReferral: () -> Unit,
+    onCleanReferralClick: () -> Unit,
 ) {
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
@@ -129,11 +142,20 @@ private fun ReferralCreateScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val isNotEmpty = searchTextFieldState.text.isNotEmpty()
                     VsTextInputField(
-                        textFieldState = TextFieldState(),
-                        innerState = VsTextInputFieldInnerState.Default,
+                        textFieldState = searchTextFieldState,
+                        innerState = state.getInnerState(),
                         hint = stringResource(R.string.referral_screen_code_hint),
                         focusRequester = null, //focusRequester,
+                        trailingIcon = if (state.searchStatus.isError() && isNotEmpty) {
+                            R.drawable.x
+                        } else {
+                            null
+                        },
+                        onTrailingIconClick = {
+                            onCleanReferralClick()
+                        },
                         imeAction = ImeAction.Go,
                         keyboardType = KeyboardType.Text,
                         modifier = Modifier.weight(1f)
@@ -153,20 +175,22 @@ private fun ReferralCreateScreen(
 
                 UiSpacer(16.dp)
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        color = Theme.colors.text.extraLight,
-                        style = Theme.brockmann.body.s.medium,
-                        text = "Status",
-                        textAlign = TextAlign.Start,
-                    )
+                if (state.searchStatus != SearchStatusType.DEFAULT) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            color = Theme.colors.text.extraLight,
+                            style = Theme.brockmann.body.s.medium,
+                            text = "Status",
+                            textAlign = TextAlign.Start,
+                        )
 
-                    UiSpacer(1f)
+                        UiSpacer(1f)
 
-                    SearchReferralTag()
+                        SearchReferralTag(state.searchStatus)
+                    }
                 }
 
                 UiSpacer(16.dp)
@@ -249,11 +273,24 @@ private fun ReferralCreateScreen(
     )
 }
 
+private fun CreateReferralUiState.getInnerState() =
+    when {
+        this.searchStatus.isError() -> VsTextInputFieldInnerState.Error
+        this.searchStatus == SearchStatusType.SUCCESS -> VsTextInputFieldInnerState.Success
+        else -> VsTextInputFieldInnerState.Default
+    }
+
 @Composable
 private fun SearchReferralTag(
-    text: String = "Available",
-    color: Color = Theme.colors.alerts.success,
+    type: SearchStatusType,
 ){
+    val (color, text) = when (type) {
+        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, "Invalid")
+        SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, "Available")
+        SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, "Already Taken")
+        else -> Pair(Theme.colors.alerts.error, "Unknown")
+    }
+
     Box(
         modifier = Modifier
             .background(
@@ -269,8 +306,8 @@ private fun SearchReferralTag(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Available",
-            color = Theme.colors.alerts.success,
+            text = text,
+            color = color,
             style = Theme.brockmann.supplementary.footnote,
         )
     }
