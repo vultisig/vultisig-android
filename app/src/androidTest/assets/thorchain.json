@@ -184,5 +184,127 @@
       }
     },
     "expected_image_hash": ["f06a8ff5bd013c4373c7ab6503e34d801383be90cd810fb26dd3d3cf8b7d4863"]
+  },
+  {
+    "name": "Stake Ruji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/ruji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "bond:x/ruji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+        "execute_msg": "{ \"account\": { \"bond\": {} } }",
+        "coins": [
+          {
+            "denom": "x/ruji",
+            "amount": "1000000"
+          }
+        ]
+      }
+    },
+    "expected_image_hash": [""]
+  },
+  {
+    "name": "Unstake Ruji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/ruji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "withdraw:x/ruji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+        "execute_msg": "{ \"account\": { \"withdraw\": { \"amount\": \"1000000\" } } }",
+        "coins": []
+      }
+    },
+    "expected_image_hash": [""]
+  },
+  {
+    "name": "Merge Ruji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/ruji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "withdraw:x/ruji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+        "execute_msg": "{ \"account\": { \"withdraw\": { \"amount\": \"1000000\" } } }",
+        "coins": []
+      }
+    },
+    "expected_image_hash": [""]
   }
 ]
