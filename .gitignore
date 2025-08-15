@@ -36,3 +36,6 @@ app/release/*
 fastlane/metadata/*
 fastlane/report.xml
 /.kotlin/sessions
+
+# Crush AI assistant
+.crush/

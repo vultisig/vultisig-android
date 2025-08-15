@@ -407,4 +407,22 @@
     <string name="verify_deposit_network">Rete</string>
     <string name="verify_deposit_hold_paired">Tieni premuto per firmare in coppia</string>
     <string name="verify_deposit_sign_transaction">Firma la transazione</string>
+    <string name="referral_invite_sheet_description">Condividi il tuo codice di riferimento unico per invitare i tuoi amici. Loro riceveranno uno sconto e più operano, più guadagni tu, direttamente nel tuo deposito.</string>
+    <string name="referral_create_referral">Crea referral</string>
+    <string name="referral_save_referral_code">Salva codice referral</string>
+    <string name="referral_or">O</string>
+    <string name="referral_create_code_and_earn">Crea il tuo codice e guadagna\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020sugli scambi invitati</string>
+    <string name="referral_save">Risparmia\u0020</string>
+    <string name="referral_add_referral">\u0020sugli swap - Aggiungi un referral</string>
+    <string name="referral_edit_referred">Modifica codice di riferimento</string>
+    <string name="referral_edit_referral">Modifica referral</string>
+    <string name="referral_external_linked">Codice referral collegato con successo</string>
+    <string name="referral_external_not_linked">Il codice referral non esiste</string>
+    <string name="referral_external_not_failed">Impossibile verificare il codice referral</string>
+    <string name="referral_invite_next">Avanti</string>
+    <string name="referral_code_settings_title">Codice referral</string>
+    <string name="referral_screen_code_hint">Inserisci fino a 4 caratteri</string>
+    <string name="referral_onboarding_title">Referral</string>
+    <string name="referral_onboarding_get_started">Inizia</string>
 </resources>

@@ -25,7 +25,7 @@
       "memo": "",
       "utxo_info": [],
       "SwapPayload": {
-        "OneinchSwapPayload":{
+          "OneinchSwapPayload":{
           "from_coin": {
             "ticker": "SOL",
             "chain": "Solana",
