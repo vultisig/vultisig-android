@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -62,6 +63,7 @@ interface ThorChainApi {
 
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
+    suspend fun getTHORChainReferralFees(): NativeTxFeeRune
 
     suspend fun getNetworkChainId(): String
 
@@ -169,6 +171,12 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         val content = response.body<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
+    }
+
+    override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
+        return httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<NativeTxFeeRune>()
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {

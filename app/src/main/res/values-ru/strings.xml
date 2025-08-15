@@ -434,4 +434,6 @@
     <string name="referral_screen_code_hint">Введите до 4 символов</string>
     <string name="referral_onboarding_title">Реферал</string>
     <string name="referral_onboarding_get_started">Начать</string>
+    <string name="referral_create_info_title">Реферальная программа</string>
+    <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>
 </resources>

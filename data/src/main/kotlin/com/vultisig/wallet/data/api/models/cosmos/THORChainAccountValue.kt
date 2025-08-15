@@ -47,5 +47,9 @@ data class THORChainAccountValue(
 @Serializable
 data class NativeTxFeeRune(
     @SerialName("native_tx_fee_rune")
-    val value: String?
+    val value: String?,
+    @SerialName("tns_register_fee_rune")
+    val registerFeeRune: String?,
+    @SerialName("tns_fee_per_block_rune")
+    val feePerBlock: String?,
 )
