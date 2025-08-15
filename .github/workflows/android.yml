@@ -77,7 +77,7 @@ jobs:
             ./gradlew assembleDebug assembleDebugAndroidTest
             
             # Run ALL instrumented tests
-            ./gradlew connectedDebugAndroidTest --stacktrace
+            ./gradlew app:connectedDebugAndroidTest --stacktrace
       
       # Archive lint reports
       - name: Archive code analysis reports
