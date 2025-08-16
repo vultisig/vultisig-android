@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.time.LocalDate
@@ -271,8 +273,10 @@ internal class CreateReferralViewModel @Inject constructor(
             require(fees is FeesReferral.Result) {
                 "Can't proceed, error calculating toAmount"
             }
-            val balance = address?.accounts?.find { it.token.isNativeToken }?.tokenValue?.value
-                ?: BigInteger.ZERO
+
+            val account =  address?.accounts?.find { it.token.isNativeToken }
+                ?: error("Can't load account")
+            val balance = account.tokenValue?.value ?: BigInteger.ZERO
             val totalFees = fees.costFeesTokenAmount.toBigInteger()
             if (balance < totalFees) {
                 state.update {
@@ -280,6 +284,25 @@ internal class CreateReferralViewModel @Inject constructor(
                 }
                 return@launch
             }
+
+            val memo = ""
+
+            val blockchainSpecific = blockChainSpecificRepository.getSpecific(
+                chain = Chain.ThorChain,
+                address = account.token.address,
+                token = account.token,
+                isDeposit = true,
+                memo = memo,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
+                gasFee = TokenValue(
+                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                    unit = CoinType.THORCHAIN.symbol,
+                    decimals = CoinType.THORCHAIN.decimals,
+                ),
+            )
         }
     }
 
