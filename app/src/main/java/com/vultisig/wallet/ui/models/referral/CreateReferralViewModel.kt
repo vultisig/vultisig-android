@@ -107,11 +107,17 @@ internal class CreateReferralViewModel @Inject constructor(
         }
     }
 
-    private suspend fun calculateFees(): FeesReferral.Result {
+    private suspend fun calculateFees(extraYears: Int = 1): FeesReferral.Result {
         val registrationTokenFees =
             (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
         val feePerBlock = (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger()
-        val totalCost = registrationTokenFees + feePerBlock
+        val extraCost = if (extraYears > 1) {
+            feePerBlock * (BLOCKS_PER_YEAR * (extraYears - 1)).toBigInteger()
+        } else {
+            BigInteger.ZERO
+        }
+
+        val totalCost = registrationTokenFees + feePerBlock + extraCost
 
         val formattedRegistrationTokenFees =
             "${CoinType.THORCHAIN.toValue(registrationTokenFees)} ${CoinType.THORCHAIN.symbol}"
@@ -209,12 +215,15 @@ internal class CreateReferralViewModel @Inject constructor(
         }
     }
 
-    private fun updateFormattedDate(toAdd: Int) {
+    private suspend fun updateFormattedDate(toAdd: Int) {
         val formattedDate = getFormattedDateByAdding(toAdd.toLong())
+        val newFees = calculateFees(toAdd)
+
         state.update {
             it.copy(
                 yearExpiration = toAdd,
                 formattedYearExpiration = formattedDate,
+                fees = newFees,
             )
         }
     }
@@ -247,5 +256,9 @@ internal class CreateReferralViewModel @Inject constructor(
         const val DEFAULT_BLOCK_FEES = "20"
 
         const val DATE_FORMAT = "d MMMM yyyy"
+
+        const val BLOCKS_PER_SECOND = 6
+        const val BLOCKS_PER_DAY = (60 / BLOCKS_PER_SECOND) * 60 * 24
+        const val BLOCKS_PER_YEAR = BLOCKS_PER_DAY * 365
     }
 }
