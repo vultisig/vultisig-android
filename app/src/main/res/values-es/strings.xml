@@ -426,4 +426,6 @@
     <string name="referral_onboarding_title">Referido</string>
     <string name="referral_onboarding_get_started">Empezar</string>
     <string name="offline">Sin conexión</string>
+    <string name="deposit_error_destination_address">La dirección de destino no debe estar vacía</string>
+    <string name="deposit_error_invalid_destination_address">La dirección de destino no es válida</string>
 </resources>
