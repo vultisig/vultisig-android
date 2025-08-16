@@ -18,12 +18,12 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
                     opts
                 )
             }
-        } catch (e: IllegalArgumentException) {
+        } catch (e: Exception) {
             Timber.e(
                 e,
                 "Navigation failed for route: $route"
             )
-            error("Navigation failed for route: $route")
+            error("Navigation failed for route: $route. the exception is $e")
         }
     }
 }
@@ -40,14 +40,12 @@ internal fun NavController.route(route: NavigateAction<Any>) {
                 opts
             )
         }
-    } catch (e: IllegalArgumentException) {
+    } catch (e: Exception) {
         Timber.e(
             e,
             "Navigation failed for route: $dst"
         )
-        error(
-            "Navigation failed for route: $dst"
-        )
+        error("Navigation failed for route: $route. the exception is $e")
     }
 }
 

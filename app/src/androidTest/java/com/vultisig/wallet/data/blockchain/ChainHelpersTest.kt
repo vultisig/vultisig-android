@@ -257,7 +257,7 @@ class ChainHelpersTest {
                 val approveImageHashes = swapHelper.getPreSignedApproveImageHash(
                     it, payload
                 )
-                nonceIncrement.add(BigInteger.ONE)
+                nonceIncrement =  nonceIncrement.add(BigInteger.ONE)
                 preImageHashes = approveImageHashes
             }
             swapPayload.let {

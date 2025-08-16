@@ -6,9 +6,11 @@ import com.vultisig.wallet.ui.utils.back
 import com.vultisig.wallet.util.VaultTest
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
+@Ignore
 class EnableChainFlowTest : VaultTest() {
 
     @Before

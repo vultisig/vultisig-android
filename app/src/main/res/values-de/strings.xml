@@ -425,6 +425,7 @@
     <string name="referral_screen_code_hint">Bis zu 4 Zeichen eingeben</string>
     <string name="referral_onboarding_title">Empfehlung</string>
     <string name="referral_onboarding_get_started">Loslegen</string>
+    <string name="offline">Sie sind offline</string>
     <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
     <string name="cacaopool_only_cacao_supported">Für Poolvorgänge wird nur das CACAO-Token unterstützt</string>

@@ -425,6 +425,7 @@
     <string name="referral_screen_code_hint">Introduce hasta 4 caracteres</string>
     <string name="referral_onboarding_title">Referido</string>
     <string name="referral_onboarding_get_started">Empezar</string>
+    <string name="offline">Sin conexión</string>
     <string name="deposit_option_add_cacao_pool">Añadir a la piscina CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Eliminar de la piscina CACAO</string>
     <string name="cacaopool_only_cacao_supported">Solo se admite el token CACAO para las operaciones del pool</string>

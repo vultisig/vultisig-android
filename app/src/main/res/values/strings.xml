@@ -665,6 +665,7 @@
     <string name="referral_external_not_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
     <string name="referral_onboarding_get_started">Get started</string>
+    <string name="offline">You are offline</string>
     <string name="deposit_option_add_cacao_pool">Add to CACAO Pool</string>
     <string name="deposit_option_remove_cacao_pool">Remove from CACAO Pool</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
