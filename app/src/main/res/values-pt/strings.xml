@@ -423,6 +423,7 @@
     <string name="referral_screen_code_hint">Insira até 4 caracteres</string>
     <string name="referral_onboarding_title">Referência</string>
     <string name="referral_onboarding_get_started">Começar</string>
+    <string name="offline">Você está offline</string>
     <string name="deposit_error_destination_address">O endereço de destino não deve estar vazio</string>
     <string name="deposit_error_invalid_destination_address">O endereço de destino é inválido</string>
 </resources>
