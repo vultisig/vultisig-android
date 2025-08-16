@@ -180,8 +180,6 @@ class SchnorrKeygen(
                 error("timeout: failed to create vault within 60 seconds")
             }
         }
-
-        return false
     }
 
     private suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
@@ -280,8 +278,6 @@ class SchnorrKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
                 val keyshareHandler = Handle()
                 val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -295,6 +291,10 @@ class SchnorrKeygen(
                     chaincode = ""
                 )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                // slightly delay to give local party time to process outbound messages
+                delay(500)
+                setKeygenDone(true)
+                task.cancel()
             }
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
@@ -436,8 +436,6 @@ class SchnorrKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
                 val newKeyshareHandler = Handle()
                 val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -452,6 +450,9 @@ class SchnorrKeygen(
                     chaincode = ""
                 )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                delay(500) // slightly delay to give local party time to process outbound messages
+                setKeygenDone(true)
+                task.cancel()
             }
         } catch (e: Exception) {
             Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
