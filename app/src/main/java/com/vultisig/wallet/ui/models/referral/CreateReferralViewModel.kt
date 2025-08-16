@@ -92,30 +92,41 @@ internal class CreateReferralViewModel @Inject constructor(
                 thorChainApi.getTHORChainReferralFees()
             }
 
-            val registrationTokenFees =
-                (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
-            val feePerBlock = (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger()
-            val totalCost = registrationTokenFees + feePerBlock
-
-            val formattedRegistrationTokenFees =
-                "${CoinType.THORCHAIN.toValue(registrationTokenFees)} ${CoinType.THORCHAIN.symbol}"
-            val formattedCostTokenFees =
-                "${CoinType.THORCHAIN.toValue(totalCost)} ${CoinType.THORCHAIN.symbol}"
-
-            val formattedRegistrationFiatFees = registrationTokenFees.convertToFiat()
-            val formattedCostFiatFees = totalCost.convertToFiat()
+            val fees = calculateFees()
 
             state.update {
                 it.copy(
                     fees = FeesReferral.Result(
-                        registrationFeesToken = formattedRegistrationTokenFees,
-                        registrationFeesPrice = formattedRegistrationFiatFees,
-                        costFeesToken = formattedCostTokenFees,
-                        costFeesPrice = formattedCostFiatFees
+                        registrationFeesToken = fees.registrationFeesToken,
+                        registrationFeesPrice = fees.registrationFeesPrice,
+                        costFeesToken = fees.costFeesToken,
+                        costFeesPrice = fees.costFeesPrice
                     )
                 )
             }
         }
+    }
+
+    private suspend fun calculateFees(): FeesReferral.Result {
+        val registrationTokenFees =
+            (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
+        val feePerBlock = (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger()
+        val totalCost = registrationTokenFees + feePerBlock
+
+        val formattedRegistrationTokenFees =
+            "${CoinType.THORCHAIN.toValue(registrationTokenFees)} ${CoinType.THORCHAIN.symbol}"
+        val formattedCostTokenFees =
+            "${CoinType.THORCHAIN.toValue(totalCost)} ${CoinType.THORCHAIN.symbol}"
+
+        val formattedRegistrationFiatFees = registrationTokenFees.convertToFiat()
+        val formattedCostFiatFees = totalCost.convertToFiat()
+
+        return FeesReferral.Result(
+            registrationFeesToken = formattedRegistrationTokenFees,
+            registrationFeesPrice = formattedRegistrationFiatFees,
+            costFeesToken = formattedCostTokenFees,
+            costFeesPrice = formattedCostFiatFees,
+        )
     }
 
     private fun loadYearExpiration() {
@@ -215,7 +226,7 @@ internal class CreateReferralViewModel @Inject constructor(
     private fun getFormattedDateByAdding(add: Long): String {
         val currentDate = LocalDate.now()
         val nextYearDate = currentDate.plusYears(add)
-        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
+        val formatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.getDefault())
         return nextYearDate.format(formatter)
     }
 
@@ -234,5 +245,7 @@ internal class CreateReferralViewModel @Inject constructor(
     private companion object {
         const val DEFAULT_REGISTRATION_FEES = "1000000000"
         const val DEFAULT_BLOCK_FEES = "20"
+
+        const val DATE_FORMAT = "d MMMM yyyy"
     }
 }
