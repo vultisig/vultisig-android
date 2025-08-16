@@ -48,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MoreInfoBox
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -81,6 +82,7 @@ internal fun ReferralCreateScreen(
         onSubtractClick = model::onSubtractExpirationYear,
         onCreateReferral = model::onCreateReferralCode,
         onCleanReferralClick = model::onCleanReferralClick,
+        onDismissError = model::onDismissError,
     )
 }
 
@@ -94,9 +96,19 @@ private fun ReferralCreateScreen(
     onSubtractClick: () -> Unit,
     onCreateReferral: () -> Unit,
     onCleanReferralClick: () -> Unit,
+    onDismissError: () -> Unit,
 ) {
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
+
+    if (state.error != null) {
+        UiAlertDialog(
+            title = stringResource(R.string.dialog_default_error_title),
+            text = "Not enough balance",
+            confirmTitle = stringResource(R.string.try_again),
+            onDismiss = onDismissError,
+        )
+    }
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -473,6 +485,7 @@ internal fun SwapFormScreenPreview() {
         onSubtractClick = {},
         onCreateReferral = {},
         onCleanReferralClick = {},
+        onDismissError = {},
     )
 }
 

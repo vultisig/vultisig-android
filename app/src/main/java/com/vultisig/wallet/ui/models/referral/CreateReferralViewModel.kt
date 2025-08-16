@@ -7,10 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.symbol
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.time.LocalDate
@@ -38,6 +41,7 @@ internal data class CreateReferralUiState(
     val yearExpiration: Int = 1,
     val formattedYearExpiration: String = "",
     val fees: FeesReferral = FeesReferral.Loading,
+    val error: ReferralError? = null,
 )
 
 internal interface FeesReferral {
@@ -46,6 +50,7 @@ internal interface FeesReferral {
         val registrationFeesToken: String = "",
         val registrationFeesPrice: String = "",
         val costFeesToken: String = "",
+        val costFeesTokenAmount: String = "",
         val costFeesPrice: String = "",
     ) : FeesReferral
 }
@@ -56,6 +61,11 @@ internal enum class SearchStatusType {
     VALIDATION_ERROR,
     SUCCESS,
     ERROR,
+}
+
+internal enum class ReferralError {
+    BALANCE_ERROR,
+    UNKNOWN_ERROR,
 }
 
 internal fun SearchStatusType.isError(): Boolean {
@@ -69,9 +79,11 @@ internal class CreateReferralViewModel @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val accountsRepository: AccountsRepository,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
     private var nativeRuneFees: NativeTxFeeRune? = null
+    private var address: Address? = null
 
     val searchReferralTexFieldState = TextFieldState()
     val state = MutableStateFlow(CreateReferralUiState())
@@ -79,8 +91,10 @@ internal class CreateReferralViewModel @Inject constructor(
     init {
         loadYearExpiration()
         loadFees()
+        loadAddress()
         observeReferralTextField()
     }
+
 
     private fun loadFees() {
         viewModelScope.launch {
@@ -99,10 +113,24 @@ internal class CreateReferralViewModel @Inject constructor(
                     fees = FeesReferral.Result(
                         registrationFeesToken = fees.registrationFeesToken,
                         registrationFeesPrice = fees.registrationFeesPrice,
+                        costFeesTokenAmount = fees.costFeesTokenAmount,
                         costFeesToken = fees.costFeesToken,
                         costFeesPrice = fees.costFeesPrice
                     )
                 )
+            }
+        }
+    }
+
+    private fun loadAddress() {
+        viewModelScope.launch {
+            try {
+                accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                    .collect { address ->
+                        this@CreateReferralViewModel.address = address
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
             }
         }
     }
@@ -131,6 +159,7 @@ internal class CreateReferralViewModel @Inject constructor(
             registrationFeesToken = formattedRegistrationTokenFees,
             registrationFeesPrice = formattedRegistrationFiatFees,
             costFeesToken = formattedCostTokenFees,
+            costFeesTokenAmount = totalCost.toString(),
             costFeesPrice = formattedCostFiatFees,
         )
     }
@@ -192,6 +221,14 @@ internal class CreateReferralViewModel @Inject constructor(
         }
     }
 
+    fun onDismissError() {
+        viewModelScope.launch {
+            state.update {
+                it.copy(error = null)
+            }
+        }
+    }
+
     fun onCleanReferralClick() {
         viewModelScope.launch {
             searchReferralTexFieldState.clearText()
@@ -229,7 +266,21 @@ internal class CreateReferralViewModel @Inject constructor(
     }
 
     fun onCreateReferralCode() {
-
+        viewModelScope.launch {
+            val fees = state.value.fees
+            require(fees is FeesReferral.Result) {
+                "Can't proceed, error calculating toAmount"
+            }
+            val balance = address?.accounts?.find { it.token.isNativeToken }?.tokenValue?.value
+                ?: BigInteger.ZERO
+            val totalFees = fees.costFeesTokenAmount.toBigInteger()
+            if (balance < totalFees) {
+                state.update {
+                    it.copy(error = ReferralError.BALANCE_ERROR)
+                }
+                return@launch
+            }
+        }
     }
 
     private fun getFormattedDateByAdding(add: Long): String {
