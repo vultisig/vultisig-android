@@ -428,7 +428,5 @@
     <string name="offline">Sie sind offline</string>
     <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
-    <string name="cacaopool_only_cacao_supported">Für Poolvorgänge wird nur das CACAO-Token unterstützt</string>
-    <string name="deposit_form_remove_from_pool">Aus dem Pool entfernen</string>
-    <string name="deposit_form_add_to_pool">Zum Pool hinzufügen</string>
+    <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
 </resources>
