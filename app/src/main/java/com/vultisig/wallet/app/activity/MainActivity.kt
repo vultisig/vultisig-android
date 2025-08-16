@@ -80,18 +80,6 @@ class MainActivity : AppCompatActivity() {
 
                 val navController = rememberNavController()
 
-                LaunchedEffect(Unit) {
-                    mainViewModel.destination.collect {
-                        navController.route(it.dst.route, it.opts)
-                    }
-                }
-
-                LaunchedEffect(Unit) {
-                    mainViewModel.route.collect {
-                        navController.route(it)
-                    }
-                }
-
                 Box(
                     modifier = Modifier
                         .background(color = Colors.Default.oxfordBlue800)
@@ -101,6 +89,18 @@ class MainActivity : AppCompatActivity() {
                         navController = navController,
                         startDestination = screen,
                     )
+
+                    LaunchedEffect(Unit) {
+                        mainViewModel.destination.collect {
+                            navController.route(it.dst.route, it.opts)
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        mainViewModel.route.collect {
+                            navController.route(it)
+                        }
+                    }
 
                     BiometryAuthScreen()
 
