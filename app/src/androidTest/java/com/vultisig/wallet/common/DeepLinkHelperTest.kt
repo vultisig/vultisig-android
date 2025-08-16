@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.models.TssAction
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 
-
 class DeepLinkHelperTest {
     private val testInput = "vultisig:?type=NewVault&tssType=Reshare&jsonData=xxx"
 

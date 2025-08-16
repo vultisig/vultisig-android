@@ -425,4 +425,5 @@
     <string name="referral_screen_code_hint">Unesite do 4 znaka</string>
     <string name="referral_onboarding_title">Preporuka</string>
     <string name="referral_onboarding_get_started">Započnite</string>
+    <string name="offline">Niste povezani s internetom</string>
 </resources>
