@@ -438,6 +438,6 @@
     <string name="deposit_option_add_cacao_pool">Toevoegen aan CACAO-pool</string>
     <string name="deposit_option_remove_cacao_pool">Verwijderen uit CACAO-pool</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
-    <string name="deposit_form_remove_from_pool">Verwijderen uit het zwembad</string>
+    <string name="deposit_form_remove_from_pool">Verwijderen uit de pool</string>
     <string name="deposit_form_add_to_pool">Toevoegen aan pool</string>
 </resources>

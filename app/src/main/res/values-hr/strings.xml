@@ -426,9 +426,9 @@
     <string name="referral_onboarding_title">Preporuka</string>
     <string name="referral_onboarding_get_started">Započnite</string>
     <string name="offline">Niste povezani s internetom</string>
-    <string name="deposit_option_add_cacao_pool">Dodaj u CACAO bazen</string>
-    <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO bazena</string>
+    <string name="deposit_option_add_cacao_pool">Dodaj u CACAO pool</string>
+    <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
-    <string name="deposit_form_remove_from_pool">Ukloni iz bazena</string>
-    <string name="deposit_form_add_to_pool">Dodaj u bazen</string>
+    <string name="deposit_form_remove_from_pool">Ukloni iz poola</string>
+    <string name="deposit_form_add_to_pool">Dodaj u pool</string>
 </resources>
