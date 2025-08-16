@@ -6,8 +6,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +26,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import wallet.core.jni.CoinType
+import java.math.BigInteger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -26,12 +37,18 @@ internal data class CreateReferralUiState(
     val searchStatus: SearchStatusType = SearchStatusType.DEFAULT,
     val yearExpiration: Int = 1,
     val formattedYearExpiration: String = "",
-    val isFeesLoading: Boolean = true,
-    val registrationFeesToken: String,
-    val registrationFeesPrice: String,
-    val costFeesToken: String,
-    val costFeesPrice: String,
+    val fees: FeesReferral = FeesReferral.Loading,
 )
+
+internal interface FeesReferral {
+    data object Loading : FeesReferral
+    data class Result(
+        val registrationFeesToken: String = "",
+        val registrationFeesPrice: String = "",
+        val costFeesToken: String = "",
+        val costFeesPrice: String = "",
+    ) : FeesReferral
+}
 
 internal enum class SearchStatusType {
     DEFAULT,
@@ -51,20 +68,52 @@ internal class CreateReferralViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
 ) : ViewModel() {
+    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private var nativeRuneFees: NativeTxFeeRune? = null
+
     val searchReferralTexFieldState = TextFieldState()
     val state = MutableStateFlow(CreateReferralUiState())
 
     init {
         loadYearExpiration()
-        calculateFees()
+        loadFees()
         observeReferralTextField()
     }
 
-    private fun calculateFees() {
+    private fun loadFees() {
         viewModelScope.launch {
-            val referralFees = withContext(Dispatchers.IO) {
+            state.update {
+                it.copy(fees = FeesReferral.Loading)
+            }
+
+            nativeRuneFees = withContext(Dispatchers.IO) {
                 thorChainApi.getTHORChainReferralFees()
+            }
+
+            val registrationTokenFees =
+                (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
+            val feePerBlock = (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger()
+            val totalCost = registrationTokenFees + feePerBlock
+
+            val formattedRegistrationTokenFees =
+                "${CoinType.THORCHAIN.toValue(registrationTokenFees)} ${CoinType.THORCHAIN.symbol}"
+            val formattedCostTokenFees =
+                "${CoinType.THORCHAIN.toValue(totalCost)} ${CoinType.THORCHAIN.symbol}"
+
+            val formattedRegistrationFiatFees = registrationTokenFees.convertToFiat()
+            val formattedCostFiatFees = totalCost.convertToFiat()
+
+            state.update {
+                it.copy(
+                    fees = FeesReferral.Result(
+                        registrationFeesToken = formattedRegistrationTokenFees,
+                        registrationFeesPrice = formattedRegistrationFiatFees,
+                        costFeesToken = formattedCostTokenFees,
+                        costFeesPrice = formattedCostFiatFees
+                    )
+                )
             }
         }
     }
@@ -168,5 +217,22 @@ internal class CreateReferralViewModel @Inject constructor(
         val nextYearDate = currentDate.plusYears(add)
         val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
         return nextYearDate.format(formatter)
+    }
+
+    private suspend fun BigInteger.convertToFiat(): String {
+        val gasFeeParams = Coins.coins[Chain.ThorChain]?.first()?.let { selectedCoin ->
+            GasFeeParams(
+                gasLimit = BigInteger.ONE,
+                gasFee = TokenValue(this, "RUNE", 8),
+                selectedToken = selectedCoin,
+            )
+        } ?: error("Can't calculate fees")
+
+        return gasFeeToEstimate.invoke(gasFeeParams).formattedFiatValue
+    }
+
+    private companion object {
+        const val DEFAULT_REGISTRATION_FEES = "1000000000"
+        const val DEFAULT_BLOCK_FEES = "20"
     }
 }

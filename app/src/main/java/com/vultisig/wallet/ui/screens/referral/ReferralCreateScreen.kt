@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.CreateReferralUiState
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel
+import com.vultisig.wallet.ui.models.referral.FeesReferral
 import com.vultisig.wallet.ui.models.referral.SearchStatusType
 import com.vultisig.wallet.ui.models.referral.isError
 import com.vultisig.wallet.ui.theme.Theme
@@ -262,18 +263,20 @@ private fun ReferralCreateScreen(
 
                 UiSpacer(16.dp)
 
+                val fees = state.getFees()
+
                 EstimatedNetworkFee(
                     title = "Registration Fees",
-                    tokenGas = "1231",
-                    fiatGas = "12312"
+                    tokenGas = fees.tokenGas,
+                    fiatGas = fees.tokenPrice,
                 )
 
                 UiSpacer(16.dp)
 
                 EstimatedNetworkFee(
                     title = "Cost",
-                    tokenGas = "1231",
-                    fiatGas = "12312"
+                    tokenGas = fees.costGas,
+                    fiatGas = fees.costPrice,
                 )
             }
         },
@@ -293,6 +296,18 @@ private fun ReferralCreateScreen(
             )
         }
     )
+}
+
+private fun CreateReferralUiState.getFees() =
+    if (this.fees is FeesReferral.Result) {
+        FeesUiModel(
+        tokenGas = this.fees.registrationFeesToken,
+        tokenPrice = this.fees.registrationFeesPrice,
+        costGas = this.fees.costFeesToken,
+        costPrice = this.fees.costFeesPrice,
+    )
+} else {
+    FeesUiModel()
 }
 
 private fun CreateReferralUiState.getInnerState() =
@@ -397,7 +412,6 @@ fun CounterYearExpiration(
     }
 }
 
-// TODO: Abstract away for other places
 @Composable
 internal fun EstimatedNetworkFee(
     title: String,
@@ -418,17 +432,31 @@ internal fun EstimatedNetworkFee(
             modifier = Modifier
                 .weight(1f),
         ) {
-            Text(
-                text = tokenGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
-            )
+            if (tokenGas.isEmpty()) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .width(80.dp)
+                )
 
-            Text(
-                text = fiatGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.extraLight,
-            )
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .width(80.dp)
+                )
+            } else {
+                Text(
+                    text = tokenGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = fiatGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
     }
 }
@@ -447,3 +475,10 @@ internal fun SwapFormScreenPreview() {
         onCleanReferralClick = {},
     )
 }
+
+private data class FeesUiModel(
+    val tokenGas: String = "",
+    val tokenPrice: String = "",
+    val costGas: String = "",
+    val costPrice: String = "",
+)
