@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.R
 
-internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
+internal fun Tokens!.getCoinLogo(logoName: String): ImageModel {
     return when (logoName.lowercase()) {
         "btc" -> R.drawable.bitcoin
         "bch" -> R.drawable.bitcoincash

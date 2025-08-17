@@ -38,7 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew build test --parallel --build-cache --no-daemon
+        run: ./gradlew build test --parallel --build-cache --no-daemon --stacktrace --info
       
       # Enable KVM for better emulator performance
       - name: Enable KVM
