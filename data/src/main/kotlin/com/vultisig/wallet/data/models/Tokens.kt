@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.models.Chain.Ripple
 
 @Deprecated("Use Coins file")
-object Tokens {
+object Tokens! {
     val rune = Coin(
         chain = Chain.ThorChain,
         ticker = "RUNE",
