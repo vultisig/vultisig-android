@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -52,13 +53,16 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -73,6 +77,7 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.first
 
 internal enum class DepositOption {
     Bond,
@@ -150,6 +155,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val enableCoin: EnableTokenUseCase,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -179,6 +185,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
+    private var addressJob: Job? = null
 
     fun loadData(
         vaultId: String,
@@ -253,20 +260,20 @@ internal class DepositFormViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, chain)
-                    .collect { address ->
-                        this@DepositFormViewModel.address.value = address
-                        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-                        state.update {
-                            it.copy(selectedToken = selectedToken)
-                        }
+        loadAddress(vaultId, chain)
+
+
+        address.filterNotNull()
+            .onEach { address ->
+                val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
+                selectedToken?.let {
+                    state.update {
+                        it.copy(selectedToken = selectedToken)
                     }
-            } catch (e: Exception) {
-                Timber.e(e)
+                }
             }
-        }
+            .launchIn(viewModelScope)
+
 
         viewModelScope.launch {
             combine(
@@ -275,31 +282,37 @@ internal class DepositFormViewModel @Inject constructor(
                 state.map { it.depositOption }.distinctUntilChanged(),
                 state.map { it.selectedToken }.distinctUntilChanged(),
             ) { selectedMergeToken, address, depositOption, selectedToken ->
-                when (depositOption) {
-                    DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge ->
+
+                var tickerToActivate : String?
+
+                val account = when (depositOption) {
+                    DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge -> {
+                        tickerToActivate = selectedMergeToken.ticker
                         address.accounts.find {
                             it.token.ticker.equals(
                                 selectedMergeToken.ticker, ignoreCase = true
                             )
                         }
+                    }
 
                     DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                     DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                     DepositOption.MintYTCY, DepositOption.MintYRUNE,
                     DepositOption.RedeemYTCY, DepositOption.RedeemYRUNE,
-                    DepositOption.Custom ->
+                    DepositOption.Custom -> {
+                        tickerToActivate = selectedToken.ticker
                         address.accounts.find { it.token.id == selectedToken.id }
-
-                    else -> address.accounts.find { it.token.isNativeToken }
-                }?.tokenValue
-                    ?.let(mapTokenValueToStringWithUnit)
-                    .let { tokenValue ->
-                        state.update {
-                            it.copy(
-                                balance = tokenValue?.asUiText() ?: UiText.Empty
-                            )
-                        }
                     }
+
+                    else -> {
+                        val account = address.accounts.find { it.token.isNativeToken }
+                        tickerToActivate = account?.token?.ticker
+                        account
+                    }
+                }
+
+                updateTokenAmount(account, chain, tickerToActivate, vaultId)
+
             }.collect {}
         }
 
@@ -337,6 +350,52 @@ internal class DepositFormViewModel @Inject constructor(
                     else -> Unit
                 }
             }.collect {}
+        }
+    }
+
+    private suspend fun updateTokenAmount(
+        account: Account?,
+        chain: Chain,
+        tickerToActivate: String?,
+        vaultId: String
+    ) {
+        if (account != null) {
+            account.tokenValue?.let { tokenValue ->
+                val value = mapTokenValueToStringWithUnit(tokenValue)
+                state.update { state ->
+                    state.copy(
+                        amountError = null,
+                        balance = value.asUiText()
+                    )
+                }
+            }
+        } else {
+            val token = findCoin(chain, tickerToActivate)
+            token?.let {
+                enableCoin(vaultId, token)
+                loadAddress(vaultId, chain)
+            } ?: run {
+                state.update {
+                    it.copy(
+                        balance = UiText.Empty,
+                        amountError = "$tickerToActivate must be enabled before proceeding.".asUiText()
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadAddress(vaultId: String, chain: Chain) {
+        addressJob?.cancel()
+        addressJob = viewModelScope.launch {
+            try {
+                accountsRepository.loadAddress(vaultId, chain)
+                    .collect { address ->
+                        this@DepositFormViewModel.address.value = address
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
         }
     }
 
@@ -1748,6 +1807,22 @@ internal class DepositFormViewModel @Inject constructor(
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
+        val dstAddr = nodeAddressFieldState.text.toString()
+        if (dstAddr.isBlank()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_destination_address)
+            )
+        }
+
+        if (!chainAccountAddressRepository.isValid(
+                state.value.selectedDstChain,
+                dstAddr
+            )
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_destination_address)
+            )
+        }
 
         val selectedMergeToken = state.value.selectedCoin
         val selectedAccount = address.accounts
@@ -1758,7 +1833,6 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
-        val dstAddr = nodeAddressFieldState.text.toString()
 
         val memo = DepositMemo.TransferIbc(
             srcChain = chain,
@@ -2064,6 +2138,11 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
     }
+
+
+    private fun findCoin(chain: Chain, ticker: String?) =
+        Coins.coins[chain]?.find { it.ticker.equals(ticker, ignoreCase = true) }
+
 }
 
 internal data class TokenMergeInfo(

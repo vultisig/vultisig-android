@@ -214,7 +214,9 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 network = when (it.network) {
                     NetworkOption.Internet -> NetworkOption.Local
                     NetworkOption.Local -> NetworkOption.Internet
-                }
+                },
+                devices = emptyList(),
+                selectedDevices = emptyList(),
             )
         }
         viewModelScope.launch {
