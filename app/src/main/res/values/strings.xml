@@ -14,6 +14,10 @@
     <string name="deposit_option_stake_ruji">Stake RUJI</string>
     <string name="deposit_option_unstake_ruji">Unstake RUJI</string>
     <string name="deposit_option_collect_ruji">Collect RUJI staking rewards</string>
+    <string name="deposit_option_receive_yrune">Mint yRUNE</string>
+    <string name="deposit_option_receive_ytcy">Mint yTCY</string>
+    <string name="deposit_option_sell_yrune">Redeem yRUNE</string>
+    <string name="deposit_option_sell_ytcy">Redeem yTCY</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
@@ -250,6 +254,11 @@
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
     <string name="deposit_form_operator_fee_title">Operator’s Fee (optional)</string>
+    <string name="deposit_form_operator_slippage_title">Slippage</string>
+    <string name="slippage_required_error">Slippage is required</string>
+    <string name="slippage_invalid_error">Slippage must be between 1 and 100</string>
+    <string name="slippage_format_error">Invalid number format</string>
+    <string name="slippage_hint">Slippage percentage</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
@@ -258,6 +267,7 @@
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>
+    <string name="referral_code_settings_title">Referral Code</string>
     <string name="address_book_edit_mode_done">Done</string>
     <string name="address_book_add_address_button">Add Address</string>
     <string name="add_address_title">Add Address</string>
@@ -615,7 +625,7 @@
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
     <string name="tx_overview_screen_title" translatable="false">Overview</string>
-    <string name="tx_transaction_succesful_screen_title" translatable="false">Transaction succesful</string>
+    <string name="tx_transaction_successful_screen_title" translatable="false">Transaction successful</string>
     <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
     <string name="tx_overview_screen_tx_from" translatable="false">From</string>
@@ -625,4 +635,35 @@
     <string name="tx_overview_screen_tx_send" translatable="false">Send</string>
     <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
     <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
+
+    <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
+    <string name="verify_deposit_function_overview">Function overview</string>
+    <string name="verify_deposit_sending" >You\'re sending</string>
+    <string name="verify_deposit_network">Network</string>
+    <string name="verify_deposit_hold_paired">Hold for paired sign</string>
+    <string name="verify_deposit_sign_transaction">Sign transaction</string>
+
+    <string name="referral_invite_sheet_description">Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault</string>
+    <string name="referral_invite_next">Next</string>
+
+    <string name="referral_invite_onboarding_1" translatable="false">Invite friends.</string>
+    <string name="referral_invite_onboarding_2" translatable="false">Earn rewards.</string>
+    <string name="referral_invite_onboarding_3" translatable="false">Save on fees.</string>
+    <string name="referral_screen_title" translatable="false">Vultisig - Referral</string>
+    <string name="referral_screen_code_hint">Enter Up to 4 characters</string>
+    <string name="referral_create_referral">Create referral</string>
+    <string name="referral_save_referral_code">Save referral code</string>
+    <string name="referral_or">OR</string>
+    <string name="referral_create_code_and_earn">Create your own code and earn\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
+    <string name="referral_save">Save\u0020</string>
+    <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
+    <string name="referral_edit_referred">Edit referred code</string>
+    <string name="referral_edit_referral">Edit referral</string>
+    <string name="referral_external_linked">Referral code successfully linked</string>
+    <string name="referral_external_not_linked">Referral code does not exist</string>
+    <string name="referral_external_not_failed">Failed to check referral code</string>
+    <string name="referral_onboarding_title">Referral</string>
+    <string name="referral_onboarding_get_started">Get started</string>
+    <string name="offline">You are offline</string>
 </resources>

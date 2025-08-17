@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.models.settings
 
-import com.vultisig.wallet.data.models.settings.AppCurrency.entries
-
 
 enum class AppCurrency(
     val ticker: String,
@@ -12,7 +10,7 @@ enum class AppCurrency(
 
     EUR(ticker = "EUR"),
 
-    RUB(ticker = "RUB"),
+    CHF(ticker = "CHF"),
 
     GBP(ticker = "GBP"),
 

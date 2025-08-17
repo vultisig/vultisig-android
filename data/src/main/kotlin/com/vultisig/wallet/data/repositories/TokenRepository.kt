@@ -2,10 +2,9 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
+import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -13,28 +12,23 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.collections.first
-import kotlin.collections.map
 
 interface TokenRepository {
 
     suspend fun getToken(tokenId: String): Coin?
-
-    fun getChainTokens(chain: Chain, vault: Vault): Flow<List<Coin>>
 
     suspend fun getNativeToken(chainId: String): Coin
 
@@ -54,84 +48,14 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
     private val thorApi: ThorChainApi,
-    private val splTokenRepository: SplTokenRepository,
     private val coinGeckoApi: CoinGeckoApi,
     private val currencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val oneInchToCoins: OneInchToCoinsUseCase,
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
-
-    override fun getChainTokens(
-        chain: Chain,
-        vault: Vault,
-    ): Flow<List<Coin>> = flow {
-
-        val builtInTokens = builtInTokens.first().filter { it.chain == chain }
-        emitUniqueTokens(builtInTokens)
-
-        val refreshedTokens = getRefreshTokens(chain, vault)
-        emitUniqueTokens(
-            builtInTokens,
-            refreshedTokens
-        )
-
-        when (chain.standard) {
-            TokenStandard.EVM -> {
-                emitEvmTokens(chain, refreshedTokens, builtInTokens)
-            }
-            TokenStandard.SOL -> {
-                emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
-            }
-            else -> Unit
-        }
-    }
-
-    private suspend fun FlowCollector<List<Coin>>.emitEvmTokens(
-        chain: Chain,
-        refreshedTokens: List<Coin>,
-        builtInTokens: List<Coin>,
-    ) {
-        val oneInchTokens = oneInchApi.getTokens(chain)
-        emitUniqueTokens(
-            oneInchTokens.tokens.toCoins(chain),
-            refreshedTokens,
-            builtInTokens,
-        )
-    }
-
-    private suspend fun FlowCollector<List<Coin>>.emitSolTokens(
-        vault: Vault,
-        chain: Chain,
-        refreshedTokens: List<Coin>,
-        builtInTokens: List<Coin>,
-    ) {
-        val address = vault.coins.first { it.chain == chain }.address
-        val tokens = splTokenRepository.getTokens(address)
-        emitUniqueTokens(
-            refreshedTokens,
-            builtInTokens,
-            tokens,
-        )
-
-        val jupiterTokens = splTokenRepository.getJupiterTokens()
-        emitUniqueTokens(
-            refreshedTokens,
-            builtInTokens,
-            tokens,
-            jupiterTokens
-        )
-    }
-
-    private suspend fun FlowCollector<List<Coin>>.emitUniqueTokens(vararg items: List<Coin>) {
-        val coins = items.toList()
-            .flatten()
-            .asSequence()
-            .distinctBy { it.contractAddress to it.chain.id }
-            .toList()
-        emit(coins)
-    }
 
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
@@ -177,6 +101,14 @@ internal class TokenRepositoryImpl @Inject constructor(
                             val parts = denom.split(".")
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
+                            }
+                        } else if (denom.startsWith("x/nami-index-nav", true)) {
+                            // Unfortunately, there is no "yrune" or "tcy" in the denom,
+                            // so the only option is to map it manually with actual contract address
+                            symbol = when {
+                                denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
+                                denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
+                                else -> denom
                             }
                         } else if (denom.startsWith("x/",true)) {
                             val parts = denom.split("/")
@@ -231,8 +163,7 @@ internal class TokenRepositoryImpl @Inject constructor(
 
                 val oneInchTokensWithBalance =
                     oneInchApi.getTokensByContracts(chain, contractsWithBalance)
-                return oneInchTokensWithBalance
-                    .toCoins(chain)
+                return oneInchToCoins(oneInchTokensWithBalance,chain)
             }
         }
     }
@@ -362,31 +293,14 @@ internal class TokenRepositoryImpl @Inject constructor(
         ).toInt()
     }
 
-    private fun Map<String, OneInchTokenJson>.toCoins(chain: Chain): List<Coin> =
-        asSequence()
-            .map { it.value }
-            .map {
-                val supportedCoin = Coins.coins.getOrDefault(chain, emptyList())
-                    .firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
-                Coin(
-                    contractAddress = it.address,
-                    chain = chain,
-                    ticker = it.symbol,
-                    logo = it.logoURI ?: "",
-                    decimal = it.decimals,
-                    isNativeToken = supportedCoin?.isNativeToken == true,
-                    priceProviderID = "",
-                    address = "",
-                    hexPublicKey = "",
-                )
-            }
-            .toList()
-
 
     private val enabledByDefaultTokens = listOf(Tokens.tcy)
         .groupBy { it.chain }
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
+
+        private const val YRUNE_CONTRACT = "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
+        private const val YTCY_CONTRACT = "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
     }
 }

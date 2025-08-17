@@ -11,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +27,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
+import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
@@ -80,27 +84,37 @@ class MainActivity : AppCompatActivity() {
 
                 val navController = rememberNavController()
 
-                LaunchedEffect(Unit) {
-                    mainViewModel.destination.collect {
-                        navController.route(it.dst.route, it.opts)
-                    }
-                }
-
-                LaunchedEffect(Unit) {
-                    mainViewModel.route.collect {
-                        navController.route(it)
-                    }
-                }
-
                 Box(
                     modifier = Modifier
                         .background(color = Colors.Default.oxfordBlue800)
                         .safeDrawingPadding()
                 ) {
-                    SetupNavGraph(
-                        navController = navController,
-                        startDestination = screen,
-                    )
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        OfflineBanner(mainViewModel.isOffline.value)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            SetupNavGraph(
+                                navController = navController,
+                                startDestination = screen,
+                            )
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        mainViewModel.destination.collect {
+                            navController.route(it.dst.route, it.opts)
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        mainViewModel.route.collect {
+                            navController.route(it)
+                        }
+                    }
 
                     BiometryAuthScreen()
 
