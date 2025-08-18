@@ -451,4 +451,7 @@
     <string name="referral_create_invalid">Недействительный</string>
     <string name="referral_create_available">Доступен</string>
     <string name="referral_create_taken">Уже занят</string>
+    <string name="referral_edit_external_title">Редактировать реферальный код</string>
+    <string name="referral_use_referred_code">Использовать реферальный код</string>
+    <string name="referral_save_referred_code">Сохранить реферальный код</string>
 </resources>
