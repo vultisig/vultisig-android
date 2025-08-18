@@ -381,9 +381,12 @@ fun CounterYearExpiration(
         Button(
             onClick = { if (count != 1) onDecrement() },
             shape = RoundedCornerShape(12.dp),
+            enabled = count != 1,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Theme.colors.backgrounds.secondary,
-                contentColor = Theme.colors.text.primary
+                contentColor = Theme.colors.text.primary,
+                disabledContainerColor = Theme.colors.backgrounds.secondary.copy(alpha = 0.5f),
+                disabledContentColor = Theme.colors.text.primary.copy(alpha = 0.5f),
             ),
             modifier = Modifier
                 .weight(1f)
