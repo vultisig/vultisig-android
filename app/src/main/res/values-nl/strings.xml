@@ -451,4 +451,7 @@
     <string name="referral_create_invalid">Ongeldig</string>
     <string name="referral_create_available">Beschikbaar</string>
     <string name="referral_create_taken">Al in gebruik</string>
+    <string name="referral_edit_external_title">Verwezen code bewerken</string>
+    <string name="referral_use_referred_code">Verwezen code gebruiken</string>
+    <string name="referral_save_referred_code">Verwezen code opslaan</string>
 </resources>

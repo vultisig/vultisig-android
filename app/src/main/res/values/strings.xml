@@ -684,4 +684,8 @@
     <string name="referral_create_invalid">Invalid</string>
     <string name="referral_create_available">Available</string>
     <string name="referral_create_taken">Already Taken</string>
+
+    <string name="referral_edit_external_title">Edit referred code</string>
+    <string name="referral_use_referred_code">Use referred code</string>
+    <string name="referral_save_referred_code">Save referred code</string>
 </resources>

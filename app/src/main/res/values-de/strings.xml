@@ -442,4 +442,7 @@
     <string name="referral_create_invalid">Ungültig</string>
     <string name="referral_create_available">Verfügbar</string>
     <string name="referral_create_taken">Bereits vergeben</string>
+    <string name="referral_edit_external_title">Empfohlenen Code bearbeiten</string>
+    <string name="referral_use_referred_code">Empfohlenen Code verwenden</string>
+    <string name="referral_save_referred_code">Empfohlenen Code speichern</string>
 </resources>

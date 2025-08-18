@@ -442,4 +442,7 @@
     <string name="referral_create_invalid">Nevažeće</string>
     <string name="referral_create_available">Dostupno</string>
     <string name="referral_create_taken">Već zauzeto</string>
+    <string name="referral_edit_external_title">Uredi preporučeni kod</string>
+    <string name="referral_use_referred_code">Koristi preporučeni kod</string>
+    <string name="referral_save_referred_code">Spremi preporučeni kod</string>
 </resources>

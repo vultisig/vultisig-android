@@ -442,4 +442,7 @@
     <string name="referral_create_invalid">Non valido</string>
     <string name="referral_create_available">Disponibile</string>
     <string name="referral_create_taken">Già in uso</string>
+    <string name="referral_edit_external_title">Modifica codice referente</string>
+    <string name="referral_use_referred_code">Usa codice referente</string>
+    <string name="referral_save_referred_code">Salva codice referente</string>
 </resources>
