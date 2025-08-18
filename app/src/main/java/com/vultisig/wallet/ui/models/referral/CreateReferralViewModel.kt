@@ -193,7 +193,9 @@ internal class CreateReferralViewModel @Inject constructor(
             }
 
             try {
-                val exists = thorChainApi.existsReferralCode(referralCode)
+                val exists = withContext(Dispatchers.IO){
+                    thorChainApi.existsReferralCode(referralCode)
+                }
                 val status = if (exists) {
                     SearchStatusType.ERROR
                 } else {
