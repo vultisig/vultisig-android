@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -136,6 +137,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val searchToken: SearchTokenUseCase,
+    private val referralRepository: ReferralCodeSettingsRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -158,6 +160,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedDst = MutableStateFlow<SendSrc?>(null)
     private val selectedSrcId = MutableStateFlow<String?>(null)
     private val selectedDstId = MutableStateFlow<String?>(null)
+    private val referralCode = MutableStateFlow<String?>(null)
 
     private val estimatedNetworkFeeTokenValue = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
@@ -879,12 +882,19 @@ internal class SwapFormViewModel @Inject constructor(
                                     )
                                     mayaSwapQuote as SwapQuote.MayaChain to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
+                                    val referral = referralCode.value
+                                        ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
+                                            ?.let { referralRepository.getExternalReferralBy(it) }
+
+                                    referral?.let { referralCode.update { it } }
+
                                     val thorSwapQuote = swapQuoteRepository.getSwapQuote(
                                         dstAddress = dst.address.address,
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
+                                        referralCode = referral.orEmpty()
                                     )
                                     thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }

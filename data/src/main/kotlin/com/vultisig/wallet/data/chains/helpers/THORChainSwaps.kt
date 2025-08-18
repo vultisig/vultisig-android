@@ -22,6 +22,7 @@ class THORChainSwaps(
     companion object {
         const val AFFILIATE_FEE_ADDRESS = "va"
         const val AFFILIATE_FEE_RATE = "50" // 50 BP
+        const val AFFILIATE_FEE_REFERRAL_RATE = "10"
     }
 
     private fun getPreSignedInputData(
