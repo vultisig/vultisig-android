@@ -101,6 +101,8 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version = "1.7.0" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version = "1.7.0" }
 
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 

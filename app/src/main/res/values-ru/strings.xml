@@ -434,4 +434,7 @@
     <string name="referral_screen_code_hint">Введите до 4 символов</string>
     <string name="referral_onboarding_title">Реферал</string>
     <string name="referral_onboarding_get_started">Начать</string>
+    <string name="offline">Вы не в сети</string>
+    <string name="deposit_error_destination_address">Адрес назначения не должен быть пустым</string>
+    <string name="deposit_error_invalid_destination_address">Неверный адрес назначения</string>
 </resources>

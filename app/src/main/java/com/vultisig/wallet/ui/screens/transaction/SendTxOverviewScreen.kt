@@ -190,7 +190,7 @@ internal fun TxDetails(
             )
 
             CopyIcon(
-                textToCopy = hash,
+                textToCopy = link,
                 size = 12.dp,
                 onCopyCompleted = onTxHashCopied
             )
