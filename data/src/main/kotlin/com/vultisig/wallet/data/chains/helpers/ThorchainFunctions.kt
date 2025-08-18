@@ -134,6 +134,51 @@ object ThorchainFunctions {
             ),
         )
     }
+
+    fun stakeTcyCompound(
+        fromAddress: String,
+        stakingContract: String,
+        denom: String,
+        amount: BigInteger,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "tokenContract cannot be empty" }
+        require(denom.isNotEmpty()) { "Denom cannot be empty" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = """{ "liquid": { "bond": {} } }""",
+            coins = listOf(
+                CosmosCoin(
+                    denom = denom,
+                    amount = amount.toString(),
+                )
+            ),
+        )
+    }
+
+    fun unStakeTcyCompound(
+        units: Int,
+        stakingContract: String,
+        fromAddress: String,
+    ): WasmExecuteContractPayload {
+        require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "tokenContract cannot be empty" }
+        require(units >= 1) { "units cannot be lower than 1" }
+
+        return WasmExecuteContractPayload(
+            senderAddress = fromAddress,
+            contractAddress = stakingContract,
+            executeMsg = """{ "liquid": { "unbond": {} } }""",
+            coins = listOf(
+                CosmosCoin(
+                    denom = "x/staking-tcy",
+                    amount = units.toString(),
+                )
+            )
+        )
+    }
 }
 
 private const val VULTISIG_AFFILIATE_ADDRESS =

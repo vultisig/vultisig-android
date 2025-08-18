@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
+import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
@@ -103,6 +104,8 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
+        onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
+        onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
     )
 }
 
@@ -156,6 +159,8 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
+    onAutoCompoundTcyStake: (Boolean) -> Unit = {},
+    onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -349,6 +354,24 @@ internal fun DepositFormScreen(
                             onLostFocus = onTokenAmountLostFocus,
                             error = state.tokenAmountError,
                         )
+
+                        if (depositOption == DepositOption.StakeTcy) {
+                            AutoCompoundToggle(
+                                title = "Enable Auto-Compounding",
+                                subtitle = "Automatically compound your TCY rewards",
+                                isChecked = state.isAutoCompoundTcyStake,
+                                onCheckedChange = onAutoCompoundTcyStake
+                            )
+                        }
+
+                        if (depositOption == DepositOption.UnstakeTcy) {
+                            AutoCompoundToggle(
+                                title = "Unstake Auto-Compound TCY",
+                                subtitle = "Unstake from auto-compounding TCY deposits",
+                                isChecked = state.isAutoCompoundTcyUnStake,
+                                onCheckedChange = onAutoCompoundTcyUnStake
+                            )
+                        }
                     }
 
                     if (depositOption !in arrayOf(
