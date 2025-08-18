@@ -203,6 +203,7 @@ internal class CreateReferralViewModel @Inject constructor(
                     it.copy(searchStatus = status)
                 }
             } catch (t: Throwable) {
+                Timber.e(t)
                 state.update {
                     it.copy(searchStatus = SearchStatusType.DEFAULT)
                 }
