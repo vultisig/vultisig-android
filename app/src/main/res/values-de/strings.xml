@@ -425,6 +425,9 @@
     <string name="referral_screen_code_hint">Bis zu 4 Zeichen eingeben</string>
     <string name="referral_onboarding_title">Empfehlung</string>
     <string name="referral_onboarding_get_started">Loslegen</string>
+    <string name="offline">Sie sind offline</string>
+    <string name="deposit_error_destination_address">Die Zieladresse darf nicht leer sein</string>
+    <string name="deposit_error_invalid_destination_address">Die Zieladresse ist ungültig</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>
 </resources>

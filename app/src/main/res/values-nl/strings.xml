@@ -434,6 +434,9 @@
     <string name="referral_screen_code_hint">Voer maximaal 4 tekens in</string>
     <string name="referral_onboarding_title">Verwijzing</string>
     <string name="referral_onboarding_get_started">Aan de slag</string>
+    <string name="offline">Je bent offline</string>
+    <string name="deposit_error_destination_address">Bestemmingsadres mag niet leeg zijn</string>
+    <string name="deposit_error_invalid_destination_address">Bestemmingsadres is ongeldig</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
     <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>
 </resources>

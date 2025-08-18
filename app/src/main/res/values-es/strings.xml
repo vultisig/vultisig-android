@@ -425,6 +425,9 @@
     <string name="referral_screen_code_hint">Introduce hasta 4 caracteres</string>
     <string name="referral_onboarding_title">Referido</string>
     <string name="referral_onboarding_get_started">Empezar</string>
+    <string name="offline">Sin conexión</string>
+    <string name="deposit_error_destination_address">La dirección de destino no debe estar vacía</string>
+    <string name="deposit_error_invalid_destination_address">La dirección de destino no es válida</string>
     <string name="referral_create_info_title">Programa de referidos</string>
     <string name="referral_create_info_content">El programa de referidos se aplica a los intercambios de THORChain y se realiza con el mejor esfuerzo posible. Necesitas registrar un THORName para usar el referido de Vultisig. La tarifa de registro es de 10 RUNE y 1 RUNE por cada año, que se paga a la red THORChain.</string>
 </resources>
