@@ -20,9 +20,10 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -80,7 +81,7 @@ internal fun SearchStatusType.isError(): Boolean {
 @HiltViewModel
 internal class CreateReferralViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val sendNavigator: Navigator<SendDst>,
+    private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
@@ -286,12 +287,12 @@ internal class CreateReferralViewModel @Inject constructor(
                     ?: error("Can't load account")
                 val balance = account.tokenValue?.value ?: BigInteger.ZERO
                 val totalFees = fees.costFeesTokenAmount.toBigInteger()
-                if (balance < totalFees) {
+                /*if (balance < totalFees) {
                     state.update {
                         it.copy(error = ReferralError.BALANCE_ERROR)
                     }
                     return@launch
-                }
+                } */
 
                 // get specific and create transaction
                 val address = account.token.address
@@ -336,11 +337,8 @@ internal class CreateReferralViewModel @Inject constructor(
 
                 transactionRepository.addTransaction(tx)
 
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
-                        transactionId = tx.id,
-                        vaultId = vaultId,
-                    )
+                navigator.route(
+                    Route.VerifyDeposit(vaultId, tx.id)
                 )
             } catch (t: Throwable) {
                 Timber.e(t)

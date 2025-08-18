@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
+import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
@@ -524,6 +525,12 @@ internal fun SetupNavGraph(
 
         composable<VerifySwap> {
             VerifySwapScreen()
+        }
+
+        composable<VerifyDeposit> {
+            VerifyDepositScreen(
+                navController = navController,
+            )
         }
 
         // keysign

@@ -432,6 +432,12 @@ internal sealed class Route {
         val transactionId: TransactionId,
     )
 
+    @Serializable
+    data class VerifyDeposit(
+        val vaultId: String,
+        val transactionId: TransactionId,
+    )
+
     // keysign
 
     data object Keysign {
