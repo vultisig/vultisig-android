@@ -44,7 +44,7 @@ internal fun ReferralEditExternalScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Edit Referred Code",
+                title = stringResource(R.string.referral_edit_external_title),
                 onBackClick = {
                     val code = model.referralCodeTextFieldState.text.toString()
                     navController.previousBackStackEntry
@@ -65,7 +65,7 @@ internal fun ReferralEditExternalScreen(
                     .padding(horizontal = 16.dp),
             ) {
                 Text(
-                    text = "Use referred code",
+                    text = stringResource(R.string.referral_use_referred_code),
                     textAlign = TextAlign.Start,
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
@@ -92,7 +92,7 @@ internal fun ReferralEditExternalScreen(
                 UiSpacer(1f)
 
                 VsButton(
-                    label = "Save referred code",
+                    label = stringResource(R.string.referral_save_referred_code),
                     modifier = Modifier.fillMaxWidth(),
                     variant = VsButtonVariant.Primary,
                     state = VsButtonState.Enabled,
