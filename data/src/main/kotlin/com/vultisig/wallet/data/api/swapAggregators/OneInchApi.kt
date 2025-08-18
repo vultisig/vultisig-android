@@ -122,7 +122,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("amount", amount)
         parameter("from", srcAddress)
         parameter("slippage", "0.5")
-        parameter("disableEstimate", false)
+        parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
         parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
