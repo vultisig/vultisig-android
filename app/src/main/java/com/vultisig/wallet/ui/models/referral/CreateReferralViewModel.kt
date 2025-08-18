@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -140,14 +141,9 @@ internal class CreateReferralViewModel @Inject constructor(
     private suspend fun calculateFees(extraYears: Int = 1): FeesReferral.Result {
         val registrationTokenFees =
             (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
-        val feePerBlock = (nativeRuneFees?.feePerBlock ?: DEFAULT_BLOCK_FEES).toBigInteger()
-        val extraCost = if (extraYears > 1) {
-            feePerBlock * (BLOCKS_PER_YEAR * (extraYears - 1)).toBigInteger()
-        } else {
-            BigInteger.ZERO
-        }
+       val extraFeesPerYear = CoinType.THORCHAIN.toUnit(extraYears.toBigDecimal())
 
-        val totalCost = registrationTokenFees + feePerBlock + extraCost
+        val totalCost = registrationTokenFees + extraFeesPerYear
 
         val formattedRegistrationTokenFees =
             "${CoinType.THORCHAIN.toValue(registrationTokenFees)} ${CoinType.THORCHAIN.symbol}"
