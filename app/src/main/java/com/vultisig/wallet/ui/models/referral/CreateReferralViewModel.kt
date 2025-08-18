@@ -10,18 +10,20 @@ import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
-import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,7 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 internal data class CreateReferralUiState(
@@ -78,11 +81,12 @@ internal fun SearchStatusType.isError(): Boolean {
 @HiltViewModel
 internal class CreateReferralViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val navigator: Navigator<Destination>,
+    private val sendNavigator: Navigator<SendDst>,
     private val thorChainApi: ThorChainApi,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val accountsRepository: AccountsRepository,
+    private val transactionRepository: DepositTransactionRepository,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
     private var nativeRuneFees: NativeTxFeeRune? = null
@@ -97,7 +101,6 @@ internal class CreateReferralViewModel @Inject constructor(
         loadAddress()
         observeReferralTextField()
     }
-
 
     private fun loadFees() {
         viewModelScope.launch {
@@ -267,11 +270,11 @@ internal class CreateReferralViewModel @Inject constructor(
 
     fun onCreateReferralCode() {
         viewModelScope.launch {
+            // perform validations
             val fees = state.value.fees
             require(fees is FeesReferral.Result) {
                 "Can't proceed, error calculating toAmount"
             }
-
             val account = address?.accounts?.find { it.token.isNativeToken }
                 ?: error("Can't load account")
             val balance = account.tokenValue?.value ?: BigInteger.ZERO
@@ -283,8 +286,16 @@ internal class CreateReferralViewModel @Inject constructor(
                 return@launch
             }
 
-            val memo = ""
-
+            // get specific and create transaction
+            val address = account.token.address
+            val referralCode = searchReferralTexFieldState.text.toString()
+            val memo = "~:${referralCode.uppercase()}:THOR:$address:$address"
+            val gasFees = TokenValue(
+                value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                unit = CoinType.THORCHAIN.symbol,
+                decimals = CoinType.THORCHAIN.decimals,
+            )
+            val toAmount = fees.costFeesTokenAmount.toBigInteger()
             val blockchainSpecific = blockChainSpecificRepository.getSpecific(
                 chain = Chain.ThorChain,
                 address = account.token.address,
@@ -295,11 +306,32 @@ internal class CreateReferralViewModel @Inject constructor(
                 isMaxAmountEnabled = false,
                 transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
                 tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
-                gasFee = TokenValue(
-                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
-                    unit = CoinType.THORCHAIN.symbol,
-                    decimals = CoinType.THORCHAIN.decimals,
+                gasFee = gasFees,
+            ).blockChainSpecific
+
+            val tx = DepositTransaction(
+                id = UUID.randomUUID().toString(),
+                vaultId = vaultId,
+                srcToken = account.token,
+                srcAddress = address,
+                dstAddress = "",
+                memo = memo,
+                srcTokenValue = TokenValue(
+                    value = toAmount,
+                    token = account.token,
                 ),
+                estimatedFees = gasFees,
+                estimateFeesFiat = gasFees.value.convertToFiat(),
+                blockChainSpecific = blockchainSpecific,
+            )
+
+            transactionRepository.addTransaction(tx)
+
+            sendNavigator.navigate(
+                SendDst.VerifyTransaction(
+                    transactionId = tx.id,
+                    vaultId = vaultId,
+                )
             )
         }
     }
