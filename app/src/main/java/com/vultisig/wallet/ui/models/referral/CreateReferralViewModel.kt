@@ -287,12 +287,12 @@ internal class CreateReferralViewModel @Inject constructor(
                     ?: error("Can't load account")
                 val balance = account.tokenValue?.value ?: BigInteger.ZERO
                 val totalFees = fees.costFeesTokenAmount.toBigInteger()
-                /*if (balance < totalFees) {
+                if (balance < totalFees) {
                     state.update {
                         it.copy(error = ReferralError.BALANCE_ERROR)
                     }
                     return@launch
-                } */
+                }
 
                 // get specific and create transaction
                 val address = account.token.address
