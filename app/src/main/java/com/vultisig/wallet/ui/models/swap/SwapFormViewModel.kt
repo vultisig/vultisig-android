@@ -886,7 +886,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         ?: vaultId?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
                                             ?.let { referralRepository.getExternalReferralBy(it) }
 
-                                    referral?.let { referralCode.update { it } }
+                                    referral?.let { code -> referralCode.update { code } }
 
                                     val thorSwapQuote = swapQuoteRepository.getSwapQuote(
                                         dstAddress = dst.address.address,
