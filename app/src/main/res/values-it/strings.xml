@@ -430,4 +430,16 @@
     <string name="deposit_error_invalid_destination_address">L\'indirizzo di destinazione non è valido</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>
+    <string name="referral_create_not_enough_balance">Saldo insufficiente</string>
+    <string name="referral_create_unknown_error">Errore sconosciuto</string>
+    <string name="referral_create_create_referral">Crea referral</string>
+    <string name="referral_create_pick_referral_code">Scegli codice referral</string>
+    <string name="referral_create_expiration_date">Data di scadenza</string>
+    <string name="referral_create_set_expiration_years">Imposta scadenza (in anni)</string>
+    <string name="referral_create_registration_fees">Commissioni di registrazione</string>
+    <string name="referral_create_cost">Costo</string>
+    <string name="referral_create_create_referral_code">Crea codice referral</string>
+    <string name="referral_create_invalid">Non valido</string>
+    <string name="referral_create_available">Disponibile</string>
+    <string name="referral_create_taken">Già in uso</string>
 </resources>
