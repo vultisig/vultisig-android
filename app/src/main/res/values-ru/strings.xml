@@ -435,6 +435,8 @@
     <string name="referral_onboarding_title">Реферал</string>
     <string name="referral_onboarding_get_started">Начать</string>
     <string name="offline">Вы не в сети</string>
+    <string name="deposit_error_destination_address">Адрес назначения не должен быть пустым</string>
+    <string name="deposit_error_invalid_destination_address">Неверный адрес назначения</string>
     <string name="deposit_option_add_cacao_pool">Добавить в пул CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Удалить из пула CACAO</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
