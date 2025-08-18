@@ -1235,7 +1235,6 @@ internal class DepositFormViewModel @Inject constructor(
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
             )
 
         val gasFeeFiat = getFeesFiatValue(
@@ -1306,7 +1305,6 @@ internal class DepositFormViewModel @Inject constructor(
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
             )
         val gasFeeFiat = getFeesFiatValue(
             specific,
