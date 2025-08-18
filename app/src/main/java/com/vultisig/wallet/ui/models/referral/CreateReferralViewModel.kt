@@ -141,7 +141,9 @@ internal class CreateReferralViewModel @Inject constructor(
     private suspend fun calculateFees(extraYears: Int = 1): FeesReferral.Result {
         val registrationTokenFees =
             (nativeRuneFees?.registerFeeRune ?: DEFAULT_REGISTRATION_FEES).toBigInteger()
-       val extraFeesPerYear = CoinType.THORCHAIN.toUnit(extraYears.toBigDecimal())
+        val extraFeesPerYear =
+            (nativeRuneFees?.feePerBlock
+                ?: DEFAULT_BLOCK_FEES).toBigInteger() * extraYears.toBigInteger() * BLOCKS_PER_YEAR
 
         val totalCost = registrationTokenFees + extraFeesPerYear
 
@@ -270,7 +272,7 @@ internal class CreateReferralViewModel @Inject constructor(
                 "Can't proceed, error calculating toAmount"
             }
 
-            val account =  address?.accounts?.find { it.token.isNativeToken }
+            val account = address?.accounts?.find { it.token.isNativeToken }
                 ?: error("Can't load account")
             val balance = account.tokenValue?.value ?: BigInteger.ZERO
             val totalFees = fees.costFeesTokenAmount.toBigInteger()
@@ -327,8 +329,6 @@ internal class CreateReferralViewModel @Inject constructor(
 
         const val DATE_FORMAT = "d MMMM yyyy"
 
-        const val BLOCKS_PER_SECOND = 6
-        const val BLOCKS_PER_DAY = (60 / BLOCKS_PER_SECOND) * 60 * 24
-        const val BLOCKS_PER_YEAR = BLOCKS_PER_DAY * 365
+        val BLOCKS_PER_YEAR = "5256000".toBigInteger()
     }
 }
