@@ -20,7 +20,6 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -270,69 +269,77 @@ internal class CreateReferralViewModel @Inject constructor(
 
     fun onCreateReferralCode() {
         viewModelScope.launch {
-            // perform validations
-            val fees = state.value.fees
-            require(fees is FeesReferral.Result) {
-                "Can't proceed, error calculating toAmount"
-            }
-            val account = address?.accounts?.find { it.token.isNativeToken }
-                ?: error("Can't load account")
-            val balance = account.tokenValue?.value ?: BigInteger.ZERO
-            val totalFees = fees.costFeesTokenAmount.toBigInteger()
-            if (balance < totalFees) {
-                state.update {
-                    it.copy(error = ReferralError.BALANCE_ERROR)
+            try {
+                // perform validations
+                val fees = state.value.fees
+                require(fees is FeesReferral.Result) {
+                    "Can't proceed, error calculating toAmount"
                 }
-                return@launch
-            }
+                val account = address?.accounts?.find { it.token.isNativeToken }
+                    ?: error("Can't load account")
+                val balance = account.tokenValue?.value ?: BigInteger.ZERO
+                val totalFees = fees.costFeesTokenAmount.toBigInteger()
+                 if (balance < totalFees) {
+                    state.update {
+                        it.copy(error = ReferralError.BALANCE_ERROR)
+                    }
+                    return@launch
+                }
 
-            // get specific and create transaction
-            val address = account.token.address
-            val referralCode = searchReferralTexFieldState.text.toString()
-            val memo = "~:${referralCode.uppercase()}:THOR:$address:$address"
-            val gasFees = TokenValue(
-                value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
-                unit = CoinType.THORCHAIN.symbol,
-                decimals = CoinType.THORCHAIN.decimals,
-            )
-            val toAmount = fees.costFeesTokenAmount.toBigInteger()
-            val blockchainSpecific = blockChainSpecificRepository.getSpecific(
-                chain = Chain.ThorChain,
-                address = account.token.address,
-                token = account.token,
-                isDeposit = true,
-                memo = memo,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-                tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
-                gasFee = gasFees,
-            ).blockChainSpecific
-
-            val tx = DepositTransaction(
-                id = UUID.randomUUID().toString(),
-                vaultId = vaultId,
-                srcToken = account.token,
-                srcAddress = address,
-                dstAddress = "",
-                memo = memo,
-                srcTokenValue = TokenValue(
-                    value = toAmount,
-                    token = account.token,
-                ),
-                estimatedFees = gasFees,
-                estimateFeesFiat = gasFees.value.convertToFiat(),
-                blockChainSpecific = blockchainSpecific,
-            )
-
-            transactionRepository.addTransaction(tx)
-
-            sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = tx.id,
-                    vaultId = vaultId,
+                // get specific and create transaction
+                val address = account.token.address
+                val referralCode = searchReferralTexFieldState.text.toString()
+                val memo = "~:${referralCode.uppercase()}:THOR:$address:$address"
+                val gasFees = TokenValue(
+                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                    unit = CoinType.THORCHAIN.symbol,
+                    decimals = CoinType.THORCHAIN.decimals,
                 )
-            )
+                val toAmount = fees.costFeesTokenAmount.toBigInteger()
+                val blockchainSpecific = blockChainSpecificRepository.getSpecific(
+                    chain = Chain.ThorChain,
+                    address = account.token.address,
+                    token = account.token,
+                    isDeposit = true,
+                    memo = memo,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                    tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
+                    gasFee = gasFees,
+                ).blockChainSpecific
+
+                val tx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = account.token,
+                    srcAddress = address,
+                    dstAddress = "",
+                    memo = memo,
+                    srcTokenValue = TokenValue(
+                        value = toAmount,
+                        token = account.token,
+                    ),
+                    estimatedFees = gasFees,
+                    estimateFeesFiat = gasFees.value.convertToFiat(),
+                    blockChainSpecific = blockchainSpecific,
+                )
+
+                transactionRepository.addTransaction(tx)
+
+                sendNavigator.navigate(
+                    SendDst.VerifyTransaction(
+                        transactionId = tx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (t: Throwable) {
+                Timber.e(t)
+
+                state.update {
+                    it.copy(error = ReferralError.UNKNOWN_ERROR)
+                }
+            }
         }
     }
 
