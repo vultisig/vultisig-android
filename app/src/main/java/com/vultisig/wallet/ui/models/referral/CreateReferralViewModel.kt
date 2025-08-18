@@ -193,7 +193,7 @@ internal class CreateReferralViewModel @Inject constructor(
             }
 
             try {
-                val exists = withContext(Dispatchers.IO){
+                val exists = withContext(Dispatchers.IO) {
                     thorChainApi.existsReferralCode(referralCode)
                 }
                 val status = if (exists) {
@@ -303,18 +303,20 @@ internal class CreateReferralViewModel @Inject constructor(
                     decimals = CoinType.THORCHAIN.decimals,
                 )
                 val toAmount = fees.costFeesTokenAmount.toBigInteger()
-                val blockchainSpecific = blockChainSpecificRepository.getSpecific(
-                    chain = Chain.ThorChain,
-                    address = account.token.address,
-                    token = account.token,
-                    isDeposit = true,
-                    memo = memo,
-                    isSwap = false,
-                    isMaxAmountEnabled = false,
-                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-                    tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
-                    gasFee = gasFees,
-                ).blockChainSpecific
+                val blockchainSpecific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = Chain.ThorChain,
+                        address = account.token.address,
+                        token = account.token,
+                        isDeposit = true,
+                        memo = memo,
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                        tokenAmountValue = fees.costFeesTokenAmount.toBigInteger(),
+                        gasFee = gasFees,
+                    ).blockChainSpecific
+                }
 
                 val tx = DepositTransaction(
                     id = UUID.randomUUID().toString(),
