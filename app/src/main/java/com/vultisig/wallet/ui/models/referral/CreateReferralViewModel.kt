@@ -111,7 +111,9 @@ internal class CreateReferralViewModel @Inject constructor(
                 thorChainApi.getTHORChainReferralFees()
             }
 
-            val fees = calculateFees()
+            val fees = withContext(Dispatchers.IO) {
+                calculateFees()
+            }
 
             state.update {
                 it.copy(
@@ -256,7 +258,9 @@ internal class CreateReferralViewModel @Inject constructor(
 
     private suspend fun updateFormattedDate(toAdd: Int) {
         val formattedDate = getFormattedDateByAdding(toAdd.toLong())
-        val newFees = calculateFees(toAdd)
+        val newFees = withContext(Dispatchers.IO) {
+            calculateFees(toAdd)
+        }
 
         state.update {
             it.copy(
@@ -279,7 +283,7 @@ internal class CreateReferralViewModel @Inject constructor(
                     ?: error("Can't load account")
                 val balance = account.tokenValue?.value ?: BigInteger.ZERO
                 val totalFees = fees.costFeesTokenAmount.toBigInteger()
-                 if (balance < totalFees) {
+                if (balance < totalFees) {
                     state.update {
                         it.copy(error = ReferralError.BALANCE_ERROR)
                     }

@@ -62,6 +62,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.CreateReferralUiState
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel
 import com.vultisig.wallet.ui.models.referral.FeesReferral
+import com.vultisig.wallet.ui.models.referral.ReferralError
 import com.vultisig.wallet.ui.models.referral.SearchStatusType
 import com.vultisig.wallet.ui.models.referral.isError
 import com.vultisig.wallet.ui.theme.Theme
@@ -102,9 +103,14 @@ private fun ReferralCreateScreen(
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
 
     if (state.error != null) {
+        val message = when (state.error) {
+            ReferralError.BALANCE_ERROR -> stringResource(R.string.referral_create_not_enough_balance)
+            else -> stringResource(R.string.referral_create_unknown_error)
+        }
+
         UiAlertDialog(
             title = stringResource(R.string.dialog_default_error_title),
-            text = "Not enough balance",
+            text = message,
             confirmTitle = stringResource(R.string.try_again),
             onDismiss = onDismissError,
         )
@@ -114,7 +120,7 @@ private fun ReferralCreateScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Create Referral",
+                title = stringResource(R.string.referral_create_create_referral),
                 onBackClick = onBackPressed,
                 iconRight = R.drawable.ic_info,
             )
@@ -147,7 +153,7 @@ private fun ReferralCreateScreen(
                 Text(
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
-                    text = "Pick Referral Code",
+                    text = stringResource(R.string.referral_create_pick_referral_code),
                     textAlign = TextAlign.Start,
                 )
 
@@ -163,7 +169,7 @@ private fun ReferralCreateScreen(
                         textFieldState = searchTextFieldState,
                         innerState = state.getInnerState(),
                         hint = stringResource(R.string.referral_screen_code_hint),
-                        focusRequester = null, //focusRequester,
+                        focusRequester = null,
                         trailingIcon = if (state.searchStatus.isError() && isNotEmpty) {
                             R.drawable.x
                         } else {
@@ -180,7 +186,7 @@ private fun ReferralCreateScreen(
                     UiSpacer(8.dp)
 
                     VsButton(
-                        label = "Search",
+                        label = stringResource(R.string.referral_create_search),
                         shape = RoundedCornerShape(percent = 20),
                         variant = VsButtonVariant.Primary,
                         state = VsButtonState.Enabled,
@@ -230,7 +236,7 @@ private fun ReferralCreateScreen(
                 Text(
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
-                    text = "Set Expiration (in years)",
+                    text = stringResource(R.string.referral_create_set_expiration_years),
                     textAlign = TextAlign.Start,
                 )
 
@@ -252,7 +258,7 @@ private fun ReferralCreateScreen(
                     Text(
                         color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
-                        text = "Expiration date",
+                        text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,
                     )
 
@@ -278,7 +284,7 @@ private fun ReferralCreateScreen(
                 val fees = state.getFees()
 
                 EstimatedNetworkFee(
-                    title = "Registration Fees",
+                    title = stringResource(R.string.referral_create_registration_fees),
                     tokenGas = fees.tokenGas,
                     fiatGas = fees.tokenPrice,
                 )
@@ -286,7 +292,7 @@ private fun ReferralCreateScreen(
                 UiSpacer(16.dp)
 
                 EstimatedNetworkFee(
-                    title = "Cost",
+                    title = stringResource(R.string.referral_create_cost),
                     tokenGas = fees.costGas,
                     fiatGas = fees.costPrice,
                 )
@@ -294,7 +300,7 @@ private fun ReferralCreateScreen(
         },
         bottomBar = {
             VsButton(
-                label = "Create referral code",
+                label = stringResource(R.string.referral_create_create_referral_code),
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 32.dp)
                     .fillMaxWidth(),
@@ -334,9 +340,9 @@ private fun SearchReferralTag(
     type: SearchStatusType,
 ) {
     val (color, text) = when (type) {
-        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, "Invalid")
-        SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, "Available")
-        SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, "Already Taken")
+        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_invalid))
+        SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, stringResource(R.string.referral_create_available))
+        SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_taken))
         else -> Pair(Theme.colors.alerts.error, "Unknown")
     }
 
