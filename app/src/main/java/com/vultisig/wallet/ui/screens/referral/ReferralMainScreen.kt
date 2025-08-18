@@ -16,6 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,13 +52,14 @@ internal fun ReferralScreen(
 ) {
     val clipboardData = VsClipboardService.getClipboardData()
     val state by model.state.collectAsState()
-    val newEditedReferral =
-        navController.currentBackStackEntry
-            ?.savedStateHandle
-            ?.get<String>(NEW_EXTERNAL_REFERRAL_CODE) ?: ""
 
-    if (newEditedReferral.isNotEmpty()) {
-        model.onNewEditedReferral(newEditedReferral)
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE)) {
+        val code = savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE).orEmpty()
+        if (code.isNotEmpty()) {
+            model.onNewEditedReferral(code)
+            savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
+        }
     }
 
     ReferralScreen(
