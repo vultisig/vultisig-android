@@ -43,12 +43,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/LICENSE*.md"
-            pickFirsts.add("META-INF/DEPENDENCIES")
-            pickFirsts.add("META-INF/LICENSE")
-            pickFirsts.add("META-INF/LICENSE.txt")
-            pickFirsts.add("META-INF/NOTICE")
-            pickFirsts.add("META-INF/NOTICE.txt")
-            pickFirsts.add("META-INF/ASL2.0")
         }
     }
     tasks.withType<Test> {
