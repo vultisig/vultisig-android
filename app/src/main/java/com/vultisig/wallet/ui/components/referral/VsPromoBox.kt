@@ -70,9 +70,11 @@ fun VsPromoBox(
 fun VsPromoTag(
     icon: Int,
     text: String,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
+            .padding(start = 16.dp)
             .background(
                 color = Theme.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(
