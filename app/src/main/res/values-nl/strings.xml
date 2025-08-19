@@ -457,4 +457,14 @@
     <string name="referral_edit_external_title">Verwezen code bewerken</string>
     <string name="referral_use_referred_code">Verwezen code gebruiken</string>
     <string name="referral_save_referred_code">Verwezen code opslaan</string>
+    <string name="referral_program_tag">Verwijzingsprogramma</string>
+    <string name="referral_how_it_works">Hoe het werkt</string>
+    <string name="referral_create_code_title">Maak je verwijzingscode</string>
+    <string name="referral_create_code_description">Kies een korte code en stel je beloningsuitbetaling in.</string>
+    <string name="referral_share_title">Deel met vrienden</string>
+    <string name="referral_share_description">Nodig vrienden uit om je code te gebruiken bij het swappen.</string>
+    <string name="referral_earn_title">Verdien automatisch 10 bps op swaps</string>
+    <string name="referral_earn_description">Ontvang betalingen in je voorkeursasset elke keer als ze handelen.</string>
+    <string name="referral_use_code_title">Gebruik verwijzingscode - Bespaar 5bps</string>
+    <string name="referral_use_code_description">Gebruik een code van je vriend en bespaar op swapkosten.</string>
 </resources>
