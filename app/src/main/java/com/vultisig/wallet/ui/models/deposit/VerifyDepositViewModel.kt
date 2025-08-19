@@ -49,17 +49,18 @@ internal class VerifyDepositViewModel @Inject constructor(
 
     val state = MutableStateFlow(VerifyDepositUiModel())
     private val password = MutableStateFlow<String?>(null)
-    private val args = runCatching { savedStateHandle.toRoute<Route.VerifySwap>() }.getOrNull()
+    private val args = runCatching { savedStateHandle.toRoute<Route.VerifyDeposit>() }.getOrNull()
     private var transactionId: String? = savedStateHandle[SendDst.ARG_TRANSACTION_ID]
     private var vaultId: String? = savedStateHandle["vault_id"]
 
     init {
         viewModelScope.launch {
-            // TODO: Remove once old navigation is completly kill
-            if (transactionId == null && vaultId == null) {
-                transactionId = requireNotNull(args?.transactionId)
-                vaultId = requireNotNull(args?.vaultId)
-            }
+            transactionId = transactionId ?: args?.transactionId
+            vaultId = vaultId ?: args?.vaultId
+
+            requireNotNull(transactionId) { "transactionId is null" }
+            requireNotNull(vaultId) { "vaultId is null" }
+
             val transaction = depositTransactionRepository.getTransaction(transactionId!!)
             val depositTransactionUiModel = mapTransactionToUiModel(transaction)
             state.update {
