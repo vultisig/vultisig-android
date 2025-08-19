@@ -54,7 +54,7 @@ internal fun ReferralOnboardingScreen(
                 .padding(16.dp),
         ) {
             VsPromoTag(
-                icon = R.drawable.ic_cup,
+                icon = R.drawable.ic_trumpet,
                 text = stringResource(R.string.referral_program_tag)
             )
 
