@@ -30,6 +30,18 @@ android {
             )
         }
     }
+
+    packaging {
+        resources {
+           pickFirsts.add("META-INF/DEPENDENCIES")
+            pickFirsts.add("META-INF/LICENSE")
+            pickFirsts.add("META-INF/LICENSE.txt")
+            pickFirsts.add("META-INF/NOTICE")
+            pickFirsts.add("META-INF/NOTICE.txt")
+            pickFirsts.add("META-INF/ASL2.0")
+        }
+    }
+
     sourceSets.getByName("main") {
         proto {
             srcDir("${project.rootProject.rootDir}/commondata/proto")
@@ -109,8 +121,12 @@ dependencies {
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
     implementation(libs.web3)
-    implementation(platform(libs.ethers.bom))
-    implementation(libs.ethers.abi)
+    implementation(platform(libs.ethers.bom)) {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    }
+    implementation(libs.ethers.abi) {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    }
 
     // test
     testImplementation(libs.ktor.client.mock)

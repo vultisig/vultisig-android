@@ -53,6 +53,16 @@ android {
         absolutePaths = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
     }
+    packaging {
+        resources {
+            pickFirsts.add("META-INF/DEPENDENCIES")
+            pickFirsts.add("META-INF/LICENSE")
+            pickFirsts.add("META-INF/LICENSE.txt")
+            pickFirsts.add("META-INF/NOTICE")
+            pickFirsts.add("META-INF/NOTICE.txt")
+            pickFirsts.add("META-INF/ASL2.0")
+        }
+    }
 }
 
 kotlin {
