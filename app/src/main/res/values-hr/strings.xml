@@ -448,4 +448,14 @@
     <string name="referral_edit_external_title">Uredi preporučeni kod</string>
     <string name="referral_use_referred_code">Koristi preporučeni kod</string>
     <string name="referral_save_referred_code">Spremi preporučeni kod</string>
+    <string name="referral_program_tag">Program preporuka</string>
+    <string name="referral_how_it_works">Kako funkcionira</string>
+    <string name="referral_create_code_title">Stvori svoj kod za preporuku</string>
+    <string name="referral_create_code_description">Odaberi kratki kod i postavi isplatu nagrade.</string>
+    <string name="referral_share_title">Podijeli s prijateljima</string>
+    <string name="referral_share_description">Pozovi prijatelje da koriste tvoj kod prilikom razmjene.</string>
+    <string name="referral_earn_title">Zaradite automatski 10 bps na razmjenama</string>
+    <string name="referral_earn_description">Primajte isplate u vašem preferiranom sredstvu svaki put kada trguju.</string>
+    <string name="referral_use_code_title">Koristi kod preporuke - Uštedi 5bps</string>
+    <string name="referral_use_code_description">Koristi kod od prijatelja i uštedi na naknadama za razmjenu.</string>
 </resources>

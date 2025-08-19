@@ -448,4 +448,14 @@
     <string name="referral_edit_external_title">Empfohlenen Code bearbeiten</string>
     <string name="referral_use_referred_code">Empfohlenen Code verwenden</string>
     <string name="referral_save_referred_code">Empfohlenen Code speichern</string>
+    <string name="referral_program_tag">Empfehlungsprogramm</string>
+    <string name="referral_how_it_works">So funktioniert es</string>
+    <string name="referral_create_code_title">Erstellen Sie Ihren Empfehlungscode</string>
+    <string name="referral_create_code_description">Wählen Sie einen kurzen Code und legen Sie Ihre Belohnungsauszahlung fest.</string>
+    <string name="referral_share_title">Mit Freunden teilen</string>
+    <string name="referral_share_description">Laden Sie Freunde ein, Ihren Code beim Tauschen zu verwenden.</string>
+    <string name="referral_earn_title">Verdienen Sie automatisch 10 bps bei Swaps</string>
+    <string name="referral_earn_description">Erhalten Sie Zahlungen in Ihrem bevorzugten Asset, wenn sie handeln.</string>
+    <string name="referral_use_code_title">Empfehlungscode verwenden - 5bps sparen</string>
+    <string name="referral_use_code_description">Verwenden Sie einen Code von Ihrem Freund und sparen Sie bei Swap-Gebühren.</string>
 </resources>
