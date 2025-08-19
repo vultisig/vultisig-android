@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
+import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
@@ -60,8 +61,10 @@ import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
@@ -524,6 +527,12 @@ internal fun SetupNavGraph(
             VerifySwapScreen()
         }
 
+        composable<VerifyDeposit> {
+            VerifyDepositScreen(
+                navController = navController,
+            )
+        }
+
         // keysign
         composable<Keysign.Join> {
             JoinKeysignView(
@@ -581,6 +590,57 @@ internal fun SetupNavGraph(
             )
         ) {
             ReferralOnboardingScreen(
+                navController = navController,
+            )
+        }
+        composable(
+            route = Destination.ReferralCode.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.ReferralOnboarding.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralOnboardingScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.ReferralExternalEdition.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralEditExternalScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.ReferralCreation.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralCreateScreen(
                 navController = navController,
             )
         }
