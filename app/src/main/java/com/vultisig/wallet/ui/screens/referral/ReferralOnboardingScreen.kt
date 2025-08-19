@@ -95,7 +95,7 @@ internal fun ReferralOnboardingScreen(
             VsPromoBox(
                 title = "Use Referral code - Save 5bps",
                 description = "Use a code from your friend and save on swap fees.",
-                icon = R.drawable.ic_referral,
+                icon = R.drawable.ic_user,
                 modifier = Modifier.padding(start = 48.dp, end = 16.dp),
             )
 
