@@ -44,7 +44,7 @@ fun VsPromoBox(
     ) {
         UiIcon(
             drawableResId = icon,
-            size = 16.dp,
+            size = 20.dp,
             tint = Theme.colors.primary.accent4,
         )
 
@@ -67,6 +67,41 @@ fun VsPromoBox(
 }
 
 @Composable
+fun VsPromoTag(
+    icon: Int,
+    text: String,
+) {
+    Row(
+        modifier = Modifier
+            .background(
+                color = Theme.colors.backgrounds.secondary,
+                shape = RoundedCornerShape(
+                    topEnd = 50.dp,
+                    bottomEnd = 50.dp,
+                    topStart = 0.dp,
+                    bottomStart = 0.dp
+                )
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UiIcon(
+            drawableResId = icon,
+            size = 14.dp,
+            tint = Theme.colors.primary.accent4,
+        )
+
+        UiSpacer(8.dp)
+
+        Text(
+            text = text,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
+}
+
+@Composable
 @androidx.compose.ui.tooling.preview.Preview
 private fun ReferralBoxes() {
     Column(
@@ -75,11 +110,23 @@ private fun ReferralBoxes() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        UiSpacer(60.dp)
+
+        VsPromoTag(
+            icon = R.drawable.ic_cup,
+            text = "Referral Program"
+        )
+
+        UiSpacer(32.dp)
+
         VsPromoBox(
             icon = R.drawable.ic_cup,
             title = "Create your referral code",
             description = "Pick a short code and set your reward payout."
         )
+
+        UiSpacer(32.dp)
+
         VsPromoBox(
             icon = R.drawable.ic_cup,
             title = "Share with friends",
