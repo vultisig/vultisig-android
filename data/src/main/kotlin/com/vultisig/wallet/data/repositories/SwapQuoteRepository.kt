@@ -39,6 +39,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        referralCode: String = "",
     ): SwapQuote
 
     suspend fun getKyberSwapQuote(
@@ -237,6 +238,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        referralCode: String
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
@@ -248,6 +250,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 amount = thorTokenValue.toString(),
                 interval = "1",
                 isAffiliate = isAffiliate,
+                referralCode = referralCode,
             )
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message ?: "Unknown error")
@@ -278,8 +281,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 )
             }
         }
-
-
     }
 
     @OptIn(ExperimentalStdlibApi::class)

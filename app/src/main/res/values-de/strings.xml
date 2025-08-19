@@ -428,4 +428,24 @@
     <string name="offline">Sie sind offline</string>
     <string name="deposit_error_destination_address">Die Zieladresse darf nicht leer sein</string>
     <string name="deposit_error_invalid_destination_address">Die Zieladresse ist ungültig</string>
+    <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
+    <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
+    <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
+    <string name="referral_create_info_title">Empfehlungsprogramm</string>
+    <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>
+    <string name="referral_create_not_enough_balance">Nicht genügend Guthaben</string>
+    <string name="referral_create_unknown_error">Unbekannter Fehler</string>
+    <string name="referral_create_create_referral">Empfehlung erstellen</string>
+    <string name="referral_create_pick_referral_code">Empfehlungscode wählen</string>
+    <string name="referral_create_expiration_date">Ablaufdatum</string>
+    <string name="referral_create_set_expiration_years">Ablauf festlegen (in Jahren)</string>
+    <string name="referral_create_registration_fees">Registrierungsgebühren</string>
+    <string name="referral_create_cost">Kosten</string>
+    <string name="referral_create_create_referral_code">Empfehlungscode erstellen</string>
+    <string name="referral_create_invalid">Ungültig</string>
+    <string name="referral_create_available">Verfügbar</string>
+    <string name="referral_create_taken">Bereits vergeben</string>
+    <string name="referral_edit_external_title">Empfohlenen Code bearbeiten</string>
+    <string name="referral_use_referred_code">Empfohlenen Code verwenden</string>
+    <string name="referral_save_referred_code">Empfohlenen Code speichern</string>
 </resources>

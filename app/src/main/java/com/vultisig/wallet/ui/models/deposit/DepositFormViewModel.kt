@@ -80,6 +80,7 @@ import javax.inject.Inject
 import kotlin.collections.first
 
 internal enum class DepositOption {
+    AddCacaoPool,
     Bond,
     Unbond,
     Leave,
@@ -89,6 +90,7 @@ internal enum class DepositOption {
     TransferIbc,
     Switch,
     Merge,
+    RemoveCacaoPool,
     UnMerge,
     StakeTcy,
     UnstakeTcy,
@@ -219,6 +221,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Unbond,
                 DepositOption.Leave,
                 DepositOption.Custom,
+                DepositOption.AddCacaoPool,
+                DepositOption.RemoveCacaoPool,
             )
 
             Chain.Kujira, Chain.Osmosis -> listOf(
@@ -705,6 +709,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 val transaction = when (depositOption) {
+                    DepositOption.AddCacaoPool -> createAddCacaoPoolTransaction()
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
                     DepositOption.Leave -> createLeaveTransaction()
@@ -733,6 +738,7 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.MintYRUNE -> createReceiveYToken(DepositOption.MintYRUNE)
                     DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
                     DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
+                    DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -1177,6 +1183,153 @@ internal class DepositFormViewModel @Inject constructor(
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val address = accountsRepository.loadAddress(
+            vaultId,
+            chain
+        )
+            .first()
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        if (selectedToken.ticker != "CACAO") {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.cacaopool_only_cacao_supported)
+            )
+        }
+
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(
+            chain,
+            srcAddress
+        )
+        val memo = DepositMemo.DepositPool
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(
+            specific,
+            gasFee,
+            selectedToken
+        )
+
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+    }
+
+    private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
+
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val address = accountsRepository.loadAddress(
+            vaultId,
+            chain
+        )
+            .first()
+
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(
+            chain,
+            srcAddress
+        )
+
+        val basisPoints = tokenAmountFieldState.text.toString()
+            .toIntOrNull()
+
+        validateBasisPoints(basisPoints)?.let {
+            throw InvalidTransactionDataException(it)
+        }
+
+        val memo = DepositMemo.WithdrawPool(
+            basisPoints = basisPoints!! * 100, // 10000 BP = 100%; basisPoints in 0..100
+        )
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+        val gasFeeFiat = getFeesFiatValue(
+            specific,
+            gasFee,
+            selectedToken
+        )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(
+                value = BigInteger.ZERO,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+
     }
 
     private suspend fun createBondTransaction(): DepositTransaction {
