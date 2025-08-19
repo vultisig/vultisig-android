@@ -13,12 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun VsPromoBox(
+    icon: Int,
     title: String,
     description: String,
     modifier: Modifier = Modifier
@@ -41,7 +43,7 @@ fun VsPromoBox(
         verticalAlignment = Alignment.CenterVertically
     ) {
         UiIcon(
-            drawableResId = com.vultisig.wallet.R.drawable.ic_cup,
+            drawableResId = icon,
             size = 16.dp,
             tint = Theme.colors.primary.accent4,
         )
@@ -74,10 +76,12 @@ private fun ReferralBoxes() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         VsPromoBox(
+            icon = R.drawable.ic_cup,
             title = "Create your referral code",
             description = "Pick a short code and set your reward payout."
         )
         VsPromoBox(
+            icon = R.drawable.ic_cup,
             title = "Share with friends",
             description = "Invite friends to use your code while swapping."
         )
