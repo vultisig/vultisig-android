@@ -428,4 +428,7 @@
     <string name="offline">Niste povezani s internetom</string>
     <string name="deposit_error_destination_address">Odredišna adresa ne smije biti prazna</string>
     <string name="deposit_error_invalid_destination_address">Odredišna adresa nije važeća</string>
+    <string name="deposit_option_add_cacao_pool">Dodaj u CACAO pool</string>
+    <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
+    <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
 </resources>

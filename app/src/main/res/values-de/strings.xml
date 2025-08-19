@@ -428,4 +428,7 @@
     <string name="offline">Sie sind offline</string>
     <string name="deposit_error_destination_address">Die Zieladresse darf nicht leer sein</string>
     <string name="deposit_error_invalid_destination_address">Die Zieladresse ist ungültig</string>
+    <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
+    <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
+    <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
 </resources>
