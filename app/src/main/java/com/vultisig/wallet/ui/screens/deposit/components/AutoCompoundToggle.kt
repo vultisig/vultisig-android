@@ -22,15 +22,17 @@ internal fun AutoCompoundToggle(
     onCheckedChange: ((Boolean) -> Unit),
 ) {
     Row(
-        verticalAlignment = Alignment.Companion.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .padding(all = 12.dp)
-            .toggleable(value = isChecked, onValueChange = onCheckedChange),
+            .toggleable(
+                value = isChecked,
+                onValueChange = onCheckedChange
+            ),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.Companion
-                .weight(1f)
+            modifier = Modifier.weight(1f)
         ) {
             Text(
                 text = title,

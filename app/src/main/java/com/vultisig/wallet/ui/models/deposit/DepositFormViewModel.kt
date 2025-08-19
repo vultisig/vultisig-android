@@ -171,7 +171,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     var tcyAutoCompoundAmount: String? = null
 
-    var unStackableAmount: String? = null
+    var unstakableAmountCache: String? = null
 
     var isAutoCompoundTcyStake : Boolean
         get() = state.value.isAutoCompoundTcyStake
@@ -541,44 +541,36 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private fun collectTcyStakeAutoCompound() {
-        state
-            .filter {
-                it.depositOption == DepositOption.UnstakeTcy
-            }
-            .map { it.isAutoCompoundTcyUnStake }
-            .onEach { isAutoCompoundTcyUnStake ->
-                val addressValue = address.value?.address
-                if(addressValue == null)
-                    return@onEach
-
+        combine(
+            state.map { it.depositOption }.distinctUntilChanged(),
+            state.map { it.isAutoCompoundTcyUnStake }.distinctUntilChanged(),
+            address.filterNotNull().map { it.address }.distinctUntilChanged(),
+        ) { option, isAuto, addr ->
+            Triple(
+                option,
+                isAuto,
+                addr
+            )
+        }
+            .filter { (option, _, _) -> option == DepositOption.UnstakeTcy }
+            .onEach { (_, isAuto, addressValue) ->
                 try {
-                    val unstakable = if (isAutoCompoundTcyUnStake)
-                            tcyAutoCompoundAmount
-                                ?: balanceRepository.getTcyAutoCompoundAmount(
-                                    addressValue
-                                )
-                                    .also { tcyAutoCompoundAmount = it }
-                        else
-                            unStackableAmount
-                                ?: balanceRepository.getUnstakableTcyAmount(addressValue)
-                                    .also {
-                                        unStackableAmount = it
-                                    }
-
-                    val formattedAmount = formatUnstakableTcyAmount(unstakable)
-                    state.update {
-                        it.copy(unstakableAmount = formattedAmount)
+                    val raw = if (isAuto) {
+                        tcyAutoCompoundAmount
+                            ?: balanceRepository.getTcyAutoCompoundAmount(addressValue)
+                                .also { tcyAutoCompoundAmount = it }
+                    } else {
+                        unstakableAmountCache
+                            ?: balanceRepository.getUnstakableTcyAmount(addressValue)
+                                .also { unstakableAmountCache = it }
                     }
+                    val formattedAmount = formatUnstakableTcyAmount(raw)
+                    state.update { it.copy(unstakableAmount = formattedAmount) }
                 } catch (e: Exception) {
                     Timber.e(e)
-                    // Failed to fetch unstakable TCY amount
-                    state.update {
-                        it.copy(unstakableAmount = null)
-                    }
+                    state.update { it.copy(unstakableAmount = null) }
                 }
-
-
-        }
+            }
             .launchIn(viewModelScope)
     }
 

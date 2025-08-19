@@ -142,7 +142,7 @@ object ThorchainFunctions {
         amount: BigInteger,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
-        require(stakingContract.isNotEmpty()) { "tokenContract cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
         return WasmExecuteContractPayload(
@@ -164,7 +164,7 @@ object ThorchainFunctions {
         fromAddress: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
-        require(stakingContract.isNotEmpty()) { "tokenContract cannot be empty" }
+        require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
         require(units >= 1) { "units cannot be lower than 1" }
 
         return WasmExecuteContractPayload(
