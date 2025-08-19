@@ -54,13 +54,13 @@ internal class VerifyDepositViewModel @Inject constructor(
     private var vaultId: String? = savedStateHandle["vault_id"]
 
     init {
+        transactionId = transactionId ?: args?.transactionId
+        vaultId = vaultId ?: args?.vaultId
+
+        requireNotNull(transactionId) { "transactionId is null" }
+        requireNotNull(vaultId) { "vaultId is null" }
+
         viewModelScope.launch {
-            transactionId = transactionId ?: args?.transactionId
-            vaultId = vaultId ?: args?.vaultId
-
-            requireNotNull(transactionId) { "transactionId is null" }
-            requireNotNull(vaultId) { "vaultId is null" }
-
             val transaction = depositTransactionRepository.getTransaction(transactionId!!)
             val depositTransactionUiModel = mapTransactionToUiModel(transaction)
             state.update {
