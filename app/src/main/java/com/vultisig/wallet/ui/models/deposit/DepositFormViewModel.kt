@@ -169,9 +169,9 @@ internal class DepositFormViewModel @Inject constructor(
     private lateinit var vaultId: String
     private var chain: Chain? = null
 
-    var tcyAutoCompoundAmount: String? = null
+    private var tcyAutoCompoundAmount: String? = null
 
-    var unstakableAmountCache: String? = null
+    private var unstakableAmountCache: String? = null
 
     var isAutoCompoundTcyStake : Boolean
         get() = state.value.isAutoCompoundTcyStake

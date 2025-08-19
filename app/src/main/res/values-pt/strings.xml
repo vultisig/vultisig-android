@@ -446,4 +446,8 @@
     <string name="referral_edit_external_title">Editar código referido</string>
     <string name="referral_use_referred_code">Usar código referido</string>
     <string name="referral_save_referred_code">Guardar código referido</string>
+    <string name="tcy_auto_compound_enable_title">Ativar Composição Automática</string>
+    <string name="tcy_auto_compound_enable_subtitle">Componha automaticamente as suas recompensas TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Desative a Composição Automática de TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Desative a composição automática de depósitos de TCY</string>
 </resources>

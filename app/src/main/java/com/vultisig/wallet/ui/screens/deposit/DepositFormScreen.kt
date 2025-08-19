@@ -361,8 +361,8 @@ internal fun DepositFormScreen(
 
                         if (depositOption == DepositOption.StakeTcy) {
                             AutoCompoundToggle(
-                                title = "Enable Auto-Compounding",
-                                subtitle = "Automatically compound your TCY rewards",
+                                title = stringResource(R.string.tcy_auto_compound_enable_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
                                 isChecked = state.isAutoCompoundTcyStake,
                                 onCheckedChange = onAutoCompoundTcyStake
                             )
@@ -370,8 +370,8 @@ internal fun DepositFormScreen(
 
                         if (depositOption == DepositOption.UnstakeTcy) {
                             AutoCompoundToggle(
-                                title = "Unstake Auto-Compound TCY",
-                                subtitle = "Unstake from auto-compounding TCY deposits",
+                                title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
                                 isChecked = state.isAutoCompoundTcyUnStake,
                                 onCheckedChange = onAutoCompoundTcyUnStake
                             )

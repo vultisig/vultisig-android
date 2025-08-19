@@ -448,4 +448,8 @@
     <string name="referral_edit_external_title">Editar código referido</string>
     <string name="referral_use_referred_code">Usar código referido</string>
     <string name="referral_save_referred_code">Guardar código referido</string>
+    <string name="tcy_auto_compound_enable_title">Activar capitalización automática</string>
+    <string name="tcy_auto_compound_enable_subtitle">Capitaliza automáticamente tus recompensas de TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Deja de apostar capitalización automática de TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Deja de apostar depósitos de TCY con capitalización automática</string>
 </resources>
