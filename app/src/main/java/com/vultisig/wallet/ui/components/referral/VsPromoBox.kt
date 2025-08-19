@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.referral
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +21,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun VsPromoBox(
-    icon: Int,
+    @DrawableRes icon: Int,
     title: String,
     description: String,
     modifier: Modifier = Modifier
@@ -68,7 +69,7 @@ fun VsPromoBox(
 
 @Composable
 fun VsPromoTag(
-    icon: Int,
+    @DrawableRes icon: Int,
     text: String,
     modifier: Modifier = Modifier,
 ) {
