@@ -761,7 +761,11 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.Switch -> createSwitchTx()
                     DepositOption.Merge -> createMergeTx()
                     DepositOption.UnMerge -> createUnMergeTx()
-                    DepositOption.StakeTcy -> createTcyStakeTx(if(isAutoCompoundTcyStake) "" else "TCY+", null)
+                    DepositOption.StakeTcy -> createTcyStakeTx(
+                        if (isAutoCompoundTcyStake) "" else "TCY+",
+                        isUnStake = false,
+                        percentage = null
+                    )
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
                         val percentageText = tokenAmountFieldState.text.toString()
@@ -769,7 +773,11 @@ internal class DepositFormViewModel @Inject constructor(
                             percentageText.toFloatOrNull() ?: 100f // Default to 100% if invalid
                         val basisPoints = (percentage * 100).toInt()
                             .coerceIn(0, 10000) // Convert to basis points (0-10000)
-                        createTcyStakeTx(if(isAutoCompoundTcyUnStake) "" else "TCY-:$basisPoints", percentage)
+                        createTcyStakeTx(
+                            if (isAutoCompoundTcyUnStake) "" else "TCY-:$basisPoints",
+                            isUnStake = true,
+                            percentage = percentage
+                        )
                     }
 
                     DepositOption.StakeRuji -> createStakeRuji()
@@ -1586,6 +1594,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private suspend fun createTcyStakeTx(
         stakeMemo: String,
+        isUnStake: Boolean,
         percentage: Float?
     ): DepositTransaction {
         val chain = chain
@@ -1607,15 +1616,12 @@ internal class DepositFormViewModel @Inject constructor(
 
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
-        val isUnStake = stakeMemo.startsWith("TCY-")
-        val tokenAmountInt = if (isUnStake) {
+        val tokenAmountInt = if (stakeMemo.startsWith("TCY-")) {
             // For unstaking, send zero TCY as gas is covered by RUNE
             BigInteger.ZERO
         } else {
-            if (stakeMemo.isNotEmpty())
             // For staking or other operations, validate and send the full amount
-                requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-            else BigInteger.ZERO
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
         }
 
         val memo = stakeMemo
