@@ -30,12 +30,19 @@ internal class FourByteRepositoryImpl @Inject constructor(
     }
 
     override fun decodeFunctionArgs(functionSignature: String, memo: String): String? {
-        val function = AbiFunction.parseSignature(functionSignature)
-        val byteArray = Numeric.hexStringToByteArray(memo)
-        val encoded = Bytes(byteArray)
-        val decoded = function.decodeCall(encoded)
-        val jsonArray = decoded.toJsonElement()
-        return json.encodeToString(JsonElement.serializer(), jsonArray)
+        return try {
+            val function = AbiFunction.parseSignature(functionSignature)
+            val byteArray = Numeric.hexStringToByteArray(memo.stripHexPrefix())
+            val encoded = Bytes(byteArray)
+            val decoded = function.decodeCall(encoded)
+            val jsonArray = decoded.toJsonElement()
+            json.encodeToString(
+                JsonElement.serializer(),
+                jsonArray
+            )
+        } catch (_: Exception) {
+            null
+        }
     }
 
 }
