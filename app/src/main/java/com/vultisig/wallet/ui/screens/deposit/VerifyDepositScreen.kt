@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.logo
@@ -50,6 +51,7 @@ import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun VerifyDepositScreen(
+    navController: NavController? = null,
     viewModel: VerifyDepositViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -75,6 +77,7 @@ internal fun VerifyDepositScreen(
     }
 
     VerifyDepositScreen(
+        hasToolbar = navController != null, // comes from new graph, and not legacy
         state = state,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConfirm = viewModel::confirm,
@@ -83,6 +86,7 @@ internal fun VerifyDepositScreen(
                 authorize()
             }
         },
+        onBackClick = { navController?.popBackStack() },
     )
 }
 
@@ -156,13 +160,16 @@ internal fun VerifyDepositScreen(
                         VerifyCardDivider(0.dp)
                     }
 
-                    VerifyCardDetails(
-                        title = stringResource(R.string.verify_transaction_to_title),
-                        subtitle = tx.dstAddress
-                    )
+                    if (tx.dstAddress.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.verify_transaction_to_title),
+                            subtitle = tx.dstAddress
+                        )
+                    }
 
                     if (tx.memo.isNotEmpty()) {
-                        VerifyCardDivider(0.dp)
+                        if (tx.dstAddress.isNotEmpty())
+                            VerifyCardDivider(0.dp)
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),

@@ -429,12 +429,6 @@ internal fun SwapScreen(
                                     onSelectSrcPercentage(0.75f)
                                 },
                             )
-                            PercentageItem(
-                                title = "MAX",
-                                onClick = {
-                                    onSelectSrcPercentage(1f)
-                                },
-                            )
                         }
                     }
                 } else {

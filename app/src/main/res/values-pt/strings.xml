@@ -424,4 +424,26 @@
     <string name="referral_onboarding_title">Referência</string>
     <string name="referral_onboarding_get_started">Começar</string>
     <string name="offline">Você está offline</string>
+    <string name="deposit_error_destination_address">O endereço de destino não deve estar vazio</string>
+    <string name="deposit_error_invalid_destination_address">O endereço de destino é inválido</string>
+    <string name="deposit_option_add_cacao_pool">Adicionar ao pool CACAO</string>
+    <string name="deposit_option_remove_cacao_pool">Remover do pool CACAO</string>
+    <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
+    <string name="referral_create_info_title">Programa de referência</string>
+    <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>
+    <string name="referral_create_not_enough_balance">Saldo insuficiente</string>
+    <string name="referral_create_unknown_error">Erro desconhecido</string>
+    <string name="referral_create_create_referral">Criar referência</string>
+    <string name="referral_create_pick_referral_code">Escolher código de referência</string>
+    <string name="referral_create_expiration_date">Data de expiração</string>
+    <string name="referral_create_set_expiration_years">Definir expiração (em anos)</string>
+    <string name="referral_create_registration_fees">Taxas de registro</string>
+    <string name="referral_create_cost">Custo</string>
+    <string name="referral_create_create_referral_code">Criar código de referência</string>
+    <string name="referral_create_invalid">Inválido</string>
+    <string name="referral_create_available">Disponível</string>
+    <string name="referral_create_taken">Já está em uso</string>
+    <string name="referral_edit_external_title">Editar código referido</string>
+    <string name="referral_use_referred_code">Usar código referido</string>
+    <string name="referral_save_referred_code">Guardar código referido</string>
 </resources>

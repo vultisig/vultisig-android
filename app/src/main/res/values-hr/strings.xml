@@ -426,4 +426,26 @@
     <string name="referral_onboarding_title">Preporuka</string>
     <string name="referral_onboarding_get_started">Započnite</string>
     <string name="offline">Niste povezani s internetom</string>
+    <string name="deposit_error_destination_address">Odredišna adresa ne smije biti prazna</string>
+    <string name="deposit_error_invalid_destination_address">Odredišna adresa nije važeća</string>
+    <string name="deposit_option_add_cacao_pool">Dodaj u CACAO pool</string>
+    <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
+    <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
+    <string name="referral_create_info_title">Program preporuka</string>
+    <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
+    <string name="referral_create_not_enough_balance">Nedovoljno sredstava</string>
+    <string name="referral_create_unknown_error">Nepoznata greška</string>
+    <string name="referral_create_create_referral">Stvori preporuku</string>
+    <string name="referral_create_pick_referral_code">Odaberi kod preporuke</string>
+    <string name="referral_create_expiration_date">Datum isteka</string>
+    <string name="referral_create_set_expiration_years">Postavi istek (u godinama)</string>
+    <string name="referral_create_registration_fees">Naknade za registraciju</string>
+    <string name="referral_create_cost">Trošak</string>
+    <string name="referral_create_create_referral_code">Stvori kod preporuke</string>
+    <string name="referral_create_invalid">Nevažeće</string>
+    <string name="referral_create_available">Dostupno</string>
+    <string name="referral_create_taken">Već zauzeto</string>
+    <string name="referral_edit_external_title">Uredi preporučeni kod</string>
+    <string name="referral_use_referred_code">Koristi preporučeni kod</string>
+    <string name="referral_save_referred_code">Spremi preporučeni kod</string>
 </resources>
