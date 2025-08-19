@@ -122,3 +122,12 @@ internal fun ReferralCodeBottomSheetContent(
         )
     }
 }
+
+@Composable
+@androidx.compose.ui.tooling.preview.Preview
+private fun ReferralCodeBottomSheetPreview() {
+    ReferralCodeBottomSheet(
+        onContinue = {},
+        onDismissRequest = {},
+    )
+}
