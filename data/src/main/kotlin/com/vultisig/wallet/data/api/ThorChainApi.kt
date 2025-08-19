@@ -83,6 +83,8 @@ interface ThorChainApi {
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
     suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
     suspend fun existsReferralCode(code: String): Boolean
+    suspend fun getReferralCodeInfo(code: String): ThorOwnerData
+    suspend fun getReferralCodesByAddress(address: String): List<String>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -383,13 +385,33 @@ internal class ThorChainApiImpl @Inject constructor(
         }
     }
 
+    override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {
+        val response = httpClient
+            .get("$NNRLM_URL/thorname/$code") {
+                header(xClientID, xClientIDValue)
+            }
+        return response.bodyOrThrow<ThorOwnerData>()
+    }
+
+    override suspend fun getReferralCodesByAddress(address: String): List<String> {
+        val response = httpClient
+            .get("$MIDGARD_URL/thorname/rlookup/$address") {
+                header(xClientID, xClientIDValue)
+            }
+        if (response.status.isSuccess()){
+            return response.bodyOrThrow<List<String>>()
+        }
+        return emptyList()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
 }
 
 @Serializable
-private data class ThorOwnerData(
+data class ThorOwnerData(
     @SerialName("name")
     val name: String,
     @SerialName("expire_block_height")
@@ -403,8 +425,11 @@ private data class ThorOwnerData(
     @SerialName("affiliate_collector_rune")
     val affilateCollectorRune: String,
     @SerialName("aliases")
-    val aliases: List<String>?
-)
+    val aliases: List<Aliases> = emptyList(),
+) {
+    @Serializable
+    data class Aliases(val chain: String, val address: String)
+}
 
 @Serializable
 private data class ThorNameEntryJson(
