@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -58,10 +59,12 @@ interface ThorChainApi {
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
+    suspend fun getTHORChainReferralFees(): NativeTxFeeRune
 
     suspend fun getNetworkChainId(): String
 
@@ -124,7 +127,13 @@ internal class ThorChainApiImpl @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized {
+        val affiliateBPS = if (isAffiliate) {
+            THORChainSwaps.AFFILIATE_FEE_RATE
+        } else {
+            "0"
+        }
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)
@@ -133,10 +142,11 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
                 parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter(
-                    "affiliate_bps",
-                    if (isAffiliate) THORChainSwaps.AFFILIATE_FEE_RATE else "0"
-                )
+                parameter("affiliate_bps", affiliateBPS)
+                if (referralCode.isNotEmpty() && isAffiliate) {
+                    parameter("affiliate", referralCode)
+                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_REFERRAL_RATE)
+                }
             }
         return try {
             json.decodeFromString(
@@ -169,6 +179,12 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         val content = response.body<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
+    }
+
+    override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
+        return httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<NativeTxFeeRune>()
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {

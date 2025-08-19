@@ -440,4 +440,21 @@
     <string name="deposit_option_add_cacao_pool">Toevoegen aan CACAO-pool</string>
     <string name="deposit_option_remove_cacao_pool">Verwijderen uit CACAO-pool</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
+    <string name="referral_create_info_title">Verwijzingsprogramma</string>
+    <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>
+    <string name="referral_create_not_enough_balance">Onvoldoende saldo</string>
+    <string name="referral_create_unknown_error">Onbekende fout</string>
+    <string name="referral_create_create_referral">Verwijzing maken</string>
+    <string name="referral_create_pick_referral_code">Verwijzingscode kiezen</string>
+    <string name="referral_create_expiration_date">Vervaldatum</string>
+    <string name="referral_create_set_expiration_years">Vervaldatum instellen (in jaren)</string>
+    <string name="referral_create_registration_fees">Registratiekosten</string>
+    <string name="referral_create_cost">Kosten</string>
+    <string name="referral_create_create_referral_code">Verwijzingscode maken</string>
+    <string name="referral_create_invalid">Ongeldig</string>
+    <string name="referral_create_available">Beschikbaar</string>
+    <string name="referral_create_taken">Al in gebruik</string>
+    <string name="referral_edit_external_title">Verwezen code bewerken</string>
+    <string name="referral_use_referred_code">Verwezen code gebruiken</string>
+    <string name="referral_save_referred_code">Verwezen code opslaan</string>
 </resources>
