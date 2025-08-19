@@ -49,7 +49,7 @@ internal fun ReferralOnboardingScreen(
             RiveAnimation(
                 modifier = Modifier
                     .align(Alignment.Center),
-                animation = R.raw.riv_securevault_summary, // TODO: Waiting for designer to provider riv
+                animation = R.raw.riv_securevault_summary,
             )
         }
 
