@@ -55,19 +55,19 @@ internal fun ReferralOnboardingScreen(
         ) {
             VsPromoTag(
                 icon = R.drawable.ic_cup,
-                text = "Referral Program"
+                text = stringResource(R.string.referral_program_tag)
             )
 
             Text(
-                text = "How it works",
+                text = stringResource(R.string.referral_how_it_works),
                 style = Theme.brockmann.headings.largeTitle,
                 color = Theme.colors.text.primary,
                 modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp)
             )
 
             VsPromoBox(
-                title = "Create your referral code",
-                description = "Pick a short code and set your reward payout.",
+                title = stringResource(R.string.referral_create_code_title),
+                description = stringResource(R.string.referral_create_code_description),
                 icon = R.drawable.ic_referral,
                 modifier = Modifier.padding(start = 48.dp, end = 16.dp),
             )
@@ -75,8 +75,8 @@ internal fun ReferralOnboardingScreen(
             UiSpacer(16.dp)
 
             VsPromoBox(
-                title = "Share with friends",
-                description = "Invite friends to use your code while swapping.",
+                title = stringResource(R.string.referral_share_title),
+                description = stringResource(R.string.referral_share_description),
                 icon = R.drawable.ic_share_referral,
                 modifier = Modifier.padding(start = 48.dp, end = 16.dp),
             )
@@ -84,8 +84,8 @@ internal fun ReferralOnboardingScreen(
             UiSpacer(16.dp)
 
             VsPromoBox(
-                title = "Earn 10 bps of swaps automatically",
-                description = "Get paid in your preferred asset every time they trade.",
+                title = stringResource(R.string.referral_earn_title),
+                description = stringResource(R.string.referral_earn_description),
                 icon = R.drawable.ic_cup,
                 modifier = Modifier.padding(start = 48.dp, end = 16.dp),
             )
@@ -93,8 +93,8 @@ internal fun ReferralOnboardingScreen(
             UiSpacer(16.dp)
 
             VsPromoBox(
-                title = "Use Referral code - Save 5bps",
-                description = "Use a code from your friend and save on swap fees.",
+                title = stringResource(R.string.referral_use_code_title),
+                description = stringResource(R.string.referral_use_code_description),
                 icon = R.drawable.ic_user,
                 modifier = Modifier.padding(start = 48.dp, end = 16.dp),
             )

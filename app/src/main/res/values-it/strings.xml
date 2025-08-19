@@ -448,4 +448,14 @@
     <string name="referral_edit_external_title">Modifica codice referente</string>
     <string name="referral_use_referred_code">Usa codice referente</string>
     <string name="referral_save_referred_code">Salva codice referente</string>
+    <string name="referral_program_tag">Programma Referral</string>
+    <string name="referral_how_it_works">Come funziona</string>
+    <string name="referral_create_code_title">Crea il tuo codice referral</string>
+    <string name="referral_create_code_description">Scegli un codice breve e imposta il pagamento delle ricompense.</string>
+    <string name="referral_share_title">Condividi con gli amici</string>
+    <string name="referral_share_description">Invita gli amici a usare il tuo codice durante gli scambi.</string>
+    <string name="referral_earn_title">Guadagna automaticamente 10 bps sugli swap</string>
+    <string name="referral_earn_description">Ricevi pagamenti nel tuo asset preferito ogni volta che fanno trading.</string>
+    <string name="referral_use_code_title">Usa codice Referral - Risparmia 5bps</string>
+    <string name="referral_use_code_description">Usa un codice del tuo amico e risparmia sulle commissioni di swap.</string>
 </resources>

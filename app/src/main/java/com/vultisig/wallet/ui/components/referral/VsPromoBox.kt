@@ -82,6 +82,16 @@ fun VsPromoTag(
                     bottomStart = 0.dp
                 )
             )
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(
+                    topEnd = 50.dp,
+                    bottomEnd = 50.dp,
+                    topStart = 0.dp,
+                    bottomStart = 0.dp
+                ),
+            )
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -448,4 +448,14 @@
     <string name="referral_edit_external_title">Editar código referido</string>
     <string name="referral_use_referred_code">Usar código referido</string>
     <string name="referral_save_referred_code">Guardar código referido</string>
+    <string name="referral_program_tag">Programa de Referidos</string>
+    <string name="referral_how_it_works">Cómo funciona</string>
+    <string name="referral_create_code_title">Crea tu código de referido</string>
+    <string name="referral_create_code_description">Elige un código corto y configura tu pago de recompensa.</string>
+    <string name="referral_share_title">Comparte con amigos</string>
+    <string name="referral_share_description">Invita a amigos a usar tu código al intercambiar.</string>
+    <string name="referral_earn_title">Gana 10 bps de swaps automáticamente</string>
+    <string name="referral_earn_description">Recibe pagos en tu activo preferido cada vez que operen.</string>
+    <string name="referral_use_code_title">Usa código de referido - Ahorra 5bps</string>
+    <string name="referral_use_code_description">Usa un código de tu amigo y ahorra en comisiones de swap.</string>
 </resources>
