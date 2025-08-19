@@ -109,6 +109,8 @@ dependencies {
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
     implementation(libs.web3)
+    implementation(platform(libs.ethers.bom))
+    implementation(libs.ethers.abi)
 
     // test
     testImplementation(libs.ktor.client.mock)
