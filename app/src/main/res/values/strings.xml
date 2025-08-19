@@ -671,4 +671,24 @@
     <string name="deposit_option_add_cacao_pool">Add to CACAO Pool</string>
     <string name="deposit_option_remove_cacao_pool">Remove from CACAO Pool</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
+    <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
+    <string name="referral_create_info_title">Referral Program</string>
+
+    <string name="referral_create_not_enough_balance">Not enough balance</string>
+    <string name="referral_create_unknown_error">Unknown Error</string>
+    <string name="referral_create_create_referral">Create Referral</string>
+    <string name="referral_create_pick_referral_code">Pick Referral Code</string>
+    <string name="referral_create_search" translatable="false">Search</string>
+    <string name="referral_create_expiration_date">Expiration date</string>
+    <string name="referral_create_set_expiration_years">Set Expiration (in years)</string>
+    <string name="referral_create_registration_fees">Registration Fees</string>
+    <string name="referral_create_cost">Cost</string>
+    <string name="referral_create_create_referral_code">Create referral code</string>
+    <string name="referral_create_invalid">Invalid</string>
+    <string name="referral_create_available">Available</string>
+    <string name="referral_create_taken">Already Taken</string>
+
+    <string name="referral_edit_external_title">Edit referred code</string>
+    <string name="referral_use_referred_code">Use referred code</string>
+    <string name="referral_save_referred_code">Save referred code</string>
 </resources>

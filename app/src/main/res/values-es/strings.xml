@@ -431,4 +431,21 @@
     <string name="deposit_option_add_cacao_pool">Agregar al pool de CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Retirar del pool de CACAO</string>
     <string name="cacaopool_only_cacao_supported">Solo se admite el token CACAO para las operaciones del pool</string>
+    <string name="referral_create_info_title">Programa de referidos</string>
+    <string name="referral_create_info_content">El programa de referidos se aplica a los intercambios de THORChain y se realiza con el mejor esfuerzo posible. Necesitas registrar un THORName para usar el referido de Vultisig. La tarifa de registro es de 10 RUNE y 1 RUNE por cada año, que se paga a la red THORChain.</string>
+    <string name="referral_create_not_enough_balance">Saldo insuficiente</string>
+    <string name="referral_create_unknown_error">Error desconocido</string>
+    <string name="referral_create_create_referral">Crear referido</string>
+    <string name="referral_create_pick_referral_code">Elegir código de referido</string>
+    <string name="referral_create_expiration_date">Fecha de vencimiento</string>
+    <string name="referral_create_set_expiration_years">Establecer vencimiento (en años)</string>
+    <string name="referral_create_registration_fees">Tarifas de registro</string>
+    <string name="referral_create_cost">Costo</string>
+    <string name="referral_create_create_referral_code">Crear código de referido</string>
+    <string name="referral_create_invalid">Inválido</string>
+    <string name="referral_create_available">Disponible</string>
+    <string name="referral_create_taken">Ya está en uso</string>
+    <string name="referral_edit_external_title">Editar código referido</string>
+    <string name="referral_use_referred_code">Usar código referido</string>
+    <string name="referral_save_referred_code">Guardar código referido</string>
 </resources>
