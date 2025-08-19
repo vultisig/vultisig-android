@@ -1761,7 +1761,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
-        val tokenAmountInt = if (stakeMemo.startsWith("TCY-")) {
+        val tokenAmountInt = if (isUnStake) {
             // For unstaking, send zero TCY as gas is covered by RUNE
             BigInteger.ZERO
         } else {
