@@ -77,7 +77,7 @@ internal class ReferralViewModel @Inject constructor(
             state.update { it.copy(isLoading = true) }
 
             val (vaultReferral, externalReferral) = withContext(Dispatchers.IO) {
-                /*referralCodeRepository.getReferralCreatedBy(vaultId)*/ "1234" to
+                referralCodeRepository.getReferralCreatedBy(vaultId) to
                         referralCodeRepository.getExternalReferralBy(vaultId)
             }
 

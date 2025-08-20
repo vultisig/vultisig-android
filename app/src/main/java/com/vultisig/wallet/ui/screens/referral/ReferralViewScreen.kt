@@ -1,9 +1,13 @@
 package com.vultisig.wallet.ui.screens.referral
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,18 +27,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -84,7 +92,61 @@ internal fun ReferralViewScreen(
                     color = Theme.colors.text.primary,
                 )
 
-                UiSpacer(1f)
+                UiSpacer(16.dp)
+
+                ReferralDataBanner()
+
+                UiSpacer(16.dp)
+
+                Text(
+                    text = "Your referral code",
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
+                )
+
+                UiSpacer(16.dp)
+
+                VsTextInputField(
+                    textFieldState = TextFieldState(initialText = "1234"),
+                    innerState = VsTextInputFieldInnerState.Default,
+                    enabled = false,
+                    focusRequester = null,
+                    trailingIcon = R.drawable.ic_paste,
+                    onTrailingIconClick = {
+                    },
+                    keyboardType = KeyboardType.Text,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                UiSpacer(16.dp)
+
+                Column(
+                    modifier = Modifier
+                        .border(
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Theme.colors.borders.light
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Theme.colors.backgrounds.secondary)
+                        .fillMaxWidth()
+                        .padding(all = 16.dp),
+                ) {
+                    Text(
+                        color = Theme.colors.text.extraLight,
+                        style = Theme.brockmann.body.s.medium,
+                        text = "Expires on"
+                    )
+                    Text(
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.body.l.medium,
+                        text = "25 May of 20027"
+                    )
+                }
+
+                UiSpacer(16.dp)
 
                 VsButton(
                     label = "Edit referral",
@@ -144,6 +206,54 @@ private fun FriendReferralBanner() {
                 text = "Add a Friends Referral",
                 color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
+            )
+        }
+    }
+}
+
+@Composable
+fun ReferralDataBanner() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.referral_data_banner),
+            contentDescription = "Provider Logo",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize()
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        ) {
+            UiIcon(
+                drawableResId = R.drawable.ic_cup,
+                size = 24.dp,
+                tint = Theme.colors.primary.accent4,
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Collected Rewards",
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.body.s.medium,
+            )
+
+            Text(
+                text = "250.40 RUNE",
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.body.l.medium,
             )
         }
     }
