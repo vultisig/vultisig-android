@@ -45,7 +45,7 @@ internal class ReferralViewModel @Inject constructor(
 
     val referralCodeTextFieldState = TextFieldState()
     val state = MutableStateFlow(ReferralUiState())
-    var remoteReferral: String? = null
+    private var remoteReferral: String? = null
 
     init {
         loadStatus()
@@ -86,33 +86,37 @@ internal class ReferralViewModel @Inject constructor(
                     referralCode = externalReferral ?: "",
                     isLoading = false,
                     isSaveEnabled = externalReferral.isNullOrEmpty(),
-                    isCreateEnabled = false,
                 )
             }
             if (!externalReferral.isNullOrEmpty()) {
                 referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(externalReferral)
             }
 
-            if (!vaultReferral.isNullOrEmpty()) {
-                try {
-                    val referrals = withContext(Dispatchers.IO) {
+            try {
+                val referralCreated = referralCodeRepository.getReferralCreatedBy(vaultId)
+                val referrals = if (referralCreated.isNullOrEmpty()) {
+                    withContext(Dispatchers.IO) {
                         val coin = vaultRepository.get(vaultId)?.coins?.find {
                             it.chain.id == Chain.ThorChain.id && it.isNativeToken
                         } ?: error("Coin not found")
                         thorChainApi.getReferralCodesByAddress(coin.address)
                     }
-
-                    if (referrals.isNotEmpty()) {
-                        state.update {
-                            it.copy(
-                                isCreateEnabled = false,
-                            )
-                        }
-                        remoteReferral = referrals.first() // for now, we stick 1 vault - 1 referral created max
-                    }
-                } catch (t: Throwable) {
-                    Timber.e(t)
+                } else {
+                    listOf(referralCreated)
                 }
+
+                if (referrals.isNotEmpty()) {
+                    state.update {
+                        it.copy(
+                            isCreateEnabled = false,
+                        )
+                    }
+                    remoteReferral = referrals.first() // for now, we stick 1 vault - 1 referral created max
+
+                    referralCodeRepository.saveReferralCreated(vaultId, remoteReferral!!)
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
