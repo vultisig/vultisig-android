@@ -90,6 +90,8 @@ interface BalanceRepository {
     ): Flow<TokenValue>
 
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
+
+    suspend fun getTcyAutoCompoundAmount(address: String): String?
 }
 
 internal class BalanceRepositoryImpl @Inject constructor(
@@ -115,6 +117,9 @@ internal class BalanceRepositoryImpl @Inject constructor(
         return thorChainApi.getUnstakableTcyAmount(address)
     }
 
+    override suspend fun getTcyAutoCompoundAmount(address: String): String? {
+        return thorChainApi.getTcyAutoCompoundAmount(address)
+    }
 
     override suspend fun getCachedTokenBalance(
         address: String,

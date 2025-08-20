@@ -458,4 +458,8 @@
     <string name="referral_earn_description">Ricevi pagamenti nel tuo asset preferito ogni volta che fanno trading.</string>
     <string name="referral_use_code_title">Usa codice Referral - Risparmia 5bps</string>
     <string name="referral_use_code_description">Usa un codice del tuo amico e risparmia sulle commissioni di swap.</string>
+    <string name="tcy_auto_compound_enable_title">Abilita l\'Auto-Compounding</string>
+    <string name="tcy_auto_compound_enable_subtitle">Componi automaticamente i tuoi premi TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Annulla lo stake dell\'Auto-Compounding TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Annulla lo stake dei depositi TCY con Auto-Compounding</string>
 </resources>

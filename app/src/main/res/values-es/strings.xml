@@ -458,4 +458,8 @@
     <string name="referral_earn_description">Recibe pagos en tu activo preferido cada vez que operen.</string>
     <string name="referral_use_code_title">Usa código de referido - Ahorra 5bps</string>
     <string name="referral_use_code_description">Usa un código de tu amigo y ahorra en comisiones de swap.</string>
+    <string name="tcy_auto_compound_enable_title">Activar capitalización automática</string>
+    <string name="tcy_auto_compound_enable_subtitle">Capitaliza automáticamente tus recompensas de TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Deja de apostar capitalización automática de TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Deja de apostar depósitos de TCY con capitalización automática</string>
 </resources>
