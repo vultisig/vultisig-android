@@ -93,8 +93,7 @@ internal class ReferralViewModel @Inject constructor(
             }
 
             try {
-                val referralCreated = referralCodeRepository.getReferralCreatedBy(vaultId)
-                val referrals = if (referralCreated.isNullOrEmpty()) {
+                val referrals = if (vaultReferral.isNullOrEmpty()) {
                     withContext(Dispatchers.IO) {
                         val coin = vaultRepository.get(vaultId)?.coins?.find {
                             it.chain.id == Chain.ThorChain.id && it.isNativeToken
@@ -102,7 +101,7 @@ internal class ReferralViewModel @Inject constructor(
                         thorChainApi.getReferralCodesByAddress(coin.address)
                     }
                 } else {
-                    listOf(referralCreated)
+                    listOf(vaultReferral)
                 }
 
                 if (referrals.isNotEmpty()) {
