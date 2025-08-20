@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.models.GraphQLResponse
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
+import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
@@ -78,6 +79,8 @@ interface ThorChainApi {
 
     suspend fun getUnstakableTcyAmount(address: String): String?
 
+    suspend fun getTcyAutoCompoundAmount(address: String): String?
+
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
@@ -105,6 +108,19 @@ internal class ThorChainApiImpl @Inject constructor(
         } catch (e: Exception) {
             // Exception occurred while fetching or parsing TCY staker data
             null
+        }
+    }
+
+    override suspend fun getTcyAutoCompoundAmount(address: String): String? {
+        val url = "https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
+        val response = httpClient.get(url)
+        return if (!response.status.isSuccess()) {
+            null
+        } else {
+            val stakingTcyAmount = response.body<ThorTcyBalancesResponseJson>().balances
+                .find { it.denom == "x/staking-tcy" }
+                ?.amount
+            stakingTcyAmount
         }
     }
 

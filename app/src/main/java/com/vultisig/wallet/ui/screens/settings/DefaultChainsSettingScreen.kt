@@ -97,8 +97,11 @@ internal fun TokenSelection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = isChecked, onValueChange = onCheckedChange)
-        ,
+            .toggleable(
+                value = isChecked,
+                onValueChange = onCheckedChange,
+                role = androidx.compose.ui.semantics.Role.Switch
+            ),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColor.oxfordBlue600Main

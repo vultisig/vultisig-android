@@ -458,4 +458,8 @@
     <string name="referral_earn_description">Primajte isplate u vašem preferiranom sredstvu svaki put kada trguju.</string>
     <string name="referral_use_code_title">Koristi kod preporuke - Uštedi 5bps</string>
     <string name="referral_use_code_description">Koristi kod od prijatelja i uštedi na naknadama za razmjenu.</string>
+    <string name="tcy_auto_compound_enable_title">Omogući automatsko složeno računanje</string>
+    <string name="tcy_auto_compound_enable_subtitle">Automatski složeno računajte svoje TCY nagrade</string>
+    <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
 </resources>
