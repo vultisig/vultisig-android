@@ -329,6 +329,8 @@ private fun QrCameraScreen(
                     val cameraProvider = cameraProviderFuture.get()
                     cameraProvider.unbindAll()
 
+                    Thread.sleep(400)
+
                     val camera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         selector,
