@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +38,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -59,7 +59,8 @@ internal fun ReferralViewScreen(
     ReferralViewScreen(
         onBackPressed = navController::popBackStack,
         onClickEditReferral = {},
-        onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner
+        onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
+        onVaultClicked = { }
     )
 }
 
@@ -68,6 +69,7 @@ internal fun ReferralViewScreen(
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
     onClickEditReferral: () -> Unit,
+    onVaultClicked: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -99,6 +101,13 @@ internal fun ReferralViewScreen(
                     text = "Vault Selected",
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.colors.text.primary,
+                )
+
+                UiSpacer(16.dp)
+
+                VaultItem(
+                    name = "Vault1234",
+                    onVaultClicked = { },
                 )
 
                 UiSpacer(16.dp)
@@ -272,6 +281,7 @@ private fun ReferralDataBanner() {
 @Composable
 fun VaultItem(
     name: String,
+    onVaultClicked: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -279,21 +289,16 @@ fun VaultItem(
             .height(56.dp)
             .clip(RoundedCornerShape(28.dp))
             .background(Theme.colors.backgrounds.secondary)
+            .clickable { onVaultClicked() }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            UiIcon(
-                drawableResId = R.drawable.referral_vault_avatar,
-                contentDescription = "referral_avatar",
-                size = 20.dp,
-            )
-        }
+
+        SubcomposeAsyncImage(
+            model = R.drawable.referral_vault_avatar,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
 
         UiSpacer(12.dp)
 
@@ -309,7 +314,7 @@ fun VaultItem(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = "click_referral_vault",
             tint = Theme.colors.text.primary,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(20.dp)
         )
     }
 }
