@@ -18,7 +18,7 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
-        const val ARG_REFERRAL_ID = "referral_Id"
+        const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_ADDRESS = "address"

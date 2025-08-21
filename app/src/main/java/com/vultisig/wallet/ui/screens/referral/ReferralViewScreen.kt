@@ -26,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +50,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -56,16 +59,22 @@ internal fun ReferralViewScreen(
     navController: NavController,
     model: ViewReferralViewModel = hiltViewModel(),
 ) {
+    val state by model.state.collectAsState()
+
     ReferralViewScreen(
+        state = state,
+        referralCodeState = model.referralCodeTextField,
         onBackPressed = navController::popBackStack,
-        onClickEditReferral = {},
+        onClickEditReferral = { }, // This will be used to edit rewards
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
-        onVaultClicked = { }
+        onVaultClicked = { },
     )
 }
 
 @Composable
 internal fun ReferralViewScreen(
+    state: ReferralViewUiState,
+    referralCodeState: TextFieldState,
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
     onClickEditReferral: () -> Unit,
@@ -106,8 +115,8 @@ internal fun ReferralViewScreen(
                 UiSpacer(16.dp)
 
                 VaultItem(
-                    name = "Vault1234",
-                    onVaultClicked = { },
+                    name = state.vaultName,
+                    onVaultClicked = onVaultClicked,
                 )
 
                 UiSpacer(16.dp)
@@ -125,7 +134,7 @@ internal fun ReferralViewScreen(
                 UiSpacer(16.dp)
 
                 VsTextInputField(
-                    textFieldState = TextFieldState(initialText = "1234"),
+                    textFieldState = referralCodeState,
                     innerState = VsTextInputFieldInnerState.Default,
                     enabled = false,
                     focusRequester = null,
@@ -138,31 +147,7 @@ internal fun ReferralViewScreen(
 
                 UiSpacer(16.dp)
 
-                Column(
-                    modifier = Modifier
-                        .border(
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = Theme.colors.borders.light
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Theme.colors.backgrounds.secondary)
-                        .fillMaxWidth()
-                        .padding(all = 16.dp),
-                ) {
-                    Text(
-                        color = Theme.colors.text.extraLight,
-                        style = Theme.brockmann.body.s.medium,
-                        text = "Expires on"
-                    )
-                    Text(
-                        color = Theme.colors.text.primary,
-                        style = Theme.brockmann.body.l.medium,
-                        text = "25 May of 20027"
-                    )
-                }
+                ReferralExpirationItem()
 
                 UiSpacer(16.dp)
 
@@ -179,6 +164,35 @@ internal fun ReferralViewScreen(
             UiSpacer(32.dp)
         },
     )
+}
+
+@Composable
+private fun ReferralExpirationItem(expiration: String = "") {
+    Column(
+        modifier = Modifier
+            .border(
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light
+                ),
+                shape = RoundedCornerShape(12.dp),
+            )
+            .clip(RoundedCornerShape(12.dp))
+            .background(Theme.colors.backgrounds.secondary)
+            .fillMaxWidth()
+            .padding(all = 16.dp),
+    ) {
+        Text(
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.body.s.medium,
+            text = "Expires on"
+        )
+        Text(
+            color = Theme.colors.text.primary,
+            style = Theme.brockmann.body.l.medium,
+            text = "25 May of 20027"
+        )
+    }
 }
 
 @Composable
