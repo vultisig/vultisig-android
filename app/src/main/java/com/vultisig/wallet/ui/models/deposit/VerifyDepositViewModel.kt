@@ -15,9 +15,12 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
@@ -35,6 +38,7 @@ internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -61,11 +65,15 @@ internal class VerifyDepositViewModel @Inject constructor(
         requireNotNull(vaultId) { "vaultId is null" }
 
         viewModelScope.launch {
+            state.update {
+                it.copy(isLoading = true)
+            }
             val transaction = depositTransactionRepository.getTransaction(transactionId!!)
             val depositTransactionUiModel = mapTransactionToUiModel(transaction)
             state.update {
                 it.copy(
-                    depositTransactionUiModel = depositTransactionUiModel
+                    depositTransactionUiModel = depositTransactionUiModel,
+                    isLoading = false,
                 )
             }
         }
@@ -106,13 +114,17 @@ internal class VerifyDepositViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = vaultPasswordRepository.getPassword(vaultId!!)
+            password.value = withContext(Dispatchers.IO) {
+                vaultPasswordRepository.getPassword(vaultId!!)
+            }
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            val hasFastSign = isVaultHasFastSignById(vaultId!!)
+            val hasFastSign = withContext(Dispatchers.IO){
+                isVaultHasFastSignById(vaultId!!)
+            }
             state.update {
                 it.copy(
                     hasFastSign = hasFastSign
