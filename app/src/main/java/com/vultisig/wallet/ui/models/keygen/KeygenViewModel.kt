@@ -447,7 +447,7 @@ internal class KeygenViewModel @Inject constructor(
         stopService()
 
         val vaultType =
-            if (vault.isFastVault() && ! args.email.isNullOrEmpty())
+            if (vault.isFastVault() && !args.email.isNullOrEmpty())
                 VaultType.Fast
             else VaultType.Secure
 

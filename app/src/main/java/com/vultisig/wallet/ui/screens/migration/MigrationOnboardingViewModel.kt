@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -38,7 +37,7 @@ internal class MigrationOnboardingViewModel @Inject constructor(
             vaultRepository.get(vaultId = vaultId)?.let { vault ->
                 state.update {
                     it.copy(
-                        vaultType = if (vault.isFastVault() && vault.libType== SigningLibType.DKLS) {
+                        vaultType = if (vault.isFastVault()) {
                             Route.VaultInfo.VaultType.Fast
                         } else {
                             Route.VaultInfo.VaultType.Secure
@@ -54,7 +53,7 @@ internal class MigrationOnboardingViewModel @Inject constructor(
             val vault = vaultRepository.get(vaultId)
                 ?: error("Vault with $vaultId doesn't exist")
 
-            if (vault.isFastVault() && vault.libType== SigningLibType.DKLS) {
+            if (vault.isFastVault()) {
                 navigator.route(
                     Route.Migration.Password(
                         vaultId = vaultId
