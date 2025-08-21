@@ -298,7 +298,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            SettingsScreen(navController = navController)
+            SettingsScreen()
         }
 
         composable(
