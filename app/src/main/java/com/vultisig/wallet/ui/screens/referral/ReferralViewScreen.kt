@@ -4,7 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,10 +15,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,13 +58,15 @@ internal fun ReferralViewScreen(
 ) {
     ReferralViewScreen(
         onBackPressed = navController::popBackStack,
-        onClickEditReferral = {}
+        onClickEditReferral = {},
+        onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner
     )
 }
 
 @Composable
 internal fun ReferralViewScreen(
     onBackPressed: () -> Unit,
+    onClickFriendReferralBanner: () -> Unit,
     onClickEditReferral: () -> Unit,
 ) {
     Scaffold(
@@ -82,7 +89,9 @@ internal fun ReferralViewScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
             ) {
-                FriendReferralBanner()
+                FriendReferralBanner(
+                    onClick = onClickFriendReferralBanner
+                )
 
                 UiSpacer(16.dp)
 
@@ -164,12 +173,13 @@ internal fun ReferralViewScreen(
 }
 
 @Composable
-private fun FriendReferralBanner() {
+private fun FriendReferralBanner(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
             .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .border(
                 width = 1.dp,
                 color = Theme.colors.borders.light,
@@ -212,7 +222,7 @@ private fun FriendReferralBanner() {
 }
 
 @Composable
-fun ReferralDataBanner() {
+private fun ReferralDataBanner() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,5 +266,50 @@ fun ReferralDataBanner() {
                 style = Theme.brockmann.body.l.medium,
             )
         }
+    }
+}
+
+@Composable
+fun VaultItem(
+    name: String,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Theme.colors.backgrounds.secondary)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            UiIcon(
+                drawableResId = R.drawable.referral_vault_avatar,
+                contentDescription = "referral_avatar",
+                size = 20.dp,
+            )
+        }
+
+        UiSpacer(12.dp)
+
+        Text(
+            text = name,
+            color = Theme.colors.text.primary,
+            style = Theme.brockmann.body.m.regular,
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = "click_referral_vault",
+            tint = Theme.colors.text.primary,
+            modifier = Modifier.size(16.dp)
+        )
     }
 }

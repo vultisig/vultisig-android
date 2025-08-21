@@ -130,6 +130,8 @@ private fun ReferralScreen(
                     fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )
 
+                UiSpacer(16.dp)
+
                 UiSpacer(1f)
 
                 VsTextInputField(
