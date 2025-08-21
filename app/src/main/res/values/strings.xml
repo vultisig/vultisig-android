@@ -691,4 +691,18 @@
     <string name="referral_edit_external_title">Edit referred code</string>
     <string name="referral_use_referred_code">Use referred code</string>
     <string name="referral_save_referred_code">Save referred code</string>
+    <string name="referral_program_tag">Referral Program</string>
+    <string name="referral_how_it_works">How it works</string>
+    <string name="referral_create_code_title">Create your referral code</string>
+    <string name="referral_create_code_description">Pick a short code and set your reward payout.</string>
+    <string name="referral_share_title">Share with friends</string>
+    <string name="referral_share_description">Invite friends to use your code while swapping.</string>
+    <string name="referral_earn_title">Earn 10 bps of swaps automatically</string>
+    <string name="referral_earn_description">Get paid in your preferred asset every time they trade.</string>
+    <string name="referral_use_code_title">Use Referral code - Save 5bps</string>
+    <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
+    <string name="tcy_auto_compound_enable_title">Enable Auto-Compounding</string>
+    <string name="tcy_auto_compound_enable_subtitle">Automatically compound your TCY rewards</string>
+    <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
 </resources>

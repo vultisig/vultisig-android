@@ -316,7 +316,14 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             }
 
             if (email != null && password != null) {
-                startVultiServerConnection()
+                // For active vault , we should present PeerDiscovery screen, so the other device can join
+                // Also need to request the server to join the upgrade process
+                if (args.action == TssAction.Migrate && signers.count() > 2) {
+                    startPeerDiscovery()
+                    requestVultiServerConnection()
+                } else {
+                    startVultiServerConnection()
+                }
             } else {
                 startPeerDiscovery()
             }
@@ -461,6 +468,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             )
                         )
                     ).encodeBase64()
+
         TssAction.ReShare, TssAction.Migrate ->
             "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
@@ -490,7 +498,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private suspend fun requestVultiServerConnection() {
         if (email != null && password != null) {
-            when(args.action) {
+            when (args.action) {
                 TssAction.ReShare -> {
                     vultiSignerRepository.joinReshare(
                         JoinReshareRequestJson(
@@ -507,6 +515,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         )
                     )
                 }
+
                 TssAction.KEYGEN -> {
                     vultiSignerRepository.joinKeygen(
                         JoinKeygenRequestJson(
@@ -521,6 +530,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         )
                     )
                 }
+
                 TssAction.Migrate -> {
                     vultiSignerRepository.migrate(
                         MigrateRequest(
@@ -613,7 +623,6 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             false
         }
     }
-
 
 
 }
