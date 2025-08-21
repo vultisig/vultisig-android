@@ -12,6 +12,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_MERGE_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -650,6 +651,9 @@ internal fun SetupNavGraph(
             route = Destination.ReferralView.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_REFERRAL_ID) {
                     type = NavType.StringType
                 }
             )

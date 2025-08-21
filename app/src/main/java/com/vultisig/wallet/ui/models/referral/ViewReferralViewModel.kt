@@ -47,29 +47,23 @@ internal class ViewReferralViewModel @Inject constructor(
 
     private fun onLoadReferralCodeInfo() {
         viewModelScope.launch {
-            val referralVaultDetails = async(Dispatchers.IO) {
-                thorChainApi.getReferralCodeInfo(vaultReferralCode)
-            }
-            val (vaultName, friendReferralCode, vaultReferralCode) = withContext(Dispatchers.IO) {
+            val (vaultName, friendReferralCode) = withContext(Dispatchers.IO) {
                 val vaultDeferred =
                     async { vaultRepository.get(vaultId)?.name ?: "Default Vault" }
                 val friendReferralDeferred =
                     async { referralRepository.getExternalReferralBy(vaultId) }
-                val vaultReferralDeferred =
-                    async { referralRepository.getReferralCreatedBy(vaultId) }
-                Triple(
-                    vaultDeferred.await(),
-                    friendReferralDeferred.await(),
-                    vaultReferralDeferred.await()
-                )
+                    vaultDeferred.await() to friendReferralDeferred.await()
             }
 
             state.update {
                 it.copy(
                     vaultName = vaultName,
-                    referralVaultCode = vaultReferralCode ?: "",
+                    referralVaultCode = vaultReferralCode,
                     referralFriendCode = friendReferralCode ?: "",
                 )
+            }
+            val referralVaultDeferred = withContext(Dispatchers.IO) {
+                thorChainApi.getReferralCodeInfo(vaultReferralCode)
             }
         }
     }
