@@ -100,9 +100,13 @@ internal fun ReferralViewScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
             ) {
-                FriendReferralBanner(
-                    onClick = onClickFriendReferralBanner
-                )
+                if (state.referralFriendCode.isEmpty()) {
+                    FriendReferralBanner(
+                        onClick = onClickFriendReferralBanner
+                    )
+                } else {
+                    // Show the actual code !!
+                }
 
                 UiSpacer(16.dp)
 

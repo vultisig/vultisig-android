@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.referral
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,6 +48,8 @@ internal class ViewReferralViewModel @Inject constructor(
 
     private fun onLoadReferralCodeInfo() {
         viewModelScope.launch {
+            referralCodeTextField.setTextAndPlaceCursorAtEnd(vaultReferralCode)
+
             val (vaultName, friendReferralCode) = withContext(Dispatchers.IO) {
                 val vaultDeferred =
                     async { vaultRepository.get(vaultId)?.name ?: "Default Vault" }
