@@ -1,5 +1,9 @@
 package com.vultisig.wallet.ui.screens.referral
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -56,6 +62,8 @@ internal fun ReferralViewScreen(
     model: ViewReferralViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
+    val clipboardManager =
+        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
 
     ReferralViewScreen(
         state = state,
@@ -64,7 +72,10 @@ internal fun ReferralViewScreen(
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onVaultClicked = { },
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
-        onCopyReferralCode = { }
+        onCopyReferralCode = {
+            val clip = ClipData.newPlainText("ReferralCode", it)
+            clipboardManager?.setPrimaryClip(clip)
+        }
     )
 }
 
@@ -76,13 +87,13 @@ internal fun ReferralViewScreen(
     onClickEditReferral: () -> Unit,
     onVaultClicked: () -> Unit,
     onEditFriendReferralCode: () -> Unit,
-    onCopyReferralCode: () -> Unit,
+    onCopyReferralCode: (String) -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Referral",
+                title = "Your Referral",
                 onBackClick = {
                     onBackPressed()
                 },
@@ -154,9 +165,9 @@ internal fun ReferralViewScreen(
                         text = state.referralVaultCode,
                         icon = {
                             UiIcon(
-                                drawableResId = R.drawable.ic_paste,
+                                drawableResId = R.drawable.ic_copy,
                                 size = 18.dp,
-                                onClick = { onCopyReferralCode() }
+                                onClick = { onCopyReferralCode(state.referralFriendCode) }
                             )
                         }
                     )
