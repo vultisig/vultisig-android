@@ -85,6 +85,7 @@ interface ThorChainApi {
     suspend fun existsReferralCode(code: String): Boolean
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
     suspend fun getReferralCodesByAddress(address: String): List<String>
+    suspend fun getLastBlock(): Long
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -404,6 +405,14 @@ internal class ThorChainApiImpl @Inject constructor(
         return emptyList()
     }
 
+    override suspend fun getLastBlock(): Long {
+        val response = httpClient
+            .get("$NNRLM_URL/lastblock") {
+                header(xClientID, xClientIDValue)
+            }
+        return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
@@ -551,6 +560,11 @@ data class PendingRevenue(
 @Serializable
 data class Asset(
     val metadata: Metadata? = null,
+)
+
+@Serializable
+data class BlockNumber(
+    val thorchain: Long,
 )
 
 data class RujiStakeBalances(

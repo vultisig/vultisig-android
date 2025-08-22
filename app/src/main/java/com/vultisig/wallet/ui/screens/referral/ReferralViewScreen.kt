@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.referral
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -75,6 +75,7 @@ internal fun ReferralViewScreen(
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onVaultClicked = { },
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
+        onDismissErrorDialog = model::onDismissErrorDialog,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
@@ -91,7 +92,17 @@ internal fun ReferralViewScreen(
     onVaultClicked: () -> Unit,
     onEditFriendReferralCode: () -> Unit,
     onCopyReferralCode: (String) -> Unit,
+    onDismissErrorDialog: () -> Unit,
 ) {
+    if (state.error.isNotEmpty()) {
+        UiAlertDialog(
+            title = stringResource(R.string.dialog_default_error_title),
+            text = "Error Loading Information",
+            confirmTitle = stringResource(R.string.try_again),
+            onDismiss = onDismissErrorDialog,
+        )
+    }
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -152,7 +163,7 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDataBanner(state.rewardsReferral, state.isLoading)
+                    ReferralDataBanner(state.rewardsReferral, state.isLoadingRewards)
 
                     UiSpacer(16.dp)
 
@@ -177,7 +188,7 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralExpirationItem()
+                    ReferralExpirationItem(state.referralVaultExpiration, state.isLoadingExpirationDate)
 
                     UiSpacer(16.dp)
 
@@ -236,7 +247,7 @@ private fun FriendReferralCode(
 }
 
 @Composable
-private fun ReferralExpirationItem(expiration: String = "25 May of 2027") {
+private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoading: Boolean) {
     Column(
         modifier = Modifier
             .border(
@@ -256,11 +267,21 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027") {
             style = Theme.brockmann.body.s.medium,
             text = "Expires on"
         )
-        Text(
-            color = Theme.colors.text.primary,
-            style = Theme.brockmann.body.l.medium,
-            text = expiration,
-        )
+        if (isLoading) {
+            UiSpacer(2.dp)
+
+            UiPlaceholderLoader(
+                modifier = Modifier
+                    .height(22.dp)
+                    .width(130.dp)
+            )
+        } else {
+            Text(
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.body.l.medium,
+                text = expiration,
+            )
+        }
     }
 }
 

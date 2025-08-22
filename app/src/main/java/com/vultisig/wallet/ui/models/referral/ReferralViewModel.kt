@@ -88,6 +88,7 @@ internal class ReferralViewModel @Inject constructor(
                     isSaveEnabled = externalReferral.isNullOrEmpty(),
                 )
             }
+
             if (!externalReferral.isNullOrEmpty()) {
                 referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(externalReferral)
             }
