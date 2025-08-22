@@ -570,7 +570,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI
             )
-
+            Chain.Mantle -> setOf(
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
+            )
             Chain.ThorChain -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,

@@ -37,4 +37,5 @@ internal val Chain.logo: Int
         Chain.Tron -> R.drawable.tron
         Chain.Zcash -> R.drawable.zcash
         Chain.Cardano -> R.drawable.cardano
+        Chain.Mantle -> R.drawable.mantle
     }
