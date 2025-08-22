@@ -104,7 +104,7 @@
     <string name="feature_item_learn_more">Meer informatie</string>
     <string name="vault_detail_screen_vault_name">Kluisnaam</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_eddsa">EdDSA</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
     <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
@@ -390,7 +390,7 @@
     <string name="security_scanner_transaction_scanning">Scannen…</string>
     <string name="security_scanner_transaction_not_scanned">Transactie niet gescand door</string>
     <string name="keygen_step_generating_ecdsa">ECDSA-sleutel genereren</string>
-    <string name="reshare_step_generating_eddsa">EDDSA-sleutel genereren</string>
+    <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
     <string name="keygen_connecting_with_server">ECDSA-sleutel genereren</string>
     <string name="keygen_step_generating_eddsa">EDDSA-sleutel genereren</string>
     <string name="reshare_step_generating_ecdsa">ECDSA-sleutel genereren</string>
