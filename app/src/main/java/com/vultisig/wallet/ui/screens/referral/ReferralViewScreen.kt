@@ -167,7 +167,7 @@ internal fun ReferralViewScreen(
                             UiIcon(
                                 drawableResId = R.drawable.ic_copy,
                                 size = 18.dp,
-                                onClick = { onCopyReferralCode(state.referralFriendCode) }
+                                onClick = { onCopyReferralCode(state.referralVaultCode) }
                             )
                         }
                     )
