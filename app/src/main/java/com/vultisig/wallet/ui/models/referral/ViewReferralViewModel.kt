@@ -41,6 +41,7 @@ internal class ViewReferralViewModel @Inject constructor(
 
     val state = MutableStateFlow(ReferralViewUiState())
     val referralCodeTextField = TextFieldState()
+    val friendReferralCodeTextField = TextFieldState()
 
     init {
         onLoadReferralCodeInfo()
@@ -65,8 +66,9 @@ internal class ViewReferralViewModel @Inject constructor(
                     referralFriendCode = friendReferralCode ?: "",
                 )
             }
-            val referralVaultDeferred = withContext(Dispatchers.IO) {
-                thorChainApi.getReferralCodeInfo(vaultReferralCode)
+
+            if (!friendReferralCode.isNullOrEmpty()) {
+                friendReferralCodeTextField.setTextAndPlaceCursorAtEnd(friendReferralCode)
             }
         }
     }

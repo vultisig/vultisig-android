@@ -64,10 +64,12 @@ internal fun ReferralViewScreen(
     ReferralViewScreen(
         state = state,
         referralCodeState = model.referralCodeTextField,
+        friendReferralCodeState = model.friendReferralCodeTextField,
         onBackPressed = navController::popBackStack,
         onClickEditReferral = { }, // This will be used to edit rewards
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onVaultClicked = { },
+        onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
     )
 }
 
@@ -75,10 +77,12 @@ internal fun ReferralViewScreen(
 internal fun ReferralViewScreen(
     state: ReferralViewUiState,
     referralCodeState: TextFieldState,
+    friendReferralCodeState: TextFieldState,
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
     onClickEditReferral: () -> Unit,
     onVaultClicked: () -> Unit,
+    onEditFriendReferralCode: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -105,7 +109,26 @@ internal fun ReferralViewScreen(
                         onClick = onClickFriendReferralBanner
                     )
                 } else {
-                    // Show the actual code !!
+                    Text(
+                        text = "Your Friend Referral Code",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.primary,
+                    )
+
+                    UiSpacer(8.dp)
+
+                    VsTextInputField(
+                        textFieldState = friendReferralCodeState,
+                        innerState = VsTextInputFieldInnerState.Default,
+                        enabled = false,
+                        focusRequester = null,
+                        trailingIcon = R.drawable.ic_edit_pencil,
+                        onTrailingIconClick = {
+                            onEditFriendReferralCode()
+                        },
+                        keyboardType = KeyboardType.Text,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 UiSpacer(16.dp)
@@ -135,7 +158,7 @@ internal fun ReferralViewScreen(
                     color = Theme.colors.text.primary,
                 )
 
-                UiSpacer(16.dp)
+                UiSpacer(8.dp)
 
                 VsTextInputField(
                     textFieldState = referralCodeState,
