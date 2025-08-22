@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.isNotEmptyContract
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -342,8 +343,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                         gas = liFiQuote.transactionRequest.gasLimit?.substring(startIndex = 2)
                             ?.hexToLong() ?: 0,
                         value = liFiQuote.transactionRequest.value?.substring(startIndex = 2)
-                            ?.hexToLong()
-                            ?.toString() ?: "0",
+                            ?.convertToBigIntegerOrZero().toString(),
                         gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
                             ?.hexToLong()?.toString() ?: "0",
                         swapFee = swapFee?.amount ?: "0",

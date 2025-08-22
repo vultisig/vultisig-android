@@ -23,6 +23,7 @@ internal class DepositTransactionUiModelMapperImpl @Inject constructor(
     override suspend fun invoke(from: DepositTransaction): DepositTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
         return DepositTransactionUiModel(
+            srcAddress = from.srcAddress,
             token = ValuedToken(
                 token = from.srcToken,
                 value = mapTokenValueToDecimalUiString(from.srcTokenValue),

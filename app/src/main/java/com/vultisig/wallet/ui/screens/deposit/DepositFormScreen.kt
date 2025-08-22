@@ -307,8 +307,8 @@ internal fun DepositFormScreen(
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE,)||
-                            !( depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool)
+                            DepositOption.RedeemYRUNE)
+                        && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
                             SelectionCard(

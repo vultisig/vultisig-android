@@ -446,9 +446,10 @@ internal class KeygenViewModel @Inject constructor(
 
         stopService()
 
-        val vaultType = if (vault.isFastVault())
-            VaultType.Fast
-        else VaultType.Secure
+        val vaultType =
+            if (vault.isFastVault() && !args.email.isNullOrEmpty())
+                VaultType.Fast
+            else VaultType.Secure
 
         navigator.route(
             route = when (action) {
