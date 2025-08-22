@@ -10,7 +10,7 @@ interface ReferralCodeSettingsRepositoryContract {
     fun getReferralCreatedBy(vaultId: String): String?
     fun saveReferralCreated(vaultId: String, referralCode: String)
     fun getExternalReferralBy(vaultId: String): String?
-    fun saveExternalReferral(vaultId: String, referralCode: String)
+    fun saveExternalReferral(vaultId: String, referralCode: String?)
 }
 
 class ReferralCodeSettingsRepository @Inject constructor(
@@ -42,7 +42,7 @@ class ReferralCodeSettingsRepository @Inject constructor(
         return encryptedSharedPreferences.getString(key, null)
     }
 
-    override fun saveExternalReferral(vaultId: String, referralCode: String) {
+    override fun saveExternalReferral(vaultId: String, referralCode: String?) {
         val key = EXTERNAL_REFERRAL_CODE_KEY + vaultId
 
         encryptedSharedPreferences.edit { putString(key, referralCode) }

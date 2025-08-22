@@ -56,10 +56,8 @@ internal fun ReferralScreen(
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     LaunchedEffect(savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE)) {
         val code = savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE).orEmpty()
-        if (code.isNotEmpty()) {
-            model.onNewEditedReferral(code)
-            savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
-        }
+        model.onNewEditedReferral(code)
+        savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
     }
 
     ReferralScreen(
