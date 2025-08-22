@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -393,6 +394,7 @@ internal fun SwapToken(
     valuedToken: ValuedToken,
     isSwap: Boolean = false,
     isDestinationToken: Boolean = false,
+    isLoading: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
@@ -436,17 +438,31 @@ internal fun SwapToken(
                 )
             }
 
-            Text(
-                text = text,
-                style = Theme.brockmann.headings.title3,
-                color = Theme.colors.text.primary,
-            )
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
 
-            Text(
-                text = valuedToken.fiatValue,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
-            )
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
+            } else {
+                Text(
+                    text = text,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = valuedToken.fiatValue,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
 
         if (shouldShowOnChainLogo) {
@@ -469,11 +485,19 @@ internal fun SwapToken(
 
                 UiSpacer(8.dp)
 
-                Text(
-                    text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.extraLight,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .width(150.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.colors.text.extraLight,
+                    )
+                }
             }
         }
     }

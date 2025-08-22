@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +39,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -62,7 +65,7 @@ internal fun VerifyDepositScreen(
         {
             context.launchBiometricPrompt(
                 promptTitle = promptTitle,
-                onAuthorizationSuccess =  viewModel::authFastSign,
+                onAuthorizationSuccess = viewModel::authFastSign,
             )
         }
     }
@@ -145,6 +148,7 @@ internal fun VerifyDepositScreen(
 
                     SwapToken(
                         valuedToken = tx.token,
+                        isLoading = state.isLoading,
                     )
 
                     UiSpacer(12.dp)
@@ -159,6 +163,7 @@ internal fun VerifyDepositScreen(
 
                         VerifyCardDivider(0.dp)
                     }
+
 
                     if (tx.dstAddress.isNotEmpty()) {
                         VerifyCardDetails(
@@ -176,8 +181,14 @@ internal fun VerifyDepositScreen(
                             subtitle = tx.memo
                         )
                     }
+                    val hasContent =
+                        tx.srcAddress.isNotEmpty()
+                                || tx.dstAddress.isNotEmpty()
+                                || tx.memo.isNotEmpty()
 
-                    VerifyCardDivider(0.dp)
+                    if (hasContent) {
+                        VerifyCardDivider(0.dp)
+                    }
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -201,21 +212,29 @@ internal fun VerifyDepositScreen(
                         ) {
                             val chain = state.depositTransactionUiModel.token.token.chain
 
-                            Image(
-                                painter = painterResource(chain.logo),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(16.dp),
-                            )
+                            if (state.isLoading) {
+                                UiPlaceholderLoader(
+                                    modifier = Modifier
+                                        .height(20.dp)
+                                        .width(150.dp)
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(chain.logo),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(16.dp),
+                                )
 
-                            Text(
-                                text = chain.raw,
-                                style = Theme.brockmann.supplementary.footnote,
-                                color = Theme.colors.text.primary,
-                                textAlign = TextAlign.End,
-                                maxLines = 1,
-                                overflow = TextOverflow.MiddleEllipsis,
-                            )
+                                Text(
+                                    text = chain.raw,
+                                    style = Theme.brockmann.supplementary.footnote,
+                                    color = Theme.colors.text.primary,
+                                    textAlign = TextAlign.End,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.MiddleEllipsis,
+                                )
+                            }
                         }
                     }
 
@@ -226,10 +245,9 @@ internal fun VerifyDepositScreen(
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeTokenValue,
                         fiatGas = tx.networkFeeFiatValue,
+                        isLoading = state.isLoading,
                     )
                 }
-
-
             }
         },
         bottomBar = {
