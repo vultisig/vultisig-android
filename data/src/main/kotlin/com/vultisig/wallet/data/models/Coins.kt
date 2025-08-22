@@ -204,7 +204,7 @@ object Coins {
                 hexPublicKey = "",
                 priceProviderID = "mantle",
                 contractAddress = "",
-                true
+                isNativeToken = true
             ),
             Coin(
                 chain = Chain.Mantle,
@@ -215,7 +215,7 @@ object Coins {
                 hexPublicKey = "",
                 priceProviderID = "tether",
                 contractAddress = "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
-                false
+                isNativeToken = false
             ),
             Coin(
                 chain = Chain.Mantle,
