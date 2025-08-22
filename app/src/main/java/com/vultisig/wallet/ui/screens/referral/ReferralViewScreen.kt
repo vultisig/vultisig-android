@@ -35,11 +35,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -93,7 +94,7 @@ internal fun ReferralViewScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Your Referral",
+                title = stringResource(R.string.referral_view_title),
                 onBackClick = {
                     onBackPressed()
                 },
@@ -135,7 +136,7 @@ internal fun ReferralViewScreen(
                         .padding(12.dp)
                 ) {
                     Text(
-                        text = "Vault Selected",
+                        text = stringResource(R.string.referral_view_selected_vault),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.primary,
                     )
@@ -149,12 +150,12 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDataBanner()
+                    ReferralDataBanner(state.rewardsReferral)
 
                     UiSpacer(16.dp)
 
                     Text(
-                        text = "Your referral code",
+                        text = stringResource(R.string.referral_view_your_referral_code),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.primary,
                     )
@@ -179,7 +180,7 @@ internal fun ReferralViewScreen(
                     UiSpacer(16.dp)
 
                     VsButton(
-                        label = "Edit referral",
+                        label = stringResource(R.string.referral_view_edit_referral),
                         modifier = Modifier.fillMaxWidth(),
                         variant = VsButtonVariant.Primary,
                         state = VsButtonState.Enabled,
@@ -212,7 +213,7 @@ private fun FriendReferralCode(
             .padding(12.dp)
     ) {
         Text(
-            text = "Your Friend Referral Code",
+            text = stringResource(R.string.referral_view_your_friend_referral),
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
         )
@@ -289,11 +290,11 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
         ) {
             Text(
                 text = buildAnnotatedString {
-                    append("Save ")
+                    append(stringResource(R.string.referral_view_save))
                     withStyle(style = SpanStyle(color = Theme.colors.primary.accent4)) {
-                        append("10%")
+                        append(" 10% ")
                     }
-                    append(" on swaps now")
+                    append(stringResource(R.string.referral_view_on_swaps))
                 },
                 color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.caption,
@@ -302,7 +303,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Add a Friends Referral",
+                text = stringResource(R.string.referral_view_add_friend),
                 color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
             )
@@ -311,7 +312,9 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
 }
 
 @Composable
-private fun ReferralDataBanner() {
+private fun ReferralDataBanner(
+    rewards: String,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -344,13 +347,13 @@ private fun ReferralDataBanner() {
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Collected Rewards",
+                text = stringResource(R.string.referral_view_collected_rewards),
                 color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
 
             Text(
-                text = "250.40 RUNE",
+                text = rewards,
                 color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
@@ -390,6 +393,8 @@ fun VaultItem(
             text = name,
             color = Theme.colors.text.primary,
             style = Theme.brockmann.body.m.regular,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(modifier = Modifier.weight(1f))

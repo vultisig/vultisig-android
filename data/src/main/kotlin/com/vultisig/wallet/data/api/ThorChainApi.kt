@@ -423,7 +423,7 @@ data class ThorOwnerData(
     @SerialName("preferred_asset_swap_threshold_rune")
     val preferredAssetSwapThresholdRune: String,
     @SerialName("affiliate_collector_rune")
-    val affilateCollectorRune: String,
+    val affiliateCollectorRune: String,
     @SerialName("aliases")
     val aliases: List<Aliases> = emptyList(),
 ) {

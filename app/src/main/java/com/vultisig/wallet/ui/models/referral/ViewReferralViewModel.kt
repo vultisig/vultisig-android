@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -17,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import wallet.core.jni.CoinType
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal data class ReferralViewUiState(
@@ -24,6 +28,8 @@ internal data class ReferralViewUiState(
     val referralVaultCode: String = "",
     val referralVaultExpiration: String = "",
     val vaultName: String = "",
+    val rewardsReferral: String = "",
+    val isLoading: Boolean = true,
 )
 
 @HiltViewModel
@@ -45,6 +51,9 @@ internal class ViewReferralViewModel @Inject constructor(
 
     private fun onLoadReferralCodeInfo() {
         viewModelScope.launch {
+            state.update {
+                it.copy(isLoading = true)
+            }
             val (vaultName, friendReferralCode) = withContext(Dispatchers.IO) {
                 val vaultDeferred =
                     async { vaultRepository.get(vaultId)?.name ?: "Default Vault" }
@@ -59,6 +68,30 @@ internal class ViewReferralViewModel @Inject constructor(
                     referralVaultCode = vaultReferralCode,
                     referralFriendCode = friendReferralCode ?: "",
                 )
+            }
+
+            try {
+                val referralDetails = withContext(Dispatchers.IO) {
+                    thorChainApi.getReferralCodeInfo(vaultReferralCode)
+                }
+                val rewards =
+                    referralDetails.affiliateCollectorRune.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val ticker = CoinType.THORCHAIN.symbol
+
+                val formattedRewards =
+                    "${CoinType.THORCHAIN.toValue(rewards).toPlainString()} $ticker"
+
+                state.update {
+                    it.copy(
+                        rewardsReferral = formattedRewards,
+                    )
+                }
+            } catch (t: Throwable) {
+                state.update {
+                    it.copy(
+                        isLoading = false,
+                    ) // TODO: Handle error state too
+                }
             }
         }
     }
