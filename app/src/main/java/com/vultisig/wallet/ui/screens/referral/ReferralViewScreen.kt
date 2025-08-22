@@ -109,39 +109,10 @@ internal fun ReferralViewScreen(
                         onClick = onClickFriendReferralBanner
                     )
                 } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = Theme.colors.borders.light
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = "Your Friend Referral Code",
-                            style = Theme.brockmann.body.s.medium,
-                            color = Theme.colors.text.primary,
-                        )
-
-                        UiSpacer(8.dp)
-
-                        VsTextInputField(
-                            textFieldState = friendReferralCodeState,
-                            innerState = VsTextInputFieldInnerState.Default,
-                            enabled = false,
-                            focusRequester = null,
-                            trailingIcon = R.drawable.ic_edit_pencil,
-                            onTrailingIconClick = {
-                                onEditFriendReferralCode()
-                            },
-                            keyboardType = KeyboardType.Text,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    FriendReferralCode(
+                        friendReferralCodeState = friendReferralCodeState,
+                        onEditFriendReferralCode = onEditFriendReferralCode,
+                    )
                 }
 
                 UiSpacer(16.dp)
@@ -220,6 +191,46 @@ internal fun ReferralViewScreen(
 }
 
 @Composable
+private fun FriendReferralCode(
+    friendReferralCodeState: TextFieldState,
+    onEditFriendReferralCode: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp)
+    ) {
+        Text(
+            text = "Your Friend Referral Code",
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.colors.text.primary,
+        )
+
+        UiSpacer(8.dp)
+
+        VsTextInputField(
+            textFieldState = friendReferralCodeState,
+            innerState = VsTextInputFieldInnerState.Default,
+            enabled = false,
+            focusRequester = null,
+            trailingIcon = R.drawable.ic_edit_pencil,
+            onTrailingIconClick = {
+                onEditFriendReferralCode()
+            },
+            keyboardType = KeyboardType.Text,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
 private fun ReferralExpirationItem(expiration: String = "") {
     Column(
         modifier = Modifier
@@ -231,7 +242,7 @@ private fun ReferralExpirationItem(expiration: String = "") {
                 shape = RoundedCornerShape(12.dp),
             )
             .clip(RoundedCornerShape(12.dp))
-            .background(Theme.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.primary)
             .fillMaxWidth()
             .padding(all = 16.dp),
     ) {
@@ -356,6 +367,11 @@ fun VaultItem(
             .height(56.dp)
             .clip(RoundedCornerShape(28.dp))
             .background(Theme.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(28.dp)
+            )
             .clickable { onVaultClicked() }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
