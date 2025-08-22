@@ -701,4 +701,14 @@
     <string name="referral_earn_description">Get paid in your preferred asset every time they trade.</string>
     <string name="referral_use_code_title">Use Referral code - Save 5bps</string>
     <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
+
+    <string name="referral_view_title">Your Referral</string>
+    <string name="referral_view_selected_vault">Vault Selected</string>
+    <string name="referral_view_your_referral_code">Your referral code</string>
+    <string name="referral_view_edit_referral">Edit referral</string>
+    <string name="referral_view_your_friend_referral">Your Friend Referral Code</string>
+    <string name="referral_view_collected_rewards">Collected Rewards</string>
+    <string name="referral_view_add_friend">Add a Friends Referral</string>
+    <string name="referral_view_save">Save</string>
+    <string name="referral_view_on_swaps">on swaps now</string>
 </resources>

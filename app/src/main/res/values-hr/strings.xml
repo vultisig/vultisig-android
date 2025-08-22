@@ -458,4 +458,13 @@
     <string name="referral_earn_description">Primajte isplate u vašem preferiranom sredstvu svaki put kada trguju.</string>
     <string name="referral_use_code_title">Koristi kod preporuke - Uštedi 5bps</string>
     <string name="referral_use_code_description">Koristi kod od prijatelja i uštedi na naknadama za razmjenu.</string>
+    <string name="referral_view_title">Tvoja preporuka</string>
+    <string name="referral_view_selected_vault">Odabrani trezor</string>
+    <string name="referral_view_your_referral_code">Tvoj preporučni kod</string>
+    <string name="referral_view_edit_referral">Uredi preporuku</string>
+    <string name="referral_view_your_friend_referral">Preporučni kod tvog prijatelja</string>
+    <string name="referral_view_collected_rewards">Prikupljene nagrade</string>
+    <string name="referral_view_add_friend">Dodaj preporuku prijatelja</string>
+    <string name="referral_view_save">Spremi</string>
+    <string name="referral_view_on_swaps">na zamjenama sada</string>
 </resources>

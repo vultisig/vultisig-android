@@ -458,4 +458,13 @@
     <string name="referral_earn_description">Erhalten Sie Zahlungen in Ihrem bevorzugten Asset, wenn sie handeln.</string>
     <string name="referral_use_code_title">Empfehlungscode verwenden - 5bps sparen</string>
     <string name="referral_use_code_description">Verwenden Sie einen Code von Ihrem Freund und sparen Sie bei Swap-Gebühren.</string>
+    <string name="referral_view_title">Deine Empfehlung</string>
+    <string name="referral_view_selected_vault">Tresor ausgewählt</string>
+    <string name="referral_view_your_referral_code">Dein Empfehlungscode</string>
+    <string name="referral_view_edit_referral">Empfehlung bearbeiten</string>
+    <string name="referral_view_your_friend_referral">Empfehlungscode deines Freundes</string>
+    <string name="referral_view_collected_rewards">Gesammelte Belohnungen</string>
+    <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
+    <string name="referral_view_save">Speichern</string>
+    <string name="referral_view_on_swaps">Jetzt bei Swaps</string>
 </resources>

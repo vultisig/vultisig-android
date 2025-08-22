@@ -456,4 +456,13 @@
     <string name="referral_earn_description">Receba pagamentos no seu ativo preferido sempre que eles negociarem.</string>
     <string name="referral_use_code_title">Use código de indicação - Economize 5bps</string>
     <string name="referral_use_code_description">Use um código do seu amigo e economize nas taxas de swap.</string>
+    <string name="referral_view_title">Sua indicação</string>
+    <string name="referral_view_selected_vault">Cofre selecionado</string>
+    <string name="referral_view_your_referral_code">Seu código de indicação</string>
+    <string name="referral_view_edit_referral">Editar indicação</string>
+    <string name="referral_view_your_friend_referral">Código de indicação do seu amigo</string>
+    <string name="referral_view_collected_rewards">Recompensas coletadas</string>
+    <string name="referral_view_add_friend">Adicionar indicação de amigo</string>
+    <string name="referral_view_save">Salvar</string>
+    <string name="referral_view_on_swaps">nas trocas agora</string>
 </resources>

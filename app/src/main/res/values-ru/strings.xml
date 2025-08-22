@@ -467,4 +467,13 @@
     <string name="referral_earn_description">Получайте выплаты в предпочитаемом активе каждый раз, когда они торгуют.</string>
     <string name="referral_use_code_title">Используйте реферальный код - Экономьте 5bps</string>
     <string name="referral_use_code_description">Используйте код от друга и экономьте на комиссиях за своп.</string>
+    <string name="referral_view_title">Ваша реферальная ссылка</string>
+    <string name="referral_view_selected_vault">Выбранное хранилище</string>
+    <string name="referral_view_your_referral_code">Ваш реферальный код</string>
+    <string name="referral_view_edit_referral">Редактировать реферал</string>
+    <string name="referral_view_your_friend_referral">Реферальный код вашего друга</string>
+    <string name="referral_view_collected_rewards">Собранные награды</string>
+    <string name="referral_view_add_friend">Добавить реферала друга</string>
+    <string name="referral_view_save">Сохранить</string>
+    <string name="referral_view_on_swaps">на обменах сейчас</string>
 </resources>

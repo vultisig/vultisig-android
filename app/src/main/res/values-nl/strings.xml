@@ -467,4 +467,13 @@
     <string name="referral_earn_description">Ontvang betalingen in je voorkeursasset elke keer als ze handelen.</string>
     <string name="referral_use_code_title">Gebruik verwijzingscode - Bespaar 5bps</string>
     <string name="referral_use_code_description">Gebruik een code van je vriend en bespaar op swapkosten.</string>
+    <string name="referral_view_title">Jouw verwijzing</string>
+    <string name="referral_view_selected_vault">Kluis geselecteerd</string>
+    <string name="referral_view_your_referral_code">Jouw verwijzingscode</string>
+    <string name="referral_view_edit_referral">Verwijzing bewerken</string>
+    <string name="referral_view_your_friend_referral">Verwijzingscode van je vriend</string>
+    <string name="referral_view_collected_rewards">Verzamelde beloningen</string>
+    <string name="referral_view_add_friend">Verwijzing van vriend toevoegen</string>
+    <string name="referral_view_save">Opslaan</string>
+    <string name="referral_view_on_swaps">nu bij swaps</string>
 </resources>

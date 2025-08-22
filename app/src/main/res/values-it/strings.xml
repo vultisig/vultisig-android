@@ -458,4 +458,13 @@
     <string name="referral_earn_description">Ricevi pagamenti nel tuo asset preferito ogni volta che fanno trading.</string>
     <string name="referral_use_code_title">Usa codice Referral - Risparmia 5bps</string>
     <string name="referral_use_code_description">Usa un codice del tuo amico e risparmia sulle commissioni di swap.</string>
+    <string name="referral_view_title">Il tuo referral</string>
+    <string name="referral_view_selected_vault">Vault selezionato</string>
+    <string name="referral_view_your_referral_code">Il tuo codice referral</string>
+    <string name="referral_view_edit_referral">Modifica referral</string>
+    <string name="referral_view_your_friend_referral">Codice referral del tuo amico</string>
+    <string name="referral_view_collected_rewards">Ricompense raccolte</string>
+    <string name="referral_view_add_friend">Aggiungi referral di un amico</string>
+    <string name="referral_view_save">Salva</string>
+    <string name="referral_view_on_swaps">sugli swap ora</string>
 </resources>
