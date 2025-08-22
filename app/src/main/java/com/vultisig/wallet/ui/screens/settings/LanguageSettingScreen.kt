@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -21,23 +19,26 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Language
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.settings.LanguageSettingUiModel
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun LanguageSettingScreen(navController: NavHostController) {
-    val colors = Theme.colors
     val viewModel = hiltViewModel<LanguageSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
@@ -45,35 +46,59 @@ fun LanguageSettingScreen(navController: NavHostController) {
         viewModel.initSelectedLanguage()
     }
 
+    LanguageSettingScreen(
+        state = state,
+        onBackClick = {
+            navController.popBackStack()
+        },
+        onLanguageClick = { language ->
+            viewModel.changeLanguage(language)
+            navController.popBackStack()
+        }
+    )
+}
 
+@Composable
+private fun LanguageSettingScreen(
+    state: LanguageSettingUiModel,
+    onBackClick: () -> Unit,
+    onLanguageClick: (Language) -> Unit,
+) {
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()
-            .background(colors.oxfordBlue800),
+            .fillMaxSize(),
         topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(R.string.language_setting_screen_title),
-                startIcon = R.drawable.ic_caret_left
+            VsTopAppBar(
+                iconLeft = R.drawable.ic_caret_left,
+                onIconLeftClick = onBackClick,
+                title = stringResource(R.string.language_setting_screen_title),
             )
         }
     ) {
-        LazyColumn(
-            modifier = Modifier
+
+        SettingsBox(
+            Modifier
                 .padding(it)
-        ) {
-            items(state.languages) { language ->
-                LanguageSettingItem(
-                    name = language.mainName,
-                    englishName = language.englishName,
-                    isSelected = language == state.selectedLanguage,
-                    onClick = {
-                        viewModel.changeLanguage(language)
-                        navController.popBackStack()
-                    }
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
                 )
+        ) {
+            LazyColumn {
+                itemsIndexed(state.languages) { index, language ->
+                    LanguageSettingItem(
+                        name = language.mainName,
+                        englishName = language.englishName,
+                        isSelected = language == state.selectedLanguage,
+                        isLastItem = index == state.languages.lastIndex,
+                        onClick = {
+                            onLanguageClick(language)
+                        }
+                    )
+                }
             }
         }
+
     }
 }
 
@@ -82,58 +107,77 @@ private fun LanguageSettingItem(
     name: String,
     englishName: String?,
     isSelected: Boolean,
+    isLastItem: Boolean = false,
     onClick: () -> Unit
 ) {
-    val colors = Theme.colors
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .fillMaxWidth()
-            .clickOnce(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.oxfordBlue600Main
-        )
-    ) {
+    Column {
         Row(
-            modifier = Modifier.padding(all = 12.dp),
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 14.dp)
+                .clickOnce(onClick = onClick),
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = name,
-                    color = colors.neutral0,
-                    style = Theme.menlo.body2,
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.headings.subtitle,
                 )
-
 
                 englishName?.let {
                     Text(
                         text = it,
-                        color = colors.neutral300,
-                        style = Theme.menlo.body3,
+                        color = Theme.colors.text.light,
+                        style = Theme.brockmann.supplementary.caption,
                     )
                 }
             }
 
             UiSpacer(weight = 1.0f)
 
-            Icon(
-                modifier = Modifier.alpha(if (isSelected) 1f else 0f),
-                painter = painterResource(id = R.drawable.check),
-                contentDescription = null,
-                tint = colors.neutral0,
-            )
+            if (isSelected)
+                Icon(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .background(
+                            color = Theme.colors.primary.accent3,
+                            shape = CircleShape
+                        )
+                        .padding(4.dp),
+                    painter = painterResource(id = R.drawable.check),
+                    contentDescription = "check mark",
+                    tint = Theme.colors.text.button.light,
+                )
+        }
+
+        if (isLastItem.not()) {
+            FadingHorizontalDivider()
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
-fun LanguageSettingScreenPreview() {
-    LanguageSettingItem(
-        name = "English",
-        englishName = "English",
-        isSelected = true,
-        onClick = {})
+private fun LanguageSettingScreenPreview() {
+    LanguageSettingScreen(
+        state = LanguageSettingUiModel(
+            languages = listOf(
+                Language(
+                    mainName = "English",
+                    englishName = "English"
+                ),
+                Language(
+                    mainName = "Français",
+                    englishName = "French"
+                )
+            ),
+            selectedLanguage = Language(
+                mainName = "English",
+                englishName = "English"
+            )
+        ),
+        onBackClick = {},
+        onLanguageClick = {}
+    )
 }

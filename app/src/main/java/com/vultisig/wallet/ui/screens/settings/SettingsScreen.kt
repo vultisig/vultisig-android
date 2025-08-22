@@ -120,12 +120,13 @@ private fun Context.openGooglePlay() {
 
 
 @Composable
-private fun SettingsBox(
-    title: String?,
+internal fun SettingsBox(
+    modifier: Modifier = Modifier,
+    title: String? = null,
     content: @Composable () -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
     ) {
         title?.let {
             Text(
@@ -174,7 +175,7 @@ private fun SettingItem(
             itemValue.icon?.let { icon ->
                 UiIcon(
                     drawableResId = icon,
-                    size = 16.dp,
+                    size = 20.dp,
                     tint = Theme.colors.primary.accent4
                 )
                 UiSpacer(size = 16.dp)

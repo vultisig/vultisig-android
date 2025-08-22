@@ -124,7 +124,7 @@ private fun RegisterVaultScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = com.vultisig.wallet.R.drawable.register_vaults),
+            painter = painterResource(id = R.drawable.vultisig),
             contentDescription = "Vultisig logo",
             contentScale = ContentScale.FillWidth,
             modifier = Modifier.width(256.dp),
