@@ -109,26 +109,39 @@ internal fun ReferralViewScreen(
                         onClick = onClickFriendReferralBanner
                     )
                 } else {
-                    Text(
-                        text = "Your Friend Referral Code",
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.primary,
-                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                            .border(
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = Theme.colors.borders.light
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Text(
+                            text = "Your Friend Referral Code",
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.colors.text.primary,
+                        )
 
-                    UiSpacer(8.dp)
+                        UiSpacer(8.dp)
 
-                    VsTextInputField(
-                        textFieldState = friendReferralCodeState,
-                        innerState = VsTextInputFieldInnerState.Default,
-                        enabled = false,
-                        focusRequester = null,
-                        trailingIcon = R.drawable.ic_edit_pencil,
-                        onTrailingIconClick = {
-                            onEditFriendReferralCode()
-                        },
-                        keyboardType = KeyboardType.Text,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        VsTextInputField(
+                            textFieldState = friendReferralCodeState,
+                            innerState = VsTextInputFieldInnerState.Default,
+                            enabled = false,
+                            focusRequester = null,
+                            trailingIcon = R.drawable.ic_edit_pencil,
+                            onTrailingIconClick = {
+                                onEditFriendReferralCode()
+                            },
+                            keyboardType = KeyboardType.Text,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
                 UiSpacer(16.dp)
