@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -35,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,8 +45,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
@@ -63,26 +59,24 @@ internal fun ReferralViewScreen(
 
     ReferralViewScreen(
         state = state,
-        referralCodeState = model.referralCodeTextField,
-        friendReferralCodeState = model.friendReferralCodeTextField,
         onBackPressed = navController::popBackStack,
-        onClickEditReferral = { }, // This will be used to edit rewards
+        onClickEditReferral = { },
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onVaultClicked = { },
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
+        onCopyReferralCode = { }
     )
 }
 
 @Composable
 internal fun ReferralViewScreen(
     state: ReferralViewUiState,
-    referralCodeState: TextFieldState,
-    friendReferralCodeState: TextFieldState,
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
     onClickEditReferral: () -> Unit,
     onVaultClicked: () -> Unit,
     onEditFriendReferralCode: () -> Unit,
+    onCopyReferralCode: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -110,7 +104,7 @@ internal fun ReferralViewScreen(
                     )
                 } else {
                     FriendReferralCode(
-                        friendReferralCodeState = friendReferralCodeState,
+                        text = state.referralFriendCode,
                         onEditFriendReferralCode = onEditFriendReferralCode,
                     )
                 }
@@ -156,16 +150,15 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(8.dp)
 
-                    VsTextInputField(
-                        textFieldState = referralCodeState,
-                        innerState = VsTextInputFieldInnerState.Default,
-                        enabled = false,
-                        focusRequester = null,
-                        trailingIcon = R.drawable.ic_paste,
-                        onTrailingIconClick = {
-                        },
-                        keyboardType = KeyboardType.Text,
-                        modifier = Modifier.fillMaxWidth()
+                    ContentRow(
+                        text = state.referralVaultCode,
+                        icon = {
+                            UiIcon(
+                                drawableResId = R.drawable.ic_paste,
+                                size = 18.dp,
+                                onClick = { onCopyReferralCode() }
+                            )
+                        }
                     )
 
                     UiSpacer(16.dp)
@@ -192,7 +185,7 @@ internal fun ReferralViewScreen(
 
 @Composable
 private fun FriendReferralCode(
-    friendReferralCodeState: TextFieldState,
+    text: String,
     onEditFriendReferralCode: () -> Unit
 ) {
     Column(
@@ -215,23 +208,21 @@ private fun FriendReferralCode(
 
         UiSpacer(8.dp)
 
-        VsTextInputField(
-            textFieldState = friendReferralCodeState,
-            innerState = VsTextInputFieldInnerState.Default,
-            enabled = false,
-            focusRequester = null,
-            trailingIcon = R.drawable.ic_edit_pencil,
-            onTrailingIconClick = {
-                onEditFriendReferralCode()
-            },
-            keyboardType = KeyboardType.Text,
-            modifier = Modifier.fillMaxWidth()
+        ContentRow(
+            text = text,
+            icon = {
+                UiIcon(
+                    drawableResId = R.drawable.ic_edit_pencil,
+                    size = 18.dp,
+                    onClick = { onEditFriendReferralCode() }
+                )
+            }
         )
     }
 }
 
 @Composable
-private fun ReferralExpirationItem(expiration: String = "") {
+private fun ReferralExpirationItem(expiration: String = "25 May of 2027") {
     Column(
         modifier = Modifier
             .border(
@@ -254,7 +245,7 @@ private fun ReferralExpirationItem(expiration: String = "") {
         Text(
             color = Theme.colors.text.primary,
             style = Theme.brockmann.body.l.medium,
-            text = "25 May of 20027"
+            text = expiration,
         )
     }
 }
@@ -366,7 +357,7 @@ fun VaultItem(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(28.dp))
-            .background(Theme.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.primary)
             .border(
                 width = 1.dp,
                 color = Theme.colors.borders.light,
@@ -376,7 +367,6 @@ fun VaultItem(
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         SubcomposeAsyncImage(
             model = R.drawable.referral_vault_avatar,
             contentDescription = null,
@@ -401,3 +391,34 @@ fun VaultItem(
         )
     }
 }
+
+@Composable
+private fun ContentRow(
+    text: String,
+    icon: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Theme.colors.backgrounds.primary)
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            color = Theme.colors.text.primary,
+            style = Theme.brockmann.body.m.regular,
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        icon()
+    }
+}
+
