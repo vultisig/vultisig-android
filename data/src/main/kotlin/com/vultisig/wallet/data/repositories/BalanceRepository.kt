@@ -46,6 +46,7 @@ import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.Zcash
 import com.vultisig.wallet.data.models.Chain.ZkSync
+import com.vultisig.wallet.data.models.Chain.Mantle
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
@@ -256,7 +257,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism,
+            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism, Mantle,
             Blast, CronosChain, ZkSync -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }

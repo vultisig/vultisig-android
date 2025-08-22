@@ -194,7 +194,41 @@ object Coins {
                 isNativeToken = false,
             ),
         ),
-
+        Chain.Mantle to listOf(
+            Coin(
+                chain = Chain.Mantle,
+                ticker = "MNT",
+                logo = "mantle",
+                address = "",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "mantle",
+                contractAddress = "",
+                true
+            ),
+            Coin(
+                chain = Chain.Mantle,
+                ticker = "USDT",
+                logo = "usdt",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "tether",
+                contractAddress = "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
+                false
+            ),
+            Coin(
+                chain = Chain.Mantle,
+                ticker = "USDC",
+                logo = "usdc",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usd-coin",
+                contractAddress = "0x09bc4e0d864854c6afb6eb9a9cdf58ac190d0df9",
+                isNativeToken = false,
+            ),
+        ),
         Chain.Avalanche to listOf(
             Coin(
                 chain = Chain.Avalanche,

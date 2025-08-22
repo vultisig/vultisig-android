@@ -103,6 +103,7 @@ internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
         "ruji" -> R.drawable.ruji
         "yrune" -> R.drawable.yrune
         "ytcy" -> R.drawable.ytcy
+        "mantle" -> R.drawable.mantle
         else -> logoName
     }
 }
