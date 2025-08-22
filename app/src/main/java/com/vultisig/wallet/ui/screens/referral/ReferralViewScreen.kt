@@ -111,7 +111,6 @@ internal fun ReferralViewScreen(
                 } else {
                     Column(
                         modifier = Modifier
-                            .padding(8.dp)
                             .fillMaxWidth()
                             .border(
                                 border = BorderStroke(
@@ -120,6 +119,7 @@ internal fun ReferralViewScreen(
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             )
+                            .padding(12.dp)
                     ) {
                         Text(
                             text = "Your Friend Referral Code",
@@ -146,58 +146,71 @@ internal fun ReferralViewScreen(
 
                 UiSpacer(16.dp)
 
-                Text(
-                    text = "Vault Selected",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Theme.colors.borders.light
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "Vault Selected",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.primary,
+                    )
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                VaultItem(
-                    name = state.vaultName,
-                    onVaultClicked = onVaultClicked,
-                )
+                    VaultItem(
+                        name = state.vaultName,
+                        onVaultClicked = onVaultClicked,
+                    )
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                ReferralDataBanner()
+                    ReferralDataBanner()
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                Text(
-                    text = "Your referral code",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
-                )
+                    Text(
+                        text = "Your referral code",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.primary,
+                    )
 
-                UiSpacer(8.dp)
+                    UiSpacer(8.dp)
 
-                VsTextInputField(
-                    textFieldState = referralCodeState,
-                    innerState = VsTextInputFieldInnerState.Default,
-                    enabled = false,
-                    focusRequester = null,
-                    trailingIcon = R.drawable.ic_paste,
-                    onTrailingIconClick = {
-                    },
-                    keyboardType = KeyboardType.Text,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    VsTextInputField(
+                        textFieldState = referralCodeState,
+                        innerState = VsTextInputFieldInnerState.Default,
+                        enabled = false,
+                        focusRequester = null,
+                        trailingIcon = R.drawable.ic_paste,
+                        onTrailingIconClick = {
+                        },
+                        keyboardType = KeyboardType.Text,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                ReferralExpirationItem()
+                    ReferralExpirationItem()
 
-                UiSpacer(16.dp)
+                    UiSpacer(16.dp)
 
-                VsButton(
-                    label = "Edit referral",
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = VsButtonVariant.Primary,
-                    state = VsButtonState.Enabled,
-                    onClick = onClickEditReferral,
-                )
+                    VsButton(
+                        label = "Edit referral",
+                        modifier = Modifier.fillMaxWidth(),
+                        variant = VsButtonVariant.Primary,
+                        state = VsButtonState.Enabled,
+                        onClick = onClickEditReferral,
+                    )
+                }
             }
         },
         bottomBar = {
