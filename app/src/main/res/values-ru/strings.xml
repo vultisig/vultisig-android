@@ -390,9 +390,9 @@
     <string name="security_scanner_transaction_scanning">Сканирование…</string>
     <string name="security_scanner_transaction_not_scanned">Транзакция не отсканирована</string>
     <string name="keygen_step_generating_ecdsa">Генерация ключа ECDSA</string>
-    <string name="reshare_step_generating_eddsa">Генерация ключа EDDSA</string>
+    <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Генерация ключа ECDSA</string>
-    <string name="keygen_step_generating_eddsa">Генерация ключа EDDSA</string>
+    <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
     <string name="deposit_option_stake_ruji">Стейк RUJI</string>
