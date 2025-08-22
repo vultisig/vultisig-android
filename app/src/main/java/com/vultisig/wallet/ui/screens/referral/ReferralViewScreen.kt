@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -52,6 +53,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
@@ -150,7 +152,7 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDataBanner(state.rewardsReferral)
+                    ReferralDataBanner(state.rewardsReferral, state.isLoading)
 
                     UiSpacer(16.dp)
 
@@ -314,6 +316,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
 @Composable
 private fun ReferralDataBanner(
     rewards: String,
+    isLoading: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -352,11 +355,21 @@ private fun ReferralDataBanner(
                 style = Theme.brockmann.body.s.medium,
             )
 
-            Text(
-                text = rewards,
-                color = Theme.colors.text.primary,
-                style = Theme.brockmann.body.l.medium,
-            )
+            if (isLoading) {
+                UiSpacer(2.dp)
+
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(22.dp)
+                        .width(130.dp)
+                )
+            } else {
+                Text(
+                    text = rewards,
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.body.l.medium,
+                )
+            }
         }
     }
 }

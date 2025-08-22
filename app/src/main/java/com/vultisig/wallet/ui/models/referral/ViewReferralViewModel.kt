@@ -84,6 +84,7 @@ internal class ViewReferralViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         rewardsReferral = formattedRewards,
+                        isLoading = false,
                     )
                 }
             } catch (t: Throwable) {
