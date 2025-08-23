@@ -91,7 +91,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
     private suspend fun checkAndSaveReferredCode(referralCode: String) {
         if (referralCode.isEmpty()) {
             withContext(Dispatchers.IO) {
-                referralCodeRepository.saveExternalReferral(vaultId, referralCode)
+                referralCodeRepository.saveExternalReferral(vaultId, null)
             }
             state.update {
                 it.copy(
