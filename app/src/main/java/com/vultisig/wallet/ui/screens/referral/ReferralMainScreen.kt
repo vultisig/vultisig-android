@@ -95,27 +95,25 @@ private fun ReferralScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.crypto_natives),
+                        painter = painterResource(id = R.drawable.crypto_natives_v2),
                         contentDescription = "ReferralImage",
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                UiSpacer(16.dp)
+                UiSpacer(1f)
 
                 StyledText(
                     parts = listOf(
@@ -129,8 +127,6 @@ private fun ReferralScreen(
                 )
 
                 UiSpacer(16.dp)
-
-                UiSpacer(1f)
 
                 VsTextInputField(
                     textFieldState = referralState,
@@ -214,8 +210,5 @@ private fun ReferralScreen(
                 )
             }
         },
-        bottomBar = {
-            UiSpacer(32.dp)
-        }
     )
 }

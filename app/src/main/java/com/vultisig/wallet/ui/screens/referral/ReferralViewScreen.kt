@@ -71,9 +71,7 @@ internal fun ReferralViewScreen(
     ReferralViewScreen(
         state = state,
         onBackPressed = navController::popBackStack,
-        onClickEditReferral = { },
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
-        onVaultClicked = { },
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
         onCopyReferralCode = {
@@ -88,11 +86,11 @@ internal fun ReferralViewScreen(
     state: ReferralViewUiState,
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
-    onClickEditReferral: () -> Unit,
-    onVaultClicked: () -> Unit,
     onEditFriendReferralCode: () -> Unit,
     onCopyReferralCode: (String) -> Unit,
     onDismissErrorDialog: () -> Unit,
+    onClickEditReferral: () -> Unit = {},
+    onVaultClicked: () -> Unit = {},
 ) {
     if (state.error.isNotEmpty()) {
         UiAlertDialog(
@@ -117,11 +115,11 @@ internal fun ReferralViewScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
             ) {
                 if (state.referralFriendCode.isEmpty()) {
                     FriendReferralBanner(
