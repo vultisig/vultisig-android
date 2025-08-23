@@ -99,7 +99,7 @@
     <string name="feature_item_learn_more">Aprende más</string>
     <string name="vault_detail_screen_vault_name">Nombre de la Bóveda</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_eddsa">EdDSA</string>
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO BÓVEDA..</string>
     <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA…</string>
@@ -381,7 +381,7 @@
     <string name="security_scanner_transaction_scanning">Escaneando…</string>
     <string name="security_scanner_transaction_not_scanned">Transacción no escaneada por</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
-    <string name="keygen_step_generating_eddsa">Generación de clave EDDSA</string>
+    <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
     <string name="keygen_connecting_with_server">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Generación de clave EDDSA</string>
@@ -458,6 +458,10 @@
     <string name="referral_earn_description">Recibe pagos en tu activo preferido cada vez que operen.</string>
     <string name="referral_use_code_title">Usa código de referido - Ahorra 5bps</string>
     <string name="referral_use_code_description">Usa un código de tu amigo y ahorra en comisiones de swap.</string>
+    <string name="tcy_auto_compound_enable_title">Activar capitalización automática</string>
+    <string name="tcy_auto_compound_enable_subtitle">Capitaliza automáticamente tus recompensas de TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Deja de apostar capitalización automática de TCY</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Deja de apostar depósitos de TCY con capitalización automática</string>
     <string name="referral_view_title">Tu Referencia</string>
     <string name="referral_view_selected_vault">Bóveda seleccionada</string>
     <string name="referral_view_your_referral_code">Tu código de referencia</string>

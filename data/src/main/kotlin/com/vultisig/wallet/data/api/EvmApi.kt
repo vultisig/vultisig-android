@@ -124,6 +124,10 @@ class EvmApiFactoryImp @Inject constructor(
                 httpClient,
                 "https://api.vultisig.com/zksync/"
             )
+            Chain.Mantle -> EvmApiImp(
+                httpClient,
+                "https://api.vultisig.com/mantle/"
+            )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
@@ -380,6 +384,7 @@ class EvmApiImp(
                 )
             }
         } catch (e: Exception) {
+            Timber.d("find custom token error: ${e.message}")
             emptyList()
         }
     }

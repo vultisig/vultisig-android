@@ -390,9 +390,9 @@
     <string name="security_scanner_transaction_scanning">Сканирование…</string>
     <string name="security_scanner_transaction_not_scanned">Транзакция не отсканирована</string>
     <string name="keygen_step_generating_ecdsa">Генерация ключа ECDSA</string>
-    <string name="reshare_step_generating_eddsa">Генерация ключа EDDSA</string>
+    <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Генерация ключа ECDSA</string>
-    <string name="keygen_step_generating_eddsa">Генерация ключа EDDSA</string>
+    <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="keygen_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
     <string name="deposit_option_stake_ruji">Стейк RUJI</string>
@@ -467,6 +467,10 @@
     <string name="referral_earn_description">Получайте выплаты в предпочитаемом активе каждый раз, когда они торгуют.</string>
     <string name="referral_use_code_title">Используйте реферальный код - Экономьте 5bps</string>
     <string name="referral_use_code_description">Используйте код от друга и экономьте на комиссиях за своп.</string>
+    <string name="tcy_auto_compound_enable_title">Включить автокомпаунд</string>
+    <string name="tcy_auto_compound_enable_subtitle">Автоматически реинвестировать вознаграждения TCY</string>
+    <string name="tcy_auto_compound_unstake_title">Отменить стейкинг TCY с автокомпаундом</string>
+    <string name="tcy_auto_compound_unstake_subtitle">Отменить стейкинг депозитов TCY с автокомпаундом</string>
     <string name="referral_view_title">Ваша реферальная ссылка</string>
     <string name="referral_view_selected_vault">Выбранное хранилище</string>
     <string name="referral_view_your_referral_code">Ваш реферальный код</string>

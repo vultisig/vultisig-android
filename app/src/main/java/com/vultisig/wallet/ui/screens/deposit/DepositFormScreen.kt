@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
+import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
@@ -103,6 +104,8 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
+        onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
+        onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
     )
 }
 
@@ -156,6 +159,8 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
+    onAutoCompoundTcyStake: (Boolean) -> Unit = {},
+    onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -302,8 +307,8 @@ internal fun DepositFormScreen(
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE,)||
-                            !( depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool)
+                            DepositOption.RedeemYRUNE)
+                        && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
                             SelectionCard(
@@ -353,6 +358,24 @@ internal fun DepositFormScreen(
                             onLostFocus = onTokenAmountLostFocus,
                             error = state.tokenAmountError,
                         )
+
+                        if (depositOption == DepositOption.StakeTcy) {
+                            AutoCompoundToggle(
+                                title = stringResource(R.string.tcy_auto_compound_enable_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
+                                isChecked = state.isAutoCompoundTcyStake,
+                                onCheckedChange = onAutoCompoundTcyStake
+                            )
+                        }
+
+                        if (depositOption == DepositOption.UnstakeTcy) {
+                            AutoCompoundToggle(
+                                title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
+                                isChecked = state.isAutoCompoundTcyUnStake,
+                                onCheckedChange = onAutoCompoundTcyUnStake
+                            )
+                        }
                     }
 
                     if (depositOption !in arrayOf(
