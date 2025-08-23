@@ -1,40 +1,29 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.settings.CurrencyUnit
+import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel
-import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 
 @Composable
 internal fun CurrencyUnitSettingScreen(navController: NavHostController) {
-    val colors = Theme.colors
     val viewModel = hiltViewModel<CurrencyUnitSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
@@ -43,32 +32,57 @@ internal fun CurrencyUnitSettingScreen(navController: NavHostController) {
     }
 
 
+    CurrencyUnitSettingScreen(
+        state = state,
+        onBackClick = {
+            navController.popBackStack()
+        },
+        onCurrencyClick = {
+            viewModel.changeCurrencyUnit(it)
+        }
+    )
+}
+
+@Composable
+private fun CurrencyUnitSettingScreen(
+    state: CurrencyUnitSettingUiModel,
+    onBackClick: () -> Unit,
+    onCurrencyClick: (CurrencyUnit) -> Unit,
+) {
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()
-            .background(colors.oxfordBlue800),
+            .fillMaxSize(),
         topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(R.string.currency_unit_setting_screen_title),
-                startIcon = R.drawable.ic_caret_left
+            VsTopAppBar(
+                onIconLeftClick = onBackClick,
+                title = stringResource(R.string.currency_unit_setting_screen_title),
+                iconLeft = R.drawable.ic_caret_left
             )
         }
     ) {
-        LazyColumn(
+
+        SettingsBox(
             modifier = Modifier
-                .padding(it),
+                .padding(it)
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                ),
         ) {
-            items(state.currencyUnits) { currencyUnit ->
-                CurrencyUnitSettingItem(
-                    name = currencyUnit.name,
-                    isSelected = currencyUnit == state.selectedCurrency,
-                    onClick = {
-                        viewModel.changeCurrencyUnit(currencyUnit)
-                    }
-                )
+            LazyColumn {
+                itemsIndexed(state.currencyUnits) {index, currencyUnit ->
+                    CurrencyUnitSettingItem(
+                        name = currencyUnit.name,
+                        isSelected = currencyUnit == state.selectedCurrency,
+                        onClick = {
+                            onCurrencyClick(currencyUnit)
+                        },
+                        isLastItem = index == state.currencyUnits.lastIndex
+                    )
+                }
             }
         }
+
     }
 }
 
@@ -76,37 +90,40 @@ internal fun CurrencyUnitSettingScreen(navController: NavHostController) {
 private fun CurrencyUnitSettingItem(
     name: String,
     isSelected: Boolean,
+    isLastItem: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = Theme.colors
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .fillMaxWidth()
-            .clickOnce(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.oxfordBlue600Main
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(all = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = name,
-                color = colors.neutral0,
-                style = Theme.montserrat.body2,
-            )
-            UiSpacer(weight = 1.0f)
 
+    SettingItem(
+        item = SettingsItemUiModel(
+            title = name,
+            trailingIcon = if(isSelected) com.vultisig.wallet.R.drawable.check else null,
+        ),
+        onClick = onClick,
+        isLastItem = isLastItem
+    )
+}
 
-            Icon(
-                modifier = Modifier.alpha(if (isSelected) 1f else 0f),
-                painter = painterResource(id = R.drawable.check),
-                contentDescription = null,
-                tint = colors.neutral0,
-            )
-        }
-    }
+@Preview
+@Composable
+private fun CurrencyUnitSettingScreenPreview() {
+    CurrencyUnitSettingScreen(
+        state = CurrencyUnitSettingUiModel(
+            currencyUnits = listOf(
+                CurrencyUnit("United States Dollar (\$)"),
+                CurrencyUnit("Australian Dollar (A\$)"),
+                CurrencyUnit("Euro (€)"),
+                CurrencyUnit("Russian Ruble (₽)"),
+                CurrencyUnit("British Pound (£)"),
+                CurrencyUnit("Japanese Yen (¥)"),
+                CurrencyUnit("Chinese Yuan (¥)"),
+                CurrencyUnit("Canadian Dollar (\$)"),
+                CurrencyUnit("Singapore Dollar (S\$)"),
+                CurrencyUnit("Swedish Krona (kr)"),
+            ),
+            selectedCurrency = CurrencyUnit("United States Dollar (\$)"),
+        ),
+        onCurrencyClick = {},
+        onBackClick = {}
+    )
 }

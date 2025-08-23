@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.settings
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -36,40 +37,43 @@ internal data class SettingsGroupUiModel(
 )
 
 internal sealed class SettingsItem(val value: SettingsItemUiModel) {
-    data object VaultSetting : SettingsItem(SettingsItemUiModel(title = "Vault Settings", icon = R.drawable.setting))
+    data object VaultSetting : SettingsItem(SettingsItemUiModel(title = "Vault Settings", leadingIcon = R.drawable.setting))
     data object RegisterVault : SettingsItem(
         SettingsItemUiModel(
             title = "Register your Vaults!",
             backgroundColor = Colors.Default.buttons.primary,
-            icon = R.drawable.register
+            leadingIcon = R.drawable.register
         )
     )
 
     data class Language(val lang: String) :
-        SettingsItem(SettingsItemUiModel(title = "Language", value = lang, icon = R.drawable.language))
+        SettingsItem(SettingsItemUiModel(title = "Language", value = lang, leadingIcon = R.drawable.language))
 
     data class Currency(val curr: String) :
-        SettingsItem(SettingsItemUiModel(title = "Currency", value = curr, icon = R.drawable.currency))
+        SettingsItem(SettingsItemUiModel(title = "Currency", value = curr, leadingIcon = R.drawable.currency))
 
-    data object AddressBook : SettingsItem(SettingsItemUiModel(title = "Address Book", icon = R.drawable.address_book))
-    data object ReferralCode : SettingsItem(SettingsItemUiModel(title = "Referral Code", icon = R.drawable.referral_code))
-    data object Faq : SettingsItem(SettingsItemUiModel(title = "FAQ", icon = R.drawable.faq))
+    data object AddressBook : SettingsItem(SettingsItemUiModel(title = "Address Book", leadingIcon = R.drawable.address_book))
+    data object ReferralCode : SettingsItem(SettingsItemUiModel(title = "Referral Code", leadingIcon = R.drawable.referral_code))
+    data object Faq : SettingsItem(SettingsItemUiModel(title = "FAQ", leadingIcon = R.drawable.faq))
     data object VultisigEducation :
-        SettingsItem(SettingsItemUiModel(icon = R.drawable.vult_eduation, title = "Vultisig Education"))
+        SettingsItem(SettingsItemUiModel(leadingIcon = R.drawable.vult_eduation, title = "Vultisig Education"))
 
-    data object CheckForUpdates : SettingsItem(SettingsItemUiModel("Check for updates", icon = R.drawable.check_update))
-    data object ShareTheApp : SettingsItem(SettingsItemUiModel("Share The App", icon = R.drawable.share_app))
-    data object Twitter : SettingsItem(SettingsItemUiModel("X", icon = R.drawable.x_twitter))
-    data object Discord : SettingsItem(SettingsItemUiModel("Discord", icon = R.drawable.discord))
-    data object Github : SettingsItem(SettingsItemUiModel("Github", icon = R.drawable.githup))
-    data object VultisigWebsite : SettingsItem(SettingsItemUiModel("Vultisig Website", icon = R.drawable.vult_website))
-    data object TermsOfService : SettingsItem(SettingsItemUiModel("Terms of Service", icon = R.drawable.term_service))
-    data object PrivacyPolicy : SettingsItem(SettingsItemUiModel("Privacy Policy", icon = R.drawable.security))
+    data object CheckForUpdates : SettingsItem(SettingsItemUiModel("Check for updates", leadingIcon = R.drawable.check_update))
+    data object ShareTheApp : SettingsItem(SettingsItemUiModel("Share The App", leadingIcon = R.drawable.share_app))
+    data object Twitter : SettingsItem(SettingsItemUiModel("X", leadingIcon = R.drawable.x_twitter))
+    data object Discord : SettingsItem(SettingsItemUiModel("Discord", leadingIcon = R.drawable.discord))
+    data object Github : SettingsItem(SettingsItemUiModel("Github", leadingIcon = R.drawable.githup))
+    data object VultisigWebsite : SettingsItem(SettingsItemUiModel("Vultisig Website", leadingIcon = R.drawable.vult_website))
+    data object TermsOfService : SettingsItem(SettingsItemUiModel("Terms of Service", leadingIcon = R.drawable.term_service))
+    data object PrivacyPolicy : SettingsItem(SettingsItemUiModel("Privacy Policy", leadingIcon = R.drawable.security))
 }
 
 internal data class SettingsItemUiModel(
     val title: String,
-    val icon: Int? = null,
+    val subTitle: String? = null,
+    val leadingIcon: Int? = null,
+    val trailingIcon: Int? = null,
+    val trailingContent: (@Composable ()-> Unit)? = null,
     val value: String? = null,
     val backgroundColor: Color? = null,
 )

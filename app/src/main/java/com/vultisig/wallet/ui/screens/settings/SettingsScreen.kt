@@ -21,15 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.settings.SettingsItem
+import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
@@ -87,7 +90,7 @@ private fun SettingsScreen(
                     SettingsBox(title = groupItem.title) {
                         groupItem.items.forEachIndexed { index, settingItem ->
                             SettingItem(
-                                item = settingItem,
+                                item = settingItem.value,
                                 isLastItem = index == groupItem.items.lastIndex,
                                 onClick = {
                                     onSettingsItemClick(settingItem)
@@ -153,18 +156,17 @@ internal fun SettingsBox(
 }
 
 @Composable
-private fun SettingItem(
-    item: SettingsItem,
+internal fun SettingItem(
+    item: SettingsItemUiModel,
     onClick: () -> Unit,
     isLastItem: Boolean
 ) {
     Column {
-        val itemValue = item.value
         Row(
             modifier = Modifier
                 .then(
-                    if (itemValue.backgroundColor != null)
-                        Modifier.background(itemValue.backgroundColor)
+                    if (item.backgroundColor != null)
+                        Modifier.background(item.backgroundColor)
                     else Modifier
                 )
                 .fillMaxWidth()
@@ -172,7 +174,7 @@ private fun SettingItem(
                 .padding(horizontal = 12.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            itemValue.icon?.let { icon ->
+            item.leadingIcon?.let { icon ->
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
@@ -181,28 +183,46 @@ private fun SettingItem(
                 UiSpacer(size = 16.dp)
             }
 
-            Text(
-                text = itemValue.title,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary
-            )
+            Column {
+                Text(
+                    text = item.title,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.primary
+                )
+
+                item.subTitle?.let {
+                    Text(
+                        text = it,
+                        color = Theme.colors.text.light,
+                        style = Theme.brockmann.supplementary.caption,
+                    )
+                }
+
+            }
 
             UiSpacer(weight = 1f)
 
-            itemValue.value?.let { value ->
+            item.trailingContent?.let { content ->
+                content()
+                UiSpacer(size = 8.dp)
+            }
+
+            item.value?.let { value ->
                 Text(
                     text = value,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.primary
                 )
-                UiSpacer(size = 16.dp)
             }
 
-            UiIcon(
-                drawableResId = R.drawable.ic_small_caret_right,
-                size = 16.dp,
-                tint = Theme.colors.text.extraLight
-            )
+
+            item.trailingIcon?.let { trailingIcon ->
+                UiIcon(
+                    drawableResId = trailingIcon,
+                    size = 16.dp,
+                    tint = Theme.colors.text.extraLight
+                )
+            }
 
         }
 
@@ -212,4 +232,22 @@ private fun SettingItem(
     }
 }
 
-private const val REFERRAL_FEATURE_FLAG = false
+@Preview
+@Composable
+private fun SettingsItemPreview() {
+    SettingItem(
+        item = SettingsItemUiModel(
+            title = "title",
+            subTitle = "subTitle",
+            leadingIcon = R.drawable.currency,
+            trailingIcon = R.drawable.ic_small_caret_right,
+            trailingContent = {
+                VsSwitch(checked = true, onCheckedChange = {})
+            },
+            value = "value",
+            backgroundColor = Theme.colors.backgrounds.primary
+        ),
+        onClick = {},
+        isLastItem = false
+    )
+}
