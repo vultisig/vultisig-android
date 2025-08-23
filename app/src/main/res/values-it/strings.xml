@@ -63,7 +63,7 @@
     <string name="network_prompts_local">Locale</string>
     <string name="vault_detail_screen_vault_name">Nome Cassaforte</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_eddsa">EdDSA</string>
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
@@ -381,9 +381,9 @@
     <string name="security_scanner_transaction_scanning">Scansione in corso…</string>
     <string name="security_scanner_transaction_not_scanned">Transazione non scansionata da</string>
     <string name="keygen_step_generating_ecdsa">Generazione della chiave ECDSA</string>
-    <string name="reshare_step_generating_eddsa">Generazione della chiave EDDSA</string>
+    <string name="reshare_step_generating_eddsa">Generazione della chiave EdDSA</string>
     <string name="keygen_connecting_with_server">Generazione della chiave ECDSA</string>
-    <string name="keygen_step_generating_eddsa">Generazione della chiave EDDSA</string>
+    <string name="keygen_step_generating_eddsa">Generazione della chiave EdDSA</string>
     <string name="reshare_step_generating_ecdsa">Generazione della chiave ECDSA</string>
     <string name="keygen_email_error">E-mail errata, controllala</string>
     <string name="deposit_option_stake_ruji">Metti in stake RUJI</string>
