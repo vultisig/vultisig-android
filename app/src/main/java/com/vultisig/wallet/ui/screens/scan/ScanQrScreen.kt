@@ -280,6 +280,15 @@ private fun QrCameraScreen(
                         Timber.e(e)
                     }
                 }
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewKey++
+                    try {
+                        cameraProviderFuture.get().unbindAll()
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                    }
+                }
                 else -> {}
             }
         }
@@ -328,8 +337,6 @@ private fun QrCameraScreen(
                 try {
                     val cameraProvider = cameraProviderFuture.get()
                     cameraProvider.unbindAll()
-
-                    Thread.sleep(400)
 
                     val camera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
