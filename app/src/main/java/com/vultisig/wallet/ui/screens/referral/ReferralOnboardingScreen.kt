@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.referral.VsPromoBox
 import com.vultisig.wallet.ui.components.referral.VsPromoTag
@@ -36,53 +36,54 @@ internal fun ReferralOnboardingScreen(
     navController: NavController,
     model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
-    Column(
-        modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
-            .fillMaxSize(),
-    ) {
-        VsTopAppBar(
-            title = stringResource(R.string.referral_onboarding_title),
-            onBackClick = {
-                navController.popBackStack()
-            },
-        )
+    Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            VsTopAppBar(
+                title = stringResource(R.string.referral_onboarding_title),
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        },
+        content = { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+            ) {
+                ReferralTag()
 
-        Column(
-            modifier = Modifier
-                .background(Theme.colors.backgrounds.primary)
-                .weight(1f)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-        ) {
-            ReferralTag()
+                HowItWorksTitle()
 
-            HowItWorksTitle()
-
-            TimeLineList()
-
-            UiSpacer(1f)
-
+                TimeLineList()
+            }
+        },
+        bottomBar = {
             FooterButton(model)
         }
-    }
+    )
 }
 
 @Composable
 private fun FooterButton(model: OnBoardingReferralViewModel) {
-    VsButton(
-        onClick = {
-            model.onClickGetStarted()
-        },
-        label = stringResource(R.string.referral_onboarding_get_started),
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .navigationBarsPadding()
-    )
-
-    UiSpacer(32.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        VsButton(
+            onClick = {
+                model.onClickGetStarted()
+            },
+            label = stringResource(R.string.referral_onboarding_get_started),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+    }
 }
 
 @Composable
