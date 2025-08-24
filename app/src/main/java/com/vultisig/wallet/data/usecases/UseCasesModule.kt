@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.usecases.cosmos.CosmosToCoinsUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCaseImpl
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
@@ -109,5 +110,10 @@ internal interface UseCasesModule {
     fun bindResolveProviderUseCase(
         impl: ResolveProviderUseCaseImpl
     ): ResolveProviderUseCase
+
+    @Binds
+    fun bindCosmosToCoinsUseCase(
+        cosmosToCoinsUseCaseImpl: CosmosToCoinsUseCaseImpl
+    ): CosmosToCoinsUseCase
 
 }
