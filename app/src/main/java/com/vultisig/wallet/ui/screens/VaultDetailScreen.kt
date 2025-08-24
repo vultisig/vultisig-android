@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
@@ -205,41 +207,10 @@ private fun InfoItem(
     key: String,
     value: String,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = Theme.colors.borders.light,
-                shape = RoundedCornerShape(
-                    size = 12.dp
-                )
-            )
-            .background(
-                shape = RoundedCornerShape(
-                    size = 12.dp
-                ),
-                color = Theme.colors.backgrounds.disabled
-            )
-            .padding(
-                vertical = 24.dp,
-                horizontal = 20.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = key,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.colors.text.primary
-        )
-
-        Text(
-            text = value,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.colors.text.primary
-        )
-    }
+    SettingInfoHorizontalItem(
+        key = key,
+        value = value,
+    )
 }
 
 @Preview
@@ -252,7 +223,7 @@ private fun KeyItemPrev() {
 }
 
 @Composable
-private fun Modifier.itemModifier(): Modifier = border(
+internal fun Modifier.itemModifier(): Modifier = border(
     width = 1.dp,
     color = Theme.colors.borders.light,
     shape = RoundedCornerShape(
@@ -301,11 +272,47 @@ private fun KeyItem(type: String, value: String) {
     }
 }
 
+@Composable
+internal fun SettingInfoHorizontalItem(
+    modifier: Modifier = Modifier,
+    key: String,
+    value: String?,
+) {
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .itemModifier(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = key,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.colors.text.primary
+        )
+
+        if (value == null)
+            UiPlaceholderLoader(
+                modifier = Modifier
+                    .width(24.dp)
+            ) else
+            Text(
+                text = value,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.colors.text.primary
+            )
+    }
+
+}
+
 
 @Composable
-private fun DeviceItem(
+internal fun SettingInfoItemVertical(
     modifier: Modifier = Modifier,
-    order: String, name: String, isThisDevice: Boolean
+    key: String,
+    value: String,
+    content: (@Composable () -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -313,24 +320,45 @@ private fun DeviceItem(
         verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically)
     ) {
         Text(
-            text = order,
+            text = key,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.light,
         )
 
         Text(
-            text = name,
+            text = value,
             style = Theme.brockmann.button.medium,
             color = Theme.colors.neutral0
         )
 
-        if (isThisDevice)
-            Text(
-                text = "This device",
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.light
-            )
+        content?.let {
+            it()
+        }
     }
+}
+
+@Composable
+private fun DeviceItem(
+    modifier: Modifier = Modifier,
+    order: String,
+    name: String,
+    isThisDevice: Boolean
+) {
+
+    SettingInfoItemVertical(
+        modifier = modifier,
+        key = order,
+        value = name,
+        content = if (isThisDevice) {
+            {
+                Text(
+                    text = "This device",
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.colors.text.light
+                )
+            }
+        } else null
+    )
 }
 
 
