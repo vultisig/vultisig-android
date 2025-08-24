@@ -63,7 +63,7 @@
     <string name="network_prompts_local">Lokalni</string>
     <string name="vault_detail_screen_vault_name">Ime sefa</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_eddsa">EdDSA</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA…</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>
@@ -462,4 +462,13 @@
     <string name="tcy_auto_compound_enable_subtitle">Automatski složeno računajte svoje TCY nagrade</string>
     <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
+    <string name="referral_view_title">Tvoja preporuka</string>
+    <string name="referral_view_selected_vault">Odabrani trezor</string>
+    <string name="referral_view_your_referral_code">Tvoj preporučni kod</string>
+    <string name="referral_view_edit_referral">Uredi preporuku</string>
+    <string name="referral_view_your_friend_referral">Preporučni kod tvog prijatelja</string>
+    <string name="referral_view_collected_rewards">Prikupljene nagrade</string>
+    <string name="referral_view_add_friend">Dodaj preporuku prijatelja</string>
+    <string name="referral_view_save">Spremi</string>
+    <string name="referral_view_on_swaps">na zamjenama sada</string>
 </resources>

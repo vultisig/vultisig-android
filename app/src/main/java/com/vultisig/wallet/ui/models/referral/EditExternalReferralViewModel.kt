@@ -48,7 +48,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
                 .textAsFlow()
                 .onEach {
                     if (state.value.referralMessage != null) {
-                        if (it.length in MIN_LENGTH_REFERRAL_CODE..MAX_LENGTH_REFERRAL_CODE) {
+                        if (it.length <= MAX_LENGTH_REFERRAL_CODE) {
                             state.update { current ->
                                 current.copy(
                                     referralMessage = null,
@@ -75,7 +75,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
     fun onSaveReferral() {
         viewModelScope.launch {
             val referralCode = referralCodeTextFieldState.text.toString().trim()
-            validateReferralCode(referralCode)?.let { validationError ->
+            validateMaxReferral(referralCode)?.let { validationError ->
                 state.update {
                     it.copy(
                         referralMessage = validationError,
@@ -89,6 +89,19 @@ internal class EditExternalReferralViewModel @Inject constructor(
     }
 
     private suspend fun checkAndSaveReferredCode(referralCode: String) {
+        if (referralCode.isEmpty()) {
+            withContext(Dispatchers.IO) {
+                referralCodeRepository.saveExternalReferral(vaultId, null)
+            }
+            state.update {
+                it.copy(
+                    referralMessage = "Referral code removed successfully",
+                    referralMessageState = VsTextInputFieldInnerState.Success,
+                )
+            }
+            return
+        }
+
         runCatching {
             withContext(Dispatchers.IO) {
                 thorChainApi.existsReferralCode(referralCode)
@@ -98,7 +111,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
                 withContext(Dispatchers.IO) {
                     referralCodeRepository.saveExternalReferral(vaultId, referralCode)
                 }
-                "Referral code successfully linked" to VsTextInputFieldInnerState.Success
+                "Referral code linked successfully" to VsTextInputFieldInnerState.Success
             } else {
                 "Referral code does not exist" to VsTextInputFieldInnerState.Error
             }

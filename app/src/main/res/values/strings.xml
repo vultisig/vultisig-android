@@ -119,7 +119,7 @@
     <string name="feature_item_learn_more">Learn more</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
-    <string name="vault_detail_screen_eddsa">EDDSA Key</string>
+    <string name="vault_detail_screen_eddsa">EdDSA Key</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
@@ -524,9 +524,9 @@
     <string name="keygen_top_bar_title" translatable="false">Creating Vault</string>
     <string name="keygen_step_preparing_vault" translatable="false">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
-    <string name="keygen_step_generating_eddsa">Generating EDDSA Key</string>
+    <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
-    <string name="reshare_step_generating_eddsa">Generating EDDSA Key</string>
+    <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server">Connecting with server...</string>
     <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately" translatable="false">Want to create vault privately?</string>
@@ -705,4 +705,14 @@
     <string name="tcy_auto_compound_enable_subtitle">Automatically compound your TCY rewards</string>
     <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
+
+    <string name="referral_view_title">Your Referral</string>
+    <string name="referral_view_selected_vault">Vault Selected</string>
+    <string name="referral_view_your_referral_code">Your referral code</string>
+    <string name="referral_view_edit_referral">Edit referral</string>
+    <string name="referral_view_your_friend_referral">Your Friend Referral Code</string>
+    <string name="referral_view_collected_rewards">Collected Rewards</string>
+    <string name="referral_view_add_friend">Add a Friends Referral</string>
+    <string name="referral_view_save">Save</string>
+    <string name="referral_view_on_swaps">on swaps now</string>
 </resources>

@@ -369,11 +369,11 @@ internal class CreateReferralViewModel @Inject constructor(
         return gasFeeToEstimate.invoke(gasFeeParams).formattedFiatValue
     }
 
-    private companion object {
-        const val DEFAULT_REGISTRATION_FEES = "1000000000"
-        const val DEFAULT_BLOCK_FEES = "20"
+    internal companion object {
+        private const val DEFAULT_REGISTRATION_FEES = "1000000000"
+        private const val DEFAULT_BLOCK_FEES = "20"
 
-        const val DATE_FORMAT = "d MMMM yyyy"
+        internal const val DATE_FORMAT = "d MMMM yyyy"
 
         val BLOCKS_PER_YEAR = "5256000".toBigInteger()
     }

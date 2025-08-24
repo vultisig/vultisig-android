@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.KyberSwap
+import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import com.vultisig.wallet.data.common.isHex
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
@@ -16,7 +17,6 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 
@@ -98,7 +98,7 @@ object SigningHelper {
                     solanaHelper.getPreSignedImageHash(payload)
                 }
 
-                Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,
+                Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,Chain.Mantle,
                 Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync -> {
                     if (payload.coin.isNativeToken) {
                         EvmHelper(
@@ -263,7 +263,7 @@ object SigningHelper {
                 return solanaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,Chain.Mantle,
             Chain.Arbitrum, Chain.Optimism, Chain.Polygon, Chain.Base, Chain.ZkSync -> {
                 if (keysignPayload.coin.isNativeToken) {
                     val evmHelper = EvmHelper(

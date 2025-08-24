@@ -6,7 +6,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class ReferralUiState(
@@ -36,11 +39,13 @@ internal class ReferralViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
     private val thorChainApi: ThorChainApi,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     val referralCodeTextFieldState = TextFieldState()
     val state = MutableStateFlow(ReferralUiState())
+    private var remoteReferral: String? = null
 
     init {
         loadStatus()
@@ -81,11 +86,36 @@ internal class ReferralViewModel @Inject constructor(
                     referralCode = externalReferral ?: "",
                     isLoading = false,
                     isSaveEnabled = externalReferral.isNullOrEmpty(),
-                    isCreateEnabled = vaultReferral.isNullOrEmpty(),
                 )
             }
+
             if (!externalReferral.isNullOrEmpty()) {
                 referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(externalReferral)
+            }
+
+            try {
+                val referrals = if (vaultReferral.isNullOrEmpty()) {
+                    withContext(Dispatchers.IO) {
+                        val coin = vaultRepository.get(vaultId)?.coins?.find {
+                            it.chain.id == Chain.ThorChain.id && it.isNativeToken
+                        } ?: error("Coin not found")
+                        thorChainApi.getReferralCodesByAddress(coin.address)
+                    }
+                } else {
+                    listOf(vaultReferral)
+                }
+                if (referrals.isNotEmpty()) {
+                    state.update {
+                        it.copy(
+                            isCreateEnabled = false,
+                        )
+                    }
+                    remoteReferral = referrals.first() // for now, we stick 1 vault - 1 referral created max
+
+                    referralCodeRepository.saveReferralCreated(vaultId, remoteReferral!!)
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
             }
         }
     }
@@ -95,7 +125,9 @@ internal class ReferralViewModel @Inject constructor(
             if (state.value.isCreateEnabled) {
                 navigator.navigate(Destination.ReferralCreation(vaultId))
             } else {
-                // navigate to visit referral
+                if (!remoteReferral.isNullOrEmpty()) {
+                    navigator.navigate(Destination.ReferralView(vaultId, remoteReferral!!))
+                }
             }
         }
     }

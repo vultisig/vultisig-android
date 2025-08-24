@@ -307,6 +307,10 @@ internal class SendFormViewModel @Inject constructor(
                 preSelectedTokenId = preSelectedTokenId,
             )
         }
+
+        if (preSelectedTokenId != null) {
+            expandSection(SendSections.Address)
+        }
     }
 
     private fun loadVaultName() {
