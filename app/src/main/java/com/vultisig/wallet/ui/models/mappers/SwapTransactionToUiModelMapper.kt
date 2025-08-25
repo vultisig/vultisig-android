@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -38,8 +39,10 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             SwapProvider.THORCHAIN, SwapProvider.MAYA ->
                 from.dstToken
 
-            SwapProvider.LIFI, SwapProvider.ONEINCH, SwapProvider.KYBER ->
+            SwapProvider.ONEINCH, SwapProvider.KYBER ->
                 tokenRepository.getNativeToken(from.srcToken.chain.id)
+
+            SwapProvider.LIFI -> getLiFiProviderFee(from)
 
             SwapProvider.JUPITER ->
                 from.srcToken
@@ -89,5 +92,16 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                     + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
         )
+    }
+
+    private suspend fun getLiFiProviderFee(from: SwapTransaction): Coin {
+        val estimateFeesUnit = from.estimatedFees.unit
+        val nativeCoin = tokenRepository.getNativeToken(from.srcToken.chain.id)
+
+        return if (estimateFeesUnit.equals(nativeCoin.ticker, true)) {
+            return nativeCoin
+        } else {
+            from.srcToken
+        }
     }
 }
