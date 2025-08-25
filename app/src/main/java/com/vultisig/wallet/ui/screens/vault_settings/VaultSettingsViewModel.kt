@@ -3,19 +3,158 @@ package com.vultisig.wallet.ui.screens.vault_settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+internal data class VaultSettingsGroupUiModel(
+    val id: String? = null,
+    val title: String?,
+    val items: List<VaultSettingsItem>,
+    val isVisible: Boolean = true
+)
+
+internal data class VaultSettingsState(
+    val settingGroups: List<VaultSettingsGroupUiModel> = emptyList(),
+    val isAdvanceSetting: Boolean = false
+)
+
+internal sealed class VaultSettingsItem(
+    val value: SettingsItemUiModel,
+    val enabled: Boolean = true,
+) {
+    data object Details : VaultSettingsItem(
+        SettingsItemUiModel(
+            title = "Details",
+            subTitle = "View vault name,part and type",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.details
+        ),
+    )
+
+    data object Rename : VaultSettingsItem(
+        SettingsItemUiModel(
+            title = "Rename",
+            subTitle = "Edit your vault name",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.reame
+        )
+    )
+
+    data class BiometricFastSign(val isBiometricEnabled: Boolean) : VaultSettingsItem(
+        SettingsItemUiModel(
+            title = "Biometric fast sign",
+            trailingSwitch = isBiometricEnabled,
+            leadingIcon = R.drawable.biomatrics_fast
+        )
+    )
+
+    data object Security : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Security",
+            subTitle = "Enable biometric for fast sign",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.security,
+        )
+    )
+
+    data object LockTime : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Lock time",
+            subTitle = "Set the time until the app locks automatically",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.lock_time
+        )
+    )
+
+    data object PasswordHint : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Password hint",
+            subTitle = "Set a password hint to protect your vault",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.pass_hint
+        )
+    )
+
+    data object BackupVaultShare : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Backup Vault Share",
+            subTitle = "Back up your Vault Share to device or server.",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.backup_vault
+        )
+    )
+
+    data class Migrate(val isEnabled: Boolean) : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Migrate",
+            subTitle = "Migrate GG20 vault DKLS",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.pass_hint,
+        ),
+        enabled = isEnabled
+    )
+
+    data object Advanced : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Advanced",
+            subTitle = "Reshare, change TSS, or sign messages.",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.advanced
+        )
+    )
+
+    data class Reshare(val isEnabled: Boolean) : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Reshare",
+            subTitle = "Reshare vault with a new committee",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.reame
+        ),
+        enabled = isEnabled
+    )
+
+    data object Sign : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Sign",
+            subTitle = "Sign custom message",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.reame
+        )
+    )
+
+    data object OnChainSecurity : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "On-Chain Security",
+            subTitle = "Manage your on-chain security",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.reame
+        )
+    )
+
+    data object Delete : VaultSettingsItem(
+        value = SettingsItemUiModel(
+            title = "Delete",
+            subTitle = "Delete your vault share permanently",
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIcon = R.drawable.delete
+        )
+    )
+}
 @HiltViewModel
 internal open class VaultSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -24,8 +163,59 @@ internal open class VaultSettingsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
+    val settingGroups = listOf(
+        VaultSettingsGroupUiModel(
+            title = "Vault Management",
+            items = listOf(
+                VaultSettingsItem.Details,
+                VaultSettingsItem.Rename,
+                VaultSettingsItem.BiometricFastSign(false)
+            )
+        ),
+        VaultSettingsGroupUiModel(
+            title = "Security",
+            items = listOf(
+                VaultSettingsItem.Security,
+                VaultSettingsItem.LockTime,
+                VaultSettingsItem.PasswordHint,
+                VaultSettingsItem.BackupVaultShare
+            )
+        ),
+        VaultSettingsGroupUiModel(
+            title = "Other",
+            items = listOf(
+                VaultSettingsItem.Migrate(false),
+                VaultSettingsItem.Advanced,
+            )
+        ),
 
-    val uiModel = MutableStateFlow(VaultSettingsState())
+        VaultSettingsGroupUiModel(
+            title = null,
+            items = listOf(
+                VaultSettingsItem.Delete
+            )
+        ),
+
+        VaultSettingsGroupUiModel(
+            id = "ADVANCED",
+            title = null,
+            items = listOf(
+                VaultSettingsItem.Reshare(false),
+                VaultSettingsItem.Sign,
+                VaultSettingsItem.OnChainSecurity
+            ),
+            isVisible = false
+        ),
+    )
+
+
+    val uiModel = MutableStateFlow(
+        VaultSettingsState(
+            settingGroups = settingGroups
+        )
+    )
+
+
 
     private val vaultId: String =
         savedStateHandle.get<String>(ARG_VAULT_ID)!!
@@ -35,13 +225,107 @@ internal open class VaultSettingsViewModel @Inject constructor(
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            uiModel.update {
-                it.copy(
-                    hasReshare = !hasFastSign,
-                    hasMigration = hasMigration,
-                    hasFastSign = hasFastSign
+
+            val newItems = uiModel.value.settingGroups.map { group ->
+                group.copy(
+                    items = group.items.map {
+                        when (it) {
+                            is VaultSettingsItem.BiometricFastSign -> it.copy(isBiometricEnabled = hasFastSign)
+                            is VaultSettingsItem.Migrate -> it.copy(isEnabled = hasMigration)
+                            is VaultSettingsItem.Reshare -> it.copy(isEnabled = !hasFastSign)
+                            else -> it
+                        }
+                    }
                 )
             }
+
+            uiModel.update {
+                it.copy(
+                    settingGroups = newItems,
+                )
+            }
+        }
+
+        viewModelScope.launch {
+            uiModel.map { it.isAdvanceSetting }.distinctUntilChanged()
+                .collect { isAdvanceSettings ->
+
+                    if (isAdvanceSettings) {
+                        uiModel.update {
+                            it.copy(
+                                settingGroups = it.settingGroups.map { group ->
+                                    group.copy(isVisible = group.id == "ADVANCED")
+                                }
+                            )
+                        }
+                    } else {
+                        uiModel.update {
+                            it.copy(
+                                settingGroups = it.settingGroups.map { group ->
+                                    group.copy(isVisible = group.id != "ADVANCED")
+                                }
+                            )
+                        }
+                    }
+
+                }
+        }
+    }
+
+    fun onBackClick() {
+        if (uiModel.value.isAdvanceSetting) {
+            uiModel.update {
+                it.copy(
+                    isAdvanceSetting = false
+                )
+            }
+        } else {
+            viewModelScope.launch {
+                navigator.back()
+            }
+        }
+    }
+
+    fun onSettingsItemClick(item: VaultSettingsItem) {
+        when (item) {
+            VaultSettingsItem.Advanced -> {
+                uiModel.update {
+                    it.copy(
+                        isAdvanceSetting = true
+                    )
+                }
+            }
+
+            VaultSettingsItem.BackupVaultShare -> navigateToBackupPasswordScreen()
+            is VaultSettingsItem.BiometricFastSign -> {
+                val newItem = uiModel.value.copy(
+                    settingGroups = uiModel.value.settingGroups.map {
+                        it.copy(
+                            items = it.items.map { item ->
+                                if (item is VaultSettingsItem.BiometricFastSign) {
+                                    item.copy(isBiometricEnabled = !item.isBiometricEnabled)
+                                } else {
+                                    item
+                                }
+                            }
+                        )
+                    }
+                )
+                uiModel.update {
+                    newItem
+                }
+            }
+
+            VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
+            VaultSettingsItem.Details -> openDetails()
+            VaultSettingsItem.LockTime -> TODO()
+            is VaultSettingsItem.Migrate -> migrate()
+            VaultSettingsItem.PasswordHint -> TODO()
+            VaultSettingsItem.Rename -> openRename()
+            VaultSettingsItem.Security -> navigateToBiometricsScreen()
+            VaultSettingsItem.OnChainSecurity -> navigateToOnChainSecurityScreen()
+            is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
+            VaultSettingsItem.Sign -> signMessage()
         }
     }
 

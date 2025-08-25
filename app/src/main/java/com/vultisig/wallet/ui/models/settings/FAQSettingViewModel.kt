@@ -19,29 +19,41 @@ internal class FAQSettingViewModel @Inject constructor(@ApplicationContext conte
         FAQSettingUiModel(
             listOf(
                 Faq(
-                    context.getString(R.string.faq_settings_q1),
-                    context.getString(R.string.faq_settings_a1)
+                    question = "What is Vultisig?",
+                    answer = "It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices."
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q2),
-                    context.getString(R.string.faq_settings_a2)
+                    question = "What are the benefits of using Vultisig?",
+                    answer = "Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking.",
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q3),
-                    context.getString(R.string.faq_settings_a3)
+                    question = "Can I recover my assets if I lose a device?",
+                    answer = "Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets.",
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q4),
-                    context.getString(R.string.faq_settings_a4)
+                    question = "How is Vultisig used?",
+                    answer = "Vultisig securely stores and manages digital assets. All actions, such as sending or swapping, require the threshold of devices to sign transactions."
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q5),
-                    context.getString(R.string.faq_settings_a5)
+                    question = "What are the fees and costs?",
+                    answer = "Vultisig is free to use. Only standard network fees apply to sending. And for swaps and bridges, there's a 0.5% (50 bps) fee."
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q6),
-                    context.getString(R.string.faq_settings_a6)
+                    question = "What cryptocurrencies are supported by Vultisig?",
+                    answer = "Vultisig supports major cryptocurrencies and tokens, with over 30 chains and their tokens, currently available."
                 ),
+                Faq(
+                    question = "Is Vultisig open source and audited?",
+                    answer = "Yes, Vultisig is open source and has undergone security audits. Both the audit reports and the source code are accessible."
+                ),
+                Faq(
+                    question = "How does Vultisig handle privacy and data protection?",
+                    answer = "Vultisig does not store any user information from its mobile apps.",
+                ),
+                Faq(
+                    question = "How does Vultisig compare to other multisig wallets?",
+                    answer = "It is built on MPC technology, which eliminates the need for seed phrases and supports multiple blockchains, making Vultisig flexible and chain-agnostic."
+                )
             )
         )
     )

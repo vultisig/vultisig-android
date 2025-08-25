@@ -23,8 +23,13 @@ internal data class VaultDetailUiModel(
     val vaultSize: String = "",
     val pubKeyECDSA: String = "",
     val pubKeyEDDSA: String = "",
-    val deviceList: List<String> = emptyList(),
+    val deviceList: List<DeviceMeta> = emptyList(),
     val libType: String? = "",
+)
+
+internal data class DeviceMeta(
+    val name: String,
+    val isThisDevice: Boolean,
 )
 
 @HiltViewModel
@@ -52,14 +57,10 @@ internal class VaultDetailViewModel @Inject constructor(
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
                         deviceList = vault.signers.map {
-                            if (it == vault.localPartyID) {
-                                context.getString(
-                                    R.string.vault_detail_this_device,
-                                    it
-                                )
-                            } else {
-                                it
-                            }
+                            DeviceMeta(
+                                name = it,
+                                isThisDevice = it == vault.localPartyID
+                            )
                         }
                     )
                 }

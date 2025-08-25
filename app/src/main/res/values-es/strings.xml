@@ -314,10 +314,10 @@
     <string name="vault_details_screen_signer">Firmante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registra tus Bóvedas</string>
     <string name="register_vault_screen_title">Registra tus Bóvedas§</string>
-    <string name="register_vault_screen_step_3">3. Sube tu código QR de Vault</string>
-    <string name="register_vault_screen_step_4">4. ¡Rastrea tus VULTIES (Puntos de bóveda)!</string>
-    <string name="register_vault_screen_step_2_go_to">2. Ir a</string>
-    <string name="register_vault_screen_step_1">1. Guarda tu código QR de Vault</string>
+    <string name="register_vault_screen_step_3">Sube tu código QR de Vault</string>
+    <string name="register_vault_screen_step_4">¡Rastrea tus VULTIES (Puntos de bóveda)!</string>
+    <string name="register_vault_screen_step_2_go_to">Ir a</string>
+    <string name="register_vault_screen_step_1">Guarda tu código QR de Vault</string>
     <string name="do_not_remind_me_again">No me lo recuerdes otra vez</string>
     <string name="send_form_gas_token_balance">Saldo de tokens de gas</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>

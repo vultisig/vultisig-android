@@ -379,18 +379,18 @@
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Register your Vaults</string>
     <string name="register_vault_screen_title">Register Vault</string>
-    <string name="register_vault_screen_step_3">3. Upload your Vault QR Code</string>
-    <string name="register_vault_screen_step_4">4. Track your VULTIES (Vault Points) !</string>
-    <string name="register_vault_screen_step_2_go_to">2. Go to</string>
+    <string name="register_vault_screen_step_3">Upload your Vault QR Code</string>
+    <string name="register_vault_screen_step_4">Track your VULTIES (Vault Points) !</string>
+    <string name="register_vault_screen_step_2_go_to">Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">"1. Save your Vault QR"</string>
+    <string name="register_vault_screen_step_1">"Save your Vault QR"</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="send_form_gas_token_balance">Gas token balance</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
-    <string name="register_vault_screen_save_qr_code">Save QR Code</string>
+    <string name="register_vault_screen_save_qr_code">Save Vault QR</string>
     <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>

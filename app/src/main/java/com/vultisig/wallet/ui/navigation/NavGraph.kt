@@ -76,7 +76,7 @@ import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
-import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
+import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
@@ -158,9 +158,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            VaultSettingsScreen(
-                navController = navController
-            )
+            VaultSettingsScreen()
         }
         composable(
             route = Destination.Details.STATIC_ROUTE,
@@ -300,7 +298,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            SettingsScreen(navController = navController)
+            SettingsScreen()
         }
 
         composable(
@@ -312,7 +310,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.FAQSetting.route,
         ) {
-            FAQSettingScreen(navController = navController)
+            FaqSettingScreen(navController = navController)
         }
 
         composable(
