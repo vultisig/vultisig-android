@@ -18,6 +18,7 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
+        const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_ADDRESS = "address"
@@ -239,6 +240,15 @@ internal sealed class Destination(
     ): Destination(route = "referral/referral_creation/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_creation/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralView(
+        val vaultId: String,
+        val code: String,
+    ): Destination(route = "referral/referral_view/$vaultId/$code") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_view/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}"
         }
     }
 
