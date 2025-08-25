@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -732,9 +733,15 @@ private fun SendFormScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
+                state = if (state.isLoading)
+                    VsButtonState.Disabled
+                else
+                    VsButtonState.Enabled,
                 onClick = {
-                    focusManager.clearFocus()
-                    onSend()
+                    if (!state.isLoading) {
+                        focusManager.clearFocus()
+                        onSend()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
