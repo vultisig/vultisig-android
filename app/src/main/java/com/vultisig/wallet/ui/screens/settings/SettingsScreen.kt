@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -159,7 +160,8 @@ internal fun SettingsBox(
 internal fun SettingItem(
     item: SettingsItemUiModel,
     onClick: () -> Unit,
-    isLastItem: Boolean
+    isLastItem: Boolean,
+    tint: Color? = null,
 ) {
     Column {
         Row(
@@ -178,7 +180,7 @@ internal fun SettingItem(
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = Theme.colors.primary.accent4
+                    tint = tint ?: Theme.colors.primary.accent4
                 )
                 UiSpacer(size = 16.dp)
             }
@@ -187,13 +189,13 @@ internal fun SettingItem(
                 Text(
                     text = item.title,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.primary
+                    color = tint ?: Theme.colors.text.primary
                 )
 
                 item.subTitle?.let {
                     Text(
                         text = it,
-                        color = Theme.colors.text.light,
+                        color = tint ?: Theme.colors.text.light,
                         style = Theme.brockmann.supplementary.caption,
                     )
                 }
@@ -202,8 +204,20 @@ internal fun SettingItem(
 
             UiSpacer(weight = 1f)
 
-            item.trailingContent?.let { content ->
-                content()
+            item.trailingSwitch?.let { isChecked ->
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    VsSwitch(checked = isChecked, onCheckedChange = {})
+                    Text(
+                        text = if (isChecked) "ON" else "OFF",
+                        style = Theme.brockmann.button.medium,
+                        color = tint ?: Theme.colors.text.primary
+                    )
+                }
+
                 UiSpacer(size = 8.dp)
             }
 
@@ -211,7 +225,7 @@ internal fun SettingItem(
                 Text(
                     text = value,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.primary
+                    color = tint ?: Theme.colors.text.primary
                 )
             }
 
@@ -241,9 +255,6 @@ private fun SettingsItemPreview() {
             subTitle = "subTitle",
             leadingIcon = R.drawable.currency,
             trailingIcon = R.drawable.ic_small_caret_right,
-            trailingContent = {
-                VsSwitch(checked = true, onCheckedChange = {})
-            },
             value = "value",
             backgroundColor = Theme.colors.backgrounds.primary
         ),

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.settings
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -73,7 +72,7 @@ internal data class SettingsItemUiModel(
     val subTitle: String? = null,
     val leadingIcon: Int? = null,
     val trailingIcon: Int? = null,
-    val trailingContent: (@Composable ()-> Unit)? = null,
+    val trailingSwitch: Boolean? = null,
     val value: String? = null,
     val backgroundColor: Color? = null,
 )

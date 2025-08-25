@@ -314,10 +314,10 @@
     <string name="vault_details_screen_signer">Pjevačica %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore</string>
     <string name="register_vault_screen_title">Registrirajte sef</string>
-    <string name="register_vault_screen_step_3">3. Učitajte svoj Vault QR kod</string>
-    <string name="register_vault_screen_step_4">4. Pratite svoje VULTIES (Vault bodove)!</string>
-    <string name="register_vault_screen_step_2_go_to">2. Idi na</string>
-    <string name="register_vault_screen_step_1">1. Spremite svoj Vault QR</string>
+    <string name="register_vault_screen_step_3">Učitajte svoj Vault QR kod</string>
+    <string name="register_vault_screen_step_4">Pratite svoje VULTIES (Vault bodove)!</string>
+    <string name="register_vault_screen_step_2_go_to">Idi na</string>
+    <string name="register_vault_screen_step_1">Spremite svoj Vault QR</string>
     <string name="do_not_remind_me_again">Nemoj me ponovno podsjećati</string>
     <string name="send_form_gas_token_balance">Stanje žetona plina</string>
     <string name="monthly_backup_reminder_title">Ne zaboravite sigurnosno kopirati svoje dionice trezora i provjeriti cjelovitost.</string>

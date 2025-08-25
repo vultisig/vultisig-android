@@ -314,10 +314,10 @@
     <string name="vault_details_screen_signer">Cantante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registra i tuoi Vault</string>
     <string name="register_vault_screen_title">Registra Vault</string>
-    <string name="register_vault_screen_step_3">3. Carica il tuo codice QR Vault</string>
-    <string name="register_vault_screen_step_4">4. Tieni traccia dei tuoi VULTIES (Punti Vault)!</string>
-    <string name="register_vault_screen_step_2_go_to">2. Vai a</string>
-    <string name="register_vault_screen_step_1">1. Salva il tuo Vault QR</string>
+    <string name="register_vault_screen_step_3">Carica il tuo codice QR Vault</string>
+    <string name="register_vault_screen_step_4">Tieni traccia dei tuoi VULTIES (Punti Vault)!</string>
+    <string name="register_vault_screen_step_2_go_to">2Vai a</string>
+    <string name="register_vault_screen_step_1">Salva il tuo Vault QR</string>
     <string name="do_not_remind_me_again">Non ricordarmelo più</string>
     <string name="send_form_gas_token_balance">Saldo del gettone del gas</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>

@@ -156,9 +156,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            VaultSettingsScreen(
-                navController = navController
-            )
+            VaultSettingsScreen()
         }
         composable(
             route = Destination.Details.STATIC_ROUTE,

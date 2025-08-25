@@ -314,10 +314,10 @@
     <string name="vault_details_screen_signer">Cantor %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registe os seus cofres</string>
     <string name="register_vault_screen_title">Registar cofre</string>
-    <string name="register_vault_screen_step_3">3.º Faça o upload do seu código QR do Vault</string>
-    <string name="register_vault_screen_step_4">4.º Acompanhe os seus VULTIES (Pontos de Vault)!</string>
-    <string name="register_vault_screen_step_2_go_to">2.º Vá para</string>
-    <string name="register_vault_screen_step_1">1.º Guarde o seu QR do Vault</string>
+    <string name="register_vault_screen_step_3">Faça o upload do seu código QR do Vault</string>
+    <string name="register_vault_screen_step_4">Acompanhe os seus VULTIES (Pontos de Vault)!</string>
+    <string name="register_vault_screen_step_2_go_to">Vá para</string>
+    <string name="register_vault_screen_step_1">Salvar QR do cofre</string>
     <string name="do_not_remind_me_again">Não me lembre outra vez</string>
     <string name="send_form_gas_token_balance">Saldo de ficha de gás</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>

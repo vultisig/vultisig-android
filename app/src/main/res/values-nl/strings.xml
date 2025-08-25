@@ -325,10 +325,10 @@
     <string name="vault_details_screen_signer">Ondertekenaar %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registreer uw kluizen</string>
     <string name="register_vault_screen_title">Registreer kluis</string>
-    <string name="register_vault_screen_step_3">3. Upload uw Vault QR-code</string>
-    <string name="register_vault_screen_step_4">4. Houd je VULTIES (Vault Points) bij!</string>
-    <string name="register_vault_screen_step_2_go_to">2. Ga naar</string>
-    <string name="register_vault_screen_step_1">1. Sla uw Vault QR op</string>
+    <string name="register_vault_screen_step_3">Upload uw Vault QR-code</string>
+    <string name="register_vault_screen_step_4">Houd je VULTIES (Vault Points) bij!</string>
+    <string name="register_vault_screen_step_2_go_to">Ga naar</string>
+    <string name="register_vault_screen_step_1">Sla uw Vault QR op</string>
     <string name="do_not_remind_me_again">Herinner me er niet meer aan</string>
     <string name="send_form_gas_token_balance">Gas-token saldo</string>
     <string name="monthly_backup_reminder_title">Vergeet niet een back-up te maken van uw kluisshares en de volledigheid ervan te verifiëren.</string>
