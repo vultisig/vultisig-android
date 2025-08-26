@@ -87,14 +87,11 @@ internal class TonApiImpl @Inject constructor(
         getAddressInformation(address).status
 
     override suspend fun getJettonsBalance(address: String, contract: String): BigInteger {
-        return runCatching {
-            val tvmBoc = getJettonsAddress(address, contract)
-            val jettonAddress = TONAddressConverter.fromBoc(tvmBoc)
-            val jettonsUserAddress = TONAddressConverter.toUserFriendly(jettonAddress, true, false)
+        val tvmBoc = getJettonsAddress(address, contract)
+        val jettonAddress = TONAddressConverter.fromBoc(tvmBoc)
+        val jettonsUserAddress = TONAddressConverter.toUserFriendly(jettonAddress, true, false)
 
-            runGetMethod(RunMethodRequestJson(jettonsUserAddress, GET_WALLET_DATA)).parseNum()
-
-        }.getOrDefault(BigInteger.ZERO)
+        return runGetMethod(RunMethodRequestJson(jettonsUserAddress, GET_WALLET_DATA)).parseNum()
     }
 
     override suspend fun getJettonsAddress(address: String, contract: String): String {
@@ -190,7 +187,7 @@ data class RunMethodResponseJson(
     @SerialName("exit_code")
     val code: Int = 0,
     val stack: List<List<JsonElement>> = emptyList(),
-)  {
+) {
     fun parseCell(): Cell? {
         val first = stack.firstOrNull()?.getOrNull(0)?.contentOrNull
         if (first != "cell") return null
