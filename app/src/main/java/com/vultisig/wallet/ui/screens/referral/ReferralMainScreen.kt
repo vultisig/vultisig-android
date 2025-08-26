@@ -56,10 +56,8 @@ internal fun ReferralScreen(
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     LaunchedEffect(savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE)) {
         val code = savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE).orEmpty()
-        if (code.isNotEmpty()) {
-            model.onNewEditedReferral(code)
-            savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
-        }
+        model.onNewEditedReferral(code)
+        savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
     }
 
     ReferralScreen(
@@ -97,27 +95,25 @@ private fun ReferralScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.crypto_natives),
+                        painter = painterResource(id = R.drawable.crypto_natives_v2),
                         contentDescription = "ReferralImage",
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                UiSpacer(16.dp)
+                UiSpacer(1f)
 
                 StyledText(
                     parts = listOf(
@@ -130,7 +126,7 @@ private fun ReferralScreen(
                     fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )
 
-                UiSpacer(1f)
+                UiSpacer(16.dp)
 
                 VsTextInputField(
                     textFieldState = referralState,
@@ -214,8 +210,5 @@ private fun ReferralScreen(
                 )
             }
         },
-        bottomBar = {
-            UiSpacer(32.dp)
-        }
     )
 }

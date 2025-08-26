@@ -462,6 +462,15 @@
     <string name="tcy_auto_compound_enable_subtitle">Automatische Zinseszinsen für Ihre TCY-Prämien</string>
     <string name="tcy_auto_compound_unstake_title">Automatische Zinseszinsen für TCY deaktivieren</string>
     <string name="tcy_auto_compound_unstake_subtitle">Automatische Zinseszinsen für TCY-Einzahlungen deaktivieren</string>
+    <string name="referral_view_title">Deine Empfehlung</string>
+    <string name="referral_view_selected_vault">Tresor ausgewählt</string>
+    <string name="referral_view_your_referral_code">Dein Empfehlungscode</string>
+    <string name="referral_view_edit_referral">Empfehlung bearbeiten</string>
+    <string name="referral_view_your_friend_referral">Empfehlungscode deines Freundes</string>
+    <string name="referral_view_collected_rewards">Gesammelte Belohnungen</string>
+    <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
+    <string name="referral_view_save">Speichern</string>
+    <string name="referral_view_on_swaps">Jetzt bei Swaps</string>
     <string name="register_vault_screen_guide_title">Leitfaden registrieren</string>
     <string name="faq_settings_q7">Ist Vultisig Open Source und geprüft?</string>
     <string name="faq_settings_q8">Wie geht Vultisig mit Datenschutz um?</string>
