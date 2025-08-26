@@ -25,81 +25,85 @@ object TonHelper {
     private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
-        val (sequenceNumber, expireAt, bounceable, _, sendMaxAmount) =
-            (payload.blockChainSpecific as? BlockChainSpecific.Ton)
-                ?: throw RuntimeException("Fail to get Ton chain specific")
+        val tonSpecific = payload.blockChainSpecific as? BlockChainSpecific.Ton
+            ?: throw RuntimeException("Failed to get TON chain specific data")
+        
+        val publicKey = PublicKey(
+            payload.coin.hexPublicKey.hexToByteArray(), 
+            PublicKeyType.ED25519
+        )
 
-        val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
-
-        val publicKey =
-            PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519)
-
-        val input = if (payload.coin.isNativeToken) {
-            // If sending max amount, set amount to 0 (entire balance will be attached)
-            val amount = if (sendMaxAmount) 0L else payload.toAmount.toLong()
-
-            // Always include IGNORE_ACTION_PHASE_ERRORS_VALUE to prevent validators from retrying
-            // until funds are depleted
-            val mode = when {
-                sendMaxAmount -> TheOpenNetwork.SendMode.ATTACH_ALL_CONTRACT_BALANCE.number
-                else -> TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
-            } or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
-
-            val transfer = TheOpenNetwork.Transfer.newBuilder()
-                .setDest(toAddress.description())
-                .setAmount(amount)
-                .setMode(mode)
-                .setBounceable(bounceable)
-                .let {
-                    if (payload.memo != null) {
-                        it.setComment(payload.memo)
-                    } else it
-                }
-                .build()
-
-            TheOpenNetwork.SigningInput.newBuilder()
-                .addMessages(transfer)
-                .setSequenceNumber(sequenceNumber.toInt())
-                .setExpireAt(expireAt.toInt())
-                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
-                .setPublicKey(ByteString.copyFrom(publicKey.data()))
-                .build()
+        val transfer = if (payload.coin.isNativeToken) {
+            buildNativeTransfer(payload, tonSpecific)
         } else {
-            val destinationAddressBounceable =
-                TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
-
-            val mode = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
-                    TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
-
-            val jettonsTransfer = TheOpenNetwork.JettonTransfer
-                .newBuilder()
-                .setJettonAmount(payload.toAmount.toLong())
-                .setResponseAddress(payload.coin.address) // return remain TON to origin
-                .setToOwner(destinationAddressBounceable)
-                .setForwardAmount(1) // set 0 if destination wallet is inactive, 1 if active
-                .build()
-
-            val transfer = TheOpenNetwork.Transfer
-                .newBuilder()
-                .setAmount(RECOMMENDED_JETTONS_AMOUNT)
-                .setComment(payload.memo.orEmpty())
-                .setBounceable(true) // Jettons should always be bounceable
-                .setMode(mode)
-                .setDest("") // Origin Jettons address
-                .setJettonTransfer(jettonsTransfer)
-                .build()
-
-            TheOpenNetwork.SigningInput
-                .newBuilder()
-                .addMessages(transfer)
-                .setSequenceNumber(sequenceNumber.toInt())
-                .setExpireAt(expireAt.toInt())
-                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
-                .setPublicKey(ByteString.copyFrom(publicKey.data()))
-                .build()
+            buildJettonTransfer(payload)
         }
 
-        return input.toByteArray()
+        return TheOpenNetwork.SigningInput.newBuilder()
+            .addMessages(transfer)
+            .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
+            .setExpireAt(tonSpecific.expireAt.toInt())
+            .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .build()
+            .toByteArray()
+    }
+
+    private fun buildNativeTransfer(
+        payload: KeysignPayload,
+        tonSpecific: BlockChainSpecific.Ton
+    ): TheOpenNetwork.Transfer {
+        val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
+        val amount = if (tonSpecific.sendMaxAmount) 0L else payload.toAmount.toLong()
+        
+        val mode = calculateSendMode(tonSpecific.sendMaxAmount)
+
+        return TheOpenNetwork.Transfer.newBuilder()
+            .setDest(toAddress.description())
+            .setAmount(amount)
+            .setMode(mode)
+            .setBounceable(tonSpecific.bounceable)
+            .apply {
+                payload.memo?.let { setComment(it) }
+            }
+            .build()
+    }
+
+    private fun buildJettonTransfer(
+        payload: KeysignPayload
+    ): TheOpenNetwork.Transfer {
+        val destinationAddress =
+            TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
+        
+        val jettonTransfer = TheOpenNetwork.JettonTransfer.newBuilder()
+            .setJettonAmount(payload.toAmount.toLong())
+            .setResponseAddress(payload.coin.address)
+            .setToOwner(destinationAddress)
+            .setForwardAmount(1) // 1 for active wallet, 0 for inactive
+            .build()
+
+        val mode = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
+                TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
+
+        return TheOpenNetwork.Transfer.newBuilder()
+            .setAmount(RECOMMENDED_JETTONS_AMOUNT)
+            .setComment(payload.memo.orEmpty())
+            .setBounceable(true) // Jettons always bounceable
+            .setMode(mode)
+            .setDest("") // Will be set to origin Jetton address
+            .setJettonTransfer(jettonTransfer)
+            .build()
+    }
+
+    private fun calculateSendMode(sendMaxAmount: Boolean): Int {
+        val baseMode = if (sendMaxAmount) {
+            TheOpenNetwork.SendMode.ATTACH_ALL_CONTRACT_BALANCE.number
+        } else {
+            TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+        }
+        
+        // Always include IGNORE_ACTION_PHASE_ERRORS to prevent retry loops
+        return baseMode or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
     }
 
     fun getPreSignedImageHash(payload: KeysignPayload): List<String> {
@@ -150,6 +154,7 @@ object TonHelper {
             transactionHash = output.hash.toByteArray().toHexString()
         )
     }
-}
 
-internal val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
+
+    private val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
+}
