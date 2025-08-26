@@ -17,7 +17,6 @@ import com.vultisig.wallet.data.utils.increaseByPercent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
-import kotlin.math.max
 
 class EthereumFeeService(
     private val evmApi: EvmApi,
@@ -38,7 +37,7 @@ class EthereumFeeService(
             BigInteger.ZERO
         }
 
-        error("")
+        return fees
     }
 
     private suspend fun estimateLimit(transaction: Transaction): BigInteger {
@@ -65,17 +64,22 @@ class EthereumFeeService(
 
         val maxPriorityFeePerGas = calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain)
         val baseNetworkPrice = calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap)
-        val maxPrice = calculateMaxPrice(baseNetworkPrice, maxPriorityFeePerGas, chain)
+        val maxFeePerGas = calculateMaxFeePerGas(baseNetworkPrice, maxPriorityFeePerGas)
 
-        error("")
+        Eip1559(
+            limit = limit,
+            networkPrice = baseNetworkPrice,
+            maxFeePerGas = maxFeePerGas,
+            maxPriorityFeePerGas = maxPriorityFeePerGas,
+            amount = maxFeePerGas * limit,
+        )
     }
 
-    private fun calculateMaxPrice(
+    private fun calculateMaxFeePerGas(
         baseNetworkPrice: BigInteger,
         maxPriorityFeePerGas: BigInteger,
-        chain: Chain
     ): BigInteger {
-        baseNetworkPrice.add(maxPriorityFeePerGas)
+       return baseNetworkPrice.increaseByPercent(20).add(maxPriorityFeePerGas)
     }
 
     private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
@@ -102,13 +106,6 @@ class EthereumFeeService(
             else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
         }
     }
-
-    /*
-        Avalanche("Avalanche", EVM, "Gwei"),
-        CronosChain("CronosChain", EVM, "Gwei"),
-        ZkSync("Zksync", EVM, "Gwei"), // si eip1559
-        Mantle("Mantle", EVM, "Gwei"), // no eip1559 custom fees
-     */
 
     private fun increaseLimit(limit: BigInteger): BigInteger{
         if (limit == COIN_TRANSFER_LIMIT) {
@@ -137,3 +134,11 @@ class EthereumFeeService(
         private val GWEI = BigInteger.TEN.pow(9)
     }
 }
+
+
+/*
+    Avalanche("Avalanche", EVM, "Gwei"),
+    CronosChain("CronosChain", EVM, "Gwei"),
+    ZkSync("Zksync", EVM, "Gwei"), // si eip1559
+    Mantle("Mantle", EVM, "Gwei"), // no eip1559 custom fees
+ */
