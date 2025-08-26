@@ -227,8 +227,8 @@
     <string name="address_book_toolbar_title">Catálogo de endereços</string>
     <string name="address_book_settings_title">Catálogo de endereços</string>
     <string name="address_book_edit_mode_done">Concluído</string>
-    <string name="address_book_add_address_button">Add Address</string>
-    <string name="add_address_title">Add Address</string>
+    <string name="address_book_add_address_button">Adicionar endereço</string>
+    <string name="add_address_title">Adicionar endereço</string>
     <string name="swap_route_not_available">Alterar rota não disponível</string>
     <string name="add_address_save_address_button">Guardar endereço</string>
     <string name="add_address_title_title">Título</string>

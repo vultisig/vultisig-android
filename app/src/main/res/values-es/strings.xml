@@ -61,7 +61,7 @@
     <string name="settings_screen_currency">Moneda</string>
     <string name="settings_screen_default_chains">Cadenas predeterminadas</string>
     <string name="settings_screen_faq">Preguntas Frecuentes</string>
-    <string name="settings_screen_vtx_token">El token $VAULT</string>
+    <string name="settings_screen_vtx_token">El token $VULT</string>
     <string name="settings_screen_share_the_app">Compartir La App</string>
     <string name="vultisig_app_version">APLICACIÓN VULTISIG V%1$s</string>
     <string name="settings_screen_title">Configuración</string>
