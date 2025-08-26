@@ -219,7 +219,6 @@ class SecurityScannerTransactionFactory(
         )
     }
 
-    // TODO: Review as it looks like it requires PSBT, which is not supported by WC legacy API
     private fun createBTCSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val keySignPayload = KeysignPayload(
             coin = transaction.token,
@@ -234,9 +233,15 @@ class SecurityScannerTransactionFactory(
             wasmExecuteContractPayload = null,
         )
 
-        val btcHelper = UtxoHelper.getHelper(Vault("", ""), CoinType.BITCOIN)
-
-        val preHash = btcHelper.getPreSignedImageHash(keySignPayload)
+        val dummyVault = Vault(
+            id = "dummy",
+            name = "dummy",
+            pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
+            hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000"
+        )
+        
+        val btcHelper = UtxoHelper.getHelper(dummyVault, CoinType.BITCOIN)
+        val zeroSignedTx = btcHelper.getZeroSignedTransaction(keySignPayload)
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
@@ -244,7 +249,7 @@ class SecurityScannerTransactionFactory(
             from = transaction.srcAddress,
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
-            data = preHash[0],
+            data = zeroSignedTx,
         )
     }
 }
