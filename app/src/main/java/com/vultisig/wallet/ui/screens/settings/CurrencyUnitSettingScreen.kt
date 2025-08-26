@@ -70,9 +70,9 @@ private fun CurrencyUnitSettingScreen(
                 ),
         ) {
             LazyColumn {
-                itemsIndexed(state.currencyUnits) {index, currencyUnit ->
+                itemsIndexed(state.currencyUnits) { index, currencyUnit ->
                     CurrencyUnitSettingItem(
-                        name = currencyUnit.name,
+                        name = currencyUnit.fullName,
                         isSelected = currencyUnit == state.selectedCurrency,
                         onClick = {
                             onCurrencyClick(currencyUnit)
@@ -97,7 +97,7 @@ private fun CurrencyUnitSettingItem(
     SettingItem(
         item = SettingsItemUiModel(
             title = name,
-            trailingIcon = if(isSelected) com.vultisig.wallet.R.drawable.check else null,
+            trailingIcon = if (isSelected) R.drawable.check else null,
         ),
         onClick = onClick,
         isLastItem = isLastItem
@@ -110,18 +110,18 @@ private fun CurrencyUnitSettingScreenPreview() {
     CurrencyUnitSettingScreen(
         state = CurrencyUnitSettingUiModel(
             currencyUnits = listOf(
-                CurrencyUnit("United States Dollar (\$)"),
-                CurrencyUnit("Australian Dollar (A\$)"),
-                CurrencyUnit("Euro (€)"),
-                CurrencyUnit("Russian Ruble (₽)"),
-                CurrencyUnit("British Pound (£)"),
-                CurrencyUnit("Japanese Yen (¥)"),
-                CurrencyUnit("Chinese Yuan (¥)"),
-                CurrencyUnit("Canadian Dollar (\$)"),
-                CurrencyUnit("Singapore Dollar (S\$)"),
-                CurrencyUnit("Swedish Krona (kr)"),
+                CurrencyUnit(fullName = "United States Dollar (\$)"),
+                CurrencyUnit(fullName = "Australian Dollar (A\$)"),
+                CurrencyUnit(fullName = "Euro (€)"),
+                CurrencyUnit(fullName = "Russian Ruble (₽)"),
+                CurrencyUnit(fullName = "British Pound (£)"),
+                CurrencyUnit(fullName = "Japanese Yen (¥)"),
+                CurrencyUnit(fullName = "Chinese Yuan (¥)"),
+                CurrencyUnit(fullName = "Canadian Dollar (\$)"),
+                CurrencyUnit(fullName = "Singapore Dollar (S\$)"),
+                CurrencyUnit(fullName = "Swedish Krona (kr)"),
             ),
-            selectedCurrency = CurrencyUnit("United States Dollar (\$)"),
+            selectedCurrency = CurrencyUnit(fullName = "United States Dollar (\$)"),
         ),
         onCurrencyClick = {},
         onBackClick = {}

@@ -80,6 +80,7 @@ internal data class SettingsItemUiModel(
 
 internal data class CurrencyUnit(
     val name: String = "",
+    val fullName: String = "",
 )
 
 internal sealed interface SettingsUiEvent {
@@ -153,7 +154,7 @@ internal class SettingsViewModel @Inject constructor(
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
             AddressBook -> {
-                navigateTo(Destination.AddressBook())
+                navigateTo(Destination.AddressBook(vaultId = vaultId))
             }
 
             CheckForUpdates -> {
@@ -249,7 +250,7 @@ internal class SettingsViewModel @Inject constructor(
         group.copy(
             items = group.items.map { item ->
                 when (item) {
-                    is Currency -> item.copy(curr = currency.name)
+                    is Currency -> item.copy(curr = currency.fullName)
                     else -> item
                 }
             }

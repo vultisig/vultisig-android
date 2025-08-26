@@ -23,7 +23,12 @@ internal class CurrencyUnitSettingViewModel @Inject constructor(
 
     val state = MutableStateFlow(
         CurrencyUnitSettingUiModel(
-            currencyUnits = appCurrencyRepository.getAllCurrencies().map { CurrencyUnit(it.ticker) })
+            currencyUnits = appCurrencyRepository.getAllCurrencies().map {
+                CurrencyUnit(
+                    name = it.name,
+                    fullName = it.fullName
+                )
+            })
     )
 
 
@@ -32,7 +37,10 @@ internal class CurrencyUnitSettingViewModel @Inject constructor(
             appCurrencyRepository.currency.collect {
                 state.update { state: CurrencyUnitSettingUiModel ->
                     state.copy(
-                        selectedCurrency = CurrencyUnit(it.ticker),
+                        selectedCurrency = CurrencyUnit(
+                            name = it.name,
+                            fullName = it.fullName
+                        ),
                     )
                 }
             }

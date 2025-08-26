@@ -250,6 +250,10 @@ internal fun SetupNavGraph(
                 navArgument(ARG_CHAIN_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
                 }
             )
         ) {
@@ -266,7 +270,12 @@ internal fun SetupNavGraph(
                 navArgument(ARG_ADDRESS) {
                     type = NavType.StringType
                     nullable = true
-                }
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                },
+
             )
         ) {
             AddAddressEntryScreen(
