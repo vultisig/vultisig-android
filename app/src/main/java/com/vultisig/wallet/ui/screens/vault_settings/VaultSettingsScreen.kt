@@ -81,8 +81,7 @@ private fun VaultSettingsScreen(
                         }
                     }
                 }
-                    UiSpacer(14.dp)
-                }
+                UiSpacer(14.dp)
             }
         }
     }

@@ -479,4 +479,7 @@
     <string name="faq_settings_a8">Vultisig не хранит информацию о пользователях из своих мобильных приложений.</string>
     <string name="faq_settings_a9">Он построен на технологии MPC, которая устраняет необходимость в сид-фразах и поддерживает несколько блокчейнов, что делает Vultisig гибким и независимым от цепочек блоков.</string>
     <string name="vault_settings_advanced_title">Передовой</string>
+    <string name="sign_message_continue">Продолжать</string>
+    <string name="hint_signing_method">Метод подписания</string>
+    <string name="hint_message_to_sign">Сообщение для подписи</string>
 </resources>

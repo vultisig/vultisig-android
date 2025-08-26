@@ -25,7 +25,7 @@ internal class CurrencyUnitSettingViewModel @Inject constructor(
         CurrencyUnitSettingUiModel(
             currencyUnits = appCurrencyRepository.getAllCurrencies().map {
                 CurrencyUnit(
-                    name = it.name,
+                    name = it.ticker,
                     fullName = it.fullName
                 )
             })
@@ -38,7 +38,7 @@ internal class CurrencyUnitSettingViewModel @Inject constructor(
                 state.update { state: CurrencyUnitSettingUiModel ->
                     state.copy(
                         selectedCurrency = CurrencyUnit(
-                            name = it.name,
+                            name = it.ticker,
                             fullName = it.fullName
                         ),
                     )

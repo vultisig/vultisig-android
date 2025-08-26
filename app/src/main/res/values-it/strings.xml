@@ -470,4 +470,7 @@
     <string name="faq_settings_a8">Vultisig non memorizza alcuna informazione utente dalle sue app mobili.</string>
     <string name="faq_settings_a9">È basato sulla tecnologia MPC, che elimina la necessità di frasi seed e supporta più blockchain, rendendo Vultisig flessibile e indipendente dalla catena.</string>
     <string name="vault_settings_advanced_title">Avanzato</string>
+    <string name="sign_message_continue">Continuare</string>
+    <string name="hint_signing_method">Metodo di firma</string>
+    <string name="hint_message_to_sign">Messaggio da firmare</string>
 </resources>
