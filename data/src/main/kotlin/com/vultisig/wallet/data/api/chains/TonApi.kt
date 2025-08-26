@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api.chains
 
+import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
+import com.vultisig.wallet.data.utils.contentOrNull
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -9,7 +11,12 @@ import io.ktor.client.request.setBody
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.addJsonArray
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.jsonObject
+import wallet.core.jni.TONAddressConverter
 import java.math.BigInteger
 import java.util.Base64
 import javax.inject.Inject
@@ -23,6 +30,10 @@ interface TonApi {
     suspend fun getSpecificTransactionInfo(address: String): BigInteger
 
     suspend fun getWalletState(address: String): String
+
+    suspend fun getJettonsBalance(address: String, contract: String): BigInteger
+
+    suspend fun getJettonsAddress(address: String, contract: String): String
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -74,6 +85,45 @@ internal class TonApiImpl @Inject constructor(
 
     override suspend fun getWalletState(address: String): String =
         getAddressInformation(address).status
+
+    override suspend fun getJettonsBalance(address: String, contract: String): BigInteger {
+        return runCatching {
+            val tvmBoc = getJettonsAddress(address, contract)
+            val jettonAddress = TONAddressConverter.fromBoc(tvmBoc)
+            val jettonsUserAddress = TONAddressConverter.toUserFriendly(jettonAddress, true, false)
+
+            runGetMethod(RunMethodRequestJson(jettonsUserAddress, GET_WALLET_DATA)).parseNum()
+
+        }.getOrDefault(BigInteger.ZERO)
+    }
+
+    override suspend fun getJettonsAddress(address: String, contract: String): String {
+        val bocAddress = TONAddressConverter.toBoc(address)
+
+        val request = RunMethodRequestJson(
+            address = contract,
+            method = GET_WALLET_ADDRESS,
+            stack = buildJsonArray {
+                addJsonArray {
+                    add(JsonPrimitive("tvm.Slice"))
+                    add(JsonPrimitive(bocAddress))
+                }
+            }
+        )
+
+        return runGetMethod(request).parseCell()?.bytes ?: ""
+    }
+
+    private suspend fun runGetMethod(payload: RunMethodRequestJson): RunMethodResponseJson {
+        return http.get("$baseUrl/runGetMethod") {
+            setBody(payload)
+        }.body<RunMethodResponseJson>()
+    }
+
+    private companion object {
+        const val GET_WALLET_ADDRESS = "get_wallet_address"
+        const val GET_WALLET_DATA = "get_wallet_data"
+    }
 }
 
 @Serializable
@@ -123,5 +173,45 @@ private data class TonSpecificTransactionInfoResponseAccountStateJson(
     val seqno: JsonPrimitive?,
 )
 
+@Serializable
+private data class RunMethodRequestJson(
+    val address: String,
+    val method: String,
+    val stack: JsonElement = buildJsonArray { },
+)
 
+@Serializable
+data class Cell(
+    val bytes: String,
+)
 
+@Serializable
+data class RunMethodResponseJson(
+    @SerialName("exit_code")
+    val code: Int = 0,
+    val stack: List<List<JsonElement>> = emptyList(),
+)  {
+    fun parseCell(): Cell? {
+        val first = stack.firstOrNull()?.getOrNull(0)?.contentOrNull
+        if (first != "cell") return null
+
+        val bytes = stack.getOrNull(0)
+            ?.getOrNull(1)
+            ?.jsonObject
+            ?.get("bytes")
+            ?.contentOrNull
+
+        return bytes?.let { Cell(it) }
+    }
+
+    fun parseNum(): BigInteger {
+        val type = stack.firstOrNull()?.getOrNull(0)?.contentOrNull
+        if (type != "num") return BigInteger.ZERO
+
+        val value = stack.getOrNull(0)
+            ?.getOrNull(1)
+            ?.contentOrNull
+
+        return value?.convertToBigIntegerOrZero() ?: BigInteger.ZERO
+    }
+}
