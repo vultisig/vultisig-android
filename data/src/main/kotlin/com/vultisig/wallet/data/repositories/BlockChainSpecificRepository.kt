@@ -369,6 +369,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                     dstAddress.startsWith("E")
                 }
+                // TODO: Jettos -> Fetch TON Jettons address and check if destination wallet is active
+                // for message forward then include new fields
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Ton(
                         sequenceNumber = sequenceNumberDeferred.await().toString().toULong(),
