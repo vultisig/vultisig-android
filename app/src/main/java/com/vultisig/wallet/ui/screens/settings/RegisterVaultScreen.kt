@@ -163,7 +163,7 @@ private fun RegisterVaultScreen(
         Text(
             modifier = Modifier
                 .fillMaxWidth(),
-            text = "Register guide",
+            text = stringResource(R.string.register_vault_screen_guide_title),
             color = colors.text.primary,
             style = Theme.brockmann.headings.largeTitle,
         )

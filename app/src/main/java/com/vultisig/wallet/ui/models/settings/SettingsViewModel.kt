@@ -55,7 +55,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel) {
     data object ReferralCode : SettingsItem(SettingsItemUiModel(title = "Referral Code", leadingIcon = R.drawable.referral_code))
     data object Faq : SettingsItem(SettingsItemUiModel(title = "FAQ", leadingIcon = R.drawable.faq))
     data object VultisigEducation :
-        SettingsItem(SettingsItemUiModel(leadingIcon = R.drawable.vult_eduation, title = "Vultisig Education"))
+        SettingsItem(SettingsItemUiModel(leadingIcon = R.drawable.vult_education, title = "Vultisig Education"))
 
     data object CheckForUpdates : SettingsItem(SettingsItemUiModel("Check for updates", leadingIcon = R.drawable.check_update))
     data object ShareTheApp : SettingsItem(SettingsItemUiModel("Share The App", leadingIcon = R.drawable.share_app))
@@ -156,7 +156,10 @@ internal class SettingsViewModel @Inject constructor(
                 navigateTo(Destination.AddressBook())
             }
 
-            CheckForUpdates -> TODO()
+            CheckForUpdates -> {
+                // TODO: replace with real updater when available
+//                sendEvent(SettingsUiEvent.OpenGooglePlay)
+            }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
             }
@@ -178,8 +181,10 @@ internal class SettingsViewModel @Inject constructor(
                 navigateTo(Destination.VaultSettings(vaultId))
             }
 
-            VultisigEducation -> TODO()
-            VultisigWebsite -> TODO()
+            VultisigEducation -> {
+                // TODO: Implement education section navigation
+            }
+            VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT))
         }
     }
 

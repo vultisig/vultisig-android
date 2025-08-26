@@ -318,9 +318,9 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
             VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
             VaultSettingsItem.Details -> openDetails()
-            VaultSettingsItem.LockTime -> TODO()
+            VaultSettingsItem.LockTime -> Unit
             is VaultSettingsItem.Migrate -> migrate()
-            VaultSettingsItem.PasswordHint -> TODO()
+            VaultSettingsItem.PasswordHint -> Unit
             VaultSettingsItem.Rename -> openRename()
             VaultSettingsItem.Security -> navigateToBiometricsScreen()
             VaultSettingsItem.OnChainSecurity -> navigateToOnChainSecurityScreen()

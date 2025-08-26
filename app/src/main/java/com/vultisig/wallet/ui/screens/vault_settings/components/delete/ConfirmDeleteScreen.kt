@@ -64,7 +64,7 @@ private fun ConfirmDeleteScreen(
     Scaffold(
         topBar = {
             VsTopAppBar(
-                title = "Delete Vault",
+                title = stringResource(R.string.vault_settings_delete_title),
                 iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick
             )
@@ -250,7 +250,7 @@ private fun DeleteVaultBanner() {
         )
 
         Text(
-            text = "Delete vault",
+            text = stringResource(R.string.vault_settings_delete_title),
             style = Theme.brockmann.headings.title2,
             color = colors.alerts.error
         )
@@ -260,7 +260,7 @@ private fun DeleteVaultBanner() {
         )
 
         Text(
-            text = "You are permanently deleting your vault share",
+            text = stringResource(R.string.confirm_delete_permanent_delete_message),
             style = Theme.brockmann.supplementary.footnote,
             color = colors.text.extraLight
         )
