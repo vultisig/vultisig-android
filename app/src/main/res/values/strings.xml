@@ -714,4 +714,6 @@
     <string name="faq_settings_a9">It is built on MPC technology, which eliminates the need for seed phrases and supports multiple blockchains, making Vultisig flexible and chain-agnostic.</string>
     <string name="vault_settings_advanced_title">Advanced</string>
     <string name="sign_message_continue">Continue</string>
+    <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
+    <string name="address_book_empty_title">Your Address Book is empty</string>
 </resources>

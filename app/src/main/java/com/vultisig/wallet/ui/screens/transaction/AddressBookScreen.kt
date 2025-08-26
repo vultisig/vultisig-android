@@ -280,7 +280,7 @@ private fun NoAddressView(
     ) {
 
         Text(
-            text = "Your Address Book is empty",
+            text = stringResource(R.string.address_book_empty_title),
             style = Theme.brockmann.button.large,
             color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
@@ -291,7 +291,7 @@ private fun NoAddressView(
         )
 
         Text(
-            text = "Keep all your important addresses organized in one place.",
+            text = stringResource(R.string.address_book_empty_description),
             style = Theme.brockmann.button.medium,
             color = Theme.colors.neutral300,
             textAlign = TextAlign.Center
@@ -302,7 +302,7 @@ private fun NoAddressView(
         )
 
         VsButton(
-            label = "Add Address",
+            label = stringResource(R.string.address_book_add_address_button),
             onClick = onAddAddressClick,
             size = VsButtonSize.Medium,
             variant = VsButtonVariant.Primary

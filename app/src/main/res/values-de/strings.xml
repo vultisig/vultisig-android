@@ -84,10 +84,10 @@
     <string name="faq_settings_q4">Wie wird Vultisig verwendet?</string>
     <string name="faq_settings_q5">Wie hoch sind die Gebühren und Kosten?</string>
     <string name="faq_settings_q6">Welche Kryptowährungen werden von Vultisig unterstützt?</string>
-    <string name="faq_settings_a1">Es handelt sich um ein sicheres Wallet mit Multi-Authentifizierung auf Basis der MPC-Technologie zur Verwaltung digitaler Vermögenswerte. Transaktionen erfordern die Freigabe mehrerer Geräte.</string>
+    <string name="faq_settings_a1">Es handelt sich um ein sicheres Wallet mit Multi‑Geräte‑Authentifizierung auf Basis der MPC‑Technologie zur Verwaltung digitaler Vermögenswerte. Transaktionen erfordern die Bestätigung auf mehreren Geräten.</string>
     <string name="faq_settings_a2">Vultisig bietet erhöhte Sicherheit durch Multi-Geräte-Authentifizierung, Unterstützung zahlreicher Blockchains, einfache Wiederherstellungsoptionen und verzichtet auf Seed-Phrasen oder Nutzer-Tracking.</string>
     <string name="faq_settings_a3">Ja, sofern Sie Ihre Backups beim Erstellen des Tresors gespeichert haben und darauf zugreifen können. Sie können diese Backups auf ein neues Gerät importieren, um wieder Zugriff auf Ihre Assets zu erhalten.</string>
-    <string name="faq_settings_a4">Vultisig speichert und verwaltet digitale Assets sicher. Für alle Aktionen, wie Senden oder Tauschen, ist die Anzahl der Geräte erforderlich, die Transaktionen signieren.Vultisig speichert und verwaltet digitale Assets sicher. Für alle Aktionen, wie Senden oder Tauschen, ist die Anzahl der Geräte erforderlich, die Transaktionen signieren.</string>
+    <string name="faq_settings_a4">Vultisig speichert und verwaltet digitale Vermögenswerte sicher. Für Aktionen wie Senden oder Tauschen ist eine bestimmte Anzahl von Geräten erforderlich, um Transaktionen zu signieren.</string>
     <string name="faq_settings_a5">Vultisig ist kostenlos. Für das Senden fallen lediglich die üblichen Netzwerkgebühren an. Für Tauschgeschäfte und Bridges fällt eine Gebühr von 0,5 % (50 Basispunkte) an.</string>
     <string name="faq_settings_a6">Vultisig unterstützt die wichtigsten Kryptowährungen und Token. Derzeit sind über 30 Blockchains und deren Token verfügbar.</string>
     <string name="swap_form_from_title">Von</string>
@@ -298,7 +298,7 @@
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
     <string name="deposit_form_screen_assets">Vermögenswerte</string>
     <string name="deposit_form_screen_lpunits">LP-Geräte</string>
-    <string name="eth_gas_settings_title">Fortschrittlich</string>
+    <string name="eth_gas_settings_title">Erweitert</string>
     <string name="join_keysign_error_wrong_vault_share">Dieselbe Tresorfreigabe. Bitte ändern Sie die Freigabe zum Signieren</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Tresor ändern</string>
     <string name="eth_gas_settings_base_fee_title">Aktuelle Grundgebühr (Gwei)</string>
@@ -470,7 +470,9 @@
     <string name="faq_settings_a8">Vultisig speichert keine Nutzerinformationen seiner mobilen Apps.</string>
     <string name="faq_settings_a9">Die Plattform basiert auf der MPC-Technologie, die Seed-Phrasen überflüssig macht und mehrere Blockchains unterstützt. Dadurch ist Vultisig flexibel und Blockchain-unabhängig.</string>
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
-    <string name="sign_message_continue">Weitermachen</string>
+    <string name="sign_message_continue">Weiter</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
+    <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
+    <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
 </resources>

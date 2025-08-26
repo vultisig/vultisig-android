@@ -122,7 +122,7 @@
     <string name="faq_settings_q2">¿Cuáles son los beneficios de utilizar Vultisig?</string>
     <string name="faq_settings_q3">¿Puedo recuperar mis activos si pierdo un dispositivo?</string>
     <string name="faq_settings_q4">¿Cómo se usa Vultisig?</string>
-    <string name="faq_settings_q5">¿Cuáles son las comisiones y los costes?</string>
+    <string name="faq_settings_q5">¿Cuáles son las comisiones y los costos?</string>
     <string name="faq_settings_q6">¿Qué criptomonedas admite Vultisig?</string>
     <string name="faq_settings_a1">Es una billetera segura con autenticación múltiple basada en tecnología MPC que se utiliza para gestionar activos digitales. Las transacciones requieren la aprobación de múltiples dispositivos.</string>
     <string name="faq_settings_a2">Vultisig ofrece seguridad mejorada con autenticación multidispositivo, compatibilidad con diversas cadenas de bloques, opciones de recuperación sencillas y ausencia de frases semilla o seguimiento de usuarios.</string>
@@ -467,10 +467,12 @@
     <string name="faq_settings_q8">¿Cómo gestiona Vultisig la privacidad y la protección de datos?</string>
     <string name="faq_settings_q9">¿Cómo se compara Vultisig con otras billeteras multifirma?</string>
     <string name="faq_settings_a7">Sí, Vultisig es de código abierto y se ha sometido a auditorías de seguridad. Tanto los informes de auditoría como el código fuente son accesibles.</string>
-    <string name="faq_settings_a8">Vultisig no almacena información del usuario desde sus aplicaciones móviles.</string>
+    <string name="faq_settings_a8">Vultisig no almacena información del usuario en sus aplicaciones móviles.</string>
     <string name="faq_settings_a9">Está basado en tecnología MPC, que elimina la necesidad de frases semilla y admite múltiples cadenas de bloques, lo que hace que Vultisig sea flexible e independiente de la cadena.</string>
-    <string name="vault_settings_advanced_title">Avanzada</string>
+    <string name="vault_settings_advanced_title">Avanzado</string>
     <string name="sign_message_continue">Continuar</string>
     <string name="hint_signing_method">Método de firma</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
+    <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
+    <string name="address_book_empty_title">Tu libreta de direcciones está vacía.</string>
 </resources>

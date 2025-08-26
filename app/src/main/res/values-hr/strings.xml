@@ -473,4 +473,6 @@
     <string name="sign_message_continue">Nastaviti</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
+    <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
+    <string name="address_book_empty_title">Vaš adresar je prazan</string>
 </resources>

@@ -471,7 +471,7 @@
     <string name="tcy_auto_compound_enable_subtitle">Stel je TCY-beloningen automatisch samen</string>
     <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">Unstake van automatisch samengestelde TCY-stortingen</string>
-    <string name="register_vault_screen_guide_title">Gids voor registeren</string>
+    <string name="register_vault_screen_guide_title">Gids voor registreren</string>
     <string name="faq_settings_q7">Is Vultisig open source en wordt het gecontroleerd?</string>
     <string name="faq_settings_q8">Hoe gaat Vultisig om met privacy en gegevensbescherming?</string>
     <string name="faq_settings_q9">Hoe verhoudt Vultisig zich tot andere multisig-wallets?</string>
@@ -482,4 +482,6 @@
     <string name="sign_message_continue">Doorgaan</string>
     <string name="hint_signing_method">Ondertekeningsmethode</string>
     <string name="hint_message_to_sign">Bericht om te ondertekenen</string>
+    <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
+    <string name="address_book_empty_title">Uw adresboek is leeg</string>
 </resources>
