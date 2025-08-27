@@ -226,7 +226,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
-            val hasFastSign = isVaultHasFastSignById(vaultId)
+            val hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
 
             val newItems = uiModel.value.settingGroups.map { group ->
                 group.copy(
