@@ -145,27 +145,23 @@ data class JettonWalletsJson(
     @SerialName("jetton_wallets")
     val jettonWallets: List<JettonWalletJson> = emptyList(),
     @SerialName("address_book")
-    val addressBook: AddressBookJson
+    val addressBook: Map<String, AddressEntryJson>
 ) {
     fun getJettonsAddress(): String? {
-        val jettonAddress = jettonWallets.firstOrNull()?.jetton ?: ""
-        val address = addressBook.addressBook[jettonAddress]
+        val jettonAddress = jettonWallets.firstOrNull()?.address ?: ""
+        val address = addressBook[jettonAddress]
         return address?.userFriendly
     }
 }
 
 @Serializable
 data class JettonWalletJson(
+    @SerialName("address")
+    val address: String,
     @SerialName("jetton")
     val jetton: String,
     @SerialName("balance")
     val balance: String,
-)
-
-@Serializable
-data class AddressBookJson(
-    @SerialName("address_book")
-    val addressBook: Map<String, AddressEntryJson> = emptyMap()
 )
 
 @Serializable
