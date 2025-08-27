@@ -39,7 +39,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             val evmApi = evmApiFactory.createEvmApi(chain)
             TokenValue(
                 evmApi.getGasPrice().multiply(BigInteger("3")).divide(BigInteger("2")),
-                chain.feeUnit,
+                "ETH",
+                //chain.feeUnit,
                 9
             )
         }
