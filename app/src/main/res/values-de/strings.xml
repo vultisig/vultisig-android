@@ -314,10 +314,10 @@
     <string name="vault_details_screen_signer">Sänger %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore!</string>
     <string name="register_vault_screen_title">Tresor registrieren</string>
-    <string name="register_vault_screen_step_3">Laden Sie Ihren Vault-QR-Code hoch</string>
-    <string name="register_vault_screen_step_4">Verfolgen Sie Ihre VULTIES (Vault Points)!</string>
+    <string name="register_vault_screen_step_3">Laden Sie Ihren Tresor‑QR‑Code hoch</string>
+    <string name="register_vault_screen_step_4">Verfolgen Sie Ihre VULTIES (Tresor‑Punkte)!</string>
     <string name="register_vault_screen_step_2_go_to">Gehen Sie zu</string>
-    <string name="register_vault_screen_step_1">Speichern Sie Ihren Vault-QR-Code</string>
+    <string name="register_vault_screen_step_1">Speichern Sie Ihren Tresor‑QR‑Code</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="send_form_gas_token_balance">Gas-Token-Guthaben</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>

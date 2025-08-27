@@ -312,7 +312,7 @@
     <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
     <string name="vault_details_screen_vault_part_desc">Compartir %1$s de %2$s</string>
     <string name="vault_details_screen_signer">Firmante %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Registra tus Bóvedas!</string>
+    <string name="settings_screen_register_your_vaults">¡Registra tus bóvedas!</string>
     <string name="register_vault_screen_title">Registra tus bóvedas</string>
     <string name="register_vault_screen_step_3">Sube tu código QR de Vault</string>
     <string name="register_vault_screen_step_4">¡Rastrea tus VULTIES (Puntos de bóveda)!</string>
