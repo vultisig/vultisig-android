@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.DATE_FORMAT
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
@@ -18,11 +19,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 
 internal data class EditVaultReferralUiState(
-    val referralCounter: String = "0",
+    val referralCounter: Int = 0,
     val referralCostAmount: String = "",
     val referralCostFiat: String = "",
     val referralExpiration: String = "",
@@ -62,5 +65,24 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
     fun onSavedReferral() {
 
+    }
+
+    fun onIncrementCounter() {
+        val formatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.getDefault())
+        val newCounter = state.value.referralCounter + 1
+        state.update {
+            it.copy(
+                referralCounter = newCounter,
+            )
+        }
+    }
+
+    fun onDecrementCounter() {
+        val newCounter = state.value.referralCounter - 1
+        state.update {
+            it.copy(
+                referralCounter = newCounter,
+            )
+        }
     }
 }

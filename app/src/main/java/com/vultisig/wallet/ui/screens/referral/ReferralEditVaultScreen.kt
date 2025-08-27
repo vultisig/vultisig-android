@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiGradientDivider
@@ -36,6 +37,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.EditVaultReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -46,22 +48,31 @@ internal fun ReferralEditVaultScreen(
 ) {
     val clipboardManager =
         LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+    val state by model.state.collectAsStateWithLifecycle()
 
     ReferralEditVaultScreen(
+        state = state,
         onBackPressed = navController::popBackStack,
         onSavedReferral = model::onSavedReferral,
+        referralTextFieldState = model.referralTexFieldState,
+        onDecrementCounter = model::onDecrementCounter,
+        onIncrementCounter = model::onIncrementCounter,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
-        }
+        },
     )
 }
 
 @Composable
 private fun ReferralEditVaultScreen(
+    state: EditVaultReferralUiState,
     onBackPressed: () -> Unit,
     onCopyReferralCode: (String) -> Unit,
     onSavedReferral: () -> Unit,
+    onIncrementCounter: () -> Unit,
+    onDecrementCounter: () -> Unit,
+    referralTextFieldState: TextFieldState,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -90,12 +101,13 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(8.dp)
 
                 VsTextInputField(
-                    textFieldState = TextFieldState().also { it.setTextAndPlaceCursorAtEnd("JTM") },
+                    textFieldState = referralTextFieldState,
                     innerState = VsTextInputFieldInnerState.Default,
                     focusRequester = null,
                     trailingIcon = R.drawable.ic_copy,
                     onTrailingIconClick = {
-                        onCopyReferralCode("jtm")
+                        val text = referralTextFieldState.text.toString()
+                        onCopyReferralCode(text)
                     },
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Text,
@@ -112,9 +124,10 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(16.dp)
 
                 CounterYearExpiration(
-                    count = 0,
-                    onIncrement = { },
-                    onDecrement = { },
+                    count = state.referralCounter,
+                    defaultInitCounter = 0,
+                    onIncrement = onIncrementCounter,
+                    onDecrement = onDecrementCounter,
                 )
 
                 UiSpacer(16.dp)
@@ -163,7 +176,11 @@ private fun ReferralEditVaultScreen(
                     .padding(horizontal = 16.dp, vertical = 32.dp)
                     .fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
-                state = VsButtonState.Enabled,
+                state = if (state.referralCounter != 0) {
+                    VsButtonState.Enabled
+                } else {
+                    VsButtonState.Disabled
+                },
                 onClick = onSavedReferral,
             )
         }
