@@ -446,7 +446,7 @@ fun VaultItem(
 }
 
 @Composable
-private fun ContentRow(
+internal fun ContentRow(
     text: String,
     icon: @Composable () -> Unit,
 ) {
