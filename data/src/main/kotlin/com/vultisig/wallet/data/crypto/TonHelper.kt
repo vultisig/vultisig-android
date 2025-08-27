@@ -75,12 +75,18 @@ object TonHelper {
     ): TheOpenNetwork.Transfer {
         val destinationAddress =
             TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
-        
+
+        require(tonSpecific.jettonAddress.isNotEmpty()) {
+            "Jetton address cannot be empty"
+        }
+
+        val forwardAmountMsg = if (tonSpecific.isActiveDestination) 1L else 0L
+
         val jettonTransfer = TheOpenNetwork.JettonTransfer.newBuilder()
             .setJettonAmount(payload.toAmount.toLong())
             .setResponseAddress(payload.coin.address)
             .setToOwner(destinationAddress)
-            .setForwardAmount(1) // 1 for active wallet, 0 for inactive
+            .setForwardAmount(forwardAmountMsg)
             .build()
 
         val mode = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
@@ -91,7 +97,7 @@ object TonHelper {
             .setComment(payload.memo.orEmpty())
             .setBounceable(true) // Jettons always bounceable
             .setMode(mode)
-            .setDest("") // Will be set to origin Jetton address
+            .setDest(tonSpecific.jettonAddress) // Will be set to origin Jetton address
             .setJettonTransfer(jettonTransfer)
             .build()
     }
