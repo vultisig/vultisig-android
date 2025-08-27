@@ -27,6 +27,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,18 +38,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.AddressBookEntry
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookViewModel
@@ -85,97 +88,78 @@ internal fun AddressBookScreen(
     onMove: (from: Int, to: Int) -> Unit,
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
-    Scaffold(
-        containerColor = Theme.colors.oxfordBlue800,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.address_book_toolbar_title),
-                        style = Theme.montserrat.heading5,
-                        fontWeight = FontWeight.Bold,
-                        color = Theme.colors.neutral0,
-                        textAlign = TextAlign.Center,
+    Scaffold(containerColor = Theme.colors.oxfordBlue800, topBar = {
+        CenterAlignedTopAppBar(
+            title = {
+            Text(
+                text = stringResource(R.string.address_book_toolbar_title),
+                style = Theme.montserrat.heading5,
+                fontWeight = FontWeight.Bold,
+                color = Theme.colors.neutral0,
+                textAlign = TextAlign.Center,
+            )
+        }, colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Theme.colors.oxfordBlue800,
+            titleContentColor = Theme.colors.neutral0,
+        ), navigationIcon = {
+            IconButton(onClick = clickOnce { navController.popBackStack() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_caret_left),
+                    contentDescription = null,
+                    tint = Theme.colors.neutral0,
+                )
+            }
+        }, actions = {
+            if (state.entries.isNotEmpty()) {
+                Box(
+                    modifier = Modifier.padding(
+                        horizontal = 8.dp,
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.colors.oxfordBlue800,
-                    titleContentColor = Theme.colors.neutral0,
-                ),
-                navigationIcon = {
-                    IconButton(onClick = clickOnce { navController.popBackStack() }) {
+                ) {
+                    if (isEditModeEnabled) {
+                        Text(
+                            text = stringResource(R.string.address_book_edit_mode_done),
+                            style = Theme.menlo.subtitle1,
+                            fontWeight = FontWeight.Bold,
+                            color = Theme.colors.neutral0,
+                            modifier = Modifier.clickOnce(onClick = onToggleEditMode)
+                        )
+                    } else {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_caret_left),
-                            contentDescription = null,
+                            painter = painterResource(id = R.drawable.baseline_edit_square_24),
+                            contentDescription = "edit",
                             tint = Theme.colors.neutral0,
+                            modifier = Modifier.clickOnce(onClick = onToggleEditMode)
                         )
                     }
-                },
-                actions = {
-                    if (state.entries.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier.padding(
-                                horizontal = 8.dp,
-                            )
-                        ) {
-                            if (isEditModeEnabled) {
-                                Text(
-                                    text = stringResource(R.string.address_book_edit_mode_done),
-                                    style = Theme.menlo.subtitle1,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Theme.colors.neutral0,
-                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                                    contentDescription = "edit",
-                                    tint = Theme.colors.neutral0,
-                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
-                                )
-                            }
-                        }
-                    }
-                }
-            )
-        },
-        content = { scaffoldPadding ->
-            if (state.entries.isNotEmpty()) {
-                VerticalReorderList(
-                    data = state.entries,
-                    onMove = onMove,
-                    key = { it.model.id },
-                    isReorderEnabled = state.isEditModeEnabled,
-                    modifier = Modifier.padding(scaffoldPadding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) { entry ->
-                    AddressItem(
-                        image = entry.image,
-                        name = entry.name,
-                        network = entry.network,
-                        address = entry.address,
-                        isEditModeEnabled = isEditModeEnabled,
-                        onClick = { onAddressClick(entry) },
-                        onDeleteClick = { onDeleteAddressClick(entry) }
-                    )
-                }
-            } else {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Text(
-                        text = "No saved addresses",
-                        style = Theme.menlo.body1,
-                        color = Theme.colors.alerts.warning,
-                        textAlign = TextAlign.Center,
-                    )
                 }
             }
-        },
-        bottomBar = {
+        })
+    }, content = { scaffoldPadding ->
+        if (state.entries.isNotEmpty()) {
+            VerticalReorderList(
+                data = state.entries,
+                onMove = onMove,
+                key = { it.model.id },
+                isReorderEnabled = state.isEditModeEnabled,
+                modifier = Modifier.padding(scaffoldPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) { entry ->
+                AddressItem(
+                    image = entry.image,
+                    name = entry.name,
+                    network = entry.network,
+                    address = entry.address,
+                    isEditModeEnabled = isEditModeEnabled,
+                    onClick = { onAddressClick(entry) },
+                    onDeleteClick = { onDeleteAddressClick(entry) })
+            }
+        } else {
+            NoAddressView(onAddAddressClick = onAddAddressClick)
+        }
+    }, bottomBar = {
+        if (state.entries.isNotEmpty()) {
             VsButton(
                 label = stringResource(R.string.address_book_add_address_button),
                 onClick = onAddAddressClick,
@@ -187,7 +171,7 @@ internal fun AddressBookScreen(
                     ),
             )
         }
-    )
+    })
 }
 
 @Composable
@@ -218,8 +202,7 @@ private fun AddressItem(
                 .weight(1f),
         ) {
             Row(
-                modifier = Modifier
-                    .padding(12.dp),
+                modifier = Modifier.padding(12.dp),
             ) {
                 AsyncImage(
                     model = image,
@@ -272,28 +255,60 @@ private fun AddressItem(
     }
 }
 
+
+@Composable
+private fun NoAddressView(
+    onAddAddressClick: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .drawBehind {
+                val gradient = Brush.vultiCircleShadeGradient()
+
+                drawCircle(
+                    brush = gradient,
+                )
+            }
+            .padding(48.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+
+        Text(
+            text = stringResource(R.string.address_book_empty_title),
+            style = Theme.brockmann.button.large,
+            color = Theme.colors.neutral0,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 12.dp
+        )
+
+        Text(
+            text = stringResource(R.string.address_book_empty_description),
+            style = Theme.brockmann.button.medium,
+            color = Theme.colors.neutral300,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 30.dp
+        )
+
+        VsButton(
+            label = stringResource(R.string.address_book_add_address_button),
+            onClick = onAddAddressClick,
+            size = VsButtonSize.Medium,
+            variant = VsButtonVariant.Primary
+        )
+
+    }
+}
+
 @Preview
 @Composable
-private fun AddressBookScreenPreview() {
-    AddressBookScreen(
-        navController = rememberNavController(),
-        state = AddressBookUiModel(
-            isEditModeEnabled = true,
-            entries = listOf(
-                AddressBookEntryUiModel(
-                    model = AddressBookEntry(
-                        chain = Chain.Ethereum,
-                        address = "123456abcdef",
-                        title = "",
-                    ),
-                    image = "",
-                    name = "Satoshi Nakamoto",
-                    network = "Bitcoin",
-                    address = "123456abcdef",
-                ),
-            ),
-        ),
-        onAddressClick = {},
-        onMove = { _, _ -> },
-    )
+private fun NoAddressPreview() {
+    NoAddressView(onAddAddressClick = {})
 }
