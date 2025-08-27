@@ -90,32 +90,14 @@ internal fun AddAddressEntryScreen(
                 val selectedChain = state.selectedChain
 
                 FormCard {
-                    var isChainsExpanded by remember { mutableStateOf(false) }
                     TokenCard(
                         title = selectedChain.raw,
                         availableToken = "",
                         tokenLogo = selectedChain.logo,
                         chainLogo = null,
-                        onClick = { isChainsExpanded = !isChainsExpanded },
+                        onClick = { onSelectChainClick(selectedChain) },
                         actionIcon = R.drawable.ic_caret_down,
                     )
-
-                    if (isChainsExpanded) {
-                        state.chains.forEach { chain ->
-                            TokenCard(
-                                title = chain.raw,
-                                availableToken = "",
-                                tokenLogo = chain.logo,
-                                onClick = {
-                                    isChainsExpanded = false
-                                    onSelectChainClick(chain)
-                                },
-                                actionIcon = if (selectedChain == chain)
-                                    R.drawable.check
-                                else null
-                            )
-                        }
-                    }
                 }
 
                 FormTextFieldCard(
@@ -134,15 +116,15 @@ internal fun AddAddressEntryScreen(
                     textFieldState = addressTextFieldState,
                     onLostFocus = onAddressFieldLostFocus,
                 ) {
-                    PasteIcon(onPaste = onSetOutputAddress)
-
-                    UiSpacer(size = 8.dp)
-
                     UiIcon(
                         drawableResId = R.drawable.camera,
                         size = 20.dp,
                         onClick = onScan,
                     )
+
+                    UiSpacer(size = 8.dp)
+
+                    PasteIcon(onPaste = onSetOutputAddress)
                 }
             }
         },

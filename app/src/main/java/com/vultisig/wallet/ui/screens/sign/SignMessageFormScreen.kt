@@ -1,18 +1,15 @@
 package com.vultisig.wallet.ui.screens.sign
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -22,11 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
-import com.vultisig.wallet.ui.models.sign.SignMessageFormUiModel
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.models.sign.SignMessageFormViewModel
 
 
@@ -41,81 +37,73 @@ internal fun SignMessageFormScreen(
         model.setData(vaultId)
     }
 
+    val focusManager = LocalFocusManager.current
     SignMessageFormScreen(
-        state = state,
         methodFieldState = model.methodFieldState,
         messageFieldState = model.messageFieldState,
-        onSign = model::sign,
+        state = if (state.isLoading)
+            VsButtonState.Disabled
+        else
+            VsButtonState.Enabled,
+        onSign = {
+            focusManager.clearFocus()
+            model.sign()
+        }
     )
 }
 
 
 @Composable
-internal fun SignMessageFormScreen(
-    state: SignMessageFormUiModel,
+private fun SignMessageFormScreen(
     methodFieldState: TextFieldState,
     messageFieldState: TextFieldState,
+    state: VsButtonState,
     onSign: () -> Unit = {},
 ) {
-    val focusManager = LocalFocusManager.current
-
-    BoxWithSwipeRefresh(
-        modifier = Modifier.fillMaxSize(),
-        isRefreshing = false,
-        onSwipe = { },
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .padding(all = 16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            FormTextFieldCard(
-                title = stringResource(R.string.sign_message_form_method_field_title),
-                hint = stringResource(R.string.sign_message_form_method_field_hint),
-                keyboardType = KeyboardType.Text,
-                textFieldState = methodFieldState,
-                onLostFocus = { },
-                error = null
-            )
-
-            FormTextFieldCard(
-                title = stringResource(R.string.sign_message_for_message_field_title),
-                hint = stringResource(R.string.sign_message_form_message_field_hint),
-                keyboardType = KeyboardType.Text,
-                textFieldState = messageFieldState,
-                onLostFocus = { },
-                error = null
+    Scaffold(
+        bottomBar = {
+            VsButton(
+                label = stringResource(id = R.string.sign_message_continue),
+                state = state,
+                onClick = onSign,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
             )
         }
-
-
-        VsButton(
-            label = stringResource(R.string.send_continue_button),
-            state = if (state.isLoading)
-                VsButtonState.Disabled
-            else
-                VsButtonState.Enabled,
-            onClick = {
-                focusManager.clearFocus()
-                onSign()
-            },
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(all = 16.dp),
-        )
-    }
+                .padding(it)
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                )
+        ) {
+            VsTextInputField(
+                textFieldState = methodFieldState,
+                hint = stringResource(id = R.string.hint_signing_method),
+                keyboardType = KeyboardType.Text,
+            )
 
+            UiSpacer(14.dp)
+
+            VsTextInputField(
+                textFieldState = messageFieldState,
+                hint = stringResource(id = R.string.hint_message_to_sign),
+                keyboardType = KeyboardType.Text,
+            )
+        }
+    }
 }
 
 
 @Preview
 @Composable
-private fun SendFormScreenPreview() {
+private fun SignMessageFormScreenPreview() {
     SignMessageFormScreen(
-        state = SignMessageFormUiModel(),
-        methodFieldState = TextFieldState(),
-        messageFieldState = TextFieldState(),
+        messageFieldState = rememberTextFieldState(),
+        methodFieldState = rememberTextFieldState(),
+        state = VsButtonState.Enabled,
     )
 }
