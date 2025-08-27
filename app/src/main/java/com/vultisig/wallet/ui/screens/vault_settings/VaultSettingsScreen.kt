@@ -49,7 +49,7 @@ private fun VaultSettingsScreen(
         topBar = {
             VsTopAppBar(
                 title = if (uiModel.isAdvanceSetting)
-                    stringResource(R.string.eth_gas_settings_title)
+                    stringResource(R.string.vault_settings_advanced_title)
                 else
                     stringResource(R.string.vault_settings_title),
                 iconLeft = R.drawable.ic_caret_left,

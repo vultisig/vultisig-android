@@ -2,9 +2,12 @@ package com.vultisig.wallet.ui.screens.vault_settings.components.delete
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -59,7 +62,7 @@ private fun ConfirmDeleteScreen(
     vaultDeleteUiModel: VaultDeleteUiModel,
     onItemCheckChangeClick: (Int, Boolean) -> Unit,
     onConfirmClick: () -> Unit,
-    onBackClick: ()-> Unit,
+    onBackClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -76,7 +79,9 @@ private fun ConfirmDeleteScreen(
                     VsButtonState.Enabled,
                 label = stringResource(R.string.confirm_delete_delete_vault),
                 variant = VsButtonVariant.Error,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
             )
         }
     ) {
@@ -105,11 +110,15 @@ private fun ConfirmDeleteScreen(
             UiSpacer(12.dp)
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .height(intrinsicSize = IntrinsicSize.Min)
             ) {
                 VerticalVaultInfo(
-                    modifier = Modifier.weight(1f),
-                    key =  stringResource(R.string.vault_settings_delete_vault_part),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    key = stringResource(R.string.vault_settings_delete_vault_part),
                     value = stringResource(
                         id = R.string.vault_part_n_of_t,
                         vaultDeleteUiModel.vaultPart,
@@ -118,24 +127,32 @@ private fun ConfirmDeleteScreen(
                 )
 
                 VerticalVaultInfo(
-                    modifier = Modifier.weight(1f),
-                    key =  stringResource(R.string.vault_settings_delete_vault_id),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    key = stringResource(R.string.vault_settings_delete_vault_id),
                     value = vaultDeleteUiModel.localPartyId
                 )
             }
 
             UiSpacer(12.dp)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .height(intrinsicSize = IntrinsicSize.Min)
             ) {
                 VerticalVaultInfo2(
-                    modifier = Modifier.weight(1f),
-                    key =  stringResource(R.string.vault_settings_delete_vault_ecdsa_key),
-                    value =  vaultDeleteUiModel.pubKeyECDSA,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    key = stringResource(R.string.vault_settings_delete_vault_ecdsa_key),
+                    value = vaultDeleteUiModel.pubKeyECDSA,
                 )
 
                 VerticalVaultInfo2(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     key = stringResource(R.string.vault_settings_delete_vault_eddsa_key),
                     value = vaultDeleteUiModel.pubKeyEDDSA
                 )
@@ -143,6 +160,7 @@ private fun ConfirmDeleteScreen(
 
 
             UiSpacer(weight = 1f)
+            UiSpacer(size = 16.dp)
 
             cautions.forEachIndexed { index, resId ->
                 Row(
@@ -157,8 +175,7 @@ private fun ConfirmDeleteScreen(
                                 )
                             },
                         )
-                        .padding(8.dp)
-                    ,
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -191,7 +208,8 @@ private fun VerticalVaultInfo(
     value: String
 ) {
     Column(
-        modifier = modifier.itemModifier()
+        modifier = modifier.itemModifier(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = key,
@@ -214,7 +232,8 @@ private fun VerticalVaultInfo2(
     value: String
 ) {
     Column(
-        modifier = modifier.itemModifier()
+        modifier = modifier.itemModifier(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = key,
@@ -223,8 +242,8 @@ private fun VerticalVaultInfo2(
         )
         Text(
             text = value,
-            style = Theme.brockmann.body.s.medium,
-            color = colors.text.primary
+            style = Theme.brockmann.supplementary.caption,
+            color = colors.text.extraLight
         )
     }
 }

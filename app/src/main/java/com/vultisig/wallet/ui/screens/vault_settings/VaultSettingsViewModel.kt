@@ -89,7 +89,8 @@ internal sealed class VaultSettingsItem(
             subTitle = "Set a password hint to protect your vault",
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.pass_hint
-        )
+        ),
+        enabled = false,
     )
 
     data object BackupVaultShare : VaultSettingsItem(

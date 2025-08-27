@@ -36,11 +36,12 @@ internal data class SettingsGroupUiModel(
     val items: List<SettingsItem>
 )
 
-internal sealed class SettingsItem(val value: SettingsItemUiModel,val enabled: Boolean = true) {
+internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: Boolean = true) {
     data object VaultSetting : SettingsItem(
         SettingsItemUiModel(
             title = "Vault Settings",
-            leadingIcon = R.drawable.setting
+            leadingIcon = R.drawable.setting,
+            trailingIcon = R.drawable.ic_small_caret_right
         )
     )
 
@@ -48,7 +49,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel,val enabled: B
         SettingsItemUiModel(
             title = "Register your Vaults!",
             backgroundColor = Colors.Default.buttons.primary,
-            leadingIcon = R.drawable.register
+            leadingIcon = R.drawable.register,
+            trailingIcon = R.drawable.ic_small_caret_right
         )
     )
 
@@ -57,7 +59,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel,val enabled: B
             SettingsItemUiModel(
                 title = "Language",
                 value = lang,
-                leadingIcon = R.drawable.language
+                leadingIcon = R.drawable.language,
+                trailingIcon = R.drawable.ic_small_caret_right
             )
         )
 
@@ -66,60 +69,115 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel,val enabled: B
             SettingsItemUiModel(
                 title = "Currency",
                 value = curr,
-                leadingIcon = R.drawable.currency
+                leadingIcon = R.drawable.currency,
+                trailingIcon = R.drawable.ic_small_caret_right
             )
         )
 
     data object AddressBook : SettingsItem(
         SettingsItemUiModel(
             title = "Address Book",
-            leadingIcon = R.drawable.address_book
+            leadingIcon = R.drawable.address_book,
+            trailingIcon = R.drawable.ic_small_caret_right
         )
     )
 
     data object ReferralCode : SettingsItem(
         SettingsItemUiModel(
             title = "Referral Code",
-            leadingIcon = R.drawable.referral_code
+            leadingIcon = R.drawable.referral_code,
+            trailingIcon = R.drawable.ic_small_caret_right
         )
     )
 
-    data object Faq : SettingsItem(SettingsItemUiModel(title = "FAQ", leadingIcon = R.drawable.faq))
+    data object Faq : SettingsItem(
+        SettingsItemUiModel(
+            title = "FAQ",
+            leadingIcon = R.drawable.faq,
+            trailingIcon = R.drawable.ic_small_caret_right
+        )
+    )
+
     data object VultisigEducation :
         SettingsItem(
             value = SettingsItemUiModel(
                 leadingIcon = R.drawable.vult_education,
-                title = "Vultisig Education"
+                title = "Vultisig Education",
+                trailingIcon = R.drawable.ic_small_caret_right
             ),
             enabled = false
         )
 
     data object CheckForUpdates : SettingsItem(
         value = SettingsItemUiModel(
-            "Check for updates",
-            leadingIcon = R.drawable.check_update
+            title = "Check for updates",
+            leadingIcon = R.drawable.check_update,
+            trailingIcon = R.drawable.ic_small_caret_right
         ),
         enabled = false
     )
 
     data object ShareTheApp :
-        SettingsItem(SettingsItemUiModel("Share The App", leadingIcon = R.drawable.share_app))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Share The App",
+                leadingIcon = R.drawable.share_app,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 
-    data object Twitter : SettingsItem(SettingsItemUiModel("X", leadingIcon = R.drawable.x_twitter))
+    data object Twitter : SettingsItem(
+        SettingsItemUiModel(
+            title = "X",
+            leadingIcon = R.drawable.x_twitter,
+            trailingIcon = R.drawable.ic_small_caret_right
+        )
+    )
+
     data object Discord :
-        SettingsItem(SettingsItemUiModel("Discord", leadingIcon = R.drawable.discord))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Discord",
+                leadingIcon = R.drawable.discord,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 
     data object Github :
-        SettingsItem(SettingsItemUiModel("Github", leadingIcon = R.drawable.githup))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Github",
+                leadingIcon = R.drawable.githup,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 
     data object VultisigWebsite :
-        SettingsItem(SettingsItemUiModel("Vultisig Website", leadingIcon = R.drawable.vult_website))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Vultisig Website",
+                leadingIcon = R.drawable.vult_website,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 
     data object TermsOfService :
-        SettingsItem(SettingsItemUiModel("Terms of Service", leadingIcon = R.drawable.term_service))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Terms of Service",
+                leadingIcon = R.drawable.term_service,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 
     data object PrivacyPolicy :
-        SettingsItem(SettingsItemUiModel("Privacy Policy", leadingIcon = R.drawable.security))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Privacy Policy",
+                leadingIcon = R.drawable.security,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
 }
 
 internal data class SettingsItemUiModel(
@@ -240,6 +298,7 @@ internal class SettingsViewModel @Inject constructor(
             VultisigEducation -> {
                 // TODO: Implement education section navigation
             }
+
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT))
         }
     }
@@ -305,7 +364,7 @@ internal class SettingsViewModel @Inject constructor(
         group.copy(
             items = group.items.map { item ->
                 when (item) {
-                    is Currency -> item.copy(curr = currency.fullName)
+                    is Currency -> item.copy(curr = currency.ticker)
                     else -> item
                 }
             }
