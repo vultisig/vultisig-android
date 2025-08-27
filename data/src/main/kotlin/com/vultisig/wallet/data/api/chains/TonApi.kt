@@ -145,7 +145,7 @@ data class JettonWalletsJson(
     @SerialName("jetton_wallets")
     val jettonWallets: List<JettonWalletJson> = emptyList(),
     @SerialName("address_book")
-    val addressBook: Map<String, AddressEntryJson>
+    val addressBook: Map<String, AddressEntryJson> = emptyMap()
 ) {
     fun getJettonsAddress(): String? {
         val jettonAddress = jettonWallets.firstOrNull()?.address ?: ""
