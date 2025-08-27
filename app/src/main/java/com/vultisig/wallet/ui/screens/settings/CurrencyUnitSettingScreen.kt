@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.models.settings.CurrencyUnit
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 internal fun CurrencyUnitSettingScreen(navController: NavHostController) {
@@ -96,7 +97,7 @@ private fun CurrencyUnitSettingItem(
 
     SettingItem(
         item = SettingsItemUiModel(
-            title = name,
+            title = name.asUiText(),
             trailingIcon = if (isSelected) R.drawable.check_2 else null,
         ),
         onClick = onClick,

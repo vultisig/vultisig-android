@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.settings.LanguageSettingUiModel
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 fun LanguageSettingScreen(navController: NavHostController) {
@@ -98,8 +99,8 @@ private fun LanguageSettingItem(
 
     SettingItem(
         item = SettingsItemUiModel(
-            title = name,
-            subTitle = englishName,
+            title = name.asUiText(),
+            subTitle = englishName?.asUiText(),
             leadingIcon = null,
             trailingIcon = if(isSelected)  R.drawable.check_2 else null,
         ),

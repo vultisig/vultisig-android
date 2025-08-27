@@ -79,9 +79,9 @@
     <string name="rename_vault_screen_vault_name">Tresorname</string>
     <string name="rename_vault_screen_continue">Fortfahren</string>
     <string name="faq_settings_q1">Was ist Vultisig?</string>
-    <string name="faq_settings_q2">Welche Vorteile bietet die Anwendung von Vultisig?</string>
+    <string name="faq_settings_q2">Welche Vorteile bietet die Vultisig‑App?</string>
     <string name="faq_settings_q3">Kann ich meine Vermögenswerte wiederherstellen, wenn ich ein Gerät verliere?</string>
-    <string name="faq_settings_q4">Wie wird Vultisig verwendet?</string>
+    <string name="faq_settings_q4">Wie verwende ich Vultisig?</string>
     <string name="faq_settings_q5">Wie hoch sind die Gebühren und Kosten?</string>
     <string name="faq_settings_q6">Welche Kryptowährungen werden von Vultisig unterstützt?</string>
     <string name="faq_settings_a1">Es handelt sich um ein sicheres Wallet mit Multi‑Geräte‑Authentifizierung auf Basis der MPC‑Technologie zur Verwaltung digitaler Vermögenswerte. Transaktionen erfordern die Bestätigung auf mehreren Geräten.</string>
@@ -312,12 +312,12 @@
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teilen %1$s von %2$s</string>
     <string name="vault_details_screen_signer">Sänger %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore</string>
+    <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore!</string>
     <string name="register_vault_screen_title">Tresor registrieren</string>
     <string name="register_vault_screen_step_3">Laden Sie Ihren Vault-QR-Code hoch</string>
     <string name="register_vault_screen_step_4">Verfolgen Sie Ihre VULTIES (Vault Points)!</string>
     <string name="register_vault_screen_step_2_go_to">Gehen Sie zu</string>
-    <string name="register_vault_screen_step_1">Speichern Sie Ihren Vault-QR</string>
+    <string name="register_vault_screen_step_1">Speichern Sie Ihren Vault-QR-Code</string>
     <string name="do_not_remind_me_again">Erinnere mich nicht mehr daran</string>
     <string name="send_form_gas_token_balance">Gas-Token-Guthaben</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
@@ -471,12 +471,12 @@
     <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
     <string name="referral_view_save">Speichern</string>
     <string name="referral_view_on_swaps">Jetzt bei Swaps</string>
-    <string name="register_vault_screen_guide_title">Leitfaden registrieren</string>
-    <string name="faq_settings_q7">Ist Vultisig Open Source und geprüft?</string>
+    <string name="register_vault_screen_guide_title">Registrierungsleitfaden</string>
+    <string name="faq_settings_q7">Ist Vultisig Open‑Source und geprüft?</string>
     <string name="faq_settings_q8">Wie geht Vultisig mit Datenschutz um?</string>
     <string name="faq_settings_q9">Wie schneidet Vultisig im Vergleich zu anderen Multisig-Wallets ab?</string>
-    <string name="faq_settings_a7">Ja, Vultisig ist Open Source und wurde Sicherheitsaudits unterzogen. Sowohl die Prüfberichte als auch der Quellcode sind zugänglich.</string>
-    <string name="faq_settings_a8">Vultisig speichert keine Nutzerinformationen seiner mobilen Apps.</string>
+    <string name="faq_settings_a7">Ja, Vultisig ist Open Source und wurde Sicherheitsaudits unterzogen. Sowohl die Prüfberichte als auch der Quellcode sind öffentlich zugänglich.</string>
+    <string name="faq_settings_a8">Vultisig speichert keine Nutzerdaten von den mobilen Apps.</string>
     <string name="faq_settings_a9">Die Plattform basiert auf der MPC-Technologie, die Seed-Phrasen überflüssig macht und mehrere Blockchains unterstützt. Dadurch ist Vultisig flexibel und Blockchain-unabhängig.</string>
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
     <string name="sign_message_continue">Weiter</string>
@@ -484,4 +484,12 @@
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
+    <string name="education_settings_title">Vultisig-Schulung</string>
+    <string name="check_updates_settings_title">Aktualisierungen prüfen</string>
+    <string name="vult_website_settings_title">Vultisig-Website</string>
+    <string name="general">Allgemein</string>
+    <string name="support">Support</string>
+    <string name="vultisig_community">Vultisig-Community</string>
+    <string name="vault_management">Tresorverwaltung</string>
+    <string name="other">Sonstiges</string>
 </resources>

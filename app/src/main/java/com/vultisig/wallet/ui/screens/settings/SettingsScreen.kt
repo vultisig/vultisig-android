@@ -45,6 +45,8 @@ import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 fun SettingsScreen() {
@@ -96,7 +98,7 @@ private fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 state.items.forEach { groupItem ->
-                    SettingsBox(title = groupItem.title) {
+                    SettingsBox(title = groupItem.title.asString()) {
                         val enabledSettings = groupItem.items.filter(SettingsItem::enabled)
                         enabledSettings
                             .forEachIndexed { index, settingItem ->
@@ -197,14 +199,14 @@ internal fun SettingItem(
 
             Column {
                 Text(
-                    text = item.title,
+                    text = item.title.asString(),
                     style = Theme.brockmann.supplementary.footnote,
                     color = tint ?: Theme.colors.text.primary
                 )
 
                 item.subTitle?.let {
                     Text(
-                        text = it,
+                        text = it.asString(),
                         color = tint ?: Theme.colors.text.light,
                         style = Theme.brockmann.supplementary.caption,
                     )
@@ -262,8 +264,8 @@ internal fun SettingItem(
 private fun SettingsItemPreview() {
     SettingItem(
         item = SettingsItemUiModel(
-            title = "title",
-            subTitle = "subTitle",
+            title = "title".asUiText(),
+            subTitle = "subTitle".asUiText(),
             leadingIcon = R.drawable.currency,
             trailingIcon = R.drawable.ic_small_caret_right,
             value = "value",

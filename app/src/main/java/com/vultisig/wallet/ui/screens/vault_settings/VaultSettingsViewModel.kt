@@ -13,6 +13,8 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,7 +25,7 @@ import javax.inject.Inject
 
 internal data class VaultSettingsGroupUiModel(
     val id: String? = null,
-    val title: String?,
+    val title: UiText?,
     val items: List<VaultSettingsItem>,
     val isVisible: Boolean = true
 )
@@ -39,8 +41,8 @@ internal sealed class VaultSettingsItem(
 ) {
     data object Details : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Details",
-            subTitle = "View vault name,part and type",
+            title = UiText.StringResource(R.string.vault_settings_details_title),
+            subTitle = "View vault name,part and type".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.details
         ),
@@ -48,8 +50,8 @@ internal sealed class VaultSettingsItem(
 
     data object Rename : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Rename",
-            subTitle = "Edit your vault name",
+            title = "Rename".asUiText(),
+            subTitle = "Edit your vault name".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         )
@@ -57,7 +59,7 @@ internal sealed class VaultSettingsItem(
 
     data class BiometricFastSign(val isBiometricEnabled: Boolean) : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Biometric fast sign",
+            title = "Biometric fast sign".asUiText(),
             trailingSwitch = isBiometricEnabled,
             leadingIcon = R.drawable.biomatrics_fast
         ),
@@ -66,8 +68,8 @@ internal sealed class VaultSettingsItem(
 
     data object Security : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Security",
-            subTitle = "Enable biometric for fast sign",
+            title = "Security".asUiText(),
+            subTitle = "Enable biometric for fast sign".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.security,
         )
@@ -75,8 +77,8 @@ internal sealed class VaultSettingsItem(
 
     data object LockTime : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Lock time",
-            subTitle = "Set the time until the app locks automatically",
+            title = "Lock time".asUiText(),
+            subTitle = "Set the time until the app locks automatically".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.lock_time
         ),
@@ -85,8 +87,8 @@ internal sealed class VaultSettingsItem(
 
     data object PasswordHint : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Password hint",
-            subTitle = "Set a password hint to protect your vault",
+            title = "Password hint".asUiText(),
+            subTitle = "Set a password hint to protect your vault".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.pass_hint
         ),
@@ -95,8 +97,8 @@ internal sealed class VaultSettingsItem(
 
     data object BackupVaultShare : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Backup Vault Share",
-            subTitle = "Back up your Vault Share to device or server.",
+            title = "Backup Vault Share".asUiText(),
+            subTitle = "Back up your Vault Share to device or server.".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.backup_vault
         )
@@ -104,8 +106,8 @@ internal sealed class VaultSettingsItem(
 
     data class Migrate(val isEnabled: Boolean) : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Migrate",
-            subTitle = "Migrate GG20 vault DKLS",
+            title = "Migrate".asUiText(),
+            subTitle = "Migrate GG20 vault DKLS".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.pass_hint,
         ),
@@ -114,8 +116,8 @@ internal sealed class VaultSettingsItem(
 
     data object Advanced : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Advanced",
-            subTitle = "Reshare, change TSS, or sign messages.",
+            title = "Advanced".asUiText(),
+            subTitle = "Reshare, change TSS, or sign messages.".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.advanced
         )
@@ -123,8 +125,8 @@ internal sealed class VaultSettingsItem(
 
     data class Reshare(val isEnabled: Boolean) : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Reshare",
-            subTitle = "Reshare vault with a new committee",
+            title = "Reshare".asUiText(),
+            subTitle = "Reshare vault with a new committee".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         ),
@@ -133,8 +135,8 @@ internal sealed class VaultSettingsItem(
 
     data object Sign : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Sign",
-            subTitle = "Sign custom message",
+            title = "Sign".asUiText(),
+            subTitle = "Sign custom message".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         )
@@ -142,8 +144,8 @@ internal sealed class VaultSettingsItem(
 
     data object OnChainSecurity : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "On-Chain Security",
-            subTitle = "Manage your on-chain security",
+            title = "On-Chain Security".asUiText(),
+            subTitle = "Manage your on-chain security".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         )
@@ -151,8 +153,8 @@ internal sealed class VaultSettingsItem(
 
     data object Delete : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Delete",
-            subTitle = "Delete your vault share permanently",
+            title = "Delete".asUiText(),
+            subTitle = "Delete your vault share permanently".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.delete
         )
@@ -168,7 +170,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     val settingGroups = listOf(
         VaultSettingsGroupUiModel(
-            title = "Vault Management",
+            title = UiText.StringResource(R.string.vault_management),
             items = listOf(
                 VaultSettingsItem.Details,
                 VaultSettingsItem.Rename,
@@ -176,7 +178,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
             )
         ),
         VaultSettingsGroupUiModel(
-            title = "Security",
+            title = UiText.StringResource(R.string.vault_settings_security_screen_title),
             items = listOf(
                 VaultSettingsItem.Security,
                 VaultSettingsItem.LockTime,
@@ -185,7 +187,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
             )
         ),
         VaultSettingsGroupUiModel(
-            title = "Other",
+            title = UiText.StringResource(R.string.other),
             items = listOf(
                 VaultSettingsItem.Migrate(false),
                 VaultSettingsItem.Advanced,

@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.MultipleClicksDetector
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -32,14 +33,14 @@ internal data class SettingsUiModel(
 )
 
 internal data class SettingsGroupUiModel(
-    val title: String,
+    val title: UiText,
     val items: List<SettingsItem>
 )
 
 internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: Boolean = true) {
     data object VaultSetting : SettingsItem(
         SettingsItemUiModel(
-            title = "Vault Settings",
+            title = UiText.StringResource(R.string.vault_settings_title),
             leadingIcon = R.drawable.setting,
             trailingIcon = R.drawable.ic_small_caret_right
         )
@@ -47,7 +48,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object RegisterVault : SettingsItem(
         SettingsItemUiModel(
-            title = "Register your Vaults!",
+            title = UiText.StringResource(R.string.settings_screen_register_your_vaults),
             backgroundColor = Colors.Default.buttons.primary,
             leadingIcon = R.drawable.register,
             trailingIcon = R.drawable.ic_small_caret_right
@@ -57,7 +58,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data class Language(val lang: String) :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Language",
+                title = UiText.StringResource(R.string.settings_screen_language),
                 value = lang,
                 leadingIcon = R.drawable.language,
                 trailingIcon = R.drawable.ic_small_caret_right
@@ -67,7 +68,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data class Currency(val curr: String) :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Currency",
+                title = UiText.StringResource(R.string.settings_screen_currency),
                 value = curr,
                 leadingIcon = R.drawable.currency,
                 trailingIcon = R.drawable.ic_small_caret_right
@@ -76,7 +77,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object AddressBook : SettingsItem(
         SettingsItemUiModel(
-            title = "Address Book",
+            title = UiText.StringResource(R.string.address_book_settings_title),
             leadingIcon = R.drawable.address_book,
             trailingIcon = R.drawable.ic_small_caret_right
         )
@@ -84,15 +85,16 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object ReferralCode : SettingsItem(
         SettingsItemUiModel(
-            title = "Referral Code",
+            title = UiText.StringResource(R.string.referral_code_settings_title),
             leadingIcon = R.drawable.referral_code,
             trailingIcon = R.drawable.ic_small_caret_right
-        )
+        ),
+        enabled = false
     )
 
     data object Faq : SettingsItem(
         SettingsItemUiModel(
-            title = "FAQ",
+            title = UiText.StringResource(R.string.faq_setting_screen_title),
             leadingIcon = R.drawable.faq,
             trailingIcon = R.drawable.ic_small_caret_right
         )
@@ -102,7 +104,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             value = SettingsItemUiModel(
                 leadingIcon = R.drawable.vult_education,
-                title = "Vultisig Education",
+                title = UiText.StringResource(R.string.education_settings_title),
                 trailingIcon = R.drawable.ic_small_caret_right
             ),
             enabled = false
@@ -110,7 +112,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object CheckForUpdates : SettingsItem(
         value = SettingsItemUiModel(
-            title = "Check for updates",
+            title = UiText.StringResource(R.string.check_updates_settings_title),
             leadingIcon = R.drawable.check_update,
             trailingIcon = R.drawable.ic_small_caret_right
         ),
@@ -120,7 +122,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object ShareTheApp :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Share The App",
+                title = UiText.StringResource(R.string.settings_screen_share_the_app),
                 leadingIcon = R.drawable.share_app,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -128,7 +130,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object Twitter : SettingsItem(
         SettingsItemUiModel(
-            title = "X",
+            title = UiText.DynamicString("X"),
             leadingIcon = R.drawable.x_twitter,
             trailingIcon = R.drawable.ic_small_caret_right
         )
@@ -137,7 +139,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object Discord :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Discord",
+                title = UiText.StringResource(R.string.discord),
                 leadingIcon = R.drawable.discord,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -146,7 +148,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Github",
+                title = UiText.StringResource(R.string.github),
                 leadingIcon = R.drawable.githup,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -155,7 +157,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object VultisigWebsite :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Vultisig Website",
+                title = UiText.StringResource(R.string.vult_website_settings_title),
                 leadingIcon = R.drawable.vult_website,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -164,7 +166,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object TermsOfService :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Terms of Service",
+                title = UiText.StringResource(R.string.settings_screen_tos),
                 leadingIcon = R.drawable.term_service,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -173,7 +175,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object PrivacyPolicy :
         SettingsItem(
             SettingsItemUiModel(
-                title = "Privacy Policy",
+                title = UiText.StringResource(R.string.settings_screen_privacy_policy),
                 leadingIcon = R.drawable.security,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
@@ -181,8 +183,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 }
 
 internal data class SettingsItemUiModel(
-    val title: String,
-    val subTitle: String? = null,
+    val title: UiText,
+    val subTitle: UiText? = null,
     val leadingIcon: Int? = null,
     val trailingIcon: Int? = null,
     val trailingSwitch: Boolean? = null,
@@ -215,14 +217,14 @@ internal class SettingsViewModel @Inject constructor(
     val settingsMenu = SettingsUiModel(
         items = listOf(
             SettingsGroupUiModel(
-                title = "Vault",
+                title = UiText.StringResource(R.string.vault),
                 items = listOf(
                     VaultSetting,
                     RegisterVault
                 )
             ),
             SettingsGroupUiModel(
-                title = "General",
+                title =UiText.StringResource(R.string.general),
                 items = listOf(
                     Language("English"),
                     Currency("USD"),
@@ -231,7 +233,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title = "Support",
+                title =UiText.StringResource(R.string.support),
                 items = listOf(
                     Faq,
                     VultisigEducation,
@@ -240,7 +242,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title = "Vultisig Community",
+                title = UiText.StringResource(R.string.vultisig_community),
                 items = listOf(
                     Twitter,
                     Discord,
@@ -249,7 +251,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title = "Legal",
+                title =UiText.StringResource(R.string.settings_screen_legal),
                 items = listOf(
                     PrivacyPolicy,
                     TermsOfService

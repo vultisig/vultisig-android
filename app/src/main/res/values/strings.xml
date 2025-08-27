@@ -377,7 +377,7 @@
     <string name="vault_password_hint_to_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Register your Vaults</string>
+    <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
     <string name="register_vault_screen_title">Register Vault</string>
     <string name="register_vault_screen_step_3">Upload your Vault QR Code</string>
     <string name="register_vault_screen_step_4">Track your VULTIES (Vault Points) !</string>
@@ -726,4 +726,15 @@
     <string name="sign_message_continue">Continue</string>
     <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
     <string name="address_book_empty_title">Your Address Book is empty</string>
+    <string name="education_settings_title">Vultisig Education</string>
+    <string name="check_updates_settings_title">Check for updates</string>
+    <string name="discord" translatable="false">Discord</string>
+    <string name="github" translatable="false">Github</string>
+    <string name="vult_website_settings_title">Vultisig Website</string>
+    <string name="vault" translatable="false">Vault</string>
+    <string name="general">General</string>
+    <string name="support">Support</string>
+    <string name="vultisig_community">Vultisig Community</string>
+    <string name="vault_management">Vault Management</string>
+    <string name="other">Other</string>
 </resources>

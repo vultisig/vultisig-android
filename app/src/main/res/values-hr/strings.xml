@@ -312,7 +312,7 @@
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
     <string name="vault_details_screen_signer">Pjevačica %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore</string>
+    <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore!</string>
     <string name="register_vault_screen_title">Registrirajte sef</string>
     <string name="register_vault_screen_step_3">Učitajte svoj Vault QR kod</string>
     <string name="register_vault_screen_step_4">Pratite svoje VULTIES (Vault bodove)!</string>
@@ -479,9 +479,17 @@
     <string name="faq_settings_a8">ltisig ne pohranjuje nikakve korisničke podatke iz svojih mobilnih aplikacija.</string>
     <string name="faq_settings_a9">Izgrađen je na MPC tehnologiji, što eliminira potrebu za početnim frazama i podržava više blockchaina, čineći Vultisig fleksibilnim i neovisnim o lancu.</string>
     <string name="vault_settings_advanced_title">Napredno</string>
-    <string name="sign_message_continue">Nastaviti</string>
+    <string name="sign_message_continue">Nastavi</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
+    <string name="education_settings_title">Vultisig obrazovanje</string>
+    <string name="check_updates_settings_title">Provjerite ažuriranja</string>
+    <string name="vult_website_settings_title">Vultisig web stranica</string>
+    <string name="general">Općenito</string>
+    <string name="support">Podrška</string>
+    <string name="vultisig_community">Vultisig zajednica</string>
+    <string name="vault_management">Upravljanje trezorom</string>
+    <string name="other">Ostalo</string>
 </resources>

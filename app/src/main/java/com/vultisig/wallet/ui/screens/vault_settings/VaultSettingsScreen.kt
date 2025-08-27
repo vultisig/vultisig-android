@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.screens.settings.SettingItem
 import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun VaultSettingsScreen() {
@@ -67,7 +68,7 @@ private fun VaultSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
-                SettingsBox(title = group.title) {
+                SettingsBox(title = group.title?.asString()) {
                     val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
                     enabledSettings.forEachIndexed { index, item ->
                         SettingItem(

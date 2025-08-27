@@ -323,7 +323,7 @@
     <string name="vault_password_hint_to_long">Подсказка слишком длинная</string>
     <string name="vault_details_screen_vault_part_desc">Поделиться %1$s из %2$s</string>
     <string name="vault_details_screen_signer">Подписавший %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Зарегистрируйте свои хранилища</string>
+    <string name="settings_screen_register_your_vaults">Зарегистрируйте свои хранилища!</string>
     <string name="register_vault_screen_title">Регистрация хранилища</string>
     <string name="register_vault_screen_step_3">Загрузите QR-код вашего хранилища</string>
     <string name="register_vault_screen_step_4">Отслеживайте свои VULTIES (баллы хранилища)!</string>
@@ -493,4 +493,12 @@
     <string name="hint_message_to_sign">Сообщение для подписи</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
     <string name="address_book_empty_title">Ваша адресная книга пуста.</string>
+    <string name="education_settings_title">Обучение Vultisig</string>
+    <string name="check_updates_settings_title">Проверить обновления</string>
+    <string name="vult_website_settings_title">Сайт Vultisig</string>
+    <string name="general">Общие</string>
+    <string name="support">Поддержка</string>
+    <string name="vultisig_community">Сообщество Vultisig</string>
+    <string name="vault_management">Управление хранилищем</string>
+    <string name="other">Другое</string>
 </resources>
