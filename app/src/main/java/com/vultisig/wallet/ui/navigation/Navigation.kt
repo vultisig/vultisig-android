@@ -616,7 +616,6 @@ internal sealed class Route {
     )
 
     // vault migration
-
     object Migration {
         @Serializable
         data class Onboarding(

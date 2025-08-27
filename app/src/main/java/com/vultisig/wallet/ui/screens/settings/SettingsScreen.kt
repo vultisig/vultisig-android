@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.settings.SettingsItem
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
@@ -67,7 +68,9 @@ fun SettingsScreen() {
     SettingsScreen(
         state = state,
         onSettingsItemClick = viewModel::onSettingsItemClick,
-        onBackClick = viewModel::back
+        onBackClick = viewModel::back,
+        onContinueReferral = viewModel::onContinueReferralBottomSheet,
+        onDismissReferral = viewModel::onDismissReferralBottomSheet,
     )
 }
 
@@ -76,6 +79,8 @@ private fun SettingsScreen(
     state: SettingsUiModel,
     onSettingsItemClick: (SettingsItem) -> Unit,
     onBackClick: () -> Unit,
+    onContinueReferral: () -> Unit,
+    onDismissReferral: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -113,6 +118,13 @@ private fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        if (state.hasToShowReferralCodeSheet) {
+            ReferralCodeBottomSheet(
+                onContinue = onContinueReferral,
+                onDismissRequest = onDismissReferral,
+            )
         }
     }
 }
@@ -242,7 +254,6 @@ internal fun SettingItem(
                 UiSpacer(size = 12.dp)
             }
 
-
             item.trailingIcon?.let { trailingIcon ->
                 Image(
                     imageVector = ImageVector.vectorResource(trailingIcon),
@@ -250,7 +261,6 @@ internal fun SettingItem(
                     contentDescription = "trailing icon"
                 )
             }
-
         }
 
         if (isLastItem.not()) {
