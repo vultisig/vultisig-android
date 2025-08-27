@@ -171,124 +171,129 @@ internal fun PeerDiscoveryScreen(
         },
         content = { contentPadding ->
 
-            if (state.showQrHelpModal) {
-                ShowQrHelperBottomSheet(
-                    onDismiss = onDismissQrHelpModal
-                )
-            }
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .padding(contentPadding)
-                    .padding(horizontal = 24.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .padding(paddingValues = contentPadding)
             ) {
-                val shape = RoundedCornerShape(24.dp)
+                if (state.showQrHelpModal) {
+                    ShowQrHelperBottomSheet(
+                        onDismiss = onDismissQrHelpModal
+                    )
+                }
 
-                QrCodeContainer(
-                    qrCode = state.qr,
+                Column(
                     modifier = Modifier
-                        .padding(
-                            vertical = 36.dp,
-                        )
-                        .fillMaxWidth(),
-                    devicesSize = devicesSize,
-                )
-
-                AnimatedVisibility(
-                    visible = state.showDevicesHint,
+                        .padding(horizontal = 24.dp)
+                        .verticalScroll(rememberScrollState()),
                 ) {
-                    Column {
-                        Banner(
-                            text = stringResource(R.string.peer_discovery_recommended_devices_hint),
-                            variant = BannerVariant.Info,
-                            onCloseClick = onCloseHintClick,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        UiSpacer(16.dp)
-                    }
-                }
+                    val shape = RoundedCornerShape(24.dp)
 
-                AnimatedVisibility(
-                    visible = state.network == NetworkOption.Local
-                ) {
-                    Column {
-                        LocalModeHint()
-                        UiSpacer(16.dp)
-                    }
-                }
-
-                Text(
-                    text = stringResource(
-                        R.string.peer_discovery_devices_n_of_n,
-                        selectedDevicesSize,
-                        state.minimumDevicesDisplayed,
-                    ),
-                    style = Theme.brockmann.headings.title2,
-                    color = Theme.colors.text.primary,
-                )
-
-                UiSpacer(24.dp)
-
-                FlowRow(
-                    maxItemsInEachRow = 2,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-
-                    PeerDeviceItem(
-                        title = state.localPartyId,
-                        caption = stringResource(R.string.peer_discovery_this_device),
-                        state = PeerDeviceState.ThisDevice,
+                    QrCodeContainer(
+                        qrCode = state.qr,
                         modifier = Modifier
-                            .weight(1f)
-                            .animateContentSize()
+                            .padding(
+                                vertical = 36.dp,
+                            )
+                            .fillMaxWidth(),
+                        devicesSize = devicesSize,
                     )
 
-                    state.devices.forEach { device ->
-                        val nameParts = device.split("-")
-                        val name = nameParts.take(nameParts.size - 1)
-                            .joinToString(separator = "")
-
-                        val suffix = nameParts.lastOrNull() ?: ""
-                        PeerDeviceItem(
-                            title = name,
-                            caption = suffix,
-                            state = if (device in state.selectedDevices)
-                                PeerDeviceState.Selected
-                            else PeerDeviceState.NotSelected,
-                            onClick = {
-                                onDeviceClick(device)
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .animateContentSize()
-                        )
+                    AnimatedVisibility(
+                        visible = state.showDevicesHint,
+                    ) {
+                        Column {
+                            Banner(
+                                text = stringResource(R.string.peer_discovery_recommended_devices_hint),
+                                variant = BannerVariant.Info,
+                                onCloseClick = onCloseHintClick,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            UiSpacer(16.dp)
+                        }
                     }
 
-                    repeat(times = remainedDevicesSize) { remindedItemIndex ->
-                        val totalIndex = devicesSize + remindedItemIndex + 1
-                        val isLastDevice = totalIndex == totalDevicesSize
-                        val ordinalDeviceIndex = ordinalFormatter.format(arrayOf(totalIndex))
+                    AnimatedVisibility(
+                        visible = state.network == NetworkOption.Local
+                    ) {
+                        Column {
+                            LocalModeHint()
+                            UiSpacer(16.dp)
+                        }
+                    }
+
+                    Text(
+                        text = stringResource(
+                            R.string.peer_discovery_devices_n_of_n,
+                            selectedDevicesSize,
+                            state.minimumDevicesDisplayed,
+                        ),
+                        style = Theme.brockmann.headings.title2,
+                        color = Theme.colors.text.primary,
+                    )
+
+                    UiSpacer(24.dp)
+
+                    FlowRow(
+                        maxItemsInEachRow = 2,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
 
                         PeerDeviceItem(
-                            title = stringResource(
-                                R.string.peer_discovery_scan_with_n_device,
-                                ordinalDeviceIndex
-                            ),
-                            caption = null,
-                            state = PeerDeviceState.Waiting,
+                            title = state.localPartyId,
+                            caption = stringResource(R.string.peer_discovery_this_device),
+                            state = PeerDeviceState.ThisDevice,
                             modifier = Modifier
                                 .weight(1f)
                                 .animateContentSize()
                         )
 
-                        // Spacer to preserve 2-column layout spacing
-                        if (isLastDevice && totalDevicesSize % 2 == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+                        state.devices.forEach { device ->
+                            val nameParts = device.split("-")
+                            val name = nameParts.take(nameParts.size - 1)
+                                .joinToString(separator = "")
+
+                            val suffix = nameParts.lastOrNull() ?: ""
+                            PeerDeviceItem(
+                                title = name,
+                                caption = suffix,
+                                state = if (device in state.selectedDevices)
+                                    PeerDeviceState.Selected
+                                else PeerDeviceState.NotSelected,
+                                onClick = {
+                                    onDeviceClick(device)
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .animateContentSize()
+                            )
+                        }
+
+                        repeat(times = remainedDevicesSize) { remindedItemIndex ->
+                            val totalIndex = devicesSize + remindedItemIndex + 1
+                            val isLastDevice = totalIndex == totalDevicesSize
+                            val ordinalDeviceIndex = ordinalFormatter.format(arrayOf(totalIndex))
+
+                            PeerDeviceItem(
+                                title = stringResource(
+                                    R.string.peer_discovery_scan_with_n_device,
+                                    ordinalDeviceIndex
+                                ),
+                                caption = null,
+                                state = PeerDeviceState.Waiting,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .animateContentSize()
+                            )
+
+                            // Spacer to preserve 2-column layout spacing
+                            if (isLastDevice && totalDevicesSize % 2 == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }
+
             }
         },
         bottomBar = {

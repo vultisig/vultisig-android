@@ -148,18 +148,18 @@
     <string name="rename_vault_screen_edit_your_vault_name">Edit your vault name</string>
     <string name="rename_vault_screen_vault_name">Vault name</string>
     <string name="rename_vault_screen_continue">Continue</string>
-    <string name="faq_settings_q1">Do I need register?</string>
-    <string name="faq_settings_q2">Can I recover my assets if I lose a device?</string>
-    <string name="faq_settings_q3">How does Vultisig make money?</string>
-    <string name="faq_settings_q4">How does the crypto vault app secure my cryptocurrencies?</string>
-    <string name="faq_settings_q5">What cryptocurrencies are supported by Vultisig?</string>
-    <string name="faq_settings_q6">How do I set up my crypto vault?</string>
-    <string name="faq_settings_a1">No, there are no registration requirements.</string>
-    <string name="faq_settings_a2">You can back-up your vault by exporting the vault shares.</string>
-    <string name="faq_settings_a3">Vultisig only charges a flat fee on swap and bridging. There are no other hidden fees.</string>
-    <string name="faq_settings_a4">Vultisig is audited, open-source and uses a very well-proven TSS library.</string>
-    <string name="faq_settings_a5">All assets supported by Trust Wallet Core are supported in Vultisig.</string>
-    <string name="faq_settings_a6">Get 2 or more of your devices together and connected to your local WiFi, Hotspot or internet. Then simply pair them via QR code and create a new vault. You can then send funds in.</string>
+    <string name="faq_settings_q1">What is Vultisig?</string>
+    <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
+    <string name="faq_settings_q3">Can I recover my assets if I lose a device?</string>
+    <string name="faq_settings_q4">How is Vultisig used?</string>
+    <string name="faq_settings_q5">What are the fees and costs?</string>
+    <string name="faq_settings_q6">What cryptocurrencies are supported by Vultisig?</string>
+    <string name="faq_settings_a1">It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices.</string>
+    <string name="faq_settings_a2">Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking.</string>
+    <string name="faq_settings_a3">Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets.</string>
+    <string name="faq_settings_a4">Vultisig securely stores and manages digital assets. All actions, such as sending or swapping, require the threshold of devices to sign transactions.</string>
+    <string name="faq_settings_a5">Vultisig is free to use. Only standard network fees apply to sending. And for swaps and bridges, there\'s a 0.5% (50 bps) fee.</string>
+    <string name="faq_settings_a6">Vultisig supports major cryptocurrencies and tokens, with over 30 chains and their tokens, currently available.</string>
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_src_amount_hint">Enter Amount</string>
@@ -377,20 +377,20 @@
     <string name="vault_password_hint_to_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Register your Vaults</string>
+    <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
     <string name="register_vault_screen_title">Register Vault</string>
-    <string name="register_vault_screen_step_3">3. Upload your Vault QR Code</string>
-    <string name="register_vault_screen_step_4">4. Track your VULTIES (Vault Points) !</string>
-    <string name="register_vault_screen_step_2_go_to">2. Go to</string>
+    <string name="register_vault_screen_step_3">Upload your Vault QR Code</string>
+    <string name="register_vault_screen_step_4">Track your VULTIES (Vault Points) !</string>
+    <string name="register_vault_screen_step_2_go_to">Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">"1. Save your Vault QR"</string>
+    <string name="register_vault_screen_step_1">"Save your Vault QR"</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="send_form_gas_token_balance">Gas token balance</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
-    <string name="register_vault_screen_save_qr_code">Save QR Code</string>
+    <string name="register_vault_screen_save_qr_code">Save Vault QR</string>
     <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
@@ -421,9 +421,9 @@
     <string name="signing_error_blockhash_not_found" translatable="false">Transaction time out due to slow signing.\nPlease try again.</string>
     <string name="verify_sign_message_message_field_title" translatable="false">Message</string>
     <string name="sign_message_form_method_field_title" translatable="false">Method</string>
-    <string name="sign_message_form_method_field_hint" translatable="false">Signing method</string>
+    <string name="hint_signing_method" >Signing method</string>
     <string name="sign_message_for_message_field_title" translatable="false">Message</string>
-    <string name="sign_message_form_message_field_hint" translatable="false">Message to sign</string>
+    <string name="hint_message_to_sign" >Message to sign</string>
     <string name="sign_message_sign_screen_title" translatable="false">Sign message</string>
     <string name="vault_settings_sign_message_title" translatable="false">Sign</string>
     <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
@@ -715,4 +715,26 @@
     <string name="referral_view_add_friend">Add a Friends Referral</string>
     <string name="referral_view_save">Save</string>
     <string name="referral_view_on_swaps">on swaps now</string>
+    <string name="register_vault_screen_guide_title">Register guide</string>
+    <string name="faq_settings_q7">Is Vultisig open source and audited?</string>
+    <string name="faq_settings_q8">How does Vultisig handle privacy and data protection?</string>
+    <string name="faq_settings_q9">How does Vultisig compare to other multisig wallets?</string>
+    <string name="faq_settings_a7">Yes, Vultisig is open source and has undergone security audits. Both the audit reports and the source code are accessible.</string>
+    <string name="faq_settings_a8">Vultisig does not store any user information from its mobile apps.</string>
+    <string name="faq_settings_a9">It is built on MPC technology, which eliminates the need for seed phrases and supports multiple blockchains, making Vultisig flexible and chain-agnostic.</string>
+    <string name="vault_settings_advanced_title">Advanced</string>
+    <string name="sign_message_continue">Continue</string>
+    <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
+    <string name="address_book_empty_title">Your Address Book is empty</string>
+    <string name="education_settings_title">Vultisig Education</string>
+    <string name="check_updates_settings_title">Check for updates</string>
+    <string name="discord" translatable="false">Discord</string>
+    <string name="github" translatable="false">Github</string>
+    <string name="vult_website_settings_title">Vultisig Website</string>
+    <string name="vault" translatable="false">Vault</string>
+    <string name="general">General</string>
+    <string name="support">Support</string>
+    <string name="vultisig_community">Vultisig Community</string>
+    <string name="vault_management">Vault Management</string>
+    <string name="other">Other</string>
 </resources>
