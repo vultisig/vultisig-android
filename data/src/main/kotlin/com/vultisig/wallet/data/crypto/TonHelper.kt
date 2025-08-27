@@ -73,6 +73,7 @@ object TonHelper {
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
     ): TheOpenNetwork.Transfer {
+        // Convert destination to bounceable, as jettons addresses are always EQ
         val destinationAddress =
             TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
 
