@@ -142,11 +142,17 @@ private data class TonSpecificTransactionInfoResponseAccountStateJson(
 
 @Serializable
 data class JettonWalletsJson(
-    @SerialName("jetton_wallet")
+    @SerialName("jetton_wallets")
     val jettonWallets: List<JettonWalletJson> = emptyList(),
     @SerialName("address_book")
     val addressBook: AddressBookJson
-)
+) {
+    fun getJettonsAddress(): String? {
+        val jettonAddress = jettonWallets.firstOrNull()?.jetton ?: ""
+        val address = addressBook.addressBook[jettonAddress]
+        return address?.userFriendly
+    }
+}
 
 @Serializable
 data class JettonWalletJson(

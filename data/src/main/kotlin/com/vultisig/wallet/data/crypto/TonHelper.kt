@@ -36,7 +36,7 @@ object TonHelper {
         val transfer = if (payload.coin.isNativeToken) {
             buildNativeTransfer(payload, tonSpecific)
         } else {
-            buildJettonTransfer(payload)
+            buildJettonTransfer(payload, tonSpecific)
         }
 
         return TheOpenNetwork.SigningInput.newBuilder()
@@ -70,7 +70,8 @@ object TonHelper {
     }
 
     private fun buildJettonTransfer(
-        payload: KeysignPayload
+        payload: KeysignPayload,
+        tonSpecific: BlockChainSpecific.Ton,
     ): TheOpenNetwork.Transfer {
         val destinationAddress =
             TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
