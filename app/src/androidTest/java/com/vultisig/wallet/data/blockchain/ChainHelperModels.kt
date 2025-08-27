@@ -179,6 +179,10 @@ data class RippleSpecific(
 
 @Serializable
 data class TonSpecific(
+    @SerialName("jettons_address")
+    val jettonsAddress: String = "",
+    @SerialName("is_active")
+    val activeDestination: Boolean = false,
     @SerialName("send_max_amount")
     val sendMaxAmount: Boolean,
     @SerialName("sequence_number")
