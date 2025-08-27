@@ -369,7 +369,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                     dstAddress.startsWith("E")
                 }
-                if (!token.isNativeToken) {
+                val (destinationActive, jettonsAddress) = if (!token.isNativeToken) {
                     val destinationIsActiveDeferred = async {
                         if (dstAddress == null) {
                             false
@@ -380,9 +380,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                     val jettonsAddressDeferred = async {
                         tonApi.getJettonWallet(address, token.contractAddress).getJettonsAddress()
-                    }.await()
+                    }
 
-                    println(jettonsAddressDeferred)
+                    destinationIsActiveDeferred.await() to jettonsAddressDeferred.await()
+                } else {
+                    false to ""
                 }
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Ton(
@@ -392,6 +394,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         bounceable = isBounceable.await(),
                         isDeposit = isDeposit,
                         sendMaxAmount = isMaxAmountEnabled,
+                        isActiveDestination = destinationActive,
+                        jettonAddress = jettonsAddress ?: "",
                     ),
                 )
             }
