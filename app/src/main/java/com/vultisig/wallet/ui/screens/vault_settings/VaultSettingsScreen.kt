@@ -52,7 +52,7 @@ private fun VaultSettingsScreen(
                     stringResource(R.string.eth_gas_settings_title)
                 else
                     stringResource(R.string.vault_settings_title),
-                iconLeft = com.vultisig.wallet.R.drawable.ic_caret_left,
+                iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick
             )
         }
@@ -66,19 +66,17 @@ private fun VaultSettingsScreen(
                 )
                 .verticalScroll(rememberScrollState())
         ) {
-            settingGroups.forEach { group ->
-                if (group.isVisible) {
-                    SettingsBox(title = group.title) {
-                        val visibleItems = group.items.filter { it.enabled }
-                        visibleItems.forEachIndexed { index, item ->
-                            SettingItem(
-                                item = item.value,
-                                onClick = { onSettingsClick(item) },
-                                isLastItem = index == visibleItems.lastIndex,
-                                tint = if (item is VaultSettingsItem.Delete)
-                                    Theme.colors.alerts.error else null
-                            )
-                        }
+            settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
+                SettingsBox(title = group.title) {
+                    val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
+                    enabledSettings.forEachIndexed { index, item ->
+                        SettingItem(
+                            item = item.value,
+                            onClick = { onSettingsClick(item) },
+                            isLastItem = index == enabledSettings.lastIndex,
+                            tint = if (item is VaultSettingsItem.Delete)
+                                Theme.colors.alerts.error else null
+                        )
                     }
                 }
                 UiSpacer(14.dp)

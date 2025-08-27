@@ -60,7 +60,8 @@ internal sealed class VaultSettingsItem(
             title = "Biometric fast sign",
             trailingSwitch = isBiometricEnabled,
             leadingIcon = R.drawable.biomatrics_fast
-        )
+        ),
+        enabled = false
     )
 
     data object Security : VaultSettingsItem(
@@ -78,7 +79,8 @@ internal sealed class VaultSettingsItem(
             subTitle = "Set the time until the app locks automatically",
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.lock_time
-        )
+        ),
+        enabled = false
     )
 
     data object PasswordHint : VaultSettingsItem(

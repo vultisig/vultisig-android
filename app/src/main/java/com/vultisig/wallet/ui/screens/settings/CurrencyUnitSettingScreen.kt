@@ -97,7 +97,7 @@ private fun CurrencyUnitSettingItem(
     SettingItem(
         item = SettingsItemUiModel(
             title = name,
-            trailingIcon = if (isSelected) R.drawable.check else null,
+            trailingIcon = if (isSelected) R.drawable.check_2 else null,
         ),
         onClick = onClick,
         isLastItem = isLastItem

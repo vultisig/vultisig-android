@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookViewModel
@@ -263,12 +264,7 @@ private fun NoAddressView(
         Modifier
             .fillMaxSize()
             .drawBehind {
-                val gradient = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0Xff33e6bf).copy(alpha = 0.1f),
-                        Color.Transparent,
-                    ),
-                )
+                val gradient = Brush.vultiCircleShadeGradient()
 
                 drawCircle(
                     brush = gradient,

@@ -60,19 +60,23 @@ fun SettingsScreen() {
 
     SettingsScreen(
         state = state,
-        onSettingsItemClick = viewModel::onSettingsItemClick
+        onSettingsItemClick = viewModel::onSettingsItemClick,
+        onBackClick = viewModel::back
     )
 }
 
 @Composable
 private fun SettingsScreen(
     state: SettingsUiModel,
-    onSettingsItemClick: (SettingsItem) -> Unit
+    onSettingsItemClick: (SettingsItem) -> Unit,
+    onBackClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             VsTopAppBar(
                 title = "Settings",
+                onIconLeftClick = onBackClick,
+                iconLeft = R.drawable.ic_caret_left,
             )
         },
     ) {
@@ -89,15 +93,17 @@ private fun SettingsScreen(
             ) {
                 state.items.forEach { groupItem ->
                     SettingsBox(title = groupItem.title) {
-                        groupItem.items.forEachIndexed { index, settingItem ->
-                            SettingItem(
-                                item = settingItem.value,
-                                isLastItem = index == groupItem.items.lastIndex,
-                                onClick = {
-                                    onSettingsItemClick(settingItem)
-                                }
-                            )
-                        }
+                        val enabledSettings = groupItem.items.filter(SettingsItem::enabled)
+                        enabledSettings
+                            .forEachIndexed { index, settingItem ->
+                                SettingItem(
+                                    item = settingItem.value,
+                                    isLastItem = index == enabledSettings.lastIndex,
+                                    onClick = {
+                                        onSettingsItemClick(settingItem)
+                                    }
+                                )
+                            }
                     }
                 }
             }

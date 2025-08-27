@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
@@ -35,8 +36,14 @@ internal data class SettingsGroupUiModel(
     val items: List<SettingsItem>
 )
 
-internal sealed class SettingsItem(val value: SettingsItemUiModel) {
-    data object VaultSetting : SettingsItem(SettingsItemUiModel(title = "Vault Settings", leadingIcon = R.drawable.setting))
+internal sealed class SettingsItem(val value: SettingsItemUiModel,val enabled: Boolean = true) {
+    data object VaultSetting : SettingsItem(
+        SettingsItemUiModel(
+            title = "Vault Settings",
+            leadingIcon = R.drawable.setting
+        )
+    )
+
     data object RegisterVault : SettingsItem(
         SettingsItemUiModel(
             title = "Register your Vaults!",
@@ -46,25 +53,73 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel) {
     )
 
     data class Language(val lang: String) :
-        SettingsItem(SettingsItemUiModel(title = "Language", value = lang, leadingIcon = R.drawable.language))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Language",
+                value = lang,
+                leadingIcon = R.drawable.language
+            )
+        )
 
     data class Currency(val curr: String) :
-        SettingsItem(SettingsItemUiModel(title = "Currency", value = curr, leadingIcon = R.drawable.currency))
+        SettingsItem(
+            SettingsItemUiModel(
+                title = "Currency",
+                value = curr,
+                leadingIcon = R.drawable.currency
+            )
+        )
 
-    data object AddressBook : SettingsItem(SettingsItemUiModel(title = "Address Book", leadingIcon = R.drawable.address_book))
-    data object ReferralCode : SettingsItem(SettingsItemUiModel(title = "Referral Code", leadingIcon = R.drawable.referral_code))
+    data object AddressBook : SettingsItem(
+        SettingsItemUiModel(
+            title = "Address Book",
+            leadingIcon = R.drawable.address_book
+        )
+    )
+
+    data object ReferralCode : SettingsItem(
+        SettingsItemUiModel(
+            title = "Referral Code",
+            leadingIcon = R.drawable.referral_code
+        )
+    )
+
     data object Faq : SettingsItem(SettingsItemUiModel(title = "FAQ", leadingIcon = R.drawable.faq))
     data object VultisigEducation :
-        SettingsItem(SettingsItemUiModel(leadingIcon = R.drawable.vult_education, title = "Vultisig Education"))
+        SettingsItem(
+            value = SettingsItemUiModel(
+                leadingIcon = R.drawable.vult_education,
+                title = "Vultisig Education"
+            ),
+            enabled = false
+        )
 
-    data object CheckForUpdates : SettingsItem(SettingsItemUiModel("Check for updates", leadingIcon = R.drawable.check_update))
-    data object ShareTheApp : SettingsItem(SettingsItemUiModel("Share The App", leadingIcon = R.drawable.share_app))
+    data object CheckForUpdates : SettingsItem(
+        value = SettingsItemUiModel(
+            "Check for updates",
+            leadingIcon = R.drawable.check_update
+        ),
+        enabled = false
+    )
+
+    data object ShareTheApp :
+        SettingsItem(SettingsItemUiModel("Share The App", leadingIcon = R.drawable.share_app))
+
     data object Twitter : SettingsItem(SettingsItemUiModel("X", leadingIcon = R.drawable.x_twitter))
-    data object Discord : SettingsItem(SettingsItemUiModel("Discord", leadingIcon = R.drawable.discord))
-    data object Github : SettingsItem(SettingsItemUiModel("Github", leadingIcon = R.drawable.githup))
-    data object VultisigWebsite : SettingsItem(SettingsItemUiModel("Vultisig Website", leadingIcon = R.drawable.vult_website))
-    data object TermsOfService : SettingsItem(SettingsItemUiModel("Terms of Service", leadingIcon = R.drawable.term_service))
-    data object PrivacyPolicy : SettingsItem(SettingsItemUiModel("Privacy Policy", leadingIcon = R.drawable.security))
+    data object Discord :
+        SettingsItem(SettingsItemUiModel("Discord", leadingIcon = R.drawable.discord))
+
+    data object Github :
+        SettingsItem(SettingsItemUiModel("Github", leadingIcon = R.drawable.githup))
+
+    data object VultisigWebsite :
+        SettingsItem(SettingsItemUiModel("Vultisig Website", leadingIcon = R.drawable.vult_website))
+
+    data object TermsOfService :
+        SettingsItem(SettingsItemUiModel("Terms of Service", leadingIcon = R.drawable.term_service))
+
+    data object PrivacyPolicy :
+        SettingsItem(SettingsItemUiModel("Privacy Policy", leadingIcon = R.drawable.security))
 }
 
 internal data class SettingsItemUiModel(
@@ -266,6 +321,12 @@ internal class SettingsViewModel @Inject constructor(
     private fun sendEvent(event: SettingsUiEvent) {
         viewModelScope.launch {
             _uiEvents.send(event)
+        }
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            navigator.back()
         }
     }
 

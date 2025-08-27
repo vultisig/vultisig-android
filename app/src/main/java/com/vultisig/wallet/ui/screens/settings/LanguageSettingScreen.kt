@@ -101,7 +101,7 @@ private fun LanguageSettingItem(
             title = name,
             subTitle = englishName,
             leadingIcon = null,
-            trailingIcon = if(isSelected)  R.drawable.check else null,
+            trailingIcon = if(isSelected)  R.drawable.check_2 else null,
         ),
         onClick = onClick,
         isLastItem = isLastItem
