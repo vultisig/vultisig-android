@@ -144,6 +144,13 @@ internal class ViewReferralViewModel @Inject constructor(
         }
     }
 
+    fun onClickedEditReferral() {
+        viewModelScope.launch {
+            val expiration = state.value.referralVaultExpiration
+            navigator.navigate(Destination.ReferralVaultEdition(vaultId, vaultReferralCode, expiration))
+        }
+    }
+
     private companion object {
         const val BLOCKS_PER_DAY = (60 / 6) * 60 * 24
     }
