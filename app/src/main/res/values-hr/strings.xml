@@ -80,11 +80,11 @@
     <string name="faq_settings_q5">Koje su naknade i troškovi?</string>
     <string name="faq_settings_q6">Koje kriptovalute podržava Vultisig?</string>
     <string name="faq_settings_a1">To je siguran novčanik s višestrukom autentifikacijom temeljen na MPC tehnologiji koji se koristi za upravljanje digitalnom imovinom. Transakcije zahtijevaju odobrenje s više uređaja.</string>
-    <string name="faq_settings_a2">Vultisig nudi poboljšanu sigurnost s autentifikacijom na više uređaja, podrškom za mnoge blockchaineove, jednostavnim opcijama oporavka i bez sjemenskih fraza ili praćenja korisnika.</string>
+    <string name="faq_settings_a2">Vultisig nudi poboljšanu sigurnost s autentifikacijom na više uređaja, podrškom za mnoge blockchainove, jednostavnim opcijama oporavka i bez sjemenskih fraza ili praćenja korisnika.</string>
     <string name="faq_settings_a3">Da, sve dok ste spremili i imate pristup svojim sigurnosnim kopijama prilikom izrade trezora. Možete uvesti ove sigurnosne kopije na novi uređaj kako biste ponovno dobili pristup svojoj imovini.</string>
     <string name="faq_settings_a4">Vultisig sigurno pohranjuje i upravlja digitalnom imovinom. Sve radnje, poput slanja ili zamjene, zahtijevaju prag uređaja za potpisivanje transakcija.</string>
-    <string name="faq_settings_a5">"ltisig je besplatan za korištenje. Za slanje se primjenjuju samo standardne mrežne naknade. A za zamjene i mostove postoji naknada od 0,5% (50 bps).  "</string>
-    <string name="faq_settings_a6">"ltisig podržava glavne kriptovalute i tokene, s preko 30 lanaca i njihovih tokena, trenutno dostupnih.  "</string>
+    <string name="faq_settings_a5">Vultisig je besplatan za korištenje. Za slanje se primjenjuju samo standardne mrežne naknade. Za zamjene i mostove postoji naknada od 0,5% (50 bps).</string>
+    <string name="faq_settings_a6">Vultisig podržava glavne kriptovalute i tokene, s više od 30 lanaca i njihovih tokena koji su trenutno dostupni.</string>
     <string name="swap_form_from_title">Od</string>
     <string name="swap_form_src_amount_hint">Unesite iznos</string>
     <string name="swap_form_dst_token_title">Do</string>

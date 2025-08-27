@@ -140,7 +140,7 @@
     <string name="faq_settings_q6">Welke cryptovaluta worden door Vultisig ondersteund?</string>
     <string name="faq_settings_a1">Het is een veilige wallet met meerdere authenticaties, gebaseerd op MPC-technologie, die wordt gebruikt voor het beheer van digitale activa. Transacties vereisen goedkeuring van meerdere apparaten.</string>
     <string name="faq_settings_a2">Vultisig biedt verbeterde beveiliging met authenticatie op meerdere apparaten, ondersteuning voor meerdere blockchains, eenvoudige herstelopties en geen seedphrases of gebruikerstracking.</string>
-    <string name="faq_settings_a3">" 899 / 5,000 Ja, zolang u uw back-ups hebt opgeslagen en er toegang toe hebt bij het aanmaken van de kluis. U kunt deze back-ups importeren op een nieuw apparaat om weer toegang te krijgen tot uw activa."</string>
+    +    <string name="faq_settings_a3">Ja, zolang u uw back-ups hebt opgeslagen en er toegang toe hebt bij het aanmaken van de kluis. U kunt deze back-ups importeren op een nieuw apparaat om weer toegang te krijgen tot uw activa.</string>
     <string name="faq_settings_a4">Vultisig slaat digitale activa veilig op en beheert deze. Alle acties, zoals verzenden of ruilen, vereisen een bepaald aantal apparaten om transacties te ondertekenen.</string>
     <string name="faq_settings_a5">Vultisig is gratis te gebruiken. Alleen standaard netwerkkosten zijn van toepassing op het verzenden. En voor ruilen en bridges geldt een tarief van 0,5% (50 bps).</string>
     <string name="faq_settings_a6">Vultisig ondersteunt de belangrijkste cryptovaluta en tokens, met momenteel meer dan 30 beschikbare blockchains en hun tokens.</string>
