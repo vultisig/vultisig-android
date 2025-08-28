@@ -32,7 +32,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,7 +71,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
         requireNotNull(savedStateHandle[ARG_EXPIRATION_ID])
     private var nativeRuneFees: NativeTxFeeRune? = null
 
-    val referralTexFieldState = TextFieldState()
+    val referralTextFieldState = TextFieldState()
     val state = MutableStateFlow(EditVaultReferralUiState())
     private var address: Address? = null
 
@@ -84,7 +83,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
     private fun initData() {
         viewModelScope.launch {
-            referralTexFieldState.setTextAndPlaceCursorAtEnd(vaultReferralCode)
+            referralTextFieldState.setTextAndPlaceCursorAtEnd(vaultReferralCode)
 
             state.update {
                 it.copy(

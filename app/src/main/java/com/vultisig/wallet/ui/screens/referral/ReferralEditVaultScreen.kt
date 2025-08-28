@@ -56,7 +56,7 @@ internal fun ReferralEditVaultScreen(
         state = state,
         onBackPressed = navController::popBackStack,
         onSavedReferral = model::onSavedReferral,
-        referralTextFieldState = model.referralTexFieldState,
+        referralTextFieldState = model.referralTextFieldState,
         onDecrementCounter = model::onDecrementCounter,
         onIncrementCounter = model::onIncrementCounter,
         onDismissError = model::onDismissError,
