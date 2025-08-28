@@ -226,7 +226,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                         token = account.token,
                     ),
                     estimatedFees = gasFees,
-                    estimateFeesFiat = gasFees.value.convertToFiat(),
+                    estimateFeesFiat = withContext(Dispatchers.IO){ gasFees.value.convertToFiat() },
                     blockChainSpecific = blockchainSpecific,
                 )
 
