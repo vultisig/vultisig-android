@@ -226,6 +226,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                     Route.VerifyDeposit(vaultId, tx.id)
                 )
             } catch (t: Throwable) {
+                Timber.e(t, "Failed to save edited referral")
                 state.update {
                     it.copy(error = ReferralError.UNKNOWN_ERROR)
                 }
@@ -241,6 +242,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                         this@EditVaultReferralViewModel.address = address
                     }
             } catch (e: Exception) {
+                Timber.e(e, "Failed to load address")
                 Timber.e(e)
             }
         }
