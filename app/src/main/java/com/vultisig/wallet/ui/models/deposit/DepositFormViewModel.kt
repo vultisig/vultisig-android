@@ -1762,10 +1762,10 @@ internal class DepositFormViewModel @Inject constructor(
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
         val tokenAmountInt = if (isUnStake) {
-            if (tcyAutoCompoundAmount?.toBigIntegerOrNull()?.let { it > BigInteger.ONE } != true) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.unstake_tcy_zero_error)
-                )
+            val totalUnits = tcyAutoCompoundAmount?.toBigIntegerOrNull()
+                ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            if (totalUnits < BigInteger.ONE) {
+                throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
             }
             // For unstaking, send zero TCY as gas is covered by RUNE
             BigInteger.ZERO

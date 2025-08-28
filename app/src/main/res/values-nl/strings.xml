@@ -501,5 +501,5 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vaultbeheer</string>
     <string name="other">Overig</string>
-    <string name="unstake_tcy_zero_error">Het uitzetten kan niet worden uitgevoerd als het saldo lager is dan 1</string>
+    <string name="unstake_tcy_zero_error">Unstake kan niet worden uitgevoerd als het saldo lager is dan 1</string>
 </resources>
