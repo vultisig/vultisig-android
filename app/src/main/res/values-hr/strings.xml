@@ -492,4 +492,8 @@
     <string name="vultisig_community">Vultisig zajednica</string>
     <string name="vault_management">Upravljanje trezorom</string>
     <string name="other">Ostalo</string>
+    <string name="check_updates_title">Provjeri ažuriranja</string>
+    <string name="update_available">Ažuriranje je dostupno</string>
+    <string name="app_up_to_date">Aplikacija je ažurirana</string>
+    <string name="update">Ažuriranje</string>
 </resources>

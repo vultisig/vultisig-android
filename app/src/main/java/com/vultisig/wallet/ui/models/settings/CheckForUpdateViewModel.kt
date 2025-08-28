@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class CheckForUpdateUiModel(
-    val isUpdateAvailable: Boolean = true,
+    val isUpdateAvailable: Boolean = false,
     val currentVersion: String = "",
 )
 

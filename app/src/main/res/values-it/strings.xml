@@ -492,4 +492,8 @@
     <string name="vultisig_community">Community Vultisig</string>
     <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
+    <string name="check_updates_title">Controlla gli aggiornamenti</string>
+    <string name="update_available">L\'aggiornamento è disponibile</string>
+    <string name="app_up_to_date">L\'applicazione è aggiornata</string>
+    <string name="update">Aggiornamento</string>
 </resources>

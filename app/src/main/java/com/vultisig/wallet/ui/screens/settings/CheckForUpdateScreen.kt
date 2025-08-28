@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -54,7 +55,7 @@ internal fun CheckForUpdateScreen(
     Scaffold(
         topBar = {
             VsTopAppBar(
-                title = "Check Updates",
+                title = stringResource(R.string.check_updates_title),
                 iconLeft = com.vultisig.wallet.R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
             )
@@ -82,9 +83,9 @@ internal fun CheckForUpdateScreen(
             Text(
                 text =
                     if (model.isUpdateAvailable)
-                        "Update is available"
+                        stringResource(R.string.update_available)
                     else
-                        "Application is up to date",
+                        stringResource(R.string.app_up_to_date),
                 style = Theme.brockmann.button.large,
                 color = Theme.colors.neutral0
             )
@@ -107,7 +108,7 @@ internal fun CheckForUpdateScreen(
                 )
 
                 VsButton(
-                    label = "Update",
+                    label = stringResource(R.string.update),
                     onClick = onUpdateClick,
                     variant = VsButtonVariant.Primary,
                     size = VsButtonSize.Medium,

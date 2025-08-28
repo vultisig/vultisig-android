@@ -501,4 +501,8 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vaultbeheer</string>
     <string name="other">Overig</string>
+    <string name="check_updates_title">Controleer updates</string>
+    <string name="update_available">Update is beschikbaar</string>
+    <string name="app_up_to_date">Applicatie is up-to-date</string>
+    <string name="update">Update</string>
 </resources>
