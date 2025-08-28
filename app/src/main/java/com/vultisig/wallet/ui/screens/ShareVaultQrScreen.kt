@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +48,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.extractBitmap
 
 
 @Composable
@@ -83,7 +87,9 @@ internal fun ShareVaultQrScreen(
         uid = state.shareVaultQrModel.uid,
         name = state.shareVaultQrModel.name,
         qrBitmapPainter = qrBitmapPainter,
+        shareVaultQrString = state.shareVaultQrString,
         onBackClick = navController::popBackStack,
+        saveShareQrBitmap = viewModel::saveShareQrBitmap,
         onShareClick = {
             if (state.fileUri == null) {
                 viewModel.share()
@@ -120,6 +126,8 @@ internal fun ShareVaultQrScreen(
     uid: String,
     name: String,
     qrBitmapPainter: BitmapPainter?,
+    shareVaultQrString: String?,
+    saveShareQrBitmap: (Bitmap) -> Unit,
     onBackClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
@@ -147,10 +155,25 @@ internal fun ShareVaultQrScreen(
                 size = 48.dp
             )
 
+            // `verticalScroll(rememberScrollState())` is required to preserve share and save functionality
             QrContainer(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .padding(
+                        all = 32.dp,
+                    )
+                    .extractBitmap { bitmap ->
+                        if (qrBitmapPainter != null) {
+                            saveShareQrBitmap(bitmap)
+                        } else {
+                            bitmap.recycle()
+                        }
+                    },
                 uid = uid,
                 name = name,
-                qrBitmapPainter = qrBitmapPainter
+                qrBitmapPainter = qrBitmapPainter,
+                shareVaultQrString = shareVaultQrString,
             )
 
             UiSpacer(
@@ -191,6 +214,7 @@ private fun QrContainer(
     uid: String,
     name: String,
     qrBitmapPainter: BitmapPainter?,
+    shareVaultQrString: String?,
 ) {
     Column(
         modifier = modifier
@@ -247,8 +271,9 @@ private fun QrContainer(
                         size = 28.dp,
                     )
                 )
+                .padding(30.dp)
         ) {
-            qrBitmapPainter?.let {
+            if (qrBitmapPainter != null && shareVaultQrString != null) {
                 Image(
                     painter = qrBitmapPainter,
                     contentDescription = "qr",
@@ -318,5 +343,7 @@ private fun ShareVaultQrCardPreview() {
         qrBitmapPainter = BitmapPainter(
             createBitmap(1, 1).asImageBitmap()
         ),
+        shareVaultQrString = null,
+        saveShareQrBitmap = {}
     )
 }
