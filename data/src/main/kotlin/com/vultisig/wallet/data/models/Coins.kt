@@ -2134,6 +2134,17 @@ object Coins {
                 contractAddress = "",
                 isNativeToken = true,
             ),
+            Coin(
+                chain = Chain.Ton,
+                ticker = "USDT",
+                logo = "usdt",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "tether",
+                contractAddress = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+                isNativeToken = false,
+            ),
         ),
 
         Chain.Tron to listOf(
