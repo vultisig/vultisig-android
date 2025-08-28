@@ -189,7 +189,7 @@ private fun ReferralEditVaultScreen(
         },
         bottomBar = {
             VsButton(
-                label = "Save Changes",
+                label = stringResource(R.string.save_changes),
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 32.dp)
                     .fillMaxWidth(),
