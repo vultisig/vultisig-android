@@ -178,7 +178,8 @@ internal class EditVaultReferralViewModel @Inject constructor(
                     ?: error("Can't load account")
                 val balance = account.tokenValue?.value ?: BigInteger.ZERO
                 val totalFees = state.value.costFeesTokenAmount.toBigInteger()
-                if (balance < totalFees) {
+                val gasFeeValue = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger()
+                if (balance < totalFees + gasFeeValue) {
                     state.update {
                         it.copy(error = ReferralError.BALANCE_ERROR)
                     }
@@ -188,7 +189,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                 val address = account.token.address
                 val memo = "~:${vaultReferralCode.uppercase()}:THOR:$address:$address"
                 val gasFees = TokenValue(
-                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                    value = gasFeeValue,
                     unit = CoinType.THORCHAIN.symbol,
                     decimals = CoinType.THORCHAIN.decimals,
                 )
