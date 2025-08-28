@@ -131,7 +131,7 @@ val Chain.canSelectTokens: Boolean
         Chain.Sui,
         Chain.Kujira,
         Chain.GaiaChain,
-        Chain.Osmosis, Chain.Tron -> true
+        Chain.Osmosis, Chain.Tron, Chain.Ton -> true
         Chain.ThorChain -> true
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {

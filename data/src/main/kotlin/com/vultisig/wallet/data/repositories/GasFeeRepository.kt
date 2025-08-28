@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -19,6 +20,7 @@ interface GasFeeRepository {
     suspend fun getGasFee(
         chain: Chain,
         address: String,
+        isNativeToken: Boolean = false,
     ): TokenValue
 }
 
@@ -34,6 +36,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     override suspend fun getGasFee(
         chain: Chain,
         address: String,
+        isNativeToken: Boolean,
     ): TokenValue = when (chain.standard) {
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
@@ -148,8 +151,13 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.Ton -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
+                val msgFees = if (!isNativeToken) {
+                    RECOMMENDED_JETTONS_AMOUNT.toBigInteger()
+                } else {
+                    BigInteger.ZERO
+                }
                 TokenValue(
-                    value = BigInteger("10000000"),
+                    value = BigInteger("10000000") + msgFees,
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

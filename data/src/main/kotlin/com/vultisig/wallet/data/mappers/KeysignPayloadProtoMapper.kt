@@ -206,6 +206,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         expireAt = it.expireAt,
                         bounceable = it.bounceable,
                         sendMaxAmount = it.sendMaxAmount,
+                        jettonAddress = it.jettonAddress,
+                        isActiveDestination = it.isActiveDestination,
                     )
                 }
                 from.rippleSpecific != null -> from.rippleSpecific.let {
