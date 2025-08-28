@@ -74,6 +74,7 @@ internal fun ReferralViewScreen(
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
+        onClickEditReferral = model::onClickedEditReferral,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
@@ -89,7 +90,7 @@ internal fun ReferralViewScreen(
     onEditFriendReferralCode: () -> Unit,
     onCopyReferralCode: (String) -> Unit,
     onDismissErrorDialog: () -> Unit,
-    onClickEditReferral: () -> Unit = {},
+    onClickEditReferral: () -> Unit,
     onVaultClicked: () -> Unit = {},
 ) {
     if (state.error.isNotEmpty()) {
@@ -194,7 +195,11 @@ internal fun ReferralViewScreen(
                         label = stringResource(R.string.referral_view_edit_referral),
                         modifier = Modifier.fillMaxWidth(),
                         variant = VsButtonVariant.Primary,
-                        state = VsButtonState.Enabled,
+                        state = if (!state.isLoadingExpirationDate && !state.isLoadingRewards) {
+                            VsButtonState.Enabled
+                        } else {
+                            VsButtonState.Disabled
+                        },
                         onClick = onClickEditReferral,
                     )
                 }
@@ -441,7 +446,7 @@ fun VaultItem(
 }
 
 @Composable
-private fun ContentRow(
+internal fun ContentRow(
     text: String,
     icon: @Composable () -> Unit,
 ) {
