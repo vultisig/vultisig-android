@@ -98,20 +98,24 @@ internal class EditVaultReferralViewModel @Inject constructor(
     }
 
     private fun updateReferralCounter(yearsDelta: Long) {
-        val formatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.getDefault())
-        val stateValue = state.value
+        try {
+            val formatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.getDefault())
+            val stateValue = state.value
 
-        val newExpiration = LocalDate.parse(stateValue.referralExpiration, formatter)
-            .plusYears(yearsDelta)
-            .format(formatter)
+            val newExpiration = LocalDate.parse(stateValue.referralExpiration, formatter)
+                .plusYears(yearsDelta)
+                .format(formatter)
 
-        val newCounter = stateValue.referralCounter + yearsDelta.toInt()
+            val newCounter = stateValue.referralCounter + yearsDelta.toInt()
 
-        state.update {
-            it.copy(
-                referralCounter = newCounter,
-                referralExpiration = newExpiration,
-            )
+            state.update {
+                it.copy(
+                    referralCounter = newCounter,
+                    referralExpiration = newExpiration,
+                )
+            }
+        } catch (t: Throwable) {
+            Timber.e(t, "Failed to parse date")
         }
     }
 
