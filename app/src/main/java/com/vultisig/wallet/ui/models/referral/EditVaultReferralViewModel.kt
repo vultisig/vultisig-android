@@ -10,12 +10,14 @@ import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.BLOCKS_PER_YEAR
@@ -26,6 +28,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,11 +37,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 
@@ -165,15 +170,66 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
     fun onSavedReferral() {
         viewModelScope.launch {
-            val account = address?.accounts?.find { it.token.isNativeToken }
-                ?: error("Can't load account")
-            val balance = account.tokenValue?.value ?: BigInteger.ZERO
-            val totalFees = state.value.costFeesTokenAmount.toBigInteger()
-            if (balance < totalFees) {
-                state.update {
-                    it.copy(error = ReferralError.BALANCE_ERROR)
+            try {
+                val account = address?.accounts?.find { it.token.isNativeToken }
+                    ?: error("Can't load account")
+                val balance = account.tokenValue?.value ?: BigInteger.ZERO
+                val totalFees = state.value.costFeesTokenAmount.toBigInteger()
+                if (balance < totalFees) {
+                    state.update {
+                        it.copy(error = ReferralError.BALANCE_ERROR)
+                    }
+                    return@launch
                 }
-                return@launch
+
+                val address = account.token.address
+                val memo = "~:${vaultReferralCode.uppercase()}:THOR:$address:$address"
+                val gasFees = TokenValue(
+                    value = nativeRuneFees?.value?.toBigInteger() ?: "2000000".toBigInteger(),
+                    unit = CoinType.THORCHAIN.symbol,
+                    decimals = CoinType.THORCHAIN.decimals,
+                )
+                val toAmount = state.value.costFeesTokenAmount.toBigInteger()
+                val blockchainSpecific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = Chain.ThorChain,
+                        address = account.token.address,
+                        token = account.token,
+                        isDeposit = true,
+                        memo = memo,
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                        tokenAmountValue = state.value.costFeesTokenAmount.toBigInteger(),
+                        gasFee = gasFees,
+                    ).blockChainSpecific
+                }
+
+                val tx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = account.token,
+                    srcAddress = address,
+                    dstAddress = "",
+                    memo = memo,
+                    srcTokenValue = TokenValue(
+                        value = toAmount,
+                        token = account.token,
+                    ),
+                    estimatedFees = gasFees,
+                    estimateFeesFiat = gasFees.value.convertToFiat(),
+                    blockChainSpecific = blockchainSpecific,
+                )
+
+                transactionRepository.addTransaction(tx)
+
+                navigator.route(
+                    Route.VerifyDeposit(vaultId, tx.id)
+                )
+            } catch (t: Throwable) {
+                state.update {
+                    it.copy(error = ReferralError.UNKNOWN_ERROR)
+                }
             }
         }
     }
@@ -181,8 +237,10 @@ internal class EditVaultReferralViewModel @Inject constructor(
     private fun loadAddress() {
         viewModelScope.launch {
             try {
-                val result = accountsRepository.loadAddress(vaultId, Chain.ThorChain).first()
-                this@EditVaultReferralViewModel.address = result
+                accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                    .collect { address ->
+                        this@EditVaultReferralViewModel.address = address
+                    }
             } catch (e: Exception) {
                 Timber.e(e)
             }
@@ -199,5 +257,13 @@ internal class EditVaultReferralViewModel @Inject constructor(
         } ?: error("Can't calculate fees")
 
         return gasFeeToEstimate.invoke(gasFeeParams).formattedFiatValue
+    }
+
+    fun onDismissError() {
+        viewModelScope.launch {
+            state.update {
+                it.copy(error = null)
+            }
+        }
     }
 }

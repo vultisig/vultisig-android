@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -39,6 +40,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
+import com.vultisig.wallet.ui.models.referral.ReferralError
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -57,6 +59,7 @@ internal fun ReferralEditVaultScreen(
         referralTextFieldState = model.referralTexFieldState,
         onDecrementCounter = model::onDecrementCounter,
         onIncrementCounter = model::onIncrementCounter,
+        onDismissError = model::onDismissError,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
@@ -72,8 +75,23 @@ private fun ReferralEditVaultScreen(
     onSavedReferral: () -> Unit,
     onIncrementCounter: () -> Unit,
     onDecrementCounter: () -> Unit,
+    onDismissError: () -> Unit,
     referralTextFieldState: TextFieldState,
 ) {
+    if (state.error != null) {
+        val message = when (state.error) {
+            ReferralError.BALANCE_ERROR -> stringResource(R.string.referral_create_not_enough_balance)
+            else -> stringResource(R.string.referral_create_unknown_error)
+        }
+
+        UiAlertDialog(
+            title = stringResource(R.string.dialog_default_error_title),
+            text = message,
+            confirmTitle = stringResource(R.string.try_again),
+            onDismiss = onDismissError,
+        )
+    }
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
