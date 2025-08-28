@@ -1762,6 +1762,11 @@ internal class DepositFormViewModel @Inject constructor(
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
         val tokenAmountInt = if (isUnStake) {
+            if (tcyAutoCompoundAmount?.toBigIntegerOrNull()?.let { it > BigInteger.ZERO } != true) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.unstake_tcy_zero_error)
+                )
+            }
             // For unstaking, send zero TCY as gas is covered by RUNE
             BigInteger.ZERO
         } else {
@@ -1821,10 +1826,10 @@ internal class DepositFormViewModel @Inject constructor(
         tokenAmountInt: BigInteger
     ): WasmExecuteContractPayload? {
         return if (isUnStake) {
-            val units =
-                percentage?.times(tcyAutoCompoundAmount?.toIntOrNull() ?: 0)
-                    ?.div(100)?.roundToInt()
-                    ?: return null
+            val units = percentage?.toBigDecimal()
+                ?.times(tcyAutoCompoundAmount?.toBigDecimal() ?:  BigDecimal.ZERO)
+                ?.div(BigDecimal.valueOf(100))?.toBigInteger() ?: return null
+
             ThorchainFunctions.unStakeTcyCompound(
                 units = units,
                 stakingContract = STAKING_TCY_COMPOUND_CONTRACT,

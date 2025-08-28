@@ -492,4 +492,5 @@
     <string name="vultisig_community">Vultisig-Community</string>
     <string name="vault_management">Tresorverwaltung</string>
     <string name="other">Sonstiges</string>
+    <string name="unstake_tcy_zero_error">Bei einem Nullsaldo kann kein Unstaking durchgeführt werden</string>
 </resources>

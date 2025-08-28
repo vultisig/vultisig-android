@@ -492,4 +492,5 @@
     <string name="vultisig_community">Community Vultisig</string>
     <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
+    <string name="unstake_tcy_zero_error">Non è possibile effettuare l\'unstaking con un saldo pari a zero</string>
 </resources>

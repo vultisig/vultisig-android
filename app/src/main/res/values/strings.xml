@@ -737,4 +737,5 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
+    <string name="unstake_tcy_zero_error">Unstaking cannot be performed with a zero balance</string>
 </resources>

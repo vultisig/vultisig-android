@@ -492,4 +492,5 @@
     <string name="vultisig_community">Vultisig zajednica</string>
     <string name="vault_management">Upravljanje trezorom</string>
     <string name="other">Ostalo</string>
+    <string name="unstake_tcy_zero_error">Uklanjanje uloga nije moguće s nultim stanjem</string>
 </resources>
