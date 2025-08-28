@@ -68,6 +68,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
     init {
         initData()
+        calculateFees()
     }
 
     private fun initData() {
@@ -121,12 +122,24 @@ internal class EditVaultReferralViewModel @Inject constructor(
     private fun calculateFees() {
         viewModelScope.launch {
             val years = state.value.referralCounter
-            val extraFeesPerYear =
+
+            if (years == 0) {
+                val totalFeesFiat = withContext(Dispatchers.IO) {
+                    BigInteger.ZERO.convertToFiat()
+                }
+                state.update {
+                    it.copy(
+                        referralCostFiat = totalFeesFiat,
+                        referralCostAmount = "0 ${CoinType.THORCHAIN.symbol}",
+                    )
+                }
+                return@launch
+            }
+
+            val totalFees =
                 (nativeRuneFees?.feePerBlock
                     ?: DEFAULT_BLOCK_FEES).toBigInteger() * years.toBigInteger() * BLOCKS_PER_YEAR
 
-            val baseFeePerYear = CoinType.THORCHAIN.toUnit("1.0".toBigDecimal())
-            val totalFees = extraFeesPerYear + baseFeePerYear
             val totalFeesFiat = withContext(Dispatchers.IO) {
                 totalFees.convertToFiat()
             }
