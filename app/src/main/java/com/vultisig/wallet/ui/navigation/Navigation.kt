@@ -18,6 +18,7 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
+        const val ARG_EXPIRATION_ID = "expiration_id"
         const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
@@ -254,11 +255,13 @@ internal sealed class Destination(
         }
     }
 
-    data class ReferralEdition(
+    data class ReferralVaultEdition(
         val vaultId: String,
-    ): Destination(route = "referral/referral_edition/$vaultId") {
+        val code: String,
+        val expiration: String,
+    ): Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
         companion object {
-            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
         }
     }
 
@@ -470,7 +473,6 @@ internal sealed class Route {
                 Send, Swap, Deposit, Sign
             }
         }
-
     }
 
     // vault creation / keygen
@@ -616,7 +618,6 @@ internal sealed class Route {
     )
 
     // vault migration
-
     object Migration {
         @Serializable
         data class Onboarding(

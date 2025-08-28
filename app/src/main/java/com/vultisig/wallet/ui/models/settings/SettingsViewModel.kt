@@ -89,7 +89,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             leadingIcon = R.drawable.referral_code,
             trailingIcon = R.drawable.ic_small_caret_right
         ),
-        enabled = false
     )
 
     data object Faq : SettingsItem(
@@ -224,7 +223,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title =UiText.StringResource(R.string.general),
+                title = UiText.StringResource(R.string.general),
                 items = listOf(
                     Language("English"),
                     Currency("USD"),
@@ -233,7 +232,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title =UiText.StringResource(R.string.support),
+                title = UiText.StringResource(R.string.support),
                 items = listOf(
                     Faq,
                     VultisigEducation,
@@ -251,7 +250,7 @@ internal class SettingsViewModel @Inject constructor(
                 )
             ),
             SettingsGroupUiModel(
-                title =UiText.StringResource(R.string.settings_screen_legal),
+                title = UiText.StringResource(R.string.settings_screen_legal),
                 items = listOf(
                     PrivacyPolicy,
                     TermsOfService
@@ -274,7 +273,7 @@ internal class SettingsViewModel @Inject constructor(
 
             CheckForUpdates -> {
                 // TODO: replace with real updater when available
-//                sendEvent(SettingsUiEvent.OpenGooglePlay)
+//              sendEvent(SettingsUiEvent.OpenGooglePlay)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
@@ -400,11 +399,13 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onContinueReferralBottomSheet() {
-        referralRepository.visitReferralCode()
-        state.update {
-            it.copy(hasToShowReferralCodeSheet = false)
+        viewModelScope.launch {
+            referralRepository.visitReferralCode()
+            state.update {
+                it.copy(hasToShowReferralCodeSheet = false)
+            }
+            navigateTo(Destination.ReferralOnboarding(vaultId))
         }
-        navigateTo(Destination.ReferralOnboarding(vaultId))
     }
 
     fun onClickReferralCode() {
