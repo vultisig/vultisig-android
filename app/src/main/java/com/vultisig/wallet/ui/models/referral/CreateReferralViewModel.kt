@@ -371,7 +371,7 @@ internal class CreateReferralViewModel @Inject constructor(
 
     internal companion object {
         private const val DEFAULT_REGISTRATION_FEES = "1000000000"
-        private const val DEFAULT_BLOCK_FEES = "20"
+        internal const val DEFAULT_BLOCK_FEES = "20"
 
         internal const val DATE_FORMAT = "d MMMM yyyy"
 

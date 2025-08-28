@@ -148,7 +148,7 @@ private fun ReferralEditVaultScreen(
                     Text(
                         color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
-                        text = "24 Aug 2007",
+                        text = state.referralExpiration,
                         textAlign = TextAlign.Start,
                     )
                 }
@@ -164,8 +164,8 @@ private fun ReferralEditVaultScreen(
 
                 EstimatedNetworkFee(
                     title = stringResource(R.string.referral_create_cost),
-                    tokenGas = "123",
-                    fiatGas = "1234",
+                    tokenGas = state.referralCostAmount,
+                    fiatGas = state.referralCostFiat,
                 )
             }
         },
