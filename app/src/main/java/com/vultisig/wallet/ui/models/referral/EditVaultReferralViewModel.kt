@@ -111,7 +111,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                 .plusYears(yearsDelta)
                 .format(formatter)
 
-            val newCounter = stateValue.referralCounter + yearsDelta.toInt()
+            val newCounter = (stateValue.referralCounter + yearsDelta.toInt()).coerceAtLeast(0)
 
             state.update {
                 it.copy(
@@ -150,6 +150,7 @@ internal class EditVaultReferralViewModel @Inject constructor(
                     it.copy(
                         referralCostFiatFormatted = totalFeesFiat,
                         referralCostAmountFormatted = "0 ${CoinType.THORCHAIN.symbol}",
+                        costFeesTokenAmount = "0"
                     )
                 }
                 return@launch
