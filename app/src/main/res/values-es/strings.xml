@@ -492,5 +492,5 @@
     <string name="vultisig_community">Comunidad de Vultisig</string>
     <string name="vault_management">Gestión de bóvedas</string>
     <string name="other">Otros</string>
-    <string name="unstake_tcy_zero_error">No se puede deshacer el staking con un saldo cero</string>
+    <string name="unstake_tcy_zero_error">No se puede deshacer el staking si el saldo es inferior a 1</string>
 </resources>
