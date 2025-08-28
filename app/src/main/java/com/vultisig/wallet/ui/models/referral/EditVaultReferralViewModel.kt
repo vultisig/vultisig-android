@@ -91,8 +91,13 @@ internal class EditVaultReferralViewModel @Inject constructor(
                 )
             }
 
-            nativeRuneFees = withContext(Dispatchers.IO) {
-                thorChainApi.getTHORChainReferralFees()
+            try {
+                nativeRuneFees = withContext(Dispatchers.IO) {
+                    thorChainApi.getTHORChainReferralFees()
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Falling back to default referral fees")
+                nativeRuneFees = null
             }
         }
     }
