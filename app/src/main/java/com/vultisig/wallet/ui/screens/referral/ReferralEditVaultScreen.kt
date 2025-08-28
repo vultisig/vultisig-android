@@ -164,8 +164,8 @@ private fun ReferralEditVaultScreen(
 
                 EstimatedNetworkFee(
                     title = stringResource(R.string.referral_create_cost),
-                    tokenGas = state.referralCostAmount,
-                    fiatGas = state.referralCostFiat,
+                    tokenGas = state.referralCostAmountFormatted,
+                    fiatGas = state.referralCostFiatFormatted,
                 )
             }
         },

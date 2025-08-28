@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -16,7 +17,6 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.symbol
-import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.BLOCKS_PER_YEAR
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.DATE_FORMAT
@@ -29,9 +29,11 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.time.LocalDate
@@ -42,9 +44,11 @@ import javax.inject.Inject
 
 internal data class EditVaultReferralUiState(
     val referralCounter: Int = 0,
-    val referralCostAmount: String = "",
-    val referralCostFiat: String = "",
+    val referralCostAmountFormatted: String = "",
+    val referralCostFiatFormatted: String = "",
     val referralExpiration: String = "",
+    val costFeesTokenAmount: String = "",
+    val error: ReferralError? = null,
 )
 
 @HiltViewModel
@@ -65,8 +69,10 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
     val referralTexFieldState = TextFieldState()
     val state = MutableStateFlow(EditVaultReferralUiState())
+    private var address: Address? = null
 
     init {
+        loadAddress()
         initData()
         calculateFees()
     }
@@ -129,8 +135,8 @@ internal class EditVaultReferralViewModel @Inject constructor(
                 }
                 state.update {
                     it.copy(
-                        referralCostFiat = totalFeesFiat,
-                        referralCostAmount = "0 ${CoinType.THORCHAIN.symbol}",
+                        referralCostFiatFormatted = totalFeesFiat,
+                        referralCostAmountFormatted = "0 ${CoinType.THORCHAIN.symbol}",
                     )
                 }
                 return@launch
@@ -149,15 +155,38 @@ internal class EditVaultReferralViewModel @Inject constructor(
 
             state.update {
                 it.copy(
-                    referralCostFiat = totalFeesFiat,
-                    referralCostAmount = formattedRegistrationTokenFees,
+                    costFeesTokenAmount = totalFees.toString(),
+                    referralCostFiatFormatted = totalFeesFiat,
+                    referralCostAmountFormatted = formattedRegistrationTokenFees,
                 )
             }
         }
     }
 
     fun onSavedReferral() {
+        viewModelScope.launch {
+            val account = address?.accounts?.find { it.token.isNativeToken }
+                ?: error("Can't load account")
+            val balance = account.tokenValue?.value ?: BigInteger.ZERO
+            val totalFees = state.value.costFeesTokenAmount.toBigInteger()
+            if (balance < totalFees) {
+                state.update {
+                    it.copy(error = ReferralError.BALANCE_ERROR)
+                }
+                return@launch
+            }
+        }
+    }
 
+    private fun loadAddress() {
+        viewModelScope.launch {
+            try {
+                val result = accountsRepository.loadAddress(vaultId, Chain.ThorChain).first()
+                this@EditVaultReferralViewModel.address = result
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
     }
 
     private suspend fun BigInteger.convertToFiat(): String {
