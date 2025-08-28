@@ -493,7 +493,8 @@
     <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
     <string name="check_updates_title">Controlla gli aggiornamenti</string>
-    <string name="update_available">L\'aggiornamento è disponibile</string>
-    <string name="app_up_to_date">L\'applicazione è aggiornata</string>
-    <string name="update">Aggiornamento</string>
+    <string name="update_available">È disponibile un aggiornamento</string>
+    <string name="app_up_to_date">L\'app è aggiornata</string>
+    <string name="update">Aggiorna</string>
+    <string name="share_vault_qr_info">Questo codice QR ti consente di condividere una versione di sola visualizzazione del tuo Vault</string>
 </resources>

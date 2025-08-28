@@ -135,7 +135,7 @@ internal fun ShareVaultQrScreen(
     Scaffold(
         topBar = {
             VsTopAppBar(
-                title = "Share Vault QR",
+                title = stringResource(R.string.share_vault_qr_title),
                 iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
             )
@@ -188,7 +188,7 @@ internal fun ShareVaultQrScreen(
 
             UiSpacer(16.dp)
             VsButton(
-                label = "Share",
+                label = stringResource(R.string.share_vault_qr_share),
                 onClick = onShareClick,
                 modifier = Modifier.fillMaxWidth(),
                 size = VsButtonSize.Small,
@@ -198,7 +198,7 @@ internal fun ShareVaultQrScreen(
             UiSpacer(12.dp)
 
             VsButton(
-                label = "Save",
+                label = stringResource(R.string.share_vault_qr_save),
                 onClick = onSaveClick,
                 modifier = Modifier.fillMaxWidth(),
                 size = VsButtonSize.Medium,
@@ -326,7 +326,7 @@ private fun Info() {
             tint = Theme.colors.text.light,
         )
         Text(
-            text = "This QR Code lets you share a view-only version of your Vault",
+            text = stringResource(R.string.share_vault_qr_info),
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.light,
         )

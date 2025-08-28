@@ -496,4 +496,5 @@
     <string name="update_available">Actualización disponible</string>
     <string name="app_up_to_date">Aplicación actualizada</string>
     <string name="update">Actualizar</string>
+    <string name="share_vault_qr_info">Este código QR le permite compartir una versión de solo lectura de su bóveda</string>
 </resources>

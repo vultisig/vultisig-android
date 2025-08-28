@@ -495,5 +495,6 @@
     <string name="check_updates_title">Provjeri ažuriranja</string>
     <string name="update_available">Ažuriranje je dostupno</string>
     <string name="app_up_to_date">Aplikacija je ažurirana</string>
-    <string name="update">Ažuriranje</string>
+    <string name="update">Ažuriraj</string>
+    <string name="share_vault_qr_info">Ovaj QR kod vam omogućuje dijeljenje verzije vašeg trezora samo za pregled</string>
 </resources>

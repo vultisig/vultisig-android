@@ -493,5 +493,6 @@
     <string name="check_updates_title">Verificar atualizações</string>
     <string name="update_available">Atualização disponível</string>
     <string name="app_up_to_date">Aplicativo atualizado</string>
-    <string name="update">Atualização</string>
+    <string name="update">Atualizar</string>
+    <string name="share_vault_qr_info">Este código QR permite-lhe partilhar uma versão apenas para visualização do seu Vault</string>
 </resources>
