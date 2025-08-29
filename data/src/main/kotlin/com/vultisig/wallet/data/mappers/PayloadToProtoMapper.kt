@@ -213,7 +213,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                 )
                             }
                         )
-                    }
+                    },
+                    provider = from.provider,
                 )
             } else null,
             kyberswapSwapPayload = if(swapPayload is SwapPayload.Kyber) {

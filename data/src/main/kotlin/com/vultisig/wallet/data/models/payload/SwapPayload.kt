@@ -114,7 +114,5 @@ sealed class SwapPayload {
                     .toBigInteger(),
                 token = dstToken,
             )
-
     }
-
 }

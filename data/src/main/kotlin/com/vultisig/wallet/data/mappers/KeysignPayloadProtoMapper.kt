@@ -79,6 +79,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                     },
                                 )
                             },
+                            provider = it.provider,
                         )
                     )
                 }

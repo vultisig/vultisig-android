@@ -10,4 +10,5 @@ data class OneInchSwapPayloadJson(
     val fromAmount: BigInteger,
     val toAmountDecimal: BigDecimal,
     val quote: OneInchSwapQuoteJson,
+    val provider: String,
 )
