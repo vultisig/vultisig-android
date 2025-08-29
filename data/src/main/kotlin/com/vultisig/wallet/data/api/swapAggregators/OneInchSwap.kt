@@ -1,12 +1,11 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toHexBytesInByteString
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
@@ -21,7 +20,7 @@ class OneInchSwap(
 ) {
 
     fun getPreSignedImageHash(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): List<String> {
@@ -34,7 +33,7 @@ class OneInchSwap(
     }
 
     fun getSignedTransaction(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
         nonceIncrement: BigInteger,
@@ -46,7 +45,7 @@ class OneInchSwap(
     }
 
     private fun getPreSignedInputData(
-        quote: OneInchSwapQuoteJson,
+        quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {

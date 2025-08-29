@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.models.payload
 
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 
@@ -65,8 +65,8 @@ sealed class SwapPayload {
 
     }
 
-    data class OneInch(
-        val data: OneInchSwapPayloadJson
+    data class EVM(
+        val data: EVMSwapPayloadJson
     ) : SwapPayload() {
 
         override val srcToken: Coin

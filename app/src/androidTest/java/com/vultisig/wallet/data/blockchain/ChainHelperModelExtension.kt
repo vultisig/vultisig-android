@@ -9,7 +9,7 @@ import OneinchTransaction
 import SwapPayload
 import ThorchainSwapPayload
 import WasmExecuteContractPayload
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
@@ -228,7 +228,7 @@ fun SwapPayload.toInternalSwapPayload(): com.vultisig.wallet.data.models.payload
         return com.vultisig.wallet.data.models.payload.SwapPayload.MayaChain(it.toInternalThorChainSwapPayload())
     }
     this.oneinchSwapPayload?.let{
-        return com.vultisig.wallet.data.models.payload.SwapPayload.OneInch(it.toInternalOneInchSwapPayload())
+        return com.vultisig.wallet.data.models.payload.SwapPayload.EVM(it.toInternalOneInchSwapPayload())
     }
     error("SwapPayload is nil")
 }
@@ -249,8 +249,8 @@ fun ThorchainSwapPayload.toInternalThorChainSwapPayload(): com.vultisig.wallet.d
         isAffiliate = this.isAffiliate,
     )
 }
-fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.models.OneInchSwapPayloadJson {
-    return com.vultisig.wallet.data.models.OneInchSwapPayloadJson(
+fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.models.EVMSwapPayloadJson {
+    return com.vultisig.wallet.data.models.EVMSwapPayloadJson(
         fromCoin = this.fromCoin.toInternalCoinPayload(),
         toCoin = this.toCoin.toInternalCoinPayload(),
         fromAmount = this.fromAmount.toBigInteger(),
@@ -258,8 +258,8 @@ fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.
         quote = this.quote.toInternalOneInchQuote()
     )
 }
-fun OneinchQuote.toInternalOneInchQuote(): OneInchSwapQuoteJson {
-    return OneInchSwapQuoteJson(
+fun OneinchQuote.toInternalOneInchQuote(): EVMSwapQuoteJson {
+    return EVMSwapQuoteJson(
         dstAmount = this.dstAmount,
         tx = this.tx.toInternalOneInchTransaction()
     )

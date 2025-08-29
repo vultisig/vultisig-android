@@ -2,11 +2,11 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -57,14 +57,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             skipBroadcast = from.skipBroadcast ?: false,
             swapPayload = when {
                 from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let { it ->
-                    SwapPayload.OneInch(
-                        OneInchSwapPayloadJson(
+                    SwapPayload.EVM(
+                        EVMSwapPayloadJson(
                             fromCoin = requireNotNull(it.fromCoin).toCoin(),
                             toCoin = requireNotNull(it.toCoin).toCoin(),
                             fromAmount = BigInteger(it.fromAmount),
                             toAmountDecimal = BigDecimal(it.toAmountDecimal),
                             quote = requireNotNull(it.quote).let { it ->
-                                OneInchSwapQuoteJson(
+                                EVMSwapQuoteJson(
                                     dstAmount = it.dstAmount,
                                     tx = requireNotNull(it.tx).let {
                                         OneInchSwapTxJson(
@@ -83,6 +83,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         )
                     )
                 }
+                // TODO: Migrate mapping once all clients use 1inch payload
                 from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
                     SwapPayload.Kyber(
                         KyberSwapPayloadJson(
@@ -239,7 +240,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         ttl = it.ttl
                     )
                 }
-
 
                 else -> error("No supported BlockChainSpecific in proto $from")
             },

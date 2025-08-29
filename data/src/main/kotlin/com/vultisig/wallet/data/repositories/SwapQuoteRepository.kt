@@ -9,8 +9,8 @@ import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.gasForChain
@@ -55,7 +55,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteJson
+    ): EVMSwapQuoteJson
 
     suspend fun getMayaSwapQuote(
         dstAddress: String,
@@ -71,14 +71,14 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson
+    ): EVMSwapQuoteJson
 
     suspend fun getJupiterSwapQuote(
         srcAddress: String,
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson
+    ): EVMSwapQuoteJson
 
     fun resolveProvider(
         srcToken: Coin,
@@ -101,7 +101,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteJson {
+    ): EVMSwapQuoteJson {
         val oneInchQuote = oneInchApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
@@ -111,11 +111,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
         when (oneInchQuote) {
-            is OneInchSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(
+            is EVMSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(
                 oneInchQuote.error
             )
 
-            is OneInchSwapQuoteDeserialized.Result -> {
+            is EVMSwapQuoteDeserialized.Result -> {
                 oneInchQuote.data.error?.let { throw SwapException.handleSwapException(it) }
                 return oneInchQuote.data
             }
@@ -163,6 +163,24 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         routeSummary: KyberSwapRouteResponse.RouteSummary,
         response: KyberSwapQuoteJson,
     ): KyberSwapQuoteJson {
+        /*
+        return EVMSwapQuoteJson(
+                    dstAmount = liFiQuote.estimate.toAmount,
+                    tx = OneInchSwapTxJson(
+                        from = liFiQuote.transactionRequest.from ?: "",
+                        to = liFiQuote.transactionRequest.to ?: "",
+                        data = liFiQuote.transactionRequest.data,
+                        gas = liFiQuote.transactionRequest.gasLimit?.substring(startIndex = 2)
+                            ?.hexToLong() ?: 0,
+                        value = liFiQuote.transactionRequest.value?.substring(startIndex = 2)
+                            ?.convertToBigIntegerOrZero().toString(),
+                        gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
+                            ?.hexToLong()?.toString() ?: "0",
+                        swapFee = swapFee?.amount ?: "0",
+                        swapFeeTokenContract = swapFeeToken,
+                    )
+                )
+         */
         val gasPrice = routeSummary.gasPrice
         val calculatedGas = response.gasForChain(chain)
         val finalGas =
@@ -291,7 +309,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson {
+    ): EVMSwapQuoteJson {
 
         val fromToken =
             srcToken.contractAddress.ifEmpty { srcToken.ticker }
@@ -334,7 +352,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                     ?: ""
 
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
-                return OneInchSwapQuoteJson(
+                return EVMSwapQuoteJson(
                     dstAmount = liFiQuote.estimate.toAmount,
                     tx = OneInchSwapTxJson(
                         from = liFiQuote.transactionRequest.from ?: "",
@@ -359,7 +377,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson {
+    ): EVMSwapQuoteJson {
 
         val fromToken =
             srcToken.contractAddress.ifEmpty { SOLANA_DEFAULT_CONTRACT_ADDRESS }
@@ -382,7 +400,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             .firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount ?: "0"
 
 
-        return OneInchSwapQuoteJson(
+        return EVMSwapQuoteJson(
             dstAmount = jupiterQuote.dstAmount,
             tx = OneInchSwapTxJson(
                 from = "",

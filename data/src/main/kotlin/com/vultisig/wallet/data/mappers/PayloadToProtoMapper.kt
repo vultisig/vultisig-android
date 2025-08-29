@@ -191,7 +191,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     isAffiliate = from.isAffiliate,
                 )
             } else null,
-            oneinchSwapPayload = if (swapPayload is SwapPayload.OneInch) {
+            oneinchSwapPayload = if (swapPayload is SwapPayload.EVM) {
                 val from = swapPayload.data
                 OneInchSwapPayload(
                     fromCoin = from.fromCoin.toCoinProto(),
@@ -217,7 +217,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     provider = from.provider,
                 )
             } else null,
-            kyberswapSwapPayload = if(swapPayload is SwapPayload.Kyber) {
+            /*kyberswapSwapPayload = if(swapPayload is SwapPayload.Kyber) {
                 val from = swapPayload.data
                 KyberSwapPayload(
                     fromCoin = from.fromCoin.toCoinProto(),
@@ -243,7 +243,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         )
                     }
                 )
-            } else null,
+            } else null */
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             erc20ApprovePayload = if (approvePayload is ERC20ApprovePayload) {
                 Erc20ApprovePayload(
@@ -267,5 +267,4 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
         hexPublicKey = hexPublicKey,
         logo = logo,
     )
-
 }
