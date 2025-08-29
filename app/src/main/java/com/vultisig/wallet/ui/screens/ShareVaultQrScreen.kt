@@ -251,7 +251,10 @@ private fun QrContainer(
         )
 
         Text(
-            text = "UID: ${uid.takeLast(10)}", /*Should we display the full text, or only the last 10 items, based on the UI design??*/
+            text = stringResource(
+                R.string.uid,
+                uid.takeLast(10)
+            ), /*Should we display the full text, or only the last 10 items, based on the UI design??*/
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.light,
         )

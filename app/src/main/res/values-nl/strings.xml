@@ -501,9 +501,9 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vaultbeheer</string>
     <string name="other">Overig</string>
-    <string name="check_updates_title">Controleer updates</string>
+    <string name="check_updates_title">Controleer op updates</string>
     <string name="update_available">Er is een update beschikbaar</string>
     <string name="app_up_to_date">De app is up-to-date</string>
-    <string name="update">Update</string>
+    <string name="update">Bijwerken</string>
     <string name="share_vault_qr_info">Met deze QR-code kunt u een alleen-lezenversie van uw kluis delen</string>
 </resources>

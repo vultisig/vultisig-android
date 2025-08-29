@@ -742,4 +742,5 @@
     <string name="app_up_to_date">Application is up to date</string>
     <string name="update">Update</string>
     <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
+    <string name="uid">UID: %1$s</string>
 </resources>

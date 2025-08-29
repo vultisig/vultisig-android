@@ -492,9 +492,9 @@
     <string name="vultisig_community">Vultisig-Community</string>
     <string name="vault_management">Tresorverwaltung</string>
     <string name="other">Sonstiges</string>
-    <string name="check_updates_title">Updates prüfen</string>
+    <string name="check_updates_title">Aktualisierungen prüfen</string>
     <string name="update_available">Update verfügbar</string>
     <string name="app_up_to_date">App ist aktuell</string>
-    <string name="update">Update</string>
-    <string name="share_vault_qr_info">Mit diesem QR-Code können Sie eine schreibgeschützte Version Ihres Tresors freigeben</string>
+    <string name="update">Aktualisieren</string>
+    <string name="share_vault_qr_info">Mit diesem QR-Code können Sie eine schreibgeschützte Version Ihres Tresors teilen</string>
 </resources>
