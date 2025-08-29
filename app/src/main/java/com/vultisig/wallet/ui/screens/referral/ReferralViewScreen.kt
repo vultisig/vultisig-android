@@ -70,7 +70,13 @@ internal fun ReferralViewScreen(
 
     ReferralViewScreen(
         state = state,
-        onBackPressed = navController::popBackStack,
+        onBackPressed = {
+            val code = model.state.value.referralFriendCode
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set(NEW_EXTERNAL_REFERRAL_CODE, code)
+            navController.popBackStack()
+        },
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
