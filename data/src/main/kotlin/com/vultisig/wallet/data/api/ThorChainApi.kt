@@ -148,11 +148,12 @@ internal class ThorChainApiImpl @Inject constructor(
         isAffiliate: Boolean,
         referralCode: String,
     ): THORChainSwapQuoteDeserialized {
-        val affiliateBPS = if (isAffiliate) {
-            THORChainSwaps.AFFILIATE_FEE_RATE
-        } else {
-            "0"
+        val affiliateBPS = when {
+            isAffiliate && referralCode.isNotEmpty() -> THORChainSwaps.AFFILIATE_FEE_RATE_PARTIAL
+            isAffiliate -> THORChainSwaps.AFFILIATE_FEE_RATE
+            else -> "0"
         }
+
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)

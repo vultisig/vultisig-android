@@ -19,28 +19,40 @@ internal class FAQSettingViewModel @Inject constructor(@ApplicationContext conte
         FAQSettingUiModel(
             listOf(
                 Faq(
-                    context.getString(R.string.faq_settings_q1),
-                    context.getString(R.string.faq_settings_a1)
+                    question = context.getString(R.string.faq_settings_q1),
+                    answer = context.getString(R.string.faq_settings_a1)
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q2),
-                    context.getString(R.string.faq_settings_a2)
+                    question = context.getString(R.string.faq_settings_q2),
+                    answer = context.getString(R.string.faq_settings_a2)
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q3),
-                    context.getString(R.string.faq_settings_a3)
+                    question =context.getString(R.string.faq_settings_q3),
+                    answer = context.getString(R.string.faq_settings_a3)
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q4),
-                    context.getString(R.string.faq_settings_a4)
+                    question =context.getString(R.string.faq_settings_q4),
+                    answer = context.getString(R.string.faq_settings_a4)
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q5),
-                    context.getString(R.string.faq_settings_a5)
+                    question =context.getString(R.string.faq_settings_q5),
+                    answer = context.getString(R.string.faq_settings_a5)
                 ),
                 Faq(
-                    context.getString(R.string.faq_settings_q6),
-                    context.getString(R.string.faq_settings_a6)
+                    question = context.getString(R.string.faq_settings_q6),
+                    answer = context.getString(R.string.faq_settings_a6)
+                ),
+                Faq(
+                    question =context.getString(R.string.faq_settings_q7),
+                    answer = context.getString(R.string.faq_settings_a7)
+                ),
+                Faq(
+                    question =context.getString(R.string.faq_settings_q8),
+                    answer = context.getString(R.string.faq_settings_a8)
+                ),
+                Faq(
+                    question = context.getString(R.string.faq_settings_q9),
+                    answer = context.getString(R.string.faq_settings_a9)
                 ),
             )
         )

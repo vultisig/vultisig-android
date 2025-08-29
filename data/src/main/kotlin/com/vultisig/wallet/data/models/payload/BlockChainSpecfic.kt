@@ -68,6 +68,8 @@ sealed class BlockChainSpecific {
         val bounceable: Boolean,
         val isDeposit: Boolean = false,
         val sendMaxAmount: Boolean = false,
+        val jettonAddress: String = "",
+        val isActiveDestination: Boolean = false,
     ) : BlockChainSpecific()
 
     data class Ripple(

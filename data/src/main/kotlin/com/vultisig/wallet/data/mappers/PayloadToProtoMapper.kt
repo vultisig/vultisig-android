@@ -133,6 +133,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     expireAt = specific.expireAt,
                     bounceable = specific.bounceable,
                     sendMaxAmount = specific.sendMaxAmount,
+                    jettonAddress = specific.jettonAddress,
+                    isActiveDestination = specific.isActiveDestination,
                 )
             } else null,
             tronSpecific = if (specific is BlockChainSpecific.Tron) {

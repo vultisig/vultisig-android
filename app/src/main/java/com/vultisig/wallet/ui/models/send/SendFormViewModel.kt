@@ -1399,6 +1399,7 @@ internal class SendFormViewModel @Inject constructor(
                 gasFeeRepository.getGasFee(
                     chain = srcAddress.chain,
                     address = srcAddress.address,
+                    isNativeToken = srcAddress.isNativeToken,
                 )
             } catch (e: Exception) {
                 uiState.update {

@@ -48,6 +48,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     private val requestId: String? = savedStateHandle[Destination.ARG_REQUEST_ID]
     private val chainId: String? = savedStateHandle[Destination.ARG_CHAIN_ID]
+    private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
 
     private var reIndexJob: Job? = null
 
@@ -123,7 +124,7 @@ internal class AddressBookViewModel @Inject constructor(
     }
 
     private suspend fun editAddress(model: AddressBookEntry) {
-        navigator.navigate(Destination.AddressEntry(model.chain.id, model.address))
+        navigator.navigate(Destination.AddressEntry(model.chain.id, model.address, vaultId = vaultId))
     }
 
     fun deleteAddress(model: AddressBookEntryUiModel) {
@@ -140,7 +141,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     fun addAddress() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddressEntry())
+            navigator.navigate(Destination.AddressEntry(vaultId = vaultId))
         }
     }
 

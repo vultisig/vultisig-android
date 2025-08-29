@@ -159,13 +159,13 @@ object ThorchainFunctions {
     }
 
     fun unStakeTcyCompound(
-        units: Int,
+        units: BigInteger,
         stakingContract: String,
         fromAddress: String,
     ): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
-        require(units >= 1) { "units cannot be lower than 1" }
+        require(units >= BigInteger.ONE) { "units cannot be lower than 1" }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,

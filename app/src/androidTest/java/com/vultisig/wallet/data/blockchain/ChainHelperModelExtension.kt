@@ -127,6 +127,8 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 expireAt = tonSpecific.expireAt.toULong(),
                 bounceable = tonSpecific.bounceable,
                 sequenceNumber = tonSpecific.sequenceNumber.toULong(),
+                jettonAddress = tonSpecific.jettonsAddress,
+                isActiveDestination = tonSpecific.activeDestination,
             )
         }
 

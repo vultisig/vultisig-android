@@ -371,6 +371,7 @@ private fun SearchReferralTag(
 @Composable
 fun CounterYearExpiration(
     count: Int,
+    defaultInitCounter: Int = 1,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
 ) {
@@ -379,9 +380,9 @@ fun CounterYearExpiration(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = { if (count != 1) onDecrement() },
+            onClick = { if (count != defaultInitCounter) onDecrement() },
             shape = RoundedCornerShape(12.dp),
-            enabled = count != 1,
+            enabled = count != defaultInitCounter,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Theme.colors.backgrounds.secondary,
                 contentColor = Theme.colors.text.primary,
