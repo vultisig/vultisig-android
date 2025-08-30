@@ -56,13 +56,14 @@ class OneInchSwap(
                     .setContractGeneric(
                         Transaction.ContractGeneric.newBuilder()
                             .setAmount(
-                                quote.tx.value.toBigInteger().toByteArray().toByteString()
+                                quote.tx.value.toBigIntegerOrNull()?.toByteArray()?.toByteString()
+                                    ?: BigInteger.ZERO.toByteArray().toByteString()
                             )
-                            .setData(quote.tx.data.toHexBytesInByteString())
+                            .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                     )
             )
 
-        val gasPrice = quote.tx.gasPrice.toBigInteger()
+        val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
         return EthereumGasHelper.setGasParameters(

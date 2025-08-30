@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
@@ -127,7 +128,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): KyberSwapQuoteJson {
+    ): EVMSwapQuoteJson {
         val kyberSwapQuote = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
@@ -143,7 +144,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             is KyberSwapQuoteDeserialized.Result -> {
 
                 return buildTransaction(
-                    chain = srcToken.chain,
+                    coin = srcToken,
                     routeSummary = kyberSwapQuote.result.data.routeSummary,
                     response = kyberApi.getKyberSwapQuote(
                         chain = srcToken.chain,
@@ -159,45 +160,24 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
 
     private fun buildTransaction(
-        chain: Chain,
+        coin: Coin,
         routeSummary: KyberSwapRouteResponse.RouteSummary,
         response: KyberSwapQuoteJson,
-    ): KyberSwapQuoteJson {
-        /*
-        return EVMSwapQuoteJson(
-                    dstAmount = liFiQuote.estimate.toAmount,
-                    tx = OneInchSwapTxJson(
-                        from = liFiQuote.transactionRequest.from ?: "",
-                        to = liFiQuote.transactionRequest.to ?: "",
-                        data = liFiQuote.transactionRequest.data,
-                        gas = liFiQuote.transactionRequest.gasLimit?.substring(startIndex = 2)
-                            ?.hexToLong() ?: 0,
-                        value = liFiQuote.transactionRequest.value?.substring(startIndex = 2)
-                            ?.convertToBigIntegerOrZero().toString(),
-                        gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
-                            ?.hexToLong()?.toString() ?: "0",
-                        swapFee = swapFee?.amount ?: "0",
-                        swapFeeTokenContract = swapFeeToken,
-                    )
-                )
-         */
+    ): EVMSwapQuoteJson {
         val gasPrice = routeSummary.gasPrice
-        val calculatedGas = response.gasForChain(chain)
+        val calculatedGas = response.gasForChain(coin.chain)
         val finalGas =
             if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
 
-        val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
-        val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
-        val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
-        // Fix: buildResponse.data is a KyberSwapQuoteData, not a numeric type. You likely want to update a fee or value field, not replace the whole data object with a BigInteger.
-        // If you want to update a fee field inside data, do so like this (assuming 'fee' is a String or BigInteger):
-        val newFee = finalGas.toBigInteger() * finalGasPrice
-
-        return response.copy(
-            data = response.data.copy(
+        return EVMSwapQuoteJson(
+            dstAmount = response.dstAmount,
+            tx = OneInchSwapTxJson(
+                from = coin.address,
+                to = response.data.routerAddress,
+                gas = finalGas,
+                data = response.data.data,
+                value = response.data.transactionValue,
                 gasPrice = gasPrice,
-                fee = newFee,
-                gas = finalGas.toString()
             )
         )
     }
