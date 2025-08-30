@@ -48,7 +48,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): KyberSwapQuoteJson
+    ): OneInchSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
         srcToken: Coin,
@@ -127,7 +127,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): KyberSwapQuoteJson {
+    ): OneInchSwapQuoteJson {
         val kyberSwapQuote = kyberApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
@@ -143,7 +143,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             is KyberSwapQuoteDeserialized.Result -> {
 
                 return buildTransaction(
-                    chain = srcToken.chain,
+                    coin = srcToken,
                     routeSummary = kyberSwapQuote.result.data.routeSummary,
                     response = kyberApi.getKyberSwapQuote(
                         chain = srcToken.chain,
@@ -159,12 +159,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
 
     private fun buildTransaction(
-        chain: Chain,
+        coin: Coin,
         routeSummary: KyberSwapRouteResponse.RouteSummary,
         response: KyberSwapQuoteJson,
-    ): KyberSwapQuoteJson {
+    ): OneInchSwapQuoteJson {
         val gasPrice = routeSummary.gasPrice
-        val calculatedGas = response.gasForChain(chain)
+        val calculatedGas = response.gasForChain(coin.chain)
         val finalGas =
             if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
 
@@ -173,15 +173,27 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
         val newFee = finalGas.toBigInteger() * finalGasPrice
 
+        return OneInchSwapQuoteJson(
+            dstAmount = "",
+            tx = OneInchSwapTxJson(
+                from = coin.address,
+                to = response.data.routerAddress,
+                gas = finalGas,
+                data = response.data.data,
+                value = response.data.transactionValue,
+                gasPrice = gasPrice,
+            )
+        )
+
+        /*
         return response.copy(
             data = response.data.copy(
                 gasPrice = gasPrice,
                 fee = newFee,
                 gas = finalGas.toString()
             )
-        )
+        ) */
     }
-
 
     override suspend fun getMayaSwapQuote(
         dstAddress: String,
