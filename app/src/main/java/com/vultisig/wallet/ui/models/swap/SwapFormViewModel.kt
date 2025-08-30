@@ -953,7 +953,6 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-
                             SwapProvider.KYBER -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken,

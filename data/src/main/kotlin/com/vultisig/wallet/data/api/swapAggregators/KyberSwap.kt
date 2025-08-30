@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
@@ -8,12 +7,10 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.models.SignedTransactionResult
-import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import tss.KeysignResponse
 import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.wallet.Swaps
 
@@ -76,7 +73,7 @@ class KyberSwap(
             )
         var gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.Companion.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
         return EthereumGasHelper.setGasParameters(
             gas = gas,

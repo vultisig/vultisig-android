@@ -171,8 +171,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
         val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
         val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
-        // Fix: buildResponse.data is a KyberSwapQuoteData, not a numeric type. You likely want to update a fee or value field, not replace the whole data object with a BigInteger.
-        // If you want to update a fee field inside data, do so like this (assuming 'fee' is a String or BigInteger):
         val newFee = finalGas.toBigInteger() * finalGasPrice
 
         return response.copy(
