@@ -15,7 +15,7 @@ sealed class KyberSwapQuoteDeserialized {
 
 @Serializable
 data class KyberSwapErrorResponse(
-//    val code: Int,
+//  val code: Int,
     val message: String,
 )
 

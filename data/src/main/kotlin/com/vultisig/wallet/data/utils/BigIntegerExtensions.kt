@@ -15,3 +15,6 @@ fun BigInteger.toSafeByteArray(): ByteArray {
         System.arraycopy(src, 0, this, 32 - src.size, src.size)
     }
 }
+
+fun BigInteger.increaseByPercent(percent: Int): BigInteger =
+    this.multiply(BigInteger.valueOf(100L + percent)).divide(BigInteger.valueOf(100))

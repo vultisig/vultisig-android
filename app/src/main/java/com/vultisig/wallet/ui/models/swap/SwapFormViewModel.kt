@@ -953,7 +953,6 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-
                             SwapProvider.KYBER -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken,
@@ -979,7 +978,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = srcNativeToken
                                 )
 
-                                this@SwapFormViewModel.quote = SwapQuote.Kyber(
+                                this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
