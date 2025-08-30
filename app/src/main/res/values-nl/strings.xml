@@ -501,6 +501,7 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vaultbeheer</string>
     <string name="other">Overig</string>
+    <string name="unstake_tcy_zero_error">Unstake kan niet worden uitgevoerd als het saldo lager is dan 1</string>
     <string name="check_updates_title">Controleer op updates</string>
     <string name="update_available">Er is een update beschikbaar</string>
     <string name="app_up_to_date">De app is up-to-date</string>

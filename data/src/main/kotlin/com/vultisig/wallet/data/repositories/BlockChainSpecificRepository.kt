@@ -148,7 +148,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     when {
                         isSwap -> "600000"
                         chain == Chain.Arbitrum -> {
-                                "160000" // arbitrum has higher gas limit
+                            "160000" // arbitrum has higher gas limit
                         }
 
                         token.isNativeToken -> "23000"
@@ -369,6 +369,23 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                     dstAddress.startsWith("E")
                 }
+                val (destinationActive, jettonsAddress) = if (!token.isNativeToken) {
+                    val destinationIsActiveDeferred = async {
+                        if (dstAddress == null) {
+                            false
+                        } else {
+                            tonApi.getWalletState(dstAddress) != TON_WALLET_STATE_UNINITIALIZED
+                        }
+                    }
+
+                    val jettonsAddressDeferred = async {
+                        tonApi.getJettonWallet(address, token.contractAddress).getJettonsAddress()
+                    }
+
+                    destinationIsActiveDeferred.await() to jettonsAddressDeferred.await()
+                } else {
+                    false to ""
+                }
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Ton(
                         sequenceNumber = sequenceNumberDeferred.await().toString().toULong(),
@@ -377,6 +394,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         bounceable = isBounceable.await(),
                         isDeposit = isDeposit,
                         sendMaxAmount = isMaxAmountEnabled,
+                        isActiveDestination = destinationActive,
+                        jettonAddress = jettonsAddress ?: "",
                     ),
                 )
             }

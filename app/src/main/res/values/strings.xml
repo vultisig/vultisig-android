@@ -737,6 +737,7 @@
     <string name="vultisig_community">Vultisig Community</string>
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
+    <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
     <string name="check_updates_title">Check Updates</string>
     <string name="update_available">Update is available</string>
     <string name="app_up_to_date">Application is up to date</string>

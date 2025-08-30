@@ -492,6 +492,7 @@
     <string name="vultisig_community">Community Vultisig</string>
     <string name="vault_management">Gestione del caveau</string>
     <string name="other">Altro</string>
+    <string name="unstake_tcy_zero_error">L\'annullamento dello staking non può essere eseguito se il saldo è inferiore a 1</string>
     <string name="check_updates_title">Controlla gli aggiornamenti</string>
     <string name="update_available">È disponibile un aggiornamento</string>
     <string name="app_up_to_date">L\'app è aggiornata</string>

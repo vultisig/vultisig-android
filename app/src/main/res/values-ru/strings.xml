@@ -501,6 +501,7 @@
     <string name="vultisig_community">Сообщество Vultisig</string>
     <string name="vault_management">Управление хранилищем</string>
     <string name="other">Другое</string>
+    <string name="unstake_tcy_zero_error">Отмена ставки невозможна, если баланс ниже 1</string>
     <string name="check_updates_title">Проверить обновления</string>
     <string name="update_available">Обновление доступно</string>
     <string name="app_up_to_date">Приложение обновлено</string>
