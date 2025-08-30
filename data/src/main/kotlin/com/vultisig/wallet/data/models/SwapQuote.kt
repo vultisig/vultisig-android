@@ -24,6 +24,7 @@ sealed class SwapQuote {
         override val fees: TokenValue,
         override val expiredAt: Instant,
         val data: EVMSwapQuoteJson,
+        val provider: String,
     ) : SwapQuote()
 
     data class ThorChain(
