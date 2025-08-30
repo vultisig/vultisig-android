@@ -255,7 +255,8 @@ fun OneinchSwapPayload.toInternalOneInchSwapPayload(): com.vultisig.wallet.data.
         toCoin = this.toCoin.toInternalCoinPayload(),
         fromAmount = this.fromAmount.toBigInteger(),
         toAmountDecimal = this.toAmountDecimal.toBigDecimal(),
-        quote = this.quote.toInternalOneInchQuote()
+        quote = this.quote.toInternalOneInchQuote(),
+        provider = this.provider,
     )
 }
 fun OneinchQuote.toInternalOneInchQuote(): EVMSwapQuoteJson {
