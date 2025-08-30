@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteErrorResponse
@@ -30,7 +30,7 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized
+    ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(
         chain: Chain,
@@ -61,7 +61,7 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized = coroutineScope {
+    ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
             val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
             val requestParams: HttpRequestBuilder.() -> Unit = {
@@ -87,7 +87,7 @@ class OneInchApiImpl @Inject constructor(
                         responses.forEach { response ->
                             if (!response.status.isSuccess()) {
                                 val resp = response.body<OneInchSwapQuoteErrorResponse>()
-                                return@coroutineScope OneInchSwapQuoteDeserialized.Error(
+                                return@coroutineScope EVMSwapQuoteDeserialized.Error(
                                     error = resp.description
                                 )
                             }
@@ -102,7 +102,7 @@ class OneInchApiImpl @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
+            EVMSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
         }
     }
 

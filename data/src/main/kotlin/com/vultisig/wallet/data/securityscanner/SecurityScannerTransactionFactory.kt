@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -45,7 +44,7 @@ class SecurityScannerTransactionFactory(
 
     private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
         return when (val payload = transaction.payload) {
-            is SwapPayload.OneInch ->
+            is SwapPayload.EVM ->
                 buildSwapSecurityScannerTransaction(
                     srcToken = transaction.srcToken,
                     from = payload.data.quote.tx.from,
@@ -54,15 +53,6 @@ class SecurityScannerTransactionFactory(
                     data = payload.data.quote.tx.data,
                     isApprovalRequired = transaction.isApprovalRequired
             )
-            is SwapPayload.Kyber ->
-                buildSwapSecurityScannerTransaction(
-                    srcToken = transaction.srcToken,
-                    from = payload.data.quote.tx.from,
-                    to = payload.data.quote.tx.to,
-                    amount = payload.data.quote.tx.value,
-                    data = payload.data.quote.tx.data,
-                    isApprovalRequired = transaction.isApprovalRequired
-                )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }

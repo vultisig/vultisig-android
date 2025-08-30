@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -20,7 +20,7 @@ class SolanaSwap(
 ) {
 
     fun getPreSignedImageHash(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
     ): List<String> {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
@@ -30,7 +30,7 @@ class SolanaSwap(
     }
 
     fun getSignedTransaction(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
@@ -41,8 +41,9 @@ class SolanaSwap(
         return helper.getSwapSignedTransaction(inputData, signatures)
     }
 
+    // TODO: Refactor Quote for SOL
     private fun getPreSignedInputData(
-        quote: OneInchSwapQuoteJson,
+        quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,
     ): ByteArray {
         if (keysignPayload.coin.chain != Chain.Solana)
