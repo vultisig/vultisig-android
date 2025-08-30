@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.core.graphics.toColorInt
+import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 
 @Composable
 fun OnBoardingComposeTheme(
@@ -34,6 +36,11 @@ fun OnBoardingComposeTheme(
 
 
 internal object Theme {
+
+    val v2: V2
+    @Composable
+    get() = LocalV2Theme.current
+
     val colors: Colors
         @Composable
         get() = LocalAppColors.current
