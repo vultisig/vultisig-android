@@ -49,7 +49,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-    ): KyberSwapQuoteJson
+    ): EVMSwapQuoteJson
 
     suspend fun getOneInchSwapQuote(
         srcToken: Coin,
