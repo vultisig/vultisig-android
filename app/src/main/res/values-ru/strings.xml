@@ -502,4 +502,9 @@
     <string name="vault_management">Управление хранилищем</string>
     <string name="other">Другое</string>
     <string name="unstake_tcy_zero_error">Отмена ставки невозможна, если баланс ниже 1</string>
+    <string name="check_updates_title">Проверить обновления</string>
+    <string name="update_available">Обновление доступно</string>
+    <string name="app_up_to_date">Приложение обновлено</string>
+    <string name="update">Обновить</string>
+    <string name="share_vault_qr_info">Этот QR-код позволяет вам поделиться версией вашего хранилища, доступной только для просмотра</string>
 </resources>

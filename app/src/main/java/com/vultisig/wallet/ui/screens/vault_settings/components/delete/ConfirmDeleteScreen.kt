@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -213,12 +214,12 @@ private fun VerticalVaultInfo(
     ) {
         Text(
             text = key,
-            style = Theme.brockmann.body.s.medium,
+            style = Theme.brockmann.supplementary.footnote,
             color = colors.text.primary
         )
         Text(
             text = value,
-            style = Theme.brockmann.body.s.medium,
+            style = Theme.brockmann.supplementary.footnote,
             color = colors.text.primary
         )
     }
@@ -237,7 +238,7 @@ private fun VerticalVaultInfo2(
     ) {
         Text(
             text = key,
-            style = Theme.brockmann.body.s.medium,
+            style = Theme.brockmann.supplementary.footnote,
             color = colors.text.primary
         )
         Text(
@@ -285,5 +286,29 @@ private fun DeleteVaultBanner() {
         )
     }
 }
+@Preview
+@Composable
+private fun ConfirmDeleteScreenPreview() {
+    ConfirmDeleteScreen(
+        cautions = listOf(
+            com.vultisig.wallet.R.string.confirm_delete_delete_vault,
+        ),
+        checkedCautionIndexes = listOf(0, 1),
+        isDeleteButtonActive = false,
+        vaultDeleteUiModel = VaultDeleteUiModel(
+            name = "My Vault",
+            totalFiatValue = "$12,345.67",
+            vaultPart = 2,
+            deviceList = listOf("Device 1", "Device 2", "Device 3"),
+            localPartyId = "123e4567-e89b-12d3-a456-426614174000",
+            pubKeyECDSA = "04bfcabf...9c3d1e5f",
+            pubKeyEDDSA = "ed25519:3b6a27bc...",
+        ),
+        onItemCheckChangeClick = { _, _ -> },
+        onConfirmClick = {},
+        onBackClick = {}
+    )
+}
+
 
 

@@ -76,6 +76,7 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
@@ -280,7 +281,7 @@ internal fun SetupNavGraph(
                     nullable = false
                 },
 
-            )
+                )
         ) {
             AddAddressEntryScreen(
                 navController = navController,
@@ -689,6 +690,12 @@ internal fun SetupNavGraph(
             ReferralEditVaultScreen(
                 navController = navController,
             )
+        }
+
+        composable(
+            route = Destination.CheckForUpdateSetting.route,
+        ) {
+            CheckForUpdateScreen()
         }
     }
 }

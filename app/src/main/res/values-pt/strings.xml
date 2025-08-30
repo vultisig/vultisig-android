@@ -491,4 +491,9 @@
     <string name="vault_management">Gestão de Cofres</string>
     <string name="other">Outros</string>
     <string name="unstake_tcy_zero_error">Não é possível anular a aposta se o saldo for inferior a 1</string>
+    <string name="check_updates_title">Verificar atualizações</string>
+    <string name="update_available">Atualização disponível</string>
+    <string name="app_up_to_date">Aplicação atualizada</string>
+    <string name="update">Atualizar</string>
+    <string name="share_vault_qr_info">Este código QR permite-lhe partilhar uma versão apenas de leitura do seu cofre</string>
 </resources>

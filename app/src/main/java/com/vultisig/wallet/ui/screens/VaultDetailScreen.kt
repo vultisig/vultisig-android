@@ -288,7 +288,7 @@ internal fun SettingInfoHorizontalItem(
     ) {
         Text(
             text = key,
-            style = Theme.brockmann.body.s.medium,
+            style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary
         )
 

@@ -493,4 +493,9 @@
     <string name="vault_management">Tresorverwaltung</string>
     <string name="other">Sonstiges</string>
     <string name="unstake_tcy_zero_error">Das Aufheben der Einsätze kann nicht durchgeführt werden, wenn der Kontostand unter 1 liegt</string>
+    <string name="check_updates_title">Aktualisierungen prüfen</string>
+    <string name="update_available">Update verfügbar</string>
+    <string name="app_up_to_date">App ist aktuell</string>
+    <string name="update">Aktualisieren</string>
+    <string name="share_vault_qr_info">Mit diesem QR-Code können Sie eine schreibgeschützte Version Ihres Tresors teilen</string>
 </resources>

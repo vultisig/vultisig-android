@@ -493,4 +493,9 @@
     <string name="vault_management">Gestión de bóvedas</string>
     <string name="other">Otros</string>
     <string name="unstake_tcy_zero_error">No se puede deshacer el staking si el saldo es inferior a 1</string>
+    <string name="check_updates_title">Consultar actualizaciones</string>
+    <string name="update_available">Actualización disponible</string>
+    <string name="app_up_to_date">Aplicación actualizada</string>
+    <string name="update">Actualizar</string>
+    <string name="share_vault_qr_info">Este código QR le permite compartir una versión de solo lectura de su bóveda</string>
 </resources>
