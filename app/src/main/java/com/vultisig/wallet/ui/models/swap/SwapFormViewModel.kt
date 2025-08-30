@@ -984,7 +984,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
