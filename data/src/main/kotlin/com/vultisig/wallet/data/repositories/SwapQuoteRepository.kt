@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
@@ -157,7 +158,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
     }
 
-
     private fun buildTransaction(
         coin: Coin,
         routeSummary: KyberSwapRouteResponse.RouteSummary,
@@ -168,13 +168,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val finalGas =
             if (calculatedGas == 0L) EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT else calculatedGas
 
-        val gasPriceValue = gasPrice.toBigIntegerOrNull() ?: BigInteger.valueOf(GAS_PRICE_VALUE)
-        val minGasPrice = BigInteger.valueOf(MIN_GAS_PRICE)
-        val finalGasPrice = if (gasPriceValue < minGasPrice) minGasPrice else gasPriceValue
-        val newFee = finalGas.toBigInteger() * finalGasPrice
-
         return OneInchSwapQuoteJson(
-            dstAmount = "",
+            dstAmount = response.dstAmount,
             tx = OneInchSwapTxJson(
                 from = coin.address,
                 to = response.data.routerAddress,
@@ -184,15 +179,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 gasPrice = gasPrice,
             )
         )
-
-        /*
-        return response.copy(
-            data = response.data.copy(
-                gasPrice = gasPrice,
-                fee = newFee,
-                gas = finalGas.toString()
-            )
-        ) */
     }
 
     override suspend fun getMayaSwapQuote(
