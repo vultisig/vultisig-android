@@ -738,6 +738,12 @@
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
+    <string name="seconds_format">%d seconds</string>
+    <string name="minute_format">%d minute</string>
+    <string name="minutes_format">%d minutes</string>
+    <string name="hour_format">%d hour</string>
+    <string name="hours_format">%d hours</string>
+    <string name="never">never</string>
     <string name="check_updates_title">Check Updates</string>
     <string name="update_available">Update is available</string>
     <string name="app_up_to_date">Application is up to date</string>

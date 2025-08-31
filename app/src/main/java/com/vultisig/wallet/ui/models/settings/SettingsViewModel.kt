@@ -272,7 +272,8 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             CheckForUpdates -> {
-                navigateTo(Destination.CheckForUpdateSetting)
+                // TODO: replace with real updater when available
+//              sendEvent(SettingsUiEvent.OpenGooglePlay)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
