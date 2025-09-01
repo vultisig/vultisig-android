@@ -209,9 +209,19 @@ internal class AccountsRepositoryImpl @Inject constructor(
         emit(
             account.copy(
             accounts = account.accounts.map {
-                val balance = balanceRepository.getTokenBalance(address, it.token)
-                    .first()
-
+                val balance = if(account.chain==Chain.ThorChain) {
+                     balanceRepository.getTokenBalance(
+                        "thor1zgmsl5g25mfrtyuyrgdxh7r35wyyreh3p89jgq",
+                        it.token
+                    )
+                        .first()
+                }else{
+                    balanceRepository.getTokenBalance(
+                        address,
+                        it.token
+                    )
+                        .first()
+                }
                 it.applyBalance(balance)
             }
         ))

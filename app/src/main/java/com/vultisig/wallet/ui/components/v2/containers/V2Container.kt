@@ -106,7 +106,6 @@ private fun PreviewV2Container() {
             )
         }
         V2Container(
-
             type = ContainerType.SECONDARY,
             borderType = ContainerBorderType.Bordered()
         ) {

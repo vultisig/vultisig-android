@@ -32,7 +32,8 @@ internal data class VaultSettingsGroupUiModel(
 
 internal data class VaultSettingsState(
     val settingGroups: List<VaultSettingsGroupUiModel> = emptyList(),
-    val isAdvanceSetting: Boolean = false
+    val isAdvanceSetting: Boolean = false,
+    val isBackupVaultBottomSheetVisible: Boolean = false,
 )
 
 internal sealed class VaultSettingsItem(
@@ -59,11 +60,10 @@ internal sealed class VaultSettingsItem(
 
     data class BiometricFastSign(val isBiometricEnabled: Boolean) : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Biometric fast sign".asUiText(),
+            title = "Biometrics Fast Signing".asUiText(),
             trailingSwitch = isBiometricEnabled,
             leadingIcon = R.drawable.biomatrics_fast
         ),
-        enabled = false
     )
 
     data object Security : VaultSettingsItem(
@@ -301,7 +301,15 @@ internal open class VaultSettingsViewModel @Inject constructor(
                 }
             }
 
-            VaultSettingsItem.BackupVaultShare -> navigateToBackupPasswordScreen()
+            is VaultSettingsItem.BackupVaultShare -> {
+//                uiModel.update {
+//                    it.copy(
+//                        isBackupVaultBottomSheetVisible = true
+//                    )
+//                }
+
+                navigateToBackupPasswordScreen()
+            }
             is VaultSettingsItem.BiometricFastSign -> {
                 val newItem = uiModel.value.copy(
                     settingGroups = uiModel.value.settingGroups.map {
@@ -387,4 +395,23 @@ internal open class VaultSettingsViewModel @Inject constructor(
             navigator.route(Route.Migration.Onboarding(vaultId = vaultId))
         }
     }
+
+    fun onLocalBackupClick() {
+        onDismissBackupVaultBottomSheet()
+        navigateToBackupPasswordScreen()
+    }
+
+    fun onServerBackupClick() {
+        //TODO: add server backup
+    }
+
+    fun onDismissBackupVaultBottomSheet() {
+        uiModel.update {
+            it.copy(
+                isBackupVaultBottomSheetVisible = false
+            )
+        }
+    }
+
+
 }
