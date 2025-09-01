@@ -37,7 +37,22 @@ class EthereumFeeService(
             BigInteger.ZERO
         }
 
-        return fees
+        return fees.addL1Amount()
+    }
+
+    private fun Fee.addL1Amount(): Fee {
+        val l1Amount = BigInteger.ZERO
+        return if (this is GasFees) {
+            this.copy(amount = this.amount + l1Amount)
+        } else if (this is Eip1559) {
+            this.copy(amount = this.amount + l1Amount)
+        } else {
+            error("Fee Type Not Supported")
+        }
+    }
+
+    private fun calculateLayer1Fees(transaction: Transaction): BigInteger {
+        return BigInteger.ZERO
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger): GasFees {
