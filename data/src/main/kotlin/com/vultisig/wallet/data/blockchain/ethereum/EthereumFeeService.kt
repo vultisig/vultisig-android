@@ -6,11 +6,6 @@ import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.GasFees
-import com.vultisig.wallet.data.blockchain.SmartContract
-import com.vultisig.wallet.data.blockchain.Swap
-import com.vultisig.wallet.data.blockchain.Transaction
-import com.vultisig.wallet.data.blockchain.Transfer
-import com.vultisig.wallet.data.blockchain.isSwap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.supportsLegacyGas
@@ -134,8 +129,3 @@ class EthereumFeeService @Inject constructor(
         val DEFAULT_ARBITRUN_TRANSFER = "160000"
     }
 }
-
-/*
-    Avalanche("Avalanche", EVM, "Gwei"),
-    Mantle("Mantle", EVM, "Gwei"), // no eip1559 custom fees
- */

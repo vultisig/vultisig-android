@@ -512,16 +512,18 @@ internal class SwapFormViewModel @Inject constructor(
         srcToken: Coin,
         srcAddress: String,
         gasFee: TokenValue,
+        quoteGas: BigInteger = BigInteger.ZERO,
     ) = try {
         blockChainSpecificRepository.getSpecific(
-            srcToken.chain,
-            srcAddress,
-            srcToken,
-            gasFee,
+            chain = srcToken.chain,
+            address = srcAddress,
+            token = srcToken,
+            gasFee = gasFee,
             isSwap = true,
             isMaxAmountEnabled = false,
             isDeposit = srcToken.chain == Chain.MayaChain,
             gasLimit = getGasLimit(srcToken),
+            quoteGas = quoteGas,
         )
     } catch (e: Exception) {
         throw InvalidTransactionDataException(

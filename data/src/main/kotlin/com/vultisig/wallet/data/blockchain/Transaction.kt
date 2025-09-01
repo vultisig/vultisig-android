@@ -25,11 +25,3 @@ data class Swap(
     override val isMax: Boolean = false,
     override val amount: BigInteger,
 ): Transaction
-
-data class SmartContract(
-    override val coin: Coin,
-    val to: String,
-    val callData: String,
-    override val isMax: Boolean = false,
-    override val amount: BigInteger,
-): Transaction

@@ -62,6 +62,7 @@ interface BlockChainSpecificRepository {
         tokenAmountValue: BigInteger? = null,
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+        quoteGas: BigInteger = BigInteger.ZERO,
     ): BlockChainSpecificAndUtxo
 }
 
@@ -94,6 +95,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         tokenAmountValue: BigInteger?,
         memo: String?,
         transactionType: TransactionType,
+        quoteGas: BigInteger,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
