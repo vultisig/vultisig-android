@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountResource
+import com.vultisig.wallet.data.api.models.TronChainParameters
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -40,6 +41,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val tronApi: TronApi,
 ) : GasFeeRepository {
+
+    var chainParameters: TronChainParameters? = null
 
     override suspend fun getGasFee(
         chain: Chain,
@@ -214,12 +217,25 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     }
 
                     val extraFeeMemo = if (!memo.isNullOrEmpty()) {
-                        tronApi.getChainParameters().memoFeeEstimate.toBigInteger()
+                        getCacheTronChainParameters().memoFeeEstimate.toBigInteger()
                     } else {
                         BigInteger.ZERO
                     }
 
-                    val totalFee = CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo
+                    val activateDestinationFee = if (!to.isNullOrEmpty()) {
+                        val isDestinationInactive = true // Fetch
+                        if (isDestinationInactive) {
+                            (getCacheTronChainParameters().createAccountFeeEstimate +
+                                    getCacheTronChainParameters().createNewAccountFeeEstimateContract).toBigInteger()
+                        } else {
+                            BigInteger.ZERO
+                        }
+                    } else {
+                        BigInteger.ZERO
+                    }
+
+                    val totalFee =
+                        CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo + activateDestinationFee
 
                     TokenValue(
                         value = totalFee,
@@ -230,6 +246,14 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             else -> throw IllegalArgumentException("Can't estimate gas fee. Chain $chain is unsupported")
+        }
+    }
+
+    private suspend fun getCacheTronChainParameters(): TronChainParameters {
+        return if (chainParameters == null) {
+            tronApi.getChainParameters()
+        } else {
+            chainParameters!!
         }
     }
 

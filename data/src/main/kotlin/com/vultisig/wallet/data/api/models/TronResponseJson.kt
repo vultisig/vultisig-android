@@ -72,6 +72,12 @@ data class TronChainParameters(
 
     val memoFeeEstimate: Long
         get() = chainParameterMapped["getMemoFee"] ?: 0L
+
+    val createAccountFeeEstimate: Long
+        get() = chainParameterMapped["getCreateAccountFee"] ?: 0L
+
+    val createNewAccountFeeEstimateContract: Long
+        get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
 }
 
 @Serializable
