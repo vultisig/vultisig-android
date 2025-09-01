@@ -325,7 +325,9 @@ data class OneinchSwapPayload(
     @SerialName("to_amount_limit")
     val toAmountLimit: String = "0",
     @SerialName("quote")
-    val quote: OneinchQuote
+    val quote: OneinchQuote,
+    @SerialName("provider")
+    val provider: String = "",
 )
 @Serializable
 data class OneinchQuote(

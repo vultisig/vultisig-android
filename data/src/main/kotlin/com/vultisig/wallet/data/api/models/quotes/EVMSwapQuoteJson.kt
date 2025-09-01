@@ -3,14 +3,14 @@ package com.vultisig.wallet.data.api.models.quotes
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed class OneInchSwapQuoteDeserialized {
-    data class Result(val data: OneInchSwapQuoteJson) : OneInchSwapQuoteDeserialized()
-    data class Error(val error: String) : OneInchSwapQuoteDeserialized()
+sealed class EVMSwapQuoteDeserialized {
+    data class Result(val data: EVMSwapQuoteJson) : EVMSwapQuoteDeserialized()
+    data class Error(val error: String) : EVMSwapQuoteDeserialized()
 }
 
 
 @Serializable
-data class OneInchSwapQuoteJson(
+data class EVMSwapQuoteJson(
     @SerialName("dstAmount")
     val dstAmount: String,
     @SerialName("tx")

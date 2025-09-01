@@ -20,7 +20,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.IsSwapSupported
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -478,14 +479,15 @@ internal class SwapFormViewModel @Inject constructor(
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.OneInch(
-                                OneInchSwapPayloadJson(
+                            payload = SwapPayload.EVM(
+                                EVMSwapPayloadJson(
                                     fromCoin = srcToken,
                                     toCoin = dstToken,
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
                                     quote = quote.data,
-                                )
+                                    provider = quote.provider,
+                                ),
                             )
                         )
                     }
@@ -984,7 +986,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
@@ -1048,7 +1051,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
@@ -1121,7 +1125,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =

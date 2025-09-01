@@ -43,7 +43,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     ): String? = when (payload) {
         is SwapPayload.ThorChain -> "https://thorchain.net/tx/$tx"
         is SwapPayload.MayaChain -> "https://www.mayascan.org/tx/${tx.removePrefix("0x")}"
-        is SwapPayload.OneInch -> {
+        is SwapPayload.EVM -> {
             if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
                 if (payload.data.fromCoin.chain == payload.data.toCoin.chain && payload.data.fromCoin.chain == Chain.Solana) {
                     "https://solana.fm/tx/${tx}"
