@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
+import com.vultisig.wallet.data.api.models.TronChainParameters
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.common.stripHexPrefix
@@ -13,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
 import kotlinx.serialization.json.buildJsonObject
@@ -20,7 +22,6 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.math.max
 
 interface TronApi {
 
@@ -39,6 +40,7 @@ interface TronApi {
         amount: BigInteger
     ): Long
 
+    suspend fun getChainParameters(): TronChainParameters
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -98,6 +100,14 @@ internal class TronApiImpl @Inject constructor(
         val totalEnergy = triggerConstant.energyUsed + triggerConstant.energyPenalty
         val totalSun = totalEnergy * ENERGY_TO_SUN_FACTOR
         return totalSun
+    }
+
+    override suspend fun getChainParameters(): TronChainParameters {
+        return httpClient.post(rpcUrl) {
+            url {
+                appendPathSegments("/wallet/getchainparameters")
+            }
+        }.body<TronChainParameters>()
     }
 
     private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {

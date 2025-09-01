@@ -1003,7 +1003,13 @@ internal class SendFormViewModel @Inject constructor(
                 selectedToken
                     .filterNotNull()
                     .map {
-                        gasFeeRepository.getGasFee(it.chain, it.address)
+                        gasFeeRepository.getGasFee(
+                            chain = it.chain,
+                            address = it.address,
+                            isNativeToken = it.isNativeToken,
+                            to = addressFieldState.text.toString(),
+                            memo = memoFieldState.text.toString()
+                        )
                     }
                     .catch {
                         // TODO handle error when querying gas fee
@@ -1203,9 +1209,8 @@ internal class SendFormViewModel @Inject constructor(
                     it.copy(
                         srcAddress = address,
                         selectedCoin = uiModel,
-                        hasMemo = hasMemo,
-
-                        )
+                        hasMemo = hasMemo
+                    )
                 }
             }.collect()
         }
@@ -1400,6 +1405,8 @@ internal class SendFormViewModel @Inject constructor(
                     chain = srcAddress.chain,
                     address = srcAddress.address,
                     isNativeToken = srcAddress.isNativeToken,
+                    to = addressFieldState.text.toString(),
+                    memo = memoFieldState.text.toString(),
                 )
             } catch (e: Exception) {
                 uiState.update {
@@ -1508,6 +1515,5 @@ internal fun List<Address>.findCurrentSrc(
     } else {
         return firstSendSrc(selectedTokenId, null)
     }
-
 }
 

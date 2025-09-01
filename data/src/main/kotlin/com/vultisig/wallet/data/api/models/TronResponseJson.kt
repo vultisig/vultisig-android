@@ -63,3 +63,25 @@ internal data class TronTriggerConstantContractJson(
     @SerialName("energy_penalty")
     val energyPenalty: Long
 )
+
+@Serializable
+data class TronChainParameters(
+    val chainParameter: List<TronChainParameter>,
+) {
+    private val chainParameterMapped = chainParameter.associate { it.key to it.value }
+
+    val memoFeeEstimate: Long
+        get() = chainParameterMapped["getMemoFee"] ?: 0L
+
+    val createAccountFeeEstimate: Long
+        get() = chainParameterMapped["getCreateAccountFee"] ?: 0L
+
+    val createNewAccountFeeEstimateContract: Long
+        get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
+}
+
+@Serializable
+data class TronChainParameter(
+    val key: String,
+    val value: Long = 0L,
+)

@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -12,7 +12,8 @@ import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.toUnit
+import com.vultisig.wallet.data.utils.toUnit
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -21,22 +22,27 @@ interface GasFeeRepository {
         chain: Chain,
         address: String,
         isNativeToken: Boolean = false,
+        to: String? = null,
+        memo: String? = null,
     ): TokenValue
 }
 
+@Deprecated("Migrate to Properly Fee Service After PR #2412")
 internal class GasFeeRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val blockChairApi: BlockChairApi,
     private val solanaApi: SolanaApi,
     private val tokenRepository: TokenRepository,
     private val thorChainApi: ThorChainApi,
-    private val suiApi: SuiApi,
+    private val tronApi: TronApi,
 ) : GasFeeRepository {
 
     override suspend fun getGasFee(
         chain: Chain,
         address: String,
         isNativeToken: Boolean,
+        to: String?,
+        memo: String?,
     ): TokenValue = when (chain.standard) {
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
@@ -173,10 +179,24 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.Tron -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
-                val feeAmount = chain.toUnit("0.1".toBigDecimal())
+
+                val chainParameters = if (!memo.isNullOrEmpty()) {
+                    tronApi.getChainParameters()
+                } else {
+                    null
+                }
+
+                val feeAmount = if (isNativeToken) {
+                    MAX_BANDWIDTH_PER_COIN_TRANSFER
+                } else {
+                    MAX_BANDWIDTH_TRANSACTION
+                }
+
+                val extraFeeMemo = chainParameters?.memoFeeEstimate?.toBigInteger() ?: BigInteger.ZERO
+                val totalFee = CoinType.TRON.toUnit(feeAmount) + extraFeeMemo
 
                 TokenValue(
-                    value = feeAmount,
+                    value = totalFee,
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )
@@ -186,4 +206,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
+    internal companion object {
+        private val MAX_BANDWIDTH_PER_COIN_TRANSFER = "0.3".toBigDecimal()
+        private val MAX_BANDWIDTH_TRANSACTION  = "0.345".toBigDecimal()
+    }
 }
