@@ -185,5 +185,4 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             else -> throw IllegalArgumentException("Can't estimate gas fee. Chain $chain is unsupported")
         }
     }
-
 }

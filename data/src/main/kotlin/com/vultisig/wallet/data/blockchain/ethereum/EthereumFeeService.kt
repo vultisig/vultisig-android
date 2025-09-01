@@ -23,19 +23,18 @@ import javax.inject.Inject
 class EthereumFeeService @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : FeeService {
-    override suspend fun calculateFees(transaction: Transaction, limit: BigInteger): Fee {
+    override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
-        val chain = transaction.coin.chain
         val evmApi = evmApiFactory.createEvmApi(chain)
 
         val fees = if (chain.supportsLegacyGas) {
             calculateLegacyGasFees(limit, evmApi)
         } else {
-            calculateEip1559Fees(limit, chain, transaction.isSwap(), evmApi)
+            calculateEip1559Fees(limit, chain, isSwap, evmApi)
         }
 
         val l1Fees = if (chain.isLayer2) {
-            calculateLayer1Fees(transaction)
+            calculateLayer1Fees()
         } else {
             BigInteger.ZERO
         }
@@ -53,7 +52,7 @@ class EthereumFeeService @Inject constructor(
         }
     }
 
-    private fun calculateLayer1Fees(transaction: Transaction): BigInteger {
+    private fun calculateLayer1Fees(): BigInteger {
         return BigInteger.ZERO
     }
 
@@ -116,7 +115,6 @@ class EthereumFeeService @Inject constructor(
             Chain.Blast,
             Chain.Optimism,
                 -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
-
             Chain.Polygon ->
                 // polygon has min of 30 gwei, but some blocks comes with less rewards
                 maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
@@ -125,29 +123,19 @@ class EthereumFeeService @Inject constructor(
         }
     }
 
-    private fun Transaction.getAmount(): BigInteger {
-        return when (this) {
-            is Transfer -> {
-                when (coin.isNativeToken) {
-                    true -> amount
-                    false -> BigInteger.ZERO // amounts is encoded in call data for tokens
-                }
-            }
-            is Swap, is SmartContract -> amount
-        }
-    }
-
-    private companion object {
+    companion object {
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val GWEI = BigInteger.TEN.pow(9)
         private val POLYGON_DEFAULT = "30".toBigInteger()
+
+        val DEFAULT_SWAP_LIMIT = "600000"
+        val DEFAULT_COIN_TRANSFER = "23000"
+        val DEFAULT_TOKEN_TRANSFER = "120000"
+        val DEFAULT_ARBITRUN_TRANSFER = "160000"
     }
 }
 
-
 /*
     Avalanche("Avalanche", EVM, "Gwei"),
-    CronosChain("CronosChain", EVM, "Gwei"),
-    ZkSync("Zksync", EVM, "Gwei"), // si eip1559
     Mantle("Mantle", EVM, "Gwei"), // no eip1559 custom fees
  */
