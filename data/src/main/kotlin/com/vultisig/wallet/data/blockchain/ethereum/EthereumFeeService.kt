@@ -37,16 +37,6 @@ class EthereumFeeService @Inject constructor(
         return fees.addL1Amount(l1Fees)
     }
 
-    private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
-        return if (this is GasFees) {
-            this.copy(amount = this.amount + l1FeesAmount)
-        } else if (this is Eip1559) {
-            this.copy(amount = this.amount + l1FeesAmount)
-        } else {
-            error("Fee Type Not Supported")
-        }
-    }
-
     private fun calculateLayer1Fees(): BigInteger {
         return BigInteger.ZERO
     }
@@ -115,6 +105,17 @@ class EthereumFeeService @Inject constructor(
                 maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
 
             else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
+        }
+    }
+
+    // TODO: Show properly fee amount on the UI (upcoming PR)
+    private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
+        return if (this is GasFees) {
+            this.copy(amount = this.amount + l1FeesAmount)
+        } else if (this is Eip1559) {
+            this.copy(amount = this.amount + l1FeesAmount)
+        } else {
+            error("Fee Type Not Supported")
         }
     }
 
