@@ -222,6 +222,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                         BigInteger.ZERO
                     }
 
+                    // TODO: Cleanup
                     val activateDestinationFee = if (!to.isNullOrEmpty()) {
                         val isDestinationInactive = true // Fetch
                         if (isDestinationInactive) {
