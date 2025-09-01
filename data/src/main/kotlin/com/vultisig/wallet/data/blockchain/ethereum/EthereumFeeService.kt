@@ -21,14 +21,14 @@ import java.math.BigInteger
 class EthereumFeeService(
     private val evmApi: EvmApi,
 ): FeeService {
-    override suspend fun calculateFees(transaction: Transaction): Fee {
-        val estimatedLimit = increaseLimit(estimateLimit(transaction))
+    override suspend fun calculateFees(transaction: Transaction, limit: BigInteger): Fee {
+        require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val chain = transaction.coin.chain
 
         val fees = if (chain.supportsLegacyGas) {
-            calculateLegacyGasFees(estimatedLimit)
+            calculateLegacyGasFees(limit)
         } else {
-            calculateEip1559Fees(estimatedLimit, chain, transaction.isSwap())
+            calculateEip1559Fees(limit, chain, transaction.isSwap())
         }
 
         val l1Fees = if (chain.isLayer2) {
@@ -38,12 +38,6 @@ class EthereumFeeService(
         }
 
         return fees
-    }
-
-    private suspend fun estimateLimit(transaction: Transaction): BigInteger {
-        val amount = transaction.getAmount()
-
-        return BigInteger.ZERO
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger): GasFees {
@@ -105,14 +99,6 @@ class EthereumFeeService(
                 maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * "30".toBigInteger())
             else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
         }
-    }
-
-    private fun increaseLimit(limit: BigInteger): BigInteger{
-        if (limit == COIN_TRANSFER_LIMIT) {
-            return limit // coin transfer is always 21K
-        }
-
-        return limit.increaseByPercent(40)
     }
 
     private fun Transaction.getAmount(): BigInteger {
