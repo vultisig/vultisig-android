@@ -195,13 +195,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     }
 
                     // 1:1 bandwidth: TRX
+                    val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
                     val availableBandwidth = bandwidth.await()
+
                     val finalFeeAmount = when {
-                        isNativeToken && availableBandwidth > feeAmount.toLong() -> {
+                        isNativeToken && availableBandwidth >= feeAmountUnit -> {
                             // Native transfer with sufficient bandwidth = free
                             BigDecimal.ZERO
                         }
-                        !isNativeToken -> {
+                        isNativeToken -> {
                             // TRC20 always pays fee (no free bandwidth for smart contracts)
                             feeAmount
                         }
