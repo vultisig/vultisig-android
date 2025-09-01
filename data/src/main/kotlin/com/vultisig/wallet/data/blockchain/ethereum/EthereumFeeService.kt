@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.blockchain.ethereum
 
 import com.vultisig.wallet.data.api.EvmApi
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
@@ -17,18 +18,20 @@ import com.vultisig.wallet.data.utils.increaseByPercent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
+import javax.inject.Inject
 
-class EthereumFeeService(
-    private val evmApi: EvmApi,
-): FeeService {
+class EthereumFeeService @Inject constructor(
+    private val evmApiFactory: EvmApiFactory,
+) : FeeService {
     override suspend fun calculateFees(transaction: Transaction, limit: BigInteger): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val chain = transaction.coin.chain
+        val evmApi = evmApiFactory.createEvmApi(chain)
 
         val fees = if (chain.supportsLegacyGas) {
-            calculateLegacyGasFees(limit)
+            calculateLegacyGasFees(limit, evmApi)
         } else {
-            calculateEip1559Fees(limit, chain, transaction.isSwap())
+            calculateEip1559Fees(limit, chain, transaction.isSwap(), evmApi)
         }
 
         val l1Fees = if (chain.isLayer2) {
@@ -37,15 +40,14 @@ class EthereumFeeService(
             BigInteger.ZERO
         }
 
-        return fees.addL1Amount()
+        return fees.addL1Amount(l1Fees)
     }
 
-    private fun Fee.addL1Amount(): Fee {
-        val l1Amount = BigInteger.ZERO
+    private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
         return if (this is GasFees) {
-            this.copy(amount = this.amount + l1Amount)
+            this.copy(amount = this.amount + l1FeesAmount)
         } else if (this is Eip1559) {
-            this.copy(amount = this.amount + l1Amount)
+            this.copy(amount = this.amount + l1FeesAmount)
         } else {
             error("Fee Type Not Supported")
         }
@@ -55,7 +57,7 @@ class EthereumFeeService(
         return BigInteger.ZERO
     }
 
-    private suspend fun calculateLegacyGasFees(limit: BigInteger): GasFees {
+    private suspend fun calculateLegacyGasFees(limit: BigInteger, evmApi: EvmApi): GasFees {
         val gasPrice = evmApi.getGasPrice()
 
         return GasFees(
@@ -65,7 +67,12 @@ class EthereumFeeService(
         )
     }
 
-    private suspend fun calculateEip1559Fees(limit: BigInteger, chain: Chain, isSwap: Boolean): Eip1559 = coroutineScope {
+    private suspend fun calculateEip1559Fees(
+        limit: BigInteger,
+        chain: Chain,
+        isSwap: Boolean,
+        evmApi: EvmApi,
+    ): Eip1559 = coroutineScope {
         val baseNetworkPriceDeferred = async { evmApi.getBaseFee() }
         val feeHistoryDeferred = async { evmApi.getFeeHistory() }
 
@@ -88,7 +95,7 @@ class EthereumFeeService(
         baseNetworkPrice: BigInteger,
         maxPriorityFeePerGas: BigInteger,
     ): BigInteger {
-       return baseNetworkPrice.increaseByPercent(20).add(maxPriorityFeePerGas)
+        return baseNetworkPrice.increaseByPercent(20).add(maxPriorityFeePerGas)
     }
 
     private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
@@ -109,9 +116,11 @@ class EthereumFeeService(
             Chain.Blast,
             Chain.Optimism,
                 -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
+
             Chain.Polygon ->
                 // polygon has min of 30 gwei, but some blocks comes with less rewards
-                maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * "30".toBigInteger())
+                maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
+
             else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
         }
     }
@@ -129,10 +138,9 @@ class EthereumFeeService(
     }
 
     private companion object {
-        private val COIN_TRANSFER_LIMIT = "21000".toBigInteger()
-
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val GWEI = BigInteger.TEN.pow(9)
+        private val POLYGON_DEFAULT = "30".toBigInteger()
     }
 }
 
