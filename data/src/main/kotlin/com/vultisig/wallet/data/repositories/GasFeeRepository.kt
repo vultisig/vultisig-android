@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.models.TronAccountResource
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -13,7 +14,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.toUnit
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import wallet.core.jni.CoinType
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -178,32 +182,51 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.Tron -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id)
+                coroutineScope {
+                    val nativeToken =
+                        async { tokenRepository.getNativeToken(chain.id) }
+                    val bandwidth =
+                        async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
 
-                val chainParameters = if (!memo.isNullOrEmpty()) {
-                    tronApi.getChainParameters()
-                } else {
-                    null
+                    val feeAmount = if (isNativeToken) {
+                        MAX_BANDWIDTH_PER_COIN_TRANSFER
+                    } else {
+                        MAX_BANDWIDTH_TRANSACTION
+                    }
+
+                    // 1:1 bandwidth: TRX
+                    val needsFee = bandwidth.await() <= CoinType.TRON.toUnit(feeAmount).toLong()
+                    val finalFeeAmount = if (needsFee) {
+                        feeAmount
+                    } else {
+                        BigDecimal.ZERO
+                    }
+
+                    val extraFeeMemo = if (!memo.isNullOrEmpty()) {
+                        tronApi.getChainParameters().memoFeeEstimate.toBigInteger()
+                    } else {
+                        BigInteger.ZERO
+                    }
+
+                    val totalFee = CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo
+
+                    TokenValue(
+                        value = totalFee,
+                        unit = chain.feeUnit,
+                        decimals = nativeToken.await().decimal,
+                    )
                 }
-
-                val feeAmount = if (isNativeToken) {
-                    MAX_BANDWIDTH_PER_COIN_TRANSFER
-                } else {
-                    MAX_BANDWIDTH_TRANSACTION
-                }
-
-                val extraFeeMemo = chainParameters?.memoFeeEstimate?.toBigInteger() ?: BigInteger.ZERO
-                val totalFee = CoinType.TRON.toUnit(feeAmount) + extraFeeMemo
-
-                TokenValue(
-                    value = totalFee,
-                    unit = chain.feeUnit,
-                    decimals = nativeToken.decimal,
-                )
             }
 
             else -> throw IllegalArgumentException("Can't estimate gas fee. Chain $chain is unsupported")
         }
+    }
+
+    private fun TronAccountResource.calculateAvailableBandwidth(): Long {
+        val freeBandwidth = freeNetLimit - freeNetUsed
+        val stakingBandwidth = netLimit - netUsed
+
+        return freeBandwidth + stakingBandwidth
     }
 
     internal companion object {

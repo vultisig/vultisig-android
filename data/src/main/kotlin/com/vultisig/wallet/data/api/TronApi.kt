@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.TronAccountRequest
+import com.vultisig.wallet.data.api.models.TronAccountResource
 import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
 import com.vultisig.wallet.data.api.models.TronChainParameters
@@ -41,6 +43,8 @@ interface TronApi {
     ): Long
 
     suspend fun getChainParameters(): TronChainParameters
+
+    suspend fun getAccountResource(address: String): TronAccountResource
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -129,6 +133,16 @@ internal class TronApiImpl @Inject constructor(
             Timber.e(e, "error getting tron balance")
             return BigInteger.ZERO
         }
+    }
+
+    override suspend fun getAccountResource(address: String): TronAccountResource {
+        return httpClient.post(rpcUrl) {
+            url {
+                appendPathSegments("/wallet/getaccountresource")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(TronAccountRequest(address, true))
+        }.body<TronAccountResource>()
     }
 
     companion object {

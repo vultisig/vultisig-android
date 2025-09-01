@@ -79,3 +79,37 @@ data class TronChainParameter(
     val key: String,
     val value: Long = 0L,
 )
+
+@Serializable
+internal data class TronAccountRequest(
+    val address: String,
+    val visible: Boolean,
+)
+
+@Serializable
+data class TronAccountResource(
+    @SerialName("freeNetUsed")
+    val freeNetUsed: Long = 0L,
+    @SerialName("freeNetLimit")
+    val freeNetLimit: Long = 0L,
+    @SerialName("NetUsed")
+    val netUsed: Long = 0L,
+    @SerialName("NetLimit")
+    val netLimit: Long = 0L,
+    @SerialName("EnergyLimit")
+    val energyLimit: Long = 0L,
+    @SerialName("EnergyUsed")
+    val energyUsed: Long = 0L,
+    @SerialName("TotalNetLimit")
+    val totalNetLimit: Long = 0L,
+    @SerialName("TotalNetWeight")
+    val totalNetWeight: Long = 0L,
+    @SerialName("TotalEnergyLimit")
+    val totalEnergyLimit: Long = 0L,
+    @SerialName("TotalEnergyWeight")
+    val totalEnergyWeight: Long = 0L,
+    @SerialName("tronPowerUsed")
+    val tronPowerUsed: Long = 0L,
+    @SerialName("tronPowerLimit")
+    val tronPowerLimit: Long = 0L,
+)
