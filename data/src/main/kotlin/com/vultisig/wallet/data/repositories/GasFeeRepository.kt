@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.toUnit
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import wallet.core.jni.CoinType
@@ -196,9 +197,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                         MAX_BANDWIDTH_TRANSACTION
                     }
 
-                    val availableBandwidth = bandwidth.await()
-
-                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, availableBandwidth, feeAmount)
+                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth, feeAmount)
 
                     val extraFeeMemo = async { getTronFeeMemo(memo) }
                     val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
@@ -218,15 +217,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun getBaseFeeWithDiscount(
+    private suspend fun getBaseFeeWithDiscount(
         isNativeToken: Boolean,
-        availableBandwidth: Long,
+        availableBandwidth: Deferred<Long>,
         feeAmount: BigDecimal
     ): BigDecimal {
         val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
         return when {
             // Native transfer with sufficient bandwidth => free tx
-            isNativeToken && availableBandwidth >= feeAmountUnit -> BigDecimal.ZERO
+            isNativeToken && availableBandwidth.await() >= feeAmountUnit -> BigDecimal.ZERO
             // TRC20 always pays fee (no free bandwidth for smart contracts)
             !isNativeToken -> feeAmount
             // Native transfer without sufficient bandwidth
