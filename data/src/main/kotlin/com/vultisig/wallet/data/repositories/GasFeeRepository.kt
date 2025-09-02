@@ -14,12 +14,10 @@ import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.utils.toUnit
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -210,7 +208,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                         val bandwidthFee = if (isNewAccount) {
                             BigInteger.ZERO
                         } else {
-                            getBaseFeeWithDiscount(isNativeToken, bandwidth)
+                            getBandwidthFeeDiscount(isNativeToken, bandwidth)
                         }
 
                         val totalFee = bandwidthFee + memoFee.await() + activationFee
@@ -235,7 +233,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun getBaseFeeWithDiscount(
+    private suspend fun getBandwidthFeeDiscount(
         isNativeToken: Boolean,
         availableBandwidth: Deferred<Long>,
     ): BigInteger {
