@@ -191,13 +191,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     val bandwidth =
                         async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
 
-                    val feeAmount = if (isNativeToken) {
-                        MAX_BANDWIDTH_PER_COIN_TRANSFER
-                    } else {
-                        MAX_BANDWIDTH_TRANSACTION
-                    }
-
-                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth, feeAmount)
+                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth)
 
                     val extraFeeMemo = async { getTronFeeMemo(memo) }
                     val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
@@ -220,8 +214,13 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private suspend fun getBaseFeeWithDiscount(
         isNativeToken: Boolean,
         availableBandwidth: Deferred<Long>,
-        feeAmount: BigDecimal
     ): BigDecimal {
+        val feeAmount = if (isNativeToken) {
+            MAX_BANDWIDTH_PER_COIN_TRANSFER
+        } else {
+            MAX_BANDWIDTH_TRANSACTION
+        }
+        // 1:1 SUN: Bandwidth
         val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
         return when {
             // Native transfer with sufficient bandwidth => free tx
