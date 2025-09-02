@@ -286,7 +286,9 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
     private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
         return if (chainParameters == null) {
-            tronApi.getChainParameters()
+            val params = tronApi.getChainParameters()
+            chainParameters = params
+            params
         } else {
             chainParameters!!
         }
