@@ -5,8 +5,8 @@ import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteJson
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -150,24 +149,24 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
     }
 }
 
-interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<OneInchSwapQuoteDeserialized>
+interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<EVMSwapQuoteDeserialized>
 
 class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
     OneInchSwapQuoteResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("OneInchSwapQuoteResponseJsonSerializer")
 
-    override fun deserialize(decoder: Decoder): OneInchSwapQuoteDeserialized {
+    override fun deserialize(decoder: Decoder): EVMSwapQuoteDeserialized {
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
         val swapJsonObject = jsonObject["swap"]?.jsonObject
         val quoteJsonObject = jsonObject["quote"]?.jsonObject
         return if (swapJsonObject != null && quoteJsonObject != null) {
-            val swapJson = json.decodeFromJsonElement<OneInchSwapQuoteJson>(swapJsonObject)
+            val swapJson = json.decodeFromJsonElement<EVMSwapQuoteJson>(swapJsonObject)
             val quoteJson = json.decodeFromJsonElement<OneInchQuoteJson>(quoteJsonObject)
-            OneInchSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas)))
+            EVMSwapQuoteDeserialized.Result(swapJson.copy(tx = swapJson.tx.copy(gas = quoteJson.gas)))
         } else {
-            OneInchSwapQuoteDeserialized.Error(
+            EVMSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<String>(jsonObject)
             )
         }
