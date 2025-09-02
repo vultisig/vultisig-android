@@ -419,8 +419,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.Kyber -> {
                         val dstAddress = quote.data.tx.to
-                        val gas = quote.data.tx.gas.toBigInteger()
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee, gas)
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
@@ -459,8 +458,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.OneInch -> {
                         val dstAddress = quote.data.tx.to
-                        val gas = quote.data.tx.gas.toBigInteger()
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee, gas)
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
