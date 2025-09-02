@@ -1,11 +1,17 @@
 package com.vultisig.wallet.ui.screens.vault_settings
 
+import android.content.Context
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.navigation.Destination
@@ -13,11 +19,17 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,10 +42,19 @@ internal data class VaultSettingsGroupUiModel(
     val isVisible: Boolean = true
 )
 
+internal data class BiometricsEnableUiModel(
+    val isSaveEnabled: Boolean = false,
+    val isPasswordVisible: Boolean = false,
+    val passwordErrorMessage: UiText? = null,
+    val passwordHint: UiText? = null
+)
+
 internal data class VaultSettingsState(
     val settingGroups: List<VaultSettingsGroupUiModel> = emptyList(),
     val isAdvanceSetting: Boolean = false,
     val isBackupVaultBottomSheetVisible: Boolean = false,
+    val isBiometricFastSignBottomSheetVisible: Boolean = false,
+    val biometricsEnableUiModel: BiometricsEnableUiModel = BiometricsEnableUiModel(),
 )
 
 internal sealed class VaultSettingsItem(
@@ -60,7 +81,7 @@ internal sealed class VaultSettingsItem(
 
     data class BiometricFastSign(val isBiometricEnabled: Boolean) : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Biometrics Fast Signing".asUiText(),
+            title = "Biometric fast sign".asUiText(),
             trailingSwitch = isBiometricEnabled,
             leadingIcon = R.drawable.biomatrics_fast
         ),
@@ -72,7 +93,8 @@ internal sealed class VaultSettingsItem(
             subTitle = "Enable biometric for fast sign".asUiText(),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.security,
-        )
+        ),
+        enabled = false
     )
 
     data object LockTime : VaultSettingsItem(
@@ -166,6 +188,11 @@ internal open class VaultSettingsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val vaultRepository: VaultRepository,
+    @ApplicationContext private val context: Context,
+    private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
 
     val settingGroups = listOf(
@@ -220,6 +247,12 @@ internal open class VaultSettingsViewModel @Inject constructor(
         )
     )
 
+    val isBiometricFastSignEnabled: Boolean? = uiModel.value.settingGroups
+        .flatMap { group -> group.items }
+        .filterIsInstance<VaultSettingsItem.BiometricFastSign>()
+        .firstOrNull()?.isBiometricEnabled
+
+    val passwordTextFieldState = TextFieldState()
 
 
     private val vaultId: String =
@@ -275,6 +308,9 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
                 }
         }
+
+        initBiometricFastSignSwitchState()
+        validateEachTextChange()
     }
 
     fun onBackClick() {
@@ -312,17 +348,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
             }
             is VaultSettingsItem.BiometricFastSign -> {
                 val newItem = uiModel.value.copy(
-                    settingGroups = uiModel.value.settingGroups.map {
-                        it.copy(
-                            items = it.items.map { item ->
-                                if (item is VaultSettingsItem.BiometricFastSign) {
-                                    item.copy(isBiometricEnabled = !item.isBiometricEnabled)
-                                } else {
-                                    item
-                                }
-                            }
-                        )
-                    }
+                    isBiometricFastSignBottomSheetVisible = true,
                 )
                 uiModel.update {
                     newItem
@@ -335,12 +361,25 @@ internal open class VaultSettingsViewModel @Inject constructor(
             is VaultSettingsItem.Migrate -> migrate()
             VaultSettingsItem.PasswordHint -> Unit
             VaultSettingsItem.Rename -> openRename()
-            VaultSettingsItem.Security -> navigateToBiometricsScreen()
+            VaultSettingsItem.Security -> Unit
             VaultSettingsItem.OnChainSecurity -> navigateToOnChainSecurityScreen()
             is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
             VaultSettingsItem.Sign -> signMessage()
         }
     }
+
+    private fun updateBiometricFastSignUiModel(isBiometricEnabled: Boolean): List<VaultSettingsGroupUiModel> =
+        uiModel.value.settingGroups.map {
+            it.copy(
+                items = it.items.map { item ->
+                    if (item is VaultSettingsItem.BiometricFastSign) {
+                        item.copy(isBiometricEnabled = isBiometricEnabled)
+                    } else {
+                        item
+                    }
+                }
+            )
+        }
 
     fun openDetails() {
         viewModelScope.launch {
@@ -411,6 +450,128 @@ internal open class VaultSettingsViewModel @Inject constructor(
                 isBackupVaultBottomSheetVisible = false
             )
         }
+    }
+
+    fun onDismissBiometricFastSignBottomSheet() {
+        uiModel.update {
+            it.copy(
+                isBiometricFastSignBottomSheetVisible = false,
+                biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
+                    passwordErrorMessage = null,
+                    passwordHint = null,
+                )
+            )
+        }
+    }
+
+    fun togglePasswordVisibility() = viewModelScope.launch {
+        uiModel.update {
+            it.copy(
+                biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
+                    isPasswordVisible = !it.biometricsEnableUiModel.isPasswordVisible
+                )
+            )
+        }
+    }
+
+
+    private fun initBiometricFastSignSwitchState() = viewModelScope.launch {
+        vaultPasswordRepository.getPassword(vaultId).let { password ->
+            val groupUiModels = updateBiometricFastSignUiModel(password != null)
+            uiModel.update {
+                it.copy(
+                    settingGroups = groupUiModels
+                )
+            }
+        }
+    }
+
+    private fun validateEachTextChange() = viewModelScope.launch {
+        passwordTextFieldState.textAsFlow()
+            .combine(uiModel.map { it.isBiometricFastSignBottomSheetVisible }
+                .distinctUntilChanged()) { text, isVisible ->
+                if (isVisible.not())
+                    return@combine
+                uiModel.update {
+                    it.copy(
+                        biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
+                            isSaveEnabled = text.isNotEmpty()
+                        )
+                    )
+                }
+
+            }
+            .collect()
+    }
+
+    fun onSaveEnableBiometricFastSign() = viewModelScope.launch {
+        val vault = vaultRepository.get(vaultId)
+            ?: error("No vault with id $vaultId exists")
+        val isPasswordValid = vultiSignerRepository.isPasswordValid(
+            publicKeyEcdsa = vault.pubKeyECDSA,
+            password = passwordTextFieldState.text.toString(),
+        )
+
+        if (!isPasswordValid) {
+            val hint = getPasswordHint()
+            passwordTextFieldState.clearText()
+            uiModel.update {
+                it.copy(
+                    biometricsEnableUiModel = it.biometricsEnableUiModel.copy(
+                        passwordErrorMessage = UiText.StringResource(
+                            R.string.keysign_password_incorrect_password
+                        ),
+                        passwordHint = hint,
+                        isSaveEnabled = false,
+                    )
+                )
+            }
+            return@launch
+        }
+        if (isBiometricFastSignEnabled == false) {
+            vaultPasswordRepository.savePassword(
+                vaultId = vaultId,
+                password = passwordTextFieldState.text.toString()
+            )
+            uiModel.update {
+                it.copy(
+                    settingGroups = updateBiometricFastSignUiModel(isBiometricEnabled = true),
+                    isBiometricFastSignBottomSheetVisible = false
+                )
+            }
+        } else {
+            vaultPasswordRepository.clearPassword(vaultId)
+            uiModel.update {
+                it.copy(
+                    settingGroups = updateBiometricFastSignUiModel(isBiometricEnabled = false),
+                    isBiometricFastSignBottomSheetVisible = false
+                )
+            }
+        }
+        showSnackbarMessage()
+        navigator.navigate(Destination.Back)
+    }
+
+    private suspend fun getPasswordHint(): UiText? {
+
+        val passwordHintString =
+            vaultDataStoreRepository.readFastSignHint(vaultId = vaultId).first()
+
+        if (passwordHintString.isEmpty()) return null
+
+        return UiText.FormattedText(
+            R.string.import_file_password_hint_text,
+            listOf(passwordHintString)
+        )
+    }
+
+    private suspend fun showSnackbarMessage() {
+        val messageRes = if (isBiometricFastSignEnabled == true) {
+            R.string.vault_settings_biometrics_screen_snackbar_enabled
+        } else {
+            R.string.vault_settings_biometrics_screen_snackbar_disabled
+        }
+        snackbarFlow.showMessage(context.getString(messageRes))
     }
 
 

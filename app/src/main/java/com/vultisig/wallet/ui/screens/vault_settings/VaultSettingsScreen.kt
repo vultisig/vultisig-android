@@ -4,8 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -22,7 +25,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -42,30 +50,30 @@ internal fun VaultSettingsScreen() {
 
     VaultSettingsScreen(
         uiModel = uiModel,
-        onSettingsClick = {
-            viewModel.onSettingsItemClick(it)
-        },
+        onSettingsClick = viewModel::onSettingsItemClick,
         onBackClick = viewModel::onBackClick,
-        onLocalBackupClick = {
-            viewModel.onLocalBackupClick()
-        },
-        onServerBackupClick = {
-            viewModel.onServerBackupClick()
-        },
-        onDismissBackupVaultBottomSheet = {
-            viewModel.onDismissBackupVaultBottomSheet()
-        }
+        onLocalBackupClick = viewModel::onLocalBackupClick,
+        onServerBackupClick = viewModel::onServerBackupClick,
+        onDismissBackupVaultBottomSheet = viewModel::onDismissBackupVaultBottomSheet,
+        onDismissBiometricsBottomSheet = viewModel::onDismissBiometricFastSignBottomSheet,
+        biometricTextFieldState = viewModel.passwordTextFieldState,
+        onSaveBiometricsClick = viewModel::onSaveEnableBiometricFastSign,
+        onToggleVisibilityClick = viewModel::togglePasswordVisibility,
     )
 }
 
 @Composable
 private fun VaultSettingsScreen(
     uiModel: VaultSettingsState,
+    onSaveBiometricsClick: () -> Unit = {},
+    onDismissBiometricsBottomSheet: () -> Unit = {},
+    biometricTextFieldState: TextFieldState,
     onSettingsClick: (VaultSettingsItem) -> Unit,
     onBackClick: () -> Unit = {},
     onLocalBackupClick: () -> Unit = {},
     onServerBackupClick: () -> Unit = {},
     onDismissBackupVaultBottomSheet: () -> Unit = {},
+    onToggleVisibilityClick: () -> Unit = {},
 ) {
 
     val settingGroups = uiModel.settingGroups
@@ -75,7 +83,7 @@ private fun VaultSettingsScreen(
             stringResource(R.string.vault_settings_advanced_title)
         else
             stringResource(R.string.vault_settings_title),
-       onBackClick =  onBackClick,
+        onBackClick =  onBackClick,
     ) {
         Column(
             Modifier
@@ -105,10 +113,43 @@ private fun VaultSettingsScreen(
                     onServerBackupClick = onServerBackupClick
                 )
             }
+
+            if (uiModel.isBiometricFastSignBottomSheetVisible) {
+                BiometricFastSignBottomSheet(
+                    onDismissBiometricsBottomSheet,
+                    biometricTextFieldState,
+                    onToggleVisibilityClick,
+                    onSaveBiometricsClick,
+                    uiModel
+                )
+            }
         }
     }
 
 
+}
+
+@Composable
+private fun BiometricFastSignBottomSheet(
+    onDismissBiometricsBottomSheet: () -> Unit,
+    biometricTextFieldState: TextFieldState,
+    onToggleVisibilityClick: () -> Unit,
+    onSaveBiometricsClick: () -> Unit,
+    uiModel: VaultSettingsState
+) {
+    VsModalBottomSheet(
+        onDismissRequest = onDismissBiometricsBottomSheet,
+    ) {
+        BiometricFastSignBottomSheetContent(
+            passwordTextFieldState = biometricTextFieldState,
+            onToggleVisibilityClick = onToggleVisibilityClick,
+            onSaveClick = onSaveBiometricsClick,
+            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString() ?: "Password",
+            errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
+            isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
+            isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
+        )
+    }
 }
 
 
@@ -125,6 +166,64 @@ private fun BackupVaultBottomSheet(
         BackupVaultBottomSheetContent(
             onLocalBackupClick = onLocalBackupClick,
             onServerBackupClick = onServerBackupClick
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun BiometricFastSignBottomSheetContent(
+    passwordTextFieldState: TextFieldState = rememberTextFieldState(),
+    onToggleVisibilityClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
+    hint: String? = null,
+    errorMessage: String? = null,
+    isSaveEnabled: Boolean = true,
+    isPasswordVisible: Boolean = true,
+) {
+    Column(
+        Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "Enable Biometrics Fast Signing",
+            style = Theme.brockmann.headings.subtitle,
+            color = Theme.colors.text.primary,
+        )
+
+        FadingHorizontalDivider(
+            modifier = Modifier.padding(
+                vertical = 24.dp
+            )
+        )
+
+        VsTextInputField(
+            textFieldState = passwordTextFieldState,
+            type = VsTextInputFieldType.Password(
+                isVisible = isPasswordVisible,
+                onVisibilityClick = onToggleVisibilityClick
+            ),
+            hint = hint,
+            footNote = errorMessage,
+            innerState = if (errorMessage != null)
+                VsTextInputFieldInnerState.Error
+            else VsTextInputFieldInnerState.Default,
+        )
+
+
+        UiSpacer(14.dp)
+
+        VsButton(
+            state = if (isSaveEnabled)
+                VsButtonState.Enabled
+            else
+                VsButtonState.Disabled,
+            label = "Save",
+            onClick = onSaveClick,
+            modifier = Modifier
+                .fillMaxWidth()
         )
     }
 }
