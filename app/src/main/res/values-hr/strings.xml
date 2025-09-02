@@ -520,4 +520,17 @@
     <string name="backup_device_title">Sigurnosna kopija uređaja</string>
     <string name="backup_server_title">Sigurnosna kopija poslužitelja</string>
     <string name="backup_server_desc">Ponovno zatražite dijeljenje trezora poslužitelja.</string>
+    <plurals name="seconds_format">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="few">%d sekundi</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d minuta</item>
+        <item quantity="few">%d minuta</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d sat</item>
+        <item quantity="few">%d sati</item>
+    </plurals>
+
 </resources>

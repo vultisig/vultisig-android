@@ -529,4 +529,20 @@
     <string name="backup_device_title">Резервное копирование устройства</string>
     <string name="backup_server_title">Резервное копирование сервера</string>
     <string name="backup_server_desc">Повторно запросите общий ресурс хранилища сервера.</string>
+    <plurals name="seconds_format">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+    </plurals>
+
 </resources>

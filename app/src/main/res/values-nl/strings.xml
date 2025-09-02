@@ -514,7 +514,7 @@
     <string name="address_book_title_edit">Adresboek bewerken</string>
     <string name="backup_password_request_title">Wilt u uw backup versleutelen met een wachtwoord?</string>
     <string name="backup_password_request_caution_encrypt_desc">Als u ervoor kiest een wachtwoord toe te voegen, wordt dit gebruikt om het back-upbestand te versleutelen.</string>
-    <string name="backup_password_request_highlight_encrypt">ersleutelen</string>
+    <string name="backup_password_request_highlight_encrypt">versleutelen</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Let op: als u uw kluiswachtwoord vergeet, kan het niet worden gereset of hersteld.</string>
     <string name="backup_password_request_highlight_cannot">kan niet</string>
     <string name="backup_password_request_caution_secure_without_desc">Uw back-up is standaard veilig zonder extra wachtwoord, omdat u Vault-shares op verschillende locaties opslaat.</string>
@@ -529,4 +529,16 @@
     <string name="backup_device_title">Apparaatback-up</string>
     <string name="backup_server_title">Serverback-up</string>
     <string name="backup_server_desc">Vraag serverkluisshare opnieuw aan.</string>
+    <plurals name="seconds_format">
+        <item quantity="one">%d seconde</item>
+        <item quantity="other">%d seconden</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d minuut</item>
+        <item quantity="other">%d minuten</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
 </resources>

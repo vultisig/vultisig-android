@@ -493,7 +493,7 @@
     <string name="vault_management">Tresorverwaltung</string>
     <string name="other">Sonstiges</string>
     <string name="unstake_tcy_zero_error">Das Aufheben der Einsätze kann nicht durchgeführt werden, wenn der Kontostand unter 1 liegt</string>
-    <string name="never">ersleutelen</string>
+    <string name="never">nie</string>
     <string name="check_updates_title">Aktualisierungen prüfen</string>
     <string name="update_available">Update verfügbar</string>
     <string name="app_up_to_date">App ist aktuell</string>
@@ -507,17 +507,31 @@
     <string name="backup_password_request_caution_encrypt_desc">Wenn Sie ein Passwort hinzufügen, wird dieses zum Verschlüsseln der Sicherungsdatei verwendet.</string>
     <string name="backup_password_request_highlight_encrypt">Verschlüsseln</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Hinweis: Wenn Sie Ihr Tresor-Passwort vergessen, kann es nicht zurückgesetzt oder wiederhergestellt werden.</string>
-    <string name="backup_password_request_highlight_cannot">Standardmäßig ist Ihr Backup ohne zusätzliches Passwort sicher, da Sie Ihre Tresor-Freigaben an verschiedenen Orten speichern.</string>
+    <string name="backup_password_request_highlight_cannot">kann nicht</string>
     <string name="backup_password_request_caution_secure_without_desc">Standardmäßig ist Ihr Backup ohne zusätzliches Passwort sicher, da Sie Ihre Tresor-Freigaben an verschiedenen Orten speichern.</string>
     <string name="backup_password_request_highlight_secure_without">Sicher ohne</string>
     <string name="backup_select_vaults_title">Tresore zum Sichern auswählen</string>
     <string name="backup_select_vaults_subtitle">Wählen Sie, ob nur dieser Tresor oder alle Tresore in Ihrer App gesichert werden sollen.</string>
-    <string name="backup_this_vault_only">Nur dieser Vault</string>
-    <string name="backup_all_vaults">Alle Vaults</string>
+    <string name="backup_this_vault_only">Nur dieser Tresor</string>
+    <string name="backup_all_vaults">Alle Tresore</string>
     <string name="more">+%1$d mehr</string>
     <string name="backup_choose_method_title">Sicherungsmethode auswählen</string>
     <string name="backup_device_desc">Speichern Sie die Vault-Freigabe dieses Geräts.</string>
     <string name="backup_device_title">Gerätesicherung</string>
     <string name="backup_server_title">Serversicherung</string>
     <string name="backup_server_desc">Server-Vault-Freigabe erneut anfordern.</string>
+
+    <plurals name="seconds_format">
+        <item quantity="one">%d Sekunden</item>
+        <item quantity="other">%d Sekunden</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d Minute</item>
+        <item quantity="other">%d Minuten</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d Stunde</item>
+        <item quantity="other">%d Stunden</item>
+    </plurals>
+
 </resources>

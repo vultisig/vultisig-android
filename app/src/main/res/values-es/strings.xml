@@ -520,4 +520,18 @@
     <string name="backup_device_title">Copia de seguridad del dispositivo</string>
     <string name="backup_server_title">Copia de seguridad del servidor</string>
     <string name="backup_server_desc">Solicitar de nuevo el recurso compartido de la bóveda del servidor.</string>
+    <plurals name="seconds_format">
+        <item quantity="one">%d segundo</item>
+        <item quantity="many">%d segundos</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d minutos</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d hora</item>
+        <item quantity="many">%d horas</item>
+    </plurals>
+
+
 </resources>
