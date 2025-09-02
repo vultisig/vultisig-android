@@ -259,6 +259,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
+    // https://developers.tron.network/docs/resource-model#account-bandwidth-balance-query
     private fun TronAccountResourceJson.calculateAvailableBandwidth(): Long {
         val freeBandwidth = freeNetLimit - freeNetUsed
         val stakingBandwidth = netLimit - netUsed
