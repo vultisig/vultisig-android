@@ -113,7 +113,7 @@ internal class TronApiImpl @Inject constructor(
     override suspend fun getChainParameters(): TronChainParametersJson {
         return httpClient.post(rpcUrl) {
             url {
-                appendPathSegments("/wallet/getchainparameters")
+                path("wallet", "getchainparameters")
             }
         }.body<TronChainParametersJson>()
     }
