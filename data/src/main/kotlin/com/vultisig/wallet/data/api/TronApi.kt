@@ -150,7 +150,7 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getAccount(address: String): TronAccountJson {
-        httpClient.post(rpcUrl) {
+        return httpClient.post(rpcUrl) {
             url {
                 appendPathSegments("/wallet/getaccount")
             }
