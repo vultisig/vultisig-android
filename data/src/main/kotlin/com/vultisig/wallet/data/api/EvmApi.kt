@@ -409,7 +409,7 @@ class EvmApiImp(
         val response = fetch<EvmRpcResponseJson<EvmBaseFeeJson>>(
             method = "eth_getBlockByNumber",
             params = buildJsonArray {
-                add("latest")
+                add("pending")
                 add(true)
             }
         )
