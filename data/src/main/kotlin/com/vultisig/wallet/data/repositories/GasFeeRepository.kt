@@ -191,13 +191,12 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     val bandwidth =
                         async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
 
-                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth)
-
+                    val baseFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth)
                     val extraFeeMemo = async { getTronFeeMemo(memo) }
                     val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
 
                     val totalFee =
-                        CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo.await() + activateDestinationFee.await()
+                        CoinType.TRON.toUnit(baseFeeAmount) + extraFeeMemo.await() + activateDestinationFee.await()
 
                     TokenValue(
                         value = totalFee,
