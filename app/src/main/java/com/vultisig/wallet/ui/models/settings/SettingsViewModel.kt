@@ -423,4 +423,9 @@ internal class SettingsViewModel @Inject constructor(
             it.copy(hasToShowReferralCodeSheet = false)
         }
     }
+
+    fun onShareVaultQrClick(){
+        navigateTo(Destination.ShareVaultQr(vaultId))
+    }
+
 }

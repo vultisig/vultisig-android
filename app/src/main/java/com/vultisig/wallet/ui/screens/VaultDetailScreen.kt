@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,7 +29,7 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
@@ -56,22 +55,13 @@ private fun VaultDetailScreen(
     state: VaultDetailUiModel,
     onBackClick: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.vault_settings_details_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick
-            )
-        }
-    ) {
+
+    V2Scaffold(
+        title = stringResource(R.string.vault_settings_details_title),
+        onBackClick = onBackClick
+    ){
         Column(
-            Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+            modifier = Modifier
                 .verticalScroll(rememberScrollState())
         ) {
             VaultDetailGroup(

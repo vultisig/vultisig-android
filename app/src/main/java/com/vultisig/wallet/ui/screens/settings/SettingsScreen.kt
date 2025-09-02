@@ -7,14 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +35,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.SettingsItem
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
@@ -71,6 +70,7 @@ fun SettingsScreen() {
         onBackClick = viewModel::back,
         onContinueReferral = viewModel::onContinueReferralBottomSheet,
         onDismissReferral = viewModel::onDismissReferralBottomSheet,
+        onShareVaultQrClick = viewModel::onShareVaultQrClick
     )
 }
 
@@ -78,24 +78,26 @@ fun SettingsScreen() {
 private fun SettingsScreen(
     state: SettingsUiModel,
     onSettingsItemClick: (SettingsItem) -> Unit,
+    onShareVaultQrClick: () -> Unit,
     onBackClick: () -> Unit,
     onContinueReferral: () -> Unit,
     onDismissReferral: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            VsTopAppBar(
-                title = "Settings",
-                onIconLeftClick = onBackClick,
-                iconLeft = R.drawable.ic_caret_left,
+    V2Scaffold(
+        title = stringResource(R.string.settings_screen_title),
+        onBackClick = onBackClick,
+        actions = {
+            UiIcon(
+                drawableResId = R.drawable.navigation_qr_code,
+                size = 16.dp,
+                onClick = onShareVaultQrClick,
+                modifier = Modifier
+                    .padding(16.dp)
             )
-        },
+        }
     ) {
         Column(
-            Modifier
-                .fillMaxHeight()
-                .padding(it)
-                .padding(16.dp)
+            modifier = Modifier
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
