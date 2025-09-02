@@ -303,10 +303,10 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-
                 val transaction = when (quote) {
                     is SwapQuote.ThorChain -> {
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
                         val dstAddress =
                             quote.data.router ?: quote.data.inboundAddress ?: srcAddress
                         val allowance = allowanceRepository.getAllowance(
@@ -360,6 +360,8 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
                         val address = quote.data.inboundAddress
                         val dstAddress = address ?: srcAddress
 
@@ -417,6 +419,8 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.Kyber -> {
                         val dstAddress = quote.data.tx.to
+                        val gas = quote.data.tx.gas.toBigInteger()
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee, gas)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
@@ -455,6 +459,8 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.OneInch -> {
                         val dstAddress = quote.data.tx.to
+                        val gas = quote.data.tx.gas.toBigInteger()
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee, gas)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
