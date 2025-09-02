@@ -63,3 +63,69 @@ internal data class TronTriggerConstantContractJson(
     @SerialName("energy_penalty")
     val energyPenalty: Long
 )
+
+@Serializable
+data class TronChainParametersJson(
+    val chainParameter: List<TronChainParameterJson>,
+) {
+    private val chainParameterMapped = chainParameter.associate { it.key to it.value }
+
+    val memoFeeEstimate: Long
+        get() = chainParameterMapped["getMemoFee"] ?: 0L
+
+    val createAccountFeeEstimate: Long
+        get() = chainParameterMapped["getCreateAccountFee"] ?: 0L
+
+    val createNewAccountFeeEstimateContract: Long
+        get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
+
+    // Atm according to network: 1 bandwidth -> 1000 SUN
+    val bandwidthFeePrice: Long
+        get() = chainParameterMapped["getTransactionFee"] ?: 0L
+}
+
+@Serializable
+data class TronChainParameterJson(
+    val key: String,
+    val value: Long = 0L,
+)
+
+@Serializable
+internal data class TronAccountRequestJson(
+    val address: String,
+    val visible: Boolean,
+)
+
+@Serializable
+data class TronAccountResourceJson(
+    @SerialName("freeNetUsed")
+    val freeNetUsed: Long = 0L,
+    @SerialName("freeNetLimit")
+    val freeNetLimit: Long = 0L,
+    @SerialName("NetUsed")
+    val netUsed: Long = 0L,
+    @SerialName("NetLimit")
+    val netLimit: Long = 0L,
+    @SerialName("EnergyLimit")
+    val energyLimit: Long = 0L,
+    @SerialName("EnergyUsed")
+    val energyUsed: Long = 0L,
+    @SerialName("TotalNetLimit")
+    val totalNetLimit: Long = 0L,
+    @SerialName("TotalNetWeight")
+    val totalNetWeight: Long = 0L,
+    @SerialName("TotalEnergyLimit")
+    val totalEnergyLimit: Long = 0L,
+    @SerialName("TotalEnergyWeight")
+    val totalEnergyWeight: Long = 0L,
+    @SerialName("tronPowerUsed")
+    val tronPowerUsed: Long = 0L,
+    @SerialName("tronPowerLimit")
+    val tronPowerLimit: Long = 0L,
+)
+
+@Serializable
+data class TronAccountJson(
+    @SerialName("address")
+    val address: String = "",
+)

@@ -1,11 +1,16 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.TronAccountJson
+import com.vultisig.wallet.data.api.models.TronAccountRequestJson
+import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
+import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
@@ -13,6 +18,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
 import kotlinx.serialization.json.buildJsonObject
@@ -20,7 +26,6 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.math.max
 
 interface TronApi {
 
@@ -39,6 +44,11 @@ interface TronApi {
         amount: BigInteger
     ): Long
 
+    suspend fun getChainParameters(): TronChainParametersJson
+
+    suspend fun getAccountResource(address: String): TronAccountResourceJson
+
+    suspend fun getAccount(address: String): TronAccountJson
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -100,6 +110,14 @@ internal class TronApiImpl @Inject constructor(
         return totalSun
     }
 
+    override suspend fun getChainParameters(): TronChainParametersJson {
+        return httpClient.post(rpcUrl) {
+            url {
+                path("wallet", "getchainparameters")
+            }
+        }.body<TronChainParametersJson>()
+    }
+
     private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {
         val paddedAddressHex = recipientBaseHex.stripHexPrefix().drop(2).padStart(64, '0')
         val paddedAmountHex = amount.toString(16).padStart(64, '0')
@@ -119,6 +137,26 @@ internal class TronApiImpl @Inject constructor(
             Timber.e(e, "error getting tron balance")
             return BigInteger.ZERO
         }
+    }
+
+    override suspend fun getAccountResource(address: String): TronAccountResourceJson {
+        return httpClient.post(rpcUrl) {
+            url {
+                url { path("wallet", "getaccountresource") }
+            }
+            contentType(ContentType.Application.Json)
+            setBody(TronAccountRequestJson(address, true))
+        }.bodyOrThrow<TronAccountResourceJson>()
+    }
+
+    override suspend fun getAccount(address: String): TronAccountJson {
+        return httpClient.post(rpcUrl) {
+            url {
+                appendPathSegments("/wallet/getaccount")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(TronAccountRequestJson(address, true))
+        }.bodyOrThrow<TronAccountJson>()
     }
 
     companion object {
