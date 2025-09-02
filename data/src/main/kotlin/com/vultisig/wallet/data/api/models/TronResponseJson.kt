@@ -65,8 +65,8 @@ internal data class TronTriggerConstantContractJson(
 )
 
 @Serializable
-data class TronChainParameters(
-    val chainParameter: List<TronChainParameter>,
+data class TronChainParametersJson(
+    val chainParameter: List<TronChainParameterJson>,
 ) {
     private val chainParameterMapped = chainParameter.associate { it.key to it.value }
 
@@ -81,19 +81,19 @@ data class TronChainParameters(
 }
 
 @Serializable
-data class TronChainParameter(
+data class TronChainParameterJson(
     val key: String,
     val value: Long = 0L,
 )
 
 @Serializable
-internal data class TronAccountRequest(
+internal data class TronAccountRequestJson(
     val address: String,
     val visible: Boolean,
 )
 
 @Serializable
-data class TronAccountResource(
+data class TronAccountResourceJson(
     @SerialName("freeNetUsed")
     val freeNetUsed: Long = 0L,
     @SerialName("freeNetLimit")
@@ -118,4 +118,10 @@ data class TronAccountResource(
     val tronPowerUsed: Long = 0L,
     @SerialName("tronPowerLimit")
     val tronPowerLimit: Long = 0L,
+)
+
+@Serializable
+data class TronAccountJson(
+    @SerialName("address")
+    val address: String = "",
 )

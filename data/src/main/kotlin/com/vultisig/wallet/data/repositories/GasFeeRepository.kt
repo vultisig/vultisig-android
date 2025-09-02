@@ -5,8 +5,8 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
-import com.vultisig.wallet.data.api.models.TronAccountResource
-import com.vultisig.wallet.data.api.models.TronChainParameters
+import com.vultisig.wallet.data.api.models.TronAccountResourceJson
+import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -16,7 +16,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.toUnit
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -42,7 +42,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val tronApi: TronApi,
 ) : GasFeeRepository {
 
-    var chainParameters: TronChainParameters? = null
+    var chainParameters: TronChainParametersJson? = null
 
     override suspend fun getGasFee(
         chain: Chain,
@@ -183,9 +183,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
-
             Chain.Tron -> {
-                coroutineScope {
+                supervisorScope {
                     val nativeToken =
                         async { tokenRepository.getNativeToken(chain.id) }
                     val bandwidth =
@@ -197,46 +196,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                         MAX_BANDWIDTH_TRANSACTION
                     }
 
-                    // 1:1 bandwidth: TRX
-                    val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
                     val availableBandwidth = bandwidth.await()
 
-                    val finalFeeAmount = when {
-                        isNativeToken && availableBandwidth >= feeAmountUnit -> {
-                            // Native transfer with sufficient bandwidth = free
-                            BigDecimal.ZERO
-                        }
-                        isNativeToken -> {
-                            // TRC20 always pays fee (no free bandwidth for smart contracts)
-                            feeAmount
-                        }
-                        else -> {
-                            // Native transfer without sufficient bandwidth
-                            feeAmount
-                        }
-                    }
+                    val finalFeeAmount = getBaseFeeWithDiscount(isNativeToken, availableBandwidth, feeAmount)
 
-                    val extraFeeMemo = if (!memo.isNullOrEmpty()) {
-                        getCacheTronChainParameters().memoFeeEstimate.toBigInteger()
-                    } else {
-                        BigInteger.ZERO
-                    }
-
-                    // TODO: Cleanup
-                    val activateDestinationFee = if (!to.isNullOrEmpty()) {
-                        val isDestinationInactive = true // Fetch
-                        if (isDestinationInactive) {
-                            (getCacheTronChainParameters().createAccountFeeEstimate +
-                                    getCacheTronChainParameters().createNewAccountFeeEstimateContract).toBigInteger()
-                        } else {
-                            BigInteger.ZERO
-                        }
-                    } else {
-                        BigInteger.ZERO
-                    }
+                    val extraFeeMemo = async { getTronFeeMemo(memo) }
+                    val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
 
                     val totalFee =
-                        CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo + activateDestinationFee
+                        CoinType.TRON.toUnit(finalFeeAmount) + extraFeeMemo.await() + activateDestinationFee.await()
 
                     TokenValue(
                         value = totalFee,
@@ -250,7 +218,43 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun getCacheTronChainParameters(): TronChainParameters {
+    private fun getBaseFeeWithDiscount(
+        isNativeToken: Boolean,
+        availableBandwidth: Long,
+        feeAmount: BigDecimal
+    ): BigDecimal {
+        val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
+        return when {
+            // Native transfer with sufficient bandwidth => free tx
+            isNativeToken && availableBandwidth >= feeAmountUnit -> BigDecimal.ZERO
+            // TRC20 always pays fee (no free bandwidth for smart contracts)
+            !isNativeToken -> feeAmount
+            // Native transfer without sufficient bandwidth
+            else -> feeAmount
+        }
+    }
+
+    private suspend fun getTronFeeMemo(memo: String?): BigInteger =
+        if (!memo.isNullOrEmpty()) {
+            getCacheTronChainParameters().memoFeeEstimate.toBigInteger()
+        } else {
+            BigInteger.ZERO
+        }
+
+    private suspend fun getTronInactiveDestinationFee(to: String?): BigInteger =
+        if (!to.isNullOrEmpty()) {
+            val isDestinationInactive = tronApi.getAccount(to).address.isEmpty()
+            if (isDestinationInactive) {
+                (getCacheTronChainParameters().createAccountFeeEstimate +
+                        getCacheTronChainParameters().createNewAccountFeeEstimateContract).toBigInteger()
+            } else {
+                BigInteger.ZERO
+            }
+        } else {
+            BigInteger.ZERO
+        }
+
+    private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
         return if (chainParameters == null) {
             tronApi.getChainParameters()
         } else {
@@ -258,7 +262,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun TronAccountResource.calculateAvailableBandwidth(): Long {
+    private fun TronAccountResourceJson.calculateAvailableBandwidth(): Long {
         val freeBandwidth = freeNetLimit - freeNetUsed
         val stakingBandwidth = netLimit - netUsed
 
