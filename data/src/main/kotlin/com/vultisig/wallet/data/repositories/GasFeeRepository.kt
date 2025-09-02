@@ -221,7 +221,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     } catch (t: Throwable) {
                         Timber.e(t)
                         TokenValue(
-                            value = (MAX_BANDWIDTH_TRANSACTION * 1000).toBigInteger(),
+                            value = (BYTES_PER_CONTRACT_TX * 1000).toBigInteger(),
                             unit = chain.feeUnit,
                             decimals = 6,
                         )
@@ -238,9 +238,9 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         availableBandwidth: Deferred<Long>,
     ): BigInteger {
         val feeBandwidthRequired = if (isNativeToken) {
-            MAX_BANDWIDTH_PER_COIN_TRANSFER
+            BYTES_PER_COIN_TX
         } else {
-            MAX_BANDWIDTH_TRANSACTION
+            BYTES_PER_CONTRACT_TX
         }
         val bandwidthPrice = getCacheTronChainParameters().bandwidthFeePrice
 
@@ -303,7 +303,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     }
 
     internal companion object {
-        private val MAX_BANDWIDTH_PER_COIN_TRANSFER = 300L
-        private val MAX_BANDWIDTH_TRANSACTION = 345L
+        private const val BYTES_PER_COIN_TX = 300L
+        private const val BYTES_PER_CONTRACT_TX = 345L
     }
 }
