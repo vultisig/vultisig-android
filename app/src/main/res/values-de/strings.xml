@@ -522,7 +522,7 @@
     <string name="backup_server_desc">Server-Vault-Freigabe erneut anfordern.</string>
 
     <plurals name="seconds_format">
-        <item quantity="one">%d Sekunden</item>
+        <item quantity="one">%d Sekunde</item>
         <item quantity="other">%d Sekunden</item>
     </plurals>
     <plurals name="minutes_format">
