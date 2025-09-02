@@ -24,5 +24,5 @@ data class Coin(
 }
 
 fun Coin.allowZeroGas(): Boolean {
-    return this.chain == Chain.Polkadot
+    return this.chain == Chain.Polkadot || this.chain == Chain.Tron
 }
