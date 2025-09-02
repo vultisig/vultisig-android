@@ -51,7 +51,7 @@ internal fun VaultsToBackupScreen(
     ) {
         Column {
             Text(
-                text = "Select vaults to backup",
+                text = stringResource(R.string.backup_select_vaults_title),
                 style = Theme.brockmann.headings.title1,
                 color = Theme.colors.text.primary,
             )
@@ -61,7 +61,7 @@ internal fun VaultsToBackupScreen(
             )
 
             Text(
-                text = "Choose whether to back up just this vault or all vaults in your app.",
+                text = stringResource(R.string.backup_select_vaults_subtitle),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.colors.text.extraLight,
             )
@@ -71,7 +71,7 @@ internal fun VaultsToBackupScreen(
             )
 
             BackupVaultContainer(
-                title = "This Vault Only",
+                title = stringResource(R.string.backup_this_vault_only),
                 vaults = listOf(
                     backupVaultUiModel.currentVault,
                 )
@@ -81,7 +81,7 @@ internal fun VaultsToBackupScreen(
             )
 
             BackupVaultContainer(
-                title = "All Vaults",
+                title = stringResource(R.string.backup_all_vaults),
                 vaults = backupVaultUiModel.vaultsToBackup,
                 remainedCount = backupVaultUiModel.remainedCount,
             )
@@ -143,7 +143,10 @@ private fun BackupVaultContainer(
 private fun RemainedCountText(remainedCount: Int?) {
     remainedCount?.let {
         Text(
-            text = "+$remainedCount more",
+            text = stringResource(
+                R.string.more,
+                remainedCount
+            ),
             color = Theme.colors.text.light,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,

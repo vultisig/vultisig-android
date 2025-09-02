@@ -90,7 +90,10 @@ internal fun AddressBookScreen(
             VsTopAppBar(
                 modifier = Modifier
                     .padding(horizontal = 16.dp),
-                title = if (isEditModeEnabled) "Edit Address Book" else "Address Book",
+                title = if (isEditModeEnabled)
+                    stringResource(R.string.address_book_title_edit)
+                else
+                    stringResource(R.string.address_book_toolbar_title),
                 navigationContent = {
                     UiIcon(
                         drawableResId = R.drawable.ic_caret_left,

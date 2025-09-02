@@ -32,6 +32,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import androidx.compose.ui.res.pluralStringResource
 
 
 @Composable
@@ -56,7 +57,7 @@ private fun LockTimeScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Lock Time",
+                title = stringResource(R.string.lock_time_title),
                 onBackClick = onBackClick
             )
         }
@@ -75,7 +76,7 @@ private fun LockTimeScreen(
         ) {
 
             Text(
-                text = "Lock Vultisig automatically after...",
+                text = stringResource(R.string.lock_time_subtitle),
                 color = Theme.colors.text.light,
                 style = Theme.brockmann.supplementary.footnote,
             )
@@ -137,23 +138,21 @@ private fun Duration?.formatted(): String {
         null -> stringResource(R.string.never)
         else -> {
             when {
-                inWholeSeconds < 1.minutes.inWholeSeconds -> stringResource(
-                    R.string.seconds_format,
+
+
+                inWholeSeconds < 1.minutes.inWholeSeconds ->pluralStringResource(
+                    R.plurals.seconds_format,inWholeMinutes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
                     inWholeSeconds
                 )
 
-                inWholeMinutes < 1.hours.inWholeMinutes -> stringResource(
-                    if (inWholeMinutes == 1L)
-                        R.string.minute_format
-                    else R.string.minutes_format,
+                inWholeMinutes < 1.hours.inWholeMinutes -> pluralStringResource(
+                        R.plurals.minutes_format,inWholeMinutes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
                     inWholeMinutes
                 )
 
-                inWholeHours < 1.days.inWholeHours -> stringResource(
-                    if (inWholeHours == 1L)
-                        R.string.hour_format
-                    else R.string.hours_format,
-                    inWholeHours
+                inWholeHours < 1.days.inWholeHours -> pluralStringResource(
+                     R.plurals.hours_format,
+                    inWholeHours.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
                 )
 
                 else -> error("this should not happen")

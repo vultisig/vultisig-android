@@ -134,7 +134,7 @@ private fun BackupPasswordRequestScreen(
             )
 
             Text(
-                text = "Do you want to encrypt your backup with a password?",
+                text = stringResource(R.string.backup_password_request_title),
                 style = Theme.brockmann.headings.title2,
                 color = Theme.colors.text.primary,
                 textAlign = TextAlign.Center,
@@ -146,17 +146,17 @@ private fun BackupPasswordRequestScreen(
 
             BackupCaution(
                 icon = R.drawable.backup_passowrd_lock,
-                mainText = "If you choose to add a password, this  will be used to encrypt the backup file.",
-                highlightedWords = listOf("encrypt")
+                mainText = stringResource(R.string.backup_password_request_caution_encrypt_desc),
+                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_encrypt))
             )
 
             UiSpacer(
                 size = 16.dp,
             )
             BackupCaution(
-                icon = R.drawable.encript,
-                mainText = "Remember: if you forget your vault password, it cannot be reset or recovered.",
-                highlightedWords = listOf("cannot")
+                icon = R.drawable.encrypt,
+                mainText = stringResource(R.string.backup_password_request_caution_cannot_reset_desc),
+                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_cannot))
             )
 
             UiSpacer(
@@ -164,8 +164,8 @@ private fun BackupPasswordRequestScreen(
             )
             BackupCaution(
                 icon = R.drawable.remeber,
-                mainText = "By default, your backup is secure without an extra password, since you store Vault shares in different locations.",
-                highlightedWords = listOf("secure without")
+                mainText = stringResource(R.string.backup_password_request_caution_secure_without_desc),
+                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_secure_without))
             )
 
             UiSpacer(

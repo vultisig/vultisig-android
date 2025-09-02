@@ -252,7 +252,7 @@ private fun QrContainer(
 
         Text(
             text = stringResource(
-                R.string.uid,
+                R.string.share_vault_qr_uid,
                 uid.takeLast(10)
             ), /*Should we display the full text, or only the last 10 items, based on the UI design??*/
             style = Theme.brockmann.supplementary.footnote,

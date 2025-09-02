@@ -142,7 +142,7 @@ private fun BackupVaultBottomSheetContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Choose Backup Method",
+            text = stringResource(R.string.backup_choose_method_title),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.colors.text.primary,
         )
@@ -155,8 +155,8 @@ private fun BackupVaultBottomSheetContent(
         )
 
         BackupOption(
-            title = "Device Backup",
-            description = "Store the vault share of this device.",
+            title = stringResource(R.string.backup_device_title),
+            description = stringResource(R.string.backup_device_desc),
             icon = R.drawable.device_backup,
             onClick = onLocalBackupClick
         )
@@ -165,8 +165,8 @@ private fun BackupVaultBottomSheetContent(
             size = 14.dp
         )
         BackupOption(
-            title = "Server Backup",
-            description = "Request Server Vault Share again.",
+            title = stringResource(R.string.backup_server_title),
+            description = stringResource(R.string.backup_server_desc),
             icon = R.drawable.server_backup,
             onClick = onServerBackupClick
         )

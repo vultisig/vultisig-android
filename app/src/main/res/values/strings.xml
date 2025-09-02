@@ -354,7 +354,7 @@
 
     <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
     <string name="naming_vault_placeholder_secure_vault">Secure Vault</string>
-    <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
+    <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="scan_qr_upload_from_gallery">Upload QR</string>
@@ -738,16 +738,44 @@
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
-    <string name="seconds_format">%d seconds</string>
-    <string name="minute_format">%d minute</string>
-    <string name="minutes_format">%d minutes</string>
-    <string name="hour_format">%d hour</string>
-    <string name="hours_format">%d hours</string>
+    <plurals name="seconds_format">
+        <item quantity="one">>%d second</item>
+        <item quantity="other">>%d seconds</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
     <string name="never">never</string>
     <string name="check_updates_title">Check Updates</string>
     <string name="update_available">Update is available</string>
     <string name="app_up_to_date">Application is up to date</string>
     <string name="update">Update</string>
     <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
-    <string name="uid">UID: %1$s</string>
+    <string name="lock_time_title">Lock Time</string>
+    <string name="lock_time_subtitle">Lock Vultisig automatically after...</string>
+    <string name="add_address_title_label">Label</string>
+    <string name="address_book_title_edit">Edit Address Book</string>
+    <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
+    <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, this  will be used to encrypt the backup file.</string>
+    <string name="backup_password_request_highlight_encrypt">encrypt</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Remember: if you forget your vault password, it cannot be reset or recovered.</string>
+    <string name="backup_password_request_highlight_cannot">cannot</string>
+    <string name="backup_password_request_caution_secure_without_desc">By default, your backup is secure without an extra password, since you store Vault shares in different locations.</string>
+    <string name="backup_password_request_highlight_secure_without">secure without</string>
+    <string name="backup_select_vaults_title">Select vaults to backup</string>
+    <string name="backup_select_vaults_subtitle">Choose whether to back up just this vault or all vaults in your app.</string>
+    <string name="backup_this_vault_only">This Vault Only</string>
+    <string name="backup_all_vaults">All Vaults</string>
+    <string name="more">+%1$d more</string>
+    <string name="backup_choose_method_title">Choose Backup Method</string>
+    <string name="backup_device_desc">Store the vault share of this device.</string>
+    <string name="backup_device_title">Device Backup</string>
+    <string name="backup_server_title">Server Backup</string>
+    <string name="backup_server_desc">Request Server Vault Share again.</string>
+
 </resources>

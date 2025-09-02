@@ -128,8 +128,8 @@ internal fun AddAddressEntryScreen(
             )
 
             VsTextInputField(
-                label = "Label",
-                hint = "Type here",
+                label = stringResource(R.string.add_address_title_label),
+                hint = stringResource(R.string.add_address_type_hint),
                 textFieldState = titleTextFieldState,
                 keyboardType = KeyboardType.Text,
             )
@@ -141,8 +141,8 @@ internal fun AddAddressEntryScreen(
             val clipboardData = VsClipboardService.getClipboardData()
 
             VsTextInputField(
-                label = "Address",
-                hint = "Type here",
+                label = stringResource(R.string.add_address_address_title),
+                hint = stringResource(R.string.add_address_type_hint),
                 textFieldState = addressTextFieldState,
                 trailingIcon = R.drawable.camera,
                 onTrailingIconClick = onScan,
@@ -174,7 +174,7 @@ internal fun SelectChain(
         modifier = modifier
     ) {
         Text(
-            text = "Chain",
+            text = stringResource(R.string.select_chain_chain_title),
             color = Theme.colors.text.primary,
             style = Theme.brockmann.body.s.medium,
         )
