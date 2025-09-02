@@ -503,6 +503,7 @@
     <string name="lock_time_subtitle">Automatski zaključaj Vultisig nakon...</string>
     <string name="add_address_title_label">Oznaka</string>
     <string name="address_book_title_edit">Uredi adresar</string>
+    <string name="backup_password_request_title">Želite li šifrirati sigurnosnu kopiju lozinkom?</string>
     <string name="backup_password_request_caution_encrypt_desc">Ako odaberete dodati lozinku, ona će se koristiti za šifriranje sigurnosne kopije datoteke.</string>
     <string name="backup_password_request_highlight_encrypt">ifriraj</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Zapamtite: ako zaboravite lozinku trezora, ne možete je resetirati ili oporaviti.</string>

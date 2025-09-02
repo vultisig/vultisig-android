@@ -501,6 +501,7 @@
     <string name="lock_time_subtitle">Bloquear Vultisig automaticamente após...</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar Catálogo de Endereços</string>
+    <string name="backup_password_request_title">Quer encriptar o seu backup com uma senha?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se optar por adicionar uma palavra-passe, esta será utilizada para encriptar o ficheiro de backup.</string>
     <string name="backup_password_request_highlight_encrypt">criptografar</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Lembre-se: se se esquecer da palavra-passe do seu cofre, esta não poderá ser redefinida ou recuperada.</string>

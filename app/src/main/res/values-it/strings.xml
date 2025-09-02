@@ -503,6 +503,7 @@
     <string name="lock_time_subtitle">Blocca Vultisig automaticamente dopo...</string>
     <string name="add_address_title_label">Etichetta</string>
     <string name="address_book_title_edit">Modifica rubrica</string>
+    <string name="backup_password_request_title">Vuoi crittografare il tuo backup con una password?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se scegli di aggiungere una password, questa verrà utilizzata per crittografare il file di backup.</string>
     <string name="backup_password_request_highlight_encrypt">crittografa</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Ricorda: se dimentichi la password del vault, non può essere reimpostata o recuperata.</string>

@@ -584,7 +584,6 @@
     <string name="select_chain_title" translatable="false">Select Chain</string>
     <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
     <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
-    <string name="backup_password_request_title" translatable="false">Do you want to add a password to your device vault shares?</string>
     <string name="backup_password_request_description" translatable="false">We recommend that you do not set a backup password for device vault shares-your data is safe if the backups are properly stored in different locations, which is already a significant protection. Remember, backup passwords can\'t be recovered if you forget them. Your choice!</string>
     <string name="backup_password_request_no_password_action" translatable="false">Backup without password</string>
     <string name="backup_password_request_with_password_action" translatable="false">Use password</string>
@@ -739,8 +738,8 @@
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
     <plurals name="seconds_format">
-        <item quantity="one">>%d second</item>
-        <item quantity="other">>%d seconds</item>
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
     </plurals>
     <plurals name="minutes_format">
         <item quantity="one">%d minute</item>

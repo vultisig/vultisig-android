@@ -163,7 +163,7 @@ private fun BackupPasswordRequestScreen(
                 size = 16.dp,
             )
             BackupCaution(
-                icon = R.drawable.remeber,
+                icon = R.drawable.remember,
                 mainText = stringResource(R.string.backup_password_request_caution_secure_without_desc),
                 highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_secure_without))
             )

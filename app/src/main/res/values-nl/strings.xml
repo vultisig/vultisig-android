@@ -512,6 +512,7 @@
     <string name="lock_time_subtitle">Vultisig automatisch vergrendelen na...</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Adresboek bewerken</string>
+    <string name="backup_password_request_title">Wilt u uw backup versleutelen met een wachtwoord?</string>
     <string name="backup_password_request_caution_encrypt_desc">Als u ervoor kiest een wachtwoord toe te voegen, wordt dit gebruikt om het back-upbestand te versleutelen.</string>
     <string name="backup_password_request_highlight_encrypt">ersleutelen</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Let op: als u uw kluiswachtwoord vergeet, kan het niet worden gereset of hersteld.</string>
