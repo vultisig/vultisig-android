@@ -14,6 +14,7 @@ import java.math.BigInteger
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.wallet.Swaps
 
+@Deprecated("Delete once all clients migrate")
 class KyberSwap(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
