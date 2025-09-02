@@ -197,7 +197,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                         val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
 
                         val totalFee =
-                            CoinType.TRON.toUnit(baseFeeAmount) + memoFee.await() + activateDestinationFee.await()
+                            baseFeeAmount + memoFee.await() + activateDestinationFee.await()
 
                         TokenValue(
                             value = totalFee,
