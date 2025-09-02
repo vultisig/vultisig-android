@@ -481,6 +481,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
                 )
             )
         }
+        passwordTextFieldState.clearText()
     }
 
     fun togglePasswordVisibility() = viewModelScope.launch {
@@ -541,10 +542,12 @@ internal open class VaultSettingsViewModel @Inject constructor(
                 password = passwordTextFieldState.text.toString()
             )
             isBiometricFastSignEnabled = true
+            passwordTextFieldState.clearText()
             hideBiometricFastVaultBottomSheet()
         } else {
             vaultPasswordRepository.clearPassword(vaultId)
             isBiometricFastSignEnabled = false
+            passwordTextFieldState.clearText()
             hideBiometricFastVaultBottomSheet()
         }
         showSnackbarMessage()
