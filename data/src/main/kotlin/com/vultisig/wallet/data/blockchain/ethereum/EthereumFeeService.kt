@@ -84,7 +84,7 @@ class EthereumFeeService @Inject constructor(
 
     private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
         if (swap) {
-            baseNetworkPrice.increaseByPercent(10)
+            return baseNetworkPrice.increaseByPercent(10)
         }
         return baseNetworkPrice
     }

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
@@ -49,6 +50,8 @@ class OneInchSwap(
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
+        val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
+            ?: throw Exception("Invalid blockChainSpecific")
         val input = SigningInput.newBuilder()
             .setToAddress(quote.tx.to)
             .setTransaction(
@@ -63,17 +66,15 @@ class OneInchSwap(
                     )
             )
 
-        val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
         return EthereumGasHelper.setGasParameters(
             gas = gas,
-            gasPrice = gasPrice,
+            gasPrice = ethSpecifc.maxFeePerGasWei,
             signingInput = input,
             keysignPayload = keysignPayload,
             nonceIncrement = nonceIncrement,
             coinType = keysignPayload.coin.coinType
         ).build().toByteArray()
     }
-
 }
