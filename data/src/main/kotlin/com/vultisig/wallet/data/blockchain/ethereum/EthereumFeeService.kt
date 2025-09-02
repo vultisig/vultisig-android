@@ -62,7 +62,7 @@ class EthereumFeeService @Inject constructor(
 
         val rewardsFeeHistory = feeHistoryDeferred.await()
 
-        val maxPriorityFeePerGas = calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain)
+        val maxPriorityFeePerGas = calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain, evmApi)
         val baseNetworkPrice = calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap)
         val maxFeePerGas = calculateMaxFeePerGas(baseNetworkPrice, maxPriorityFeePerGas)
 
@@ -89,22 +89,28 @@ class EthereumFeeService @Inject constructor(
         return baseNetworkPrice
     }
 
-    private fun calculateMaxPriorityFeePerGas(
+    private suspend fun calculateMaxPriorityFeePerGas(
         rewardsFeeHistory: List<BigInteger>,
-        chain: Chain
+        chain: Chain,
+        evmApi: EvmApi,
     ): BigInteger {
-        return when (chain) {
-            Chain.Arbitrum ->
-                BigInteger.ZERO // arbitrum has no fee priority
-            Chain.Base,
-            Chain.Blast,
-            Chain.Optimism,
-                -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
-            Chain.Polygon ->
-                // polygon has min of 30 gwei, but some blocks comes with less rewards
-                maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
+        return if (chain.id == Chain.Avalanche.id) {
+            evmApi.getMaxPriorityFeePerGas() // exception for avalanche
+        } else {
+            when (chain) {
+                Chain.Arbitrum ->
+                    BigInteger.ZERO // arbitrum has no fee priority
+                Chain.Base,
+                Chain.Blast,
+                Chain.Optimism,
+                    -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
 
-            else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
+                Chain.Polygon ->
+                    // polygon has min of 30 gwei, but some blocks comes with less rewards
+                    maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
+
+                else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
+            }
         }
     }
 
@@ -127,6 +133,6 @@ class EthereumFeeService @Inject constructor(
         val DEFAULT_SWAP_LIMIT = "600000"
         val DEFAULT_COIN_TRANSFER = "23000"
         val DEFAULT_TOKEN_TRANSFER = "120000"
-        val DEFAULT_ARBITRUN_TRANSFER = "160000"
+        val DEFAULT_ARBITRUM_TRANSFER = "160000"
     }
 }

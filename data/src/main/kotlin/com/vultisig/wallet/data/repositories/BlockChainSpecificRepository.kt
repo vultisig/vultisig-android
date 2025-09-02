@@ -15,7 +15,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.GasFees
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUN_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER
@@ -154,7 +154,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 val defaultGasLimit = BigInteger(
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
-                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUN_TRANSFER // TODO: Review Arb
+                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
                         token.isNativeToken -> DEFAULT_COIN_TRANSFER
                         else -> DEFAULT_TOKEN_TRANSFER
                     }
