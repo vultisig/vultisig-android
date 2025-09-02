@@ -108,6 +108,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.Noble -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
@@ -116,6 +117,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.TerraClassic -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
@@ -124,6 +126,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.Dydx -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
@@ -132,6 +135,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.Solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 val fee = maxOf(
@@ -176,6 +180,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.Ripple -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
@@ -184,13 +189,16 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
+
             Chain.Tron -> {
                 supervisorScope {
                     try {
                         val nativeToken =
                             async { tokenRepository.getNativeToken(chain.id) }
                         val bandwidth =
-                            async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
+                            async {
+                                tronApi.getAccountResource(address).calculateAvailableBandwidth()
+                            }
                         val memoFee =
                             async { getTronFeeMemo(memo) }
 
@@ -255,21 +263,28 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             BigInteger.ZERO
         }
 
-    private suspend fun getTronInactiveDestinationFee(to: String?): BigInteger =
-        if (!to.isNullOrEmpty()) {
-            val isDestinationInactive = tronApi.getAccount(to).address.isEmpty()
-            if (isDestinationInactive) {
-                val createAccountFee =
-                    getCacheTronChainParameters().createAccountFeeEstimate
-                val createAccountContractFee =
-                    getCacheTronChainParameters().createNewAccountFeeEstimateContract
-                createAccountFee.toBigInteger() + createAccountContractFee.toBigInteger()
-            } else {
-                BigInteger.ZERO
-            }
-        } else {
-            BigInteger.ZERO
+    private suspend fun getTronInactiveDestinationFee(to: String?): BigInteger {
+        if (to.isNullOrEmpty()) {
+            return BigInteger.ZERO
         }
+
+        val accountExists = try {
+            tronApi.getAccount(to).address.isNotEmpty()
+        } catch (e: Exception) {
+            false
+        }
+
+        if (accountExists){
+            return BigInteger.ZERO
+        }
+
+        val createAccountFee =
+            getCacheTronChainParameters().createAccountFeeEstimate
+        val createAccountContractFee =
+            getCacheTronChainParameters().createNewAccountFeeEstimateContract
+
+        return createAccountFee.toBigInteger() + createAccountContractFee.toBigInteger()
+    }
 
     private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
         return if (chainParameters == null) {
@@ -289,6 +304,6 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
     internal companion object {
         private val MAX_BANDWIDTH_PER_COIN_TRANSFER = 300L
-        private val MAX_BANDWIDTH_TRANSACTION  = 345L
+        private val MAX_BANDWIDTH_TRANSACTION = 345L
     }
 }
