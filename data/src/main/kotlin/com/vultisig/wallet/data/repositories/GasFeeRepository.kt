@@ -18,8 +18,8 @@ import com.vultisig.wallet.data.utils.toUnit
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
 import wallet.core.jni.CoinType
-import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -186,23 +186,32 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
             Chain.Tron -> {
                 supervisorScope {
-                    val nativeToken =
-                        async { tokenRepository.getNativeToken(chain.id) }
-                    val bandwidth =
-                        async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
+                    try {
+                        val nativeToken =
+                            async { tokenRepository.getNativeToken(chain.id) }
+                        val bandwidth =
+                            async { tronApi.getAccountResource(address).calculateAvailableBandwidth() }
 
-                    val baseFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth)
-                    val memoFee = async { getTronFeeMemo(memo) }
-                    val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
+                        val baseFeeAmount = getBaseFeeWithDiscount(isNativeToken, bandwidth)
+                        val memoFee = async { getTronFeeMemo(memo) }
+                        val activateDestinationFee = async { getTronInactiveDestinationFee(to) }
 
-                    val totalFee =
-                        CoinType.TRON.toUnit(baseFeeAmount) + memoFee.await() + activateDestinationFee.await()
+                        val totalFee =
+                            CoinType.TRON.toUnit(baseFeeAmount) + memoFee.await() + activateDestinationFee.await()
 
-                    TokenValue(
-                        value = totalFee,
-                        unit = chain.feeUnit,
-                        decimals = nativeToken.await().decimal,
-                    )
+                        TokenValue(
+                            value = totalFee,
+                            unit = chain.feeUnit,
+                            decimals = nativeToken.await().decimal,
+                        )
+                    } catch (t: Throwable) {
+                        Timber.e(t)
+                        TokenValue(
+                            value = (MAX_BANDWIDTH_TRANSACTION * 1000).toBigInteger(),
+                            unit = chain.feeUnit,
+                            decimals = 6,
+                        )
+                    }
                 }
             }
 
@@ -213,21 +222,21 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private suspend fun getBaseFeeWithDiscount(
         isNativeToken: Boolean,
         availableBandwidth: Deferred<Long>,
-    ): BigDecimal {
-        val feeAmount = if (isNativeToken) {
+    ): BigInteger {
+        val feeBandwidthRequired = if (isNativeToken) {
             MAX_BANDWIDTH_PER_COIN_TRANSFER
         } else {
             MAX_BANDWIDTH_TRANSACTION
         }
-        // 1:1 SUN: Bandwidth
-        val feeAmountUnit = CoinType.TRON.toUnit(feeAmount).toLong()
+        val bandwidthPrice = getCacheTronChainParameters().bandwidthFeePrice
+
         return when {
             // Native transfer with sufficient bandwidth => free tx
-            isNativeToken && availableBandwidth.await() >= feeAmountUnit -> BigDecimal.ZERO
+            isNativeToken && availableBandwidth.await() >= feeBandwidthRequired -> BigInteger.ZERO
             // TRC20 always pays fee (no free bandwidth for smart contracts)
-            !isNativeToken -> feeAmount
+            !isNativeToken -> (feeBandwidthRequired * bandwidthPrice).toBigInteger()
             // Native transfer without sufficient bandwidth
-            else -> feeAmount
+            else -> (feeBandwidthRequired * bandwidthPrice).toBigInteger()
         }
     }
 
@@ -242,8 +251,11 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         if (!to.isNullOrEmpty()) {
             val isDestinationInactive = tronApi.getAccount(to).address.isEmpty()
             if (isDestinationInactive) {
-                (getCacheTronChainParameters().createAccountFeeEstimate +
-                        getCacheTronChainParameters().createNewAccountFeeEstimateContract).toBigInteger()
+                val createAccountFee =
+                    getCacheTronChainParameters().createAccountFeeEstimate
+                val createAccountContractFee =
+                    getCacheTronChainParameters().createNewAccountFeeEstimateContract
+                createAccountFee.toBigInteger() + createAccountContractFee.toBigInteger()
             } else {
                 BigInteger.ZERO
             }
@@ -268,7 +280,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     }
 
     internal companion object {
-        private val MAX_BANDWIDTH_PER_COIN_TRANSFER = "0.3".toBigDecimal()
-        private val MAX_BANDWIDTH_TRANSACTION  = "0.345".toBigDecimal()
+        private val MAX_BANDWIDTH_PER_COIN_TRANSFER = 300L
+        private val MAX_BANDWIDTH_TRANSACTION  = 345L
     }
 }

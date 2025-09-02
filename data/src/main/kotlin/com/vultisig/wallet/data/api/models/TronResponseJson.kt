@@ -78,6 +78,10 @@ data class TronChainParametersJson(
 
     val createNewAccountFeeEstimateContract: Long
         get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
+
+    // Atm according to network: 1 bandwidth -> 1000 SUN
+    val bandwidthFeePrice: Long
+        get() = chainParameterMapped["getTransactionFee"] ?: 0L
 }
 
 @Serializable
