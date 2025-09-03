@@ -7,7 +7,9 @@ import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,7 @@ internal class CheckForUpdateViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+    private val multipleClicksDetector = MultipleClicksDetector()
 
     val state = MutableStateFlow(
         CheckForUpdateUiModel(
@@ -46,6 +49,14 @@ internal class CheckForUpdateViewModel @Inject constructor(
 
     fun update() {
 
+    }
+
+    fun clickSecret() {
+        if (multipleClicksDetector.clickAndCheckIfDetected()) {
+            viewModelScope.launch {
+                navigator.route(Route.Secret)
+            }
+        }
     }
 
 
