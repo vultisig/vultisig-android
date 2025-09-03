@@ -16,10 +16,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,7 +46,7 @@ internal fun ShareLinkBottomSheet(
 ) {
     val viewModel = hiltViewModel<ShareLinkViewModel>()
     val context = LocalContext.current
-    val uiModel = viewModel.getUiModel(context)
+    val uiModel = remember(context) { viewModel.getUiModel(context) }
 
     VsModalBottomSheet(
         onDismissRequest = onDismissRequest
@@ -70,7 +72,7 @@ private fun ShareLinkContent(
             .padding(8.dp),
     ) {
         Text(
-            text = "Vultisig",
+            text = stringResource(R.string.app_name),
             style = Theme.brockmann.headings.subtitle,
             color = Theme.colors.text.primary,
             modifier = Modifier.fillMaxWidth(),
@@ -84,7 +86,7 @@ private fun ShareLinkContent(
         )
 
         Text(
-            text = "Share the app",
+            text = stringResource(R.string.settings_screen_share_the_app),
             color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier
