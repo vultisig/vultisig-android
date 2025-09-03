@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.settings
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,10 +21,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateUiModel
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateViewModel
@@ -40,7 +43,8 @@ internal fun CheckForUpdateScreen() {
     CheckForUpdateScreen(
         model = state.value,
         onBackClick = model::back,
-        onUpdateClick = model::update
+        onUpdateClick = model::update,
+        onClickSecret = model::clickSecret
     )
 
 }
@@ -51,6 +55,7 @@ internal fun CheckForUpdateScreen(
     model: CheckForUpdateUiModel,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {},
+    onClickSecret: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -94,12 +99,13 @@ internal fun CheckForUpdateScreen(
                 size = 12.dp
             )
 
-            Text(
-                text = model.currentVersion,
-                style = Theme.brockmann.button.medium,
-                color = Theme.colors.text.extraLight
-
+            AppVersionText(
+                modifier = Modifier
+                   .padding(top = 12.dp , bottom = 24.dp)
+                     .clickable(onClick =onClickSecret)
             )
+
+
 
             if (model.isUpdateAvailable) {
 
