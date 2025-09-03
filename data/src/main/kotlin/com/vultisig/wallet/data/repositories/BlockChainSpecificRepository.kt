@@ -12,6 +12,13 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.blockchain.Eip1559
+import com.vultisig.wallet.data.blockchain.GasFees
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -71,6 +78,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
+    private val ethereumFeeService: EthereumFeeService,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -143,17 +151,12 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-
                 val defaultGasLimit = BigInteger(
                     when {
-                        isSwap -> "600000"
-                        chain == Chain.Arbitrum -> {
-                            "160000" // arbitrum has higher gas limit
-                        }
-
-                        token.isNativeToken -> "23000"
-
-                        else -> "120000"
+                        isSwap -> DEFAULT_SWAP_LIMIT
+                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
+                        token.isNativeToken -> DEFAULT_COIN_TRANSFER
+                        else -> DEFAULT_TOKEN_TRANSFER
                     }
                 )
 
@@ -169,17 +172,23 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     value = tokenAmountValue ?: BigInteger.ZERO,
                 )
 
-                var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-                if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
-                    maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
-                }
                 val nonce = evmApi.getNonce(address)
+
+                val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                val fees = ethereumFeeService.calculateFees(chain, estimateGasLimit, isSwap)
+
+                val (maxFeePerGas, priorityFeeWei) = when (fees) {
+                    is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
+                    is GasFees -> fees.price to BigInteger.ZERO
+                    else -> error("Unsupported fee type ${fees::class.simpleName} for chain=$chain")
+                }
+
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = gasFee.value,
-                        priorityFeeWei = minOf(maxPriorityFee, gasFee.value),
+                        maxFeePerGasWei = maxFeePerGas,
+                        priorityFeeWei = priorityFeeWei,
                         nonce = nonce,
-                        gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
+                        gasLimit = gasLimitFee,
                     )
                 )
             }
@@ -451,13 +460,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             )
         }
-
-    }
-
-    private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
-        // Let's make sure we pay at least 1GWei as priority fee
-        val oneGwei = 1000000000.toBigInteger()
-        return priorityFee.coerceAtLeast(oneGwei)
     }
 
     companion object {
