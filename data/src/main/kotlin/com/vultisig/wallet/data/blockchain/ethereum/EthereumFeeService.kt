@@ -98,17 +98,18 @@ class EthereumFeeService @Inject constructor(
             evmApi.getMaxPriorityFeePerGas() // exception for avalanche
         } else {
             when (chain) {
-                Chain.Arbitrum ->
-                    BigInteger.ZERO // arbitrum has no fee priority
+                // Arb and Mantle requires no miner tip
+                Chain.Arbitrum, Chain.Mantle -> BigInteger.ZERO
+
+                // picked max from 10 previous blocks, then ensure inclusion. For l2 is quite low
                 Chain.Base,
                 Chain.Blast,
-                Chain.Optimism,
-                    -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
+                Chain.Optimism, -> rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
 
-                Chain.Polygon ->
-                    // polygon has min of 30 gwei, but some blocks comes with less rewards
-                    maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * POLYGON_DEFAULT)
+                // polygon has min of 30 gwei, but some blocks comes with less rewards
+                Chain.Polygon -> maxOf(rewardsFeeHistory[rewardsFeeHistory.size / 2], GWEI * DEFAULT_MAX_PRIORITY_FEE_POLYGON)
 
+                // picked medium with min of 1 GWEI (ETH etc..)
                 else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
             }
         }
@@ -126,13 +127,16 @@ class EthereumFeeService @Inject constructor(
     }
 
     companion object {
-        private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val GWEI = BigInteger.TEN.pow(9)
-        private val POLYGON_DEFAULT = "30".toBigInteger()
+
+        private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
+        private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
 
         val DEFAULT_SWAP_LIMIT = "600000"
-        val DEFAULT_COIN_TRANSFER = "23000"
-        val DEFAULT_TOKEN_TRANSFER = "120000"
+        val DEFAULT_COIN_TRANSFER_LIMIT = "23000"
+        val DEFAULT_TOKEN_TRANSFER_LIMIT = "120000"
+
         val DEFAULT_ARBITRUM_TRANSFER = "160000"
+        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000"
     }
 }
