@@ -5,7 +5,6 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific

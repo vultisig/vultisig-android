@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
@@ -62,7 +63,6 @@ class OneInchSwap(
                             .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                     )
             )
-
         val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
@@ -75,5 +75,4 @@ class OneInchSwap(
             coinType = keysignPayload.coin.coinType
         ).build().toByteArray()
     }
-
 }

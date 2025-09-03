@@ -37,8 +37,6 @@ object SigningHelper {
         )
     }
 
-
-
     fun getKeysignMessages(
         payload: KeysignPayload,
         vault: Vault

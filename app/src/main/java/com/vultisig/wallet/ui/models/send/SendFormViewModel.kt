@@ -649,10 +649,10 @@ internal class SendFormViewModel @Inject constructor(
 
                 val specific = blockChainSpecificRepository
                     .getSpecific(
-                        chain,
-                        srcAddress,
-                        selectedToken,
-                        gasFee,
+                        chain = chain,
+                        address = srcAddress,
+                        token = selectedToken,
+                        gasFee = gasFee,
                         memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
                         tokenAmountValue = tokenAmountInt,
                         isSwap = false,
