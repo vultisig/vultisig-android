@@ -1,22 +1,19 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.CurrencyUnit
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel
@@ -50,25 +47,14 @@ private fun CurrencyUnitSettingScreen(
     onBackClick: () -> Unit,
     onCurrencyClick: (CurrencyUnit) -> Unit,
 ) {
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        topBar = {
-            VsTopAppBar(
-                onIconLeftClick = onBackClick,
-                title = stringResource(R.string.currency_unit_setting_screen_title),
-                iconLeft = R.drawable.ic_caret_left
-            )
-        }
-    ) {
 
-        SettingsBox(
-            modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                ),
+    V2Scaffold(
+        title = stringResource(R.string.currency_unit_setting_screen_title),
+        onBackClick = onBackClick
+    ){
+
+        V2Container(
+            type = ContainerType.SECONDARY,
         ) {
             LazyColumn {
                 itemsIndexed(state.currencyUnits) { index, currencyUnit ->

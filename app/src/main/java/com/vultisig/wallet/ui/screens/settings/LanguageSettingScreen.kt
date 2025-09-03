@@ -1,23 +1,21 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Language
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.LanguageSettingUiModel
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
@@ -50,25 +48,13 @@ private fun LanguageSettingScreen(
     onBackClick: () -> Unit,
     onLanguageClick: (Language) -> Unit,
 ) {
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        topBar = {
-            VsTopAppBar(
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-                title = stringResource(R.string.language_setting_screen_title),
-            )
-        }
+    V2Scaffold(
+        title = stringResource(R.string.language_setting_screen_title),
+        onBackClick = onBackClick
     ) {
-
-        SettingsBox(
-            Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+        V2Container(
+            type = ContainerType.SECONDARY,
+            borderType = ContainerBorderType.Borderless
         ) {
             LazyColumn {
                 itemsIndexed(state.languages) { index, language ->
@@ -102,7 +88,7 @@ private fun LanguageSettingItem(
             title = name.asUiText(),
             subTitle = englishName?.asUiText(),
             leadingIcon = null,
-            trailingIcon = if(isSelected)  R.drawable.check_2 else null,
+            trailingIcon = if (isSelected) R.drawable.check_2 else null,
         ),
         onClick = onClick,
         isLastItem = isLastItem

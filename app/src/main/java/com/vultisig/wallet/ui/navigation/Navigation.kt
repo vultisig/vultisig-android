@@ -222,6 +222,8 @@ internal sealed class Destination(
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
+    data object CheckForUpdateSetting : Destination(route = "settings/check_for_update")
+
     data class ReferralOnboarding(
         val vaultId: String,
     ): Destination(route = "referral/onboarding/$vaultId") {

@@ -20,8 +20,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -74,8 +80,25 @@ internal class AddressEntryViewModel @Inject constructor(
                 addressTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntry.address)
             }
         }
-    }
 
+
+        combine(
+            state.map { it.selectedChain }.distinctUntilChanged(),
+            addressTextFieldState.textAsFlow().filter { it.isNotEmpty() },
+        ) { chain, address ->
+            val error = validateAddress(
+                chain = chain,
+                address = address.toString()
+            )
+            state.update {
+                it.copy(
+                    addressError = error
+                )
+            }
+        }
+            .launchIn(viewModelScope)
+
+    }
 
 
     @OptIn(ExperimentalUuidApi::class)
@@ -150,14 +173,6 @@ internal class AddressEntryViewModel @Inject constructor(
 
             navigator.navigate(Destination.Back)
         }
-    }
-
-    fun validateAddress() {
-        val address = addressTextFieldState.text.toString()
-        val chain = state.value.selectedChain
-
-        val error = validateAddress(chain, address)
-        state.update { it.copy(addressError = error) }
     }
 
     private fun validateAddress(chain: Chain, address: String): UiText? =

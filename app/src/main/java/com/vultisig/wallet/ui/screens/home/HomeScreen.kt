@@ -155,14 +155,6 @@ private fun HomeScreen(
                                 modifier = modifier.clickOnce(onClick = onEdit)
                             )
                         }
-                        state.selectedVaultId != null -> {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_share),
-                                contentDescription = "share",
-                                tint = Theme.colors.neutral0,
-                                modifier = modifier.clickOnce(onClick = onShareVaultQr)
-                            )
-                        }
                     }
                 }
             )

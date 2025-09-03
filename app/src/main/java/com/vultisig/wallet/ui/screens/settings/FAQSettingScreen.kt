@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,7 +31,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.FAQSettingUiModel
 import com.vultisig.wallet.ui.models.settings.FAQSettingViewModel
 import com.vultisig.wallet.ui.models.settings.Faq
@@ -44,9 +44,12 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun FaqSettingScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<FAQSettingViewModel>()
     val state by viewModel.state.collectAsState()
-    FaqSettingScreen(onBackClick = {
-        navController.popBackStack()
-    }, state)
+    FaqSettingScreen(
+        onBackClick = {
+            navController.popBackStack()
+        },
+        state = state
+    )
 }
 
 @Composable
@@ -54,25 +57,14 @@ private fun FaqSettingScreen(
     onBackClick: () -> Unit,
     state: FAQSettingUiModel
 ) {
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        topBar = {
-            VsTopAppBar(
-                onIconLeftClick = onBackClick,
-                title = stringResource(R.string.faq_setting_screen_title),
-                iconLeft = R.drawable.ic_caret_left
-            )
-        }
+
+    V2Scaffold(
+        title = stringResource(R.string.faq_setting_screen_title),
+        onBackClick = onBackClick
     ) {
 
-        SettingsBox(
-            modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
-                )
+        V2Container(
+            type = ContainerType.SECONDARY
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(

@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -816,10 +817,9 @@ internal fun FadingHorizontalDivider(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Theme.colors.borders.normal.copy(alpha = 0f),
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal.copy(alpha = 0f)
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
+                        Color(0xFF284570),
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
                     ),
                     startX = 0f,
                     endX = Float.POSITIVE_INFINITY,
