@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import java.math.BigInteger
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -103,6 +104,17 @@ internal fun SendTxOverviewScreen(
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_memo),
                         subtitle = tx.memo,
+                    )
+                }
+
+                if (tx.token.value.isNotEmpty() && tx.token.value.toBigInteger() > BigInteger.ZERO) {
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    TextDetails(
+                        title = stringResource(R.string.deposit_screen_amount_title),
+                        subtitle = tx.token.value
                     )
                 }
 
