@@ -27,29 +27,34 @@ class EvmHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
-    companion object{
+    companion object {
         const val DEFAULT_ETH_SWAP_GAS_UNIT: Long = 600000L
     }
 
-    fun getSwapPreSignedInputData(keysignPayload: KeysignPayload,nonceIncrement: BigInteger = BigInteger.ZERO): ByteArray {
+    fun getSwapPreSignedInputData(
+        keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger = BigInteger.ZERO
+    ): ByteArray {
         val thorChainSwapPayload = keysignPayload.swapPayload as? SwapPayload.ThorChain
             ?: throw Exception("Invalid swap payload for EVM chain")
-        if (thorChainSwapPayload.data.vaultAddress.isEmpty()){
+        if (thorChainSwapPayload.data.vaultAddress.isEmpty()) {
             throw Exception("Vault address is required for THORChain swap")
         }
-        require(!keysignPayload.memo.isNullOrEmpty()){
+        require(!keysignPayload.memo.isNullOrEmpty()) {
             "Memo is required for THORChain swap"
         }
         val ethSpecifc = EthereumGasHelper.requireEthereumSpec(keysignPayload.blockChainSpecific)
-        val input = EthereumGasHelper.setGasParameters(ethSpecifc.gasLimit,
+        val input = EthereumGasHelper.setGasParameters(
+            ethSpecifc.gasLimit,
             ethSpecifc.maxFeePerGasWei,
             Ethereum.SigningInput.newBuilder(),
             keysignPayload,
             nonceIncrement,
-            coinType)
+            coinType
+        )
 
         // Native token , send directly to asgard vault
-        if(thorChainSwapPayload.data.fromCoin.isNativeToken){
+        if (thorChainSwapPayload.data.fromCoin.isNativeToken) {
             input.toAddress = thorChainSwapPayload.data.vaultAddress
             input.transaction = Ethereum.Transaction.newBuilder().apply {
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
@@ -75,11 +80,14 @@ class EvmHelper(
             )
             input.toAddress = thorChainSwapPayload.data.routerAddress
             val f = EthereumAbiFunction("depositWithExpiry")
-            f.addParamAddress(vaultAddress.data(),false)
-            f.addParamAddress(contractAddr.data(),false)
-            f.addParamUInt256(thorChainSwapPayload.data.fromAmount.toByteArray(),false)
+            f.addParamAddress(vaultAddress.data(), false)
+            f.addParamAddress(contractAddr.data(), false)
+            f.addParamUInt256(thorChainSwapPayload.data.fromAmount.toByteArray(), false)
             f.addParamString(keysignPayload.memo, false)
-            f.addParamUInt256(BigInteger(thorChainSwapPayload.data.expirationTime.toString()).toByteArray(),false)
+            f.addParamUInt256(
+                BigInteger(thorChainSwapPayload.data.expirationTime.toString()).toByteArray(),
+                false
+            )
 
             input.transaction = Ethereum.Transaction.newBuilder().apply {
                 contractGeneric = Ethereum.Transaction.ContractGeneric.newBuilder().apply {
@@ -102,7 +110,7 @@ class EvmHelper(
     ): ByteArray {
         val ethSpecifc = EthereumGasHelper.requireEthereumSpec(keysignPayload.blockChainSpecific)
         return EthereumGasHelper.setGasParameters(
-            gas =  ethSpecifc.gasLimit,
+            gas = ethSpecifc.gasLimit,
             gasPrice = ethSpecifc.maxFeePerGasWei,
             signingInput = signingInput.toBuilder(),
             keysignPayload = keysignPayload,
@@ -128,13 +136,13 @@ class EvmHelper(
             }.build()
         }
         return EthereumGasHelper.setGasParameters(
-            ethSpecifc.gasLimit,
-            ethSpecifc.maxFeePerGasWei,
-            input,
+            gas = ethSpecifc.gasLimit,
+            gasPrice = ethSpecifc.maxFeePerGasWei,
+            signingInput = input,
             keysignPayload = keysignPayload,
             nonceIncrement = BigInteger.ZERO,
             coinType = coinType
-            ).build().toByteArray()
+        ).build().toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -192,5 +200,4 @@ class EvmHelper(
             transactionHash = output.encoded.toByteArray().toKeccak256()
         )
     }
-
 }
