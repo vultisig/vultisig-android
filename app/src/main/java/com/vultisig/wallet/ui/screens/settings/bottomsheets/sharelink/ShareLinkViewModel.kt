@@ -52,7 +52,7 @@ internal class ShareLinkViewModel @Inject constructor() : ViewModel() {
             )
         } + ShareOptionUiModel(
             packageName = "",
-            label = "More",
+            label = context.getString(R.string.share_sheet_more),
             icon = AppCompatResources.getDrawable(
                 context,
                 R.drawable.plus

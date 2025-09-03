@@ -531,5 +531,6 @@
         <item quantity="one">%d hora</item>
         <item quantity="many">%d horas</item>
     </plurals>
+    <string name="share_sheet_more">Mais</string>
 
 </resources>
