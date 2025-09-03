@@ -99,15 +99,6 @@ internal sealed class VaultSettingsItem(
         enabled = false
     )
 
-    data object LockTime : VaultSettingsItem(
-        value = SettingsItemUiModel(
-            title = "Lock time".asUiText(),
-            subTitle = "Set the time until the app locks automatically".asUiText(),
-            trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIcon = R.drawable.lock_time
-        ),
-        enabled = false
-    )
 
     data object PasswordHint : VaultSettingsItem(
         value = SettingsItemUiModel(
@@ -211,7 +202,6 @@ internal open class VaultSettingsViewModel @Inject constructor(
             title = UiText.StringResource(R.string.vault_settings_security_screen_title),
             items = listOf(
                 VaultSettingsItem.Security,
-                VaultSettingsItem.LockTime,
                 VaultSettingsItem.PasswordHint,
                 VaultSettingsItem.BackupVaultShare
             )
@@ -376,7 +366,6 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
             VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
             VaultSettingsItem.Details -> openDetails()
-            VaultSettingsItem.LockTime -> Unit
             is VaultSettingsItem.Migrate -> migrate()
             VaultSettingsItem.PasswordHint -> Unit
             VaultSettingsItem.Rename -> openRename()
