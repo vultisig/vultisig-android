@@ -180,7 +180,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 val (maxFeePerGas, priorityFeeWei) = when (fees) {
                     is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
                     is GasFees -> fees.price to BigInteger.ZERO
-                    else -> error("Fee Type not supported")
+                    else -> error("Unsupported fee type ${fees::class.simpleName} for chain=$chain")
                 }
 
                 BlockChainSpecificAndUtxo(
