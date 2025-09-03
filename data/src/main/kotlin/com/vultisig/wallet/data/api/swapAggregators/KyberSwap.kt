@@ -64,8 +64,6 @@ class KyberSwap(
     fun getPreSignedInputData(
         quote: KyberSwapQuoteJson, keysignPayload: KeysignPayload, nonceIncrement: BigInteger
     ): ByteArray {
-        val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
-            ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
             .setToAddress(quote.tx.to).setTransaction(
                 Ethereum.Transaction.newBuilder().setContractGeneric(
@@ -75,12 +73,13 @@ class KyberSwap(
                     ).setData(quote.tx.data.removePrefix("0x").toByteStringOrHex())
                 ).build()
             )
+        val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
         val gas = (quote.tx.gas.takeIf { it != 0L }
             ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
 
         return EthereumGasHelper.setGasParameters(
             gas = gas,
-            gasPrice = ethSpecifc.maxFeePerGasWei,
+            gasPrice = gasPrice,
             signingInput = input,
             keysignPayload = keysignPayload,
             nonceIncrement = nonceIncrement,

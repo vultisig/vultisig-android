@@ -430,6 +430,15 @@ internal class SwapFormViewModel @Inject constructor(
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
 
+                        val specific = specificAndUtxo.blockChainSpecific
+                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                            quote.data.copy(
+                                data = quote.data.data.copy(gasPrice = specific.maxFeePerGasWei.toString())
+                            )
+                        } else {
+                            quote.data
+                        }
+
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
@@ -450,7 +459,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     toCoin = dstToken,
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quote.data,
+                                    quote = quoteData,
                                 )
                             )
                         )
@@ -468,6 +477,15 @@ internal class SwapFormViewModel @Inject constructor(
                         )
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
+
+                        val specific = specificAndUtxo.blockChainSpecific
+                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                            quote.data.copy(
+                                tx = quote.data.tx.copy(gasPrice = specific.maxFeePerGasWei.toString())
+                            )
+                        } else {
+                            quote.data
+                        }
 
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -489,7 +507,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     toCoin = dstToken,
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quote.data,
+                                    quote = quoteData,
                                     provider = quote.provider,
                                 ),
                             )
