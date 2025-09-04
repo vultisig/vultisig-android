@@ -30,6 +30,7 @@ import javax.inject.Inject
 internal data class SettingsUiModel(
     val items: List<SettingsGroupUiModel>,
     val hasToShowReferralCodeSheet: Boolean = false,
+    val showShareBottomSheet: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(
@@ -199,7 +200,6 @@ internal data class CurrencyUnit(
 
 internal sealed interface SettingsUiEvent {
     data class OpenLink(val url: String) : SettingsUiEvent
-    data object OpenGooglePlay : SettingsUiEvent
 }
 
 @HiltViewModel
@@ -287,7 +287,7 @@ internal class SettingsViewModel @Inject constructor(
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
             ReferralCode -> onClickReferralCode()
             RegisterVault -> navigateTo(Destination.RegisterVault(vaultId))
-            ShareTheApp -> sendEvent(SettingsUiEvent.OpenGooglePlay)
+            ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
             VaultSetting -> {
@@ -420,4 +420,15 @@ internal class SettingsViewModel @Inject constructor(
         navigateTo(Destination.ShareVaultQr(vaultId))
     }
 
+    fun onDismissShareLinkBottomSheet(){
+        state.update {
+            it.copy(showShareBottomSheet = false)
+        }
+    }
+
+    private fun openShareLinkModalBottomSheet() {
+        state.update {
+            it.copy(showShareBottomSheet = true)
+        }
+    }
 }

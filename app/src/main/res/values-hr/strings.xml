@@ -534,5 +534,6 @@
         <item quantity="one">%d sat</item>
         <item quantity="few">%d sati</item>
     </plurals>
+    <string name="share_sheet_more">Više</string>
 
 </resources>

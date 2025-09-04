@@ -543,4 +543,5 @@
         <item quantity="one">%d uur</item>
         <item quantity="other">%d uur</item>
     </plurals>
+    <string name="share_sheet_more">Meer</string>
 </resources>
