@@ -77,7 +77,7 @@ fun VsCenterHighlightCarousel(
     // Track the last selected index to detect re-selection
     var lastSelectedIndex by remember { mutableStateOf(-1) }
     
-    // Trigger selection when scrolling stops
+    // Trigger selection when scrolling stops or user release
     LaunchedEffect(listState, chains) {
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
@@ -85,7 +85,6 @@ fun VsCenterHighlightCarousel(
                 Timber.d("VsCenterHighlightCarousel: Scroll state changed, isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll")
                 
                 if (!isScrolling && !isProgrammaticScroll && chains.isNotEmpty()) {
-                    // Wait a bit for snap animation to complete
                     delay(200)
                     
                     // Calculate which item is in the center after snap
@@ -131,11 +130,10 @@ fun VsCenterHighlightCarousel(
             }
     }
     
-    // Scroll to selected chain on initial composition or when selection changes externally
+    // check if scroll is needed, and if so, scroll to that element
     LaunchedEffect(selectedChain) {
         val targetIndex = chains.indexOfFirst { it.chain.id == selectedChain.id }
         if (targetIndex >= 0) {
-            // Check if we actually need to scroll
             val layoutInfo = listState.layoutInfo
             val viewportCenter = layoutInfo.viewportEndOffset / 2
             val currentCenterItem = layoutInfo.visibleItemsInfo
