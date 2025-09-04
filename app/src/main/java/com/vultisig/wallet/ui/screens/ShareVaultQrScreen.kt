@@ -180,10 +180,6 @@ internal fun ShareVaultQrScreen(
                 weight = 1f
             )
 
-            UiSpacer(
-                size = 16.dp
-            )
-
             Info()
 
             UiSpacer(16.dp)

@@ -30,6 +30,7 @@ import javax.inject.Inject
 internal data class SettingsUiModel(
     val items: List<SettingsGroupUiModel>,
     val hasToShowReferralCodeSheet: Boolean = false,
+    val showShareBottomSheet: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(
@@ -115,7 +116,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             leadingIcon = R.drawable.check_update,
             trailingIcon = R.drawable.ic_small_caret_right
         ),
-        enabled = false
+        enabled = true
     )
 
     data object ShareTheApp :
@@ -199,7 +200,6 @@ internal data class CurrencyUnit(
 
 internal sealed interface SettingsUiEvent {
     data class OpenLink(val url: String) : SettingsUiEvent
-    data object OpenGooglePlay : SettingsUiEvent
 }
 
 @HiltViewModel
@@ -263,7 +263,6 @@ internal class SettingsViewModel @Inject constructor(
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
     private var hasUsedReferral = false
 
-    private val multipleClicksDetector = MultipleClicksDetector()
 
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
@@ -272,8 +271,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             CheckForUpdates -> {
-                // TODO: replace with real updater when available
-//              sendEvent(SettingsUiEvent.OpenGooglePlay)
+               navigateTo(Destination.CheckForUpdateSetting)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
@@ -289,7 +287,7 @@ internal class SettingsViewModel @Inject constructor(
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
             ReferralCode -> onClickReferralCode()
             RegisterVault -> navigateTo(Destination.RegisterVault(vaultId))
-            ShareTheApp -> sendEvent(SettingsUiEvent.OpenGooglePlay)
+            ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
             VaultSetting -> {
@@ -390,13 +388,7 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clickSecret() {
-        if (multipleClicksDetector.clickAndCheckIfDetected()) {
-            viewModelScope.launch {
-                navigator.route(Route.Secret)
-            }
-        }
-    }
+
 
     fun onContinueReferralBottomSheet() {
         viewModelScope.launch {
@@ -428,4 +420,15 @@ internal class SettingsViewModel @Inject constructor(
         navigateTo(Destination.ShareVaultQr(vaultId))
     }
 
+    fun onDismissShareLinkBottomSheet(){
+        state.update {
+            it.copy(showShareBottomSheet = false)
+        }
+    }
+
+    private fun openShareLinkModalBottomSheet() {
+        state.update {
+            it.copy(showShareBottomSheet = true)
+        }
+    }
 }

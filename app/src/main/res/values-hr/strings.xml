@@ -17,7 +17,7 @@
     <string name="vault_settings_security_screen_title">Sigurnost</string>
     <string name="swap_form_on_chain">na</string>
     <string name="vault_settings_security_screen_title_switch">Upravljajte svojom sigurnošću na lancu</string>
-    <string name="vault_settings_security_screen_title_content">Možete onemogućiti svoju sigurnost na lancu u stvarnom vremenu</string>
+    <string name="vault_settings_security_screen_title_content">Možete onemogućiti sigurnost u stvarnom vremenu na lancu koju pruža Blockaid.</string>
     <string name="vault_settings_security_screen_title_bottomsheet">Sigurnost na lancu onemogućena</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Onemogućavanje sigurnosti na lancu znači da Blockaid ne može provjeriti transakcije. Bit ćete manje zaštićeni.</string>
     <string name="choose_tokens">Odaberite tokene</string>
@@ -481,7 +481,9 @@
     <string name="vault_settings_advanced_title">Napredno</string>
     <string name="sign_message_continue">Nastavi</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
+    <string name="verify_sign_message_signing_method" >Metoda potpisivanja</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
+    <string name="verify_sign_message_message_sign">Poruka za potpis</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
     <string name="education_settings_title">Vultisig obrazovanje</string>
@@ -532,5 +534,6 @@
         <item quantity="one">%d sat</item>
         <item quantity="few">%d sati</item>
     </plurals>
+    <string name="share_sheet_more">Više</string>
 
 </resources>

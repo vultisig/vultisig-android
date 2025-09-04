@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,8 +40,8 @@ import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
@@ -53,13 +51,11 @@ fun SettingsScreen() {
     val viewModel = hiltViewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = VsUriHandler()
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect {
             when (it) {
                 is SettingsUiEvent.OpenLink -> uriHandler.openUri(it.url)
-                is SettingsUiEvent.OpenGooglePlay -> context.openGooglePlay()
             }
         }
     }
@@ -70,7 +66,8 @@ fun SettingsScreen() {
         onBackClick = viewModel::back,
         onContinueReferral = viewModel::onContinueReferralBottomSheet,
         onDismissReferral = viewModel::onDismissReferralBottomSheet,
-        onShareVaultQrClick = viewModel::onShareVaultQrClick
+        onShareVaultQrClick = viewModel::onShareVaultQrClick,
+        onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
     )
 }
 
@@ -82,6 +79,7 @@ private fun SettingsScreen(
     onBackClick: () -> Unit,
     onContinueReferral: () -> Unit,
     onDismissReferral: () -> Unit,
+    onDismissShareLink: () -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.settings_screen_title),
@@ -128,24 +126,14 @@ private fun SettingsScreen(
                 onDismissRequest = onDismissReferral,
             )
         }
-    }
-}
 
+        if (state.showShareBottomSheet) {
+            ShareLinkBottomSheet(
+                onDismissRequest = onDismissShareLink
+            )
+        }
 
-private fun Context.openGooglePlay() {
-    val sendIntent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(
-            Intent.EXTRA_TEXT,
-            VsAuxiliaryLinks.GOOGLE_PLAY
-        )
-        type = "text/plain"
     }
-    val shareIntent = Intent.createChooser(
-        sendIntent,
-        null
-    )
-    startActivity(shareIntent)
 }
 
 
@@ -199,7 +187,10 @@ internal fun SettingItem(
                 )
                 .fillMaxWidth()
                 .clickOnce(onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 16.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             item.leadingIcon?.let { icon ->
@@ -236,7 +227,9 @@ internal fun SettingItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    VsSwitch(checked = isChecked, onCheckedChange = {})
+                    VsSwitch(
+                        checked = isChecked,
+                        onCheckedChange = {})
                     Text(
                         text = if (isChecked) "ON" else "OFF",
                         style = Theme.brockmann.button.medium,
