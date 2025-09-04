@@ -10,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.tx
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -479,9 +479,17 @@ internal class SwapFormViewModel @Inject constructor(
                             allowance != null && allowance < srcTokenValue.value
 
                         val specific = specificAndUtxo.blockChainSpecific
+                        val gasLimit = if (srcToken.chain == Chain.Mantle) {
+                            DEFAULT_MANTLE_SWAP_LIMIT.toLong()
+                        } else {
+                            quote.data.tx.gas
+                        }
                         val quoteData = if (specific is BlockChainSpecific.Ethereum) {
                             quote.data.copy(
-                                tx = quote.data.tx.copy(gasPrice = specific.maxFeePerGasWei.toString())
+                                tx = quote.data.tx.copy(
+                                    gasPrice = specific.maxFeePerGasWei.toString(),
+                                    gas = gasLimit,
+                                )
                             )
                         } else {
                             quote.data

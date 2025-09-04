@@ -16,9 +16,9 @@ import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.GasFees
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -155,8 +155,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
                         chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
-                        token.isNativeToken -> DEFAULT_COIN_TRANSFER
-                        else -> DEFAULT_TOKEN_TRANSFER
+                        token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
+                        else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                     }
                 )
 

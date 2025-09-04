@@ -116,7 +116,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             leadingIcon = R.drawable.check_update,
             trailingIcon = R.drawable.ic_small_caret_right
         ),
-        enabled = false
+        enabled = true
     )
 
     data object ShareTheApp :
@@ -263,7 +263,6 @@ internal class SettingsViewModel @Inject constructor(
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
     private var hasUsedReferral = false
 
-    private val multipleClicksDetector = MultipleClicksDetector()
 
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
@@ -272,8 +271,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             CheckForUpdates -> {
-                // TODO: replace with real updater when available
-//              sendEvent(SettingsUiEvent.OpenGooglePlay)
+               navigateTo(Destination.CheckForUpdateSetting)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
@@ -390,13 +388,7 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clickSecret() {
-        if (multipleClicksDetector.clickAndCheckIfDetected()) {
-            viewModelScope.launch {
-                navigator.route(Route.Secret)
-            }
-        }
-    }
+
 
     fun onContinueReferralBottomSheet() {
         viewModelScope.launch {
