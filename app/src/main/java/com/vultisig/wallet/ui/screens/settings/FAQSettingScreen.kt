@@ -121,7 +121,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
 
             Icon(
                 modifier = Modifier.rotate(rotation.value),
-                painter = painterResource(id = R.drawable.ic_small_caret_right),
+                painter = painterResource(id = R.drawable.small_caret_down),
                 contentDescription = null,
                 tint = colors.text.extraLight,
             )

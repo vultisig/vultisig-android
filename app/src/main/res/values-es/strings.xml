@@ -25,7 +25,7 @@
     <string name="vault_settings_security_title">Seguridad en cadena</string>
     <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
     <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>
-    <string name="vault_settings_security_screen_title_content">Puedes desactivar tu seguridad en cadena en tiempo real</string>
+    <string name="vault_settings_security_screen_title_content">Puedes desactivar la seguridad en cadena en tiempo real proporcionada por Blockaid.</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>
     <string name="join_keysign_missing_required_vault">No tienes la bóveda necesaria para Keysign</string>
     <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
@@ -481,7 +481,9 @@
     <string name="vault_settings_advanced_title">Avanzado</string>
     <string name="sign_message_continue">Continuar</string>
     <string name="hint_signing_method">Método de firma</string>
+    <string name="verify_sign_message_signing_method" >Método de firma</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
+    <string name="verify_sign_message_message_sign">Mensaje para firmar</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
     <string name="address_book_empty_title">Tu libreta de direcciones está vacía</string>
     <string name="education_settings_title">Educación de Vultisig</string>
