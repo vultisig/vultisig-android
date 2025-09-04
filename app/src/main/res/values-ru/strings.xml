@@ -25,7 +25,7 @@
     <string name="vault_settings_reshare_title">Повторное совместное использование</string>
     <string name="vault_settings_security_screen_title">Безопасность</string>
     <string name="vault_settings_security_screen_title_switch">Управление безопасностью в сети</string>
-    <string name="vault_settings_security_screen_title_content">Вы можете отключить свою безопасность в сети в реальном времени</string>
+    <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
@@ -490,7 +490,9 @@
     <string name="vault_settings_advanced_title">Дополнительно</string>
     <string name="sign_message_continue">Продолжить</string>
     <string name="hint_signing_method">Метод подписания</string>
+    <string name="verify_sign_message_signing_method" >Метод подписания</string>
     <string name="hint_message_to_sign">Сообщение для подписи</string>
+    <string name="verify_sign_message_message_sign">Сообщение для подписи</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
     <string name="address_book_empty_title">Ваша адресная книга пуста.</string>
     <string name="education_settings_title">Обучение Vultisig</string>

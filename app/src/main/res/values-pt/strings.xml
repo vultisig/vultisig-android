@@ -479,7 +479,9 @@
     <string name="vault_settings_advanced_title">Avançadas</string>
     <string name="sign_message_continue">Continuar</string>
     <string name="hint_signing_method">Método de assinatura</string>
+    <string name="verify_sign_message_signing_method" >Método de assinatura</string>
     <string name="hint_message_to_sign">Mensagem para assinar</string>
+    <string name="verify_sign_message_message_sign">Mensagem para assinar</string>
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados num só lugar.</string>
     <string name="address_book_empty_title">A sua agenda está vazia.</string>
     <string name="education_settings_title">Vultisig Educação</string>

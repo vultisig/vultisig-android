@@ -147,13 +147,13 @@ private fun VerifySignMessageScreen(
         ) {
 
             SignMessageBox(
-                title = stringResource(R.string.verify_sign_message_method_field_title),
+                title = stringResource(R.string.verify_sign_message_signing_method),
                 value = method,
             )
 
 
             SignMessageBox(
-                title = stringResource(R.string.verify_sign_message_message_field_title),
+                title = stringResource(R.string.verify_sign_message_message_sign),
                 value = message,
             )
         }
