@@ -18,6 +18,7 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
+        const val ARG_EXPIRATION_ID = "expiration_id"
         const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
@@ -131,22 +132,24 @@ internal sealed class Destination(
     data class AddressBook(
         val chain: Chain? = null,
         val requestId: String? = null,
+        val vaultId: String,
     ) : Destination(
-        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
+        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}&$ARG_VAULT_ID=$vaultId"
     ) {
         companion object {
             const val STATIC_ROUTE =
-                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
         }
     }
 
     data class AddressEntry(
         val chainId: String? = null,
         val address: String? = null,
-    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address") {
+        val vaultId: String,
+    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address&$ARG_VAULT_ID=$vaultId") {
         companion object {
             const val STATIC_ROUTE =
-                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}"
+                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
         }
     }
 
@@ -219,6 +222,8 @@ internal sealed class Destination(
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
+    data object CheckForUpdateSetting : Destination(route = "settings/check_for_update")
+
     data class ReferralOnboarding(
         val vaultId: String,
     ): Destination(route = "referral/onboarding/$vaultId") {
@@ -252,11 +257,13 @@ internal sealed class Destination(
         }
     }
 
-    data class ReferralEdition(
+    data class ReferralVaultEdition(
         val vaultId: String,
-    ): Destination(route = "referral/referral_edition/$vaultId") {
+        val code: String,
+        val expiration: String,
+    ): Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
         companion object {
-            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
         }
     }
 
@@ -468,7 +475,6 @@ internal sealed class Route {
                 Send, Swap, Deposit, Sign
             }
         }
-
     }
 
     // vault creation / keygen
@@ -614,7 +620,6 @@ internal sealed class Route {
     )
 
     // vault migration
-
     object Migration {
         @Serializable
         data class Onboarding(

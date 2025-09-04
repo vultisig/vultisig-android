@@ -1,315 +1,282 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import android.content.Context
-import android.content.Intent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.AppVersionText
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
+import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
+import com.vultisig.wallet.ui.models.settings.SettingsItem
+import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
+import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
-    val colors = Theme.colors
+fun SettingsScreen() {
     val viewModel = hiltViewModel<SettingsViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val uriHandler = VsUriHandler()
-    val context: Context = LocalContext.current
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.loadSettings()
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect {
+            when (it) {
+                is SettingsUiEvent.OpenLink -> uriHandler.openUri(it.url)
+            }
+        }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.oxfordBlue800),
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(R.string.settings_screen_title),
-                startIcon = R.drawable.ic_caret_left
+    SettingsScreen(
+        state = state,
+        onSettingsItemClick = viewModel::onSettingsItemClick,
+        onBackClick = viewModel::back,
+        onContinueReferral = viewModel::onContinueReferralBottomSheet,
+        onDismissReferral = viewModel::onDismissReferralBottomSheet,
+        onShareVaultQrClick = viewModel::onShareVaultQrClick,
+        onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
+    )
+}
+
+@Composable
+private fun SettingsScreen(
+    state: SettingsUiModel,
+    onSettingsItemClick: (SettingsItem) -> Unit,
+    onShareVaultQrClick: () -> Unit,
+    onBackClick: () -> Unit,
+    onContinueReferral: () -> Unit,
+    onDismissReferral: () -> Unit,
+    onDismissShareLink: () -> Unit,
+) {
+    V2Scaffold(
+        title = stringResource(R.string.settings_screen_title),
+        onBackClick = onBackClick,
+        actions = {
+            UiIcon(
+                drawableResId = R.drawable.navigation_qr_code,
+                size = 16.dp,
+                onClick = onShareVaultQrClick,
+                modifier = Modifier
+                    .padding(16.dp)
             )
         }
     ) {
         Column(
             modifier = Modifier
-                .fillMaxHeight()
-                .padding(it)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppSettingItem(
-                R.drawable.gear,
-                stringResource(R.string.settings_screen_vault_settings)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                viewModel.navigateTo(Destination.VaultSettings(viewModel.vaultId))
-            }
-
-            AppSettingItem(
-                R.drawable.settings_globe,
-                stringResource(R.string.settings_screen_language),
-                state.selectedLocal.mainName
-            ) {
-                viewModel.navigateTo(Destination.LanguageSetting)
-            }
-
-            AppSettingItem(
-                R.drawable.settings_dollar,
-                stringResource(R.string.settings_screen_currency),
-                state.selectedCurrency.name
-            ) {
-                viewModel.navigateTo(Destination.CurrencyUnitSetting)
-            }
-
-            AppSettingItem(
-                logo = R.drawable.ic_bookmark,
-                title = stringResource(R.string.address_book_settings_title),
-            ) {
-                viewModel.navigateTo(Destination.AddressBook())
-            }
-
-            if (REFERRAL_FEATURE_FLAG) {
-                AppSettingItem(
-                    logo = R.drawable.handshake,
-                    title = stringResource(R.string.referral_code_settings_title),
-                ) {
-                    viewModel.onClickReferralCode()
+                state.items.forEach { groupItem ->
+                    SettingsBox(title = groupItem.title.asString()) {
+                        val enabledSettings = groupItem.items.filter(SettingsItem::enabled)
+                        enabledSettings
+                            .forEachIndexed { index, settingItem ->
+                                SettingItem(
+                                    item = settingItem.value,
+                                    isLastItem = index == enabledSettings.lastIndex,
+                                    onClick = {
+                                        onSettingsItemClick(settingItem)
+                                    }
+                                )
+                            }
+                    }
                 }
             }
+        }
 
-            AppSettingItem(
-                R.drawable.settings_coin,
-                stringResource(R.string.settings_screen_default_chains)
-            ) {
-                viewModel.navigateTo(Destination.DefaultChainSetting)
-            }
+        if (state.hasToShowReferralCodeSheet) {
+            ReferralCodeBottomSheet(
+                onContinue = onContinueReferral,
+                onDismissRequest = onDismissReferral,
+            )
+        }
 
-            AppSettingItem(
-                R.drawable.settings_question,
-                stringResource(R.string.settings_screen_faq)
-            ) {
-                viewModel.navigateTo(Destination.FAQSetting)
-            }
+        if (state.showShareBottomSheet) {
+            ShareLinkBottomSheet(
+                onDismissRequest = onDismissShareLink
+            )
+        }
 
+    }
+}
+
+
+@Composable
+internal fun SettingsBox(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier.fillMaxWidth()
+    ) {
+        title?.let {
             Text(
-                text = stringResource(R.string.settings_screen_others),
-                modifier = Modifier
-                    .padding(12.dp)
-                    .fillMaxWidth(),
-                style = Theme.montserrat.body2,
-                textAlign = TextAlign.Start
+                text = it,
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption
+
             )
+            UiSpacer(size = 12.dp)
+        }
 
-            AppSettingItem(
-                R.drawable.settings_logo,
-                stringResource(R.string.settings_screen_register_your_vaults),
-                backgroundColor = colors.turquoise600Main,
-                textColor = colors.oxfordBlue600Main,
-                style = Theme.montserrat.caption
-            ) {
-                viewModel.navigateTo(Destination.RegisterVault(viewModel.vaultId))
-            }
-
-            AppSettingItem(
-                R.drawable.settings_logo,
-                stringResource(R.string.settings_screen_vtx_token)
-            ) {
-                viewModel.navigateTo(Destination.VultisigToken)
-            }
-
-            AppSettingItem(
-                R.drawable.share,
-                stringResource(R.string.settings_screen_share_the_app)
-            ) {
-                val sendIntent: Intent = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(
-                        Intent.EXTRA_TEXT,
-                        "https://play.google.com/store/apps/details?id=com.vultisig.wallet"
-                    )
-                    type = "text/plain"
-                }
-                val shareIntent = Intent.createChooser(
-                    sendIntent,
-                    null
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Theme.colors.backgrounds.neutral,
+                    shape = RoundedCornerShape(12.dp)
                 )
-                context.startActivity(shareIntent)
-            }
-
-            Text(
-                text = stringResource(R.string.settings_screen_legal),
-                modifier = Modifier
-                    .padding(12.dp)
-                    .fillMaxWidth(),
-                style = Theme.montserrat.body2,
-                textAlign = TextAlign.Start
-            )
-
-            AppSettingItem(
-                R.drawable.shield_check,
-                stringResource(R.string.settings_screen_privacy_policy)
-            ) {
-                uriHandler.openUri(VsAuxiliaryLinks.PRIVACY)
-            }
-
-            AppSettingItem(
-                R.drawable.note,
-                stringResource(R.string.settings_screen_tos)
-            ) {
-                uriHandler.openUri(VsAuxiliaryLinks.TERMS_OF_SERVICE)
-            }
-
-            UiSpacer(weight = 1f)
-
-            UiSpacer(size = 26.dp)
-
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.settings_github),
-                    contentDescription = "github",
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri(VsAuxiliaryLinks.GITHUB)
-                    }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.settings_twitter),
-                    contentDescription = "twitter",
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri(VsAuxiliaryLinks.TWITTER)
-                    }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.settings_discord),
-                    contentDescription = "discord",
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri(VsAuxiliaryLinks.DISCORD)
-                    }
-                )
-            }
-
-            AppVersionText(
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 24.dp)
-                    .clickable(onClick = viewModel::clickSecret)
-            )
-
-            if (state.hasToShowReferralCodeSheet && REFERRAL_FEATURE_FLAG) {
-                ReferralCodeBottomSheet(
-                    onContinue = { viewModel.onContinueReferralBottomSheet() },
-                    onDismissRequest = { viewModel.onDismissReferralBottomSheet() },
-                )
-             }
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            content()
         }
     }
 }
 
 @Composable
-private fun AppSettingItem(
-    @DrawableRes logo: Int,
-    title: String,
-    currentValue: String? = null,
-    backgroundColor: Color = Theme.colors.oxfordBlue600Main,
-    textColor: Color = Theme.colors.neutral0,
-    style: TextStyle = Theme.montserrat.body2,
-    onClick: () -> Unit = {},
+internal fun SettingItem(
+    item: SettingsItemUiModel,
+    onClick: () -> Unit,
+    isLastItem: Boolean,
+    tint: Color? = null,
 ) {
-    val colors = Theme.colors
-    Card(
-        modifier = Modifier
-            .clickOnce(
-                onClick = onClick
-            )
-            .padding(
-                horizontal = 12.dp, vertical = 8.dp
-            )
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        )
-    ) {
+    Column {
         Row(
-            modifier = Modifier.padding(all = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                modifier = Modifier
-                    .padding(
-                        end = 12.dp,
-                    )
-                    .size(20.dp)
-                    .clip(CircleShape),
-                painter = painterResource(id = logo),
-                contentDescription = stringResource(R.string.token_logo),
-            )
-            Text(
-                text = title,
-                color = textColor,
-                style = style,
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            currentValue?.let {
-                Text(
-                    text = it,
-                    color = colors.neutral0,
-                    style = Theme.montserrat.body2,
+            modifier = Modifier
+                .then(
+                    if (item.backgroundColor != null)
+                        Modifier.background(item.backgroundColor)
+                    else Modifier
                 )
+                .fillMaxWidth()
+                .clickOnce(onClick = onClick)
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 16.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item.leadingIcon?.let { icon ->
+                UiIcon(
+                    drawableResId = icon,
+                    size = 20.dp,
+                    tint = tint ?: Theme.colors.primary.accent4
+                )
+                UiSpacer(size = 16.dp)
             }
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_small_caret_right),
-                contentDescription = null,
-                tint = colors.neutral0,
-            )
+            Column {
+                Text(
+                    text = item.title.asString(),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = tint ?: Theme.colors.text.primary
+                )
+
+                item.subTitle?.let {
+                    Text(
+                        text = it.asString(),
+                        color = tint ?: Theme.colors.text.light,
+                        style = Theme.brockmann.supplementary.caption,
+                    )
+                }
+
+            }
+
+            UiSpacer(weight = 1f)
+
+            item.trailingSwitch?.let { isChecked ->
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    VsSwitch(
+                        checked = isChecked,
+                        onCheckedChange = {})
+                    Text(
+                        text = if (isChecked) "ON" else "OFF",
+                        style = Theme.brockmann.button.medium,
+                        color = tint ?: Theme.colors.text.primary
+                    )
+                }
+
+                UiSpacer(size = 8.dp)
+            }
+
+            item.value?.let { value ->
+                Text(
+                    text = value,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = tint ?: Theme.colors.text.primary
+                )
+                UiSpacer(size = 12.dp)
+            }
+
+            item.trailingIcon?.let { trailingIcon ->
+                Image(
+                    imageVector = ImageVector.vectorResource(trailingIcon),
+                    modifier = Modifier.size(16.dp),
+                    contentDescription = "trailing icon"
+                )
+            }
+        }
+
+        if (isLastItem.not()) {
+            FadingHorizontalDivider()
         }
     }
 }
 
-private const val REFERRAL_FEATURE_FLAG = false
+@Preview
+@Composable
+private fun SettingsItemPreview() {
+    SettingItem(
+        item = SettingsItemUiModel(
+            title = "title".asUiText(),
+            subTitle = "subTitle".asUiText(),
+            leadingIcon = R.drawable.currency,
+            trailingIcon = R.drawable.ic_small_caret_right,
+            value = "value",
+            backgroundColor = Theme.colors.backgrounds.primary
+        ),
+        onClick = {},
+        isLastItem = false
+    )
+}

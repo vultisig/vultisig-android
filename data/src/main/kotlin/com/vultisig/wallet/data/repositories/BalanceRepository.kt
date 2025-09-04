@@ -316,7 +316,11 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 coin.contractAddress
             )
 
-            Ton -> tonApi.getBalance(address)
+            Ton -> if (coin.isNativeToken) {
+                tonApi.getBalance(address)
+            } else {
+                tonApi.getJettonBalance(address, coin.contractAddress)
+            }
             Chain.Ripple -> rippleApi.getBalance(coin)
             Chain.Tron -> tronApi.getBalance(coin)
             Chain.Cardano -> cardanoApi.getBalance(coin)

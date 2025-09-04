@@ -116,6 +116,12 @@ val Chain.coinType: CoinType
         Chain.Mantle -> CoinType.MANTLE
     }
 
+val Chain.supportsLegacyGas: Boolean
+    get() = when (this) {
+        Chain.BscChain -> true
+        else -> false
+    }
+
 val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
         Chain.Solana, Chain.Polkadot, Chain.Sui, Chain.Ton, Chain.Cardano -> TssKeyType.EDDSA
@@ -131,7 +137,7 @@ val Chain.canSelectTokens: Boolean
         Chain.Sui,
         Chain.Kujira,
         Chain.GaiaChain,
-        Chain.Osmosis, Chain.Tron -> true
+        Chain.Osmosis, Chain.Tron, Chain.Ton -> true
         Chain.ThorChain -> true
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {

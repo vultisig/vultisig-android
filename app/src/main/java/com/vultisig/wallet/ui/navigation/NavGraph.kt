@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_MERGE_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
@@ -66,6 +67,7 @@ import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
@@ -74,9 +76,10 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
-import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
+import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
@@ -158,9 +161,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            VaultSettingsScreen(
-                navController = navController
-            )
+            VaultSettingsScreen()
         }
         composable(
             route = Destination.Details.STATIC_ROUTE,
@@ -254,6 +255,10 @@ internal fun SetupNavGraph(
                 navArgument(ARG_CHAIN_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
                 }
             )
         ) {
@@ -270,8 +275,13 @@ internal fun SetupNavGraph(
                 navArgument(ARG_ADDRESS) {
                     type = NavType.StringType
                     nullable = true
-                }
-            )
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                },
+
+                )
         ) {
             AddAddressEntryScreen(
                 navController = navController,
@@ -300,7 +310,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            SettingsScreen(navController = navController)
+            SettingsScreen()
         }
 
         composable(
@@ -312,7 +322,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.FAQSetting.route,
         ) {
-            FAQSettingScreen(navController = navController)
+            FaqSettingScreen(navController = navController)
         }
 
         composable(
@@ -661,6 +671,31 @@ internal fun SetupNavGraph(
             ReferralViewScreen(
                 navController = navController,
             )
+        }
+
+        composable(
+            route = Destination.ReferralVaultEdition.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_REFERRAL_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_EXPIRATION_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralEditVaultScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.CheckForUpdateSetting.route,
+        ) {
+            CheckForUpdateScreen()
         }
     }
 }

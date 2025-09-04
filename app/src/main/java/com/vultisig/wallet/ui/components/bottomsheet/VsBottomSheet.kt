@@ -53,6 +53,7 @@ fun VsModalBottomSheet(
 
     ModalBottomSheet(
         sheetState = sheetState,
+        scrimColor = Theme.colors.neutrals.n900.copy(alpha = 0.8f),
         dragHandle = {
             VsBottomSheet.DragHandle()
         },

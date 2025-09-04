@@ -15,6 +15,7 @@ import wallet.core.java.AnySigner
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
@@ -257,6 +258,38 @@ class UtxoHelper(
             ),
             transactionHash = output.transactionId
         )
+    }
+
+    fun getZeroSignedTransaction(
+        keysignPayload: KeysignPayload,
+    ): String {
+        val inputData = getBitcoinPreSigningInputData(keysignPayload)
+        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
+            .checkError()
+        val publicKeys = DataVector()
+        val allSignatures = DataVector()
+        
+        // Create a dummy private key for generating valid DER signatures
+        val privateKey = PrivateKey()
+        val publicKey = privateKey.getPublicKeySecp256k1(true)
+        
+        for (item in preSigningOutput.hashPublicKeysList) {
+            val derSignature = privateKey.signAsDER(item.dataHash.toByteArray())
+            allSignatures.add(derSignature)
+            publicKeys.add(publicKey.data())
+        }
+
+        val compiledWithSignature = TransactionCompiler.compileWithSignatures(
+            coinType,
+            inputData,
+            allSignatures,
+            publicKeys
+        )
+        val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
+
+        return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
     }
 
     fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {

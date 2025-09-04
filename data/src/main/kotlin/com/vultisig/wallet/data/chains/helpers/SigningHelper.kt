@@ -37,8 +37,6 @@ object SigningHelper {
         )
     }
 
-
-
     fun getKeysignMessages(
         payload: KeysignPayload,
         vault: Vault
@@ -62,7 +60,7 @@ object SigningHelper {
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
 
-                is SwapPayload.OneInch -> {
+                is SwapPayload.EVM -> {
                     val message = if (payload.coin.chain == Chain.Solana) {
                         SolanaSwap(vault.pubKeyEDDSA)
                             .getPreSignedImageHash(
@@ -199,7 +197,7 @@ object SigningHelper {
                         )
                 }
 
-                is SwapPayload.OneInch -> {
+                is SwapPayload.EVM -> {
                     return if (keysignPayload.blockChainSpecific is BlockChainSpecific.Solana)
                         SolanaSwap(vault.pubKeyEDDSA)
                             .getSignedTransaction(

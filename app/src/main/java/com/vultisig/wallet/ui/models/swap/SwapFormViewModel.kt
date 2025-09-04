@@ -10,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.tx
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -20,7 +20,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.IsSwapSupported
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KyberSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -302,10 +303,10 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-
                 val transaction = when (quote) {
                     is SwapQuote.ThorChain -> {
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
                         val dstAddress =
                             quote.data.router ?: quote.data.inboundAddress ?: srcAddress
                         val allowance = allowanceRepository.getAllowance(
@@ -359,6 +360,8 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
                         val address = quote.data.inboundAddress
                         val dstAddress = address ?: srcAddress
 
@@ -416,6 +419,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.Kyber -> {
                         val dstAddress = quote.data.tx.to
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
@@ -425,6 +429,15 @@ internal class SwapFormViewModel @Inject constructor(
                         )
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
+
+                        val specific = specificAndUtxo.blockChainSpecific
+                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                            quote.data.copy(
+                                data = quote.data.data.copy(gasPrice = specific.maxFeePerGasWei.toString())
+                            )
+                        } else {
+                            quote.data
+                        }
 
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -446,7 +459,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     toCoin = dstToken,
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quote.data,
+                                    quote = quoteData,
                                 )
                             )
                         )
@@ -454,6 +467,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                     is SwapQuote.OneInch -> {
                         val dstAddress = quote.data.tx.to
+                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
@@ -463,6 +477,23 @@ internal class SwapFormViewModel @Inject constructor(
                         )
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
+
+                        val specific = specificAndUtxo.blockChainSpecific
+                        val gasLimit = if (srcToken.chain == Chain.Mantle) {
+                            DEFAULT_MANTLE_SWAP_LIMIT.toLong()
+                        } else {
+                            quote.data.tx.gas
+                        }
+                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                            quote.data.copy(
+                                tx = quote.data.tx.copy(
+                                    gasPrice = specific.maxFeePerGasWei.toString(),
+                                    gas = gasLimit,
+                                )
+                            )
+                        } else {
+                            quote.data
+                        }
 
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -478,14 +509,15 @@ internal class SwapFormViewModel @Inject constructor(
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
                             gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.OneInch(
-                                OneInchSwapPayloadJson(
+                            payload = SwapPayload.EVM(
+                                EVMSwapPayloadJson(
                                     fromCoin = srcToken,
                                     toCoin = dstToken,
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quote.data,
-                                )
+                                    quote = quoteData,
+                                    provider = quote.provider,
+                                ),
                             )
                         )
                     }
@@ -514,10 +546,10 @@ internal class SwapFormViewModel @Inject constructor(
         gasFee: TokenValue,
     ) = try {
         blockChainSpecificRepository.getSpecific(
-            srcToken.chain,
-            srcAddress,
-            srcToken,
-            gasFee,
+            chain = srcToken.chain,
+            address = srcAddress,
+            token = srcToken,
+            gasFee = gasFee,
             isSwap = true,
             isMaxAmountEnabled = false,
             isDeposit = srcToken.chain == Chain.MayaChain,
@@ -953,7 +985,6 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-
                             SwapProvider.KYBER -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken,
@@ -979,11 +1010,12 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = srcNativeToken
                                 )
 
-                                this@SwapFormViewModel.quote = SwapQuote.Kyber(
+                                this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
@@ -1047,7 +1079,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
@@ -1120,7 +1153,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
                                     data = quote,
-                                    expiredAt = Clock.System.now() + expiredAfter
+                                    expiredAt = Clock.System.now() + expiredAfter,
+                                    provider = provider.getSwapProviderId(),
                                 )
 
                                 val fiatFees =
