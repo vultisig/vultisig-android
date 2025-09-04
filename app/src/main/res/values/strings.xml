@@ -302,7 +302,7 @@
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
-    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security</string>
+    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security provided by Blockaid.</string>
     <string name="vault_settings_security_screen_title">Security</string>
     <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
     <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>
@@ -422,8 +422,9 @@
     <string name="verify_sign_message_message_field_title" translatable="false">Message</string>
     <string name="sign_message_form_method_field_title" translatable="false">Method</string>
     <string name="hint_signing_method" >Signing method</string>
-    <string name="sign_message_for_message_field_title" translatable="false">Message</string>
+    <string name="verify_sign_message_signing_method" >Signing method</string>
     <string name="hint_message_to_sign" >Message to sign</string>
+    <string name="verify_sign_message_message_sign" >Message to sign</string>
     <string name="sign_message_sign_screen_title" translatable="false">Sign message</string>
     <string name="vault_settings_sign_message_title" translatable="false">Sign</string>
     <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
@@ -776,5 +777,6 @@
     <string name="backup_device_title">Device Backup</string>
     <string name="backup_server_title">Server Backup</string>
     <string name="backup_server_desc">Request Server Vault Share again.</string>
+    <string name="share_sheet_more">More</string>
 
 </resources>

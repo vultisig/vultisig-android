@@ -481,7 +481,9 @@
     <string name="vault_settings_advanced_title">Avanzato</string>
     <string name="sign_message_continue">Continua</string>
     <string name="hint_signing_method">Metodo di firma</string>
+    <string name="verify_sign_message_signing_method" >Metodo di firma</string>
     <string name="hint_message_to_sign">Messaggio da firmare</string>
+    <string name="verify_sign_message_message_sign">Messaggio da firmare</string>
     <string name="address_book_empty_description">Tieni tutti i tuoi indirizzi importanti organizzati in un unico posto.</string>
     <string name="address_book_empty_title">La tua rubrica è vuota</string>
     <string name="education_settings_title">Formazione Vultisig</string>
@@ -532,5 +534,6 @@
         <item quantity="one">%d ora</item>
         <item quantity="many">%d ore</item>
     </plurals>
+    <string name="share_sheet_more">Di più</string>
 
 </resources>
