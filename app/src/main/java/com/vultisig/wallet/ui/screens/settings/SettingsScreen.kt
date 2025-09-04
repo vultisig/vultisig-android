@@ -127,7 +127,7 @@ private fun SettingsScreen(
             )
         }
 
-        if(state.showShareBottomSheet) {
+        if (state.showShareBottomSheet) {
             ShareLinkBottomSheet(
                 onDismissRequest = onDismissShareLink
             )
@@ -187,7 +187,10 @@ internal fun SettingItem(
                 )
                 .fillMaxWidth()
                 .clickOnce(onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 16.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             item.leadingIcon?.let { icon ->
@@ -224,7 +227,9 @@ internal fun SettingItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    VsSwitch(checked = isChecked, onCheckedChange = {})
+                    VsSwitch(
+                        checked = isChecked,
+                        onCheckedChange = {})
                     Text(
                         text = if (isChecked) "ON" else "OFF",
                         style = Theme.brockmann.button.medium,
