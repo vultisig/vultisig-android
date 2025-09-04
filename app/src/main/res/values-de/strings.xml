@@ -18,7 +18,7 @@
     <string name="vault_settings_security_subtitle">Verwalten Sie Ihre On-Chain-Sicherheit</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
     <string name="vault_settings_security_screen_title_switch">Ihre On-Chain-Sicherheit verwalten</string>
-    <string name="vault_settings_security_screen_title_content">Sie können Ihre Echtzeit-On-Chain-Sicherheit deaktivieren</string>
+    <string name="vault_settings_security_screen_title_content">Sie können Ihre von Blockaid bereitgestellte Echtzeit-On-Chain-Sicherheit deaktivieren.</string>
     <string name="vault_settings_security_screen_title_bottomsheet">On-Chain-Sicherheit deaktiviert</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Das Deaktivieren der On-Chain-Sicherheit bedeutet, dass Blockaid Transaktionen nicht überprüfen kann. Sie sind dann weniger geschützt.</string>
     <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
@@ -481,7 +481,9 @@
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
     <string name="sign_message_continue">Weiter</string>
     <string name="hint_signing_method">Signaturmethode</string>
+    <string name="verify_sign_message_signing_method" >Signaturmethode</string>
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
+    <string name="verify_sign_message_message_sign">Zu unterschreibende Nachricht</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
     <string name="education_settings_title">Vultisig-Schulung</string>
