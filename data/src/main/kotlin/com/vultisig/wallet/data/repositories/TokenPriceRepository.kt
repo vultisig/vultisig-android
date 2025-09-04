@@ -335,22 +335,26 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val tokenIds = matchingTokens.map { it.id }
 
         val tickerUsd = AppCurrency.USD.ticker.lowercase()
-        val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true))
-            1.toBigDecimal()
-        else fetchTetherPrice()
+        val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true)) {
+            BigDecimal.ONE
+        } else {
+            fetchTetherPrice()
+        }
 
-        val tokenIdToPrices = contracts.zip(tokenIds).mapNotNull { (contract, tokenId) ->
-            try {
-                val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
-                // nav_per_share / redemption_rate
-                val priceUsd = vaultData.data.priceUsd()
-
-                tokenId to mapOf(currency to priceUsd * tetherPrice)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch price for contract: $contract")
-                null
-            }
-        }.toMap()
+        val tokenIdToPrices = coroutineScope {
+            contracts.zip(tokenIds).map { (contract, tokenId) ->
+                async {
+                    try {
+                        val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
+                        val priceUsd = vaultData.data.priceUsd()
+                        tokenId to mapOf(currency to priceUsd * tetherPrice)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to fetch price for contract: $contract")
+                        null
+                    }
+                }
+            }.awaitAll().filterNotNull().toMap()
+        }
 
         savePrices(tokenIdToPrices, currency)
     }
