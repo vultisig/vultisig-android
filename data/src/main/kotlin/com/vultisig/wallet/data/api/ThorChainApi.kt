@@ -619,32 +619,4 @@ data class VaultRedemptionDataJson(
     val nav: String,
     @SerialName("nav_per_share")
     val navPerShare: String,
-    @SerialName("allocation")
-    val allocation: List<VaultAllocationJson>
-) {
-    fun priceUsd(): BigDecimal {
-        return try {
-            navPerShare.toBigDecimal().divide(redemptionRate.toBigDecimal(), RoundingMode.HALF_UP)
-        } catch (t: Throwable) {
-            BigDecimal.ZERO
-        }
-    }
-}
-
-@Serializable
-data class VaultAllocationJson(
-    @SerialName("denom")
-    val denom: String,
-    @SerialName("swap_contract")
-    val swapContract: String? = null,
-    @SerialName("balance")
-    val balance: String,
-    @SerialName("price")
-    val price: String,
-    @SerialName("weight")
-    val weight: String,
-    @SerialName("threshold")
-    val threshold: String,
-    @SerialName("slippage")
-    val slippage: String
 )

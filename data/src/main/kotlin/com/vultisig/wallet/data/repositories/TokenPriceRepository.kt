@@ -318,45 +318,49 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokenList: List<Coin>,
         currency: String
     ) = supervisorScope {
-        val thorTokens =
-            Coins.coins[Chain.ThorChain]?.filter { it.contractAddress.startsWith("x/nami") }
-                ?: emptyList()
+        try {
+            val thorTokens =
+                Coins.coins[Chain.ThorChain]?.filter { it.contractAddress.startsWith("x/nami") }
+                    ?: emptyList()
 
-        val matchingTokens = tokenList.filter { token ->
-            thorTokens.any { it.id == token.id }
-        }
+            val matchingTokens = tokenList.filter { token ->
+                thorTokens.any { it.id == token.id }
+            }
 
-        if (matchingTokens.isEmpty()) return@supervisorScope
+            if (matchingTokens.isEmpty()) return@supervisorScope
 
-        val contracts = matchingTokens.map {
-            it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
-        }
+            val contracts = matchingTokens.map {
+                it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
+            }
 
-        val tokenIds = matchingTokens.map { it.id }
+            val tokenIds = matchingTokens.map { it.id }
 
-        val tickerUsd = AppCurrency.USD.ticker.lowercase()
-        val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true)) {
-            BigDecimal.ONE
-        } else {
-            fetchTetherPrice()
-        }
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true)) {
+                BigDecimal.ONE
+            } else {
+                fetchTetherPrice()
+            }
 
-        val tokenIdToPrices = coroutineScope {
-            contracts.zip(tokenIds).map { (contract, tokenId) ->
-                async {
-                    try {
-                        val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
-                        val priceUsd = vaultData.data.priceUsd()
-                        tokenId to mapOf(currency to priceUsd * tetherPrice)
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to fetch price for contract: $contract")
-                        null
+            val tokenIdToPrices = coroutineScope {
+                contracts.zip(tokenIds).map { (contract, tokenId) ->
+                    async {
+                        try {
+                            val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
+                            val priceUsd = vaultData.data.navPerShare.toBigDecimal()
+                            tokenId to mapOf(currency to priceUsd * tetherPrice)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to fetch price for contract: $contract")
+                            null
+                        }
                     }
-                }
-            }.awaitAll().filterNotNull().toMap()
-        }
+                }.awaitAll().filterNotNull().toMap()
+            }
 
-        savePrices(tokenIdToPrices, currency)
+            savePrices(tokenIdToPrices, currency)
+        } catch (t: Throwable) {
+            Timber.e(t, "Could not update YTCY/YRUNE prices")
+        }
     }
 
     companion object {
