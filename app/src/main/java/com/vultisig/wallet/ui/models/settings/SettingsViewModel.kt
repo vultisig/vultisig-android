@@ -434,8 +434,6 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
-
-
     private fun openShareLinkModalBottomSheet() {
         state.update {
             it.copy(showShareBottomSheet = true)

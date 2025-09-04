@@ -544,6 +544,6 @@
         <item quantity="few">%d часа</item>
         <item quantity="many">%d часов</item>
     </plurals>
-    <string name="share_sheet_more">Более</string>
+    <string name="share_sheet_more">Ещё</string>
 
 </resources>
