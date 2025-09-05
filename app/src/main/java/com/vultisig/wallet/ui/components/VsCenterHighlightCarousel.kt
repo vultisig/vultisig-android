@@ -62,7 +62,7 @@ fun VsCenterHighlightCarousel(
     val itemWidth = 150.dp
     val itemSpacing = 16.dp
     val screenWidth = configuration.screenWidthDp.dp
-    val centerOffset = (screenWidth - itemWidth) / 2
+    val centerOffset = ((screenWidth - itemWidth) / 2).coerceAtLeast(0.dp)
     
     val listState = rememberLazyListState()
     
