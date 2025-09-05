@@ -66,13 +66,9 @@ fun VsCenterHighlightCarousel(
     
     val listState = rememberLazyListState()
     
-    // Track if we're programmatically scrolling to prevent feedback loop
+    // Avoid side effects with scrolling programatically to center
     var isProgrammaticScroll by remember { mutableStateOf(false) }
-    
-    // Log initial setup
-    LaunchedEffect(Unit) {
-        Timber.d("VsCenterHighlightCarousel: Component initialized with ${chains.size} chains")
-    }
+
     
     // Track the last selected index to detect re-selection
     var lastSelectedIndex by remember { mutableStateOf(-1) }
@@ -99,7 +95,7 @@ fun VsCenterHighlightCarousel(
                     val viewportCenter = layoutInfo.viewportEndOffset / 2
                     Timber.d("VsCenterHighlightCarousel: Viewport center = $viewportCenter")
                     
-                    // Find the item closest to center
+                    // Find the item closest to center (left or right)
                     val centerItem = layoutInfo.visibleItemsInfo
                         .filter { it.index >= 0 && it.index < chains.size }
                         .minByOrNull { item ->
@@ -130,7 +126,7 @@ fun VsCenterHighlightCarousel(
             }
     }
     
-    // check if scroll is needed, and if so, scroll to that element
+    // check if scroll is needed (i.e element is not center already)
     LaunchedEffect(selectedChain) {
         val targetIndex = chains.indexOfFirst { it.chain.id == selectedChain.id }
         if (targetIndex >= 0) {
@@ -143,7 +139,6 @@ fun VsCenterHighlightCarousel(
                     abs(itemCenter - viewportCenter)
                 }
             
-            // Only scroll if the selected item is not already in center
             if (currentCenterItem?.index != targetIndex) {
                 isProgrammaticScroll = true
                 listState.animateScrollToItem(
