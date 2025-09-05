@@ -90,8 +90,8 @@ fun VsCenterHighlightCarousel(
                     if (layoutInfo.visibleItemsInfo.isEmpty()) {
                         return@collect
                     }
-                    
-                    val viewportCenter = layoutInfo.viewportEndOffset / 2
+
+                    val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
 
                     // Find the item closest to center (left or right)
                     val centerItem = layoutInfo.visibleItemsInfo
