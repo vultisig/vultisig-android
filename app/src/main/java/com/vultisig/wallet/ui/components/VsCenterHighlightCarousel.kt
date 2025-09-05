@@ -130,7 +130,7 @@ fun VsCenterHighlightCarousel(
         val targetIndex = chains.indexOfFirst { it.chain.id == selectedChain.id }
         if (targetIndex >= 0) {
             val layoutInfo = listState.layoutInfo
-            val viewportCenter = layoutInfo.viewportEndOffset / 2
+            val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
             val currentCenterItem = layoutInfo.visibleItemsInfo
                 .filter { it.index >= 0 && it.index < chains.size }
                 .minByOrNull { item ->
