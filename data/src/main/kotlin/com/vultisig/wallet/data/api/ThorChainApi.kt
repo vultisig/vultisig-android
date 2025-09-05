@@ -38,7 +38,9 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -89,6 +91,8 @@ interface ThorChainApi {
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
     suspend fun getReferralCodesByAddress(address: String): List<String>
     suspend fun getLastBlock(): Long
+
+    suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -430,6 +434,14 @@ internal class ThorChainApiImpl @Inject constructor(
         return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
     }
 
+    override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
+        val url = "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<VaultRedemptionResponseJson>()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
@@ -589,4 +601,22 @@ data class RujiStakeBalances(
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
+)
+
+@Serializable
+data class VaultRedemptionResponseJson(
+    @SerialName("data")
+    val data: VaultRedemptionDataJson
+)
+
+@Serializable
+data class VaultRedemptionDataJson(
+    @SerialName("redemption_rate")
+    val redemptionRate: String,
+    @SerialName("shares")
+    val shares: String,
+    @SerialName("nav")
+    val nav: String,
+    @SerialName("nav_per_share")
+    val navPerShare: String,
 )
