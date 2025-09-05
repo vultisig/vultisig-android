@@ -103,6 +103,7 @@ internal fun ReferralCodeBottomSheetContent(
             text = stringResource(R.string.referral_invite_sheet_description),
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
+            color = Theme.colors.text.light,
             modifier = Modifier
                 .padding(horizontal = 32.dp)
                 .fillMaxWidth()
