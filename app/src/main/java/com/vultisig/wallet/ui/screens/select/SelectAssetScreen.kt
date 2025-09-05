@@ -30,9 +30,9 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.Tokens
-import com.vultisig.wallet.ui.components.ChainSelectionScreen
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
+import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.theme.Theme
@@ -128,7 +128,7 @@ private fun SelectAssetScreen(
             }
         },
         bottomBar = {
-            ChainSelectionScreen(
+            VsCenterHighlightCarousel(
                 onSelectChain = { onSelectChain(it) },
                 chains = state.chains,
                 selectedChain = state.selectedChain,
