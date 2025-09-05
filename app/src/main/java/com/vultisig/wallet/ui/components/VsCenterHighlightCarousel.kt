@@ -72,12 +72,14 @@ fun VsCenterHighlightCarousel(
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
             .collect { isScrolling ->
-                Timber.d("VsCenterHighlightCarousel: Scroll state changed, isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll")
+                Timber.d("VsCenterHighlightCarousel: Scroll state changed, " +
+                        "isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll")
 
                 if (!isScrolling && !isProgrammaticScroll && chains.isNotEmpty()) {
                     // Calculate which item is in the center after snap
                     val layoutInfo = listState.layoutInfo
-                    Timber.d("VsCenterHighlightCarousel: Layout info - visible items count = ${layoutInfo.visibleItemsInfo.size}")
+                    Timber.d("VsCenterHighlightCarousel: Layout info - " +
+                            "visible items count = ${layoutInfo.visibleItemsInfo.size}")
 
                     if (layoutInfo.visibleItemsInfo.isEmpty()) {
                         return@collect
@@ -92,26 +94,31 @@ fun VsCenterHighlightCarousel(
                         .minByOrNull { item ->
                             val itemCenter = item.offset + item.size / 2
                             val distance = abs(itemCenter - viewportCenter)
-                            Timber.d("VsCenterHighlightCarousel: Item ${item.index} - center = $itemCenter, distance = $distance")
+                            Timber.d("VsCenterHighlightCarousel: Item ${item.index} - " +
+                                    "center = $itemCenter, distance = $distance")
                             distance
                         }
 
                     // figure out index and trigger onSelectChain
                     centerItem?.let { item ->
                         val safeIndex = item.index.coerceIn(0, chains.size - 1)
-                        Timber.d("VsCenterHighlightCarousel: Center item found - index = ${item.index}, safeIndex = $safeIndex, chains.size = ${chains.size}")
+                        Timber.d("VsCenterHighlightCarousel: Center item found - " +
+                                "index = ${item.index}, safeIndex = $safeIndex, chains.size = ${chains.size}")
 
                         if (safeIndex < chains.size) {
                             if (safeIndex != lastSelectedIndex) {
                                 val selectedChainInCenter = chains[safeIndex].chain
-                                Timber.d("VsCenterHighlightCarousel: Calling onSelectChain for ${selectedChainInCenter.name} (${selectedChainInCenter.id})")
+                                Timber.d("VsCenterHighlightCarousel: Calling onSelectChain " +
+                                        "for ${selectedChainInCenter.name} (${selectedChainInCenter.id})")
                                 lastSelectedIndex = safeIndex
                                 onSelectChain(selectedChainInCenter)
                             } else {
-                                Timber.d("VsCenterHighlightCarousel: Center unchanged (index=$safeIndex); skipping onSelectChain")
+                                Timber.d("VsCenterHighlightCarousel: Center unchanged " +
+                                        "(index=$safeIndex); skipping onSelectChain")
                             }
                         } else {
-                            Timber.e("VsCenterHighlightCarousel: Safe index $safeIndex still out of bounds for chains list of size ${chains.size}")
+                            Timber.e("VsCenterHighlightCarousel: Safe index $safeIndex " +
+                                    "still out of bounds for chains list of size ${chains.size}")
                         }
                     } ?: run {
                         Timber.e("VsCenterHighlightCarousel: No valid center item could be determined")
