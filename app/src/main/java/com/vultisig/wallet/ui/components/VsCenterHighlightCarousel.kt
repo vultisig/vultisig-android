@@ -88,13 +88,11 @@ fun VsCenterHighlightCarousel(
                     Timber.d("VsCenterHighlightCarousel: Layout info - visible items count = ${layoutInfo.visibleItemsInfo.size}")
                     
                     if (layoutInfo.visibleItemsInfo.isEmpty()) {
-                        Timber.w("VsCenterHighlightCarousel: No visible items")
                         return@collect
                     }
                     
                     val viewportCenter = layoutInfo.viewportEndOffset / 2
-                    Timber.d("VsCenterHighlightCarousel: Viewport center = $viewportCenter")
-                    
+
                     // Find the item closest to center (left or right)
                     val centerItem = layoutInfo.visibleItemsInfo
                         .filter { it.index >= 0 && it.index < chains.size }
@@ -104,7 +102,8 @@ fun VsCenterHighlightCarousel(
                             Timber.d("VsCenterHighlightCarousel: Item ${item.index} - center = $itemCenter, distance = $distance")
                             distance
                         }
-                    
+
+                    // figure out index and trigger onSelectChain
                     centerItem?.let { item ->
                         val safeIndex = item.index.coerceIn(0, chains.size - 1)
                         Timber.d("VsCenterHighlightCarousel: Center item found - index = ${item.index}, safeIndex = $safeIndex, chains.size = ${chains.size}")
