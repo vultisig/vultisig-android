@@ -75,8 +75,6 @@ fun VsCenterHighlightCarousel(
                 Timber.d("VsCenterHighlightCarousel: Scroll state changed, isScrolling = $isScrolling, isProgrammatic = $isProgrammaticScroll")
 
                 if (!isScrolling && !isProgrammaticScroll && chains.isNotEmpty()) {
-                    //delay(200)
-
                     // Calculate which item is in the center after snap
                     val layoutInfo = listState.layoutInfo
                     Timber.d("VsCenterHighlightCarousel: Layout info - visible items count = ${layoutInfo.visibleItemsInfo.size}")
