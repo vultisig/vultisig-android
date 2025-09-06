@@ -10,7 +10,7 @@ import java.math.BigInteger
 
 interface CosmosToCoinsUseCase : (List<CosmosBankToken>, Chain) -> List<Coin>
 
-internal class CosmosToCoinsUseCaseImpl @Inject constructor() : CosmosToCoinsUseCase {
+ class CosmosToCoinsUseCaseImpl @Inject constructor() : CosmosToCoinsUseCase {
     
     override fun invoke(tokens: List<CosmosBankToken>, chain: Chain): List<Coin> {
         return tokens.mapNotNull { token ->

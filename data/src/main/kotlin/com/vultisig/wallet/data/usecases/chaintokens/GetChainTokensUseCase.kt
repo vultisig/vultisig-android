@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -50,37 +51,9 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
             TokenStandard.SOL -> {
                 emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
             }
-            TokenStandard.COSMOS -> { // Add this case
-                emitCosmosTokens(chain, vault, refreshedTokens, builtInTokens)
-            }
+
             else -> Unit
         }
-    }
-    private suspend fun FlowCollector<List<Coin>>.emitCosmosTokens(
-        chain: Chain,
-        refreshedTokens: List<Coin>,
-        builtInTokens: List<Coin>,
-    ) {
-        runCatching {
-            val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-            cosmosToCoinsUseCase(
-                allBankTokens,
-                chain
-            )
-        }
-            .onSuccess { discoveredTokens ->
-                emitUniqueTokens(
-                    refreshedTokens,
-                    builtInTokens,
-                    discoveredTokens,
-                )
-            }
-            .onFailure {
-                emitUniqueTokens(
-                    refreshedTokens,
-                    builtInTokens,
-                )
-            }
     }
 
     private suspend fun FlowCollector<List<Coin>>.emitEvmTokens(

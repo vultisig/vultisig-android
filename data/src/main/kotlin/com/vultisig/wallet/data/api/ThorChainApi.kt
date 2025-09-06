@@ -7,6 +7,9 @@ import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataListResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
@@ -89,6 +92,8 @@ interface ThorChainApi {
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
     suspend fun getReferralCodesByAddress(address: String): List<String>
     suspend fun getLastBlock(): Long
+    suspend fun getDenomMetaFromLCD(denom: String): CosmosTokenMetadata?
+
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -429,9 +434,56 @@ internal class ThorChainApiImpl @Inject constructor(
             }
         return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
     }
+    suspend fun getThorchainDenomMetadata(denom: String): CosmosTokenMetadata? {
+        return try {
+
+            val encodedDenom = java.net.URLEncoder.encode(
+                denom,
+                "UTF-8"
+            )
+            val response =
+                httpClient.get("$NNRLM_URL2/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
+                    .body<CosmosTokenMetadataResponse>()
+            response.metadata
+        } catch (e: Exception) {
+            try {
+                val allMetadata = getFetchThorchainAllDenomMetadata()
+                allMetadata.find { it.base == denom }
+            } catch (fallbackE: Exception) {
+                null
+            }
+        }
+    }
+
+    suspend fun getFetchThorchainAllDenomMetadata(): List<CosmosTokenMetadata> {
+        return try {
+            val response =
+                httpClient.get("$NNRLM_URL2/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
+                    .body<CosmosTokenMetadataListResponse>()
+            response.metadatas
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to fetch denom metadata list"
+            )
+            emptyList()
+        }
+    }
+
+    override suspend fun getDenomMetaFromLCD(denom: String): CosmosTokenMetadata? {
+        return try {
+            getThorchainDenomMetadata(denom)
+                ?: getFetchThorchainAllDenomMetadata().find { it.base == denom }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
 
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+        private const val NNRLM_URL2 = "https://thornode.ninerealms.com/"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
 }

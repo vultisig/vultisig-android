@@ -5,9 +5,6 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataListResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
@@ -35,8 +32,6 @@ interface CosmosApi {
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
     suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
     suspend fun getLatestBlock(): String
-    suspend fun getTokenMetadata(denom: String): CosmosTokenMetadata?
-    suspend fun getDenomMetadataList(): List<CosmosTokenMetadata>
 }
 
 interface CosmosApiFactory {
@@ -153,32 +148,5 @@ internal class CosmosApiImp(
             ?.get("height")
             ?.jsonPrimitive
             ?.content ?: "0"
-    }
-    override suspend fun getTokenMetadata(denom: String): CosmosTokenMetadata? {
-        return try {
-
-            val encodedDenom = java.net.URLEncoder.encode(denom, "UTF-8")
-            val response = httpClient.get("$rpcEndpoint/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
-                .body<CosmosTokenMetadataResponse>()
-            response.metadata
-        } catch (e: Exception) {
-            try {
-                val allMetadata = getDenomMetadataList()
-                allMetadata.find { it.base == denom }
-            } catch (fallbackE: Exception) {
-                null
-            }
-        }
-    }
-
-    override suspend fun getDenomMetadataList(): List<CosmosTokenMetadata> {
-        return try {
-            val response = httpClient.get("$rpcEndpoint/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
-                .body<CosmosTokenMetadataListResponse>()
-            response.metadatas
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch denom metadata list")
-            emptyList()
-        }
     }
 }

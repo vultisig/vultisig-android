@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CoinGeckoApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
@@ -92,9 +94,18 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
+
                 thorApi.getBalance(address)
                     .mapNotNull {
-                        val denom = it.denom
+
+                        val metadata= thorApi.getDenomMetaFromLCD(it.denom)
+                        val denom =if(metadata?.denomUnits!=null){
+//                            val decimals = decimalsFromMeta(metadata)
+                             deriveTicker(it.denom, metadata)
+                        }else
+                            it.denom
+
+
                         var symbol = ""
 
                         if (denom.contains(".")) {
@@ -165,6 +176,49 @@ internal class TokenRepositoryImpl @Inject constructor(
                     oneInchApi.getTokensByContracts(chain, contractsWithBalance)
                 return oneInchToCoins(oneInchTokensWithBalance,chain)
             }
+        }
+    }
+
+    private fun decimalsFromMeta(metadata: CosmosTokenMetadata): Int? {
+        val denomUnits = metadata.denomUnits ?: return null
+        val display = metadata.display ?: return null
+
+        // First try to match by display
+        denomUnits.find { it.denom == display }?.let { return it.exponent }
+
+        // Then try to match by symbol
+        metadata.symbol?.let { symbol ->
+            denomUnits.find { it.denom == symbol }?.let { return it.exponent }
+        }
+
+        return null
+    }
+
+    private fun deriveTicker(denom: String, metadata: CosmosTokenMetadata): String {
+        // Use symbol if available
+        metadata.symbol?.takeIf { it.isNotEmpty() }?.let { return it }
+
+        // Use display if available
+        metadata.display?.takeIf { it.isNotEmpty() }?.let { return it }
+
+        // Handle specific denom patterns (matching iOS logic exactly)
+        return when {
+            denom.startsWith("x/staking-") -> {
+                val withoutPrefix = denom.removePrefix("x/staking-")
+                "S${withoutPrefix.uppercase()}"
+            }
+            denom.startsWith("x/") -> {
+                denom.split("/").lastOrNull() ?: denom
+            }
+            denom.startsWith("factory/") -> {
+                val lastComponent = denom.split("/").lastOrNull() ?: denom
+                if (lastComponent.startsWith("u") && lastComponent.length > 1) {
+                    lastComponent.drop(1)
+                } else {
+                    lastComponent
+                }
+            }
+            else -> denom
         }
     }
 

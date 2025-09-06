@@ -4,6 +4,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
+@Serializable
+data class CosmosBankSupplyResponse(
+    @SerialName("supply")
+    val supply: List<CosmosBalance>,
+//    @SerialName("pagination")
+//    val pagination: CosmosPagination? = null
+)
+
 
 @Serializable
 data class CosmosBankToken(
