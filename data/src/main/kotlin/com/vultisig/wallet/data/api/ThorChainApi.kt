@@ -1,8 +1,6 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.GraphQLResponse
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -11,6 +9,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
@@ -38,9 +38,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
-import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -321,7 +319,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
@@ -367,7 +365,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
