@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CoinGeckoApi
-import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
@@ -94,65 +94,82 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
+                var balances = thorApi.getBalance(address)
+                val metaCache = mutableMapOf<String, DenomMetadata?>()
+                balances.mapNotNull {
 
-                thorApi.getBalance(address)
-                    .mapNotNull {
-
-                        val metadata= thorApi.getDenomMetaFromLCD(it.denom)
-                        val denom =if(metadata?.denomUnits!=null){
-//                            val decimals = decimalsFromMeta(metadata)
-                             deriveTicker(it.denom, metadata)
-                        }else
-                            it.denom
-
-
-                        var symbol = ""
-
-                        if (denom.contains(".")) {
-                            val parts = denom.split(".")
-                            if (parts.size >= 2) {
-                                symbol = parts[1].uppercase()
-                            }
-                        } else if (denom.startsWith("x/nami-index-nav", true)) {
-                            // Unfortunately, there is no "yrune" or "tcy" in the denom,
-                            // so the only option is to map it manually with actual contract address
-                            symbol = when {
-                                denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
-                                denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
-                                else -> denom
-                            }
-                        } else if (denom.startsWith("x/",true)) {
-                            val parts = denom.split("/")
-                            if (parts.size >= 2) {
-                                symbol = parts[1].uppercase()
-                            }
-                        }
-                        else if (denom.contains("-")) {
-                            val parts = denom.split("-")
-                            if (parts.size >= 2) {
-                                symbol = parts[1].uppercase()
-                            }
-                        } else {
-                            symbol = denom.uppercase()
-                        }
-
-                        if (denom == "rune") {
-                            null
-                        } else {
-                            Coin(
-                                contractAddress = it.denom,
-                                chain = chain,
-                                ticker = symbol,
-                                logo = symbol,
-                                decimal = 8,
-                                isNativeToken = false,
-                                priceProviderID = "",
-
-                                address = "",
-                                hexPublicKey = "",
-                            )
-                        }
+                    val metadata = metaCache.getOrPut(it.denom) {
+                        thorApi.getDenomMetaFromLCD(it.denom)
                     }
+
+                    var decimal :Int=8
+                    val denom = if (metadata != null) {
+                        decimal = decimalsFromMeta(metadata) ?: decimal
+                        var denom= deriveTicker(
+                            it.denom,
+                            metadata
+                        )
+                        Timber.e("Denom metadata found for ${denom } is  ${ decimalsFromMeta(metadata)} ")
+                        denom
+                    } else {
+                        it.denom
+                    }
+
+                    var symbol = ""
+
+                    if (denom.contains(".")) {
+                        val parts = denom.split(".")
+                        if (parts.size >= 2) {
+                            symbol = parts[1].uppercase()
+                        }
+                    } else if (denom.startsWith(
+                            "x/nami-index-nav",
+                            true
+                        )
+                    ) {
+                        // Unfortunately, there is no "yrune" or "tcy" in the denom,
+                        // so the only option is to map it manually with actual contract address
+                        symbol = when {
+                            denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
+                            denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
+                            else -> denom
+                        }
+                    } else if (denom.startsWith(
+                            "x/",
+                            true
+                        )
+                    ) {
+                        val parts = denom.split("/")
+                        if (parts.size >= 2) {
+                            symbol = parts[1].uppercase()
+                        }
+                    } else if (denom.contains("-")) {
+                        val parts = denom.split("-")
+                        if (parts.size >= 2) {
+                            symbol = parts[1].uppercase()
+                        }
+                    } else {
+                        symbol = denom.uppercase()
+                    }
+
+                    if (denom == "rune") {
+                        null
+                    } else {
+                        Coin(
+                            contractAddress = it.denom,
+                            chain = chain,
+                            ticker = symbol,
+                            logo = symbol,
+                            decimal = decimal,
+                            isNativeToken = false,
+                            priceProviderID = "",
+
+                            address = "",
+                            hexPublicKey = "",
+                        )
+                    }
+                }
+
             }
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
@@ -179,7 +196,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun decimalsFromMeta(metadata: CosmosTokenMetadata): Int? {
+    private fun decimalsFromMeta(metadata: DenomMetadata): Int? {
         val denomUnits = metadata.denomUnits ?: return null
         val display = metadata.display ?: return null
 
@@ -194,14 +211,13 @@ internal class TokenRepositoryImpl @Inject constructor(
         return null
     }
 
-    private fun deriveTicker(denom: String, metadata: CosmosTokenMetadata): String {
-        // Use symbol if available
+
+
+    private fun deriveTicker(denom: String, metadata: DenomMetadata): String {
         metadata.symbol?.takeIf { it.isNotEmpty() }?.let { return it }
 
-        // Use display if available
         metadata.display?.takeIf { it.isNotEmpty() }?.let { return it }
 
-        // Handle specific denom patterns (matching iOS logic exactly)
         return when {
             denom.startsWith("x/staking-") -> {
                 val withoutPrefix = denom.removePrefix("x/staking-")

@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.SplTokenRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
-import com.vultisig.wallet.data.usecases.cosmos.CosmosToCoinsUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
@@ -26,7 +25,6 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val oneInchToCoins: OneInchToCoinsUseCase,
     private val cosmosApiFactory: CosmosApiFactory,
-    private val cosmosToCoins: CosmosToCoinsUseCase,
 ) : GetChainTokensUseCase {
 
 
