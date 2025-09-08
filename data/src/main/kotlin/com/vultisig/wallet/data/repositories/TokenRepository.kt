@@ -93,7 +93,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
-                var balances = thorApi.getBalance(address)
+                val balances = thorApi.getBalance(address)
                 val metaCache = mutableMapOf<String, DenomMetadata?>()
                 balances.mapNotNull {
 

@@ -94,7 +94,6 @@ interface ThorChainApi {
     suspend fun getLastBlock(): Long
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
     suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
-
 }
 
 internal class ThorChainApiImpl @Inject constructor(

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.usecases.chaintokens
 
-import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -13,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -24,7 +22,6 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
     private val splTokenRepository: SplTokenRepository,
     private val oneInchApi: OneInchApi,
     private val oneInchToCoins: OneInchToCoinsUseCase,
-    private val cosmosApiFactory: CosmosApiFactory,
 ) : GetChainTokensUseCase {
 
 
@@ -49,7 +46,6 @@ internal class GetChainTokensUseCaseImpl @Inject constructor(
             TokenStandard.SOL -> {
                 emitSolTokens(vault, chain, refreshedTokens, builtInTokens)
             }
-
             else -> Unit
         }
     }
