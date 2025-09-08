@@ -86,7 +86,7 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun disableToken(coin: Coin) {
         viewModelScope.launch {
-            vaultRepository.deleteTokenFromVault(vaultId, coin)
+            vaultRepository.disableTokenFromVault(vaultId, coin)
             enabledTokenIds.update { it - coin.id }
         }
     }

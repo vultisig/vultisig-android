@@ -45,20 +45,6 @@ internal sealed class Destination(
         }
     }
 
-    data class TokenDetail(
-        val vaultId: String,
-        val chainId: String,
-        val tokenId: String,
-        val mergeId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/${tokenId}/${mergeId}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/{$ARG_TOKEN_ID}/{$ARG_MERGE_ID}"
-        }
-    }
-
     data class Send(
         val vaultId: String,
         val chainId: String? = null,
@@ -638,5 +624,13 @@ internal sealed class Route {
         val requestId: String,
         val chainId: ChainId,
         val excludeVaultId: VaultId,
+    )
+
+    @Serializable
+    data class TokenDetail(
+        val vaultId: String,
+        val chainId: String,
+        val tokenId: String,
+        val mergeId: String,
     )
 }
