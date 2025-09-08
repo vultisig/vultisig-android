@@ -3,12 +3,14 @@
 package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.toHexString
 import com.vultisig.wallet.data.utils.toUnit
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
@@ -60,7 +62,7 @@ object TonHelper {
 
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
-            .setAmount(amount)
+            .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(mode)
             .setBounceable(tonSpecific.bounceable)
             .apply {
@@ -84,17 +86,17 @@ object TonHelper {
         val forwardAmountMsg = if (tonSpecific.isActiveDestination) 1L else 0L
 
         val jettonTransfer = TheOpenNetwork.JettonTransfer.newBuilder()
-            .setJettonAmount(payload.toAmount.toLong())
+            .setJettonAmount(ByteString.copyFrom(payload.toAmount.toHexString().toHexByteArray()))
             .setResponseAddress(payload.coin.address)
             .setToOwner(destinationAddress)
-            .setForwardAmount(forwardAmountMsg)
+            .setForwardAmount(ByteString.copyFrom(forwardAmountMsg.toHexString().toHexByteArray()))
             .build()
 
         val mode = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
                 TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
 
         return TheOpenNetwork.Transfer.newBuilder()
-            .setAmount(RECOMMENDED_JETTONS_AMOUNT)
+            .setAmount(ByteString.copyFrom(RECOMMENDED_JETTONS_AMOUNT.toHexString().toHexByteArray()))
             .setComment(payload.memo.orEmpty())
             .setBounceable(true) // Jettons always bounceable
             .setMode(mode)

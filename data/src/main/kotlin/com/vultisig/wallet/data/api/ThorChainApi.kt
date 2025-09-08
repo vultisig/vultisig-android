@@ -4,8 +4,6 @@ import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.GraphQLResponse
 import com.vultisig.wallet.data.api.models.MetadataResponse
 import com.vultisig.wallet.data.api.models.MetadatasResponse
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -14,6 +12,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
@@ -93,6 +93,7 @@ interface ThorChainApi {
     suspend fun getReferralCodesByAddress(address: String): List<String>
     suspend fun getLastBlock(): Long
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
+    suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
 
 }
 
@@ -322,7 +323,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
@@ -368,7 +369,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
@@ -433,6 +434,14 @@ internal class ThorChainApiImpl @Inject constructor(
                 header(xClientID, xClientIDValue)
             }
         return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
+    }
+
+    override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
+        val url = "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<VaultRedemptionResponseJson>()
     }
 
     suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
@@ -633,4 +642,22 @@ data class RujiStakeBalances(
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
+)
+
+@Serializable
+data class VaultRedemptionResponseJson(
+    @SerialName("data")
+    val data: VaultRedemptionDataJson
+)
+
+@Serializable
+data class VaultRedemptionDataJson(
+    @SerialName("redemption_rate")
+    val redemptionRate: String,
+    @SerialName("shares")
+    val shares: String,
+    @SerialName("nav")
+    val nav: String,
+    @SerialName("nav_per_share")
+    val navPerShare: String,
 )
