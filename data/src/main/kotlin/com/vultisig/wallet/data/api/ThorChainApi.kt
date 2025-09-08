@@ -448,7 +448,7 @@ internal class ThorChainApiImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(
                 e,
-                "Failed to fetch the denom metadata "
+                "Failed to fetch denom metadata for $denom"
             )
             null
         }
@@ -469,14 +469,13 @@ internal class ThorChainApiImpl @Inject constructor(
         }
     }
 
-    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? {
-        return getThorchainDenomMetadata(denom)
+    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? =
+        getThorchainDenomMetadata(denom)
             ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
-    }
 
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
-        private const val THORNODE_BASE = "https://thornode.ninerealms.com/"
+        private const val THORNODE_BASE = "https://thornode.ninerealms.com"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
 }

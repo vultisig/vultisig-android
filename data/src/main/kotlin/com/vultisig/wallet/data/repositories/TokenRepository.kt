@@ -101,21 +101,20 @@ internal class TokenRepositoryImpl @Inject constructor(
                         thorApi.getDenomMetaFromLCD(it.denom)
                     }
 
-                    var decimal :Int=8
+                    var decimal: Int = 8
                     val denom = if (metadata != null) {
                         decimal = decimalsFromMeta(metadata) ?: decimal
-                        var denom= deriveTicker(
+                        var denom = deriveTicker(
                             it.denom,
                             metadata
                         )
-                        Timber.e("Denom metadata found for ${denom } is  ${ decimalsFromMeta(metadata)} ")
                         denom
                     } else {
                         it.denom
                     }
                     var symbol = ""
 
-                    if(denom==it.denom) {
+                    if (denom == it.denom) {
                         if (denom.contains(".")) {
                             val parts = denom.split(".")
                             if (parts.size >= 2) {
