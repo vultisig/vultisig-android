@@ -437,14 +437,13 @@ internal class ThorChainApiImpl @Inject constructor(
 
     suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
         return try {
-
             val encodedDenom = java.net.URLEncoder.encode(
                 denom,
-                "UTF-8"
+                Charsets.UTF_8.name()
             )
-            val response =
-                httpClient.get("$NNRLM_URL2/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
-                    .body<MetadataResponse>()
+            val response = httpClient
+                .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
+                .body<MetadataResponse>()
             response.metadata
         } catch (e: Exception) {
             Timber.e(
@@ -458,7 +457,7 @@ internal class ThorChainApiImpl @Inject constructor(
     suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
         return try {
             val response =
-                httpClient.get("$NNRLM_URL2/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
+                httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
                     .body<MetadatasResponse>()
             response.metadatas
         } catch (e: Exception) {
@@ -471,19 +470,13 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? {
-        return try {
-            getThorchainDenomMetadata(denom)
-                ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
-        } catch (e: Exception) {
-            null
-        }
+        return getThorchainDenomMetadata(denom)
+            ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
     }
-
-
 
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
-        private const val NNRLM_URL2 = "https://thornode.ninerealms.com/"
+        private const val THORNODE_BASE = "https://thornode.ninerealms.com/"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
 }

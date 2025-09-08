@@ -165,7 +165,6 @@ internal class TokenRepositoryImpl @Inject constructor(
                             decimal = decimal,
                             isNativeToken = false,
                             priceProviderID = "",
-
                             address = "",
                             hexPublicKey = "",
                         )
@@ -200,20 +199,14 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     private fun decimalsFromMeta(metadata: DenomMetadata): Int? {
         val denomUnits = metadata.denomUnits ?: return null
-        val display = metadata.display ?: return null
-
-        // First try to match by display
-        denomUnits.find { it.denom == display }?.let { return it.exponent }
-
-        // Then try to match by symbol
-        metadata.symbol?.let { symbol ->
-            denomUnits.find { it.denom == symbol }?.let { return it.exponent }
+        metadata.display?.let { display ->
+            denomUnits.firstOrNull { it.denom == display }?.let { return it.exponent }
         }
-
-        return null
+        metadata.symbol?.let { symbol ->
+            denomUnits.firstOrNull { it.denom == symbol }?.let { return it.exponent }
+        }
+        return denomUnits.maxByOrNull { it.exponent ?: 0 }?.exponent
     }
-
-
 
     private fun deriveTicker(denom: String, metadata: DenomMetadata): String {
         metadata.symbol?.takeIf { it.isNotEmpty() }?.let { return it }
