@@ -10,9 +10,6 @@ import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataListResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadataResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson

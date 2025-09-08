@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTokenMetadata
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
@@ -114,42 +113,45 @@ internal class TokenRepositoryImpl @Inject constructor(
                     } else {
                         it.denom
                     }
-
                     var symbol = ""
 
-                    if (denom.contains(".")) {
-                        val parts = denom.split(".")
-                        if (parts.size >= 2) {
-                            symbol = parts[1].uppercase()
+                    if(denom==it.denom) {
+                        if (denom.contains(".")) {
+                            val parts = denom.split(".")
+                            if (parts.size >= 2) {
+                                symbol = parts[1].uppercase()
+                            }
+                        } else if (denom.startsWith(
+                                "x/nami-index-nav",
+                                true
+                            )
+                        ) {
+                            // Unfortunately, there is no "yrune" or "tcy" in the denom,
+                            // so the only option is to map it manually with actual contract address
+                            symbol = when {
+                                denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
+                                denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
+                                else -> denom
+                            }
+                        } else if (denom.startsWith(
+                                "x/",
+                                true
+                            )
+                        ) {
+                            val parts = denom.split("/")
+                            if (parts.size >= 2) {
+                                symbol = parts[1].uppercase()
+                            }
+                        } else if (denom.contains("-")) {
+                            val parts = denom.split("-")
+                            if (parts.size >= 2) {
+                                symbol = parts[1].uppercase()
+                            }
+                        } else {
+                            symbol = denom.uppercase()
                         }
-                    } else if (denom.startsWith(
-                            "x/nami-index-nav",
-                            true
-                        )
-                    ) {
-                        // Unfortunately, there is no "yrune" or "tcy" in the denom,
-                        // so the only option is to map it manually with actual contract address
-                        symbol = when {
-                            denom.lowercase().contains(YRUNE_CONTRACT.lowercase()) -> "YRUNE"
-                            denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
-                            else -> denom
-                        }
-                    } else if (denom.startsWith(
-                            "x/",
-                            true
-                        )
-                    ) {
-                        val parts = denom.split("/")
-                        if (parts.size >= 2) {
-                            symbol = parts[1].uppercase()
-                        }
-                    } else if (denom.contains("-")) {
-                        val parts = denom.split("-")
-                        if (parts.size >= 2) {
-                            symbol = parts[1].uppercase()
-                        }
-                    } else {
-                        symbol = denom.uppercase()
+                    }else{
+                        symbol=denom.uppercase()
                     }
 
                     if (denom == "rune") {
