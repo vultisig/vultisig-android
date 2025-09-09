@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -84,6 +85,16 @@ object SigningHelper {
                 else -> Unit
             }
         } else {
+            val isMayaErc20Swap =
+                payload.swapPayload != null
+                        && swapPayload is SwapPayload.MayaChain
+                        && !payload.coin.isNativeToken
+                        && payload.coin.chain.standard == TokenStandard.EVM
+
+            // showed as generic
+            if (isMayaErc20Swap) {
+                throw UnsupportedOperationException("Not Implemented")
+            }
             val chain = payload.coin.chain
             messages += when (chain) {
                 Chain.ThorChain -> {

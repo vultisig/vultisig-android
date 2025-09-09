@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
@@ -190,6 +191,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote {
+        val isErc20Swap = !srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM
+
+        if (isErc20Swap) {
+            throw SwapException.handleSwapException("No routes")
+        }
+
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val mayaQuoteResult = mayaChainApi.getSwapQuotes(

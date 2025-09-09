@@ -299,7 +299,6 @@ internal class SwapFormViewModel @Inject constructor(
                 }
             }
 
-
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
