@@ -91,7 +91,7 @@ object SigningHelper {
                         && !payload.coin.isNativeToken
                         && payload.coin.chain.standard == TokenStandard.EVM
 
-            // catch as generic message outside
+            // showed as generic
             if (isMayaErc20Swap) {
                 throw UnsupportedOperationException("Not Implemented")
             }
