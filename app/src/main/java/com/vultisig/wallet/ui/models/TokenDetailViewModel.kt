@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.Tokens
@@ -47,14 +48,12 @@ internal class TokenDetailViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
-    private val tokenId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_TOKEN_ID))
-    private val mergedBalance: String =
-        savedStateHandle.get<String>(Destination.ARG_MERGE_ID) ?: "0"
+
+    private val tokenDetail = savedStateHandle.toRoute<Route.TokenDetail>()
+    private val chainRaw: String = tokenDetail.chainId
+    private val vaultId: String = tokenDetail.vaultId
+    private val tokenId: String = tokenDetail.tokenId
+    private val mergedBalance: String = tokenDetail.mergeId
 
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
