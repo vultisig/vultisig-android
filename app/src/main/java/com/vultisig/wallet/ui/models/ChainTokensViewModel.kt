@@ -161,8 +161,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun openToken(model: ChainTokenUiModel) {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.TokenDetail(
+            navigator.route(
+                Route.TokenDetail(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     tokenId = model.id,

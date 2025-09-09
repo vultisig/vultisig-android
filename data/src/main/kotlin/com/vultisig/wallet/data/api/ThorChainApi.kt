@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.GraphQLResponse
+import com.vultisig.wallet.data.api.models.MetadataResponse
+import com.vultisig.wallet.data.api.models.MetadatasResponse
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -89,7 +92,7 @@ interface ThorChainApi {
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
     suspend fun getReferralCodesByAddress(address: String): List<String>
     suspend fun getLastBlock(): Long
-
+    suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
     suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
 }
 
@@ -440,8 +443,47 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<VaultRedemptionResponseJson>()
     }
 
+    suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
+        return try {
+            val encodedDenom = java.net.URLEncoder.encode(
+                denom,
+                Charsets.UTF_8.name()
+            )
+            val response = httpClient
+                .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
+                .body<MetadataResponse>()
+            response.metadata
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to fetch denom metadata for $denom"
+            )
+            null
+        }
+    }
+
+    suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
+        return try {
+            val response =
+                httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
+                    .body<MetadatasResponse>()
+            response.metadatas
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to fetch denom metadata list"
+            )
+            emptyList()
+        }
+    }
+
+    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? =
+        getThorchainDenomMetadata(denom)
+            ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+        private const val THORNODE_BASE = "https://thornode.ninerealms.com"
         private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
 }
