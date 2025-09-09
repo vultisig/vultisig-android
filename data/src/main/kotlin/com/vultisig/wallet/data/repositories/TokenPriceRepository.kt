@@ -95,7 +95,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
 
-        val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID }
+        val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID.lowercase() }
         val tokensByContractAddress = tokens.associateBy { it.contractAddress.lowercase() }
 
         val priceProviderIds = mutableListOf<String>()
@@ -115,7 +115,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(priceProviderIds, currencies)
             .asSequence()
             .mapNotNull { (priceProviderId, value) ->
-                val tokenIds = tokensByPriceProviderIds[priceProviderId]?.map { it.id }
+                val tokenIds = tokensByPriceProviderIds[priceProviderId.lowercase()]?.map { it.id }
                 tokenIds?.map { tokenId -> tokenId to value }
             }
             .flatten()
