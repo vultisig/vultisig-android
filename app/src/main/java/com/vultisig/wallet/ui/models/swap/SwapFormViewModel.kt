@@ -299,6 +299,13 @@ internal class SwapFormViewModel @Inject constructor(
                 }
             }
 
+            val unSupportedMayaSwap = quote is SwapQuote.MayaChain &&
+                    !srcToken.isNativeToken &&
+                    srcToken.chain.standard == TokenStandard.EVM
+
+            if (unSupportedMayaSwap) {
+                throw InvalidTransactionDataException("Not Supported".asUiText())
+            }
 
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
