@@ -215,7 +215,7 @@ private fun NoAddressView(
     }
 }
 
-internal fun Modifier.shadeCircle() = this.drawBehind {
+fun Modifier.shadeCircle() = this.drawBehind {
     drawCircle(
         brush = Brush.vultiCircleShadeGradient(),
     )

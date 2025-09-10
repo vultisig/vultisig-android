@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
+import com.vultisig.wallet.ui.screens.transaction.shadeCircle
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -145,6 +146,7 @@ internal fun ReferralViewScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shadeCircle()
                         .border(
                             border = BorderStroke(
                                 width = 1.dp,
