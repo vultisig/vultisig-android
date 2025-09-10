@@ -229,9 +229,8 @@ internal fun SettingItem(
                 ) {
                     VsSwitch(
                         checked = isChecked,
-                        modifier = Modifier
-                            .clickOnce(onClick = onClick),
-                        onCheckedChange = {})
+                        onCheckedChange = null
+                    )
                     Text(
                         text = if (isChecked) "ON" else "OFF",
                         style = Theme.brockmann.button.medium,
