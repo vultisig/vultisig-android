@@ -191,12 +191,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote {
-        val isErc20Swap = !srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM
-
-        if (isErc20Swap) {
-            throw SwapException.handleSwapException("No routes")
-        }
-
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val mayaQuoteResult = mayaChainApi.getSwapQuotes(

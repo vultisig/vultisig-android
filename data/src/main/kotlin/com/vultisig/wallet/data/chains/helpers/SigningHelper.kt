@@ -60,7 +60,6 @@ object SigningHelper {
                     messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
-
                 is SwapPayload.EVM -> {
                     val message = if (payload.coin.chain == Chain.Solana) {
                         SolanaSwap(vault.pubKeyEDDSA)
@@ -81,20 +80,12 @@ object SigningHelper {
                     messages += KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
-                // mayachain is implemented through send transaction
                 else -> Unit
             }
+        } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
+            messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
         } else {
-            val isMayaErc20Swap =
-                payload.swapPayload != null
-                        && swapPayload is SwapPayload.MayaChain
-                        && !payload.coin.isNativeToken
-                        && payload.coin.chain.standard == TokenStandard.EVM
-
-            // showed as generic
-            if (isMayaErc20Swap) {
-                throw UnsupportedOperationException("Not Implemented")
-            }
             val chain = payload.coin.chain
             messages += when (chain) {
                 Chain.ThorChain -> {
@@ -235,7 +226,14 @@ object SigningHelper {
 
                 else -> {}
             }
-
+        } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
+            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getSignedTransaction(
+                    swapPayload.data,
+                    keysignPayload,
+                    signatures,
+                    nonceAcc
+                )
         }
 
         val chain = keysignPayload.coin.chain
