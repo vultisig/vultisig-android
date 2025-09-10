@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -210,5 +211,47 @@ private fun ReferralScreen(
                 )
             }
         },
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralScreenPreview() {
+    val referralState = TextFieldState("FRIEND-REF-2024")
+    val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
+    
+    ReferralScreen(
+        onBackPressed = {},
+        onPasteIcon = {},
+        onSavedOrEditExternalReferral = {},
+        onCreateOrEditReferral = {},
+        state = ReferralUiState(
+            referralMessage = null,
+            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+            isCreateEnabled = true,
+        ),
+        clipboardData = clipboardData,
+        referralState = referralState,
+    )
+}
+
+@Preview(showBackground = true, name = "With Existing Referral")
+@Composable
+private fun ReferralScreenWithReferralPreview() {
+    val referralState = TextFieldState("EXISTING-CODE")
+    val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
+    
+    ReferralScreen(
+        onBackPressed = {},
+        onPasteIcon = {},
+        onSavedOrEditExternalReferral = {},
+        onCreateOrEditReferral = {},
+        state = ReferralUiState(
+            referralMessage = null,
+            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+            isCreateEnabled = false,
+        ),
+        clipboardData = clipboardData,
+        referralState = referralState,
     )
 }

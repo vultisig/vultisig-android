@@ -42,6 +42,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -479,5 +480,77 @@ internal fun ContentRow(
 
         icon()
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralViewScreenPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "FRIEND-REF-2024",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "December 31, 2025",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "0.5 RUNE ($25.00)",
+            isLoadingRewards = false,
+            isLoadingExpirationDate = false,
+            error = "",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun ReferralViewScreenLoadingPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "",
+            isLoadingRewards = true,
+            isLoadingExpirationDate = true,
+            error = "",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Error State")
+@Composable
+private fun ReferralViewScreenErrorPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "FRIEND-REF-2024",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "December 31, 2025",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "0.5 RUNE ($25.00)",
+            isLoadingRewards = false,
+            isLoadingExpirationDate = false,
+            error = "Failed to load referral information",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+    )
 }
 

@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -202,5 +203,28 @@ private fun ReferralEditVaultScreen(
                 onClick = onSavedReferral,
             )
         }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralEditVaultScreenPreview() {
+    val referralTextFieldState = TextFieldState("VULTISIG-REF-2024")
+    
+    ReferralEditVaultScreen(
+        state = EditVaultReferralUiState(
+            referralCounter = 2,
+            referralExpiration = "December 31, 2025",
+            referralCostAmountFormatted = "0.02 RUNE",
+            referralCostFiatFormatted = "$1.50",
+            error = null
+        ),
+        onBackPressed = {},
+        onCopyReferralCode = {},
+        onSavedReferral = {},
+        onIncrementCounter = {},
+        onDecrementCounter = {},
+        onDismissError = {},
+        referralTextFieldState = referralTextFieldState,
     )
 }
