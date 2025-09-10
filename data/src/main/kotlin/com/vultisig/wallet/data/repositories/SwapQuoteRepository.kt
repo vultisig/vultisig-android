@@ -25,13 +25,11 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
-import java.math.BigInteger
 import javax.inject.Inject
 
 interface SwapQuoteRepository {
@@ -198,7 +196,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = srcToken.streamingInterval,
+            interval = srcToken.mayaStreamingInterval,
             isAffiliate = isAffiliate,
         )
 
@@ -396,11 +394,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
 
-    private val Coin.streamingInterval: String
+    private val Coin.mayaStreamingInterval: String
         get() = when (chain) {
             Chain.MayaChain -> "3"
             Chain.ThorChain -> "1"
-            else -> "0"
+            else -> "1"  // Use 1 instead of 0 to ensure Maya API returns complete memo format
         }
 
     private fun String.convertToTokenValue(token: Coin): TokenValue =
