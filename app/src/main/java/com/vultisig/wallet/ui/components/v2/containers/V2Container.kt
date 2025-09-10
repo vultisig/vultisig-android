@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal enum class ContainerType {
     PRIMARY,
     SECONDARY,
+    TERTIARY,
 }
 
 internal sealed interface ContainerBorderType {
@@ -36,6 +37,7 @@ internal fun V2Container(
     val containerColor = when (type) {
         ContainerType.PRIMARY -> Theme.colors.backgrounds.primary
         ContainerType.SECONDARY -> Theme.colors.backgrounds.secondary
+        ContainerType.TERTIARY -> Theme.colors.backgrounds.tertiary
     }
 
     val borderColor = when (borderType) {
