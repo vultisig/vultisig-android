@@ -229,6 +229,8 @@ internal fun SettingItem(
                 ) {
                     VsSwitch(
                         checked = isChecked,
+                        modifier = Modifier
+                            .clickOnce(onClick = onClick),
                         onCheckedChange = {})
                     Text(
                         text = if (isChecked) "ON" else "OFF",
