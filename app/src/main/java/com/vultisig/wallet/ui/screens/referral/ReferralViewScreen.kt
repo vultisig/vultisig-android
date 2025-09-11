@@ -40,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -482,6 +483,63 @@ internal fun ContentRow(
         Spacer(modifier = Modifier.weight(1f))
 
         icon()
+    }
+}
+
+@Composable
+internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadeCircle()
+            .background(Theme.colors.backgrounds.primary)
+            .border(
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        UiSpacer(32.dp)
+
+        Image(
+            painter = painterResource(id = R.drawable.referral_question),
+            contentDescription = "Empty Logo",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(42.dp)
+        )
+
+        UiSpacer(16.dp)
+
+        Text(
+            style = Theme.brockmann.body.m.medium,
+            text = "No referral yet",
+            color = Theme.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(16.dp)
+
+        Text(
+            style = Theme.brockmann.supplementary.caption,
+            text = "Turn your vault into a rewards machine. Create your referral now and start earning",
+            color = Theme.colors.text.extraLight,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = stringResource(R.string.referral_create_referral),
+            modifier = Modifier.fillMaxWidth(),
+            variant = VsButtonVariant.Primary,
+            onClick = onClickedCreateReferral,
+        )
+
+        UiSpacer(8.dp)
     }
 }
 
