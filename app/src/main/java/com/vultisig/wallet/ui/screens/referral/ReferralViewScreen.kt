@@ -83,6 +83,7 @@ internal fun ReferralViewScreen(
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
         onClickEditReferral = model::onClickedEditReferral,
+        onVaultClicked = model::onVaultClicked,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)

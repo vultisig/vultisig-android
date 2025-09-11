@@ -151,6 +151,12 @@ internal class ViewReferralViewModel @Inject constructor(
         }
     }
 
+    fun onVaultClicked() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ReferralListVault(vaultId))
+        }
+    }
+
     private companion object {
         const val BLOCKS_PER_DAY = (60 / 6) * 60 * 24
     }

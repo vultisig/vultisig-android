@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.referral
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -24,6 +25,8 @@ internal data class VaultItem(
     val id: String,
     val name: String,
     val isSelected: Boolean = false,
+    val signingInfo: String = "",
+    val isFastVault: Boolean = false,
 )
 
 @HiltViewModel
@@ -46,9 +49,16 @@ internal class ReferralVaultListViewModel @Inject constructor(
             try {
                 val vaults = vaultRepository.getAll()
                 val vaultItems = vaults.map { vault ->
+                    val signerIndex = vault.signers.indexOf(vault.localPartyID)
+                    val partNumber = if (signerIndex != -1) signerIndex + 1 else vault.signers.size
+                    val signingInfo = "Part $partNumber of ${vault.signers.size}"
+
                     VaultItem(
                         id = vault.id,
                         name = vault.name,
+                        isSelected = true,
+                        signingInfo = signingInfo,
+                        isFastVault = vault.isFastVault(),
                     )
                 }
 
