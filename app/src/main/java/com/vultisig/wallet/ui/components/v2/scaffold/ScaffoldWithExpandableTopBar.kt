@@ -26,7 +26,7 @@ import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 internal fun ScaffoldWithExpandableTopBar(
     topBarCollapsedHeight: Dp = 64.dp,
     topBarExpandedHeight: Dp = 300.dp,
-    isTopbarExpanded: Boolean,
+    isTopbarCollapsed: Boolean,
     snackbarState: VSSnackbarState,
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
     topBarCollapsedContent: @Composable BoxScope.() -> Unit,
@@ -34,7 +34,7 @@ internal fun ScaffoldWithExpandableTopBar(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val animatedCollapsedFraction by animateFloatAsState(
-        targetValue = if (isTopbarExpanded) 1f else 0f,
+        targetValue = if (isTopbarCollapsed) 1f else 0f,
         animationSpec = tween(
             durationMillis = 500,
             easing = EaseOutCubic
@@ -80,7 +80,7 @@ internal fun ScaffoldWithExpandableTopBar(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(1f - if (isTopbarExpanded) 1f else 0f),
+                        .alpha(1f - if (isTopbarCollapsed) 1f else 0f),
                     content = topBarExpandedContent
                 )
 
@@ -89,7 +89,7 @@ internal fun ScaffoldWithExpandableTopBar(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(if (isTopbarExpanded) 1f else 0f),
+                        .alpha(if (isTopbarCollapsed) 1f else 0f),
                     content = topBarCollapsedContent
                 )
             }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
@@ -29,6 +30,21 @@ private val brockmannFontFamily = FontFamily(
     Font(R.font.brockmann_regular, weight = FontWeight.Normal),
     Font(R.font.brockmann_medium, weight = FontWeight.Medium),
 )
+
+private val satoshiFontFamily = FontFamily(
+    Font(R.font.satoshi_black, weight = FontWeight.Black),
+    Font(R.font.satoshi_blackitalic, weight = FontWeight.Black, style = FontStyle.Italic),
+    Font(R.font.satoshi_bold, weight = FontWeight.Bold),
+    Font(R.font.satoshi_bolditalic, weight = FontWeight.Bold, style = FontStyle.Italic),
+    Font(R.font.satoshi_italic, style = FontStyle.Italic),
+    Font(R.font.satoshi_light, weight = FontWeight.Light),
+    Font(R.font.satoshi_lightitalic, weight = FontWeight.Light, style = FontStyle.Italic),
+    Font(R.font.satoshi_medium, weight = FontWeight.Medium),
+    Font(R.font.satoshi_mediumitalic, weight = FontWeight.Medium, style = FontStyle.Italic),
+    Font(R.font.satoshi_regular),
+)
+
+
 
 @Immutable
 internal data class VsTypography(
@@ -334,8 +350,48 @@ internal data class VultisigTypography(
     }
 }
 
+
+internal data class SatoshiTypography(
+    val price : SatoshiPriceTypography = SatoshiPriceTypography()
+)
+
+internal data class SatoshiPriceTypography(
+    val largeTitle: TextStyle = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 34.sp,
+        lineHeight = 37.sp,
+        letterSpacing = (-0.86).sp,
+        fontFamily = satoshiFontFamily,
+    ),
+    val title1: TextStyle = TextStyle(
+        fontWeight = FontWeight.Medium,
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.56).sp,
+        fontFamily = satoshiFontFamily,
+    ),
+    val bodyS : TextStyle = TextStyle(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = (0.2).sp,
+        fontFamily = satoshiFontFamily,
+    ),
+    val caption : TextStyle = TextStyle(
+        fontWeight = FontWeight(550),
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.12.sp,
+        fontFamily = satoshiFontFamily,
+    )
+
+)
+
+
 internal val menloTypography = VultisigTypography.createFrom(menloFontFamily)
 
 internal val montserratTypography = VultisigTypography.createFrom(montserratFontFamily)
 
 internal val brockmannTypography = VsTypography.createFrom(brockmannFontFamily)
+
+internal val satoshiTypography = SatoshiTypography()

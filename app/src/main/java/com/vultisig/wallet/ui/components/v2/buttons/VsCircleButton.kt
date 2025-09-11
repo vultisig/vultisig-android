@@ -33,6 +33,7 @@ internal sealed class VsCircleButtonType {
 
 @Composable
 internal fun VsCircleButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     @DrawableRes icon: Int,
     size: VsCircleButtonSize = VsCircleButtonSize.Medium,
@@ -50,7 +51,7 @@ internal fun VsCircleButton(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clickOnce(onClick = onClick)
             .size(sizeInDp)
             .clip(CircleShape)

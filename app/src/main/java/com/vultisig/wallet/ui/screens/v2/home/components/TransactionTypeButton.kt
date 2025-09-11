@@ -43,7 +43,7 @@ fun TransactionTypeButton(
 
     val backgroundColor = if (isSelected)
         Theme.colors.buttons.primary
-    else Theme.colors.buttons.secondary
+    else Theme.colors.backgrounds.tertiary
 
 
     Column(

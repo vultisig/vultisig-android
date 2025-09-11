@@ -30,7 +30,7 @@ fun BalanceBanner(
         Text(
             text = balance,
             color = Theme.v2.colors.text.primary,
-            style = Theme.brockmann.headings.title1,
+            style = Theme.satoshi.price.largeTitle,
         )
 
         UiSpacer(
@@ -94,6 +94,15 @@ private fun PreviewBalanceBanner() {
     BalanceBanner(
         balance = "$53,010.77",
         isVisible = true,
+        onToggleVisibility = {}
+    )
+}
+@Preview
+@Composable
+private fun PreviewBalanceBanner2() {
+    BalanceBanner(
+        balance = "$53,010.77",
+        isVisible = false,
         onToggleVisibility = {}
     )
 }

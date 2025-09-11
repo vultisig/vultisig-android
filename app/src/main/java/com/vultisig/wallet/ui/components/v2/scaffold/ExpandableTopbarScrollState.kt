@@ -44,12 +44,10 @@ internal fun rememberExpandableTopbarScrollState(
         derivedStateOf { lazyListState.firstVisibleItemIndex > 0 }
     }
 
-    val isTopbarExpanded = when (scrollBehavior) {
+    return when (scrollBehavior) {
         ExpandableTopbarScrollBehavior.EXPAND_WHEN_FIRST_ITEM_VISIBLE -> isFirstItemVisible
         ExpandableTopbarScrollBehavior.EXPAND_WHEN_SCROLLING_DOWN -> isScrollingDown
     }
-
-    return isTopbarExpanded
 }
 
 

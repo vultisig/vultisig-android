@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.Theme
@@ -27,11 +29,17 @@ internal sealed interface ContainerBorderType {
     data class Bordered(val color: Color = Colors.Default.borders.light) : ContainerBorderType
 }
 
+internal sealed interface CorerType {
+    object Circular : CorerType
+    data class RoundedCornerShape(val size: Dp = 12.dp) : CorerType
+}
+
 @Composable
 internal fun V2Container(
     modifier: Modifier = Modifier,
     type: ContainerType = ContainerType.PRIMARY,
     borderType: ContainerBorderType = ContainerBorderType.Borderless,
+    cornerType: CorerType = CorerType.RoundedCornerShape(),
     content: @Composable () -> Unit,
 ) {
     val containerColor = when (type) {
@@ -45,11 +53,16 @@ internal fun V2Container(
         is ContainerBorderType.Bordered -> borderType.color
     }
 
+    val shape = when (cornerType) {
+        CorerType.Circular -> CircleShape
+        is CorerType.RoundedCornerShape -> RoundedCornerShape(
+            size = cornerType.size,
+        )
+    }
+
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(
-            size = 12.dp,
-        ),
+        shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
         ),
