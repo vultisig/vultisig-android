@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.referral
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,7 +47,7 @@ internal fun ReferralVaultListScreen(
     ReferralVaultListContentScreen(
         state = state,
         onBackPress = navController::popBackStack,
-        onVaultClicked = {},
+        onVaultClicked = model::onVaultClick,
     )
 }
 
@@ -90,7 +91,7 @@ internal fun ReferralVaultListContentScreen(
                     items(state.vaults.size) { index ->
                         val vault = state.vaults[index]
 
-                        VaultRow(vault)
+                        VaultRow(vault, onVaultClicked)
                         
                         if (index < state.vaults.size - 1) {
                             UiGradientDivider(
@@ -106,10 +107,11 @@ internal fun ReferralVaultListContentScreen(
 }
 
 @Composable
-internal fun VaultRow(vault: VaultItem) {
+internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onVaultClicked(vault.id) }
             .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

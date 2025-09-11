@@ -7,13 +7,16 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class ReferralVaultListUiState(
@@ -36,6 +39,7 @@ internal class ReferralVaultListViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
 ) : ViewModel() {
+    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     private val _state = MutableStateFlow(ReferralVaultListUiState())
     val state: StateFlow<ReferralVaultListUiState> = _state.asStateFlow()
@@ -47,7 +51,18 @@ internal class ReferralVaultListViewModel @Inject constructor(
     private fun loadVaults() {
         viewModelScope.launch {
             try {
-                val vaults = vaultRepository.getAll()
+                val vaults = withContext(Dispatchers.IO) {
+                    vaultRepository.getAll()
+                }
+                val selectedVault = withContext(Dispatchers.IO) {
+                    referralCodeRepository.getCurrentVaultId()
+                }
+
+                val vaultToSelect = when {
+                    !selectedVault.isNullOrEmpty() -> selectedVault
+                    else -> vaultId
+                }
+
                 val vaultItems = vaults.map { vault ->
                     val signerIndex = vault.signers.indexOf(vault.localPartyID)
                     val partNumber = if (signerIndex != -1) signerIndex + 1 else vault.signers.size
@@ -56,7 +71,7 @@ internal class ReferralVaultListViewModel @Inject constructor(
                     VaultItem(
                         id = vault.id,
                         name = vault.name,
-                        isSelected = true,
+                        isSelected = vault.id == vaultToSelect,
                         signingInfo = signingInfo,
                         isFastVault = vault.isFastVault(),
                     )
@@ -78,9 +93,11 @@ internal class ReferralVaultListViewModel @Inject constructor(
         }
     }
 
-    fun onVaultClick(vaultId: String, hasReferralCode: Boolean) {
+    fun onVaultClick(vaultId: String) {
         viewModelScope.launch {
-            //navigator.navigate(Destination.ViewReferral(vaultId, referralCode))
+            referralCodeRepository.setCurrentVaultId(vaultId)
+
+            navigator.navigate(Destination.Back)
         }
     }
 
