@@ -23,6 +23,7 @@ internal data class ReferralVaultListUiState(
 internal data class VaultItem(
     val id: String,
     val name: String,
+    val isSelected: Boolean = false,
 )
 
 @HiltViewModel
@@ -69,7 +70,7 @@ internal class ReferralVaultListViewModel @Inject constructor(
 
     fun onVaultClick(vaultId: String, hasReferralCode: Boolean) {
         viewModelScope.launch {
-            navigator.navigate(Destination.ViewReferral(vaultId, referralCode))
+            //navigator.navigate(Destination.ViewReferral(vaultId, referralCode))
         }
     }
 
