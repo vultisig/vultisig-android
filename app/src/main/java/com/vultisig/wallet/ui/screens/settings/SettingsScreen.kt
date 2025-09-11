@@ -197,7 +197,7 @@ internal fun SettingItem(
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = tint ?: Theme.colors.primary.accent4
+                    tint = tint ?: item.trailingIconTint ?: Theme.colors.primary.accent4
                 )
                 UiSpacer(size = 16.dp)
             }
