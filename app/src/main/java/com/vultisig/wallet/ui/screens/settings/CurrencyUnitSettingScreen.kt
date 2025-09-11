@@ -108,7 +108,7 @@ private fun CurrencyUnitSettingScreenPreview() {
                 CurrencyUnit(fullName = "Singapore Dollar (SGD)"),
                 CurrencyUnit(fullName = "Swedish Krona (SEK)"),
             ),
-            selectedCurrency = CurrencyUnit(fullName = "US Dollar Dollar (\$)"),
+            selectedCurrency = CurrencyUnit(fullName = "US Dollar (\$)"),
         ),
         onCurrencyClick = {},
         onBackClick = {}
