@@ -14,6 +14,7 @@ enum class AppLanguage(val mainName: String, val engName: String?) {
         fun String.fromName(): AppLanguage {
             return when (this) {
                 "English UK" -> EN
+                "English" -> EN
                 "Deutsch" -> DE
                 "Espanol" -> ES
                 "Italiano" -> IT
