@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.models.settings
 
 enum class AppLanguage(val mainName: String, val engName: String?) {
-    EN("English UK", null),
+    EN("English", "(UK)"),
     DE("Deutsch", "German"),
     ES("Espanol", "Spanish"),
     IT("Italiano", "Italian"),
