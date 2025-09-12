@@ -534,5 +534,6 @@
         <item quantity="many">%d horas</item>
     </plurals>
     <string name="share_sheet_more">Mais</string>
-
+    <string name="referral_not_found">Ainda sem indicação</string>
+    <string name="referral_cta">Transforme seu cofre em uma máquina de recompensas. Crie sua indicação agora e comece a ganhar</string>
 </resources>

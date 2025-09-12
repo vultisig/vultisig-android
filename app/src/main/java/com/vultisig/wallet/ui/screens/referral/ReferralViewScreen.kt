@@ -516,7 +516,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
 
         Text(
             style = Theme.brockmann.body.m.medium,
-            text = "No referral yet",
+            text = stringResource(R.string.referral_not_found),
             color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
         )
@@ -525,7 +525,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
 
         Text(
             style = Theme.brockmann.supplementary.caption,
-            text = "Turn your vault into a rewards machine. Create your referral now and start earning",
+            text = stringResource(R.string.referral_cta),
             color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center
         )

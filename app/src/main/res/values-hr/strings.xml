@@ -536,4 +536,6 @@
     </plurals>
     <string name="share_sheet_more">Više</string>
 
+    <string name="referral_not_found">Još nema preporuke</string>
+    <string name="referral_cta">Pretvori svoj trezor u stroj za nagrade. Stvori svoju preporuku sada i počni zarađivati</string>
 </resources>
