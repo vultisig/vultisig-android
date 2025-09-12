@@ -154,6 +154,7 @@ internal class ReferralViewModel @Inject constructor(
                 validateReferralCode(referralCode)?.let { validationError ->
                     state.update {
                         it.copy(
+                            referralCode = referralCode,
                             referralMessage = validationError,
                             referralMessageState = VsTextInputFieldInnerState.Error,
                         )
