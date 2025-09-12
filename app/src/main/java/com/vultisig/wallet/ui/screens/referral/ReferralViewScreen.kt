@@ -173,32 +173,7 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDataBanner(state.rewardsReferral, state.isLoadingRewards)
-
-                    UiSpacer(16.dp)
-
-                    Text(
-                        text = stringResource(R.string.referral_view_your_referral_code),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.primary,
-                    )
-
-                    UiSpacer(8.dp)
-
-                    ContentRow(
-                        text = state.referralVaultCode,
-                        icon = {
-                            UiIcon(
-                                drawableResId = R.drawable.ic_copy,
-                                size = 18.dp,
-                                onClick = { onCopyReferralCode(state.referralVaultCode) }
-                            )
-                        }
-                    )
-
-                    UiSpacer(16.dp)
-
-                    ReferralExpirationItem(state.referralVaultExpiration, state.isLoadingExpirationDate)
+                    ReferralDetails(state, onCopyReferralCode)
 
                     UiSpacer(16.dp)
 
@@ -220,6 +195,39 @@ internal fun ReferralViewScreen(
             UiSpacer(32.dp)
         },
     )
+}
+
+@Composable
+private fun ReferralDetails(
+    state: ReferralViewUiState,
+    onCopyReferralCode: (String) -> Unit,
+) {
+    ReferralRewardsBanner(state.rewardsReferral, state.isLoadingRewards)
+
+    UiSpacer(16.dp)
+
+    Text(
+        text = stringResource(R.string.referral_view_your_referral_code),
+        style = Theme.brockmann.body.s.medium,
+        color = Theme.colors.text.primary,
+    )
+
+    UiSpacer(8.dp)
+
+    ContentRow(
+        text = state.referralVaultCode,
+        icon = {
+            UiIcon(
+                drawableResId = R.drawable.ic_copy,
+                size = 18.dp,
+                onClick = { onCopyReferralCode(state.referralVaultCode) }
+            )
+        }
+    )
+
+    UiSpacer(16.dp)
+
+    ReferralExpirationItem(state.referralVaultExpiration, state.isLoadingExpirationDate)
 }
 
 @Composable
@@ -349,7 +357,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
 }
 
 @Composable
-private fun ReferralDataBanner(
+private fun ReferralRewardsBanner(
     rewards: String,
     isLoading: Boolean,
 ) {
