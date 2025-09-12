@@ -96,7 +96,6 @@ internal class ReferralVaultListViewModel @Inject constructor(
     fun onVaultClick(vaultId: String) {
         viewModelScope.launch {
             referralCodeRepository.setCurrentVaultId(vaultId)
-
             navigator.navigate(Destination.Back)
         }
     }
@@ -105,5 +104,9 @@ internal class ReferralVaultListViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
+    }
+
+    companion object {
+        internal const val VAULT_ID_SELECTED = "vault_id_selected"
     }
 }

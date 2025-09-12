@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.time.LocalDate
@@ -46,8 +47,8 @@ internal class ViewReferralViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val thorChainApi: ThorChainApi,
 ): ViewModel() {
-    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
-    private val vaultReferralCode: String = requireNotNull(savedStateHandle[ARG_REFERRAL_ID])
+    private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private var vaultReferralCode: String = requireNotNull(savedStateHandle[ARG_REFERRAL_ID])
 
     val state = MutableStateFlow(ReferralViewUiState())
 
@@ -57,9 +58,6 @@ internal class ViewReferralViewModel @Inject constructor(
 
     private fun onLoadReferralCodeInfo() {
         viewModelScope.launch {
-            state.update {
-                it.copy(isLoadingRewards = true, isLoadingExpirationDate = true)
-            }
             val (vaultName, friendReferralCode) = withContext(Dispatchers.IO) {
                 val vaultDeferred =
                     async { vaultRepository.get(vaultId)?.name ?: "Default Vault" }
@@ -74,6 +72,16 @@ internal class ViewReferralViewModel @Inject constructor(
                     referralVaultCode = vaultReferralCode,
                     referralFriendCode = friendReferralCode ?: "",
                 )
+            }
+
+            if (vaultReferralCode.isEmpty()) {
+                state.update {
+                    it.copy(
+                        isLoadingExpirationDate = false,
+                        isLoadingRewards = false,
+                    )
+                }
+                return@launch
             }
 
             try {
@@ -109,6 +117,7 @@ internal class ViewReferralViewModel @Inject constructor(
                     )
                 }
             } catch (t: Throwable) {
+                Timber.e(t)
                 state.update {
                     it.copy(
                         isLoadingRewards = false,
@@ -154,6 +163,19 @@ internal class ViewReferralViewModel @Inject constructor(
     fun onVaultClicked() {
         viewModelScope.launch {
             navigator.navigate(Destination.ReferralListVault(vaultId))
+        }
+    }
+
+    fun onCreateReferralClicked() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ReferralCreation(vaultId))
+        }
+    }
+
+    fun onVaultSelected(vaultId: String) {
+        if (vaultId.isNotEmpty()) {
+            this.vaultId = vaultId
+            onLoadReferralCodeInfo()
         }
     }
 

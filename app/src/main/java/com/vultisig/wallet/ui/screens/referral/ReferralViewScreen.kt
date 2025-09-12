@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -57,6 +58,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
@@ -68,8 +70,15 @@ internal fun ReferralViewScreen(
     model: ViewReferralViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val clipboardManager =
         LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+
+    LaunchedEffect(savedStateHandle?.get<String>(VAULT_ID_SELECTED)) {
+        val code = savedStateHandle?.get<String>(VAULT_ID_SELECTED).orEmpty()
+        model.onVaultSelected(code)
+        savedStateHandle?.remove<String>(VAULT_ID_SELECTED)
+    }
 
     ReferralViewScreen(
         state = state,
@@ -85,6 +94,7 @@ internal fun ReferralViewScreen(
         onDismissErrorDialog = model::onDismissErrorDialog,
         onClickEditReferral = model::onClickedEditReferral,
         onVaultClicked = model::onVaultClicked,
+        onCreateReferral = model::onCreateReferralClicked,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
@@ -101,7 +111,8 @@ internal fun ReferralViewScreen(
     onCopyReferralCode: (String) -> Unit,
     onDismissErrorDialog: () -> Unit,
     onClickEditReferral: () -> Unit,
-    onVaultClicked: () -> Unit = {},
+    onVaultClicked: () -> Unit,
+    onCreateReferral: () -> Unit,
 ) {
     if (state.error.isNotEmpty()) {
         UiAlertDialog(
@@ -173,21 +184,25 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDetails(state, onCopyReferralCode)
+                    if (state.referralVaultCode.isEmpty()) {
+                        EmptyReferralBanner(onCreateReferral)
+                    } else {
+                        ReferralDetails(state, onCopyReferralCode)
 
-                    UiSpacer(16.dp)
+                        UiSpacer(16.dp)
 
-                    VsButton(
-                        label = stringResource(R.string.referral_view_edit_referral),
-                        modifier = Modifier.fillMaxWidth(),
-                        variant = VsButtonVariant.Primary,
-                        state = if (!state.isLoadingExpirationDate && !state.isLoadingRewards) {
-                            VsButtonState.Enabled
-                        } else {
-                            VsButtonState.Disabled
-                        },
-                        onClick = onClickEditReferral,
-                    )
+                        VsButton(
+                            label = stringResource(R.string.referral_view_edit_referral),
+                            modifier = Modifier.fillMaxWidth(),
+                            variant = VsButtonVariant.Primary,
+                            state = if (!state.isLoadingExpirationDate && !state.isLoadingRewards) {
+                                VsButtonState.Enabled
+                            } else {
+                                VsButtonState.Disabled
+                            },
+                            onClick = onClickEditReferral,
+                        )
+                    }
                 }
             }
         },
@@ -572,6 +587,7 @@ private fun ReferralViewScreenPreview() {
         onDismissErrorDialog = {},
         onClickEditReferral = {},
         onVaultClicked = {},
+        onCreateReferral = {},
     )
 }
 
@@ -596,6 +612,7 @@ private fun ReferralViewScreenLoadingPreview() {
         onDismissErrorDialog = {},
         onClickEditReferral = {},
         onVaultClicked = {},
+        onCreateReferral = {},
     )
 }
 
@@ -620,6 +637,7 @@ private fun ReferralViewScreenErrorPreview() {
         onDismissErrorDialog = {},
         onClickEditReferral = {},
         onVaultClicked = {},
+        onCreateReferral = {},
     )
 }
 

@@ -13,18 +13,18 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
-import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class SettingsUiModel(
@@ -401,18 +401,26 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onClickReferralCode() {
-        if (hasUsedReferral) {
-            navigateTo(Destination.ReferralCode(vaultId))
-        } else {
-            state.update {
-                it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+        viewModelScope.launch {
+            if (hasUsedReferral) {
+                val referralInitialVault = withContext(Dispatchers.IO){
+                    referralRepository.getCurrentVaultId()
+                }
+                val referralVaultId = referralInitialVault ?: vaultId
+                navigateTo(Destination.ReferralCode(referralVaultId))
+            } else {
+                state.update {
+                    it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+                }
             }
         }
     }
 
     fun onDismissReferralBottomSheet() {
-        state.update {
-            it.copy(hasToShowReferralCodeSheet = false)
+        viewModelScope.launch {
+            state.update {
+                it.copy(hasToShowReferralCodeSheet = false)
+            }
         }
     }
 

@@ -114,6 +114,18 @@ internal class ReferralViewModel @Inject constructor(
 
                     referralCodeRepository.saveReferralCreated(vaultId, remoteReferral!!)
                 }
+
+                // Enable button edit always when vaults > 1
+                if (referrals.isEmpty()) {
+                    val hasMultipleReferrals = vaultRepository.getAll().size > 1
+                    if (hasMultipleReferrals) {
+                        state.update {
+                            it.copy(
+                                isCreateEnabled = false,
+                            )
+                        }
+                    }
+                }
             } catch (t: Throwable) {
                 Timber.e(t)
             }
@@ -125,9 +137,7 @@ internal class ReferralViewModel @Inject constructor(
             if (state.value.isCreateEnabled) {
                 navigator.navigate(Destination.ReferralCreation(vaultId))
             } else {
-                if (!remoteReferral.isNullOrEmpty()) {
-                    navigator.navigate(Destination.ReferralView(vaultId, remoteReferral!!))
-                }
+                navigator.navigate(Destination.ReferralView(vaultId, remoteReferral ?: ""))
             }
         }
     }

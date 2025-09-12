@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListUiState
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel
+import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.VaultItem
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -47,7 +49,12 @@ internal fun ReferralVaultListScreen(
     ReferralVaultListContentScreen(
         state = state,
         onBackPress = navController::popBackStack,
-        onVaultClicked = model::onVaultClick,
+        onVaultClicked = { vaultId ->
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set(VAULT_ID_SELECTED, vaultId)
+            model.onVaultClick(vaultId)
+        },
     )
 }
 
@@ -149,7 +156,8 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_shield),
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(14.dp),
+                    tint = Theme.colors.alerts.success,
                 )
             }
 
@@ -180,4 +188,44 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralVaultListScreenPreview() {
+    val state = ReferralVaultListUiState(
+        vaults = listOf(
+            VaultItem(
+                id = "1",
+                name = "My Main Vault",
+                isSelected = true,
+                signingInfo = "Part 1 of 3"
+            ),
+            VaultItem(
+                id = "2",
+                name = "Trading Vault",
+                isSelected = false,
+                signingInfo = "Part 2 of 3"
+            ),
+            VaultItem(
+                id = "3",
+                name = "Savings Vault",
+                isSelected = false,
+                signingInfo = "Part 1 of 2"
+            ),
+            VaultItem(
+                id = "4",
+                name = "DeFi Vault",
+                isSelected = false,
+                signingInfo = "Part 3 of 5"
+            ),
+        ),
+        error = null
+    )
+
+    ReferralVaultListContentScreen(
+        state = state,
+        onBackPress = {},
+        onVaultClicked = {}
+    )
 }
