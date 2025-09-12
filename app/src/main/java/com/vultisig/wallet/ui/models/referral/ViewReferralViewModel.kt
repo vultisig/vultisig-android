@@ -194,7 +194,11 @@ internal class ViewReferralViewModel @Inject constructor(
                         thorChainApi.getReferralCodesByAddress(coin.address)
                     }.firstOrNull()
 
-                    remoteReferral?.let { referralRepository.saveReferralCreated(vaultId, it) }
+                    remoteReferral?.let {
+                        referralRepository.saveReferralCreated(vaultId, it)
+                    } ?: run {
+                        this@ViewReferralViewModel.vaultReferralCode = ""
+                    }
 
                     onLoadReferralCodeInfo()
                 } catch (t: Throwable) {
