@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -45,6 +46,7 @@ import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 internal fun ReferralScreen(
@@ -55,10 +57,18 @@ internal fun ReferralScreen(
     val state by model.state.collectAsState()
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-    LaunchedEffect(savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE)) {
-        val code = savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE).orEmpty()
-        model.onNewEditedReferral(code)
-        savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
+
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.let { handle ->
+            snapshotFlow { handle.get<String>(NEW_EXTERNAL_REFERRAL_CODE) }
+                .distinctUntilChanged()
+                .collect { code ->
+                    if (code != null) {
+                        model.onNewEditedReferral(code)
+                        handle.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
+                    }
+                }
+        }
     }
 
     ReferralScreen(
@@ -219,7 +229,7 @@ private fun ReferralScreen(
 private fun ReferralScreenPreview() {
     val referralState = TextFieldState("FRIEND-REF-2024")
     val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
-    
+
     ReferralScreen(
         onBackPressed = {},
         onPasteIcon = {},
@@ -240,7 +250,7 @@ private fun ReferralScreenPreview() {
 private fun ReferralScreenWithReferralPreview() {
     val referralState = TextFieldState("EXISTING-CODE")
     val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
-    
+
     ReferralScreen(
         onBackPressed = {},
         onPasteIcon = {},
