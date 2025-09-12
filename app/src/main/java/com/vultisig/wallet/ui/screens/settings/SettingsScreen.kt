@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -197,7 +196,7 @@ internal fun SettingItem(
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = tint ?: Theme.colors.primary.accent4
+                    tint = tint ?: item.leadingIconTint ?: Theme.colors.primary.accent4
                 )
                 UiSpacer(size = 16.dp)
             }
