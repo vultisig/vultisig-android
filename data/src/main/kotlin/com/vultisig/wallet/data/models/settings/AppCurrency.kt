@@ -7,7 +7,7 @@ enum class AppCurrency(
 ) {
     USD(
         ticker = "USD",
-        fullName = "United States Dollar ($)"
+        fullName = "US Dollar ($)"
     ),
 
     AUD(
@@ -32,27 +32,27 @@ enum class AppCurrency(
 
     JPY(
         ticker = "JPY",
-        fullName = "Japanese Yen (¥)"
+        fullName = "Japanese Yen (JP¥)"
     ),
 
     CNY(
         ticker = "CNY",
-        fullName = "Chinese Yuan (¥)"
+        fullName = "Chinese Yuan (CN¥)"
     ),
 
     CAD(
         ticker = "CAD",
-        fullName = "Canadian Dollar ($)"
+        fullName = "Canadian Dollar (CA$)"
     ),
 
     SGD(
         ticker = "SGD",
-        fullName = "Singapore Dollar (S$)"
+        fullName = "Singapore Dollar (SGD)"
     ),
 
     SEK(
         ticker = "SEK",
-        fullName = "Swedish Krona (kr)"
+        fullName = "Swedish Krona (SEK)"
     ),
 
     RUB(
