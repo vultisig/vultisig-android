@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.symbol
@@ -173,9 +174,33 @@ internal class ViewReferralViewModel @Inject constructor(
     }
 
     fun onVaultSelected(vaultId: String) {
-        if (vaultId.isNotEmpty()) {
-            this.vaultId = vaultId
-            onLoadReferralCodeInfo()
+        viewModelScope.launch {
+            if (vaultId.isNotEmpty()) {
+                this@ViewReferralViewModel.vaultId = vaultId
+            }
+            val vaultReferral = withContext(Dispatchers.IO){
+                referralRepository.getReferralCreatedBy(vaultId)
+            }
+
+            if (vaultReferral != null) {
+                this@ViewReferralViewModel.vaultReferralCode = vaultReferral
+                onLoadReferralCodeInfo()
+            } else {
+                try {
+                    val remoteReferral = withContext(Dispatchers.IO) {
+                        val coin = vaultRepository.get(vaultId)?.coins?.find {
+                            it.chain.id == Chain.ThorChain.id && it.isNativeToken
+                        } ?: error("Coin not found")
+                        thorChainApi.getReferralCodesByAddress(coin.address)
+                    }.firstOrNull()
+
+                    remoteReferral?.let { referralRepository.saveReferralCreated(vaultId, it) }
+
+                    onLoadReferralCodeInfo()
+                } catch (t: Throwable) {
+                    Timber.e(t)
+                }
+            }
         }
     }
 
