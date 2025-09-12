@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +64,7 @@ import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 internal fun ReferralViewScreen(
@@ -74,10 +76,17 @@ internal fun ReferralViewScreen(
     val clipboardManager =
         LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
 
-    LaunchedEffect(savedStateHandle?.get<String>(VAULT_ID_SELECTED)) {
-        val code = savedStateHandle?.get<String>(VAULT_ID_SELECTED).orEmpty()
-        model.onVaultSelected(code)
-        savedStateHandle?.remove<String>(VAULT_ID_SELECTED)
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.let { handle ->
+            snapshotFlow { handle.get<String>(VAULT_ID_SELECTED) }
+                .distinctUntilChanged()
+                .collect { code ->
+                    if (code != null) {
+                        model.onVaultSelected(code)
+                        handle.remove<String>(VAULT_ID_SELECTED)
+                    }
+                }
+        }
     }
 
     ReferralViewScreen(

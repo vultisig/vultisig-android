@@ -405,11 +405,7 @@ internal class SettingsViewModel @Inject constructor(
     fun onClickReferralCode() {
         viewModelScope.launch {
             if (hasUsedReferral) {
-                val referralInitialVault = withContext(Dispatchers.IO){
-                    referralRepository.getCurrentVaultId()
-                }
-                val referralVaultId = referralInitialVault ?: vaultId
-                navigateTo(Destination.ReferralCode(referralVaultId))
+                navigateTo(Destination.ReferralCode(vaultId))
             } else {
                 state.update {
                     it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
