@@ -25,13 +25,11 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
 import kotlinx.datetime.Clock
 import java.math.BigDecimal
-import java.math.BigInteger
 import javax.inject.Inject
 
 interface SwapQuoteRepository {
@@ -191,12 +189,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote {
-        val isErc20Swap = !srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM
-
-        if (isErc20Swap) {
-            throw SwapException.handleSwapException("No routes")
-        }
-
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val mayaQuoteResult = mayaChainApi.getSwapQuotes(
@@ -204,7 +196,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = srcToken.streamingInterval,
+            interval = srcToken.mayaStreamingInterval,
             isAffiliate = isAffiliate,
         )
 
@@ -402,7 +394,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
 
-    private val Coin.streamingInterval: String
+    private val Coin.mayaStreamingInterval: String
         get() = when (chain) {
             Chain.MayaChain -> "3"
             Chain.ThorChain -> "1"
@@ -618,7 +610,5 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     companion object {
         private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
             "So11111111111111111111111111111111111111112"
-        private const val MIN_GAS_PRICE = 1000000000L
-        private const val GAS_PRICE_VALUE = 20000000000L
     }
 }
