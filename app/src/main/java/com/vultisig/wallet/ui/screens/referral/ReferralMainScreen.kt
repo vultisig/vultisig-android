@@ -229,7 +229,7 @@ private fun ReferralScreen(
 @Composable
 private fun ReferralScreenPreview() {
     val referralState = TextFieldState("FRIEND-REF-2024")
-    val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
+    val clipboardData = mutableStateOf<String?>(null)
 
     ReferralScreen(
         onBackPressed = {},
