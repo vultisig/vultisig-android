@@ -549,4 +549,9 @@
     <string name="share_sheet_more">Ещё</string>
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
+    <string name="transaction_buy">Купить</string>
+    <string name="transaction_receive">Получить</string>
+    <string name="search_bar_portfolio">Портфель</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Скоро</string>
 </resources>

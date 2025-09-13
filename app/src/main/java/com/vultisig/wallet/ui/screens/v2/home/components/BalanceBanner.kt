@@ -72,7 +72,7 @@ internal fun ToggleBalanceVisibilityButton(
 
     ) {
         UiIcon(
-            drawableResId = if (isVisible) com.vultisig.wallet.R.drawable.visible else com.vultisig.wallet.R.drawable.alert ,
+            drawableResId = if (isVisible) com.vultisig.wallet.R.drawable.eye_open else com.vultisig.wallet.R.drawable.eye_closed ,
             size = 16.dp,
             tint =  Theme.v2.colors.text.button.dim
         )

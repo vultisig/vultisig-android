@@ -784,5 +784,10 @@
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
+    <string name="transaction_buy">Buy</string>
+    <string name="transaction_receive">Receive</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Soon</string>
 
 </resources>

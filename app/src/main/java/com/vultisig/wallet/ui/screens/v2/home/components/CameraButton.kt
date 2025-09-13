@@ -14,7 +14,7 @@ internal fun CameraButton(
 ) {
     VsCircleButton(
         onClick = onClick,
-        icon = R.drawable.camera,
+        icon = R.drawable.camera_2,
         size = VsCircleButtonSize.Medium,
         modifier = modifier
     )

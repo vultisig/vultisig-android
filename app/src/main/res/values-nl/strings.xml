@@ -546,4 +546,9 @@
     <string name="share_sheet_more">Meer</string>
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
+    <string name="transaction_buy">Kopen</string>
+    <string name="transaction_receive">Ontvangen</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFT\'s</string>
+    <string name="search_bar_soon">Binnenkort</string>
 </resources>

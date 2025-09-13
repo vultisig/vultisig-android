@@ -26,10 +26,10 @@ enum class TransactionTypeButtonType(
     @DrawableRes val logo: Int,
     @StringRes val title: Int
 ) {
-    SWAP(drawable.ic_arrow_bottom_top, string.deposit_option_bond),
-    BUY(drawable.ic_arrow_bottom_top, string.deposit_option_bond),
-    SEND(drawable.ic_arrow_bottom_top, string.deposit_option_bond),
-    RECEIVE(drawable.ic_arrow_bottom_top, string.deposit_option_bond),
+    SWAP(drawable.swap, string.swap_screen_title),
+    BUY(drawable.buy, string.transaction_buy),
+    SEND(drawable.send, string.send_screen_title),
+    RECEIVE(drawable.receive, string.transaction_receive),
 }
 
 

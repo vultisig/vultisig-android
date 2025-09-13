@@ -539,4 +539,9 @@
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
+    <string name="transaction_buy">Kaufen</string>
+    <string name="transaction_receive">Erhalten</string>
+    <string name="search_bar_portfolio">Portfolio-NFTs</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Bald</string>
 </resources>

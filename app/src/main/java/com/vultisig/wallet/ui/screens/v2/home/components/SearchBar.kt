@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -83,7 +84,7 @@ fun SearchBar(
                         state = 0
                         onPortfolioClick()
                     },
-                    label = "Portfolio",
+                    label = stringResource(R.string.search_bar_portfolio),
                     isEnabled = true
                 )
 
@@ -95,7 +96,7 @@ fun SearchBar(
                         state = 1
                         onTNFTsClick()
                     },
-                    label = "TNFTs",
+                    label = stringResource(R.string.search_bar_nfts),
                     isEnabled = false
                 )
 
@@ -134,7 +135,7 @@ fun SearchBar(
                 borderType = com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Borderless
             ) {
                 UiIcon(
-                    drawableResId = R.drawable.ic_search,
+                    drawableResId = R.drawable.write,
                     size = 16.dp,
                     tint = Theme.colors.primary.accent4,
                     modifier = Modifier.padding(12.dp)
@@ -197,7 +198,7 @@ private fun VsHomepageTab(
                 cornerType = CorerType.RoundedCornerShape(8.dp),
             ) {
                 Text(
-                    text = "Soon",
+                    text = stringResource(R.string.search_bar_soon),
                     color = Theme.colors.alerts.info,
                     style = Theme.brockmann.supplementary.caption,
                     modifier = Modifier.padding(
