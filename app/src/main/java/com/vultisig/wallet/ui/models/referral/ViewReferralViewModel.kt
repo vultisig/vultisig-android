@@ -195,7 +195,9 @@ internal class ViewReferralViewModel @Inject constructor(
                     }.firstOrNull()
 
                     remoteReferral?.let {
-                        referralRepository.saveReferralCreated(vaultId, it)
+                        withContext(Dispatchers.IO) {
+                            referralRepository.saveReferralCreated(vaultId, it)
+                        }
                     } ?: run {
                         this@ViewReferralViewModel.vaultReferralCode = ""
                     }

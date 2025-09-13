@@ -117,7 +117,9 @@ internal class ReferralViewModel @Inject constructor(
 
                 // Enable button edit always when vaults > 1
                 if (referrals.isEmpty()) {
-                    val hasMultipleReferrals = vaultRepository.getAll().size > 1
+                    val hasMultipleReferrals = withContext(Dispatchers.IO) {
+                        vaultRepository.getAll().size > 1
+                    }
                     if (hasMultipleReferrals) {
                         state.update {
                             it.copy(
