@@ -12,10 +12,8 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_MERGE_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
@@ -68,6 +66,7 @@ import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralVaultListScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
@@ -597,6 +596,20 @@ internal fun SetupNavGraph(
                 navController = navController,
             )
         }
+
+        composable(
+            route = Destination.ReferralListVault.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralVaultListScreen(
+                navController = navController,
+            )
+        }
+
         composable(
             route = Destination.ReferralCode.STATIC_ROUTE,
             arguments = listOf(

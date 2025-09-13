@@ -29,8 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +42,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -55,9 +59,12 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
+import com.vultisig.wallet.ui.screens.transaction.shadeCircle
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 internal fun ReferralViewScreen(
@@ -65,8 +72,22 @@ internal fun ReferralViewScreen(
     model: ViewReferralViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val clipboardManager =
         LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.let { handle ->
+            snapshotFlow { handle.get<String>(VAULT_ID_SELECTED) }
+                .distinctUntilChanged()
+                .collect { code ->
+                    if (code != null) {
+                        model.onVaultSelected(code)
+                        handle.remove<String>(VAULT_ID_SELECTED)
+                    }
+                }
+        }
+    }
 
     ReferralViewScreen(
         state = state,
@@ -81,6 +102,8 @@ internal fun ReferralViewScreen(
         onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
         onClickEditReferral = model::onClickedEditReferral,
+        onVaultClicked = model::onVaultClicked,
+        onCreateReferral = model::onCreateReferralClicked,
         onCopyReferralCode = {
             val clip = ClipData.newPlainText("ReferralCode", it)
             clipboardManager?.setPrimaryClip(clip)
@@ -97,7 +120,8 @@ internal fun ReferralViewScreen(
     onCopyReferralCode: (String) -> Unit,
     onDismissErrorDialog: () -> Unit,
     onClickEditReferral: () -> Unit,
-    onVaultClicked: () -> Unit = {},
+    onVaultClicked: () -> Unit,
+    onCreateReferral: () -> Unit,
 ) {
     if (state.error.isNotEmpty()) {
         UiAlertDialog(
@@ -144,6 +168,7 @@ internal fun ReferralViewScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .shadeCircle()
                         .border(
                             border = BorderStroke(
                                 width = 1.dp,
@@ -168,46 +193,25 @@ internal fun ReferralViewScreen(
 
                     UiSpacer(16.dp)
 
-                    ReferralDataBanner(state.rewardsReferral, state.isLoadingRewards)
+                    if (state.referralVaultCode.isEmpty()) {
+                        EmptyReferralBanner(onCreateReferral)
+                    } else {
+                        ReferralDetails(state, onCopyReferralCode)
 
-                    UiSpacer(16.dp)
+                        UiSpacer(16.dp)
 
-                    Text(
-                        text = stringResource(R.string.referral_view_your_referral_code),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.primary,
-                    )
-
-                    UiSpacer(8.dp)
-
-                    ContentRow(
-                        text = state.referralVaultCode,
-                        icon = {
-                            UiIcon(
-                                drawableResId = R.drawable.ic_copy,
-                                size = 18.dp,
-                                onClick = { onCopyReferralCode(state.referralVaultCode) }
-                            )
-                        }
-                    )
-
-                    UiSpacer(16.dp)
-
-                    ReferralExpirationItem(state.referralVaultExpiration, state.isLoadingExpirationDate)
-
-                    UiSpacer(16.dp)
-
-                    VsButton(
-                        label = stringResource(R.string.referral_view_edit_referral),
-                        modifier = Modifier.fillMaxWidth(),
-                        variant = VsButtonVariant.Primary,
-                        state = if (!state.isLoadingExpirationDate && !state.isLoadingRewards) {
-                            VsButtonState.Enabled
-                        } else {
-                            VsButtonState.Disabled
-                        },
-                        onClick = onClickEditReferral,
-                    )
+                        VsButton(
+                            label = stringResource(R.string.referral_view_edit_referral),
+                            modifier = Modifier.fillMaxWidth(),
+                            variant = VsButtonVariant.Primary,
+                            state = if (!state.isLoadingExpirationDate && !state.isLoadingRewards) {
+                                VsButtonState.Enabled
+                            } else {
+                                VsButtonState.Disabled
+                            },
+                            onClick = onClickEditReferral,
+                        )
+                    }
                 }
             }
         },
@@ -215,6 +219,39 @@ internal fun ReferralViewScreen(
             UiSpacer(32.dp)
         },
     )
+}
+
+@Composable
+private fun ReferralDetails(
+    state: ReferralViewUiState,
+    onCopyReferralCode: (String) -> Unit,
+) {
+    ReferralRewardsBanner(state.rewardsReferral, state.isLoadingRewards)
+
+    UiSpacer(16.dp)
+
+    Text(
+        text = stringResource(R.string.referral_view_your_referral_code),
+        style = Theme.brockmann.body.s.medium,
+        color = Theme.colors.text.primary,
+    )
+
+    UiSpacer(8.dp)
+
+    ContentRow(
+        text = state.referralVaultCode,
+        icon = {
+            UiIcon(
+                drawableResId = R.drawable.ic_copy,
+                size = 18.dp,
+                onClick = { onCopyReferralCode(state.referralVaultCode) }
+            )
+        }
+    )
+
+    UiSpacer(16.dp)
+
+    ReferralExpirationItem(state.referralVaultExpiration, state.isLoadingExpirationDate)
 }
 
 @Composable
@@ -344,7 +381,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
 }
 
 @Composable
-private fun ReferralDataBanner(
+private fun ReferralRewardsBanner(
     rewards: String,
     isLoading: Boolean,
 ) {
@@ -479,5 +516,137 @@ internal fun ContentRow(
 
         icon()
     }
+}
+
+@Composable
+internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadeCircle()
+            .background(Theme.colors.backgrounds.primary)
+            .border(
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        UiSpacer(32.dp)
+
+        Image(
+            painter = painterResource(id = R.drawable.referral_question),
+            contentDescription = "Empty Logo",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(42.dp)
+        )
+
+        UiSpacer(16.dp)
+
+        Text(
+            style = Theme.brockmann.body.m.medium,
+            text = stringResource(R.string.referral_not_found),
+            color = Theme.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(16.dp)
+
+        Text(
+            style = Theme.brockmann.supplementary.caption,
+            text = stringResource(R.string.referral_cta),
+            color = Theme.colors.text.extraLight,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = stringResource(R.string.referral_create_referral),
+            modifier = Modifier.fillMaxWidth(),
+            variant = VsButtonVariant.Primary,
+            onClick = onClickedCreateReferral,
+        )
+
+        UiSpacer(8.dp)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralViewScreenPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "FRIEND-REF-2024",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "December 31, 2025",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "0.5 RUNE ($25.00)",
+            isLoadingRewards = false,
+            isLoadingExpirationDate = false,
+            error = "",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+        onCreateReferral = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun ReferralViewScreenLoadingPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "",
+            isLoadingRewards = true,
+            isLoadingExpirationDate = true,
+            error = "",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+        onCreateReferral = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Error State")
+@Composable
+private fun ReferralViewScreenErrorPreview() {
+    ReferralViewScreen(
+        state = ReferralViewUiState(
+            referralFriendCode = "FRIEND-REF-2024",
+            referralVaultCode = "VAULT-REF-ABC123",
+            referralVaultExpiration = "December 31, 2025",
+            vaultName = "My Secure Vault",
+            rewardsReferral = "0.5 RUNE ($25.00)",
+            isLoadingRewards = false,
+            isLoadingExpirationDate = false,
+            error = "Failed to load referral information",
+        ),
+        onBackPressed = {},
+        onClickFriendReferralBanner = {},
+        onEditFriendReferralCode = {},
+        onCopyReferralCode = {},
+        onDismissErrorDialog = {},
+        onClickEditReferral = {},
+        onVaultClicked = {},
+        onCreateReferral = {},
+    )
 }
 

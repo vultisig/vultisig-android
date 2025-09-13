@@ -210,6 +210,14 @@ internal sealed class Destination(
 
     data object CheckForUpdateSetting : Destination(route = "settings/check_for_update")
 
+    data class ReferralListVault(
+        val vaultId: String,
+    ): Destination(route = "referral/vaultlist/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/vaultlist/{$ARG_VAULT_ID}"
+        }
+    }
+
     data class ReferralOnboarding(
         val vaultId: String,
     ): Destination(route = "referral/onboarding/$vaultId") {

@@ -544,4 +544,6 @@
         <item quantity="other">%d uur</item>
     </plurals>
     <string name="share_sheet_more">Meer</string>
+    <string name="referral_not_found">Nog geen verwijzing</string>
+    <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
 </resources>

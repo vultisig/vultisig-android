@@ -18,11 +18,13 @@ import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class SettingsUiModel(
@@ -401,18 +403,22 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onClickReferralCode() {
-        if (hasUsedReferral) {
-            navigateTo(Destination.ReferralCode(vaultId))
-        } else {
-            state.update {
-                it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+        viewModelScope.launch {
+            if (hasUsedReferral) {
+                navigateTo(Destination.ReferralCode(vaultId))
+            } else {
+                state.update {
+                    it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+                }
             }
         }
     }
 
     fun onDismissReferralBottomSheet() {
-        state.update {
-            it.copy(hasToShowReferralCodeSheet = false)
+        viewModelScope.launch {
+            state.update {
+                it.copy(hasToShowReferralCodeSheet = false)
+            }
         }
     }
 
