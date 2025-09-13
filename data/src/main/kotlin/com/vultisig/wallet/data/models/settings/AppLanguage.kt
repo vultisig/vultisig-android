@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.models.settings
 
 enum class AppLanguage(val mainName: String, val engName: String?) {
-    EN("English UK", null),
+    EN("English", "(UK)"),
     DE("Deutsch", "German"),
     ES("Espanol", "Spanish"),
     IT("Italiano", "Italian"),
@@ -14,6 +14,7 @@ enum class AppLanguage(val mainName: String, val engName: String?) {
         fun String.fromName(): AppLanguage {
             return when (this) {
                 "English UK" -> EN
+                "English" -> EN
                 "Deutsch" -> DE
                 "Espanol" -> ES
                 "Italiano" -> IT
