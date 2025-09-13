@@ -13,7 +13,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.CurrencyUnit
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel

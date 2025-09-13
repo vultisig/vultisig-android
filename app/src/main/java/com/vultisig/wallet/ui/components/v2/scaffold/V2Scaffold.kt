@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.components.v2.containers
+package com.vultisig.wallet.ui.components.v2.scaffold
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -7,6 +7,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -24,7 +25,7 @@ internal fun V2Scaffold(
         topBar = {
             VsTopAppBar(
                 title = title,
-                iconLeft = com.vultisig.wallet.R.drawable.ic_caret_left,
+                iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
             )
         }
@@ -45,7 +46,7 @@ internal fun V2Scaffold(
         topBar = {
             VsTopAppBar(
                 title = title,
-                iconLeft = com.vultisig.wallet.R.drawable.ic_caret_left,
+                iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
                 actions = actions,
             )

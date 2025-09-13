@@ -92,7 +92,32 @@ private fun HomeScreen(
         state.vaultName
     }
 
-    Scaffold(
+    Box{
+        if (state.selectedVaultId != null) {
+            VaultAccountsScreen(
+                navHostController = navController,
+                vaultId = state.selectedVaultId,
+                isRearrangeMode = state.isChainRearrangeMode,
+                onToggleVaultListClick = onToggleVaults,
+            )
+        }
+
+        AnimatedVisibility(
+            visible = state.showVaultList,
+            enter = slideInVertically(initialOffsetY = { height -> -height }),
+            exit = slideOutVertically(targetOffsetY = { height -> -height })
+        ) {
+            VaultListScreen(
+                onSelectVault = onSelectVault,
+                onSelectFolder = onSelectFolder,
+                onCreateNewVault = onCreateNewVault,
+                onCreateNewFolder = onCreateNewFolder,
+                isRearrangeMode = state.isVaultRearrangeMode,
+            )
+        }
+    }
+
+    /*Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -185,7 +210,7 @@ private fun HomeScreen(
                 )
             }
         }
-    }
+    }*/
 }
 
 @Preview

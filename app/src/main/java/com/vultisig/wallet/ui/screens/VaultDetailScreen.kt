@@ -29,7 +29,7 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
