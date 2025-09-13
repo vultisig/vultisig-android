@@ -398,7 +398,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         get() = when (chain) {
             Chain.MayaChain -> "3"
             Chain.ThorChain -> "1"
-            else -> "1"  // Use 1 instead of 0 to ensure Maya API returns complete memo format
+            else -> "0"
         }
 
     private fun String.convertToTokenValue(token: Coin): TokenValue =
@@ -610,7 +610,5 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     companion object {
         private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
             "So11111111111111111111111111111111111111112"
-        private const val MIN_GAS_PRICE = 1000000000L
-        private const val GAS_PRICE_VALUE = 20000000000L
     }
 }
