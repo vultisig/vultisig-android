@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
+import android.os.Build
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,6 +31,7 @@ import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -155,6 +157,14 @@ internal class VerifySwapViewModel @Inject constructor(
         state.update { it.copy(errorText = null) }
     }
 
+    private fun isUnisocT606Device(): Boolean {
+        return Build.HARDWARE.contains("t606", ignoreCase = true) ||
+                Build.BOARD.contains("t606", ignoreCase = true) ||
+                (Build.MANUFACTURER.equals("motorola", ignoreCase = true) &&
+                        Build.MODEL.contains("moto g04", ignoreCase = true))
+    }
+
+
     private fun keysign(
         keysignInitType: KeysignInitType,
     ) {
@@ -162,20 +172,47 @@ internal class VerifySwapViewModel @Inject constructor(
             it.consentReceiveAmount && it.consentAmount && it.consentAllowance
         }
 
-        if (hasAllConsents) {
-            viewModelScope.launch {
-                launchKeysign(
-                    keysignInitType, transactionId, password.value,
-                    Route.Keysign.Keysign.TxType.Swap, vaultId
-                )
-            }
-        } else {
+        if (!hasAllConsents) {
             state.update {
                 it.copy(
                     errorText = UiText.StringResource(
                         R.string.verify_transaction_error_not_enough_consent
                     )
                 )
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val dispatcher = if (isUnisocT606Device()) {
+                    Dispatchers.IO.limitedParallelism(1)
+                } else {
+                    Dispatchers.IO
+                }
+                withContext(dispatcher) {
+                    if (isUnisocT606Device()) {
+                        // Reduce pressure on CGO heap for problematic devices
+                        System.gc()
+                        delay(100)
+                    }
+                    launchKeysign(
+                        keysignInitType,
+                        transactionId,
+                        password.value,
+                        Route.Keysign.Keysign.TxType.Swap,
+                        vaultId
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Keysign failed"
+                )
+                state.update {
+                    it.copy(
+                        errorText = UiText.DynamicString(e.message ?: "Unknown error")
+                    )
+                }
             }
         }
     }
