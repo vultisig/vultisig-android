@@ -361,8 +361,8 @@ internal class SwapFormViewModel @Inject constructor(
                     is SwapQuote.MayaChain -> {
                         val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
-                        val address = quote.data.inboundAddress
-                        val dstAddress = address ?: srcAddress
+                        val dstAddress =
+                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
