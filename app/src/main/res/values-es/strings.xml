@@ -535,6 +535,6 @@
         <item quantity="many">%d horas</item>
     </plurals>
     <string name="share_sheet_more">Más</string>
-
-
+    <string name="referral_not_found">Aún no hay referencia</string>
+    <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
 </resources>

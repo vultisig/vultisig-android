@@ -103,7 +103,6 @@ internal fun AddressBookScreen(
                 },
                 actions = {
                     if (state.entries.isNotEmpty()) {
-
                         if (isEditModeEnabled) {
                             Text(
                                 text = stringResource(R.string.address_book_edit_mode_done),
@@ -172,7 +171,6 @@ internal fun AddressBookScreen(
         })
 }
 
-
 @Composable
 private fun NoAddressView(
     onAddAddressClick: () -> Unit,
@@ -214,11 +212,10 @@ private fun NoAddressView(
             size = VsButtonSize.Medium,
             variant = VsButtonVariant.Primary
         )
-
     }
 }
 
-internal fun Modifier.shadeCircle() = this.drawBehind {
+fun Modifier.shadeCircle() = this.drawBehind {
     drawCircle(
         brush = Brush.vultiCircleShadeGradient(),
     )

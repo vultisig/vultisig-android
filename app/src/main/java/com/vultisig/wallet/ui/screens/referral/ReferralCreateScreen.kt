@@ -483,11 +483,47 @@ internal fun EstimatedNetworkFee(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-internal fun SwapFormScreenPreview() {
+private fun ReferralCreateScreenPreview() {
+    val searchTextFieldState = TextFieldState("VULTISIG-REF")
+    
     ReferralCreateScreen(
-        state = CreateReferralUiState(),
+        state = CreateReferralUiState(
+            searchStatus = SearchStatusType.SUCCESS,
+            yearExpiration = 2,
+            formattedYearExpiration = "December 31, 2026",
+            fees = FeesReferral.Result(
+                registrationFeesToken = "0.02 RUNE",
+                registrationFeesPrice = "$1.50",
+                costFeesToken = "0.04 RUNE",
+                costFeesTokenAmount = "0.04",
+                costFeesPrice = "$3.00"
+            ),
+            error = null
+        ),
+        searchTextFieldState = searchTextFieldState,
+        onBackPressed = {},
+        onSearchClick = {},
+        onAddClick = {},
+        onSubtractClick = {},
+        onCreateReferral = {},
+        onCleanReferralClick = {},
+        onDismissError = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun ReferralCreateScreenLoadingPreview() {
+    ReferralCreateScreen(
+        state = CreateReferralUiState(
+            searchStatus = SearchStatusType.IS_SEARCHING,
+            yearExpiration = 1,
+            formattedYearExpiration = "December 31, 2025",
+            fees = FeesReferral.Loading,
+            error = null
+        ),
         searchTextFieldState = TextFieldState(),
         onBackPressed = {},
         onSearchClick = {},
