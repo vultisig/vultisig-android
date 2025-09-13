@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -189,4 +190,59 @@ private fun HowItWorksTitle() {
             modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp)
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReferralOnboardingScreenPreview() {
+    Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            VsTopAppBar(
+                title = stringResource(R.string.referral_onboarding_title),
+                onBackClick = {},
+            )
+        },
+        content = { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+            ) {
+                ReferralTag()
+                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 24.dp)
+                            .width(1.dp)
+                            .fillMaxHeight(0.92f)
+                            .background(Theme.colors.borders.light)
+                    )
+
+                    Column {
+                        HowItWorksTitle()
+
+                        TimeLineList()
+                    }
+                }
+            }
+        },
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(bottom = 32.dp)
+            ) {
+                VsButton(
+                    onClick = {},
+                    label = stringResource(R.string.referral_onboarding_get_started),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+            }
+        }
+    )
 }
