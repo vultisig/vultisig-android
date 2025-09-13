@@ -703,6 +703,8 @@
     <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
     <string name="referral_not_found">No referral yet</string>
     <string name="referral_cta">Turn your vault into a rewards machine. Create your referral now and start earning</string>
+    <string name="referral_top_bar_list" translatable="false">Referral</string>
+    <string name="referral_top_bar_list_vaults" translatable="false">Vaults</string>
 
     <string name="tcy_auto_compound_enable_title">Enable Auto-Compounding</string>
     <string name="tcy_auto_compound_enable_subtitle">Automatically compound your TCY rewards</string>

@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +69,7 @@ internal fun ReferralVaultListContentScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Referral",
+                title = stringResource(R.string.referral_top_bar_list),
                 onBackClick = onBackPress,
             )
         },
@@ -85,7 +86,7 @@ internal fun ReferralVaultListContentScreen(
                 Text(
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.colors.text.extraLight,
-                    text = "Vaults",
+                    text = stringResource(R.string.referral_top_bar_list_vaults),
                     textAlign = TextAlign.Start,
                 )
 
