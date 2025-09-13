@@ -168,46 +168,51 @@ internal class VerifySwapViewModel @Inject constructor(
     private fun keysign(
         keysignInitType: KeysignInitType,
     ) {
-        try {
-            val hasAllConsents = state.value.let {
-                it.consentReceiveAmount && it.consentAmount && it.consentAllowance
-            }
+        val hasAllConsents = state.value.let {
+            it.consentReceiveAmount && it.consentAmount && it.consentAllowance
+        }
 
-            if (hasAllConsents) {
-                viewModelScope.launch {
-                    // Force garbage collection before intensive CGO operation
-                    System.gc()
-                    delay(100)
-
-                    val dispatcher = if (isUnisocT606Device()) {
-                        Dispatchers.IO.limitedParallelism(1)
-                    } else {
-                        Dispatchers.IO
-                    }
-                    withContext(dispatcher) {
-                        launchKeysign(
-                            keysignInitType,
-                            transactionId,
-                            password.value,
-                            Route.Keysign.Keysign.TxType.Swap,
-                            vaultId
-                        )
-                    }
-                }
-            } else {
-                state.update {
-                    it.copy(
-                        errorText = UiText.StringResource(
-                            R.string.verify_transaction_error_not_enough_consent
-                        )
-                    )
-                }
-            }
-        } catch (e: Exception) {
+        if (!hasAllConsents) {
             state.update {
                 it.copy(
-                    errorText = UiText.DynamicString(e.message ?: "Unknown error")
+                    errorText = UiText.StringResource(
+                        R.string.verify_transaction_error_not_enough_consent
+                    )
                 )
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val dispatcher = if (isUnisocT606Device()) {
+                    Dispatchers.IO.limitedParallelism(1)
+                } else {
+                    Dispatchers.IO
+                }
+                withContext(dispatcher) {
+                    if (isUnisocT606Device()) {
+                        // Reduce pressure on CGO heap for problematic devices
+                        System.gc()
+                        delay(100)
+                    }
+                    launchKeysign(
+                        keysignInitType,
+                        transactionId,
+                        password.value,
+                        Route.Keysign.Keysign.TxType.Swap,
+                        vaultId
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Keysign failed"
+                )
+                state.update {
+                    it.copy(
+                        errorText = UiText.DynamicString(e.message ?: "Unknown error")
+                    )
+                }
             }
         }
     }
