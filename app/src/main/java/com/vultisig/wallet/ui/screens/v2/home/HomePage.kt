@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.AnimatedPrice
 import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
+import com.vultisig.wallet.ui.screens.v2.home.components.SearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButtonType
@@ -140,7 +142,7 @@ internal fun HomePage(
                     onOpenSettingsClick = onOpenSettingsClick,
                     onToggleVaultListClick = onToggleVaultListClick,
                     vaultName = state.vaultName,
-                    isFastVault = false //todo
+                    isFastVault = state.isFastVault,
                 )
                 UiSpacer(
                     40.dp
@@ -223,19 +225,27 @@ internal fun HomePage(
                         .fillMaxSize()
                 ) {
                     if (state.showMigration) {
+                        UiSpacer(12.dp)
                         UpgradeBanner(
                             modifier = Modifier
-                                .padding(all = 16.dp),
+                                .padding(horizontal = 16.dp),
                             onUpgradeClick = onMigrateClick,
                         )
-                        UiSpacer(4.dp)
+                        UiSpacer(20.dp)
+                        UiHorizontalDivider(
+                            color = Theme.colors.borders.light,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        UiSpacer(16.dp)
                     }
 
 
-                    UiHorizontalDivider(
-                        color = Theme.colors.borders.light,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                    SearchBar(
+                        modifier = Modifier.padding(
+                            horizontal = 16.dp,
+                        )
                     )
+
 
                     TopShineContainer(
                         modifier = Modifier
@@ -275,4 +285,12 @@ internal fun HomePage(
     )
 }
 
+
+@Preview
+@Composable
+private fun PreviewHomePage() {
+    HomePage(
+        state = VaultAccountsUiModel()
+    )
+}
 
