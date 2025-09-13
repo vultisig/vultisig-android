@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -249,7 +250,7 @@ private fun ReferralScreenPreview() {
 @Composable
 private fun ReferralScreenWithReferralPreview() {
     val referralState = TextFieldState("EXISTING-CODE")
-    val clipboardData = androidx.compose.runtime.mutableStateOf<String?>(null)
+    val clipboardData = mutableStateOf<String?>(null)
 
     ReferralScreen(
         onBackPressed = {},
