@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.referral
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -225,6 +226,7 @@ private fun ReferralScreen(
     )
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 private fun ReferralScreenPreview() {
@@ -246,6 +248,7 @@ private fun ReferralScreenPreview() {
     )
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true, name = "With Existing Referral")
 @Composable
 private fun ReferralScreenWithReferralPreview() {
