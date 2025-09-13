@@ -13,10 +13,8 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
-import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,7 +50,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             title = UiText.StringResource(R.string.settings_screen_register_your_vaults),
             backgroundColor = Colors.Default.buttons.primary,
             leadingIcon = R.drawable.register,
-            trailingIcon = R.drawable.ic_small_caret_right
+            trailingIcon = R.drawable.ic_small_caret_right,
+            leadingIconTint =  Colors.Default.text.primary,
         )
     )
 
@@ -130,7 +129,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
 
     data object Twitter : SettingsItem(
         SettingsItemUiModel(
-            title = UiText.DynamicString("X"),
+            title = UiText.StringResource(R.string.x_twitter),
             leadingIcon = R.drawable.x_twitter,
             trailingIcon = R.drawable.ic_small_caret_right
         )
@@ -187,6 +186,7 @@ internal data class SettingsItemUiModel(
     val subTitle: UiText? = null,
     val leadingIcon: Int? = null,
     val trailingIcon: Int? = null,
+    val leadingIconTint: Color? = null,
     val trailingSwitch: Boolean? = null,
     val value: String? = null,
     val backgroundColor: Color? = null,
