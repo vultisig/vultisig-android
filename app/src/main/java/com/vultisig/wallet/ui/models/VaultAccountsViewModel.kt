@@ -266,4 +266,13 @@ internal class VaultAccountsViewModel @Inject constructor(
         dismissBackupReminder()
     }
 
+    fun openSettings() {
+         vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                Timber.d("openSettings($vaultId)")
+                navigator.navigate(Destination.Settings(vaultId = vaultId))
+            }
+        }
+    }
+
 }

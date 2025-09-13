@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.*
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType.*
 import com.vultisig.wallet.ui.components.v2.containers.CorerType
@@ -23,9 +24,10 @@ fun ChooseVaultButton(
     modifier: Modifier = Modifier,
     vaultName: String,
     isFastVault: Boolean,
+    onClick: () -> Unit,
 ) {
     V2Container(
-        modifier = modifier,
+        modifier = modifier.clickOnce(onClick = onClick),
         cornerType = CorerType.Circular,
         borderType = Bordered(),
         type = SECONDARY
@@ -72,6 +74,7 @@ fun ChooseVaultButton(
 private fun PreviewChooseVaultButton() {
     ChooseVaultButton(
         vaultName = "Main vault",
-        isFastVault = false
+        isFastVault = false,
+        onClick = {}
     )
 }

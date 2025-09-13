@@ -17,18 +17,20 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun BalanceBanner(
+internal fun BalanceBanner(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
-    balance: String,
+    balance: String?,
     onToggleVisibility: () -> Unit,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
     ) {
-        Text(
-            text = balance,
+
+        AnimatedPrice(
+            totalFiatValue = balance,
+            isVisible = isVisible,
             color = Theme.v2.colors.text.primary,
             style = Theme.satoshi.price.largeTitle,
         )
@@ -46,7 +48,7 @@ fun BalanceBanner(
 
 
 @Composable
-fun ToggleBalanceVisibilityButton(
+internal fun ToggleBalanceVisibilityButton(
     modifier: Modifier = Modifier,
     isVisible: Boolean = true,
     onToggleVisibility: () -> Unit,
