@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ internal sealed class VsCircleButtonSize {
 internal sealed class VsCircleButtonType {
     object Primary : VsCircleButtonType()
     object Secondary : VsCircleButtonType()
+    data class Custom(val color: Color,) : VsCircleButtonType()
 }
 
 @Composable
@@ -48,6 +50,7 @@ internal fun VsCircleButton(
     val backgroundColor = when (type) {
         VsCircleButtonType.Primary -> Theme.colors.primary.accent3
         VsCircleButtonType.Secondary -> Theme.colors.backgrounds.tertiary
+        is VsCircleButtonType.Custom -> type.color
     }
 
     Box(

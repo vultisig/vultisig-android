@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.theme.Theme
 fun CopiableAddress(
     modifier: Modifier = Modifier,
     address: String,
+    onAddressCopied: (String) -> Unit = {},
 ) {
     Row(
         modifier = modifier,
@@ -38,7 +39,8 @@ fun CopiableAddress(
         CopyIcon(
             textToCopy = address,
             size = 12.dp,
-            tint = Theme.colors.text.extraLight
+            tint = Theme.colors.text.extraLight,
+            onCopyCompleted = onAddressCopied
         )
     }
 }

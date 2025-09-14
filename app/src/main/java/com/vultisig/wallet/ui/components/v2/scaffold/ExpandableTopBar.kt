@@ -2,6 +2,11 @@
 
 package com.vultisig.wallet.ui.components.v2.scaffold
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,10 +16,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -23,6 +30,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -51,6 +59,15 @@ fun VsExpandableTopBar(
         val expandedFraction = 1f - collapseFraction
         val height = lerp(collapsedHeight, expandedHeight, expandedFraction)
 
+        val coroutineScope = rememberCoroutineScope()
+
+        val animatedOffset = remember { Animatable(0f) }
+
+        LaunchedEffect(animatedOffset.value) {
+            scrollBehavior.state.heightOffset = animatedOffset.value
+        }
+
+
         SideEffect {
             if (scrollBehavior.state.heightOffsetLimit != -heightPx) {
                 scrollBehavior.state.heightOffsetLimit = -heightPx
@@ -58,7 +75,27 @@ fun VsExpandableTopBar(
         }
 
         Surface(
-            modifier = modifier.height(height),
+            modifier = modifier
+                .height(height)
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        coroutineScope.launch {
+                            animatedOffset.snapTo(
+                                (animatedOffset.value + delta)
+                                    .coerceIn(-heightPx, 0f)
+                            )
+                        }
+                    },
+                    onDragStopped = {
+                        coroutineScope.launch {
+                            val shouldCollapse = expandedFraction < 0.5f
+                            val target = if (shouldCollapse) -heightPx else 0f
+                            animatedOffset.animateTo(target, tween(300))
+                        }
+                    }
+                ),
+
             tonalElevation = 0.dp,
             color = backgroundColor
         ) {

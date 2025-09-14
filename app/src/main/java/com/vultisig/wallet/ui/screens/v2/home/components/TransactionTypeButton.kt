@@ -27,9 +27,9 @@ enum class TransactionTypeButtonType(
     @StringRes val title: Int
 ) {
     SWAP(drawable.swap, string.swap_screen_title),
-    BUY(drawable.buy, string.transaction_buy),
+//    BUY(drawable.buy, string.transaction_buy),
     SEND(drawable.send, string.send_screen_title),
-    RECEIVE(drawable.receive, string.transaction_receive),
+//    RECEIVE(drawable.receive, string.transaction_receive),
 }
 
 

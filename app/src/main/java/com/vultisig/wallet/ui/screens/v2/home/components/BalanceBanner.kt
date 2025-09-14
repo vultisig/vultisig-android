@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,39 +54,42 @@ internal fun ToggleBalanceVisibilityButton(
     isVisible: Boolean = true,
     onToggleVisibility: () -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .clip(
-                shape = CircleShape,
-            )
-            .background(
-                color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f),
-            )
-            .padding(
-                horizontal = 6.dp,
-                vertical = 4.dp,
-            )
-            .clickOnce(
-                onClick = onToggleVisibility
-            ),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    AnimatedContent(isVisible) { isVisible ->
+        Row(
+            modifier = modifier
+                .clip(
+                    shape = CircleShape,
+                )
+                .background(
+                    color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f),
+                )
+                .padding(
+                    horizontal = 6.dp,
+                    vertical = 4.dp,
+                )
+                .clickOnce(
+                    onClick = onToggleVisibility
+                ),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
 
-    ) {
-        UiIcon(
-            drawableResId = if (isVisible) com.vultisig.wallet.R.drawable.eye_open else com.vultisig.wallet.R.drawable.eye_closed ,
-            size = 16.dp,
-            tint =  Theme.v2.colors.text.button.dim
-        )
+        ) {
+            UiIcon(
+                drawableResId = if (isVisible) com.vultisig.wallet.R.drawable.eye_closed else com.vultisig.wallet.R.drawable.eye_open,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.button.dim
+            )
 
-        UiSpacer(
-            size = 4.dp
-        )
+            UiSpacer(
+                size = 4.dp
+            )
 
-        Text(
-            text = if (isVisible) "Hide balance" else "Show balance",
-            color = Theme.v2.colors.text.button.dim,
-            style = Theme.brockmann.button.medium
-        )
+            Text(
+                text = if (isVisible) "Hide balance" else "Show balance",
+                color = Theme.v2.colors.text.button.dim,
+                style = Theme.brockmann.button.medium
+            )
+        }
+
 
     }
 }
@@ -99,6 +103,7 @@ private fun PreviewBalanceBanner() {
         onToggleVisibility = {}
     )
 }
+
 @Preview
 @Composable
 private fun PreviewBalanceBanner2() {

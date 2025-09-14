@@ -4,14 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.AccountItem
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
@@ -174,7 +174,6 @@ internal fun HomePage(
                                 when (it) {
                                     TransactionTypeButtonType.SEND -> onSend()
                                     TransactionTypeButtonType.SWAP -> onSwap()
-                                    else -> {}
                                 }
                             }
                         )
@@ -255,27 +254,36 @@ internal fun HomePage(
                             .padding(16.dp)
                     ) {
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 64.dp)
-                        ) {
-                            items(
+                        LazyColumn {
+                            itemsIndexed(
                                 items = state.accounts,
-                                key = { it.chainName },
-                            ) { account ->
-                                ChainAccountItem(
-                                    account = account,
-                                    isBalanceVisible = state.isBalanceValueVisible,
-                                    onClick = {
-                                        onAccountClick(account)
-                                    },
-                                    onCopy = {
-                                        coroutineScope.launch {
-                                            snackbarState.show(it)
-                                        }
-                                    },
-                                    isRearrangeMode = false
-                                )
+                                key = { _, account -> account.chainName },
+                            ) { index, account ->
+                                Column {
+                                    AccountItem(
+                                        modifier = Modifier.padding(
+                                            horizontal = 16.dp,
+                                            vertical = 12.dp
+                                        ),
+                                        account = account,
+                                        isBalanceVisible = state.isBalanceValueVisible,
+                                        onClick = {
+                                            onAccountClick(account)
+                                        },
+                                        onCopy = {
+                                            coroutineScope.launch {
+                                                snackbarState.show("${account.chainName} Address Copied")
+                                            }
+                                        },
+                                    )
+
+                                    if (index != state.accounts.lastIndex) {
+
+                                        UiHorizontalDivider(
+                                            color = Theme.colors.borders.light,
+                                        )
+                                    }
+                                }
 
                             }
 
