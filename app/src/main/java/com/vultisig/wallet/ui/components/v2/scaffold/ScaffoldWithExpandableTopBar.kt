@@ -24,7 +24,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScaffoldWithExpandableTopBar(
-    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
     snackbarState: VSSnackbarState = rememberVsSnackbarState(),
     backgroundColor : Color = Theme.colors.backgrounds.primary,
     topBarExpandedContent: @Composable BoxScope.() -> Unit,

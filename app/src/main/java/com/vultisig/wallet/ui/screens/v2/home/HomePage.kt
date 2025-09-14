@@ -24,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.AccountItem
@@ -42,6 +41,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButtonType
 import com.vultisig.wallet.ui.screens.v2.home.components.UpgradeBanner
+import com.vultisig.wallet.ui.screens.v2.home.components.WalletEarnSelect
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
 
@@ -59,6 +59,7 @@ internal fun HomePage(
     onToggleBalanceVisibility: () -> Unit = {},
     onMigrateClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
+    onChooseChains: () -> Unit = {},
 ) {
 
     val snackbarState = rememberVsSnackbarState()
@@ -115,6 +116,10 @@ internal fun HomePage(
                 UiHorizontalDivider(
                     color = Theme.colors.borders.light
                 )
+
+                UiSpacer(
+                    size = 8.dp
+                )
             }
         },
         topBarExpandedContent = {
@@ -169,7 +174,7 @@ internal fun HomePage(
                     TransactionTypeButtonType.entries.forEach {
                         TransactionTypeButton(
                             txType = it,
-                            isSelected = it == TransactionTypeButtonType.SEND,
+                            isSelected = false,
                             onClick = {
                                 when (it) {
                                     TransactionTypeButtonType.SEND -> onSend()
@@ -194,12 +199,13 @@ internal fun HomePage(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
+                        .height(150.dp)
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Theme.colors.backgrounds.primary.copy(alpha = 0.5f)
+                                    Theme.colors.backgrounds.primary.copy(alpha = 0.4f),
+                                    Theme.colors.backgrounds.primary.copy(alpha = 0.9f)
                                 )
                             )
                         )
@@ -209,9 +215,11 @@ internal fun HomePage(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.End,
+                        .padding(16.dp)
+                        .align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
+                    WalletEarnSelect()
                     CameraButton(
                         onClick = openCamera
                     )
@@ -244,7 +252,8 @@ internal fun HomePage(
                     SearchBar(
                         modifier = Modifier.padding(
                             horizontal = 16.dp,
-                        )
+                        ),
+                        onEditClick = onChooseChains,
                     )
 
 

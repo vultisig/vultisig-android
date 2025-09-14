@@ -31,6 +31,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.animatePlacementInScope
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CorerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -41,6 +42,8 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
 ) {
     var state by remember { mutableIntStateOf(0) }
     var tab1WidthDp by remember {
@@ -69,10 +72,6 @@ fun SearchBar(
                 size = 6.dp
             )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(
-                    space = 8.dp,
-                    alignment = Alignment.Start
-                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
 
@@ -86,6 +85,10 @@ fun SearchBar(
                     },
                     label = stringResource(R.string.search_bar_portfolio),
                     isEnabled = true
+                )
+
+                UiSpacer(
+                    size = 16.dp
                 )
 
                 VsHomepageTab(
@@ -117,6 +120,7 @@ fun SearchBar(
 
             ) {
             V2Container(
+                modifier = Modifier.clickOnce(onClick = onSearchClick),
                 cornerType = CorerType.Circular,
                 type = com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY,
                 borderType = com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Borderless
@@ -130,6 +134,7 @@ fun SearchBar(
             }
 
             V2Container(
+                modifier = Modifier.clickOnce(onClick = onEditClick),
                 cornerType = CorerType.Circular,
                 type = com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY,
                 borderType = com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Borderless

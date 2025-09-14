@@ -1,12 +1,16 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,83 +29,128 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.animatePlacementInScope
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun WalletEarnSelect(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onWalletClick: () -> Unit = {},
+    onEarnClick: () -> Unit = {},
 ) {
 
-    var x by remember {
-        mutableStateOf(false)
+    var isWalletSelected by remember {
+        mutableStateOf(true)
     }
 
     LookaheadScope {
 
         Box(
             modifier = modifier
+                .height(64.dp)
+                .width(184.dp)
                 .border(
                     width = 0.1.dp,
-                    color = Color.White,
+                    color = Color.White.copy(alpha = 0.2f),
                     shape = CircleShape
                 )
                 .clip(
                     CircleShape
                 )
-                .background(Theme.v2.colors.backgrounds.tertiary)
+                .background(Color(0xFF0d2446))
                 .padding(
                     all = 4.dp,
                 )
-                .height(
-                    IntrinsicSize.Min
-                )
-                .width(100.dp)
         ) {
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                contentAlignment = if (x)
-                    Alignment.TopEnd else Alignment.TopStart
-            ) {
-                Box(
-                    modifier = Modifier
-                        .animatePlacementInScope(this@LookaheadScope)
-                        .clip(CircleShape)
-                        .background(Theme.colors.text.button.dark)
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.5f)
-                )
-            }
+                    .animatePlacementInScope(this@LookaheadScope)
+                    .clip(CircleShape)
+                    .border(
+                        width = 0.1.dp,
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+                    .background(Color(0xFF1e3250))
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.5f)
+                    .align(
+                        if (isWalletSelected)
+                            Alignment.CenterStart else Alignment.CenterEnd
+                    ),
+            )
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "A",
-                    modifier = Modifier.clickOnce(
-                        onClick = {
-                            x = true
-                        }
-                    )
+
+                WalletEarnOption(
+                    modifier = Modifier
+                        .weight(1f),
+                    onClick = {
+                        isWalletSelected = true
+                        onWalletClick()
+                    },
+                    text = "Wallet",
+                    icon = R.drawable.wallet,
+                    enabled = isWalletSelected
                 )
-                UiSpacer(16.dp)
-                Text(
-                    text = "B",
-                    modifier = Modifier.clickOnce(
-                        onClick = {
-                            x = false
-                        }
-                    )
+
+
+                WalletEarnOption(
+                    modifier = Modifier
+                        .weight(1f),
+                    onClick = {
+                        isWalletSelected = false
+                        onEarnClick()
+                    },
+                    text = "Earn",
+                    icon = R.drawable.coins_add,
+                    enabled = !isWalletSelected
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WalletEarnOption(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    text: String,
+    @DrawableRes icon: Int,
+    enabled: Boolean,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        val contentColor = if (enabled) Theme.colors.text.primary else Theme.colors.text.extraLight
+
+        UiIcon(
+            drawableResId = icon,
+            size = 24.dp,
+            tint = contentColor,
+        )
+        Text(
+            text = text,
+            style = Theme.brockmann.supplementary.caption,
+            color =contentColor
+        )
     }
 }
 

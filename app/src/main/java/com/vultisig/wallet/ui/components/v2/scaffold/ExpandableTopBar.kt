@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 fun VsExpandableTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
-    backgroundColor : Color,
+    backgroundColor: Color,
     expandedContent: @Composable BoxScope.() -> Unit,
     collapsedContent: @Composable BoxScope.() -> Unit
 ) {
@@ -132,14 +132,10 @@ fun VsExpandableTopBar(
             )
 
             // Show expanded content by default during measurement
-            Surface(
-                tonalElevation = 0.dp
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    content = expandedContent
-                )
-            }
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                content = expandedContent
+            )
         }
     }
 }

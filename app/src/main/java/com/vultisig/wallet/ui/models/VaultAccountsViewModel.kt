@@ -281,4 +281,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun openAddChainAccount() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                navigator.route(Route.AddChainAccount(vaultId))
+            }
+        }
+    }
+
 }

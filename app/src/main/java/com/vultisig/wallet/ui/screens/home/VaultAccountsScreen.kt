@@ -52,7 +52,6 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.HomePage
 import com.vultisig.wallet.ui.theme.Theme
@@ -102,6 +101,7 @@ internal fun VaultAccountsScreen(
         onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,
         onOpenSettingsClick = viewModel::openSettings,
         onToggleVaultListClick = onToggleVaultListClick,
+        onChooseChains = viewModel::openAddChainAccount,
     )
 
 }
