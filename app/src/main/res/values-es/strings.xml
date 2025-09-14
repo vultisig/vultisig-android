@@ -542,4 +542,8 @@
     <string name="search_bar_portfolio">Portafolio</string>
     <string name="search_bar_nfts">NFT</string>
     <string name="search_bar_soon">Próximamente</string>
+    <string name="upgrade_banner_sign_faster">Firma más rápido que nunca</string>
+    <string name="upgrade_banner_upgrade_your">Actualiza tu bóveda ahora</string>
+    <string name="upgrade_banner_upgrade_now">Actualízate ahora</string>
+    <string name="home_portfolio_balance">Saldo de la cartera</string>
 </resources>

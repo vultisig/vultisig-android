@@ -544,4 +544,8 @@
     <string name="search_bar_portfolio">Portfolio-NFTs</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Bald</string>
+    <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
+    <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>
+    <string name="upgrade_banner_upgrade_now">Jetzt upgraden</string>
+    <string name="home_portfolio_balance">Portfolio-Guthaben</string>
 </resources>

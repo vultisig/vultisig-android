@@ -12,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
@@ -44,7 +46,7 @@ fun UpgradeBanner(
                     )
             ) {
                 Text(
-                    text = "Sign faster than ever before",
+                    text = stringResource(R.string.upgrade_banner_sign_faster),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.colors.text.extraLight,
                 )
@@ -52,7 +54,7 @@ fun UpgradeBanner(
                     size = 2.dp
                 )
                 Text(
-                    text = "Upgrade your vault now",
+                    text = stringResource(R.string.upgrade_banner_upgrade_your),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.colors.text.primary,
                 )
@@ -62,7 +64,7 @@ fun UpgradeBanner(
 
 
                 Text(
-                    text = "Upgrade now",
+                    text = stringResource(R.string.upgrade_banner_upgrade_now),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.colors.text.primary,
                     modifier = Modifier

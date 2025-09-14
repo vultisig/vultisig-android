@@ -541,4 +541,8 @@
     <string name="search_bar_portfolio">Carteira</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Em breve</string>
+    <string name="upgrade_banner_sign_faster">Assine mais rápido do que nunca</string>
+    <string name="upgrade_banner_upgrade_your">Atualize o seu cofre agora</string>
+    <string name="upgrade_banner_upgrade_now">Atualize agora</string>
+    <string name="home_portfolio_balance">Saldo da carteira</string>
 </resources>

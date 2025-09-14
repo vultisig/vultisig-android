@@ -600,8 +600,6 @@
     <string name="migration_onboarding_step_3_text_emphasize" translatable="false">all initial devices are present</string>
     <string name="migration_onboarding_step_3_text_end" translatable="false">when upgrading</string>
     <string name="migration_onboarding_upgrade_your_vault" translatable="false">Upgrade your vault</string>
-    <string name="migration_onboarding_upgrade_now" translatable="false">Upgrade now</string>
-    <string name="upgrade_banner_title" translatable="false">Upgrade your vault now</string>
     <string name="deposit_form_custom_memo_optional_title" translatable="false">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
     <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
@@ -789,5 +787,9 @@
     <string name="search_bar_portfolio">Portfolio</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Soon</string>
+    <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
+    <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
+    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
+    <string name="home_portfolio_balance">Portfolio Balance</string>
 
 </resources>

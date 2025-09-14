@@ -543,4 +543,8 @@
     <string name="search_bar_portfolio">Portfelj</string>
     <string name="search_bar_nfts">NFT-ove</string>
     <string name="search_bar_soon">Uskoro</string>
+    <string name="upgrade_banner_sign_faster">Potpišite brže nego ikad prije</string>
+    <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>
+    <string name="upgrade_banner_upgrade_now">Nadogradite sada</string>
+    <string name="home_portfolio_balance">Stanje portfelja</string>
 </resources>
