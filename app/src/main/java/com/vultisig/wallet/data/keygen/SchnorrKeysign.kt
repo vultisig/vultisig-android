@@ -209,11 +209,13 @@ class SchnorrKeysign(
                 } else {
                     delay(100)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if(e is CancellationException){
-                    throw e
-                }
-                Timber.e(e, "Failed to get messages")
+                Timber.e(
+                    e,
+                    "Failed to get messages"
+                )
                 delay(1000)
             }
 
@@ -345,7 +347,8 @@ class SchnorrKeysign(
                 keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
                 signatures[messageToSign] = resp
             }
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)

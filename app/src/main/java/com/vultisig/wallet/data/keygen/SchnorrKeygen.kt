@@ -171,13 +171,16 @@ class SchnorrKeygen(
                 } else {
                     delay(1000)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if(e is CancellationException){
-                    throw e
-                }
-                Timber.e(e, "Failed to get messages")
+                Timber.e(
+                    e,
+                    "Failed to get messages"
+                )
                 delay(1000)
             }
+
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
             if (elapsedTime > 60) {
@@ -300,6 +303,8 @@ class SchnorrKeygen(
                 setKeygenDone(true)
                 task.cancel()
             }
+        } catch (e: Exception) {
+            throw e
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
             setKeygenDone(true)
