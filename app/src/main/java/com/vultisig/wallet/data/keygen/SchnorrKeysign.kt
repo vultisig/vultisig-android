@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -209,6 +210,9 @@ class SchnorrKeysign(
                     delay(100)
                 }
             } catch (e: Exception) {
+                if(e is CancellationException){
+                    throw e
+                }
                 Timber.e(e, "Failed to get messages")
             }
 

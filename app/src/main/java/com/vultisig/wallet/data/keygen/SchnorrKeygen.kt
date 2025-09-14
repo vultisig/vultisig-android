@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -171,6 +172,9 @@ class SchnorrKeygen(
                     delay(1000)
                 }
             } catch (e: Exception) {
+                if(e is CancellationException){
+                    throw e
+                }
                 Timber.e(e, "Failed to get messages")
                 delay(1000)
             }
