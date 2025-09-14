@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 

@@ -214,6 +214,7 @@ class SchnorrKeysign(
                     throw e
                 }
                 Timber.e(e, "Failed to get messages")
+                delay(1000)
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
