@@ -212,11 +212,8 @@ class SchnorrKeysign(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(
-                    e,
-                    "Failed to get messages"
-                )
-                delay(1000)
+                Timber.e(e, "Failed to get messages")
+                delay(100)
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -347,8 +344,7 @@ class SchnorrKeysign(
                 keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
                 signatures[messageToSign] = resp
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
