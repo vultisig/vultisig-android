@@ -548,4 +548,8 @@
     <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>
     <string name="upgrade_banner_upgrade_now">Jetzt upgraden</string>
     <string name="home_portfolio_balance">Portfolio-Guthaben</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Verdienen</string>
+    <string name="hide_balance">Guthaben verbergen</string>
+    <string name="show_balance">Guthaben anzeigen</string>
 </resources>

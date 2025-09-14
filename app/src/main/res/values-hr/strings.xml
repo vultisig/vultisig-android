@@ -547,4 +547,8 @@
     <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>
     <string name="upgrade_banner_upgrade_now">Nadogradite sada</string>
     <string name="home_portfolio_balance">Stanje portfelja</string>
+    <string name="wallet">Novčanik</string>
+    <string name="earn">Zaradi</string>
+    <string name="hide_balance">Sakrij stanje</string>
+    <string name="show_balance">Prikaži stanje</string>
 </resources>

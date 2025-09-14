@@ -545,4 +545,8 @@
     <string name="upgrade_banner_upgrade_your">Atualize o seu cofre agora</string>
     <string name="upgrade_banner_upgrade_now">Atualize agora</string>
     <string name="home_portfolio_balance">Saldo da carteira</string>
+    <string name="wallet">Carteira</string>
+    <string name="earn">Ganhe</string>
+    <string name="hide_balance">Ocultar saldo</string>
+    <string name="show_balance">Mostrar saldo</string>
 </resources>

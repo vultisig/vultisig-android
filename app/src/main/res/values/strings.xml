@@ -793,5 +793,8 @@
     <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
     <string name="upgrade_banner_upgrade_now">Upgrade now</string>
     <string name="home_portfolio_balance">Portfolio Balance</string>
-
+    <string name="wallet">Wallet</string>
+    <string name="earn">Earn</string>
+    <string name="hide_balance">Hide balance</string>
+    <string name="show_balance">Show balance</string>
 </resources>

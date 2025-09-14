@@ -24,7 +24,7 @@ internal fun TopShineContainer(
         shape = RoundedCornerShape(
             size = 12.dp
         ),
-        colors = CardDefaults.cardColors().copy(
+        colors = CardDefaults.cardColors(
             containerColor = Theme.colors.backgrounds.secondary
         ),
     ) {
