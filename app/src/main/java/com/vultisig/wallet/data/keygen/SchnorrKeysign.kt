@@ -142,7 +142,7 @@ class SchnorrKeysign(
             val receiverResult =
                 schnorr_sign_session_message_receiver(handle, message, idx, bufReceiver)
             if (receiverResult != LIB_OK) {
-                println("fail to get receiver message, error: $receiverResult")
+                Timber.d("fail to get receiver message, error: $receiverResult")
                 return byteArrayOf()
             }
             return BufferUtilJNI.get_bytes_from_tss_buffer(bufReceiver)
@@ -156,7 +156,7 @@ class SchnorrKeysign(
         try {
             val result = schnorr_sign_session_output_message(handle, buf)
             if (result != LIB_OK) {
-                println("fail to get outbound message: $result")
+                Timber.d("fail to get outbound message: $result")
                 return Pair(result, byteArrayOf())
             }
             return Pair(result, BufferUtilJNI.get_bytes_from_tss_buffer(buf))
@@ -187,7 +187,7 @@ class SchnorrKeysign(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                println("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
+                Timber.d("sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}")
                 messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
             }
         }
@@ -219,7 +219,7 @@ class SchnorrKeysign(
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
             if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+                error("timeout: Schnorr keysign did not finish within 60 seconds")
             }
         }
 

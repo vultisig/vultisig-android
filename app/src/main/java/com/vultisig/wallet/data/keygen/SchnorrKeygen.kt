@@ -181,7 +181,7 @@ class SchnorrKeygen(
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
             if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+                error("timeout: Schnorr keygen did not finish within 60 seconds")
             }
         }
     }
