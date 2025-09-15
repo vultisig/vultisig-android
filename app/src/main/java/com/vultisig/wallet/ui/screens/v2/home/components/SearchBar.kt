@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CorerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -121,7 +121,7 @@ fun SearchBar(
             ) {
             V2Container(
                 modifier = Modifier.clickOnce(onClick = onSearchClick),
-                cornerType = CorerType.Circular,
+                cornerType = CornerType.Circular,
                 type = com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY,
                 borderType = com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Borderless
             ) {
@@ -135,7 +135,7 @@ fun SearchBar(
 
             V2Container(
                 modifier = Modifier.clickOnce(onClick = onEditClick),
-                cornerType = CorerType.Circular,
+                cornerType = CornerType.Circular,
                 type = com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY,
                 borderType = com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Borderless
             ) {
@@ -200,7 +200,7 @@ private fun VsHomepageTab(
 
             V2Container(
                 type = ContainerType.SECONDARY,
-                cornerType = CorerType.RoundedCornerShape(8.dp),
+                cornerType = CornerType.RoundedCornerShape(8.dp),
             ) {
                 Text(
                     text = stringResource(R.string.search_bar_soon),

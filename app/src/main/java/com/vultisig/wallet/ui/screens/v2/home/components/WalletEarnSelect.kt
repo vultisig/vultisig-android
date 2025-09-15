@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.stringResource
@@ -47,14 +49,17 @@ fun WalletEarnSelect(
     }
 
     LookaheadScope {
-
+        val tt = Color.Transparent
+        val tc = Theme.colors.neutrals.n100.copy(alpha = 0.1f)
         Box(
             modifier = modifier
                 .height(64.dp)
                 .width(184.dp)
                 .border(
-                    width = 0.1.dp,
-                    color = Color.White.copy(alpha = 0.2f),
+                    width = 1.dp,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(tt, tc, tt, tt),
+                    ),
                     shape = CircleShape
                 )
                 .clip(
@@ -70,17 +75,20 @@ fun WalletEarnSelect(
                 modifier = Modifier
                     .animatePlacementInScope(this@LookaheadScope)
                     .clip(CircleShape)
-                    .border(
-                        width = 0.1.dp,
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = CircleShape
-                    )
                     .background(Color(0xFF1e3250))
+                    .shadow(
+                        elevation = 1.dp,
+                        shape = CircleShape,
+                        spotColor = Theme.colors.neutrals.n100.copy(alpha = 0.2f),
+                        clip = true,
+                    )
                     .fillMaxHeight()
                     .fillMaxWidth(0.5f)
                     .align(
                         if (isWalletSelected)
-                            Alignment.CenterStart else Alignment.CenterEnd
+                            Alignment.CenterStart else
+                            if (IS_EARN_ENABLED) Alignment.CenterEnd
+                            else Alignment.CenterStart
                     ),
             )
 
@@ -113,7 +121,8 @@ fun WalletEarnSelect(
                     },
                     text = stringResource(R.string.earn),
                     icon = R.drawable.coins_add,
-                    enabled = !isWalletSelected
+                    enabled = !isWalletSelected,
+                    isClickable = IS_EARN_ENABLED,
                 )
             }
         }
@@ -124,6 +133,7 @@ fun WalletEarnSelect(
 private fun WalletEarnOption(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    isClickable: Boolean = true,
     text: String,
     @DrawableRes icon: Int,
     enabled: Boolean,
@@ -135,6 +145,7 @@ private fun WalletEarnOption(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
+                enabled = isClickable,
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -150,7 +161,7 @@ private fun WalletEarnOption(
         Text(
             text = text,
             style = Theme.brockmann.supplementary.caption,
-            color =contentColor
+            color = contentColor
         )
     }
 }
@@ -161,3 +172,4 @@ private fun PreviewWalletEarnSelect() {
     WalletEarnSelect()
 }
 
+private const val IS_EARN_ENABLED = false

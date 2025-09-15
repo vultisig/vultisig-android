@@ -14,7 +14,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.*
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType.*
-import com.vultisig.wallet.ui.components.v2.containers.CorerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -28,7 +28,7 @@ fun ChooseVaultButton(
 ) {
     V2Container(
         modifier = modifier.clickOnce(onClick = onClick),
-        cornerType = CorerType.Circular,
+        cornerType = CornerType.Circular,
         borderType = Bordered(),
         type = SECONDARY
     ) {

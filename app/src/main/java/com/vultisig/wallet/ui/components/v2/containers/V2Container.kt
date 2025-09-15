@@ -29,9 +29,9 @@ internal sealed interface ContainerBorderType {
     data class Bordered(val color: Color = Colors.Default.borders.light) : ContainerBorderType
 }
 
-internal sealed interface CorerType {
-    object Circular : CorerType
-    data class RoundedCornerShape(val size: Dp = 12.dp) : CorerType
+internal sealed interface CornerType {
+    object Circular : CornerType
+    data class RoundedCornerShape(val size: Dp = 12.dp) : CornerType
 }
 
 @Composable
@@ -39,7 +39,7 @@ internal fun V2Container(
     modifier: Modifier = Modifier,
     type: ContainerType = ContainerType.PRIMARY,
     borderType: ContainerBorderType = ContainerBorderType.Borderless,
-    cornerType: CorerType = CorerType.RoundedCornerShape(),
+    cornerType: CornerType = CornerType.RoundedCornerShape(),
     content: @Composable () -> Unit,
 ) {
     val containerColor = when (type) {
@@ -54,8 +54,8 @@ internal fun V2Container(
     }
 
     val shape = when (cornerType) {
-        CorerType.Circular -> CircleShape
-        is CorerType.RoundedCornerShape -> RoundedCornerShape(
+        CornerType.Circular -> CircleShape
+        is CornerType.RoundedCornerShape -> RoundedCornerShape(
             size = cornerType.size,
         )
     }

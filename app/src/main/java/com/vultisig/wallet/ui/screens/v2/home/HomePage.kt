@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -196,26 +197,10 @@ internal fun HomePage(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Theme.colors.backgrounds.primary.copy(alpha = 0.4f),
-                                    Theme.colors.backgrounds.primary.copy(alpha = 0.9f)
-                                )
-                            )
-                        )
-                        .align(Alignment.BottomCenter),
-                )
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = 16.dp)
                         .align(Alignment.BottomCenter),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
@@ -226,8 +211,12 @@ internal fun HomePage(
                 }
             }
         },
-        content = {
-            Box {
+        content = { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 Column(
                     modifier = Modifier
                         .background(Theme.colors.backgrounds.primary)
@@ -248,14 +237,12 @@ internal fun HomePage(
                         UiSpacer(16.dp)
                     }
 
-
                     SearchBar(
                         modifier = Modifier.padding(
                             horizontal = 16.dp,
                         ),
                         onEditClick = onChooseChains,
                     )
-
 
                     TopShineContainer(
                         modifier = Modifier
@@ -299,8 +286,27 @@ internal fun HomePage(
                         }
                     }
                 }
+                BottomFadeEffect()
             }
         }
+    )
+}
+
+@Composable
+private fun BoxScope.BottomFadeEffect() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        Theme.colors.backgrounds.primary
+                    )
+                )
+            )
+            .align(Alignment.BottomCenter),
     )
 }
 
