@@ -539,4 +539,17 @@
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
+    <string name="transaction_buy">Kaufen</string>
+    <string name="transaction_receive">Erhalten</string>
+    <string name="search_bar_portfolio">Portfolio-NFTs</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Bald</string>
+    <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
+    <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>
+    <string name="upgrade_banner_upgrade_now">Jetzt upgraden</string>
+    <string name="home_portfolio_balance">Portfolio-Guthaben</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Verdienen</string>
+    <string name="hide_balance">Guthaben verbergen</string>
+    <string name="show_balance">Guthaben anzeigen</string>
 </resources>

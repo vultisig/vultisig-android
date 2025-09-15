@@ -549,4 +549,17 @@
     <string name="share_sheet_more">Ещё</string>
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
+    <string name="transaction_buy">Купить</string>
+    <string name="transaction_receive">Получить</string>
+    <string name="search_bar_portfolio">Портфель</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Скоро</string>
+    <string name="upgrade_banner_sign_faster">Подписывайте быстрее, чем когда-либо прежде</string>
+    <string name="upgrade_banner_upgrade_your">Обновите хранилище прямо сейчас</string>
+    <string name="upgrade_banner_upgrade_now">Обновите сейчас</string>
+    <string name="home_portfolio_balance">Баланс портфеля</string>
+    <string name="wallet">Кошелек</string>
+    <string name="earn">Заработать</string>
+    <string name="hide_balance">Скрыть баланс</string>
+    <string name="show_balance">Показать баланс</string>
 </resources>

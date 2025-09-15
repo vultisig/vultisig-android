@@ -56,6 +56,8 @@ internal object Theme {
     val brockmann: VsTypography
         @Composable
         get() = LocalBrockmannFamilyTypography.current
+
+    val satoshi: SatoshiTypography = satoshiTypography
 }
 
 

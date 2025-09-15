@@ -546,4 +546,17 @@
     <string name="share_sheet_more">Meer</string>
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
+    <string name="transaction_buy">Kopen</string>
+    <string name="transaction_receive">Ontvangen</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFT\'s</string>
+    <string name="search_bar_soon">Binnenkort</string>
+    <string name="upgrade_banner_sign_faster">Teken sneller dan ooit tevoren</string>
+    <string name="upgrade_banner_upgrade_your">Upgrade nu uw kluis</string>
+    <string name="upgrade_banner_upgrade_now">Upgrade nu</string>
+    <string name="home_portfolio_balance">Portefeuillesaldo</string>
+    <string name="wallet">Portemonnee</string>
+    <string name="earn">Verdienen</string>
+    <string name="hide_balance">Saldo verbergen</string>
+    <string name="show_balance">Saldo weergeven</string>
 </resources>

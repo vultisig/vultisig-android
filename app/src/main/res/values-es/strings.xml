@@ -537,4 +537,17 @@
     <string name="share_sheet_more">Más</string>
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
+    <string name="transaction_buy">Comprar</string>
+    <string name="transaction_receive">Recibir</string>
+    <string name="search_bar_portfolio">Portafolio</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Próximamente</string>
+    <string name="upgrade_banner_sign_faster">Firma más rápido que nunca</string>
+    <string name="upgrade_banner_upgrade_your">Actualiza tu bóveda ahora</string>
+    <string name="upgrade_banner_upgrade_now">Actualízate ahora</string>
+    <string name="home_portfolio_balance">Saldo de la cartera</string>
+    <string name="wallet">Monedero</string>
+    <string name="earn">Gana</string>
+    <string name="hide_balance">Ocultar saldo</string>
+    <string name="show_balance">Mostrar saldo</string>
 </resources>

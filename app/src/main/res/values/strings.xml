@@ -786,4 +786,17 @@
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
 
+    <string name="transaction_buy">Buy</string>
+    <string name="transaction_receive">Receive</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Soon</string>
+    <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
+    <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
+    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
+    <string name="home_portfolio_balance">Portfolio Balance</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Earn</string>
+    <string name="hide_balance">Hide balance</string>
+    <string name="show_balance">Show balance</string>
 </resources>
