@@ -1762,8 +1762,13 @@ internal class DepositFormViewModel @Inject constructor(
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
         val tokenAmountInt = if (isUnStake) {
-            val totalUnits = tcyAutoCompoundAmount?.toBigIntegerOrNull()
-                ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            // Get the appropriate unstakable amount based on compound type
+            val totalUnits = if (isAutoCompoundTcyUnStake) {
+                tcyAutoCompoundAmount?.toBigIntegerOrNull()
+            } else {
+                unstakableAmountCache?.toBigIntegerOrNull()
+            } ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            
             if (totalUnits < BigInteger.ONE) {
                 throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
             }
@@ -1776,8 +1781,11 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = stakeMemo
 
-        val isAutoCompound = if (isUnStake) isAutoCompoundTcyUnStake
-        else isAutoCompoundTcyStake
+        val isAutoCompound = if (isUnStake){
+            isAutoCompoundTcyUnStake
+        } else {
+            isAutoCompoundTcyStake
+        }
 
         val specific = blockChainSpecificRepository
             .getSpecific(
