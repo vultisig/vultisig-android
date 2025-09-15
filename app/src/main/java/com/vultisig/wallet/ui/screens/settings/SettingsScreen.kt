@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
-import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.SettingsItem
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent

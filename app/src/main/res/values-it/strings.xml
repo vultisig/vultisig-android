@@ -548,4 +548,17 @@
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
     <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
     <string name="vault_settings_migration_title">Migrare</string>
+    <string name="transaction_buy">Acquista</string>
+    <string name="transaction_receive">Ricevi</string>
+    <string name="search_bar_portfolio">Portafoglio</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Presto</string>
+    <string name="upgrade_banner_sign_faster">Firma più velocemente che mai</string>
+    <string name="upgrade_banner_upgrade_your">Aggiorna il tuo vault ora</string>
+    <string name="upgrade_banner_upgrade_now">Aggiorna ora</string>
+    <string name="home_portfolio_balance">Saldo del portafoglio</string>
+    <string name="wallet">Portafoglio</string>
+    <string name="earn">Guadagna</string>
+    <string name="hide_balance">Nascondi saldo</string>
+    <string name="show_balance">Mostra saldo</string>
 </resources>

@@ -38,6 +38,7 @@ import javax.inject.Inject
 @Immutable
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
+    val isFastVault: Boolean = false,
     val showBackupWarning: Boolean = false,
     val showMonthlyBackupReminder: Boolean = false,
     val showMigration: Boolean = false,
@@ -162,7 +163,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadVaultNameJob = viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
-            uiState.update { it.copy(vaultName = vault.name) }
+            uiState.update {
+                it.copy(
+                    vaultName = vault.name,
+                    isFastVault = vault.isFastVault()
+                )
+            }
             val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
             uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
             val showMigration = vault.libType == SigningLibType.GG20
@@ -264,6 +270,23 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun doNotRemindBackup() = viewModelScope.launch {
         setNeverShowGlobalBackupReminder()
         dismissBackupReminder()
+    }
+
+    fun openSettings() {
+         vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                Timber.d("openSettings($vaultId)")
+                navigator.navigate(Destination.Settings(vaultId = vaultId))
+            }
+        }
+    }
+
+    fun openAddChainAccount() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                navigator.route(Route.AddChainAccount(vaultId))
+            }
+        }
     }
 
 }

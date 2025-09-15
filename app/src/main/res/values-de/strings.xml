@@ -550,4 +550,17 @@
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_settings_migration_title">Migrieren</string>
+    <string name="transaction_buy">Kaufen</string>
+    <string name="transaction_receive">Erhalten</string>
+    <string name="search_bar_portfolio">Portfolio-NFTs</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Bald</string>
+    <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
+    <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>
+    <string name="upgrade_banner_upgrade_now">Jetzt upgraden</string>
+    <string name="home_portfolio_balance">Portfolio-Guthaben</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Verdienen</string>
+    <string name="hide_balance">Guthaben verbergen</string>
+    <string name="show_balance">Guthaben anzeigen</string>
 </resources>
