@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -170,6 +171,8 @@ class SchnorrKeygen(
                 } else {
                     delay(1000)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
                 delay(1000)
@@ -177,7 +180,7 @@ class SchnorrKeygen(
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
             if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+                error("timeout: Schnorr keygen did not finish within 60 seconds")
             }
         }
     }
