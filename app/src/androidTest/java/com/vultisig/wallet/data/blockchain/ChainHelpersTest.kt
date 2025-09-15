@@ -284,7 +284,7 @@ class ChainHelpersTest {
                 pubKeyEDDSA = HEX_PUBLIC_KEY,
                 hexChainCode = HEX_CHAIN_CODE,
             ))
-            assertEquals(preImageHashes, transaction.expectedImageHash)
+            assertEquals(preImageHashes, transaction.expectedImageHash.sorted())
         }
     }
     @Test
