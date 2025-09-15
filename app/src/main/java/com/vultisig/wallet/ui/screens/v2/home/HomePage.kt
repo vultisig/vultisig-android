@@ -133,13 +133,13 @@ internal fun HomePage(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                Theme.colors.primary.accent3,
+                                Theme.colors.primary.accent1,
                                 Theme.colors.backgrounds.primary
                             ),
                             radius = screenWidthPx,
                             center = androidx.compose.ui.geometry.Offset(
                                 screenWidthPx / 2,
-                                -screenWidthPx * 0.65f
+                                -screenWidthPx * 0.5f
                             )
                         )
                     )
