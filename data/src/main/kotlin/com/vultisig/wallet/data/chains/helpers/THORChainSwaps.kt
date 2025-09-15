@@ -47,7 +47,7 @@ class THORChainSwaps(
                 )
             }
 
-            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base -> {
+            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base, Chain.Arbitrum -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSwapPreSignedInputData(
@@ -160,7 +160,7 @@ class THORChainSwaps(
             Chain.Ripple -> {
                 return RippleHelper.getSignedTransaction(keysignPayload,signatures)
             }
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base -> {
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base,Chain.Arbitrum -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
