@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.Packaging
-
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -49,9 +47,6 @@ android {
     }
     tasks.withType<Test> {
         useJUnitPlatform()
-    }
-    fun Packaging.() {
-        exclude("build/generated/source/**")
     }
     lint {
         abortOnError = true

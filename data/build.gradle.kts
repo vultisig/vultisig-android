@@ -48,7 +48,7 @@ protobuf {
 
     plugins {
         id("kotlinx-protobuf-gen") {
-            artifact = "io.github.dogacel:kotlinx-protobuf-gen:0.0.1:jvm8@jar"
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen}:jvm8@jar"
         }
     }
 
