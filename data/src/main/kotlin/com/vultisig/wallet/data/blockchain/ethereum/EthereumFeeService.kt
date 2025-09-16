@@ -115,7 +115,6 @@ class EthereumFeeService @Inject constructor(
         }
     }
 
-    // TODO: Show properly fee amount on the UI (upcoming PR)
     private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
         return if (this is GasFees) {
             this.copy(amount = this.amount + l1FeesAmount)
@@ -124,6 +123,10 @@ class EthereumFeeService @Inject constructor(
         } else {
             error("Fee Type Not Supported")
         }
+    }
+
+    override suspend fun calculateDefaultFees(): Fee {
+        TODO("Not yet implemented")
     }
 
     companion object {

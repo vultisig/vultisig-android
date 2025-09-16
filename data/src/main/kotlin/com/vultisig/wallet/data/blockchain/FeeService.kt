@@ -5,4 +5,5 @@ import java.math.BigInteger
 
 interface FeeService {
     suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean): Fee
+    suspend fun calculateDefaultFees(): Fee
 }
