@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
+    <issue id="All" severity="warning">
+        <ignore path="**/build/generated/source/**" />
+    </issue>
     <issue id="AndroidGradlePluginVersion" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
