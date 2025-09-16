@@ -29,9 +29,9 @@ object TonHelper {
 
         val tonSpecific = payload.blockChainSpecific as? BlockChainSpecific.Ton
             ?: throw RuntimeException("Failed to get TON chain specific data")
-
+        
         val publicKey = PublicKey(
-            payload.coin.hexPublicKey.hexToByteArray(),
+            payload.coin.hexPublicKey.hexToByteArray(), 
             PublicKeyType.ED25519
         )
 
@@ -57,7 +57,7 @@ object TonHelper {
     ): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
         val amount = if (tonSpecific.sendMaxAmount) 0L else payload.toAmount.toLong()
-
+        
         val mode = calculateSendMode(tonSpecific.sendMaxAmount)
 
         return TheOpenNetwork.Transfer.newBuilder()
@@ -111,7 +111,7 @@ object TonHelper {
         } else {
             TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
         }
-
+        
         // Always include IGNORE_ACTION_PHASE_ERRORS to prevent retry loops
         return baseMode or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
     }
