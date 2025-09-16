@@ -9,6 +9,6 @@ object VsAuxiliaryLinks {
     const val TWITTER = "https://twitter.com/vultisig"
     const val DISCORD = "https://discord.gg/54wEtGYxuv"
     const val VULT_TOKEN = "https://vultisig.com/vult"
-    const val VULT_WEBSIRE = "https://vultisig.com"
+    const val VULT_WEBSITE = "https://vultisig.com"
     const val GOOGLE_PLAY = "https://play.google.com/store/apps/details?id=com.vultisig.wallet"
 }

@@ -149,7 +149,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vult),
                 leadingIcon = com.vultisig.wallet.R.drawable.vult,
-                trailingIcon = com.vultisig.wallet.R.drawable.ic_small_caret_right
+                trailingIcon = R.drawable.ic_small_caret_right
             )
         )
     data object Github :
@@ -307,7 +307,7 @@ internal class SettingsViewModel @Inject constructor(
                 // TODO: Implement education section navigation
             }
 
-            VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSIRE))
+            VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))
         }
     }
 
