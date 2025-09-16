@@ -3,8 +3,14 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'build/generated/source/**'
+      - '**/build/generated/source/**'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - 'build/generated/source/**'
+      - '**/build/generated/source/**'
 
 jobs:
   build-and-test:
@@ -38,7 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew build test --parallel --build-cache --no-daemon --exclude '**/build/generated/source/**'
+        run: ./gradlew build test --parallel --build-cache --no-daemon
       
       # Enable KVM for better emulator performance
       - name: Enable KVM
