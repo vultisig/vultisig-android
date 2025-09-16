@@ -4,12 +4,10 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - 'build/generated/source/**'
       - '**/build/generated/source/**'
   pull_request:
     branches: [ "main" ]
     paths-ignore:
-      - 'build/generated/source/**'
       - '**/build/generated/source/**'
 
 jobs:
