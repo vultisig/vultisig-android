@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,7 +40,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlinx.coroutines.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -388,7 +388,7 @@ class SchnorrKeygen(
             }
 
             val reshareSetupMsg: ByteArray
-            if (isInitiatingDevice) {
+            if (isInitiatingDevice && attempt == 0) {
                 // DKLS/Schnorr reshare needs to upload a different setup message, thus here pass in an additional header as "eddsa" to make sure
                 // DKLS and Schnorr setup messages will be saved differently
                 reshareSetupMsg = getSchnorrReshareSetupMessage(keyshareHandle)
