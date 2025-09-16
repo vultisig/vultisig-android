@@ -270,7 +270,7 @@ class DKLSKeygen(
         try {
             val keygenSetupMsg: ByteArray
 
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 keygenSetupMsg = getDklsSetupMessage()
 
                 sessionApi.uploadSetupMessage(
@@ -452,7 +452,7 @@ class DKLSKeygen(
             }
 
             val reshareSetupMsg: ByteArray
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 reshareSetupMsg = getDklsReshareSetupMessage(keyshareHandle)
 
                 sessionApi.uploadSetupMessage(
