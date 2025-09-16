@@ -51,6 +51,7 @@ android {
     lint {
         abortOnError = true
         absolutePaths = false
+        checkGeneratedSources = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
     }
 }

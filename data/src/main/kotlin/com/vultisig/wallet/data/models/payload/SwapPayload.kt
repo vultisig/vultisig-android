@@ -31,9 +31,7 @@ sealed class SwapPayload {
 
         override val dstTokenValue: TokenValue
             get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
+                value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
                 token = dstToken,
             )
 
@@ -57,9 +55,7 @@ sealed class SwapPayload {
 
         override val dstTokenValue: TokenValue
             get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
+                value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
                 token = dstToken,
             )
 
@@ -83,9 +79,7 @@ sealed class SwapPayload {
 
         override val dstTokenValue: TokenValue
             get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
+                value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
                 token = dstToken,
             )
 
@@ -109,9 +103,7 @@ sealed class SwapPayload {
 
         override val dstTokenValue: TokenValue
             get() = TokenValue(
-                value = data.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger(),
+                value = data.toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
                 token = dstToken,
             )
     }

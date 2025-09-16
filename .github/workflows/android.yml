@@ -3,12 +3,8 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - '**/build/generated/source/**'
   pull_request:
     branches: [ "main" ]
-    paths-ignore:
-      - '**/build/generated/source/**'
 
 jobs:
   build-and-test:
