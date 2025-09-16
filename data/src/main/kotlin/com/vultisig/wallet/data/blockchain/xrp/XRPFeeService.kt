@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.xrp
 
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleServerStateResponseJson
+import com.vultisig.wallet.data.api.getBaseReserve
 import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
@@ -40,10 +41,9 @@ class XRPFeeService(
 
         // Fetch the destination, check if it does not exist, and include reservedBase fees
         val accountData = accountStateDeferred.await()?.result?.accountData
-        val serverState = serverStateDeferred.await().result?.state
+
         val accountActivationFee: BigInteger = if (accountData == null) {
-            serverState?.validateLedger?.reservedBase?.toBigInteger()
-                ?: error("XRPFeeService RPC Error: Can't fetch fees")
+            serverStateDeferred.await().getBaseReserve()
         } else {
             BigInteger.ZERO
         }

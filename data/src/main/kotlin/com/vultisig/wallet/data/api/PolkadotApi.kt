@@ -27,6 +27,7 @@ interface PolkadotApi {
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
     suspend fun getBlockHeader(): BigInteger
     suspend fun broadcastTransaction(tx: String): String?
+    suspend fun queryInfo(tx: String)
 }
 
 internal class PolkadotApiImp @Inject constructor(
@@ -144,5 +145,20 @@ internal class PolkadotApiImp @Inject constructor(
             throw Exception("Error broadcasting transaction: $responseContent")
         }
         return responseContent.result
+    }
+
+    override suspend fun queryInfo(tx: String) {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "payment_queryInfo",
+            params = buildJsonArray {
+                add(if (tx.startsWith("0x")) tx else "0x${tx}")
+            },
+            id = 1,
+        )
+
+        val response = httpClient.post(polkadotApiUrl) {
+            setBody(payload)
+        }
     }
 }

@@ -153,6 +153,7 @@ internal class RippleApiImp @Inject constructor(
         }
     }
 
+    // TODO: REMOVE
     // Returning these default values is acceptable if the RPC call fails. Reserve balances change
     // infrequently, and fetching them (even if it sometimes fails) is preferable to hardcoding them
     private fun getDefaultRippleStateServer() = RippleServerStateResponseJson(
@@ -161,7 +162,10 @@ internal class RippleApiImp @Inject constructor(
                 validateLedger = RippleServerStateResultJson.RippleStateJson.RippleValidateLedger(
                     reservedBase = 1000000,
                     reserveInc = 200000,
-                )
+                    baseFee = 0L,
+                ),
+                loadBase = 0L,
+                loadFactor = 0L,
             )
         )
     )
@@ -172,16 +176,19 @@ internal class RippleApiImp @Inject constructor(
     }
 }
 
-private fun RippleAccountInfoResponseJson.getBalance(): BigInteger =
+internal fun RippleAccountInfoResponseJson.getBalance(): BigInteger =
     this.result?.accountData?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
-private fun RippleAccountInfoResponseJson.getOwnerCount(): BigInteger =
+internal fun RippleAccountInfoResponseJson.getOwnerCount(): BigInteger =
     this.result?.accountData?.ownerCount?.toBigInteger() ?: BigInteger.ZERO
 
-private fun RippleServerStateResponseJson.getBaseReserve(): BigInteger =
+internal fun RippleServerStateResponseJson.getBaseReserve(): BigInteger =
     this.result?.state?.validateLedger?.reservedBase?.toBigInteger() ?: BigInteger.ZERO
 
-private fun RippleServerStateResponseJson.getIncReserve(): BigInteger =
+internal fun RippleServerStateResponseJson.getIncReserve(): BigInteger =
+    this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
+
+internal fun RippleServerStateResponseJson.getReserveFees(): BigInteger =
     this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
 
 
