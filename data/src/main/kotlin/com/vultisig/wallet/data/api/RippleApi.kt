@@ -228,13 +228,19 @@ data class RippleServerStateResultJson(
     data class RippleStateJson(
         @SerialName("validated_ledger")
         val validateLedger: RippleValidateLedger,
+        @SerialName("load_base")
+        val loadBase: Long,
+        @SerialName("load_factor")
+        val loadFactor: Long,
     ) {
         @Serializable
         data class RippleValidateLedger(
             @SerialName("reserve_base")
             val reservedBase: Long,
             @SerialName("reserve_inc")
-            val reserveInc: Long
+            val reserveInc: Long,
+            @SerialName("base_fee")
+            val baseFee: Long
         )
     }
 }
