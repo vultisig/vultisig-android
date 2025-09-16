@@ -33,7 +33,8 @@ private class VsUriHandler(
         get() = listOf(
             VsAuxiliaryLinks.PRIVACY,
             VsAuxiliaryLinks.TERMS_OF_SERVICE,
-            VsAuxiliaryLinks.VULT,
+            VsAuxiliaryLinks.VULT_TOKEN,
+            VsAuxiliaryLinks.VULT_WEBSIRE,
         ).contains(this)
 
 }
