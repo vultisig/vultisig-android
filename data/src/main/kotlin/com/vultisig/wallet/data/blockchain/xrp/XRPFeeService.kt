@@ -34,9 +34,11 @@ class XRPFeeService(
         val serverStateDeferred = async { rippleApi.fetchServerState() }
         val accountStateDeferred = async { rippleApi.fetchAccountsInfo(to!!) }
 
+        // estimate network fees
         val computedFee = computeServerStateFee(serverStateDeferred)
         val networkFee = maxOf(computedFee, MIN_PROTOCOL_FEE)
 
+        // Fetch the destination, check if it does not exist, and include reservedBase fees
         val accountData = accountStateDeferred.await()?.result?.accountData
         val serverState = serverStateDeferred.await().result?.state
         val accountActivationFee: BigInteger = if (accountData == null) {
