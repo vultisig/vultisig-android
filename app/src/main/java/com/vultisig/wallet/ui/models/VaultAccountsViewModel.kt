@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,12 +25,15 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -47,6 +51,8 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
+    val filteredAccounts : List<AccountUiModel> = emptyList(),
+    val searchTextFieldState: TextFieldState = TextFieldState()
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
 }
@@ -91,6 +97,24 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
+        collectSearchChainName()
+    }
+
+    private fun collectSearchChainName() {
+        uiState.value.searchTextFieldState.textAsFlow().onEach { searchedValue ->
+            val filteredAccounts = if (searchedValue.isEmpty()) uiState.value.accounts
+            else uiState.value.accounts.filter {
+                it.chainName.contains(
+                    searchedValue,
+                    ignoreCase = true
+                )
+            }
+            uiState.update {
+                it.copy(filteredAccounts = filteredAccounts)
+            }
+        }.launchIn(
+            viewModelScope
+        )
     }
 
     private fun showGlobalBackupReminder() {
@@ -215,7 +239,9 @@ internal class VaultAccountsViewModel @Inject constructor(
 
         uiState.update {
             it.copy(
-                totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                totalFiatValue = totalFiatValue,
+                accounts = accountsUiModel,
+                filteredAccounts = accountsUiModel,
             )
         }
         updateRefreshing(false)
@@ -273,7 +299,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun openSettings() {
-         vaultId?.let { vaultId ->
+        vaultId?.let { vaultId ->
             viewModelScope.launch {
                 Timber.d("openSettings($vaultId)")
                 navigator.navigate(Destination.Settings(vaultId = vaultId))

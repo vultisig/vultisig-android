@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,24 +29,24 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.AccountItem
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AnimatedPrice
 import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
-import com.vultisig.wallet.ui.screens.v2.home.components.SearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
+import com.vultisig.wallet.ui.screens.v2.home.components.TabMenuAndSearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButtonType
 import com.vultisig.wallet.ui.screens.v2.home.components.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletEarnSelect
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +66,16 @@ internal fun HomePage(
 ) {
 
     val snackbarState = rememberVsSnackbarState()
-    val coroutineScope = rememberCoroutineScope()
+    var isTabMenu by remember {
+        mutableStateOf(true)
+    }
+    val isBottomBarVisible = remember {
+        derivedStateOf { isTabMenu }
+    }
+
+    val isShowingSearchResult = remember {
+        derivedStateOf { isTabMenu.not() }
+    }
 
     ScaffoldWithExpandableTopBar(
         snackbarState = snackbarState,
@@ -187,29 +198,41 @@ internal fun HomePage(
                 }
 
                 UiSpacer(
-                    size = 16.dp
+                    size = 32.dp
+                )
+
+                UiHorizontalDivider(
+                    color = Theme.colors.borders.light
+                )
+
+                UiSpacer(
+                    size = 20.dp
                 )
 
             }
         },
-        bottomBarContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                Row(
+        bottomBarContent = if (isBottomBarVisible.value) {
+            {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    WalletEarnSelect()
-                    CameraButton(
-                        onClick = openCamera
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .align(Alignment.BottomCenter),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        WalletEarnSelect()
+                        CameraButton(
+                            onClick = openCamera
+                        )
+                    }
                 }
             }
+        } else {
+            {}
         },
         content = { innerPadding ->
             Box(
@@ -237,11 +260,19 @@ internal fun HomePage(
                         UiSpacer(16.dp)
                     }
 
-                    SearchBar(
+                    TabMenuAndSearchBar(
                         modifier = Modifier.padding(
                             horizontal = 16.dp,
                         ),
                         onEditClick = onChooseChains,
+                        isTabMenu = isTabMenu,
+                        onSearchClick = {
+                            isTabMenu = false
+                        },
+                        onCancelSearchClick = {
+                            isTabMenu = true
+                        },
+                        searchTextFiledState = state.searchTextFieldState,
                     )
 
                     TopShineContainer(
@@ -249,44 +280,27 @@ internal fun HomePage(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-
-                        LazyColumn {
-                            itemsIndexed(
-                                items = state.accounts,
-                                key = { _, account -> account.chainName },
-                            ) { index, account ->
-                                Column {
-                                    AccountItem(
-                                        modifier = Modifier.padding(
-                                            horizontal = 16.dp,
-                                            vertical = 12.dp
-                                        ),
-                                        account = account,
-                                        isBalanceVisible = state.isBalanceValueVisible,
-                                        onClick = {
-                                            onAccountClick(account)
-                                        },
-                                        onCopy = {
-                                            coroutineScope.launch {
-                                                snackbarState.show("${account.chainName} Address Copied")
-                                            }
-                                        },
-                                    )
-
-                                    if (index != state.accounts.lastIndex) {
-
-                                        UiHorizontalDivider(
-                                            color = Theme.colors.borders.light,
-                                        )
-                                    }
-                                }
-
-                            }
-
+                        if (isShowingSearchResult.value && state.filteredAccounts.isEmpty()) {
+                            NoChainFound(
+                                modifier = Modifier
+                                    .weight(1f),
+                                onChooseChains = onChooseChains
+                            )
+                        } else {
+                            AccountList(
+                                isShowingSearchResult = isShowingSearchResult,
+                                onAccountClick = onAccountClick,
+                                snackbarState = snackbarState,
+                                isBalanceVisible = state.isBalanceValueVisible,
+                                accounts = state.accounts,
+                                filteredAccounts = state.filteredAccounts,
+                            )
                         }
                     }
                 }
-                BottomFadeEffect()
+                if (isTabMenu) {
+                    BottomFadeEffect()
+                }
             }
         }
     )
