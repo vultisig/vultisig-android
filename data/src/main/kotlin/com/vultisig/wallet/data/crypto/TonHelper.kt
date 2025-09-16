@@ -29,46 +29,47 @@ object TonHelper {
 
         val tonSpecific = payload.blockChainSpecific as? BlockChainSpecific.Ton
             ?: throw RuntimeException("Failed to get TON chain specific data")
-        
+
         val publicKey = PublicKey(
-            payload.coin.hexPublicKey.hexToByteArray(), 
+            payload.coin.hexPublicKey.hexToByteArray(),
             PublicKeyType.ED25519
         )
 
         val transfer = if (payload.coin.isNativeToken) {
-            buildNativeTransfer(payload, tonSpecific)
+            buildNativeTransfer(
+                payload,
+                tonSpecific
+            )
         } else {
-            buildJettonTransfer(payload, tonSpecific)
+            buildJettonTransfer(
+                payload,
+                tonSpecific
+            )
         }
 
-        return TheOpenNetwork.SigningInput.newBuilder()
-            .addMessages(transfer)
+        return TheOpenNetwork.SigningInput.newBuilder().addMessages(transfer)
             .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
             .setExpireAt(tonSpecific.expireAt.toInt())
             .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .build()
-            .toByteArray()
+            .setPublicKey(ByteString.copyFrom(publicKey.data())).build().toByteArray()
     }
 
     private fun buildNativeTransfer(
-        payload: KeysignPayload,
-        tonSpecific: BlockChainSpecific.Ton
+        payload: KeysignPayload, tonSpecific: BlockChainSpecific.Ton
     ): TheOpenNetwork.Transfer {
-        val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
+        val toAddress = AnyAddress(
+            payload.toAddress,
+            CoinType.TON
+        )
         val amount = if (tonSpecific.sendMaxAmount) 0L else payload.toAmount.toLong()
-        
+
         val mode = calculateSendMode(tonSpecific.sendMaxAmount)
 
-        return TheOpenNetwork.Transfer.newBuilder()
-            .setDest(toAddress.description())
-            .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
-            .setMode(mode)
-            .setBounceable(tonSpecific.bounceable)
-            .apply {
+        return TheOpenNetwork.Transfer.newBuilder().setDest(toAddress.description())
+            .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray())).setMode(mode)
+            .setBounceable(tonSpecific.bounceable).apply {
                 payload.memo?.let { setComment(it) }
-            }
-            .build()
+            }.build()
     }
 
     private fun buildJettonTransfer(
@@ -76,8 +77,11 @@ object TonHelper {
         tonSpecific: BlockChainSpecific.Ton,
     ): TheOpenNetwork.Transfer {
         // Convert destination to bounceable, as jettons addresses are always EQ
-        val destinationAddress =
-            TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
+        val destinationAddress = TONAddressConverter.toUserFriendly(
+            payload.toAddress,
+            true,
+            false
+        )
 
         require(tonSpecific.jettonAddress.isNotEmpty()) {
             "Jetton address cannot be empty"
@@ -87,22 +91,21 @@ object TonHelper {
 
         val jettonTransfer = TheOpenNetwork.JettonTransfer.newBuilder()
             .setJettonAmount(ByteString.copyFrom(payload.toAmount.toHexString().toHexByteArray()))
-            .setResponseAddress(payload.coin.address)
-            .setToOwner(destinationAddress)
+            .setResponseAddress(payload.coin.address).setToOwner(destinationAddress)
             .setForwardAmount(ByteString.copyFrom(forwardAmountMsg.toHexString().toHexByteArray()))
             .build()
 
-        val mode = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
-                TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
+        val mode =
+            TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
 
-        return TheOpenNetwork.Transfer.newBuilder()
-            .setAmount(ByteString.copyFrom(RECOMMENDED_JETTONS_AMOUNT.toHexString().toHexByteArray()))
-            .setComment(payload.memo.orEmpty())
-            .setBounceable(true) // Jettons always bounceable
+        return TheOpenNetwork.Transfer.newBuilder().setAmount(
+                ByteString.copyFrom(
+                    RECOMMENDED_JETTONS_AMOUNT.toHexString().toHexByteArray()
+                )
+            ).setComment(payload.memo.orEmpty()).setBounceable(true) // Jettons always bounceable
             .setMode(mode)
             .setDest(tonSpecific.jettonAddress) // Will be set to origin Jetton address
-            .setJettonTransfer(jettonTransfer)
-            .build()
+            .setJettonTransfer(jettonTransfer).build()
     }
 
     private fun calculateSendMode(sendMaxAmount: Boolean): Int {
@@ -111,40 +114,47 @@ object TonHelper {
         } else {
             TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
         }
-        
+
         // Always include IGNORE_ACTION_PHASE_ERRORS to prevent retry loops
         return baseMode or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
     }
 
     fun getPreSignedImageHash(payload: KeysignPayload): List<String> {
         val inputData = getPreSignedInputData(payload)
-        val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
-            .parseFrom(hashes)
-            .checkError()
+        val hashes = TransactionCompiler.preImageHashes(
+            CoinType.TON,
+            inputData
+        )
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
 
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
 
     fun getSignedTransaction(
-        vaultHexPublicKey: String,
-        payload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>
+        vaultHexPublicKey: String, payload: KeysignPayload, signatures: Map<String, KeysignResponse>
     ): SignedTransactionResult {
         val pubKeyData = vaultHexPublicKey.hexToByteArray()
-        PublicKey(pubKeyData, PublicKeyType.ED25519)
+        PublicKey(
+            pubKeyData,
+            PublicKeyType.ED25519
+        )
         val inputData = getPreSignedInputData(payload)
-        val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
-        val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
-            .parseFrom(hashes)
-            .checkError()
+        val hashes = TransactionCompiler.preImageHashes(
+            CoinType.TON,
+            inputData
+        )
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
 
-        val signature = signatures[Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())]
-            ?.getSignature()
-            ?: throw Exception("Signature not found")
+        val signature =
+            signatures[Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())]?.getSignature()
+                ?: throw Exception("Signature not found")
 
         allSignatures.add(signature)
         publicKeys.add(pubKeyData)
@@ -156,8 +166,7 @@ object TonHelper {
             publicKeys
         )
 
-        val output = TheOpenNetwork.SigningOutput
-            .parseFrom(compileWithSignature)
+        val output = TheOpenNetwork.SigningOutput.parseFrom(compileWithSignature)
 
         return SignedTransactionResult(
             rawTransaction = output.encoded,
