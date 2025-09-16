@@ -217,7 +217,8 @@ private fun SendFormScreen(
                                         .background(Theme.colors.neutral100),
                                     logo = selectedToken?.tokenLogo ?: "",
                                     title = selectedToken?.title ?: "",
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier
+                                        .size(16.dp)
                                 )
 
                                 UiSpacer(4.dp)
@@ -228,9 +229,11 @@ private fun SendFormScreen(
                                     color = Theme.colors.text.extraLight,
                                 )
                             }
-                        }) {
+                        }
+                    ) {
                         Column(
-                            modifier = Modifier.padding(
+                            modifier = Modifier
+                                .padding(
                                     start = 12.dp,
                                     top = 16.dp,
                                     end = 12.dp,
@@ -249,7 +252,8 @@ private fun SendFormScreen(
                             UiSpacer(12.dp)
 
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth(),
                             ) {
                                 TokenChip(
                                     selectedToken = state.selectedCoin,
@@ -259,7 +263,8 @@ private fun SendFormScreen(
                                 Column(
                                     horizontalAlignment = Alignment.End,
                                     verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 ) {
                                     state.selectedCoin?.let { token ->
                                         Text(
@@ -305,9 +310,11 @@ private fun SendFormScreen(
                                 overflow = TextOverflow.MiddleEllipsis,
                                 modifier = Modifier.weight(1f),
                             )
-                        }) {
+                        }
+                    ) {
                         Column(
-                            modifier = Modifier.padding(
+                            modifier = Modifier
+                                .padding(
                                     start = 12.dp,
                                     top = 16.dp,
                                     end = 12.dp,
@@ -379,10 +386,12 @@ private fun SendFormScreen(
                                 },
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Next,
-                                innerState = if (state.dstAddressError != null) VsTextInputFieldInnerState.Error
+                                innerState = if (state.dstAddressError != null)
+                                    VsTextInputFieldInnerState.Error
                                 else VsTextInputFieldInnerState.Default,
                                 footNote = state.dstAddressError?.asString(),
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth(),
                             )
 
                             UiSpacer(16.dp)
@@ -425,7 +434,9 @@ private fun SendFormScreen(
                     FoldableSection(
                         expanded = state.expandedSection == SendSections.Amount,
                         onToggle = {
-                            if (state.isDstAddressComplete && addressFieldState.text.isNotEmpty()) {
+                            if (state.isDstAddressComplete &&
+                                addressFieldState.text.isNotEmpty()
+                            ) {
                                 onExpandSection(SendSections.Amount)
                             }
                         },
@@ -433,7 +444,8 @@ private fun SendFormScreen(
                             if (state.hasGasSettings) {
                                 Row(
                                     horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 ) {
                                     UiIcon(
                                         drawableResId = R.drawable.advance_gas_settings, // TODO different icon
@@ -447,7 +459,8 @@ private fun SendFormScreen(
                         title = "Amount"
                     ) {
                         Column(
-                            modifier = Modifier.padding(
+                            modifier = Modifier
+                                .padding(
                                     start = 12.dp,
                                     top = 16.dp,
                                     end = 12.dp,
@@ -493,7 +506,8 @@ private fun SendFormScreen(
                                             lineLimits = TextFieldLineLimits.MultiLine(
                                                 maxHeightInLines = 3,
                                             ),
-                                            textStyle = Theme.brockmann.headings.largeTitle.copy(
+                                            textStyle = Theme.brockmann.headings.largeTitle
+                                                .copy(
                                                     color = Theme.colors.text.primary,
                                                     textAlign = TextAlign.Center,
                                                 ),
@@ -506,7 +520,8 @@ private fun SendFormScreen(
                                                 focusManager.clearFocus()
                                                 onSend()
                                             },
-                                            modifier = Modifier.width(IntrinsicSize.Min),
+                                            modifier = Modifier
+                                                .width(IntrinsicSize.Min),
                                             decorator = { textField ->
                                                 if (primaryFieldState.text.isEmpty()) {
                                                     Text(
@@ -514,11 +529,13 @@ private fun SendFormScreen(
                                                         color = Theme.colors.text.light,
                                                         style = Theme.brockmann.headings.largeTitle,
                                                         textAlign = TextAlign.Center,
-                                                        modifier = Modifier.wrapContentWidth()
+                                                        modifier = Modifier
+                                                            .wrapContentWidth()
                                                     )
                                                 }
                                                 textField()
-                                            })
+                                            }
+                                        )
 
                                         Text(
                                             text = " $primaryAmountText",
@@ -541,7 +558,8 @@ private fun SendFormScreen(
                                     onTokenSelected = {
                                         onToogleAmountInputType(it)
                                     },
-                                    modifier = Modifier.align(Alignment.CenterEnd),
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd),
                                 )
                             }
 
@@ -555,28 +573,32 @@ private fun SendFormScreen(
                                     title = "25%",
                                     isSelected = false,
                                     onClick = { onChoosePercentageAmount(0.25f) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 )
 
                                 PercentageChip(
                                     title = "50%",
                                     isSelected = false,
                                     onClick = { onChoosePercentageAmount(0.5f) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 )
 
                                 PercentageChip(
                                     title = "75%",
                                     isSelected = false,
                                     onClick = { onChoosePercentageAmount(0.75f) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 )
 
                                 PercentageChip(
                                     title = "Max",
                                     isSelected = false,
                                     onClick = onChooseMaxTokenAmount,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 )
                             }
 
@@ -604,7 +626,8 @@ private fun SendFormScreen(
                                     style = Theme.brockmann.body.s.medium,
                                     color = Theme.colors.text.light,
                                     textAlign = TextAlign.End,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier
+                                        .weight(1f),
                                 )
                             }
 
@@ -629,19 +652,22 @@ private fun SendFormScreen(
                                         }
                                         .padding(
                                             vertical = 2.dp,
-                                        )) {
+                                        )
+                                ) {
                                     Text(
                                         text = "Add MEMO",
                                         style = Theme.brockmann.supplementary.caption,
                                         color = Theme.colors.text.extraLight,
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier
+                                            .weight(1f),
                                     )
 
                                     UiIcon(
                                         drawableResId = R.drawable.ic_caret_down,
                                         tint = Theme.colors.text.primary,
                                         size = 16.dp,
-                                        modifier = Modifier.rotate(rotationAngle)
+                                        modifier = Modifier
+                                            .rotate(rotationAngle)
                                     )
                                 }
 
@@ -656,10 +682,12 @@ private fun SendFormScreen(
                                         hint = "Enter Memo",
                                         trailingIcon = R.drawable.ic_paste,
                                         onTrailingIconClick = {
-                                            clipboardData.value?.takeIf { it.isNotEmpty() }
+                                            clipboardData.value
+                                                ?.takeIf { it.isNotEmpty() }
                                                 ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
                                         },
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
                                     )
 
                                     UiSpacer(12.dp)
@@ -668,7 +696,8 @@ private fun SendFormScreen(
 
                             if (state.showGasFee) {
                                 FadingHorizontalDivider(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
                                 )
 
                                 UiSpacer(12.dp)
@@ -705,8 +734,10 @@ private fun SendFormScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
-                state = if (state.isLoading) VsButtonState.Disabled
-                else VsButtonState.Enabled,
+                state = if (state.isLoading)
+                    VsButtonState.Disabled
+                else
+                    VsButtonState.Enabled,
                 onClick = {
                     if (!state.isLoading) {
                         focusManager.clearFocus()
@@ -720,7 +751,8 @@ private fun SendFormScreen(
                         vertical = 12.dp,
                     ),
             )
-        })
+        }
+    )
 }
 
 @Composable
@@ -740,7 +772,8 @@ internal fun EstimatedNetworkFee(
 
         Column(
             horizontalAlignment = Alignment.End,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f),
         ) {
             if (isLoading) {
                 UiPlaceholderLoader(
@@ -797,16 +830,18 @@ internal fun FadingHorizontalDivider(
 }
 
 @Composable
-private fun Modifier.vsClickableBackground() = border(
-    border = BorderStroke(
-        width = 1.dp,
-        color = Theme.colors.borders.light,
-    ),
-    shape = RoundedCornerShape(12.dp),
-).background(
-        color = Theme.colors.backgrounds.secondary,
+private fun Modifier.vsClickableBackground() =
+    border(
+        border = BorderStroke(
+            width = 1.dp,
+            color = Theme.colors.borders.light,
+        ),
         shape = RoundedCornerShape(12.dp),
     )
+        .background(
+            color = Theme.colors.backgrounds.secondary,
+            shape = RoundedCornerShape(12.dp),
+        )
 
 @Composable
 private fun PercentageChip(
@@ -823,15 +858,17 @@ private fun PercentageChip(
         modifier = modifier
             .clickable(onClick = onClick)
             .then(
-                if (isSelected) Modifier.background(
-                    color = Theme.colors.primary.accent3,
-                    shape = RoundedCornerShape(99.dp),
-                )
-                else Modifier.border(
-                    width = 1.dp,
-                    color = Theme.colors.borders.light,
-                    shape = RoundedCornerShape(99.dp),
-                )
+                if (isSelected)
+                    Modifier.background(
+                        color = Theme.colors.primary.accent3,
+                        shape = RoundedCornerShape(99.dp),
+                    )
+                else
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Theme.colors.borders.light,
+                        shape = RoundedCornerShape(99.dp),
+                    )
             )
             .padding(
                 all = 4.dp,
@@ -883,10 +920,11 @@ private fun ToggleButton(
         modifier = Modifier
             .clickable(onClick = onClick)
             .then(
-                if (isSelected) Modifier.background(
-                    color = Theme.colors.primary.accent3,
-                    shape = CircleShape,
-                )
+                if (isSelected)
+                    Modifier.background(
+                        color = Theme.colors.primary.accent3,
+                        shape = CircleShape,
+                    )
                 else Modifier
             )
             .padding(all = 8.dp)
@@ -909,7 +947,8 @@ private fun FoldableSection(
     content: @Composable () -> Unit,
 ) {
     Column(
-        modifier = Modifier.border(
+        modifier = Modifier
+            .border(
                 width = 1.dp,
                 color = Theme.colors.borders.normal,
                 shape = RoundedCornerShape(12.dp),

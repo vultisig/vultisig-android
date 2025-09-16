@@ -246,8 +246,10 @@ object CardanoUtils {
 
             additionalInfo == 26 -> {
                 if (index + 3 >= bytes.size) error("CBOR length truncated")
-                val length =
-                    ((bytes[index].toInt() and 0xFF) shl 24) or ((bytes[index + 1].toInt() and 0xFF) shl 16) or ((bytes[index + 2].toInt() and 0xFF) shl 8) or (bytes[index + 3].toInt() and 0xFF)
+                val length = ((bytes[index].toInt() and 0xFF) shl 24) or
+                        ((bytes[index + 1].toInt() and 0xFF) shl 16) or
+                        ((bytes[index + 2].toInt() and 0xFF) shl 8) or
+                        (bytes[index + 3].toInt() and 0xFF)
                 Pair(
                     length,
                     4
