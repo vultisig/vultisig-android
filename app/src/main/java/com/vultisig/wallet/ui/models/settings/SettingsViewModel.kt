@@ -148,10 +148,11 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vult),
-                leadingIcon = com.vultisig.wallet.R.drawable.vult,
+                leadingIcon = R.drawable.vult,
                 trailingIcon = R.drawable.ic_small_caret_right
             )
         )
+    
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
