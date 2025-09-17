@@ -84,13 +84,6 @@ fun SearchBar(
                         Theme.colors.primary.accent4,
                     )
                 ),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Search,
-
-                ),
-                onKeyboardAction = {
-
-                },
                 modifier = Modifier
                     .padding(
                         all = 12.dp,

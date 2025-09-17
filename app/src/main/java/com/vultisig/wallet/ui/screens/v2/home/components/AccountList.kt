@@ -18,18 +18,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun AccountList(
-    isShowingSearchResult: State<Boolean>,
     onAccountClick: (AccountUiModel) -> Unit,
     snackbarState: VSSnackbarState,
-    filteredAccounts: List<AccountUiModel>,
     accounts: List<AccountUiModel>,
     isBalanceVisible: Boolean,
 ) {
     val coroutineScope = rememberCoroutineScope()
     LazyColumn {
         itemsIndexed(
-            items = if (isShowingSearchResult.value)
-                filteredAccounts else accounts,
+            items = accounts,
             key = { _, account -> account.chainName },
         ) { index, account ->
             Column {

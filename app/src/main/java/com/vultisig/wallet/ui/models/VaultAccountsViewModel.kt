@@ -25,15 +25,12 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -51,10 +48,18 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
-    val filteredAccounts : List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState()
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
+    val filteredAccounts : List<AccountUiModel>
+        get() = accounts.filter {
+            it.chainName.contains(
+                searchTextFieldState.text,
+                ignoreCase = true
+            )
+        }
+    val noChainFound: Boolean
+        get() = searchTextFieldState.text.isNotEmpty() && filteredAccounts.isEmpty()
 }
 
 internal data class AccountUiModel(
@@ -97,25 +102,8 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
-        collectSearchChainName()
     }
 
-    private fun collectSearchChainName() {
-        uiState.value.searchTextFieldState.textAsFlow().onEach { searchedValue ->
-            val filteredAccounts = if (searchedValue.isEmpty()) uiState.value.accounts
-            else uiState.value.accounts.filter {
-                it.chainName.contains(
-                    searchedValue,
-                    ignoreCase = true
-                )
-            }
-            uiState.update {
-                it.copy(filteredAccounts = filteredAccounts)
-            }
-        }.launchIn(
-            viewModelScope
-        )
-    }
 
     private fun showGlobalBackupReminder() {
         viewModelScope.launch {
@@ -241,7 +229,6 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.copy(
                 totalFiatValue = totalFiatValue,
                 accounts = accountsUiModel,
-                filteredAccounts = accountsUiModel,
             )
         }
         updateRefreshing(false)

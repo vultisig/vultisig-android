@@ -280,7 +280,7 @@ internal fun HomePage(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        if (isShowingSearchResult.value && state.filteredAccounts.isEmpty()) {
+                        if (isShowingSearchResult.value && state.noChainFound) {
                             NoChainFound(
                                 modifier = Modifier
                                     .weight(1f),
@@ -288,12 +288,10 @@ internal fun HomePage(
                             )
                         } else {
                             AccountList(
-                                isShowingSearchResult = isShowingSearchResult,
                                 onAccountClick = onAccountClick,
                                 snackbarState = snackbarState,
                                 isBalanceVisible = state.isBalanceValueVisible,
-                                accounts = state.accounts,
-                                filteredAccounts = state.filteredAccounts,
+                                accounts = state.filteredAccounts,
                             )
                         }
                     }
