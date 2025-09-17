@@ -59,8 +59,8 @@ internal class SolanaApiImp @Inject constructor(
 
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
-    private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
-    private val jupiterTokensUrl = "https://tokens.jup.ag/tokens"
+    private val splTokensInfoEndpoint2 = "https://lite-api.jup.ag/tokens/v2/search"
+    private val jupiterTokensUrl = "https://lite-api.jup.ag/tokens/v2/tag"
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload = RpcPayload(
@@ -213,7 +213,9 @@ internal class SolanaApiImp @Inject constructor(
         tokens.map { token ->
             async {
                 try {
-                    httpClient.get("$splTokensInfoEndpoint2/$token").body<SplTokenInfo>()
+                    httpClient.get(splTokensInfoEndpoint2){
+                        parameter("query", token)
+                    }.body<SplTokenInfo>()
                 } catch (e: Exception) {
                     Timber.tag("SolanaApiImp")
                         .e("Error getting spl token for $token message : ${e.message}")
@@ -226,7 +228,7 @@ internal class SolanaApiImp @Inject constructor(
     override suspend fun getJupiterTokens(): List<JupiterTokenResponseJson> =
         httpClient.get(jupiterTokensUrl) {
             parameter(
-                "tags",
+                "query",
                 "verified"
             )
         }.body()
