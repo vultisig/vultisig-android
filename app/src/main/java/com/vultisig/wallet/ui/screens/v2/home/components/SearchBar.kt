@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -111,7 +112,7 @@ fun SearchBar(
                         )
                         if (state.text.isEmpty()) {
                             Text(
-                                text = "Search",
+                                text = stringResource(R.string.search_bar_search),
                                 color = Theme.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
@@ -144,7 +145,7 @@ fun SearchBar(
                         size = 8.dp
                     )
                     Text(
-                        text = "Cancel",
+                        text = stringResource(R.string.search_bar_cancel),
                         color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                         modifier = Modifier

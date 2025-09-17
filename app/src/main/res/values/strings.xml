@@ -801,4 +801,6 @@
     <string name="no_chains_found">No chains found</string>
     <string name="no_chian_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
     <string name="no_chain_customize_chains">Customize chains</string>
+    <string name="search_bar_search">Search</string>
+    <string name="search_bar_cancel">Cancel</string>
 </resources>

@@ -555,4 +555,6 @@
     <string name="no_chains_found">Keine Ketten gefunden</string>
     <string name="no_chian_make_sure_that">Stellen Sie sicher, dass die gesuchte Kette aktiviert ist.</string>
     <string name="no_chain_customize_chains">Ketten anpassen</string>
+    <string name="search_bar_search">Suche</string>
+    <string name="search_bar_cancel">Abbrechen</string>
 </resources>
