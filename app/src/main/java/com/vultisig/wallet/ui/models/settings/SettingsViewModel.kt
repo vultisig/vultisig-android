@@ -254,6 +254,7 @@ internal class SettingsViewModel @Inject constructor(
                 items = listOf(
                     Twitter,
                     Vult,
+                    Discord,
                     Github,
                     VultisigWebsite
                 )
