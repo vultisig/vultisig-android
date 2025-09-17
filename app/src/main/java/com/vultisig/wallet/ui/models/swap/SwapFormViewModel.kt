@@ -288,15 +288,21 @@ internal class SwapFormViewModel @Inject constructor(
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
-
                 if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
-                        ?: BigInteger.ZERO) + swapFee
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
                 }
+
+                if (nativeTokenValue < ((estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO + swapFee))
+                ) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.signing_error_insufficient_funds)
+                    )
+                }
+
             }
 
             viewModelScope.launch {
