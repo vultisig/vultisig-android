@@ -13,6 +13,22 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
 
+/**
+ * Fee service for the Polkadot blockchain.
+ *
+ * Polkadot transaction fees are calculated using a weight-based fee model:
+ *   - Base fee: fixed minimum charged for every transaction
+ *   - Weight fee: proportional to the transaction's computational cost
+ *   - Length fee: proportional to the transaction's size in bytes
+ *   - Tip: optional, paid by user to prioritize transaction inclusion
+ *
+ * Formula (simplified):
+ *   final_fee = base_fee + (weight * coeff) + (length * coeff) + tip
+ *
+ * In this implementation:
+ *   - We prepare a valid Polkadot transaction payload.
+ *   - We can call `queryInfo` on the payload to get the chain-calculated dynamic fee.
+ */
 class PolkadotFeeService(
     private val polkadotApi: PolkadotApi,
 ): FeeService {
