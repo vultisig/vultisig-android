@@ -90,7 +90,6 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import java.math.BigInteger
 import java.util.Locale
 import kotlin.time.Duration
 
@@ -367,16 +366,6 @@ internal fun SwapScreen(
                     state.formError != null -> {
                         FormError(
                             errorMessage = state.formError.asString()
-                        )
-                    }
-
-                    state.minimumAmount != BigInteger.ZERO.toString() -> {
-                        FormError(
-                            errorMessage = stringResource(
-                                R.string.swap_form_minimum_amount,
-                                state.minimumAmount,
-                                state.selectedSrcToken?.title ?: ""
-                            )
                         )
                     }
                 }
