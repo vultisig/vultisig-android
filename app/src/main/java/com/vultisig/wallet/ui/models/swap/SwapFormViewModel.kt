@@ -102,7 +102,6 @@ internal data class SwapFormUiModel(
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
-    val minimumAmount: String = BigInteger.ZERO.toString(),
     val networkFee: String = "",
     val networkFeeFiat: String = "",
     val totalFee: String = "0",
@@ -233,9 +232,10 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFee = gasFee.value ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
             )
-            val gasFeeFiatValue = estimatedNetworkFeeFiatValue.value ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-            )
+            val gasFeeFiatValue =
+                estimatedNetworkFeeFiatValue.value ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
+                )
 
             val srcToken = selectedSrc.account.token
             val dstToken = selectedDst.account.token
@@ -362,7 +362,8 @@ internal class SwapFormViewModel @Inject constructor(
                         val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                         val dstAddress = if (!srcToken.isNativeToken &&
-                            srcToken.chain.standard == TokenStandard.EVM) {
+                            srcToken.chain.standard == TokenStandard.EVM
+                        ) {
                             quote.data.router ?: quote.data.inboundAddress ?: srcAddress
                         } else {
                             quote.data.inboundAddress ?: srcAddress
@@ -559,6 +560,7 @@ internal class SwapFormViewModel @Inject constructor(
             gasLimit = getGasLimit(srcToken),
         )
     } catch (e: Exception) {
+        Timber.d(e)
         throw InvalidTransactionDataException(
             UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
         )
@@ -702,7 +704,7 @@ internal class SwapFormViewModel @Inject constructor(
             srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
-        if(maxUsableTokenAmount <= BigInteger.ZERO) {
+        if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
             return
         }
@@ -840,9 +842,10 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private fun collectTotalFee() {
-        estimatedNetworkFeeFiatValue.filterNotNull().combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
-            gasFeeFiat + swapFeeFiat
-        }.onEach { totalFee ->
+        estimatedNetworkFeeFiatValue.filterNotNull()
+            .combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
+                gasFeeFiat + swapFeeFiat
+            }.onEach { totalFee ->
             uiState.update {
                 it.copy(totalFee = fiatValueToString(totalFee))
             }
@@ -938,18 +941,10 @@ internal class SwapFormViewModel @Inject constructor(
                                 val recommendedMinAmountTokenString =
                                     mapTokenValueToDecimalUiString(recommendedMinAmountToken)
                                 amount.let {
-                                    uiState.update {
-                                        if (amount < recommendedMinAmountToken.decimal) {
-                                            it.copy(
-                                                minimumAmount = recommendedMinAmountTokenString,
-                                                isSwapDisabled = true
-                                            )
-                                        } else {
-                                            it.copy(
-                                                minimumAmount = BigInteger.ZERO.toString(),
-                                                isSwapDisabled = false
-                                            )
-                                        }
+                                    if (amount < recommendedMinAmountToken.decimal) {
+                                        throw SwapException.SmallSwapAmount(
+                                            recommendedMinAmountTokenString
+                                        )
                                     }
                                 }
 
@@ -1219,8 +1214,16 @@ internal class SwapFormViewModel @Inject constructor(
                             is SwapException.NetworkConnection ->
                                 UiText.StringResource(R.string.network_connection_lost)
 
-                            is SwapException.SmallSwapAmount ->
-                                UiText.StringResource(R.string.swap_error_small_swap_amount)
+                            is SwapException.SmallSwapAmount -> {
+                                e.message?.let {
+                                    UiText.FormattedText(
+                                        R.string.swap_form_minimum_amount,
+                                        listOf(it, uiState.value.selectedSrcToken?.title ?: "")
+                                    )
+                                } ?: run {
+                                    UiText.StringResource(R.string.swap_error_amount_too_low)
+                                }
+                            }
 
                             is SwapException.InsufficientFunds ->
                                 UiText.StringResource(R.string.swap_error_small_insufficient_funds)
