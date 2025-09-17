@@ -31,7 +31,6 @@ data class QuoteSwapTransactionJson(
     val data: String,
 )
 
-
 @Serializable
 data class SwapRouteResponseJson(
     @SerialName("inputMint")
