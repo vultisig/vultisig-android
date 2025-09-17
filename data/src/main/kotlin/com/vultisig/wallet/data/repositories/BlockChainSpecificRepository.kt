@@ -337,28 +337,39 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUBSTRATE -> {
-            if (chain == Chain.Polkadot) {
-                val version: Pair<BigInteger, BigInteger> = polkadotApi.getRuntimeVersion()
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.Polkadot(
-                        recentBlockHash = polkadotApi.getBlockHash(),
-                        nonce = polkadotApi.getNonce(address),
-                        currentBlockNumber = polkadotApi.getBlockHeader(),
-                        specVersion = version.first.toLong().toUInt(),
-                        transactionVersion = version.second.toLong().toUInt(),
-                        genesisHash = polkadotApi.getGenesisBlockHash()
+            when (chain) {
+                Chain.Polkadot -> coroutineScope {
+                    val runtimeVersionDeferred = async { polkadotApi.getRuntimeVersion() }
+                    val blockHashDeferred = async { polkadotApi.getBlockHash() }
+                    val nonceDeferred = async { polkadotApi.getNonce(address) }
+                    val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
+                    val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
+                    
+                    val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
+                    
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Polkadot(
+                            recentBlockHash = blockHashDeferred.await(),
+                            nonce = nonceDeferred.await(),
+                            currentBlockNumber = blockHeaderDeferred.await(),
+                            specVersion = specVersion.toLong().toUInt(),
+                            transactionVersion = transactionVersion.toLong().toUInt(),
+                            genesisHash = genesisHashDeferred.await()
+                        )
                     )
-                )
-            } else {
-                error("Unsupported chain: $chain")
+                }
+                else -> error("Unsupported SUBSTRATE chain: $chain")
             }
         }
 
-        TokenStandard.SUI -> {
+        TokenStandard.SUI -> coroutineScope {
+            val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
+            val coinsDeferred = async { suiApi.getAllCoins(address) }
+            
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = suiApi.getReferenceGasPrice(),
-                    coins = suiApi.getAllCoins(address),
+                    referenceGasPrice = gasPriceDeferred.await(),
+                    coins = coinsDeferred.await(),
                 ),
                 utxos = emptyList(),
             )
