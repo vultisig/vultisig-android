@@ -46,7 +46,6 @@ data class PolkadotGetBlockHeaderNumberJson(
     val number: String,
 )
 
-
 @Serializable
 data class PolkadotBroadcastTransactionJson(
     @SerialName("result")
@@ -60,3 +59,14 @@ data class PolkadotBroadcastTransactionErrorJson(
     @SerialName("code")
     val code: Int,
 )
+
+@Serializable
+data class PolkadotQueryInfoResponseJson(
+    val result: QueryInfoPayload?,
+) {
+    @Serializable
+    data class QueryInfoPayload(
+        @SerialName("partialFee")
+        val partialFee: String?,
+    )
+}

@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.utils.toUnit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 
 /**
@@ -28,6 +30,9 @@ import java.math.BigInteger
  * In this implementation:
  *   - We prepare a valid Polkadot transaction payload.
  *   - We can call `queryInfo` on the payload to get the chain-calculated dynamic fee.
+ *   - Get the real fee from partialFee (RPC Endpoint already calculate everything for us)
+ *
+ * https://docs.polkadot.com/polkadot-protocol/parachain-basics/blocks-transactions-fees/fees/
  */
 class PolkadotFeeService(
     private val polkadotApi: PolkadotApi,
@@ -38,16 +43,17 @@ class PolkadotFeeService(
         isSwap: Boolean,
         to: String?
     ): Fee {
-        val address = ""
+        val address = "14VqLjSy3kz33xfxNGGQjovBUTSAJmQUvzNd6Uoob7hZM75K"
         val keySignPayload = buildPolkadotSpecific(address)
-        val helper = PolkadotHelper("").getPreSignedImageHash(keySignPayload)
 
-        val result = polkadotApi.queryInfo(helper.first())
-        println(result)
+        val serializedTransaction = PolkadotHelper("").getZeroSignedTransaction(keySignPayload)
 
-        return BasicFee(POLKADOT_DEFAULT_FEE)
+        val partialFee = polkadotApi.getPartialFee(serializedTransaction)
+
+        return BasicFee(partialFee)
     }
 
+    // TODO: Review if these data can just be injected
     private suspend fun buildPolkadotSpecific(address: String): KeysignPayload = coroutineScope {
         val polkadotCoin = Coins.coins[Chain.Polkadot]
             ?.first { it.isNativeToken }
@@ -63,8 +69,8 @@ class PolkadotFeeService(
 
         KeysignPayload(
             coin = polkadotCoin,
-            toAddress = "",
-            toAmount = BigInteger.ZERO,
+            toAddress = "13pL9fvtpczfCbk9tkPc7GUvukmTdLFGihXGetsRsokMsaM2",
+            toAmount = CoinType.POLKADOT.toUnit("0.1".toBigDecimal()),
             blockChainSpecific = BlockChainSpecific.Polkadot(
                 recentBlockHash = blockHashDeferred.await(),
                 nonce = nonceDeferred.await(),
@@ -85,6 +91,6 @@ class PolkadotFeeService(
     }
 
     private companion object {
-        val POLKADOT_DEFAULT_FEE = "250_000_000".toBigInteger()
+        val POLKADOT_DEFAULT_FEE = "250000000".toBigInteger()
     }
 }
