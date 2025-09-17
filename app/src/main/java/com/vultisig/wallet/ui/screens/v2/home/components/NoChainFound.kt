@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,7 @@ internal fun NoChainFound(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "No chains found",
+            text = stringResource(R.string.no_chains_found),
             style = Theme.brockmann.headings.title3,
             color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
@@ -42,7 +43,7 @@ internal fun NoChainFound(
         )
 
         Text(
-            text = "Make sure that the chain you’re looking for is enabled.",
+            text = stringResource(R.string.no_chian_make_sure_that),
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
@@ -56,7 +57,7 @@ internal fun NoChainFound(
             variant = VsButtonVariant.Primary,
             size = VsButtonSize.Mini,
             iconLeft = R.drawable.write,
-            label = "Customize chains",
+            label = stringResource(R.string.no_chain_customize_chains),
             onClick = onChooseChains
         )
     }

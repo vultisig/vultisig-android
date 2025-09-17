@@ -552,4 +552,7 @@
     <string name="earn">Verdienen</string>
     <string name="hide_balance">Guthaben verbergen</string>
     <string name="show_balance">Guthaben anzeigen</string>
+    <string name="no_chains_found">Keine Ketten gefunden</string>
+    <string name="no_chian_make_sure_that">Stellen Sie sicher, dass die gesuchte Kette aktiviert ist.</string>
+    <string name="no_chain_customize_chains">Ketten anpassen</string>
 </resources>

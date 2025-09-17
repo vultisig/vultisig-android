@@ -549,4 +549,7 @@
     <string name="earn">Ganhe</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
+    <string name="no_chains_found">Nenhuma corrente encontrada</string>
+    <string name="no_chian_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
+    <string name="no_chain_customize_chains">Personalizar correntes</string>
 </resources>
