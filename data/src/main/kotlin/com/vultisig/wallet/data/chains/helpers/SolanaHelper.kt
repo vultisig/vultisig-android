@@ -41,6 +41,7 @@ class SolanaHelper(
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
         val input = Solana.SigningInput.newBuilder()
+            .setV0Msg(true)
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setSender(keysignPayload.coin.address)
             .setPriorityFeePrice(
