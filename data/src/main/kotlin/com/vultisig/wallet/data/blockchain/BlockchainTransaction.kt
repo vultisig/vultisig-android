@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.blockchain
 import com.vultisig.wallet.data.models.Coin
 import java.math.BigInteger
 
-sealed interface Transaction {
+sealed interface BlockchainTransaction {
     val coin: Coin
     val vault: VaultData
     val amount: BigInteger
@@ -17,7 +17,7 @@ data class Transfer(
     override val amount: BigInteger,
     val to: String,
     val memo: String? = null,
-) : Transaction
+) : BlockchainTransaction
 
 data class Swap(
     override val coin: Coin,
@@ -27,7 +27,7 @@ data class Swap(
     val to: String,
     val callData: String,
     val approvalData: String?,
-): Transaction
+): BlockchainTransaction
 
 data class VaultData(
     val vaultHexPublicKey: String,

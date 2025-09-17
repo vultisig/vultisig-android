@@ -4,15 +4,15 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
+import com.vultisig.wallet.data.blockchain.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.utils.toUnit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 
 /**
@@ -38,30 +38,43 @@ class PolkadotFeeService(
     private val polkadotApi: PolkadotApi,
 ): FeeService {
     override suspend fun calculateFees(
-        chain: Chain,
-        limit: BigInteger,
-        isSwap: Boolean,
-        to: String?
+        transaction: BlockchainTransaction,
     ): Fee {
-        val address = "14VqLjSy3kz33xfxNGGQjovBUTSAJmQUvzNd6Uoob7hZM75K"
-        val keySignPayload = buildPolkadotSpecific(address)
+        require(transaction is Transfer) {
+            "Invalid Transaction type: ${transaction::class.simpleName}"
+        }
 
-        val serializedTransaction = PolkadotHelper("").getZeroSignedTransaction(keySignPayload)
+        val fromAddress = transaction.coin.address
+        val toAddress = transaction.to
+        val valHexPublicKey = transaction.vault.vaultHexPublicKey
+        val amount = transaction.amount
+
+        val keySignPayload = buildPolkadotSpecific(
+            fromAddress = fromAddress,
+            toAddress = toAddress,
+            amount = amount,
+        )
+
+        val serializedTransaction =
+            PolkadotHelper(valHexPublicKey).getZeroSignedTransaction(keySignPayload)
 
         val partialFee = polkadotApi.getPartialFee(serializedTransaction)
 
         return BasicFee(partialFee)
     }
 
-    // TODO: Review if these data can just be injected
-    private suspend fun buildPolkadotSpecific(address: String): KeysignPayload = coroutineScope {
+    private suspend fun buildPolkadotSpecific(
+        fromAddress: String,
+        toAddress:String,
+        amount: BigInteger,
+    ): KeysignPayload = coroutineScope {
         val polkadotCoin = Coins.coins[Chain.Polkadot]
             ?.first { it.isNativeToken }
             ?: error("Polkadot Coin not found")
 
         val runtimeVersionDeferred = async { polkadotApi.getRuntimeVersion() }
         val blockHashDeferred = async { polkadotApi.getBlockHash() }
-        val nonceDeferred = async { polkadotApi.getNonce(address) }
+        val nonceDeferred = async { polkadotApi.getNonce(fromAddress) }
         val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
         val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
 
@@ -69,8 +82,8 @@ class PolkadotFeeService(
 
         KeysignPayload(
             coin = polkadotCoin,
-            toAddress = "13pL9fvtpczfCbk9tkPc7GUvukmTdLFGihXGetsRsokMsaM2",
-            toAmount = CoinType.POLKADOT.toUnit("0.1".toBigDecimal()),
+            toAddress = toAddress,
+            toAmount = amount,
             blockChainSpecific = BlockChainSpecific.Polkadot(
                 recentBlockHash = blockHashDeferred.await(),
                 nonce = nonceDeferred.await(),
@@ -86,7 +99,7 @@ class PolkadotFeeService(
         )
     }
 
-    override suspend fun calculateDefaultFees(): Fee {
+    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         return BasicFee(POLKADOT_DEFAULT_FEE)
     }
 
