@@ -34,7 +34,7 @@ internal class JupiterApiImpl @Inject constructor(
         toToken: String,
         fromAddress: String,
     ): QuoteSwapTotalDataJson {
-        val quoteResponse = httpClient.get("https://quote-api.jup.ag/v6/quote") {
+        val quoteResponse = httpClient.get("https://lite-api.jup.ag/swap/v1/quote") {
             parameter("inputMint", fromToken)
             parameter("outputMint", toToken)
             parameter("amount", fromAmount)
@@ -47,7 +47,7 @@ internal class JupiterApiImpl @Inject constructor(
             put("quoteResponse", json.encodeToJsonElement(body))
             put("userPublicKey", fromAddress)
         }
-        val quoteSwapData = httpClient.post("https://quote-api.jup.ag/v6/swap") {
+        val quoteSwapData = httpClient.post("https://lite-api.jup.ag/swap/v1/swap") {
             setBody(quoteSwapRequestBody)
         }.body<QuoteSwapTransactionJson>()
 

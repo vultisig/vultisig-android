@@ -81,7 +81,7 @@ data class SplTokenJson(
 
 @Serializable
 data class SplTokenInfo(
-    @SerialName("address")
+    @SerialName("id")
     val address: String,
     @SerialName("name")
     val name: String,
@@ -89,7 +89,7 @@ data class SplTokenInfo(
     val symbol: String,
     @SerialName("decimals")
     val decimals: Int,
-    @SerialName("logoURI")
+    @SerialName("icon")
     val logoURI: String?,
     @SerialName("extensions")
     val extensions: SplExtensionsJson?,
@@ -175,13 +175,13 @@ data class SPLTokenRequestJson(
 
 @Serializable
 data class JupiterTokenResponseJson(
-    @SerialName("address")
+    @SerialName("id")
     val contractAddress: String,
     @SerialName("symbol")
     val ticker: String,
     @SerialName("decimals")
     val decimals: Int,
-    @SerialName("logoURI")
+    @SerialName("icon")
     val logo: String?,
     @SerialName("extensions")
     val extensions: JupiterTokenCoinGeckoIdJson?
