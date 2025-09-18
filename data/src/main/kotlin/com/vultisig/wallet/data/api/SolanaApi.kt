@@ -213,9 +213,9 @@ internal class SolanaApiImp @Inject constructor(
         tokens.map { token ->
             async {
                 try {
-                    httpClient.get(splTokensInfoEndpoint2){
+                    httpClient.get(splTokensInfoEndpoint2) {
                         parameter("query", token)
-                    }.body<SplTokenInfo>()
+                    }.body<List<SplTokenInfo>>().firstOrNull()
                 } catch (e: Exception) {
                     Timber.tag("SolanaApiImp")
                         .e("Error getting spl token for $token message : ${e.message}")
@@ -313,6 +313,9 @@ internal class SolanaApiImp @Inject constructor(
                 return null
             }
             val value = rpcResp.value ?: error("getSPLTokenBalance error")
+            if(value.value.isEmpty()){
+                return null
+            }
             return value.value[0].account.data.parsed.info.tokenAmount.amount
         } catch (e: Exception) {
             Timber.e(e)
