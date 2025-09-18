@@ -34,7 +34,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.containers.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.SettingItem
 import com.vultisig.wallet.ui.screens.settings.SettingsBox

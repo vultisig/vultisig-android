@@ -4,12 +4,13 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
-import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,9 +37,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val discoverToken: DiscoverTokenUseCase,
 ) : ViewModel() {
 
-    private val vaultId: String =
-        requireNotNull(savedStateHandle[AddChainAccount.ARG_VAULT_ID])
-
+    private val vaultId: String = savedStateHandle.toRoute<Route.AddChainAccount>().vaultId
     val uiState = MutableStateFlow(ChainSelectionUiModel())
 
     val searchTextFieldState = TextFieldState()

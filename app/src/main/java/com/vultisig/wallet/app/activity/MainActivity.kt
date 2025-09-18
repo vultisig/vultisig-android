@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 
                 Box(
                     modifier = Modifier
-                        .background(color = Colors.Default.oxfordBlue800)
+                        .background(color = Colors.Default.backgrounds.primary)
                         .safeDrawingPadding()
                 ) {
 
