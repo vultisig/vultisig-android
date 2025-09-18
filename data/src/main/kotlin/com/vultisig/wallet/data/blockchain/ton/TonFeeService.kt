@@ -18,8 +18,13 @@ import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
  * from bloating the blockchain. Gas not used is refunded, but storage is always charged.
  *
  * **IMPORTANT** : TON Center has specific API to calculate fees by passing a serialized transaction
- *                 Unfortunately, it returns ridiculus low fees. Under investigation if it is due
- *                 to the way WalletCore internally build the cells for the transaction
+ *                 Unfortunately, it returns ridiculus low fees. Under investigation it seems that
+ *                 is is due to the way wallet core serialize internal bag cells, for some reason
+ *                 it triggers something wrong on TON center and returning only storage and forward
+ *                 fees, while gas fee is 0.
+ *
+ *                 Under investigation, and will open a potential issue to wallet core
+ *                 it seems other users has experienced it.
  *
  * Reference: https://ton.org/docs/learn/overviews/fees
  */

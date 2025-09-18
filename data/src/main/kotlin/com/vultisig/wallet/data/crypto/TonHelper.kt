@@ -13,9 +13,11 @@ import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.toHexString
 import com.vultisig.wallet.data.utils.toUnit
 import tss.KeysignResponse
+import wallet.core.java.AnySigner
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TONAddressConverter
@@ -124,6 +126,41 @@ object TonHelper {
             .checkError()
 
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
+    }
+
+    fun getZeroSignedTransaction(
+        payload: KeysignPayload
+    ): String {
+        val dummyPrivateKey = PrivateKey()
+        val dummyPublicKey = dummyPrivateKey.getPublicKeyEd25519()
+        
+        require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
+        
+        val tonSpecific = payload.blockChainSpecific as? BlockChainSpecific.Ton
+            ?: throw RuntimeException("Failed to get TON chain specific data")
+        
+        val transfer = if (payload.coin.isNativeToken) {
+            buildNativeTransfer(payload, tonSpecific)
+        } else {
+            buildJettonTransfer(payload, tonSpecific)
+        }
+        
+        val signingInput = TheOpenNetwork.SigningInput.newBuilder()
+            .addMessages(transfer)
+            .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
+            .setExpireAt(tonSpecific.expireAt.toInt())
+            .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+            .setPublicKey(ByteString.copyFrom(dummyPublicKey.data()))
+            .setPrivateKey(ByteString.copyFrom(dummyPrivateKey.data()))
+            .build()
+        
+        val output = AnySigner.sign(
+            signingInput,
+            CoinType.TON,
+            TheOpenNetwork.SigningOutput.parser()
+        )
+        
+        return output.encoded
     }
 
     fun getSignedTransaction(
