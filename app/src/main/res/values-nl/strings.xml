@@ -570,4 +570,9 @@
     <string name="earn">Verdienen</string>
     <string name="hide_balance">Saldo verbergen</string>
     <string name="show_balance">Saldo weergeven</string>
+    <string name="no_chains_found">Geen kettingen gevonden</string>
+    <string name="no_chian_make_sure_that">Zorg ervoor dat de ketting die je zoekt is ingeschakeld.</string>
+    <string name="no_chain_customize_chains">Kettingen aanpassen</string>
+    <string name="search_bar_search">Zoeken</string>
+    <string name="search_bar_cancel">Annuleren</string>
 </resources>

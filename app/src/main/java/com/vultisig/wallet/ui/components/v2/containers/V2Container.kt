@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.containers
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,18 +62,22 @@ internal fun V2Container(
         )
     }
 
+    val containerColorAnimated by animateColorAsState(containerColor)
+    val borderColorAnimated by animateColorAsState(borderColor)
+
+
     Card(
         modifier = modifier,
         shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = containerColor,
+            containerColor = containerColorAnimated,
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
         ),
         border = BorderStroke(
             width = 1.dp,
-            color = borderColor,
+            color = borderColorAnimated,
         )
     ) {
         content()
