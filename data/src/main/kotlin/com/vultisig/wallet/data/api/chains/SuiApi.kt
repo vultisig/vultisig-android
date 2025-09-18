@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.api.chains
 import com.vultisig.wallet.data.api.utils.RpcResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import io.ktor.client.HttpClient
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -13,6 +15,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.minus
+import kotlin.plus
 
 interface SuiApi {
 
@@ -32,6 +36,9 @@ interface SuiApi {
         signature: String
     ): String
 
+    suspend fun dryRunTransaction(
+        transactionBytes: String,
+    ): SuiDryRunResponse
 }
 
 internal class SuiApiImpl @Inject constructor(
@@ -121,5 +128,43 @@ internal class SuiApiImpl @Inject constructor(
             ?.jsonPrimitive
             ?.content
             ?: error("Failed to execute transaction block")
+    }
+
+    override suspend fun dryRunTransaction(transactionBytes: String): SuiDryRunResponse {
+        TODO("Not yet implemented")
+    }
+}
+
+@Serializable
+data class SuiDryRunResponse(
+    @SerialName("effects")
+    val effects: SuiTransactionEffects,
+)
+
+@Serializable
+data class SuiTransactionEffects(
+    @SerialName("status")
+    val status: SuiEffectStatus,
+    @SerialName("gasUsed")
+    val gasUsed: SuiEffectGasUsed,
+)
+
+
+@Serializable
+data class SuiEffectStatus(
+    val status: String,
+    val error: String = "",
+)
+
+
+@Serializable
+data class SuiEffectGasUsed(
+    val computationCost: String,
+    val storageCost: String,
+    val storageRebate: String = "0",
+    val nonRefundableStorageFee: String = "0",
+) {
+    fun totalGasCost(): BigInteger {
+        return computationCost.toBigInteger() + storageCost.toBigInteger() - storageRebate.toBigInteger() + nonRefundableStorageFee.toBigInteger()
     }
 }

@@ -5,8 +5,8 @@ import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
+import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.utils.increaseByPercent
-import java.math.BigInteger
 
 /**
  * Service that estimates and prepares gas payment details for Sui transactions.
@@ -23,7 +23,20 @@ class SuiFeeService(
     private val suiApi: SuiApi,
 ): FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
+        require(transaction is Transfer) {
+            "Invalid Transfer type: ${transaction::class.simpleName}"
+        }
+
+        /*
+        val dryRunResult = rpcClient.dryRunTransaction(txBytes)
+        val gasUsed = dryRunResult.effects.gasUsed
+        val dryRunGasUsed = gasUsed.computationCost + gasUsed.storageCost
+        val gasPrice = rpcClient.getReferenceGasPrice()
+        val coinOverhead = COINS * GAS_OVERHEAD_PER_COIN * gasPrice
+        return SimpleFee(amount = dryRunGasUsed + coinOverhead)
+         */
+
+        error("")
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
@@ -36,8 +49,9 @@ class SuiFeeService(
     }
 
     private companion object {
-        val BASELINE_COMPUTATION_COIN_TRANSFER = BigInteger.valueOf(1200)
+        // Default Limit for
+        val BASELINE_COMPUTATION_COIN_TRANSFER = "1300".toBigInteger()
         // Baseline storage cost in MIST
-        val BASELINE_STORAGE = BigInteger.valueOf(50)
+        val BASELINE_STORAGE = "50".toBigInteger()
     }
 }
