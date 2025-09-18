@@ -54,4 +54,4 @@ internal fun TokenLogo(
 }
 
 private const val USER_AGENT = "User-Agent"
-private const val DEFAULT_USER_AGENT = "Mozilla/5.0 (Android) AppleWebKit/537.36 Chrome/119.0 Mobile Safari/537.36"
+private const val DEFAULT_USER_AGENT = "Vultisig/1.0 (Android 14; Pixel 7 Pro)"
