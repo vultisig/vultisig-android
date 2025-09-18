@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,8 +48,18 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
+    val searchTextFieldState: TextFieldState = TextFieldState()
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
+    val filteredAccounts : List<AccountUiModel>
+        get() = accounts.filter {
+            it.chainName.contains(
+                searchTextFieldState.text,
+                ignoreCase = true
+            )
+        }
+    val noChainFound: Boolean
+        get() = searchTextFieldState.text.isNotEmpty() && filteredAccounts.isEmpty()
 }
 
 internal data class AccountUiModel(
@@ -92,6 +103,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
     }
+
 
     private fun showGlobalBackupReminder() {
         viewModelScope.launch {
@@ -215,7 +227,8 @@ internal class VaultAccountsViewModel @Inject constructor(
 
         uiState.update {
             it.copy(
-                totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                totalFiatValue = totalFiatValue,
+                accounts = accountsUiModel,
             )
         }
         updateRefreshing(false)
@@ -273,7 +286,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun openSettings() {
-         vaultId?.let { vaultId ->
+        vaultId?.let { vaultId ->
             viewModelScope.launch {
                 Timber.d("openSettings($vaultId)")
                 navigator.navigate(Destination.Settings(vaultId = vaultId))

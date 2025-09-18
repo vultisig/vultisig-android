@@ -785,7 +785,6 @@
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
-
     <string name="transaction_buy">Buy</string>
     <string name="transaction_receive">Receive</string>
     <string name="search_bar_portfolio">Portfolio</string>
@@ -799,4 +798,9 @@
     <string name="earn">Earn</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
+    <string name="no_chains_found">No chains found</string>
+    <string name="no_chian_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
+    <string name="no_chain_customize_chains">Customize chains</string>
+    <string name="search_bar_search">Search</string>
+    <string name="search_bar_cancel">Cancel</string>
 </resources>

@@ -550,4 +550,9 @@
     <string name="earn">Guadagna</string>
     <string name="hide_balance">Nascondi saldo</string>
     <string name="show_balance">Mostra saldo</string>
+    <string name="no_chains_found">Nessuna catena trovata</string>
+    <string name="no_chian_make_sure_that">Assicurati che la catena che stai cercando sia abilitata.</string>
+    <string name="no_chain_customize_chains">Personalizza catene</string>
+    <string name="search_bar_search">Cerca</string>
+    <string name="search_bar_cancel">Annulla</string>
 </resources>

@@ -562,4 +562,9 @@
     <string name="earn">Заработать</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
+    <string name="no_chains_found">Цепочки не найдены.</string>
+    <string name="no_chian_make_sure_that">Убедитесь, что искомая цепочка включена.</string>
+    <string name="no_chain_customize_chains">Настроить цепочки</string>
+    <string name="search_bar_search">Поиск</string>
+    <string name="search_bar_cancel">Отмена</string>
 </resources>
