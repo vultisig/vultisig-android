@@ -46,6 +46,7 @@ internal class JupiterApiImpl @Inject constructor(
         val quoteSwapRequestBody = buildJsonObject {
             put("quoteResponse", json.encodeToJsonElement(body))
             put("userPublicKey", fromAddress)
+            put("dynamicComputeUnitLimit", true)
         }
         val quoteSwapData = httpClient.post("https://quote-api.jup.ag/v6/swap") {
             setBody(quoteSwapRequestBody)
@@ -57,5 +58,4 @@ internal class JupiterApiImpl @Inject constructor(
             routePlan = routePlan
         )
     }
-
 }
