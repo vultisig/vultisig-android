@@ -8,12 +8,17 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.increaseByPercent
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import vultisig.keysign.v1.SuiCoin
+import java.math.BigInteger
 import kotlin.collections.first
 
 /**
@@ -34,20 +39,36 @@ class SuiFeeService(
         require(transaction is Transfer) {
             "Invalid Transfer type: ${transaction::class.simpleName}"
         }
-
-        val suiCoin = Coins.coins[Chain.Sui]
-            ?.first { it.isNativeToken }
-            ?: error("Polkadot Coin not found")
-
-        val fromAddress = suiCoin.address
-        val toAddress = transaction.to
-        val toAmount = transaction.amount
+        val fromAddress = transaction.coin.address
 
         val referenceGasPriceDeferred = async { suiApi.getReferenceGasPrice() }
         val allCoinsDeferred = async { suiApi.getAllCoins(fromAddress) }
 
-        val keySignPayload = KeysignPayload(
-            coin = suiCoin,
+        val keySignPayload =
+            buildKeySignPayload(transaction, referenceGasPriceDeferred, allCoinsDeferred)
+
+        val txSerialized = SuiHelper.getZeroSignedTransaction(keySignPayload)
+
+        val dryRunResult = suiApi.dryRunTransaction(txSerialized)
+
+        val gasUsed = dryRunResult.effects.gasUsed
+        val totalGasUsed = gasUsed.computationCost.toBigInteger() + gasUsed.storageCost.toBigInteger()
+        val coinOverhead = GAS_OVERHEAD * referenceGasPriceDeferred.await()
+
+        BasicFee(amount = totalGasUsed + coinOverhead)
+    }
+
+    private suspend fun buildKeySignPayload(
+        transaction: Transfer,
+        referenceGasPriceDeferred: Deferred<BigInteger>,
+        allCoinsDeferred: Deferred<List<SuiCoin>>
+    ): KeysignPayload {
+        val coin = transaction.coin
+        val toAddress = transaction.to
+        val toAmount = transaction.amount
+
+        return KeysignPayload(
+            coin = coin,
             toAddress = toAddress,
             toAmount = toAmount,
             blockChainSpecific = BlockChainSpecific.Sui(
@@ -59,16 +80,6 @@ class SuiFeeService(
             libType = null,
             wasmExecuteContractPayload = null,
         )
-
-        val txSerialized = SuiHelper.getZeroSignedTransaction(keySignPayload)
-
-        val dryRunResult = suiApi.dryRunTransaction(txSerialized)
-
-        val gasUsed = dryRunResult.effects.gasUsed
-        val totalGasUsed = gasUsed.computationCost.toBigInteger() + gasUsed.storageCost.toBigInteger()
-        val coinOverhead = GAS_OVERHEAD * referenceGasPriceDeferred.await()
-
-        BasicFee(amount = totalGasUsed + coinOverhead)
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
@@ -85,7 +96,6 @@ class SuiFeeService(
         val BASELINE_COMPUTATION_COIN_TRANSFER = "1300".toBigInteger()
         // Baseline storage cost in MIST
         val BASELINE_STORAGE = "50".toBigInteger()
-
         // GasOverhead
         val GAS_OVERHEAD = 150.toBigInteger() // 10 coins with extra overhead per coin
     }
