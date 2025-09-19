@@ -7,10 +7,6 @@ import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.crypto.SuiHelper
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.increaseByPercent
@@ -19,7 +15,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
-import kotlin.collections.first
 
 /**
  * Service that estimates and prepares gas payment details for Sui transactions.
