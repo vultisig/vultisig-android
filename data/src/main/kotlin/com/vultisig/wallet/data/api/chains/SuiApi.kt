@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.buildJsonArray
@@ -131,7 +132,19 @@ internal class SuiApiImpl @Inject constructor(
     }
 
     override suspend fun dryRunTransaction(transactionBytes: String): SuiDryRunResponse {
-        TODO("Not yet implemented")
+        val response = http.postRpc<SuiDryRunResponse>(
+            url = rpcUrl,
+            method = "sui_dryRunTransactionBlock",
+            params = buildJsonArray {
+                add(JsonPrimitive(transactionBytes))
+            }
+        )
+
+        if (response.effects.status.error.isNotEmpty()) {
+            throw Exception("Simulation Error: ${response.effects.status.error}")
+        }
+
+        return response
     }
 }
 
