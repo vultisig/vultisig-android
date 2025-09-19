@@ -8,11 +8,11 @@ import javax.inject.Singleton
 
 @Singleton
 class FeeServiceComposite @Inject constructor(
-    private val ethereumFeeService: FeeService,
-    private val polkadotFeeService: FeeService,
-    private val rippleFeeService: FeeService,
-    private val suiFeeService: FeeService,
-    private val tonFeeService: FeeService,
+    @EthereumFee private val ethereumFeeService: FeeService,
+    @PolkadotFee private val polkadotFeeService: FeeService,
+    @RippleFee private val rippleFeeService: FeeService,
+    @SuiFee private val suiFeeService: FeeService,
+    @TonFee private val tonFeeService: FeeService,
 ) : FeeService {
     
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -39,15 +39,13 @@ class FeeServiceComposite @Inject constructor(
     }
     
     private fun getFeeServiceForChain(chain: Chain): FeeService {
-        val service = when (chain.standard) {
+        return when (chain.standard) {
             TokenStandard.EVM -> ethereumFeeService
             TokenStandard.SUBSTRATE -> polkadotFeeService
             TokenStandard.RIPPLE -> rippleFeeService
             TokenStandard.SUI -> suiFeeService
             TokenStandard.TON -> tonFeeService
-            else -> error("Chain not supported for FeeService")
+            else -> error("Not Supported ")
         }
-
-        return service
     }
 }

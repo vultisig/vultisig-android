@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
 import com.vultisig.wallet.data.blockchain.ton.TonFeeService
-import com.vultisig.wallet.data.blockchain.tron.TronFeeService
 import com.vultisig.wallet.data.blockchain.xrp.XRPFeeService
 import dagger.Module
 import dagger.Provides
@@ -18,62 +17,38 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object FeeServiceModule {
+object FeeServiceProvidersModule {
     
     @Provides
     @Singleton
+    @EthereumFee
     fun provideEthereumFeeService(
         evmApiFactory: EvmApiFactory
-    ): FeeService {
-        return EthereumFeeService(evmApiFactory)
-    }
+    ): FeeService = EthereumFeeService(evmApiFactory)
     
     @Provides
     @Singleton
+    @PolkadotFee
     fun providePolkadotFeeService(
         polkadotApi: PolkadotApi
-    ): FeeService {
-        return PolkadotFeeService(polkadotApi)
-    }
+    ): FeeService = PolkadotFeeService(polkadotApi)
     
     @Provides
     @Singleton
+    @RippleFee
     fun provideRippleFeeService(
         rippleApi: RippleApi
-    ): FeeService {
-        return XRPFeeService(rippleApi)
-    }
+    ): FeeService = XRPFeeService(rippleApi)
     
     @Provides
     @Singleton
+    @SuiFee
     fun provideSuiFeeService(
         suiApi: SuiApi
-    ): FeeService {
-        return SuiFeeService(suiApi)
-    }
+    ): FeeService = SuiFeeService(suiApi)
     
     @Provides
     @Singleton
-    fun provideTonFeeService(): FeeService {
-        return TonFeeService()
-    }
-
-    @Provides
-    @Singleton
-    fun provideFeeService(
-        ethereumFeeService: EthereumFeeService,
-        polkadotFeeService: PolkadotFeeService,
-        rippleFeeService: XRPFeeService,
-        suiFeeService: SuiFeeService,
-        tonFeeService: TonFeeService,
-        tronFeeService: TronFeeService,
-    ): FeeService {
-        return FeeServiceComposite(
-            ethereumFeeService = ethereumFeeService,
-            polkadotFeeService = polkadotFeeService,
-            rippleFeeService = rippleFeeService,
-            suiFeeService = suiFeeService,
-            tonFeeService = tonFeeService,
-        )
-    }
+    @TonFee
+    fun provideTonFeeService(): FeeService = TonFeeService()
 }
