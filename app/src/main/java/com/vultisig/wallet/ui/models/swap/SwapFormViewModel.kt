@@ -271,15 +271,40 @@ internal class SwapFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
             )
 
-            val swapFee =
-                quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+            var nonNativeswapFee: BigInteger = BigInteger.ZERO
+            var nativeSwapFee: BigInteger = BigInteger.ZERO
 
+            if (quote.fees.unit.equals(
+                    selectedSrc.account.tokenValue?.unit,
+                    ignoreCase = true
+                ) && srcToken.isNativeToken
+            ) {
+                nativeSwapFee =
+                    quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+            } else {
+
+                nonNativeswapFee =
+                    quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+            }
+
+            var maximumAmountAllowedToSwap: BigDecimal = BigDecimal.ZERO
             if (srcToken.isNativeToken) {
                 if (srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value
-                        ?: BigInteger.ZERO) + swapFee > selectedSrcBalance
+                        ?: BigInteger.ZERO) + nativeSwapFee > selectedSrcBalance
                 ) {
+                    maximumAmountAllowedToSwap =
+                        (selectedSrcBalance - (nativeSwapFee - (estimatedNetworkFeeTokenValue.value?.value
+                            ?: BigInteger.ZERO))).toBigDecimal()
+                            .movePointLeft(selectedSrc.account.tokenValue?.decimals ?: 0)
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                        if (maximumAmountAllowedToSwap > BigDecimal.ZERO) {
+                            UiText.FormattedText(
+                                R.string.swap_error_insufficient_balance,
+                                listOf(maximumAmountAllowedToSwap)
+                            )
+                        } else {
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        }
                     )
                 }
             } else {
@@ -290,12 +315,28 @@ internal class SwapFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
 
-                if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
-                        ?: BigInteger.ZERO) + swapFee
+                if (
+                    selectedSrcBalance < srcAmountInt + nonNativeswapFee
+                ) {
+                    maximumAmountAllowedToSwap = (selectedSrcBalance - nonNativeswapFee).toBigDecimal()
+                        .movePointLeft(selectedSrc.account.tokenValue?.decimals ?: 0)
+                    throw InvalidTransactionDataException(
+                        if (maximumAmountAllowedToSwap > BigDecimal.ZERO) {
+                            UiText.FormattedText(
+                                R.string.swap_error_insufficient_balance,
+                                listOf(maximumAmountAllowedToSwap)
+                            )
+                        } else {
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        }
+                    )
+                }
+
+                if (nativeTokenValue < ((estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO) + nativeSwapFee)
                 ) {
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                        UiText.StringResource(R.string.signing_error_insufficient_funds)
                     )
                 }
             }
