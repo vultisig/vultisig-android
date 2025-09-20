@@ -1,15 +1,21 @@
-package com.vultisig.wallet.ui.screens.v2.home.bottomsheets
+package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.chainselectionbottomsheet.components
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -21,6 +27,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,11 +53,24 @@ internal fun ChainSelectionItem(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(74.dp)
+                .clip(
+                    shape = RoundedCornerShape(size = 24.dp)
+                )
+                .background(
+                    color = if (isChecked) Theme.colors.backgrounds.secondary else Theme.colors.backgrounds.disabled
+                )
         ) {
-            RoundedBorderWithLeaf(
-                isSelected = isChecked,
-            )
+            // does not work when use "import ...". maybe ide bug!.
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isChecked,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                RoundedBorderWithLeaf()
+            }
 
             Image(
                 painter = painterResource(chain.logo),
@@ -66,7 +86,11 @@ internal fun ChainSelectionItem(
         Text(
             text = chain.raw,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.primary
+            color = Theme.colors.text.primary,
+            modifier = Modifier
+                .widthIn(max = 74.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 
@@ -82,9 +106,7 @@ internal fun Dp.toPx() = with(LocalDensity.current) {
 internal fun RoundedBorderWithLeaf(
     modifier: Modifier = Modifier,
     borderSize: Dp = 74.dp,
-    isSelected: Boolean,
     borderColor: Color = Theme.colors.borders.normal,
-    backgroundColor: Color = Theme.colors.backgrounds.primary,
     leafColor: Color = Theme.colors.borders.normal,
     checkMarkColor: Color = Theme.colors.alerts.success,
     borderWidth: Dp = 1.5.dp,
@@ -111,25 +133,6 @@ internal fun RoundedBorderWithLeaf(
         val borderExcludedHeight = canvasHeight - borderWidthPx
 
 
-        val backgroundPath = Path().apply {
-            addRoundRect(
-                RoundRect(
-                    left = 0f,
-                    top = 0f,
-                    right = canvasWidth,
-                    bottom = canvasHeight,
-                    cornerRadius = CornerRadius(
-                        x = cornerRadiusPx,
-                        y = cornerRadiusPx,
-                    )
-                )
-            )
-        }
-
-        drawPath(
-            path = backgroundPath,
-            color = backgroundColor,
-        )
         val borderStartTop = borderWidthPx / 2
         val borderStartLeft = borderWidthPx / 2
 
@@ -148,20 +151,17 @@ internal fun RoundedBorderWithLeaf(
             )
         }
 
-        if (isSelected) {
-            drawPath(
-                path = borderPath,
-                color = borderColor,
-                style = Stroke(
-                    width = borderWidthPx,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round
-                )
-            )
-        }
 
-        if (isSelected.not())
-            return@Canvas
+        drawPath(
+            path = borderPath,
+            color = borderColor,
+            style = Stroke(
+                width = borderWidthPx,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
+            )
+        )
+
 
         val leafStartTop = borderExcludedHeight - leafHeighPx
         val leafStartLeft = borderExcludedWidth - leafWidthPx
