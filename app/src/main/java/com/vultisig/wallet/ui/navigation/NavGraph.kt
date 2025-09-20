@@ -143,7 +143,7 @@ internal fun SetupNavGraph(
         ) {
             FolderScreen()
         }
-        composable<AddChainAccount>{
+        dialog <AddChainAccount>{
             ChainSelectionScreen(
                 navController = navController
             )

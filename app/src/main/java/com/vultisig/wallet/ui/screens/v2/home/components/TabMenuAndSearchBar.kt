@@ -71,7 +71,7 @@ internal fun TabMenuAndSearchBar(
                 onCancelClick = {
                     onCancelSearchClick()
                 },
-                isFocused = true,
+                isInitiallyFocused = true,
             )
         }
     }
