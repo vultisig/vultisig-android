@@ -554,6 +554,6 @@
     <string name="no_chain_customize_chains">Personalizar correntes</string>
     <string name="search_bar_search">Pesquisar</string>
     <string name="search_bar_cancel">Cancelar</string>
-    <string name="chain_selectionـselect_chains">Selecionar correntes</string>
+    <string name="chain_selection_select_chains">Selecionar correntes</string>
     <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
 </resources>

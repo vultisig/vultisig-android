@@ -567,6 +567,6 @@
     <string name="no_chain_customize_chains">Настроить цепочки</string>
     <string name="search_bar_search">Поиск</string>
     <string name="search_bar_cancel">Отмена</string>
-    <string name="chain_selectionـselect_chains">Выбрать сети</string>
+    <string name="chain_selection_select_chains">Выбрать сети</string>
     <string name="chain_selection_no_chains_found">Сети не найдены</string>
 </resources>

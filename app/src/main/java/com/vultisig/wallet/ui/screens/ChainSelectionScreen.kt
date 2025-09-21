@@ -91,7 +91,7 @@ private fun ChainSelectionScreen(
             )
 
             Text(
-                text = stringResource(R.string.chain_selectionـselect_chains),
+                text = stringResource(R.string.chain_selection_select_chains),
                 style = Theme.brockmann.headings.title2,
                 color = Theme.colors.neutrals.n100,
             )
