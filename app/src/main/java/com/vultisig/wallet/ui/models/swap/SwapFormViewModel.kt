@@ -72,6 +72,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -880,6 +881,7 @@ internal class SwapFormViewModel @Inject constructor(
                     address to srcAmount
                 }
                 .combine(refreshQuoteState) { it, _ -> it }
+                .debounce  (450L)
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
