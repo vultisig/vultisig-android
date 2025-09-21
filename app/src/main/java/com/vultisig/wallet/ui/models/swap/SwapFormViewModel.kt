@@ -91,6 +91,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.minus
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
@@ -254,15 +255,20 @@ internal class SwapFormViewModel @Inject constructor(
                 ?.toBigInteger()
                 ?.takeIf { it != BigInteger.ZERO }
                 ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
+                    UiText.StringResource(
+                        if (srcAmountState.text.toString().toBigDecimalOrNull() == null)
+                            R.string.swap_form_invalid_amount
+                        else
+                            R.string.swap_screen_invalid_zero_token_amount
+                    )
                 )
 
             val selectedSrcBalance =
                 selectedSrc.account.tokenValue?.value ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                    UiText.StringResource(R.string.send_error_insufficient_balance)
                 )
 
-            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken,srcAmountInt)
+            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcAmountInt)
 
             val quote = quote ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
@@ -284,8 +290,10 @@ internal class SwapFormViewModel @Inject constructor(
                     quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
             }
 
+
+
             if (srcToken.isNativeToken) {
-                if (srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value
+                if (srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                         ?: BigInteger.ZERO) + nativeSwapFee > selectedSrcBalance
                 ) {
                     throw InvalidTransactionDataException(
