@@ -251,20 +251,17 @@ internal class SwapFormViewModel @Inject constructor(
             val srcAmountInt = srcAmount
                 ?.movePointRight(selectedSrc.account.token.decimal)
                 ?.toBigInteger()
+                ?.takeIf { it != BigInteger.ZERO }
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
+                )
 
             val selectedSrcBalance =
                 selectedSrc.account.tokenValue?.value ?: throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.swap_screen_same_asset_error_message)
                 )
-            if (srcAmountInt == BigInteger.ZERO)
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
-                )
-            val srcTokenValue = srcAmountInt
-                ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
-                )
+
+            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken,srcAmountInt)
 
             val quote = quote ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
