@@ -40,35 +40,36 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainSelectionScreen(
-    navController: NavHostController,
     viewModel: ChainSelectionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
 
     ChainSelectionScreen(
         state = state,
-        navController = navController,
         searchTextFieldState = viewModel.searchTextFieldState,
-        onEnableAccount = viewModel::enableAccount,
-        onDisableAccount = viewModel::disableAccount,
+        onEnableAccount = viewModel::enableAccountTemp,
+        onDisableAccount = viewModel::disableAccountTemp,
+        onDoneClick = viewModel::onCommitChanges,
+        onCancelClick = viewModel::cancelChanges,
     )
 }
 
 @Composable
 private fun ChainSelectionScreen(
     state: ChainSelectionUiModel,
-    navController: NavHostController,
     searchTextFieldState: TextFieldState,
     onEnableAccount: (Coin) -> Unit,
     onDisableAccount: (Coin) -> Unit,
+    onDoneClick: () -> Unit,
+    onCancelClick: () -> Unit,
 ) {
 
     V2BottomSheet(
-        onDismissRequest = navController::popBackStack,
+        onDismissRequest = onCancelClick,
         leftAction = {
             VsCircleButton(
                 icon = R.drawable.x,
-                onClick = navController::popBackStack,
+                onClick = onCancelClick,
                 type = VsCircleButtonType.Tertiary,
                 size = VsCircleButtonSize.Small,
             )
@@ -76,7 +77,7 @@ private fun ChainSelectionScreen(
         rightAction = {
             VsCircleButton(
                 icon = R.drawable.ic_check,
-                onClick = navController::popBackStack,
+                onClick = onDoneClick,
                 size = VsCircleButtonSize.Small,
             )
 
@@ -170,9 +171,10 @@ private fun NoChainFound() {
 fun ChainSelectionViewPreview() {
     ChainSelectionScreen(
         state = ChainSelectionUiModel(),
-        navController = rememberNavController(),
         searchTextFieldState = rememberTextFieldState(),
         onEnableAccount = {},
         onDisableAccount = {},
+        onDoneClick = {},
+        onCancelClick = {},
     )
 }

@@ -144,9 +144,7 @@ internal fun SetupNavGraph(
             FolderScreen()
         }
         dialog <AddChainAccount>{
-            ChainSelectionScreen(
-                navController = navController
-            )
+            ChainSelectionScreen()
         }
         composable(
             route = Destination.VaultSettings.STATIC_ROUTE,
