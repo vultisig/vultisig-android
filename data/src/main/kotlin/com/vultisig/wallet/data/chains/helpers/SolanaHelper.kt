@@ -68,7 +68,7 @@ class SolanaHelper(
                 .build()
                 .toByteArray()
         } else {
-            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey != null) {
+            if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty()  && !solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
                 val transfer = Solana.TokenTransfer.newBuilder()
                     .setTokenMintAddress(keysignPayload.coin.contractAddress)
                     .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
