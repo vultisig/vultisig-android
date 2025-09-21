@@ -556,5 +556,5 @@
     <string name="search_bar_search">Cerca</string>
     <string name="search_bar_cancel">Annulla</string>
     <string name="chain_selectionـselect_chains">Seleziona catene</string>
-    <string name="chain_selectionـno_chains_found">Nessuna catena trovata</string>
+    <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
 </resources>

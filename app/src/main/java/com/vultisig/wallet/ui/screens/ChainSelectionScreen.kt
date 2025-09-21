@@ -157,7 +157,7 @@ private fun NoChainFound() {
             )
             UiSpacer(14.dp)
             Text(
-                text = stringResource(R.string.chain_selectionـno_chains_found),
+                text = stringResource(R.string.chain_selection_no_chains_found),
                 style = Theme.brockmann.headings.subtitle,
                 color = Theme.colors.text.primary,
             )

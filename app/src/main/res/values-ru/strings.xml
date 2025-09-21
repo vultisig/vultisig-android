@@ -568,5 +568,5 @@
     <string name="search_bar_search">Поиск</string>
     <string name="search_bar_cancel">Отмена</string>
     <string name="chain_selectionـselect_chains">Выбрать сети</string>
-    <string name="chain_selectionـno_chains_found">Сети не найдены</string>
+    <string name="chain_selection_no_chains_found">Сети не найдены</string>
 </resources>

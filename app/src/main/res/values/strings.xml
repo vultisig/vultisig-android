@@ -804,5 +804,5 @@
     <string name="search_bar_search">Search</string>
     <string name="search_bar_cancel">Cancel</string>
     <string name="chain_selectionـselect_chains">Select chains</string>
-    <string name="chain_selectionـno_chains_found">No chains found</string>
+    <string name="chain_selection_no_chains_found">No chains found</string>
 </resources>
