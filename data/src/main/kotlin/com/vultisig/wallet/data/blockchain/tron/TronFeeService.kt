@@ -45,6 +45,8 @@ import javax.inject.Inject
  *    - When this applies, the bandwidth fee is waived (since activation includes it).
  *
  * Notes:
+ * - At the moment there is no full UI to show all TRON fee details (discount %, etc..), but just
+ *   amount. So we'll stick to it.
  * - Resource availability is checked first (bandwidth/energy from free quota or staking).
  * - Any shortfall is covered by burning TRX as fees.
  * - This service fetches chain parameters dynamically via TronApi, but provides
@@ -66,30 +68,27 @@ class TronFeeService @Inject constructor(
         val toAddress = transaction.to
         val memo = transaction.memo
 
-        val chainParamsDeferred = async { getCacheTronChainParameters() }
         val srcAccountDeferred = async { tronApi.getAccountResource(fromAddress) }
         val dstAccountDeferred = async { tronApi.getAccount(toAddress) }
 
-        val chainParams = chainParamsDeferred.await()
         val srcAccount = srcAccountDeferred.await()
         val dstAccount = dstAccountDeferred.await()
 
-        val fee = if (coin.isNativeToken) {
+        val feeAmount = if (coin.isNativeToken) {
             calculateNativeTrxFee(
                 srcAccount = srcAccount,
                 dstAccount = dstAccount,
                 hasMemo = !memo.isNullOrEmpty()
             )
         } else {
-            calculateTrc20Fee(
+             calculateTrc20Fee(
                 srcAccount = srcAccount,
                 dstAccount = dstAccount,
-                chainParams = chainParams,
-                hasMemo = !memo.isNullOrEmpty(),
                 contractAddress = coin.contractAddress
             )
         }
-        error("")
+
+        BasicFee(feeAmount)
     }
 
     private suspend fun calculateNativeTrxFee(
@@ -155,6 +154,13 @@ class TronFeeService @Inject constructor(
         }
     }
 
+    private suspend fun calculateActivationFee(): BigInteger {
+        val createAccountFee = getCacheTronChainParameters().createAccountFeeEstimate
+        val systemFee = getCacheTronChainParameters().createNewAccountFeeEstimateContract
+
+        return BigInteger.valueOf(createAccountFee + systemFee)
+    }
+
     // https://developers.tron.network/docs/resource-model#account-bandwidth-balance-query
     private fun TronAccountResourceJson.calculateAvailableBandwidth(): Long {
         val freeBandwidth = freeNetLimit - freeNetUsed
@@ -163,16 +169,42 @@ class TronFeeService @Inject constructor(
         return freeBandwidth + stakingBandwidth
     }
 
+    private suspend fun calculateTrc20Fee(
+        srcAccount: TronAccountResourceJson?,
+        dstAccount: TronAccountJson?,
+        contractAddress: String?
+    ): BigInteger {
+        var totalFee = BigInteger.ZERO
+
+        // 1. Bandwidth fee (always paid for TRC20)
+        val bandwidthFee = calculateBandwidthFee(
+            srcAccount = srcAccount,
+            isContract = true,
+        )
+
+        totalFee = totalFee.add(bandwidthFee)
+
+        // 2. Energy fee
+        val energyFee = calculateEnergyFee(
+            srcAccount = srcAccount,
+            contractAddress = contractAddress
+        )
+
+        totalFee = totalFee.add(energyFee)
+
+        // 3. Account activation fee (if destination is new)
+        if (dstAccount.isNewAccount()) {
+            val activationFee = calculateActivationFee()
+            totalFee = totalFee.add(activationFee)
+        }
+
+        return totalFee
+    }
+
     private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
         return maxOf(energyLimit - energyUsed, 0L)
     }
 
-    private suspend fun calculateActivationFee(): BigInteger {
-        val createAccountFee = getCacheTronChainParameters().createAccountFeeEstimate
-        val systemFee = getCacheTronChainParameters().createNewAccountFeeEstimateContract
-
-        return BigInteger.valueOf(createAccountFee + systemFee)
-    }
 
     private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
         return if (chainParameters == null) {
