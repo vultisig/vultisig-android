@@ -555,4 +555,6 @@
     <string name="no_chain_customize_chains">Personalizza catene</string>
     <string name="search_bar_search">Cerca</string>
     <string name="search_bar_cancel">Annulla</string>
+    <string name="chain_selection_select_chains">Seleziona catene</string>
+    <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
 </resources>

@@ -803,4 +803,6 @@
     <string name="no_chain_customize_chains">Customize chains</string>
     <string name="search_bar_search">Search</string>
     <string name="search_bar_cancel">Cancel</string>
+    <string name="chain_selection_select_chains">Select chains</string>
+    <string name="chain_selection_no_chains_found">No chains found</string>
 </resources>

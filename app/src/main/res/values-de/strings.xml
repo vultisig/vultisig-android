@@ -557,4 +557,6 @@
     <string name="no_chain_customize_chains">Ketten anpassen</string>
     <string name="search_bar_search">Suche</string>
     <string name="search_bar_cancel">Abbrechen</string>
+    <string name="chain_selection_select_chains">Ketten auswählen</string>
+    <string name="chain_selection_no_chains_found">Keine Ketten gefunden</string>
 </resources>
