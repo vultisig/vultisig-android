@@ -6,11 +6,11 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
@@ -510,52 +510,52 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 ticker.uppercase() in thorEthTokens && ticker.uppercase() in mayaEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
-                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
+                    SwapProvider.KYBER,
                     SwapProvider.MAYA,
                 )
 
                 ticker.uppercase() in thorEthTokens -> setOf(
                     SwapProvider.THORCHAIN,
                     SwapProvider.ONEINCH,
-                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
+                    SwapProvider.KYBER,
                 )
 
                 ticker.uppercase() in mayaEthTokens -> setOf(
                     SwapProvider.ONEINCH,
-                    SwapProvider.KYBER,
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
+                    SwapProvider.KYBER,
                 )
 
                 else -> setOf(
-                    SwapProvider.KYBER,
                     SwapProvider.ONEINCH,
-                    SwapProvider.LIFI
+                    SwapProvider.LIFI,
+                    SwapProvider.KYBER
                 )
             }
 
             Chain.BscChain -> if (ticker in thorBscTokens) setOf(
-                SwapProvider.KYBER,
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
-            ) else setOf(
                 SwapProvider.KYBER,
+            ) else setOf(
                 SwapProvider.ONEINCH,
-                SwapProvider.LIFI
+                SwapProvider.LIFI,
+                SwapProvider.KYBER
             )
 
             Chain.Avalanche -> if (ticker in thorAvaxTokens) setOf(
-                SwapProvider.KYBER,
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
-            ) else setOf(
                 SwapProvider.KYBER,
+            ) else setOf(
                 SwapProvider.ONEINCH,
-                SwapProvider.LIFI
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
             )
 
             Chain.Base -> setOf(
