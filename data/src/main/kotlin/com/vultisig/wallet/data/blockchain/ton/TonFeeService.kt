@@ -24,7 +24,7 @@ import wallet.core.jni.CoinType
  *                 it triggers something wrong on TON center and returning only storage and forward
  *                 fees, while gas fee is 0.
  *
- *                 Under investigation, and will open a potential issue to wallet core
+ *                 Under investigation, and will open/address a potential issue to wallet core
  *                 it seems other users has experienced it.
  *
  * Reference: https://ton.org/docs/learn/overviews/fees
