@@ -28,4 +28,11 @@ val supportsFeeService = setOf(
     Chain.Ripple,
     Chain.Ton,
     Chain.Sui,
+    // Utxo
+    Chain.Bitcoin,
+    Chain.BitcoinCash,
+    Chain.Litecoin,
+    Chain.Dogecoin,
+    Chain.Dash,
+    Chain.Zcash
 )

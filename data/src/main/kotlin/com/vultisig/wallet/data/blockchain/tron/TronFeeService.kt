@@ -131,6 +131,7 @@ class TronFeeService @Inject constructor(
         isContract: Boolean,
     ): BigInteger {
         val bytesRequired = if (isContract) {
+            // TODO: Only valid for TRC-20 transfer, for swaps implement actual serializer
             BYTES_PER_CONTRACT_TX
         } else {
             BYTES_PER_COIN_TX
@@ -160,6 +161,10 @@ class TronFeeService @Inject constructor(
         val stakingBandwidth = netLimit - netUsed
 
         return freeBandwidth + stakingBandwidth
+    }
+
+    private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
+        return maxOf(energyLimit - energyUsed, 0L)
     }
 
     private suspend fun calculateActivationFee(): BigInteger {
