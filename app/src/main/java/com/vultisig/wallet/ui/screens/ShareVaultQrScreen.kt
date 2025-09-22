@@ -140,7 +140,38 @@ internal fun ShareVaultQrScreen(
                 onIconLeftClick = onBackClick,
             )
         },
-        containerColor = Theme.colors.backgrounds.primary
+        containerColor = Theme.colors.backgrounds.primary,
+        bottomBar = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(
+                        vertical = 16.dp,
+                        horizontal = 12.dp,
+                    )
+            ) {
+                Info()
+
+                UiSpacer(8.dp)
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_share),
+                    onClick = onShareClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    size = VsButtonSize.Small,
+                    variant = VsButtonVariant.Primary
+                )
+
+                UiSpacer(12.dp)
+
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_save),
+                    onClick = onSaveClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    size = VsButtonSize.Medium,
+                    variant = VsButtonVariant.Secondary
+                )
+            }
+        }
     ) {
         Column(
             modifier = Modifier
@@ -176,30 +207,6 @@ internal fun ShareVaultQrScreen(
                 shareVaultQrString = shareVaultQrString,
             )
 
-            UiSpacer(
-                weight = 1f
-            )
-
-            Info()
-
-            UiSpacer(16.dp)
-            VsButton(
-                label = stringResource(R.string.share_vault_qr_share),
-                onClick = onShareClick,
-                modifier = Modifier.fillMaxWidth(),
-                size = VsButtonSize.Small,
-                variant = VsButtonVariant.Primary
-            )
-
-            UiSpacer(12.dp)
-
-            VsButton(
-                label = stringResource(R.string.share_vault_qr_save),
-                onClick = onSaveClick,
-                modifier = Modifier.fillMaxWidth(),
-                size = VsButtonSize.Medium,
-                variant = VsButtonVariant.Secondary
-            )
         }
     }
 }

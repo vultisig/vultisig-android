@@ -539,4 +539,5 @@
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
+    <string name="error_saving_qr_code">QR-Code konnte nicht gespeichert werden. %1$s</string>
 </resources>

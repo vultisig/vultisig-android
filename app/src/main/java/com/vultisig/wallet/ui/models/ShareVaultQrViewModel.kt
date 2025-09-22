@@ -172,20 +172,29 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     private fun saveBitmap(toShare: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val uri = context.saveBitmapToDownloads(
-                requireNotNull(shareQrBitmap.value),
-                requireNotNull(state.value.fileName)
-            )
-            shareQrBitmap.value?.recycle()
-            if (toShare) {
-                state.update {
-                    it.copy(
-                        fileUri = uri
-                    )
+            try {
+                val uri = context.saveBitmapToDownloads(
+                    requireNotNull(shareQrBitmap.value),
+                    requireNotNull(state.value.fileName)
+                )
+                shareQrBitmap.value?.recycle()
+                if (toShare) {
+                    state.update {
+                        it.copy(
+                            fileUri = uri
+                        )
+                    }
+                } else if (uri != null) {
+                    showSnackbarMessage()
+                    navigator.navigate(Destination.Back)
                 }
-            } else if (uri != null) {
-                showSnackbarMessage()
-                navigator.navigate(Destination.Back)
+            } catch (e: Exception) {
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.error_saving_qr_code,
+                        e.localizedMessage ?: ""
+                    )
+                )
             }
         }
     }
