@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
+import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
@@ -179,97 +180,42 @@ class TronFeeService @Inject constructor(
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-
-    }
-
-    /* override suspend fun calculateFee(
-        coin: Coin,
-        srcAddress: String,
-        dstAddress: String,
-        amount: BigInteger,
-        memo: String?,
-        gasFee: BigInteger,
-        isMaxAmount: Boolean,
-        blockChainSpecific: BlockChainSpecific.Tron?
-    ): BigInteger = withContext(Dispatchers.IO) {
-        try {
-            Timber.Forest.d("Calculating TRON fee for ${coin.ticker} from $srcAddress to $dstAddress")
-
-            // Fetch required data in parallel
-            val chainParamsDeferred = async { getChainParameters() }
-            val srcAccountDeferred = async { tronApi.getAccount(srcAddress) }
-            val dstAccountDeferred = async { tronApi.getAccount(dstAddress) }
-
-            val chainParams = chainParamsDeferred.await()
-            val srcAccount = srcAccountDeferred.await()
-            val dstAccount = dstAccountDeferred.await()
-
-            // Calculate fee based on token type
-            val fee = if (coin.isNativeToken) {
-               calculateNativeTrxFee(
-                    srcAccount = srcAccount,
-                    dstAccount = dstAccount,
-                    chainParams = chainParams,
-                    hasMemo = !memo.isNullOrEmpty()
-                )
-            } else {
-                calculateTrc20Fee(
-                    srcAccount = srcAccount,
-                    dstAccount = dstAccount,
-                    chainParams = chainParams,
-                    hasMemo = !memo.isNullOrEmpty(),
-                    contractAddress = coin.contractAddress
-                )
-            }
-
-            Timber.Forest.d(
-                "TRON fee calculated: $fee SUN (${
-                    fee.divide(
-                        BigInteger.valueOf(
-                            1_000_000
-                        )
-                    )
-                } TRX)"
-            )
-            fee
-        } catch (e: Exception) {
-            Timber.Forest.e(e, "Error calculating TRON fee, using default")
-            getDefaultFee(coin.isNativeToken)
-        }
-    }
-
-    private fun calculateNativeTrxFee(
-        srcAccount: TronAccountResponseJson?,
-        dstAccount: TronAccountResponseJson?,
-        chainParams: TronChainParametersJson,
-        hasMemo: Boolean
-    ): BigInteger {
-        var totalFee = BigInteger.ZERO
-
-        // 1. Bandwidth fee
-        val bandwidthFee = calculateBandwidthFee(
-            srcAccount = srcAccount,
-            isContract = false,
-            chainParams = chainParams
-        )
-        totalFee = totalFee.add(bandwidthFee)
-
-        // 2. Account activation fee (if destination is new)
-        if (isNewAccount(dstAccount)) {
-            val activationFee = calculateActivationFee(chainParams)
-            totalFee = totalFee.add(activationFee)
-            // New accounts don't pay bandwidth fee (it's included in activation)
-            totalFee = totalFee.subtract(bandwidthFee)
+        require(transaction is Transfer) {
+            "Invalid Transaction Type: ${transaction::class.simpleName}"
         }
 
-        // 3. Memo fee
-        if (hasMemo) {
-            val memoFee = chainParams.getMemoFee ?: DEFAULT_MEMO_FEE
-            totalFee = totalFee.add(BigInteger.valueOf(memoFee))
+        val toAddress = transaction.to
+        val isNativeCoin = transaction.coin.isNativeToken
+        val hasMemo = !transaction.memo.isNullOrEmpty()
+
+        val isNewAccount = runCatching {
+            tronApi.getAccount(toAddress).isNewAccount()
+        }.getOrDefault(true)
+
+        val baseFee = when {
+            isNativeCoin -> (BYTES_PER_CONTRACT_TX * 1000).toBigInteger()
+            else -> DEFAULT_TOKEN_TRANSFER_FEE
         }
 
-        return totalFee
+        val accountFee = if (isNewAccount) {
+            DEFAULT_CREATE_ACCOUNT_FEE + DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE
+        } else {
+            BigInteger.ZERO
+        }
+
+        val memoFee = if (hasMemo) {
+            DEFAULT_MEMO_TRANSFER_FEE
+        } else {
+            BigInteger.ZERO
+        }
+
+        val totalFee = baseFee + accountFee + memoFee
+
+        return BasicFee(totalFee)
     }
+
+
+    /*
 
     private fun calculateTrc20Fee(
         srcAccount: TronAccountResponseJson?,
@@ -316,7 +262,6 @@ class TronFeeService @Inject constructor(
         chainParams: TronChainParametersJson,
         contractAddress: String?
     ): BigInteger {
-        // TODO: Implement actual energy estimation based on contract
         // For now, use a reasonable default for TRC20 transfers
         val energyRequired = DEFAULT_TRC20_ENERGY
         val energyPrice = DEFAULT_ENERGY_PRICE // Could be fetched from chain params
@@ -331,7 +276,6 @@ class TronFeeService @Inject constructor(
         } else {
             energyRequired - availableEnergy
         }
-
         return BigInteger.valueOf(energyToPay * energyPrice)
     }
  */
@@ -341,12 +285,11 @@ class TronFeeService @Inject constructor(
         private const val BYTES_PER_COIN_TX = 300L // Native TRX transfer
         private const val BYTES_PER_CONTRACT_TX = 345L // TRC20 token transfer
 
-        // Default values
-        private const val DEFAULT_BANDWIDTH_FEE_PRICE = 1000L // 1000 SUN per byte
-        private const val DEFAULT_MEMO_FEE = 1_000_000L // 1 TRX
-        private const val DEFAULT_CREATE_ACCOUNT_FEE = 1_000_000L // 1 TRX
-        private const val DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE = 100_000L // 0.1 TRX
-        private const val DEFAULT_ENERGY_PRICE = 280L // 280 SUN per energy unit
-        private const val DEFAULT_TRC20_ENERGY = 65_000L // Typical TRC20 transfer energy
+        private val DEFAULT_TOKEN_TRANSFER_FEE = "50000000".toBigInteger()
+        private val DEFAULT_MEMO_TRANSFER_FEE = "1000000".toBigInteger()
+
+        // Default inactive destination values
+        private val DEFAULT_CREATE_ACCOUNT_FEE = "1000000".toBigInteger() // 1 TRX
+        private val DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE = "100000".toBigInteger() // 0.1 TRX
     }
 }
