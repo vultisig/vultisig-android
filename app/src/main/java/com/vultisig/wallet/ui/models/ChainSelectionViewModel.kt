@@ -8,9 +8,11 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.ui.models.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -40,6 +42,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val discoverToken: DiscoverTokenUseCase,
     private val navigator: Navigator<Destination>,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.AddChainAccount>().vaultId
@@ -91,6 +94,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             toDisableAccounts.forEach {
                 disableAccount(it.coin)
             }
+            requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
             navigator.back()
         }
     }

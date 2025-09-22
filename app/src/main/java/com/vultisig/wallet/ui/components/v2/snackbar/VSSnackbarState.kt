@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -45,6 +44,6 @@ internal class VSSnackbarState(
 
 @Composable
 internal fun rememberVsSnackbarState(
-    duration: Duration = 450.milliseconds
+    duration: Duration = 2.seconds
 ) = remember { VSSnackbarState(duration) }
 
