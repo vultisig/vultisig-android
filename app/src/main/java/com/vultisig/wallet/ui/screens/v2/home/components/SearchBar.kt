@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -42,21 +44,22 @@ import com.vultisig.wallet.ui.theme.Theme
 fun SearchBar(
     modifier: Modifier = Modifier,
     state: TextFieldState,
-    onCancelClick: ()-> Unit,
-    isFocused: Boolean = false,
+    onCancelClick: () -> Unit,
+    isInitiallyFocused: Boolean,
 ) {
-    var isFocused by remember { mutableStateOf(isFocused) }
+    var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
     val focusRequester = remember {
         FocusRequester()
     }
 
     LaunchedEffect(key1 = Unit) {
-        focusRequester.requestFocus()
+        if (isInitiallyFocused)
+            focusRequester.requestFocus()
     }
 
-    LaunchedEffect(key1 = isFocused) {
-        if(isFocused.not()){
+    LaunchedEffect(key1 = isFocusedState) {
+        if (isFocusedState.not()) {
             focusManager.clearFocus()
         }
     }
@@ -67,7 +70,7 @@ fun SearchBar(
     ) {
         V2Container(
             type = ContainerType.SECONDARY,
-            borderType = if (isFocused)
+            borderType = if (isFocusedState)
                 ContainerBorderType.Bordered(
                     color = Theme.colors.borders.normal,
                 )
@@ -91,8 +94,13 @@ fun SearchBar(
                     )
                     .focusRequester(focusRequester)
                     .onFocusChanged {
-                        isFocused = it.isFocused
+                        isFocusedState = it.isFocused
                     },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Default
+                ),
+                lineLimits = TextFieldLineLimits.SingleLine,
                 textStyle = Theme.brockmann.supplementary.footnote.copy(
                     color = Theme.colors.text.primary
                 ),
@@ -136,7 +144,7 @@ fun SearchBar(
         }
 
 
-        AnimatedContent(targetState = isFocused) { focused ->
+        AnimatedContent(targetState = isFocusedState) { focused ->
             if (focused)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -151,7 +159,7 @@ fun SearchBar(
                         modifier = Modifier
                             .clickable(
                                 onClick = {
-                                    isFocused = false
+                                    isFocusedState = false
                                     state.clearText()
                                     onCancelClick()
                                 }
@@ -169,5 +177,6 @@ private fun PreviewSearchBar() {
     SearchBar(
         state = rememberTextFieldState(),
         onCancelClick = {},
+        isInitiallyFocused = true
     )
 }

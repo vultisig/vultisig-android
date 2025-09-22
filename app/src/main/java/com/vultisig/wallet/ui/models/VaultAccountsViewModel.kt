@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -75,6 +76,7 @@ internal data class AccountUiModel(
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
+    private val requestResultRepository: RequestResultRepository,
 
     private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
@@ -298,8 +300,17 @@ internal class VaultAccountsViewModel @Inject constructor(
         vaultId?.let { vaultId ->
             viewModelScope.launch {
                 navigator.route(Route.AddChainAccount(vaultId))
+                requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
+
+
+                // Manually trigger loadData because dialog popBackStack in NavGraph
+                // doesn't automatically re-trigger LaunchedEffect
+                loadData(vaultId)
             }
         }
     }
 
+    companion object {
+         internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
+    }
 }
