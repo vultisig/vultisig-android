@@ -187,7 +187,6 @@ class TronFeeService @Inject constructor(
         // 2. Energy fee
         val energyFee = calculateEnergyFee(
             srcAccount = srcAccount,
-            contractAddress = contractAddress
         )
 
         totalFee = totalFee.add(energyFee)
@@ -199,6 +198,24 @@ class TronFeeService @Inject constructor(
         }
 
         return totalFee
+    }
+
+    private suspend fun calculateEnergyFee(
+        srcAccount: TronAccountResourceJson?,
+    ): BigInteger {
+        // For now, use a reasonable default for TRC20 transfers
+        val energyRequired = DEFAULT_TRC20_ENERGY
+        val energyPrice = getCacheTronChainParameters().energyFee
+
+        // Check if account has staked energy
+        val availableEnergy = srcAccount?.calculateAvailableEnergy() ?: 0L
+
+        val energyToPay = if (availableEnergy >= DEFAULT_TRC20_ENERGY) {
+            0L
+        } else {
+            energyRequired - availableEnergy
+        }
+        return BigInteger.valueOf(energyToPay * energyPrice)
     }
 
     private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
@@ -251,72 +268,6 @@ class TronFeeService @Inject constructor(
         return BasicFee(totalFee)
     }
 
-
-    /*
-
-    private fun calculateTrc20Fee(
-        srcAccount: TronAccountResponseJson?,
-        dstAccount: TronAccountResponseJson?,
-        chainParams: TronChainParametersJson,
-        hasMemo: Boolean,
-        contractAddress: String?
-    ): BigInteger {
-        var totalFee = BigInteger.ZERO
-
-        // 1. Bandwidth fee (always paid for TRC20)
-        val bandwidthFee = calculateBandwidthFee(
-            srcAccount = srcAccount,
-            isContract = true,
-            chainParams = chainParams
-        )
-        totalFee = totalFee.add(bandwidthFee)
-
-        // 2. Energy fee
-        val energyFee = calculateEnergyFee(
-            srcAccount = srcAccount,
-            chainParams = chainParams,
-            contractAddress = contractAddress
-        )
-        totalFee = totalFee.add(energyFee)
-
-        // 3. Account activation fee (if destination is new)
-        if (isNewAccount(dstAccount)) {
-            val activationFee = calculateActivationFee(chainParams)
-            totalFee = totalFee.add(activationFee)
-        }
-
-        // 4. Memo fee
-        if (hasMemo) {
-            val memoFee = chainParams.getMemoFee ?: DEFAULT_MEMO_FEE
-            totalFee = totalFee.add(BigInteger.valueOf(memoFee))
-        }
-
-        return totalFee
-    }
-
-    private fun calculateEnergyFee(
-        srcAccount: TronAccountResponseJson?,
-        chainParams: TronChainParametersJson,
-        contractAddress: String?
-    ): BigInteger {
-        // For now, use a reasonable default for TRC20 transfers
-        val energyRequired = DEFAULT_TRC20_ENERGY
-        val energyPrice = DEFAULT_ENERGY_PRICE // Could be fetched from chain params
-
-        // Check if account has staked energy
-        val availableEnergy = srcAccount?.accountResource?.energyLimit?.minus(
-            srcAccount.accountResource.energyUsed ?: 0
-        ) ?: 0
-
-        val energyToPay = if (availableEnergy >= energyRequired) {
-            0L
-        } else {
-            energyRequired - availableEnergy
-        }
-        return BigInteger.valueOf(energyToPay * energyPrice)
-    }
- */
-
     companion object {
         // Bandwidth requirements
         private const val BYTES_PER_COIN_TX = 300L // Native TRX transfer
@@ -328,5 +279,7 @@ class TronFeeService @Inject constructor(
         // Default inactive destination values
         private val DEFAULT_CREATE_ACCOUNT_FEE = "1000000".toBigInteger() // 1 TRX
         private val DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE = "100000".toBigInteger() // 0.1 TRX
+
+        private val DEFAULT_TRC20_ENERGY = 65_000L
     }
 }
