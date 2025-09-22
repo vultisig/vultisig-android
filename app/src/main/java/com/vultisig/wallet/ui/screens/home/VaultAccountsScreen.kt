@@ -52,8 +52,8 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
+import com.vultisig.wallet.ui.screens.v2.home.HomePage
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
 
@@ -63,6 +63,7 @@ internal fun VaultAccountsScreen(
     navHostController: NavHostController,
     viewModel: VaultAccountsViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
+    onToggleVaultListClick: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -90,23 +91,19 @@ internal fun VaultAccountsScreen(
         )
     }
 
-    VaultAccountsScreen(
+    HomePage(
         state = state,
-        isRearrangeMode = isRearrangeMode,
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         openCamera = viewModel::openCamera,
         onAccountClick = viewModel::openAccount,
-        onChooseChains = {
-            navHostController.navigate(
-                Screen.AddChainAccount.createRoute(vaultId)
-            )
-        },
         onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,
-        onBackupWarningClick = viewModel::backupVault,
-        onMigrateClick = viewModel::migrate,
+        onOpenSettingsClick = viewModel::openSettings,
+        onToggleVaultListClick = onToggleVaultListClick,
+        onChooseChains = viewModel::openAddChainAccount,
     )
+
 }
 
 

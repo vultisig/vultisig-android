@@ -538,4 +538,24 @@
 
     <string name="referral_not_found">Još nema preporuke</string>
     <string name="referral_cta">Pretvori svoj trezor u stroj za nagrade. Stvori svoju preporuku sada i počni zarađivati</string>
+    <string name="transaction_buy">Kupi</string>
+    <string name="transaction_receive">Primi</string>
+    <string name="search_bar_portfolio">Portfelj</string>
+    <string name="search_bar_nfts">NFT-ove</string>
+    <string name="search_bar_soon">Uskoro</string>
+    <string name="upgrade_banner_sign_faster">Potpišite brže nego ikad prije</string>
+    <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>
+    <string name="upgrade_banner_upgrade_now">Nadogradite sada</string>
+    <string name="home_portfolio_balance">Stanje portfelja</string>
+    <string name="wallet">Novčanik</string>
+    <string name="earn">Zaradi</string>
+    <string name="hide_balance">Sakrij stanje</string>
+    <string name="show_balance">Prikaži stanje</string>
+    <string name="no_chains_found">Nisu pronađeni lanci</string>
+    <string name="no_chian_make_sure_that">Provjerite je li lanac koji tražite omogućen.</string>
+    <string name="no_chain_customize_chains">Prilagodi lance</string>
+    <string name="search_bar_search">Traži</string>
+    <string name="search_bar_cancel">Otkaži</string>
+    <string name="chain_selection_select_chains">Odaberite lance</string>
+    <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
 </resources>

@@ -59,6 +59,7 @@ data class TextButton(
     val dark: Color = Color(0xFF02122B),
     val light: Color = Color(0xFFF0F4FC),
     val disabled: Color = Color(0xFF718096),
+    val dim: Color = Color(0xFF5180FC)
 )
 
 data class Border(

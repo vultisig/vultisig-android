@@ -641,4 +641,9 @@ internal sealed class Route {
         val tokenId: String,
         val mergeId: String,
     )
+
+    @Serializable
+    data class AddChainAccount(
+        val vaultId: String
+    )
 }
