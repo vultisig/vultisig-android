@@ -4,12 +4,6 @@ import com.vultisig.wallet.data.models.Chain
 import java.math.BigInteger
 
 interface FeeService {
-    suspend fun calculateFees(
-        chain: Chain,
-        limit: BigInteger,
-        isSwap: Boolean,
-        to: String? = null
-    ): Fee = throw NotImplementedError("Service not Implemented")
 
     suspend fun calculateFees(transaction: BlockchainTransaction): Fee
 
