@@ -84,7 +84,6 @@ class TronFeeService @Inject constructor(
              calculateTrc20Fee(
                 srcAccount = srcAccount,
                 dstAccount = dstAccount,
-                contractAddress = coin.contractAddress
             )
         }
 
@@ -172,7 +171,6 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateTrc20Fee(
         srcAccount: TronAccountResourceJson?,
         dstAccount: TronAccountJson?,
-        contractAddress: String?
     ): BigInteger {
         var totalFee = BigInteger.ZERO
 
@@ -203,7 +201,7 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
     ): BigInteger {
-        // For now, use a reasonable default for TRC20 transfers
+        // TODO: Simulate TRC_20 transfer
         val energyRequired = DEFAULT_TRC20_ENERGY
         val energyPrice = getCacheTronChainParameters().energyFee
 
@@ -221,7 +219,6 @@ class TronFeeService @Inject constructor(
     private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
         return maxOf(energyLimit - energyUsed, 0L)
     }
-
 
     private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
         return if (chainParameters == null) {

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
+import wallet.core.jni.CoinType
 
 /**
  * Fee model for The Open Network (TON).
