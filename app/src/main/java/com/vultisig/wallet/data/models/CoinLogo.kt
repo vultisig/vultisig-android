@@ -105,6 +105,7 @@ internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
         "ytcy" -> R.drawable.ytcy
         "mantle" -> R.drawable.mantle
         "stcy" -> R.drawable.stcy
+        "auto" -> R.drawable.auto_token_kujira
         else -> logoName
     }
 }
