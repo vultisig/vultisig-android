@@ -50,8 +50,8 @@ internal class JupiterApiImpl @Inject constructor(
             put("dynamicComputeUnitLimit", true)
             put("prioritizationFeeLamports", buildJsonObject {
                 put("priorityLevelWithMaxLamports", buildJsonObject {
-                    put("maxLamports", 6000000)
-                    put("priorityLevel", "high")
+                    put("maxLamports", MAX_PRIORITY_FEE_LAMPORTS)
+                    put("priorityLevel", PRIORITY_LEVEL)
                 })
             })
         }
@@ -77,5 +77,7 @@ internal class JupiterApiImpl @Inject constructor(
 
     private companion object {
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
+        val MAX_PRIORITY_FEE_LAMPORTS = 6000000
+        val PRIORITY_LEVEL = "high"
     }
 }
