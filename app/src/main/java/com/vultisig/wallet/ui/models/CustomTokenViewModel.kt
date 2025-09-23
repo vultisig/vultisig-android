@@ -21,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class CustomTokenUiModel(
@@ -59,6 +60,7 @@ internal class CustomTokenViewModel @Inject constructor(
                 showError()
             } else {
                 val price = fiatValueToStringMapper(searchedToken.fiatValue)
+                Timber.d("token url: ${searchedToken.coin.logo}")
                 uiModel.update {
                     it.copy(
                         isLoading = false,
