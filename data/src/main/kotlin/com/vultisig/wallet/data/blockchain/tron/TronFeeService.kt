@@ -247,6 +247,7 @@ class TronFeeService @Inject constructor(
 
         val energyFactor = (contractEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
         val maxFactor = (contractMaxEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
+
         val energyUnitsRequired =
             energyRequired.toBigDecimal().multiply(energyFactor).toBigInteger()
         val maxEnergyUnitsRequired =
