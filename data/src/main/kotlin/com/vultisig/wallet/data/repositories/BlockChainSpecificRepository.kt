@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.blockchain.Eip1559
@@ -453,6 +454,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         ownerAddressBase58 = token.address,
                         contractAddressBase58 = token.contractAddress,
                         recipientAddressHex = recipientAddressHex,
+                        functionSelector = TRANSFER_FUNCTION_SELECTOR,
                         amount = rawBalance
                     )
                 }

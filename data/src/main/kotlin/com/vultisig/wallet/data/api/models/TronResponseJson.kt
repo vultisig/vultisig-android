@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.models
 
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
@@ -100,6 +101,14 @@ internal data class TronAccountRequestJson(
 )
 
 @Serializable
+internal data class TronContractRequestJson(
+    val value: String,
+) {
+    @EncodeDefault
+    val visible: Boolean = true
+}
+
+@Serializable
 data class TronAccountResourceJson(
     @SerialName("freeNetUsed")
     val freeNetUsed: Long = 0L,
@@ -132,3 +141,15 @@ data class TronAccountJson(
     @SerialName("address")
     val address: String = "",
 )
+
+@Serializable
+data class TronContractInfoJson(
+    @SerialName("contract_state")
+    val contractState: ContractStateJson,
+) {
+    @Serializable
+    data class ContractStateJson(
+        @SerialName("energy_factor")
+        val energyFactor: String = "0",
+    )
+}
