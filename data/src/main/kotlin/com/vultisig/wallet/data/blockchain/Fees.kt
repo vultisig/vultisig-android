@@ -20,6 +20,13 @@ data class Eip1559(
     override val amount: BigInteger,
 ): Fee
 
+data class TronFees(
+    val maxEnergyRequired: BigInteger, // If UI requires so, at some point we should enhance this with discounts
+    val energyRequired: BigInteger,
+    val bandwidthRequired: BigInteger,
+    val amount: BigInteger,
+)
+
 data class BasicFee(
     override val amount: BigInteger
 ): Fee
