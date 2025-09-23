@@ -14,9 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-internal fun TabMenuAndSearchBar(
+internal fun HomePageTabMenuAndSearchBar(
     modifier: Modifier = Modifier,
     searchTextFiledState: TextFieldState,
     onTNFTsClick: () -> Unit = {},
@@ -81,8 +82,8 @@ internal fun TabMenuAndSearchBar(
 
 @Preview
 @Composable
-private fun PreviewTabMenuAndSearchBar() {
-    TabMenuAndSearchBar(
+private fun PreviewHomePageTabMenuAndSearchBar() {
+    HomePageTabMenuAndSearchBar(
         isTabMenu = true,
         onSearchClick = {},
         onCancelSearchClick = {},
