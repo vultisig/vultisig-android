@@ -41,6 +41,7 @@ class SolanaHelper(
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
         val input = Solana.SigningInput.newBuilder()
+            .setV0Msg(true)
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setSender(keysignPayload.coin.address)
             .setPriorityFeePrice(
@@ -67,7 +68,7 @@ class SolanaHelper(
                 .build()
                 .toByteArray()
         } else {
-            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey != null) {
+            if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty()  && !solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
                 val transfer = Solana.TokenTransfer.newBuilder()
                     .setTokenMintAddress(keysignPayload.coin.contractAddress)
                     .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)

@@ -104,8 +104,14 @@ fun Context.saveBitmapToDownloads(bitmap: Bitmap, fileName: String): Uri?{
 @RequiresApi(Build.VERSION_CODES.Q)
 internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: String): Uri? {
     val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+        put(
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            fileName
+        )
+        put(
+            MediaStore.MediaColumns.MIME_TYPE,
+            "image/png"
+        )
         put(
             MediaStore.MediaColumns.RELATIVE_PATH,
             Environment.DIRECTORY_DOWNLOADS + "/$QRCODE_DIRECTORY_NAME_FULL"
@@ -115,19 +121,19 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
     val resolver = contentResolver
 
     val downloadUri: Uri =
-        resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return null
-    return try {
-        resolver.openOutputStream(downloadUri).use { bitmapStream ->
-            if (bitmapStream != null) {
-                bitmap.compressPng(bitmapStream)
-                bitmap.recycle()
-                downloadUri
-            } else {
-                null
-            }
+        resolver.insert(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            contentValues
+        ) ?: return null
+
+    return resolver.openOutputStream(downloadUri).use { bitmapStream ->
+        if (bitmapStream != null) {
+            bitmap.compressPng(bitmapStream)
+            bitmap.recycle()
+            downloadUri
+        } else {
+            null
         }
-    } catch (e: Exception) {
-        null
     }
 }
 

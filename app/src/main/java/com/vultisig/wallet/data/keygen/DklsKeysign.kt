@@ -286,7 +286,7 @@ class DKLSKeysign(
         try {
             val keysignSetupMsg: ByteArray
 
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 keysignSetupMsg = getDKLSKeysignSetupMessage(messageToSign)
 
                 sessionApi.uploadSetupMessage(

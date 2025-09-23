@@ -66,12 +66,14 @@ import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -90,6 +92,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.minus
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
@@ -102,7 +105,6 @@ internal data class SwapFormUiModel(
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
-    val minimumAmount: String = BigInteger.ZERO.toString(),
     val networkFee: String = "",
     val networkFeeFiat: String = "",
     val totalFee: String = "0",
@@ -233,9 +235,10 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFee = gasFee.value ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
             )
-            val gasFeeFiatValue = estimatedNetworkFeeFiatValue.value ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-            )
+            val gasFeeFiatValue =
+                estimatedNetworkFeeFiatValue.value ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
+                )
 
             val srcToken = selectedSrc.account.token
             val dstToken = selectedDst.account.token
@@ -248,34 +251,31 @@ internal class SwapFormViewModel @Inject constructor(
 
             val srcAddress = selectedSrc.address.address
 
-            val srcAmountInt = srcAmount
-                ?.movePointRight(selectedSrc.account.token.decimal)
-                ?.toBigInteger()
+            val srcAmountInt =
+                srcAmount?.movePointRight(selectedSrc.account.token.decimal)?.toBigInteger()
+                    ?.takeIf { it != BigInteger.ZERO } ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(
+                        if (srcAmountState.text.toString()
+                                .toBigDecimalOrNull() == null
+                        ) R.string.swap_form_invalid_amount
+                        else R.string.swap_screen_invalid_zero_token_amount
+                    )
+                )
 
             val selectedSrcBalance =
                 selectedSrc.account.tokenValue?.value ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                    UiText.StringResource(R.string.send_error_insufficient_balance)
                 )
-            if (srcAmountInt == BigInteger.ZERO)
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
-                )
-            val srcTokenValue = srcAmountInt
-                ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
-                )
+
+            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcAmountInt)
 
             val quote = quote ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
             )
 
-            val swapFee =
-                quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
-
             if (srcToken.isNativeToken) {
                 if (srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value
-                        ?: BigInteger.ZERO) + swapFee > selectedSrcBalance
+                        ?: BigInteger.ZERO) > selectedSrcBalance
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -284,17 +284,21 @@ internal class SwapFormViewModel @Inject constructor(
             } else {
                 val nativeTokenAccount =
                     selectedSrc.address.accounts.find { it.token.isNativeToken }
-                val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
-                    ?: throw InvalidTransactionDataException(
+                val nativeTokenValue =
+                    nativeTokenAccount?.tokenValue?.value ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
 
-                if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
-                        ?: BigInteger.ZERO) + swapFee
-                ) {
+                if (selectedSrcBalance < srcAmountInt) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+                if (nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
+                        ?: BigInteger.ZERO)
+                ) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.signing_error_insufficient_funds)
                     )
                 }
             }
@@ -321,8 +325,8 @@ internal class SwapFormViewModel @Inject constructor(
                             srcToken, srcTokenValue, AppCurrency.USD,
                         )
 
-                        val isAffiliate = srcFiatValue.value >=
-                                AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                        val isAffiliate =
+                            srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
                         RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -350,8 +354,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     toAmountLimit = "0",
                                     streamingInterval = "1",
                                     streamingQuantity = "0",
-                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                                        .inWholeSeconds.toULong(),
+                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
                                     isAffiliate = isAffiliate,
                                 )
                             )
@@ -361,12 +364,12 @@ internal class SwapFormViewModel @Inject constructor(
                     is SwapQuote.MayaChain -> {
                         val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
-                        val dstAddress = if (!srcToken.isNativeToken &&
-                            srcToken.chain.standard == TokenStandard.EVM) {
-                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
-                        } else {
-                            quote.data.inboundAddress ?: srcAddress
-                        }
+                        val dstAddress =
+                            if (!srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM) {
+                                quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                            } else {
+                                quote.data.inboundAddress ?: srcAddress
+                            }
 
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
@@ -381,8 +384,8 @@ internal class SwapFormViewModel @Inject constructor(
                             srcToken, srcTokenValue, AppCurrency.USD,
                         )
 
-                        val isAffiliate = srcFiatValue.value >=
-                                AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                        val isAffiliate =
+                            srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
                         val regularSwapTransaction = RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
@@ -410,8 +413,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     toAmountLimit = "0",
                                     streamingInterval = "3",
                                     streamingQuantity = "0",
-                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                                        .inWholeSeconds.toULong(),
+                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
                                     isAffiliate = isAffiliate,
                                 )
                             )
@@ -559,6 +561,7 @@ internal class SwapFormViewModel @Inject constructor(
             gasLimit = getGasLimit(srcToken),
         )
     } catch (e: Exception) {
+        Timber.d(e)
         throw InvalidTransactionDataException(
             UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
         )
@@ -600,8 +603,7 @@ internal class SwapFormViewModel @Inject constructor(
             )
         )
 
-        val chain: Chain = requestResultRepository.request(requestId)
-            ?: return null
+        val chain: Chain = requestResultRepository.request(requestId) ?: return null
 
         if (chain == selectedChain) {
             return null
@@ -695,21 +697,19 @@ internal class SwapFormViewModel @Inject constructor(
 
         val srcToken = selectedSrcAccount.token
 
-        val swapFee =
-            quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+        val swapFee = quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
 
         val maxUsableTokenAmount =
             srcTokenValue.value - swapFee - (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                 ?: BigInteger.ZERO)
 
-        if(maxUsableTokenAmount <= BigInteger.ZERO) {
+        if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
             return
         }
 
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
-            .multiply(percentage.toBigDecimal())
-            .setScale(6, RoundingMode.DOWN)
+            .multiply(percentage.toBigDecimal()).setScale(6, RoundingMode.DOWN)
 
         srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
     }
@@ -745,11 +745,9 @@ internal class SwapFormViewModel @Inject constructor(
         vaultId: String,
     ) {
         viewModelScope.launch {
-            accountsRepository.loadAddresses(vaultId)
-                .map { addresses ->
+            accountsRepository.loadAddresses(vaultId).map { addresses ->
                     addresses.filter { it.chain.IsSwapSupported }
-                }
-                .catch {
+                }.catch {
                     Timber.e(it)
                     emit(emptyList())
                 }.collect(addresses)
@@ -792,16 +790,12 @@ internal class SwapFormViewModel @Inject constructor(
 
     private fun calculateGas() {
         viewModelScope.launch {
-            selectedSrc
-                .filterNotNull()
-                .map {
+            selectedSrc.filterNotNull().map {
                     it to gasFeeRepository.getGasFee(it.address.chain, it.address.address)
-                }
-                .catch {
+                }.catch {
                     // TODO handle error when querying gas fee
                     Timber.e(it)
-                }
-                .collect { (selectedSrc, gasFee) ->
+                }.collect { (selectedSrc, gasFee) ->
                     this@SwapFormViewModel.gasFee.value = gasFee
                     val selectedAccount = selectedSrc.account
                     val chain = selectedAccount.token.chain
@@ -840,27 +834,26 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private fun collectTotalFee() {
-        estimatedNetworkFeeFiatValue.filterNotNull().combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
-            gasFeeFiat + swapFeeFiat
-        }.onEach { totalFee ->
-            uiState.update {
-                it.copy(totalFee = fiatValueToString(totalFee))
-            }
-        }.launchIn(viewModelScope)
+        estimatedNetworkFeeFiatValue.filterNotNull()
+            .combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
+                gasFeeFiat + swapFeeFiat
+            }.onEach { totalFee ->
+                uiState.update {
+                    it.copy(totalFee = fiatValueToString(totalFee))
+                }
+            }.launchIn(viewModelScope)
     }
 
+    @OptIn(FlowPreview::class)
     private fun calculateFees() {
         viewModelScope.launch {
             combine(
                 selectedSrc.filterNotNull(),
                 selectedDst.filterNotNull(),
-            ) { src, dst -> src to dst }
-                .distinctUntilChanged()
-                .combine(
+            ) { src, dst -> src to dst }.distinctUntilChanged().combine(
                     srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
                     address to srcAmount
-                }
-                .combine(refreshQuoteState) { it, _ -> it }
+                }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
@@ -868,9 +861,8 @@ internal class SwapFormViewModel @Inject constructor(
                     val srcToken = src.account.token
                     val dstToken = dst.account.token
 
-                    val srcTokenValue = amount
-                        ?.movePointRight(src.account.token.decimal)
-                        ?.toBigInteger()
+                    val srcTokenValue =
+                        amount?.movePointRight(src.account.token.decimal)?.toBigInteger()
 
                     try {
                         if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
@@ -889,8 +881,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val currency = appCurrencyRepository.currency.first()
 
-                        val srcFiatValue =
-                            convertTokenValueToFiat(srcToken, tokenValue, currency)
+                        val srcFiatValue = convertTokenValueToFiat(srcToken, tokenValue, currency)
 
                         val srcFiatValueText = srcFiatValue.let {
                             fiatValueToString(it)
@@ -938,18 +929,10 @@ internal class SwapFormViewModel @Inject constructor(
                                 val recommendedMinAmountTokenString =
                                     mapTokenValueToDecimalUiString(recommendedMinAmountToken)
                                 amount.let {
-                                    uiState.update {
-                                        if (amount < recommendedMinAmountToken.decimal) {
-                                            it.copy(
-                                                minimumAmount = recommendedMinAmountTokenString,
-                                                isSwapDisabled = true
-                                            )
-                                        } else {
-                                            it.copy(
-                                                minimumAmount = BigInteger.ZERO.toString(),
-                                                isSwapDisabled = false
-                                            )
-                                        }
+                                    if (amount < recommendedMinAmountToken.decimal) {
+                                        throw SwapException.SmallSwapAmount(
+                                            recommendedMinAmountTokenString
+                                        )
                                     }
                                 }
 
@@ -957,23 +940,18 @@ internal class SwapFormViewModel @Inject constructor(
                                     convertTokenValueToFiat(dstToken, quote.fees, currency)
                                 swapFeeFiat.value = fiatFees
 
-                                val estimatedDstTokenValue =
-                                    mapTokenValueToDecimalUiString(
-                                        quote.expectedDstValue
-                                    )
+                                val estimatedDstTokenValue = mapTokenValueToDecimalUiString(
+                                    quote.expectedDstValue
+                                )
 
                                 val estimatedDstFiatValue = convertTokenValueToFiat(
-                                    dstToken,
-                                    quote.expectedDstValue,
-                                    currency
+                                    dstToken, quote.expectedDstValue, currency
                                 )
 
                                 uiState.update {
                                     it.copy(
-                                        provider = if (provider == SwapProvider.MAYA)
-                                            R.string.swap_form_provider_mayachain.asUiText()
-                                        else
-                                            R.string.swap_form_provider_thorchain.asUiText(),
+                                        provider = if (provider == SwapProvider.MAYA) R.string.swap_form_provider_mayachain.asUiText()
+                                        else R.string.swap_form_provider_thorchain.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
                                         estimatedDstFiatValue = fiatValueToString(
@@ -1006,12 +984,10 @@ internal class SwapFormViewModel @Inject constructor(
                                     value = quote.dstAmount.toBigInteger(),
                                     token = dstToken,
                                 )
-                                val tokenFees = TokenValue(
-                                    value = quote.tx.gasPrice.toBigInteger() *
-                                            (quote.tx.gas.takeIf { it != 0L }
-                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
-                                    token = srcNativeToken
-                                )
+                                val tokenFees =
+                                    TokenValue(value = quote.tx.gasPrice.toBigInteger() * (quote.tx.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+                                        token = srcNativeToken)
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
@@ -1029,9 +1005,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     mapTokenValueToDecimalUiString(expectedDstValue)
 
                                 val estimatedDstFiatValue = convertTokenValueToFiat(
-                                    dstToken,
-                                    expectedDstValue,
-                                    currency
+                                    dstToken, expectedDstValue, currency
                                 )
 
                                 uiState.update {
@@ -1071,12 +1045,10 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
-                                val tokenFees = TokenValue(
-                                    value = quote.tx.gasPrice.toBigInteger() *
-                                            (quote.tx.gas.takeIf { it != 0L }
-                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
-                                    token = srcNativeToken
-                                )
+                                val tokenFees =
+                                    TokenValue(value = quote.tx.gasPrice.toBigInteger() * (quote.tx.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+                                        token = srcNativeToken)
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
@@ -1094,8 +1066,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     mapTokenValueToDecimalUiString(expectedDstValue)
 
                                 val estimatedDstFiatValue = convertTokenValueToFiat(
-                                    dstToken,
-                                    expectedDstValue, currency
+                                    dstToken, expectedDstValue, currency
                                 )
 
                                 uiState.update {
@@ -1139,17 +1110,14 @@ internal class SwapFormViewModel @Inject constructor(
                                     val tokenContract = quote.tx.swapFeeTokenContract
                                     val chainId = srcNativeToken.chain.id
                                     searchToken(
-                                        chainId,
-                                        tokenContract
-                                    )?.coin
-                                        ?: srcNativeToken
+                                        chainId, tokenContract
+                                    )?.coin ?: srcNativeToken
                                 } else {
                                     srcNativeToken
                                 }
 
                                 val tokenFees = TokenValue(
-                                    value = quote.tx.swapFee.toBigInteger(),
-                                    token = feeCoin
+                                    value = quote.tx.swapFee.toBigInteger(), token = feeCoin
                                 )
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -1160,15 +1128,13 @@ internal class SwapFormViewModel @Inject constructor(
                                     provider = provider.getSwapProviderId(),
                                 )
 
-                                val fiatFees =
-                                    convertTokenValueToFiat(feeCoin, tokenFees, currency)
+                                val fiatFees = convertTokenValueToFiat(feeCoin, tokenFees, currency)
                                 swapFeeFiat.value = fiatFees
                                 val estimatedDstTokenValue =
                                     mapTokenValueToDecimalUiString(expectedDstValue)
 
                                 val estimatedDstFiatValue = convertTokenValueToFiat(
-                                    dstToken,
-                                    expectedDstValue, currency
+                                    dstToken, expectedDstValue, currency
                                 )
 
                                 uiState.update {
@@ -1195,35 +1161,36 @@ internal class SwapFormViewModel @Inject constructor(
                     } catch (e: SwapException) {
                         this@SwapFormViewModel.quote = null
                         val formError = when (e) {
-                            is SwapException.SwapIsNotSupported ->
-                                UiText.StringResource(R.string.swap_route_not_available)
+                            is SwapException.SwapIsNotSupported -> UiText.StringResource(R.string.swap_route_not_available)
 
-                            is SwapException.AmountCannotBeZero ->
-                                UiText.StringResource(R.string.swap_form_invalid_amount)
+                            is SwapException.AmountCannotBeZero -> UiText.StringResource(R.string.swap_form_invalid_amount)
 
-                            is SwapException.SameAssets ->
-                                UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                            is SwapException.SameAssets -> UiText.StringResource(R.string.swap_screen_same_asset_error_message)
 
-                            is SwapException.UnkownSwapError ->
-                                UiText.DynamicString(e.message ?: "Unknown error")
+                            is SwapException.UnkownSwapError -> UiText.DynamicString(
+                                e.message ?: "Unknown error"
+                            )
 
-                            is SwapException.InsufficentSwapAmount ->
-                                UiText.StringResource(R.string.swap_error_amount_too_low)
+                            is SwapException.InsufficentSwapAmount -> UiText.StringResource(R.string.swap_error_amount_too_low)
 
-                            is SwapException.SwapRouteNotAvailable ->
-                                UiText.StringResource(R.string.swap_route_not_available)
+                            is SwapException.SwapRouteNotAvailable -> UiText.StringResource(R.string.swap_route_not_available)
 
-                            is SwapException.TimeOut ->
-                                UiText.StringResource(R.string.swap_error_time_out)
+                            is SwapException.TimeOut -> UiText.StringResource(R.string.swap_error_time_out)
 
-                            is SwapException.NetworkConnection ->
-                                UiText.StringResource(R.string.network_connection_lost)
+                            is SwapException.NetworkConnection -> UiText.StringResource(R.string.network_connection_lost)
 
-                            is SwapException.SmallSwapAmount ->
-                                UiText.StringResource(R.string.swap_error_small_swap_amount)
+                            is SwapException.SmallSwapAmount -> {
+                                e.message?.let {
+                                    UiText.FormattedText(
+                                        R.string.swap_form_minimum_amount,
+                                        listOf(it, uiState.value.selectedSrcToken?.title ?: "")
+                                    )
+                                } ?: run {
+                                    UiText.StringResource(R.string.swap_error_amount_too_low)
+                                }
+                            }
 
-                            is SwapException.InsufficientFunds ->
-                                UiText.StringResource(R.string.swap_error_small_insufficient_funds)
+                            is SwapException.InsufficientFunds -> UiText.StringResource(R.string.swap_error_small_insufficient_funds)
                         }
                         uiState.update {
                             it.copy(
@@ -1289,14 +1256,10 @@ internal class SwapFormViewModel @Inject constructor(
     private fun getGasLimit(
         token: Coin
     ): BigInteger? {
-        val isEVMSwap =
-            token.isNativeToken &&
-                    token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
-        return if (isEVMSwap)
-            BigInteger.valueOf(
-                if (token.chain == Chain.Ethereum)
-                    ETH_GAS_LIMIT else ARB_GAS_LIMIT
-            ) else null
+        val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
+        return if (isEVMSwap) BigInteger.valueOf(
+            if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT
+        ) else null
     }
 
     companion object {
@@ -1356,8 +1319,7 @@ internal fun List<Address>.findCurrentSrc(
         val selectedAddress = currentSrc.address
         val selectedAccount = currentSrc.account
         val address = first {
-            it.chain == selectedAddress.chain &&
-                    it.address == selectedAddress.address
+            it.chain == selectedAddress.chain && it.address == selectedAddress.address
         }
         return SendSrc(
             address,

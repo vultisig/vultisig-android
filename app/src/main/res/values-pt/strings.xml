@@ -536,4 +536,5 @@
     <string name="share_sheet_more">Mais</string>
     <string name="referral_not_found">Ainda sem indicação</string>
     <string name="referral_cta">Transforme seu cofre em uma máquina de recompensas. Crie sua indicação agora e comece a ganhar</string>
+    <string name="error_saving_qr_code">Falha ao guardar o código QR. %1$s</string>
 </resources>

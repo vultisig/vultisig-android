@@ -18,13 +18,11 @@ import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class SettingsUiModel(
@@ -146,6 +144,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             )
         )
 
+    data object Vult :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.vult),
+                leadingIcon = R.drawable.vult,
+                trailingIcon = R.drawable.ic_small_caret_right
+            )
+        )
+    
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
@@ -246,6 +253,7 @@ internal class SettingsViewModel @Inject constructor(
                 title = UiText.StringResource(R.string.vultisig_community),
                 items = listOf(
                     Twitter,
+                    Vult,
                     Discord,
                     Github,
                     VultisigWebsite
@@ -280,6 +288,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             Discord -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD))
+            Vult -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_TOKEN))
             Faq -> navigateTo(Destination.FAQSetting)
             Github -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.GITHUB))
             is Language -> {
@@ -300,7 +309,7 @@ internal class SettingsViewModel @Inject constructor(
                 // TODO: Implement education section navigation
             }
 
-            VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT))
+            VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))
         }
     }
 
