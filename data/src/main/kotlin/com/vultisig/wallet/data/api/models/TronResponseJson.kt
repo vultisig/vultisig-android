@@ -59,11 +59,38 @@ internal data class TronBalanceResponseData(
 
 @Serializable
 internal data class TronTriggerConstantContractJson(
+    @SerialName("result")
+    val result: Result? = Result(),
     @SerialName("energy_used")
-    val energyUsed: Long,
+    val energyUsed: Long = 0L,
     @SerialName("energy_penalty")
-    val energyPenalty: Long
-)
+    val energyPenalty: Long = 0L,
+    @SerialName("transaction")
+    val transaction: Transaction,
+) {
+    @Serializable
+    data class Result(
+        val result: Boolean = false,
+        val message: String = "",
+    )
+
+    @Serializable
+    data class RetItem(
+        val ret: String? = null,
+    )
+
+    @Serializable
+    data class Transaction(
+        @SerialName("ret")
+        val ret: List<RetItem>? = null,
+        @SerialName("raw_data_hex")
+        val rawDataHex: String = "",
+    )
+
+    fun isSuccessfulSimulation(): Boolean {
+        return result?.result == true && transaction.ret?.all { it.ret != "FAILED" } != false
+    }
+}
 
 @Serializable
 data class TronChainParametersJson(

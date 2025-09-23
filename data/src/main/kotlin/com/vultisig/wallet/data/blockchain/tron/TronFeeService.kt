@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.blockchain.tron
 
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
@@ -9,8 +10,10 @@ import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -81,9 +84,10 @@ class TronFeeService @Inject constructor(
                 hasMemo = !memo.isNullOrEmpty()
             )
         } else {
-             calculateTrc20Fee(
+            calculateTrc20Fee(
                 srcAccount = srcAccount,
                 dstAccount = dstAccount,
+                transaction = transaction,
             )
         }
 
@@ -171,6 +175,7 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateTrc20Fee(
         srcAccount: TronAccountResourceJson?,
         dstAccount: TronAccountJson?,
+        transaction: Transfer,
     ): BigInteger {
         var totalFee = BigInteger.ZERO
 
@@ -185,6 +190,7 @@ class TronFeeService @Inject constructor(
         // 2. Energy fee
         val energyFee = calculateEnergyFee(
             srcAccount = srcAccount,
+            transfer = transaction,
         )
 
         totalFee = totalFee.add(energyFee)
@@ -200,14 +206,26 @@ class TronFeeService @Inject constructor(
 
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
+        transaction: Transfer,
     ): BigInteger {
-        // TODO: Simulate TRC_20 transfer
+        val fromAddress = transaction.coin.address
+        val toAddress = Numeric.toHexString(Base58.decode(transaction.to))
+        val contract = transaction.coin.contractAddress
+        val amount = transaction.amount
+
+        val triggerConstantResult = tronApi.getTriggerConstantContractFee(
+            ownerAddressBase58 = fromAddress,
+            contractAddressBase58 = contract,
+            recipientAddressHex = toAddress,
+            functionSelector = TRANSFER_FUNCTION_SELECTOR,
+            amount = amount,
+        )
+
         val energyRequired = DEFAULT_TRC20_ENERGY
         val energyPrice = getCacheTronChainParameters().energyFee
 
         // Check if account has staked energy
         val availableEnergy = srcAccount?.calculateAvailableEnergy() ?: 0L
-
         val energyToPay = if (availableEnergy >= DEFAULT_TRC20_ENERGY) {
             0L
         } else {
