@@ -482,7 +482,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockHeaderTxTrieRoot = rawData.txTrieRoot,
                     blockHeaderParentHash = rawData.parentHash,
                     blockHeaderWitnessAddress = rawData.witnessAddress,
-                    gasFeeEstimation = estimation.toULong()
+                    gasFeeEstimation = "0".toULong(),// estimation.toULong()
                 )
             )
         }

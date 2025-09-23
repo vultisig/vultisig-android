@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
-import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -152,10 +151,6 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.Polkadot -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
-                val feeService = PolkadotFeeService(polkadotApi)
-                val result = feeService.calculateFees(Chain.Polkadot, BigInteger.ZERO, false, "")
-
-                println(result)
 
                 TokenValue(
                     value = PolkadotHelper.DEFAULT_FEE_PLANCKS.toBigInteger(),
