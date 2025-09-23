@@ -8,7 +8,7 @@ import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
-import com.vultisig.wallet.data.common.stripHexPrefix
+import com.vultisig.wallet.data.chains.helpers.TronFunctions.buildTrc20TransferParameters
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -87,7 +87,7 @@ internal class TronApiImpl @Inject constructor(
     ): Long {
         val functionSelector = FUNCTION_SELECTOR
         val parameter =
-            buildTrc20TransParameter(
+            buildTrc20TransferParameters(
                 recipientBaseHex = recipientAddressHex,
                 amount = amount
             )
@@ -116,12 +116,6 @@ internal class TronApiImpl @Inject constructor(
                 path("wallet", "getchainparameters")
             }
         }.body<TronChainParametersJson>()
-    }
-
-    private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {
-        val paddedAddressHex = recipientBaseHex.stripHexPrefix().drop(2).padStart(64, '0')
-        val paddedAmountHex = amount.toString(16).padStart(64, '0')
-        return paddedAddressHex + paddedAmountHex
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
