@@ -446,18 +446,31 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             // Tron does not have a 0x... it can be any address
             // We will only simulate the transaction fee with below address
             val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
+            val estimation = if (token.isNativeToken) {
+                TRON_DEFAULT_ESTIMATION_FEE
+            } else {
+                val simulation = tronApi.getTriggerConstantContractFee(
+                    ownerAddressBase58 = token.address,
+                    contractAddressBase58 = token.contractAddress,
+                    recipientAddressHex = recipientAddressHex,
+                    functionSelector = TRANSFER_FUNCTION_SELECTOR,
+                    amount = tokenAmountValue ?: BigInteger.ZERO
+                )
 
-            val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
-                ?: run {
-                    val rawBalance = tronApi.getBalance(token)
-                    tronApi.getTriggerConstantContractFee(
-                        ownerAddressBase58 = token.address,
-                        contractAddressBase58 = token.contractAddress,
-                        recipientAddressHex = recipientAddressHex,
-                        functionSelector = TRANSFER_FUNCTION_SELECTOR,
-                        amount = rawBalance
-                    )
-                }
+                val params = tronApi.getChainParameters()
+            }
+
+            /*TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
+            ?: run {
+                val rawBalance = tronApi.getBalance(token)
+                tronApi.getTriggerConstantContractFee(
+                    ownerAddressBase58 = token.address,
+                    contractAddressBase58 = token.contractAddress,
+                    recipientAddressHex = recipientAddressHex,
+                    functionSelector = TRANSFER_FUNCTION_SELECTOR,
+                    amount = rawBalance
+                )
+            } */
 
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.Tron(
