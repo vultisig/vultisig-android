@@ -196,7 +196,7 @@ class TronFeeService @Inject constructor(
             transaction = transaction,
         )
 
-        totalFee = totalFee.add(energyFee)
+        totalFee = totalFee.add(energyFee.amount)
 
         // 3. Account activation fee (if destination is new)
         if (dstAccount.isNewAccount()) {
@@ -207,10 +207,11 @@ class TronFeeService @Inject constructor(
         return totalFee
     }
 
+    // https://developers.tron.network/docs/resource-model#dynamic-energy-model
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
         transaction: Transfer,
-    ): BigInteger = supervisorScope {
+    ): TronEnergyFee = supervisorScope {
         val fromAddress = transaction.coin.address
         val toAddress = Numeric.toHexString(Base58.decode(transaction.to))
         val contract = transaction.coin.contractAddress
@@ -244,17 +245,27 @@ class TronFeeService @Inject constructor(
             throw RuntimeException("Tron Simulated failed")
         }
 
-        // Check if account has staked energy
+        val energyFactor = (contractEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
+        val maxFactor = (contractMaxEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
+        val energyUnitsRequired =
+            energyRequired.toBigDecimal().multiply(energyFactor).toBigInteger()
+        val maxEnergyUnitsRequired =
+            energyRequired.toBigDecimal().multiply(maxFactor).toBigInteger()
+
+        // Apply Energy discount: If account has staked energy
         val availableEnergy = srcAccount?.calculateAvailableEnergy() ?: 0L
         val energyToPay = if (availableEnergy >= DEFAULT_TRC20_ENERGY) {
-            0L
+            BigInteger.ZERO
         } else {
-            energyRequired - availableEnergy
+            energyUnitsRequired - availableEnergy.toBigInteger()
         }
-
         val energyPrice = getCacheTronChainParameters().energyFee
 
-        BigInteger.valueOf(energyToPay * energyPrice)
+        TronEnergyFee(
+            maxEnergyRequired = maxEnergyUnitsRequired,
+            energyUsed = energyUnitsRequired,
+            amount = energyToPay * energyPrice.toBigInteger(),
+        )
     }
 
     private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
@@ -321,3 +332,27 @@ class TronFeeService @Inject constructor(
         private val DEFAULT_TRC20_ENERGY = 65_000L
     }
 }
+
+/**
+ * @param maxEnergyRequired The maximum energy that this transaction could consume.
+ *                          This value can be used as the transaction's fee limit
+ *                          to prevent excessive fees in case of contract execution issues.
+ *                          Typically set higher than the expected usage as a safety margin.
+ *
+ * @param energyUsed        The actual energy units consumed during transaction execution.
+ *                          Represents the real computational cost of running the smart contract.
+ *                          Note: During network maintenance or adjustments
+ *                          (https://developers.tron.network/docs/glossary#maintenance-period),
+ *                          the actual fee may be lower than the computed value.
+ *
+ * @param amount            The calculated fee in SUN (1 TRX = 1,000,000 SUN), computed as:
+ *                          `energyUsed * energyPrice`. This is the TRX that will be deducted
+ *                          if the user does not have sufficient staked energy.
+ *
+ *
+ */
+internal data class TronEnergyFee(
+    val maxEnergyRequired: BigInteger,
+    val energyUsed: BigInteger,
+    val amount: BigInteger,
+)
