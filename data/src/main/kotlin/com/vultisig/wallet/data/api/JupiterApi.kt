@@ -50,7 +50,7 @@ internal class JupiterApiImpl @Inject constructor(
             put("dynamicComputeUnitLimit", true)
             put("prioritizationFeeLamports", buildJsonObject {
                 put("priorityLevelWithMaxLamports", buildJsonObject {
-                    put("maxLamports", 10000000)
+                    put("maxLamports", 6000000)
                     put("priorityLevel", "high")
                 })
             })
