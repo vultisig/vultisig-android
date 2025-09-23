@@ -36,7 +36,7 @@ suspend fun extractError(response: HttpResponse, errorKey: String): String {
         val json = JSONObject(responseBody)
         return json.optString(errorKey, responseBody)
     } catch (t: Throwable) {
-        Timber.w("Failed to extract error from response", t)
+        Timber.e(t, "Failed to extract error from response")
         response.bodyAsText()
     }
 }

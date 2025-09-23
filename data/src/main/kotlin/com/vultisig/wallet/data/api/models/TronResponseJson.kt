@@ -58,7 +58,7 @@ internal data class TronBalanceResponseData(
 )
 
 @Serializable
-internal data class TronTriggerConstantContractJson(
+data class TronTriggerConstantContractJson(
     @SerialName("result")
     val result: Result? = Result(),
     @SerialName("energy_used")

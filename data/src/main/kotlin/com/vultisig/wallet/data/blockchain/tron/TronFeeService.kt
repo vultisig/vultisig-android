@@ -190,7 +190,7 @@ class TronFeeService @Inject constructor(
         // 2. Energy fee
         val energyFee = calculateEnergyFee(
             srcAccount = srcAccount,
-            transfer = transaction,
+            transaction = transaction,
         )
 
         totalFee = totalFee.add(energyFee)
@@ -220,6 +220,10 @@ class TronFeeService @Inject constructor(
             functionSelector = TRANSFER_FUNCTION_SELECTOR,
             amount = amount,
         )
+
+        if (!triggerConstantResult.isSuccessfulSimulation()) {
+            // TODO: throw
+        }
 
         val energyRequired = DEFAULT_TRC20_ENERGY
         val energyPrice = getCacheTronChainParameters().energyFee
