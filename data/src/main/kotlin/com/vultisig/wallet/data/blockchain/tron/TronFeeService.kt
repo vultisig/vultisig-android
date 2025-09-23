@@ -13,7 +13,10 @@ import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
 import wallet.core.jni.Base58
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -207,13 +210,15 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
         transaction: Transfer,
-    ): BigInteger {
+    ): BigInteger = supervisorScope {
         val fromAddress = transaction.coin.address
         val toAddress = Numeric.toHexString(Base58.decode(transaction.to))
         val contract = transaction.coin.contractAddress
         val amount = transaction.amount
 
-        val triggerConstantResult = tronApi.getTriggerConstantContractFee(
+        val contractMetadata = async { tronApi.getContractMetadata(contract) }
+
+        val simulationResult = tronApi.getTriggerConstantContractFee(
             ownerAddressBase58 = fromAddress,
             contractAddressBase58 = contract,
             recipientAddressHex = toAddress,
@@ -221,12 +226,23 @@ class TronFeeService @Inject constructor(
             amount = amount,
         )
 
-        if (!triggerConstantResult.isSuccessfulSimulation()) {
-            // TODO: throw
+        if (!simulationResult.isSuccessfulSimulation()) {
+            Timber.e("Tron Simulation Failed: ${simulationResult.result ?: ""}")
+            throw RuntimeException("Tron Simulated failed")
         }
 
-        val energyRequired = DEFAULT_TRC20_ENERGY
-        val energyPrice = getCacheTronChainParameters().energyFee
+        val contractEnergyFactor = contractMetadata.await().contractState.energyFactor.toBigDecimal()
+        val contractMaxEnergyFactor = getCacheTronChainParameters().maxEnergyFactor.toBigDecimal()
+
+        val energyRequired = if (contractEnergyFactor == BigDecimal.ZERO) {
+            simulationResult.energyUsed
+        } else {
+            simulationResult.energyUsed - simulationResult.energyPenalty
+        }
+
+        if (energyRequired == 0L) {
+            throw RuntimeException("Tron Simulated failed")
+        }
 
         // Check if account has staked energy
         val availableEnergy = srcAccount?.calculateAvailableEnergy() ?: 0L
@@ -235,7 +251,10 @@ class TronFeeService @Inject constructor(
         } else {
             energyRequired - availableEnergy
         }
-        return BigInteger.valueOf(energyToPay * energyPrice)
+
+        val energyPrice = getCacheTronChainParameters().energyFee
+
+        BigInteger.valueOf(energyToPay * energyPrice)
     }
 
     private fun TronAccountResourceJson.calculateAvailableEnergy(): Long {
