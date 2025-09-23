@@ -76,6 +76,6 @@ internal class JupiterApiImpl @Inject constructor(
     }
 
     private companion object {
-        val MIN_FEE_PRICE_SWAP = "200000".toBigInteger()
+        val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
     }
 }
