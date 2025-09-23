@@ -13,6 +13,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import wallet.core.jni.SolanaTransaction
 import javax.inject.Inject
 
 interface JupiterApi {
@@ -47,15 +48,34 @@ internal class JupiterApiImpl @Inject constructor(
             put("quoteResponse", json.encodeToJsonElement(body))
             put("userPublicKey", fromAddress)
             put("dynamicComputeUnitLimit", true)
+            put("prioritizationFeeLamports", buildJsonObject {
+                put("priorityLevelWithMaxLamports", buildJsonObject {
+                    put("maxLamports", 10000000)
+                    put("priorityLevel", "high")
+                })
+            })
         }
         val quoteSwapData = httpClient.post("https://lite-api.jup.ag/swap/v1/swap") {
             setBody(quoteSwapRequestBody)
         }.body<QuoteSwapTransactionJson>()
 
+        val feePrice =
+            (SolanaTransaction.getComputeUnitPrice(quoteSwapData.data) ?: "0").toBigInteger()
+
+        val updatedSwapTx = if (feePrice < MIN_FEE_PRICE_SWAP) {
+            SolanaTransaction.setComputeUnitPrice(quoteSwapData.data, MIN_FEE_PRICE_SWAP.toString())
+        } else {
+            quoteSwapData.data
+        }
+
         return QuoteSwapTotalDataJson(
-            swapTransaction = quoteSwapData,
+            swapTransaction = quoteSwapData.copy(data = updatedSwapTx),
             dstAmount = outAmount,
             routePlan = routePlan
         )
+    }
+
+    private companion object {
+        val MIN_FEE_PRICE_SWAP = "200000".toBigInteger()
     }
 }
