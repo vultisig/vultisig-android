@@ -139,36 +139,15 @@ internal class RippleApiImp @Inject constructor(
     }
 
     override suspend fun fetchServerState(): RippleServerStateResponseJson {
-        return try {
-            val payload = RpcPayload(
-                method = "server_state",
-                params = buildJsonArray { }
-            )
-
-            return http.post(BASE_XRP_CLUSTER) {
-                setBody(payload)
-            }.bodyOrThrow<RippleServerStateResponseJson>()
-        } catch (t: Throwable) {
-            getDefaultRippleStateServer()
-        }
-    }
-
-    // TODO: REMOVE
-    // Returning these default values is acceptable if the RPC call fails. Reserve balances change
-    // infrequently, and fetching them (even if it sometimes fails) is preferable to hardcoding them
-    private fun getDefaultRippleStateServer() = RippleServerStateResponseJson(
-        result = RippleServerStateResultJson(
-            state = RippleServerStateResultJson.RippleStateJson(
-                validateLedger = RippleServerStateResultJson.RippleStateJson.RippleValidateLedger(
-                    reservedBase = 1000000,
-                    reserveInc = 200000,
-                    baseFee = 0L,
-                ),
-                loadBase = 0L,
-                loadFactor = 0L,
-            )
+        val payload = RpcPayload(
+            method = "server_state",
+            params = buildJsonArray { }
         )
-    )
+
+        return http.post(BASE_XRP_CLUSTER) {
+            setBody(payload)
+        }.bodyOrThrow<RippleServerStateResponseJson>()
+    }
 
     private companion object {
         const val BASE_XRP_VULTISIG: String = "https://api.vultisig.com/ripple"
