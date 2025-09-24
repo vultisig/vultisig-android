@@ -1355,6 +1355,17 @@ object Coins {
                 contractAddress = "ibc/B64A07C006C0F5E260A8AD50BD53568F1FD4A0D75B7A9F8765C81BEAFDA62053",
                 isNativeToken = false,
             ),
+            Coin(
+                chain = Chain.Kujira,
+                ticker = "AUTO",
+                logo = "auto",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "auto-2",
+                contractAddress = "factory/kujira13x2l25mpkhwnwcwdzzd34cr8fyht9jlj7xu9g4uffe36g3fmln8qkvm3qn/uauto",
+                isNativeToken = false,
+            ),
         ),
 
         Chain.Litecoin to listOf(
