@@ -254,11 +254,11 @@ class TronFeeService @Inject constructor(
             energyRequired.toBigDecimal().multiply(maxFactor).toBigInteger()
 
         // Apply Energy discount: If account has staked energy
-        val availableEnergy = srcAccount?.calculateAvailableEnergy() ?: 0L
-        val energyToPay = if (availableEnergy >= DEFAULT_TRC20_ENERGY) {
+        val availableEnergy = srcAccount?.calculateAvailableEnergy()?.toBigInteger() ?: BigInteger.ZERO
+        val energyToPay = if (availableEnergy >= energyUnitsRequired) {
             BigInteger.ZERO
         } else {
-            energyUnitsRequired - availableEnergy.toBigInteger()
+            energyUnitsRequired - availableEnergy
         }
         val energyPrice = getCacheTronChainParameters().energyFee
 
