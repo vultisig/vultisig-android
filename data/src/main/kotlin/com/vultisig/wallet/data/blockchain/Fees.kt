@@ -24,8 +24,14 @@ data class TronFees(
     val maxEnergyRequired: BigInteger, // If UI requires so, at some point we should enhance this with discounts
     val energyRequired: BigInteger,
     val bandwidthRequired: BigInteger,
-    val amount: BigInteger,
-)
+    override val amount: BigInteger,
+): Fee
+
+data class RippleFees(
+    val networkFee: BigInteger, // field use for helper in the WC transaction
+    val accountActivationFee: BigInteger = BigInteger.ZERO, // fee used for UI
+    override val amount: BigInteger // field to show total fee
+): Fee
 
 data class BasicFee(
     override val amount: BigInteger

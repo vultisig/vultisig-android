@@ -3,10 +3,10 @@ package com.vultisig.wallet.data.blockchain.xrp
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleServerStateResponseJson
 import com.vultisig.wallet.data.api.getBaseReserve
-import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.RippleFees
 import com.vultisig.wallet.data.blockchain.Transfer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -55,7 +55,11 @@ class RippleFeeService(
             BigInteger.ZERO
         }
 
-        BasicFee(amount = networkFee + accountActivationFee)
+        RippleFees(
+            networkFee = networkFee,
+            accountActivationFee = accountActivationFee,
+            amount = networkFee + accountActivationFee
+        )
     }
 
     /**
@@ -78,11 +82,15 @@ class RippleFeeService(
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        return BasicFee(DEFAULT_RIPPLE_FEE)
+        return RippleFees(
+            networkFee = DEFAULT_RIPPLE_FEE,
+            accountActivationFee = BigInteger.ZERO,
+            amount = DEFAULT_RIPPLE_FEE,
+        )
     }
 
     private companion object {
         private val MIN_PROTOCOL_FEE = 15.toBigInteger()
-        private val DEFAULT_RIPPLE_FEE = 600.toBigInteger()
+        private val DEFAULT_RIPPLE_FEE = 400.toBigInteger()
     }
 }
