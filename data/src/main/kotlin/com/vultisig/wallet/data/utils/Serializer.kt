@@ -61,7 +61,7 @@ class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 
-@Deprecated("Unsafe serializer due to overflow for string values")
+@Deprecated("Unsafe serializer due to decodeLong and inability to handle strings")
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
