@@ -10,7 +10,7 @@ import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
 import com.vultisig.wallet.data.blockchain.ton.TonFeeService
 import com.vultisig.wallet.data.blockchain.tron.TronFeeService
-import com.vultisig.wallet.data.blockchain.xrp.XRPFeeService
+import com.vultisig.wallet.data.blockchain.xrp.RippleFeeService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,7 +40,7 @@ object FeeServiceProvidersModule {
     @RippleFee
     fun provideRippleFeeService(
         rippleApi: RippleApi
-    ): FeeService = XRPFeeService(rippleApi)
+    ): FeeService = RippleFeeService(rippleApi)
     
     @Provides
     @Singleton

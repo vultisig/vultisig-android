@@ -431,7 +431,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     lastLedgerSequence = accountInfo?.result?.ledgerCurrentIndex?.toULong()
                         ?.plus(60UL)
                         ?: 0UL,
-                    gas = gasFee.value.toLong().toULong(),
+                    gas = gasFee.value.toLong().toULong(), // TODO: Inject
                 ),
             )
 

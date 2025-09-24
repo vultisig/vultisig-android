@@ -29,7 +29,7 @@ import java.math.BigInteger
  *
  * Reference: https://xrpl.org/docs/concepts/transactions/transaction-cost
  */
-class XRPFeeService(
+class RippleFeeService(
     private val rippleApi: RippleApi
 ) : FeeService {
     override suspend fun calculateFees(
