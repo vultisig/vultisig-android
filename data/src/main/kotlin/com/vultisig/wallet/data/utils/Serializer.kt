@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -47,14 +48,14 @@ interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
 class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
-        PrimitiveKind.DOUBLE
+        PrimitiveKind.STRING
     )
 
     override fun serialize(encoder: Encoder, value: BigDecimal) =
-        encoder.encodeDouble(value.toDouble())
+        encoder.encodeString(value.toPlainString())
 
     override fun deserialize(decoder: Decoder): BigDecimal =
-        BigDecimal.valueOf(decoder.decodeDouble())
+        decoder.decodeString().toBigDecimal()
 }
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
@@ -62,14 +63,21 @@ interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
-        PrimitiveKind.DOUBLE
+        PrimitiveKind.STRING
     )
 
     override fun serialize(encoder: Encoder, value: BigInteger) =
         encoder.encodeString(value.toString())
 
-    override fun deserialize(decoder: Decoder): BigInteger =
-        BigInteger.valueOf(decoder.decodeLong())
+    override fun deserialize(decoder: Decoder): BigInteger {
+        val value = decoder.decodeString()
+
+        return when {
+            value.isEmpty() || value == "0x" -> BigInteger.ZERO
+            value.startsWith("0x") -> value.remove0x().toBigInteger(16)
+            else -> value.toBigInteger()
+        }
+    }
 }
 
 
