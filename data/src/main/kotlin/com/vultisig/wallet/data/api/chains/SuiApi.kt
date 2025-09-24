@@ -5,19 +5,19 @@ import com.vultisig.wallet.data.api.utils.postRpc
 import io.ktor.client.HttpClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.minus
-import kotlin.plus
 
 interface SuiApi {
 
@@ -44,6 +44,7 @@ interface SuiApi {
 
 internal class SuiApiImpl @Inject constructor(
     private val http: HttpClient,
+    private val json: Json,
 ) : SuiApi {
 
     private val rpcUrl = "https://sui-rpc.publicnode.com"
@@ -132,7 +133,7 @@ internal class SuiApiImpl @Inject constructor(
     }
 
     override suspend fun dryRunTransaction(transactionBytes: String): SuiDryRunResponse {
-        val response = http.postRpc<SuiDryRunResponse>(
+        val response = http.postRpc<RpcResponseJson>(
             url = rpcUrl,
             method = "sui_dryRunTransactionBlock",
             params = buildJsonArray {
@@ -140,11 +141,15 @@ internal class SuiApiImpl @Inject constructor(
             }
         )
 
-        if (response.effects.status.error.isNotEmpty()) {
-            throw Exception("Simulation Error: ${response.effects.status.error}")
+        val dryRunResponse = response.result?.let {
+            json.decodeFromJsonElement<SuiDryRunResponse>(it)
+        } ?: error("Failed to dry run transaction")
+
+        if (dryRunResponse.effects.status.error.isNotEmpty()) {
+            throw Exception("Simulation Error: ${dryRunResponse.effects.status.error}")
         }
 
-        return response
+        return dryRunResponse
     }
 }
 
@@ -165,19 +170,19 @@ data class SuiTransactionEffects(
 
 @Serializable
 data class SuiEffectStatus(
+    @SerialName("status")
     val status: String,
+    @SerialName("error")
     val error: String = "",
 )
 
 
 @Serializable
 data class SuiEffectGasUsed(
+    @SerialName("computationCost")
     val computationCost: String,
+    @SerialName("storageCost")
     val storageCost: String,
+    @SerialName("storageRebate")
     val storageRebate: String = "0",
-    val nonRefundableStorageFee: String = "0",
-) {
-    fun totalGasCost(): BigInteger {
-        return computationCost.toBigInteger() + storageCost.toBigInteger() - storageRebate.toBigInteger() + nonRefundableStorageFee.toBigInteger()
-    }
-}
+)

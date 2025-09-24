@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.blockchain.BasicFee
 import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
+import com.vultisig.wallet.data.blockchain.GasFees
 import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -26,10 +27,11 @@ import java.math.BigInteger
  *
  * Note:
  *  - Estimates are approximate as much as possible; always allow a small margin in the gas budget.
+ *  - Docs: https://docs.sui.io/concepts/tokenomics/gas-in-sui
  */
 class SuiFeeService(
     private val suiApi: SuiApi,
-): FeeService {
+) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
         require(transaction is Transfer) {
             "Invalid Transfer type: ${transaction::class.simpleName}"
@@ -44,13 +46,28 @@ class SuiFeeService(
 
         val txSerialized = SuiHelper.getZeroSignedTransaction(keySignPayload)
 
+        // Simulate Tx, and get safe gas budget, avoid subtracting storageRebate for safety
         val dryRunResult = suiApi.dryRunTransaction(txSerialized)
-
         val gasUsed = dryRunResult.effects.gasUsed
-        val totalGasUsed = gasUsed.computationCost.toBigInteger() + gasUsed.storageCost.toBigInteger()
-        val coinOverhead = GAS_OVERHEAD * referenceGasPriceDeferred.await()
+        val gasBudget = gasUsed.computationCost.toBigInteger() + gasUsed.storageCost.toBigInteger()
+        val safeGasBudget = gasBudget.increaseByPercent(15)
 
-        BasicFee(amount = totalGasUsed + coinOverhead)
+        // Check against min gas required by network, in some edge cases for small tx
+        // you might get less than 2000
+        val finalSafeGasBudget = if (safeGasBudget < MIN_NETWORK_GAS_BUDGET) {
+            MIN_NETWORK_GAS_BUDGET
+        } else {
+            safeGasBudget
+        }
+
+        // fetch current gas price
+        val gasPrice = referenceGasPriceDeferred.await()
+
+        GasFees(
+            price = gasPrice,
+            limit = finalSafeGasBudget,
+            amount = gasPrice * finalSafeGasBudget,
+        )
     }
 
     private suspend fun buildKeySignPayload(
@@ -87,11 +104,12 @@ class SuiFeeService(
     }
 
     private companion object {
+        val MIN_NETWORK_GAS_BUDGET = 2000.toBigInteger()
+
         // Default Limit for
         val BASELINE_COMPUTATION_COIN_TRANSFER = "1300".toBigInteger()
+
         // Baseline storage cost in MIST
         val BASELINE_STORAGE = "50".toBigInteger()
-        // GasOverhead
-        val GAS_OVERHEAD = 150.toBigInteger() // 10 coins with extra overhead per coin
     }
 }
