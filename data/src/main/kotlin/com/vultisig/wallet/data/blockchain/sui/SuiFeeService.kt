@@ -18,16 +18,29 @@ import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
 
 /**
- * Service that estimates and prepares gas payment details for Sui transactions.
+ * Service responsible for estimating and preparing gas payment details for Sui blockchain transactions.
  *
- * Implementation notes:
- *  - Use an RPC dry-run / dev-inspect endpoint to obtain computationUnits and storage effects.
- *  - Query the network reference gas price (an epoch-level value) from the node or SDK.
- *  - Compute: total = computationUnits * referenceGasPrice + storageUnits * storagePricePerUnit.
+ * In Sui, every transaction requires gas fees to compensate validators for computation and storage costs.
+ * Gas fees are paid in SUI tokens and depend on:
+ *  - **Computation cost**: The amount of CPU cycles or execution units required by the transaction.
+ *  - **Storage cost**: The cost of writing or modifying objects on-chain.
+ *  - **Reference gas price**: An epoch-level network parameter that determines SUI token price per gas unit.
  *
- * Note:
- *  - Estimates are approximate as much as possible; always allow a small margin in the gas budget.
- *  - Docs: https://docs.sui.io/concepts/tokenomics/gas-in-sui
+ * This service calculates the required gas fees by simulating the transaction and combining computation
+ * and storage costs, ensuring a safe gas budget with a small margin.
+ *
+ * Implementation details:
+ *  - Uses the RPC `dry-run` / `dev-inspect` endpoint to retrieve computation units and storage effects.
+ *  - Queries the current reference gas price from the node.
+ *  - Computes total gas fee as:
+ *      `totalGas = computationUnits * referenceGasPrice + storageUnits * storagePricePerUnit`
+ *  - Applies a configurable safety margin (default +15%) to avoid transaction failure due to underestimation.
+ *  - Ensures the final gas budget is not below the network minimum.
+ *
+ * Notes:
+ *  - Gas fee estimates are approximate; always allow a safety margin.
+ *  - Small transactions may still require a minimum network gas budget.
+ *  - Reference documentation: [Sui Gas Concepts](https://docs.sui.io/concepts/tokenomics/gas-in-sui)
  */
 class SuiFeeService(
     private val suiApi: SuiApi,
