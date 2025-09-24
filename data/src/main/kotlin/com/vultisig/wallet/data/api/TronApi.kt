@@ -131,7 +131,7 @@ internal class TronApiImpl @Inject constructor(
             return if (coin.isNativeToken)
                 content.tronBalanceResponseData[0].balance
             else
-                content.tronBalanceResponseData[0].trc20[0][coin.contractAddress]
+                content.tronBalanceResponseData[0].trc20[0][coin.contractAddress]?.toBigIntegerOrNull()
                     ?: BigInteger.ZERO
         } catch (e: Exception) {
             Timber.e(e, "error getting tron balance")

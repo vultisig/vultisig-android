@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
@@ -44,6 +45,7 @@ interface DefaultSerializer<T> : KSerializer<T> {
 
 interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
 
+@Deprecated("Losses precision due to double")
 class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
@@ -59,6 +61,7 @@ class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 
+@Deprecated("Unsafe serializer due to decodeLong and inability to handle strings")
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
