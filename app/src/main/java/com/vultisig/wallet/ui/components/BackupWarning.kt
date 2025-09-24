@@ -46,6 +46,7 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
 
 @Composable
 internal fun WarningCard(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     @DrawableRes startIcon: Int = R.drawable.ic_warning,
     startIconTint: Color = Theme.colors.alert,
@@ -53,7 +54,6 @@ internal fun WarningCard(
     @DrawableRes endIcon: Int = R.drawable.ic_small_caret_right,
     endIconTint: Color = Theme.colors.neutral100,
     endIconSize: Dp = 18.dp,
-    modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
     Card(
