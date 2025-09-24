@@ -434,7 +434,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     gas = gasFee.value.toLong().toULong(), // TODO: Inject
                 ),
             )
-
         }
 
         TokenStandard.TRC20 -> {
@@ -443,8 +442,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val expiration = now + 1.hours
             val rawData = specific.blockHeader.rawData
 
-            // Tron does not have a 0x... it can be any address
-            // We will only simulate the transaction fee with below address
             val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
             val estimation = if (token.isNativeToken) {
                 TRON_DEFAULT_ESTIMATION_FEE
