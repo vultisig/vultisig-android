@@ -45,6 +45,7 @@ interface DefaultSerializer<T> : KSerializer<T> {
 
 interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
 
+@Deprecated("Losses precision due to double")
 class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
@@ -60,6 +61,7 @@ class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 
+@Deprecated("Unsafe serializer due to overflow for string values")
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",

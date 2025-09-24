@@ -53,7 +53,7 @@ internal data class TronBalanceResponseData(
     @Contextual
     val balance: BigInteger,
     @SerialName("trc20")
-    val trc20: Array<Map<String, @Contextual BigInteger>>
+    val trc20: Array<Map<String, String>>
 )
 
 @Serializable
