@@ -71,7 +71,6 @@ object SuiHelper {
                         .addAllAmounts(listOf(keysignPayload.toAmount.toLong()))
                         .build()
                 )
-
         }.setSigner(keysignPayload.coin.address)
             .setGasBudget(3000000L) // TODO: Remove hardcoded gasBudget, use proper calculation
             .setReferenceGasPrice(referenceGasPrice.toLong())

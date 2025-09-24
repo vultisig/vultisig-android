@@ -66,7 +66,7 @@ class SuiFeeService(
         GasFees(
             price = gasPrice,
             limit = finalSafeGasBudget,
-            amount = gasPrice * finalSafeGasBudget,
+            amount = finalSafeGasBudget,
         )
     }
 
@@ -97,19 +97,20 @@ class SuiFeeService(
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val gasPrice = suiApi.getReferenceGasPrice()
 
-        val estimatedFees = (BASELINE_COMPUTATION_COIN_TRANSFER * gasPrice) + BASELINE_STORAGE
-        val feesWithBuffer = estimatedFees.increaseByPercent(20)
+        val estimatedFees = DEFAULT_GAS_BUDGET.increaseByPercent(15)
 
-        return BasicFee(amount = feesWithBuffer)
+        return GasFees(
+            price = gasPrice,
+            limit = DEFAULT_GAS_BUDGET,
+            amount = estimatedFees,
+        )
+        return BasicFee(amount = estimatedFees)
     }
 
     private companion object {
+        // Min gas budget accepeted by the network
         val MIN_NETWORK_GAS_BUDGET = 2000.toBigInteger()
 
-        // Default Limit for
-        val BASELINE_COMPUTATION_COIN_TRANSFER = "1300".toBigInteger()
-
-        // Baseline storage cost in MIST
-        val BASELINE_STORAGE = "50".toBigInteger()
+        val DEFAULT_GAS_BUDGET = "3000000".toBigInteger()
     }
 }
