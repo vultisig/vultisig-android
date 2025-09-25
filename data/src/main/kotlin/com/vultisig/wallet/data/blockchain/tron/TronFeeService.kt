@@ -221,6 +221,8 @@ class TronFeeService @Inject constructor(
     }
 
     // https://developers.tron.network/docs/resource-model#dynamic-energy-model
+    // https://developers.tron.network/docs/set-feelimit
+    // https://developers.tron.network/docs/resource-model#principle
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
         transaction: Transfer,
@@ -353,19 +355,26 @@ class TronFeeService @Inject constructor(
 
 /**
  * @param maxEnergyRequired The maximum energy that this transaction could consume.
- *                          This value can be used as the transaction's fee limit
+ *                          This value can be used as the transaction's fee limit in helper
  *                          to prevent excessive fees in case of contract execution issues.
  *                          Typically set higher than the expected usage as a safety margin.
+ *
+ *                          Important: The reason why maximum energy exits is due to main
+ *                          maintenance cycle.
+ *
+ *                          Note: No discount applied here
  *
  * @param energyUsed        The actual energy units consumed during transaction execution.
  *                          Represents the real computational cost of running the smart contract.
  *                          Note: During network maintenance or adjustments
  *                          (https://developers.tron.network/docs/glossary#maintenance-period),
  *                          the actual fee may be lower than the computed value.
+ *                          Note: No discount applied here
  *
  * @param amount            The calculated fee in SUN (1 TRX = 1,000,000 SUN), computed as:
  *                          `energyUsed * energyPrice`. This is the TRX that will be deducted
  *                          if the user does not have sufficient staked energy.
+ *                          Note: Discounts applied here
  *
  *
  */
