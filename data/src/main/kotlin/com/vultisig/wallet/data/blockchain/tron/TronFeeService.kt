@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.TronFees
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -74,7 +75,7 @@ class TronFeeService @Inject constructor(
 
     private var chainParameters: TronChainParametersJson? = null
 
-    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
+    override suspend fun calculateFees(transaction: BlockchainTransaction): TronFees = coroutineScope {
         require(transaction is Transfer) {
             "Transaction type not supported $"
         }
@@ -90,7 +91,7 @@ class TronFeeService @Inject constructor(
         val srcAccount = srcAccountDeferred.await()
         val dstAccount = dstAccountDeferred.await()
 
-        val feeAmount = if (coin.isNativeToken) {
+        if (coin.isNativeToken) {
             calculateNativeTrxFee(
                 srcAccount = srcAccount,
                 dstAccount = dstAccount,
@@ -103,15 +104,13 @@ class TronFeeService @Inject constructor(
                 transaction = transaction,
             )
         }
-
-        BasicFee(feeAmount)
     }
 
     private suspend fun calculateNativeTrxFee(
         srcAccount: TronAccountResourceJson?,
         dstAccount: TronAccountJson?,
         hasMemo: Boolean
-    ): BigInteger {
+    ): TronFees {
         var totalFee = BigInteger.ZERO
 
         // 1) Bandwidth fee
@@ -120,14 +119,14 @@ class TronFeeService @Inject constructor(
             isContract = false,
         )
 
-        totalFee = totalFee.add(bandwidthFee)
+        totalFee = totalFee.add(bandwidthFee.amount)
 
         // 2) Account activation fee (if destination is new)
         // New accounts don't pay bandwidth fee (it's included in activation)
         if (dstAccount.isNewAccount()) {
             val activationFee = calculateActivationFee()
             totalFee = totalFee.add(activationFee)
-            totalFee = totalFee.subtract(bandwidthFee)
+            totalFee = totalFee.subtract(bandwidthFee.amount)
         }
 
         // 3) Memo fee
@@ -136,7 +135,9 @@ class TronFeeService @Inject constructor(
             totalFee = totalFee + memoFee
         }
 
-        return totalFee
+        return bandwidthFee.copy(
+            amount = totalFee,
+        )
     }
 
     private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
@@ -148,7 +149,7 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
         isContract: Boolean,
-    ): BigInteger {
+    ): TronFees {
         val bytesRequired = if (isContract) {
             BYTES_PER_CONTRACT_TX
         } else {
@@ -159,18 +160,32 @@ class TronFeeService @Inject constructor(
 
         // For contracts, always pay bandwidth fee
         if (isContract) {
-            return BigInteger.valueOf(bytesRequired * bandwidthPrice)
+            return TronFees(
+                bandwidthDiscounted = BYTES_PER_CONTRACT_TX.toBigInteger(),
+                bandwidthRequired = BYTES_PER_CONTRACT_TX.toBigInteger(),
+                amount = BigInteger.valueOf(bytesRequired * bandwidthPrice),
+            )
         }
 
         // For native transfers, check available bandwidth
         val availableBandwidth = srcAccount?.calculateAvailableBandwidth() ?: 0L
 
         // Bandwidth apply all or nothing
-        return if (availableBandwidth >= bytesRequired) {
+        val trxAmount = if (availableBandwidth >= bytesRequired) {
             BigInteger.ZERO
         } else {
             BigInteger.valueOf(bytesRequired * bandwidthPrice)
         }
+
+        return TronFees(
+            bandwidthDiscounted = if (trxAmount == BigInteger.ZERO) {
+                BigInteger.ZERO
+            } else {
+                BYTES_PER_COIN_TX.toBigInteger()
+            },
+            bandwidthRequired = BYTES_PER_COIN_TX.toBigInteger(),
+            amount = trxAmount,
+        )
     }
 
     private suspend fun calculateActivationFee(): BigInteger {
@@ -192,7 +207,7 @@ class TronFeeService @Inject constructor(
         srcAccount: TronAccountResourceJson?,
         dstAccount: TronAccountJson?,
         transaction: Transfer,
-    ): BigInteger {
+    ): TronFees {
         var totalFee = BigInteger.ZERO
 
         // 1. Bandwidth fee (always paid for TRC20)
@@ -201,7 +216,7 @@ class TronFeeService @Inject constructor(
             isContract = true,
         )
 
-        totalFee = totalFee.add(bandwidthFee)
+        totalFee = totalFee.add(bandwidthFee.amount)
 
         // 2. Energy fee
         val energyFee = calculateEnergyFee(
@@ -217,7 +232,12 @@ class TronFeeService @Inject constructor(
             totalFee = totalFee.add(activationFee)
         }
 
-        return totalFee
+        return bandwidthFee.copy(
+            maxEnergyRequired = energyFee.maxEnergyRequired,
+            energyDiscounted = energyFee.energyDiscounted,
+            energyRequired = energyFee.energyRequired,
+            amount = totalFee,
+        )
     }
 
     // https://developers.tron.network/docs/resource-model#dynamic-energy-model
@@ -226,7 +246,7 @@ class TronFeeService @Inject constructor(
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
         transaction: Transfer,
-    ): TronEnergyFee = supervisorScope {
+    ): TronFees = supervisorScope {
         val fromAddress = transaction.coin.address
         val toAddress = Numeric.toHexString(Base58.decode(transaction.to))
         val contract = transaction.coin.contractAddress
@@ -281,10 +301,11 @@ class TronFeeService @Inject constructor(
         }
         val energyPrice = getCacheTronChainParameters().energyFee
 
-        TronEnergyFee(
+        TronFees(
             maxEnergyRequired = maxEnergyUnitsRequired,
-            energyUsed = energyUnitsRequired,
-            amount = energyToPay * energyPrice.toBigInteger(),
+            energyRequired = energyUnitsRequired,
+            energyDiscounted = energyToPay,
+            amount = energyToPay * energyPrice.toBigInteger()
         )
     }
 
@@ -342,7 +363,7 @@ class TronFeeService @Inject constructor(
         private const val BYTES_PER_COIN_TX = 300L // Native TRX transfer
         private const val BYTES_PER_CONTRACT_TX = 345L // TRC20 token transfer
 
-        private val DEFAULT_TOKEN_TRANSFER_FEE = "50000000".toBigInteger()
+        private val DEFAULT_TOKEN_TRANSFER_FEE = "30000000".toBigInteger()
         private val DEFAULT_MEMO_TRANSFER_FEE = "1000000".toBigInteger()
 
         // Default inactive destination values
@@ -352,34 +373,3 @@ class TronFeeService @Inject constructor(
         private val ENERGY_FACTOR = "10000".toBigDecimal()
     }
 }
-
-/**
- * @param maxEnergyRequired The maximum energy that this transaction could consume.
- *                          This value can be used as the transaction's fee limit in helper
- *                          to prevent excessive fees in case of contract execution issues.
- *                          Typically set higher than the expected usage as a safety margin.
- *
- *                          Important: The reason why maximum energy exits is due to main
- *                          maintenance cycle.
- *
- *                          Note: No discount applied here
- *
- * @param energyUsed        The actual energy units consumed during transaction execution.
- *                          Represents the real computational cost of running the smart contract.
- *                          Note: During network maintenance or adjustments
- *                          (https://developers.tron.network/docs/glossary#maintenance-period),
- *                          the actual fee may be lower than the computed value.
- *                          Note: No discount applied here
- *
- * @param amount            The calculated fee in SUN (1 TRX = 1,000,000 SUN), computed as:
- *                          `energyUsed * energyPrice`. This is the TRX that will be deducted
- *                          if the user does not have sufficient staked energy.
- *                          Note: Discounts applied here
- *
- *
- */
-internal data class TronEnergyFee(
-    val maxEnergyRequired: BigInteger,
-    val energyUsed: BigInteger,
-    val amount: BigInteger,
-)
