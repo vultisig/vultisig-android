@@ -18,6 +18,7 @@ import timber.log.Timber
 import wallet.core.jni.Base58
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 
 /**
@@ -142,7 +143,8 @@ class TronFeeService @Inject constructor(
 
     // Both transfers COIN and TRC-20 are quite deterministic in terms of bandwidth
     // Bandwidth represents the transaction size in bytes, 250-300 for COIN and around 350 for TRC-20
-    // To consider implementing a tx serializer for swaps.
+    // To consider implementing a tx serializer for swaps. This can be easily achieve by :
+    // headers & others(fixed) + signature(fixed) + rawCallDataSize (return by simulation)
     private suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
         isContract: Boolean,
@@ -257,8 +259,10 @@ class TronFeeService @Inject constructor(
             throw RuntimeException("Tron Simulated failed")
         }
 
-        val energyFactor = (contractEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
-        val maxFactor = (contractMaxEnergyFactor / "10000".toBigDecimal()) + BigDecimal.ONE
+        val energyFactor =
+            (contractEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.HALF_UP)) + BigDecimal.ONE
+        val maxFactor =
+            (contractMaxEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.HALF_UP)) + BigDecimal.ONE
 
         val energyUnitsRequired =
             energyRequired.toBigDecimal().multiply(energyFactor).toBigInteger()
@@ -343,7 +347,7 @@ class TronFeeService @Inject constructor(
         private val DEFAULT_CREATE_ACCOUNT_FEE = "1000000".toBigInteger() // 1 TRX
         private val DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE = "100000".toBigInteger() // 0.1 TRX
 
-        private val DEFAULT_TRC20_ENERGY = 65_000L
+        private val ENERGY_FACTOR = "10000".toBigDecimal()
     }
 }
 
