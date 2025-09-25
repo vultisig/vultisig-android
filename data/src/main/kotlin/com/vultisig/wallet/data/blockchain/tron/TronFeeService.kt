@@ -129,7 +129,7 @@ class TronFeeService @Inject constructor(
         return totalFee
     }
 
-    private fun TronAccountJson?.isNewAccount(): Boolean = this == null
+    private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
 
     private suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
