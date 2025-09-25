@@ -17,8 +17,10 @@ internal fun LoadableValue(
     isVisible: Boolean,
     style: TextStyle,
     color: Color,
+    modifier: Modifier = Modifier,
 ) {
     AnimatedContent(
+        modifier = modifier,
         targetState = value,
     ) { v ->
         if (v != null) {
@@ -32,7 +34,7 @@ internal fun LoadableValue(
             UiPlaceholderLoader(
                 modifier = Modifier.Companion
                     .width(48.dp)
-                    .height(32.dp),
+                    .height(16.dp),
             )
         }
     }

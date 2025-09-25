@@ -128,7 +128,7 @@ private fun TopRow(
 }
 
 @Composable
-private fun DragHandler(modifier: Modifier = Modifier) {
+internal fun DragHandler(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .width(36.dp)
