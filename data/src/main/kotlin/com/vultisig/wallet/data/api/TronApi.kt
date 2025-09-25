@@ -166,7 +166,7 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getContractMetadata(contract: String): TronContractInfoJson {
-        return httpClient.post(rpcUrl) {
+        return httpClient.post(tronGrid) {
             url {
                 appendPathSegments("/wallet/getcontractinfo")
             }
