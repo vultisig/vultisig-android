@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
+import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
@@ -48,7 +49,12 @@ interface SolanaApi {
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
-    suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String):Pair<String?, Boolean>
+    suspend fun getTokenAssociatedAccountByOwner(
+        walletAddress: String,
+        mintAddress: String
+    ): Pair<String?, Boolean>
+
+    suspend fun getFeeForMessage(message: String, commitment: String = "processed"): BigInteger?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -201,6 +207,7 @@ internal class SolanaApiImp @Inject constructor(
                     )
                     return emptyList()
                 }
+
                 is SplTokenDeserialized.Result -> return result.result.values.toList()
             }
         } catch (e: Exception) {
@@ -313,7 +320,7 @@ internal class SolanaApiImp @Inject constructor(
                 return null
             }
             val value = rpcResp.value ?: error("getSPLTokenBalance error")
-            if(value.value.isEmpty()){
+            if (value.value.isEmpty()) {
                 return null
             }
             return value.value[0].account.data.parsed.info.tokenAmount.amount
@@ -343,7 +350,7 @@ internal class SolanaApiImp @Inject constructor(
             )
             if (response.error != null) {
                 Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
-                return Pair(null,false)
+                return Pair(null, false)
             }
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
             return Pair(
@@ -352,10 +359,37 @@ internal class SolanaApiImp @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e)
-            return Pair(null,false)
+            return Pair(null, false)
         }
     }
 
+    override suspend fun getFeeForMessage(message: String, commitment: String): BigInteger? {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "getFeeForMessage",
+            params = buildJsonArray {
+                add(message)
+                addJsonObject {
+                    put("commitment", commitment)
+                }
+            },
+            id = 1,
+        )
+
+        val response = httpClient.post(rpcEndpoint) {
+            setBody(payload)
+        }
+
+        val rpcResp = response.body<SolanaFeeForMessageResponse>()
+
+        if (rpcResp.error != null) {
+            Timber.tag("solanaApiImp")
+                .d("getFeeForMessage error: ${rpcResp.error}")
+            return null
+        }
+
+        return rpcResp.result?.value
+    }
 
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
@@ -365,5 +399,4 @@ internal class SolanaApiImp @Inject constructor(
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
     }
-
 }
