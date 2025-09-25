@@ -1,23 +1,16 @@
 package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.ui.components.VsCircularLoading
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
@@ -30,6 +23,7 @@ import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Send
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Sign
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Swap
 import com.vultisig.wallet.ui.utils.showReviewPopUp
+import timber.log.Timber
 
 @Composable
 internal fun KeysignScreen(
@@ -38,12 +32,16 @@ internal fun KeysignScreen(
     keysignShareViewModel: KeysignShareViewModel =
         hiltViewModel(LocalActivity.current as MainActivity)
 ) {
-
-    when (txType) {
-        Send -> keysignShareViewModel.loadTransaction(transactionId)
-        Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
-        Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
-        Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
+    try {
+        when (txType) {
+            Send -> keysignShareViewModel.loadTransaction(transactionId)
+            Swap -> keysignShareViewModel.loadSwapTransaction(transactionId)
+            Deposit -> keysignShareViewModel.loadDepositTransaction(transactionId)
+            Sign -> keysignShareViewModel.loadSignMessageTx(transactionId)
+        }
+    }
+    catch (e: Exception) {
+        Timber.e(e, "Error loading transaction for keysign")
     }
 
     KeysignScreen()
