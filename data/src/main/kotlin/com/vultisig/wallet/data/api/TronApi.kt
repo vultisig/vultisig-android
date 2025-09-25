@@ -55,13 +55,12 @@ internal class TronApiImpl @Inject constructor(
     private val httpClient: HttpClient,
 ) : TronApi {
 
-    private val rpcUrl = "https://tron-rpc.publicnode.com"
-    private val tronGrid = "https://api.trongrid.io"
+    private val tronGrid = "https://api.vultisig.com/tron"
 
     override suspend fun broadcastTransaction(tx: String): String {
-        val httpResponse = httpClient.post(rpcUrl) {
+        val httpResponse = httpClient.post(tronGrid) {
             url {
-                path("wallet", "broadcasttransaction")
+                path("tron", "wallet", "broadcasttransaction")
             }
             contentType(ContentType.Application.Json)
             setBody(tx)
@@ -73,9 +72,9 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getSpecific() =
-        httpClient.post(rpcUrl) {
+        httpClient.post(tronGrid) {
             url {
-                path("wallet", "getnowblock")
+                path("tron", "wallet", "getnowblock")
             }
         }.body<TronSpecificBlockJson>()
 
@@ -100,7 +99,7 @@ internal class TronApiImpl @Inject constructor(
         }
         val triggerConstant = httpClient.post(tronGrid) {
             url {
-                path("walletsolidity", "triggerconstantcontract")
+                path("tron", "walletsolidity", "triggerconstantcontract")
             }
             setBody(body)
             accept(ContentType.Application.Json)
@@ -111,9 +110,9 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getChainParameters(): TronChainParametersJson {
-        return httpClient.post(rpcUrl) {
+        return httpClient.post(tronGrid) {
             url {
-                path("wallet", "getchainparameters")
+                path("tron", "wallet", "getchainparameters")
             }
         }.body<TronChainParametersJson>()
     }
@@ -128,11 +127,17 @@ internal class TronApiImpl @Inject constructor(
         try {
             val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
             val content = response.body<TronBalanceResponseJson>()
-            return if (coin.isNativeToken)
-                content.tronBalanceResponseData[0].balance
-            else
-                content.tronBalanceResponseData[0].trc20[0][coin.contractAddress]?.toBigIntegerOrNull()
+            val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
+
+            return if (coin.isNativeToken) {
+                account.balance
+            } else {
+                account.trc20
+                    .asSequence()
+                    .mapNotNull { it[coin.contractAddress]?.toBigIntegerOrNull() }
+                    .firstOrNull()
                     ?: BigInteger.ZERO
+            }
         } catch (e: Exception) {
             Timber.e(e, "error getting tron balance")
             return BigInteger.ZERO
@@ -140,9 +145,9 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getAccountResource(address: String): TronAccountResourceJson {
-        return httpClient.post(rpcUrl) {
+        return httpClient.post(tronGrid) {
             url {
-                url { path("wallet", "getaccountresource") }
+                url { path("tron", "wallet", "getaccountresource") }
             }
             contentType(ContentType.Application.Json)
             setBody(TronAccountRequestJson(address, true))
@@ -150,7 +155,7 @@ internal class TronApiImpl @Inject constructor(
     }
 
     override suspend fun getAccount(address: String): TronAccountJson {
-        return httpClient.post(rpcUrl) {
+        return httpClient.post(tronGrid) {
             url {
                 appendPathSegments("/wallet/getaccount")
             }
