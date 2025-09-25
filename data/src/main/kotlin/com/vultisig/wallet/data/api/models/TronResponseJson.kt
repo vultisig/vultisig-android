@@ -180,6 +180,6 @@ data class TronContractInfoJson(
     @Serializable
     data class ContractStateJson(
         @SerialName("energy_factor")
-        val energyFactor: String = "0",
+        val energyFactor: Long = 0L,
     )
 }
