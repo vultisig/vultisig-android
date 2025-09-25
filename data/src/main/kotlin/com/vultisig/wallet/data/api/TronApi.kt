@@ -147,7 +147,7 @@ internal class TronApiImpl @Inject constructor(
     override suspend fun getAccountResource(address: String): TronAccountResourceJson {
         return httpClient.post(tronGrid) {
             url {
-                url { path("tron", "wallet", "getaccountresource") }
+                path("tron", "wallet", "getaccountresource")
             }
             contentType(ContentType.Application.Json)
             setBody(TronAccountRequestJson(address, true))
