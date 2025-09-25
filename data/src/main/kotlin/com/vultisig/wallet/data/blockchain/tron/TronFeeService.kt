@@ -35,11 +35,22 @@ import javax.inject.Inject
  *    - If the sender has enough free or staked bandwidth, no TRX is burned.
  *    - Otherwise, the cost is: bytes * bandwidthPrice (≈1000 SUN per byte).
  *
+ *    How Users Earn Bandwidth:
+ *    - Free daily quota: Each account receives a small amount of bandwidth points daily (600 bandwidth, 2 transfers).
+ *    - Staking TRX: Users can freeze (stake) TRX to earn additional bandwidth points.
+ *      - The more TRX frozen, the more bandwidth points allocated per day.
+ *    - Bandwidth is consumed with each transaction until depleted; any shortfall is paid in TRX.
+ *
  * 2. Energy Fee (for smart contracts)
  *    - TRC20 and other contract calls consume "energy".
  *    - Energy can be obtained by staking TRX, or else TRX is burned.
  *    - Cost formula: (energyRequired - availableEnergy) * energyPrice (≈280 SUN per unit).
  *    - Example: a TRC20 transfer consumes ~65,000 energy → ~18.2 TRX if no energy available.
+ *
+ *    How Users Earn Energy:
+ *    - Staking TRX: Freezing TRX can also grant energy points.
+ *      - Energy is specifically required for smart contract execution.
+ *    - Unlike bandwidth, there is no daily free quota for energy; only staking provides it.
  *
  * 3. Memo Fee
  *    - If a transaction includes a memo, a flat fee applies.
@@ -51,8 +62,6 @@ import javax.inject.Inject
  *    - When this applies, the bandwidth fee is waived (since activation includes it).
  *
  * Notes:
- * - At the moment there is no full UI to show all TRON fee details (discount %, etc..), but just
- *   amount. So we'll stick to it.
  * - Resource availability is checked first (bandwidth/energy from free quota or staking).
  * - Any shortfall is covered by burning TRX as fees.
  * - This service fetches chain parameters dynamically via TronApi, but provides
@@ -131,12 +140,14 @@ class TronFeeService @Inject constructor(
 
     private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
 
+    // Both transfers COIN and TRC-20 are quite deterministic in terms of bandwidth
+    // Bandwidth represents the transaction size in bytes, 250-300 for COIN and around 350 for TRC-20
+    // To consider implementing a tx serializer for swaps.
     private suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
         isContract: Boolean,
     ): BigInteger {
         val bytesRequired = if (isContract) {
-            // TODO: Only valid for TRC-20 transfer, for swaps implement actual serializer
             BYTES_PER_CONTRACT_TX
         } else {
             BYTES_PER_COIN_TX
@@ -232,7 +243,8 @@ class TronFeeService @Inject constructor(
             throw RuntimeException("Tron Simulated failed")
         }
 
-        val contractEnergyFactor = contractMetadata.await().contractState.energyFactor.toBigDecimal()
+        val contractEnergyFactor =
+            contractMetadata.await().contractState.energyFactor.toBigDecimal()
         val contractMaxEnergyFactor = getCacheTronChainParameters().maxEnergyFactor.toBigDecimal()
 
         val energyRequired = if (contractEnergyFactor == BigDecimal.ZERO) {
@@ -254,7 +266,8 @@ class TronFeeService @Inject constructor(
             energyRequired.toBigDecimal().multiply(maxFactor).toBigInteger()
 
         // Apply Energy discount: If account has staked energy
-        val availableEnergy = srcAccount?.calculateAvailableEnergy()?.toBigInteger() ?: BigInteger.ZERO
+        val availableEnergy =
+            srcAccount?.calculateAvailableEnergy()?.toBigInteger() ?: BigInteger.ZERO
         val energyToPay = if (availableEnergy >= energyUnitsRequired) {
             BigInteger.ZERO
         } else {
