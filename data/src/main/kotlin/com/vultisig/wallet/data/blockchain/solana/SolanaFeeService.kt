@@ -67,6 +67,7 @@ class SolanaFeeService @Inject constructor(
         return BigInteger.ZERO
     }
 
+    // TODO: Build KeySignPayload
     private fun buildKeySignPayload(): KeysignPayload {
         error("")
     }
@@ -92,8 +93,5 @@ class SolanaFeeService @Inject constructor(
 
     private companion object {
         val DEFAULT_COIN_TRANSFER_BASE_FEE = CoinType.SOLANA.toUnit("0.000105".toBigDecimal())
-
-        // used for rent exemption
-        private const val TOKEN_ACCOUNT_SIZE = 165
     }
 }
