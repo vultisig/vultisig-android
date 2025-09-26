@@ -6,9 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.VaultData
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
@@ -23,6 +28,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.coin
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +94,8 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val securityScannerService: SecurityScannerContract,
+    private val vaultRepository: VaultRepository,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -115,6 +123,37 @@ internal class VerifyTransactionViewModel @Inject constructor(
         loadTransaction()
         loadPassword()
         scanTransaction()
+        calculateFees()
+    }
+
+    private fun calculateFees() {
+        viewModelScope.launch {
+            val tx = transaction.value ?: return@launch
+            val chain = tx.token.chain
+            val vault = withContext(Dispatchers.IO) {
+                vaultRepository.get(vaultId)
+            } ?: return@launch
+
+            val vaultData = VaultData(
+                vaultHexChainCode = vault.hexChainCode,
+                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+            )
+
+            val blockchainTransaction = Transfer(
+                coin = tx.token,
+                vault = vaultData,
+                amount = tx.tokenValue.value,
+                to = tx.dstAddress,
+                memo = tx.memo,
+                isMax = false,
+            )
+
+            val fees = withContext(Dispatchers.IO){
+                feeServiceComposite.calculateFees(blockchainTransaction)
+            }
+
+            println(fees)
+        }
     }
 
     fun checkConsentAddress(checked: Boolean) {

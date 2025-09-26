@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
@@ -62,6 +63,28 @@ class PolkadotHelper(
             throw Exception(preSigningOutput.errorMessage)
         }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
+    }
+
+    fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
+        val dummyPublicKey = PrivateKey().publicKeyEd25519
+        
+        val inputData = getPreSignedInputData(keysignPayload)
+
+        val allSignatures = DataVector()
+        val publicKeys = DataVector()
+        
+        // Add a dummy ED25519 signature (64 bytes of zeros) - we still use zeros for the signature
+        // but use the dummy public key so the transaction structure is valid
+        allSignatures.add("0".repeat(128).toHexByteArray())
+        publicKeys.add(dummyPublicKey.data())
+        
+        // Compile with the dummy signature
+        val compiledWithSignature =
+            TransactionCompiler.compileWithSignatures(coinType, inputData, allSignatures, publicKeys)
+        val output = wallet.core.jni.proto.Polkadot.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
+
+        return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
     }
 
     fun getSignedTransaction(

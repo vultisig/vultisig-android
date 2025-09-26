@@ -76,3 +76,18 @@ data class SolanaFeeObjectJson(
     @Contextual
     val slot: BigInteger,
 )
+
+@Serializable
+data class SolanaFeeForMessageResponse(
+    @SerialName("error")
+    val error: JsonObject? = null,
+    @SerialName("result")
+    val result: SolanaFeeForMessageResult? = null,
+)
+
+@Serializable
+data class SolanaFeeForMessageResult(
+    @SerialName("value")
+    @Contextual
+    val value: BigInteger? = null,
+)

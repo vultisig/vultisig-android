@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.ethereum
 
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.blockchain.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
@@ -18,7 +19,7 @@ import javax.inject.Inject
 class EthereumFeeService @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : FeeService {
-    override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean): Fee {
+    override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val evmApi = evmApiFactory.createEvmApi(chain)
 
@@ -35,6 +36,14 @@ class EthereumFeeService @Inject constructor(
         }
 
         return fees.addL1Amount(l1Fees)
+    }
+
+    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
+        TODO("Not yet implemented")
     }
 
     private fun calculateLayer1Fees(): BigInteger {
@@ -115,7 +124,6 @@ class EthereumFeeService @Inject constructor(
         }
     }
 
-    // TODO: Show properly fee amount on the UI (upcoming PR)
     private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
         return if (this is GasFees) {
             this.copy(amount = this.amount + l1FeesAmount)

@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
@@ -39,6 +40,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val thorChainApi: ThorChainApi,
     private val tronApi: TronApi,
+    private val polkadotApi: PolkadotApi,
 ) : GasFeeRepository {
 
     var chainParameters: TronChainParametersJson? = null
@@ -149,6 +151,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.Polkadot -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
+
                 TokenValue(
                     value = PolkadotHelper.DEFAULT_FEE_PLANCKS.toBigInteger(),
                     unit = chain.feeUnit,
