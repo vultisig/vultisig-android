@@ -10,6 +10,8 @@ import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.utils.toUnit
+import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -45,10 +47,25 @@ class SolanaFeeService @Inject constructor(
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
+        require(transaction is Transfer) {
+            "Invalid Transaction Type: ${transaction::class.simpleName}"
+        }
+
+        val priorityFee = (PRIORITY_FEE_PRICE * PRIORITY_FEE_LIMIT).toBigInteger()
+
+        val priorityAmount = priorityFee
+            .toBigDecimal()
+            .divide(BigDecimal.TEN.pow(6))
+            .toBigInteger()
+
+        return GasFees(
+            price = PRIORITY_FEE_PRICE.toBigInteger(),
+            limit = PRIORITY_FEE_LIMIT.toBigInteger(),
+            amount = DEFAULT_BASE_FEE + priorityAmount,
+        )
     }
 
     private companion object {
-        const val DEFAULT_BASE_FEE = ""
+        val DEFAULT_BASE_FEE = CoinType.SOLANA.toUnit("0.000105".toBigDecimal())
     }
 }
