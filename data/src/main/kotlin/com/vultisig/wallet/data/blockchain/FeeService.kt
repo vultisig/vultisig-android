@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import java.math.BigInteger
 
 interface FeeService {
+    @Deprecated("use calculateFees(transaction)")
     suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String? = null): Fee =
         throw NotImplementedError("Not implemented")
 

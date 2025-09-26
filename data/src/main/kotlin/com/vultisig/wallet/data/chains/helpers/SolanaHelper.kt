@@ -19,8 +19,8 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Solana
 import java.math.BigInteger
 
-private const val PRIORITY_FEE_PRICE = 1000000L
-private const val PRIORITY_FEE_LIMIT = 100000
+internal const val PRIORITY_FEE_PRICE = 1000000L
+internal const val PRIORITY_FEE_LIMIT = 100000
 
 class SolanaHelper(
     private val vaultHexPublicKey: String,

@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -54,7 +55,7 @@ interface SolanaApi {
         mintAddress: String
     ): Pair<String?, Boolean>
 
-    suspend fun getFeeForMessage(message: String, commitment: String = "processed"): BigInteger?
+    suspend fun getFeeForMessage(message: String): BigInteger
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -363,14 +364,14 @@ internal class SolanaApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getFeeForMessage(message: String, commitment: String): BigInteger? {
+    override suspend fun getFeeForMessage(message: String): BigInteger {
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "getFeeForMessage",
             params = buildJsonArray {
                 add(message)
                 addJsonObject {
-                    put("commitment", commitment)
+                    put("commitment", "confirmed")
                 }
             },
             id = 1,
@@ -380,15 +381,9 @@ internal class SolanaApiImp @Inject constructor(
             setBody(payload)
         }
 
-        val rpcResp = response.body<SolanaFeeForMessageResponse>()
+        val rpcResp = response.bodyOrThrow<SolanaFeeForMessageResponse>()
 
-        if (rpcResp.error != null) {
-            Timber.tag("solanaApiImp")
-                .d("getFeeForMessage error: ${rpcResp.error}")
-            return null
-        }
-
-        return rpcResp.result?.value
+        return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
     }
 
     companion object {
