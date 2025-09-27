@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.scaffold
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,14 +47,18 @@ internal fun ScaffoldWithExpandableTopBar(
                 VsSnackBar(snackbarState = snackbarState)
             },
             topBar = {
-                if (topBarCollapsedContent != null)
+                if (topBarCollapsedContent != null) {
                     VsExpandableTopBar(
                         expandedContent = topBarExpandedContent,
                         collapsedContent = topBarCollapsedContent,
                         scrollBehavior = scrollBehavior,
                         backgroundColor = backgroundColor,
-                    ) else
-                    topBarExpandedContent()
+                    )
+                } else {
+                    Box(
+                        content = topBarExpandedContent
+                    )
+                }
             },
             bottomBar = bottomBarContent,
             content = content

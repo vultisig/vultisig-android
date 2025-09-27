@@ -24,8 +24,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -54,7 +56,12 @@ internal fun QrContainer(
                 )
             )
             .drawBehind {
-                boxShadow(cornerRadius, startGradient, topOffsetDp = 2.dp, bottomOffsetDp = 3.dp)
+                boxShadow(
+                    cornerRadius,
+                    startGradient,
+                    topOffsetDp = 2.dp,
+                    bottomOffsetDp = 3.dp
+                )
             }
 
             .padding(
@@ -94,7 +101,10 @@ internal fun QrContainer(
                 )
 
                 Text(
-                    text = "Receive $chainName",
+                    text = stringResource(
+                        R.string.chain_tokens_qr_receive_label,
+                        chainName
+                    ),
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.colors.text.primary,
                 )

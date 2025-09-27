@@ -805,4 +805,7 @@
     <string name="search_bar_cancel">Cancel</string>
     <string name="chain_selection_select_chains">Select chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
+    <string name="copy_address">Copy Address</string>
+    <string name="chain_tokens_tab_hidden">Hidden</string>
+    <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
 </resources>

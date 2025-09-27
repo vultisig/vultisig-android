@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -22,9 +22,8 @@ internal fun ExpandedTopbarContainer(
     shineSpotColor: Color = Theme.colors.primary.accent1,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val context = LocalContext.current
-    val displayMetrics = context.resources.displayMetrics
-    val screenWidthPx = displayMetrics.widthPixels.toFloat()
+    val windowInfo = LocalWindowInfo.current
+    val screenWidthPx = windowInfo.containerSize.width.toFloat()
 
     Column(
         modifier = modifier

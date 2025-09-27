@@ -559,4 +559,7 @@
     <string name="search_bar_cancel">Abbrechen</string>
     <string name="chain_selection_select_chains">Ketten auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Ketten gefunden</string>
+    <string name="copy_address">Adresse kopieren</string>
+    <string name="chain_tokens_tab_hidden">Versteckt</string>
+    <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
 </resources>

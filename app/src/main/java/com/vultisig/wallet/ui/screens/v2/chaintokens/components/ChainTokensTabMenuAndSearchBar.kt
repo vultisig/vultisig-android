@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -13,8 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -56,7 +57,7 @@ fun ChainTokensTabMenuAndSearchBar(
                     tabs = listOf(
                         {
                             VsTab(
-                                label = "Tokens",
+                                label = stringResource(R.string.tokens),
                                 onClick = {
                                     onTokensClick()
                                     tabIndex = 0
@@ -65,7 +66,7 @@ fun ChainTokensTabMenuAndSearchBar(
                         },
                         {
                             VsTab(
-                                label = "Hidden",
+                                label = stringResource(R.string.chain_tokens_tab_hidden),
                                 onClick = {
                                     onHiddenClick()
                                     tabIndex = 1
@@ -88,12 +89,9 @@ fun ChainTokensTabMenuAndSearchBar(
                         .clickOnce(onClick = onSearchClick)
                 ) {
                     UiIcon(
-                        drawableResId = com.vultisig.wallet.R.drawable.ic_search,
+                        drawableResId = R.drawable.ic_search,
                         size = 16.dp,
-                        modifier = Modifier
-                            .padding(
-                                all = 8.dp
-                            )
+                        modifier = Modifier.padding(all = 12.dp)
                     )
                 }
 
@@ -108,12 +106,9 @@ fun ChainTokensTabMenuAndSearchBar(
                         .clickOnce(onClick = onEditClick)
                 ) {
                     UiIcon(
-                        drawableResId = com.vultisig.wallet.R.drawable.edit,
+                        drawableResId = R.drawable.ic_search,
                         size = 16.dp,
-                        modifier = Modifier
-                            .padding(
-                                all = 8.dp
-                            )
+                        modifier = Modifier.padding(all = 12.dp)
                     )
                 }
             }

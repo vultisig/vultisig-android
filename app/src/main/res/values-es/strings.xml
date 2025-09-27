@@ -557,4 +557,7 @@
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleziona catene</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="copy_address">Copiar dirección</string>
+    <string name="chain_tokens_tab_hidden">Oculto</string>
+    <string name="chain_tokens_qr_receive_label">Oculto</string>
 </resources>

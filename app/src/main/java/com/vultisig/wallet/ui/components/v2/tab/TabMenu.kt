@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -108,9 +109,12 @@ private fun TabUnderLine(
     HorizontalDivider(
         modifier = Modifier
             .width(width)
-            .offset(
-                x = offset()
-            ),
+            .offset {
+                IntOffset(
+                    x = offset().roundToPx(),
+                    y = 0
+                )
+            },
         color = Theme.colors.primary.accent4,
         thickness = 1.5.dp
     )

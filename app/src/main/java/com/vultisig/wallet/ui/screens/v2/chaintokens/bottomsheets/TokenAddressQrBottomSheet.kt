@@ -23,8 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
@@ -108,7 +110,7 @@ internal fun TokenAddressQrBottomSheet(
                         VsButton(
                             variant = VsButtonVariant.Tertiary,
                             size = VsButtonSize.Small,
-                            label = "Share",
+                            label = stringResource(R.string.share_vault_qr_share),
                             onClick = onShareQrClick,
                             modifier = Modifier
                                 .weight(1f)
@@ -119,7 +121,7 @@ internal fun TokenAddressQrBottomSheet(
                         VsButton(
                             variant = VsButtonVariant.Primary,
                             size = VsButtonSize.Small,
-                            label = "Copy Address",
+                            label = stringResource(R.string.copy_address),
                             onClick = onCopyAddressClick,
                             modifier = Modifier
                                 .weight(1f)
