@@ -14,6 +14,7 @@ data class Account(
     val token: Coin,
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
+    val price: FiatValue?,
 )
 
 fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =

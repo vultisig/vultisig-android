@@ -28,6 +28,7 @@ internal class ChainAndTokensToAddressMapperImpl @Inject constructor() :
                             token = it,
                             tokenValue = null,
                             fiatValue = null,
+                            price = null,
                         )
                     }
                 )

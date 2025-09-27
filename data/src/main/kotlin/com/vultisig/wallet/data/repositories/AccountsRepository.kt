@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.async
@@ -80,10 +81,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
                             account.accounts.map {
                                 async {
                                     val balance =
-                                        balanceRepository.getTokenBalance(address, it.token)
+                                        balanceRepository.getTokenBalanceAndPrice(address, it.token)
                                             .first()
 
-                                    it.applyBalance(balance)
+                                    it.applyBalance(balance.tokenBalance, balance.price)
                                 }
                             }.awaitAll()
                         }
@@ -194,12 +195,12 @@ internal class AccountsRepositoryImpl @Inject constructor(
         emit(
             account.copy(
                 accounts = account.accounts.map {
-                    val balance = balanceRepository.getCachedTokenBalance(
+                    val balance = balanceRepository.getCachedTokenBalanceAndPrice(
                         address,
                         it.token,
                     )
 
-                    it.applyBalance(balance)
+                    it.applyBalance(balance.tokenBalance, balance.price)
                 }
             )
         )
@@ -209,10 +210,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
         emit(
             account.copy(
             accounts = account.accounts.map {
-                val balance = balanceRepository.getTokenBalance(address, it.token)
+                val balance = balanceRepository.getTokenBalanceAndPrice(address, it.token)
                     .first()
 
-                it.applyBalance(balance)
+                it.applyBalance(balance.tokenBalance, balance.price)
             }
         ))
     }
@@ -261,15 +262,21 @@ internal class AccountsRepositoryImpl @Inject constructor(
             ?: error("Account for token ${updatedToken.id} not found in mapped address")
 
         val balance = balanceRepository
-            .getTokenBalance(finalAccount.address, updatedToken)
+            .getTokenBalanceAndPrice(finalAccount.address, updatedToken)
             .first()
 
-        accountToUpdate.applyBalance(balance)
+        accountToUpdate.applyBalance(balance.tokenBalance, balance.price)
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account = copy(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
+    )
+
+    private fun Account.applyBalance(balance: TokenBalance, price: FiatValue?): Account = copy(
+        tokenValue = balance.tokenValue,
+        fiatValue = balance.fiatValue,
+        price = price
     )
 }
 

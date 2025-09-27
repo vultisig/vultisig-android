@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.home.components
+package com.vultisig.wallet.ui.components.v2.texts
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.height
@@ -12,19 +12,20 @@ import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 
 @Composable
-internal fun AnimatedPrice(
-    totalFiatValue: String?,
+internal fun LoadableValue(
+    value: String?,
     isVisible: Boolean,
     style: TextStyle,
     color: Color,
+    modifier: Modifier = Modifier,
 ) {
     AnimatedContent(
-        targetState = totalFiatValue,
-        label = "ChainAccount FiatAmount",
-    ) { totalFiatValue ->
-        if (totalFiatValue != null) {
+        modifier = modifier,
+        targetState = value,
+    ) { v ->
+        if (v != null) {
             ToggleVisibilityText(
-                text = totalFiatValue,
+                text = v,
                 isVisible = isVisible,
                 style = style,
                 color = color,
@@ -33,7 +34,7 @@ internal fun AnimatedPrice(
             UiPlaceholderLoader(
                 modifier = Modifier.Companion
                     .width(48.dp)
-                    .height(32.dp),
+                    .height(16.dp),
             )
         }
     }

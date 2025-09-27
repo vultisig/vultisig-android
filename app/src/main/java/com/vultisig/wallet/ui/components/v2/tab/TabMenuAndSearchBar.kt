@@ -1,7 +1,6 @@
-package com.vultisig.wallet.ui.screens.v2.home.components
+package com.vultisig.wallet.ui.components.v2.tab
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,23 +9,21 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun TabMenuAndSearchBar(
     modifier: Modifier = Modifier,
-    searchTextFiledState: TextFieldState,
-    onTNFTsClick: () -> Unit = {},
-    onPortfolioClick: () -> Unit = {},
-    onEditClick: () -> Unit = {},
-    onSearchClick: () -> Unit,
-    onCancelSearchClick: () -> Unit,
+    tabMenuContent: @Composable () -> Unit,
     isTabMenu: Boolean,
-) {
-
+    searchTextFiledState: TextFieldState,
+    onCancelSearchClick: () -> Unit,
+    isInitiallyFocused: Boolean,
+){
     AnimatedContent(
         targetState = isTabMenu,
         transitionSpec = {
@@ -55,15 +52,7 @@ internal fun TabMenuAndSearchBar(
         },
     ) {
         if (it)
-            HomePageTabMenu(
-                modifier = modifier,
-                onTNFTsClick = onTNFTsClick,
-                onPortfolioClick = onPortfolioClick,
-                onEditClick = onEditClick,
-                onSearchClick = {
-                    onSearchClick()
-                },
-            )
+            tabMenuContent()
         else {
             SearchBar(
                 modifier = modifier,
@@ -71,23 +60,23 @@ internal fun TabMenuAndSearchBar(
                 onCancelClick = {
                     onCancelSearchClick()
                 },
-                isInitiallyFocused = true,
+                isInitiallyFocused = isInitiallyFocused,
             )
         }
     }
-
 }
-
 
 @Preview
 @Composable
-private fun PreviewTabMenuAndSearchBar() {
+private fun TabMenuAndSearchBarPreview(){
     TabMenuAndSearchBar(
-        isTabMenu = true,
-        onSearchClick = {},
-        onCancelSearchClick = {},
+        isTabMenu = false,
         searchTextFiledState = rememberTextFieldState(),
+        onCancelSearchClick = {},
+        isInitiallyFocused = true,
+        tabMenuContent = {
+            Text("Tab menu content")
+        }
     )
 }
-
 

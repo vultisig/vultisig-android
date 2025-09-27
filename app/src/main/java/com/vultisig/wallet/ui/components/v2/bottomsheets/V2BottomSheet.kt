@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.home.bottomsheets
+package com.vultisig.wallet.ui.components.v2.bottomsheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,42 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize.*
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType.*
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
-
-
-@Composable
-@Preview
-fun V2BottomSheetPreview() {
-    V2BottomSheet(
-        leftAction = {
-            VsCircleButton(
-                onClick = { /*TODO*/ },
-                icon = com.vultisig.wallet.R.drawable.x,
-                size = Small,
-                type = Tertiary,
-            )
-        },
-        rightAction = {
-            VsCircleButton(
-                onClick = { /*TODO*/ },
-                icon = com.vultisig.wallet.R.drawable.x,
-                size = Small,
-                type = Tertiary,
-            )
-        },
-        title = "New Folder",
-        content = {
-            Text(
-                text = "Add Folder",
-                color = Theme.colors.neutrals.n100,
-                style = Theme.brockmann.headings.title3,
-            )
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,7 +128,7 @@ private fun TopRow(
 }
 
 @Composable
-private fun DragHandler(modifier: Modifier = Modifier) {
+internal fun DragHandler(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .width(36.dp)
@@ -171,3 +140,33 @@ private fun DragHandler(modifier: Modifier = Modifier) {
 }
 
 
+@Composable
+@Preview
+internal fun V2BottomSheetPreview() {
+    V2BottomSheet(
+        leftAction = {
+            VsCircleButton(
+                onClick = {},
+                icon = R.drawable.x,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Tertiary,
+            )
+        },
+        rightAction = {
+            VsCircleButton(
+                onClick = {},
+                icon = R.drawable.x,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Tertiary,
+            )
+        },
+        title = "New Folder",
+        content = {
+            Text(
+                text = "Add Folder",
+                color = Theme.colors.neutrals.n100,
+                style = Theme.brockmann.headings.title3,
+            )
+        }
+    )
+}

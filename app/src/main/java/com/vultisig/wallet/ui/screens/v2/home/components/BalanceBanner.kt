@@ -17,6 +17,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -31,8 +32,8 @@ internal fun BalanceBanner(
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
     ) {
 
-        AnimatedPrice(
-            totalFiatValue = balance,
+        LoadableValue(
+            value = balance,
             isVisible = isVisible,
             color = Theme.v2.colors.text.primary,
             style = Theme.satoshi.price.largeTitle,

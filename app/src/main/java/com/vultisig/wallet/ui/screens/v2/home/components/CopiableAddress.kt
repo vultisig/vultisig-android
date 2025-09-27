@@ -6,8 +6,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -18,6 +20,8 @@ fun CopiableAddress(
     modifier: Modifier = Modifier,
     address: String,
     onAddressCopied: (String) -> Unit = {},
+    tint: Color = Theme.colors.text.extraLight,
+    maxLength: Dp = 64.dp
 ) {
     Row(
         modifier = modifier,
@@ -25,11 +29,11 @@ fun CopiableAddress(
     ) {
         Text(
             text = address,
-            modifier = Modifier.widthIn(max = 64.dp),
+            modifier = Modifier.widthIn(max = maxLength),
             overflow = TextOverflow.MiddleEllipsis,
             maxLines = 1,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.extraLight,
+            color = tint,
         )
 
         UiSpacer(
@@ -39,7 +43,7 @@ fun CopiableAddress(
         CopyIcon(
             textToCopy = address,
             size = 12.dp,
-            tint = Theme.colors.text.extraLight,
+            tint = tint,
             onCopyCompleted = onAddressCopied
         )
     }

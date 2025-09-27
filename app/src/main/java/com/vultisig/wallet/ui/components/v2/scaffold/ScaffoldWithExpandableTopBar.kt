@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.scaffold
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,11 +21,15 @@ import com.vultisig.wallet.ui.theme.Theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScaffoldWithExpandableTopBar(
-    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
     snackbarState: VSSnackbarState = rememberVsSnackbarState(),
-    backgroundColor : Color = Theme.colors.backgrounds.primary,
+    backgroundColor: Color = Theme.colors.backgrounds.primary,
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
-    topBarCollapsedContent: @Composable BoxScope.() -> Unit,
+    topBarCollapsedContent: (@Composable BoxScope.() -> Unit)? = null,
+    scrollBehavior: TopAppBarScrollBehavior =
+        if (topBarCollapsedContent == null)
+            TopAppBarDefaults.pinnedScrollBehavior()
+        else
+            TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
     bottomBarContent: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
     isRefreshing: Boolean = false,
@@ -42,12 +47,18 @@ internal fun ScaffoldWithExpandableTopBar(
                 VsSnackBar(snackbarState = snackbarState)
             },
             topBar = {
-                VsExpandableTopBar(
-                    expandedContent = topBarExpandedContent,
-                    collapsedContent = topBarCollapsedContent,
-                    scrollBehavior = scrollBehavior,
-                    backgroundColor = backgroundColor,
-                )
+                if (topBarCollapsedContent != null) {
+                    VsExpandableTopBar(
+                        expandedContent = topBarExpandedContent,
+                        collapsedContent = topBarCollapsedContent,
+                        scrollBehavior = scrollBehavior,
+                        backgroundColor = backgroundColor,
+                    )
+                } else {
+                    Box(
+                        content = topBarExpandedContent
+                    )
+                }
             },
             bottomBar = bottomBarContent,
             content = content

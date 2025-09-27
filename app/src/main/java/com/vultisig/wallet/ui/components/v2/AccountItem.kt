@@ -26,7 +26,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.screens.v2.home.components.AnimatedPrice
+import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -87,8 +87,8 @@ internal fun AccountItem(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.End
         ) {
-            AnimatedPrice(
-                totalFiatValue = account.fiatAmount,
+            LoadableValue(
+                value = account.fiatAmount,
                 style = Theme.satoshi.price.bodyS,
                 color = Theme.colors.text.primary,
                 isVisible = isBalanceVisible,

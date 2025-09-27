@@ -566,4 +566,7 @@
     <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
+    <string name="copy_address">Kopieer adres</string>
+    <string name="chain_tokens_tab_hidden">Verborgen</string>
+    <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
 </resources>

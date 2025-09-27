@@ -1,41 +1,32 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.LookaheadScope
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.tab.VsTab
+import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -46,85 +37,53 @@ internal fun HomePageTabMenu(
     onEditClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
-    var state by remember { mutableIntStateOf(0) }
-    var tab1WidthDp by remember {
-        mutableStateOf(0.dp)
-    }
-    var tab2WidthDp by remember {
-        mutableStateOf(0.dp)
-    }
-
-    val underLineWidth = if (state == 0) tab1WidthDp else tab2WidthDp
-
-    val animateWidth by animateDpAsState(underLineWidth)
-
-
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Companion.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Column(
-            modifier = Modifier.Companion
-        ) {
-
-            UiSpacer(
-                size = 6.dp
-            )
-            Row(
-                verticalAlignment = Alignment.Companion.CenterVertically,
-            ) {
-
-                VsHomepageTab(
-                    onGlobalLayout = {
-                        tab1WidthDp = it
-                    },
-                    onClick = {
-                        state = 0
-                        onPortfolioClick()
-                    },
-                    label = stringResource(R.string.search_bar_portfolio),
-                    isEnabled = true
-                )
-
-                UiSpacer(
-                    size = 16.dp
-                )
-
-                VsHomepageTab(
-                    onGlobalLayout = {
-                        tab2WidthDp = it
-                    },
-                    onClick = {
-                        state = 1
-                        onTNFTsClick()
-                    },
-                    label = stringResource(R.string.search_bar_nfts),
-                    isEnabled = false
-                )
-
-            }
-
-            UiSpacer(
-                size = 6.dp
-            )
-
-            TabUnderLine(animateWidth, state)
+        var state by remember {
+            mutableIntStateOf(0)
         }
+
+        VsTabGroup(
+            index = state,
+            tabs = listOf(
+                {
+                    VsTab(
+                        label = stringResource(R.string.search_bar_portfolio),
+                        onClick = {
+                            onPortfolioClick()
+                            state = 0
+                        },
+                        isEnabled = true
+                    )
+                },
+                {
+                    HomepageTab(
+                        onClick = {
+                            onTNFTsClick()
+                            state = 1
+                        },
+                        label = stringResource(R.string.search_bar_nfts),
+                        isEnabled = false
+                    )
+                },
+            ),
+        )
 
         UiSpacer(weight = 1f)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(
                 space = 8.dp,
-                alignment = Alignment.Companion.End
+                alignment = Alignment.End
             ),
-            verticalAlignment = Alignment.Companion.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
 
             ) {
             V2Container(
-                modifier = Modifier.Companion.clickOnce(onClick = onSearchClick),
+                modifier = Modifier.clickOnce(onClick = onSearchClick),
                 cornerType = CornerType.Circular,
                 type = ContainerType.SECONDARY,
                 borderType = ContainerBorderType.Borderless
@@ -133,12 +92,12 @@ internal fun HomePageTabMenu(
                     drawableResId = R.drawable.ic_search,
                     size = 16.dp,
                     tint = Theme.colors.primary.accent4,
-                    modifier = Modifier.Companion.padding(12.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
 
             V2Container(
-                modifier = Modifier.Companion.clickOnce(onClick = onEditClick),
+                modifier = Modifier.clickOnce(onClick = onEditClick),
                 cornerType = CornerType.Circular,
                 type = ContainerType.SECONDARY,
                 borderType = ContainerBorderType.Borderless
@@ -147,53 +106,29 @@ internal fun HomePageTabMenu(
                     drawableResId = R.drawable.write,
                     size = 16.dp,
                     tint = Theme.colors.primary.accent4,
-                    modifier = Modifier.Companion.padding(12.dp)
+                    modifier = Modifier.padding(12.dp)
                 )
             }
         }
     }
 }
 
-@Composable
-private fun ColumnScope.TabUnderLine(
-    width: Dp,
-    state: Int
-) {
-    LookaheadScope {
-        HorizontalDivider(
-            modifier = Modifier
-                .animatePlacementInScope(this@LookaheadScope)
-                .width(width)
-                .align(if (state == 0) Alignment.Start else Alignment.End),
-            color = Theme.colors.primary.accent4,
-            thickness = 1.5.dp
-        )
-    }
-}
 
 @Composable
-private fun VsHomepageTab(
+private fun HomepageTab(
     modifier: Modifier = Modifier,
-    onGlobalLayout: (Dp) -> Unit,
     onClick: () -> Unit,
     label: String,
     isEnabled: Boolean,
 ) {
-    val density = LocalDensity.current
     Row(
         modifier = modifier
-            .clickable(
-                onClick = onClick,
-                enabled = isEnabled,
-            )
-            .onGloballyPositioned { coordinates ->
-                onGlobalLayout(with(density) { coordinates.size.width.toDp() })
-            },
     ) {
-        Text(
-            text = label,
-            color = if (isEnabled) Theme.colors.text.primary else Theme.colors.text.button.disabled,
-            style = Theme.brockmann.body.s.medium
+
+        VsTab(
+            label = label,
+            onClick = onClick,
+            isEnabled = isEnabled,
         )
 
         if (isEnabled.not()) {

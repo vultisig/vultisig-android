@@ -569,4 +569,7 @@
     <string name="search_bar_cancel">Отмена</string>
     <string name="chain_selection_select_chains">Выбрать сети</string>
     <string name="chain_selection_no_chains_found">Сети не найдены</string>
+    <string name="copy_address">Копировать адрес</string>
+    <string name="chain_tokens_tab_hidden">Скрыто</string>
+    <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
 </resources>

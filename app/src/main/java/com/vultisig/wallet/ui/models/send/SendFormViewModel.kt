@@ -1205,6 +1205,7 @@ internal class SendFormViewModel @Inject constructor(
                             token = token,
                             tokenValue = null,
                             fiatValue = null,
+                            price = null,
                         )
                     )
                 )

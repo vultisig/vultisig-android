@@ -5,67 +5,41 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.utils.toValue
-import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
-import com.vultisig.wallet.ui.components.CopyIcon
-import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.TokenLogo
-import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.VaultActionButton
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.library.form.FormCard
-import com.vultisig.wallet.ui.models.ChainTokenUiModel
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
+import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.showReviewPopUp
-import kotlinx.coroutines.launch
 import wallet.core.jni.CoinType
 
 @Composable
@@ -82,7 +56,6 @@ internal fun ChainTokensScreen(
     }
 
     ChainTokensScreen(
-        navController = navController,
         uiModel = uiModel,
         onRefresh = viewModel::refresh,
         onSend = viewModel::send,
@@ -90,237 +63,12 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onQrBtnClick = viewModel::navigateToQrAddressScreen,
+        onBackClick = navController::popBackStack,
+        onShareQrClick = { viewModel.shareQRCode(context) },
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
         }
     )
-}
-
-@Composable
-private fun ChainTokensScreen(
-    navController: NavHostController,
-    uiModel: ChainTokensUiModel,
-    onRefresh: () -> Unit = {},
-    onSend: () -> Unit = {},
-    onSwap: () -> Unit = {},
-    onDeposit: () -> Unit = {},
-    onSelectTokens: () -> Unit = {},
-    onTokenClick: (ChainTokenUiModel) -> Unit = {},
-
-    onQrBtnClick: () -> Unit = {},
-    onShowReviewPopUp: () -> Unit = {},
-) {
-    val appColor = Theme.colors
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember {
-        SnackbarHostState()
-    }
-
-    BoxWithSwipeRefresh(
-        onSwipe = onRefresh,
-        isRefreshing = uiModel.isRefreshing,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Scaffold(
-            contentColor = Theme.colors.oxfordBlue800,
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState)
-            },
-            topBar = {
-                TopBar(
-                    navController = navController,
-                    centerText = uiModel.chainName,
-                    startIcon = R.drawable.ic_caret_left,
-                )
-            },
-            bottomBar = {}
-        ) {
-            Box(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(it)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(all = 16.dp)
-                ) {
-                    UiSpacer(size = 8.dp)
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        VaultActionButton(
-                            text = stringResource(R.string.chain_account_view_send),
-                            color = appColor.turquoise600Main,
-                            modifier = Modifier.weight(1f),
-                            onClick = onSend,
-                        )
-                        if (uiModel.canSwap) {
-                            VaultActionButton(
-                                text = stringResource(R.string.chain_account_view_swap),
-                                color = appColor.persianBlue200,
-                                modifier = Modifier.weight(1f),
-                                onClick = onSwap,
-                            )
-                        }
-                        if (uiModel.canDeposit) {
-                            VaultActionButton(
-                                stringResource(R.string.chain_account_view_deposit),
-                                appColor.mediumPurple,
-                                modifier = Modifier.weight(1f),
-                                onClick = onDeposit,
-                            )
-                        }
-                    }
-
-                    UiSpacer(size = 22.dp)
-
-                    FormCard {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 12.dp,
-                                )
-                        ) {
-                            ChainAccountInfo(
-                                address = uiModel.chainAddress,
-                                name = uiModel.chainName,
-                                chainLogo = uiModel.chainLogo,
-                                totalBalance = uiModel.totalBalance,
-                                explorerURL = uiModel.explorerURL,
-                                onCopy = { message ->
-                                    coroutineScope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            context.getString(
-                                                R.string.chain_token_screen_address_copied, message
-                                            )
-                                        )
-                                    }
-                                    onShowReviewPopUp()
-                                },
-                                isBalanceVisible = uiModel.isBalanceVisible,
-                                onQrBtnClick = onQrBtnClick,
-                            )
-
-                            uiModel.tokens.forEach { token ->
-                                UiHorizontalDivider()
-
-                                CoinItem(
-                                    title = token.name,
-                                    isBalanceVisible = uiModel.isBalanceVisible,
-                                    balance = token.balance,
-                                    fiatBalance = token.fiatBalance,
-                                    tokenLogo = token.tokenLogo,
-                                    chainLogo = token.chainLogo,
-                                    onClick = clickOnce { onTokenClick(token) },
-                                    mergedBalance = token.mergeBalance,
-                                )
-                            }
-                        }
-                    }
-
-                    if (uiModel.canSelectTokens) {
-                        UiPlusButton(
-                            title = stringResource(R.string.choose_tokens),
-                            onClick = onSelectTokens,
-                            modifier = Modifier
-                                .padding(vertical = 16.dp),
-                        )
-                    }
-
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ChainAccountInfo(
-    address: String,
-    name: String,
-    isBalanceVisible: Boolean,
-    @DrawableRes chainLogo: Int?,
-    totalBalance: String?,
-    explorerURL: String,
-    onQrBtnClick: () -> Unit = {},
-    onCopy: (String) -> Unit,
-) {
-    val appColor = Theme.colors
-    val uriHandler = VsUriHandler()
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .padding(vertical = 12.dp),
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (chainLogo != null) {
-                Image(
-                    painter = painterResource(id = chainLogo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(32.dp)
-                )
-            }
-
-            Text(
-                text = name,
-                style = Theme.montserrat.heading5,
-                color = appColor.neutral0,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-
-            CopyIcon(
-                textToCopy = address,
-                onCopyCompleted = onCopy
-            )
-
-            UiIcon(
-                drawableResId = R.drawable.icon_qr,
-                size = 20.dp,
-                onClick = onQrBtnClick,
-            )
-
-            UiIcon(
-                drawableResId = R.drawable.ic_link,
-                size = 20.dp,
-                onClick = {
-                    uriHandler.openUri(explorerURL)
-                },
-            )
-        }
-
-        if (totalBalance != null) {
-            ToggleVisibilityText(
-                text = totalBalance,
-                isVisible = isBalanceVisible,
-                style = Theme.menlo.heading5,
-                color = appColor.neutral0,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        } else {
-            UiPlaceholderLoader(
-                modifier = Modifier
-                    .width(48.dp)
-            )
-        }
-
-        MiddleEllipsisText(
-            text = address,
-            style = Theme.menlo.body1,
-            color = appColor.turquoise600Main,
-        )
-    }
 }
 
 @Composable
@@ -434,27 +182,4 @@ internal fun CoinItem(
             }
         }
     }
-}
-
-@Preview(showBackground = true, name = "chain coin screen")
-@Composable
-private fun ChainCoinScreenPreview() {
-    ChainTokensScreen(
-        navController = rememberNavController(),
-        uiModel = ChainTokensUiModel(
-            chainName = "Ethereum",
-            chainAddress = "0x1234567890",
-            totalBalance = "0.000000",
-            explorerURL = "https://etherscan.io/",
-            tokens = listOf(
-                ChainTokenUiModel(
-                    name = "USDT",
-                    balance = "0.000",
-                    fiatBalance = "$0.000000",
-                    tokenLogo = R.drawable.usdt,
-                    chainLogo = R.drawable.ethereum
-                ),
-            )
-        )
-    )
 }

@@ -558,4 +558,7 @@
     <string name="search_bar_cancel">Otkaži</string>
     <string name="chain_selection_select_chains">Odaberite lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
+    <string name="copy_address">Kopiraj adresu</string>
+    <string name="chain_tokens_tab_hidden">Skriveno</string>
+    <string name="chain_tokens_qr_receive_label">Primi %1$s</string>
 </resources>

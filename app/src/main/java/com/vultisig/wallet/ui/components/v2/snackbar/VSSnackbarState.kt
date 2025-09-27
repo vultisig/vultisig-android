@@ -2,48 +2,81 @@ package com.vultisig.wallet.ui.components.v2.snackbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Stable
 internal class VSSnackbarState(
     private val duration: Duration,
+    private val coroutineScope: CoroutineScope,
 ) {
-    private var _isVisible by mutableStateOf(false)
-    private var _message by mutableStateOf("")
-    private var _progress by mutableFloatStateOf(0f)
+    private val _progressState = MutableStateFlow(ProgressState())
+    val progressState: StateFlow<ProgressState> = _progressState
+    private val _showProgress = MutableSharedFlow<String>()
 
-    val isVisible: Boolean get() = _isVisible
-    val message: String get() = _message
-    val progress: Float get() = _progress
+    init {
+        _showProgress
+            .flatMapLatest { message ->
+                flow {
+                    val steps = 60
+                    val stepDuration = duration / steps
+                    repeat(steps) { step ->
+                        delay(stepDuration)
+                        emit(
+                            ProgressState(
+                                message = message,
+                                isVisible = true,
+                                progress = (step + 1).toFloat() / steps
+                            )
+                        )
+                    }
+                    emit(ProgressState(
+                        message = "",
+                        isVisible = false,
+                        progress = 0f
+                    ))
+                }
+            }
+            .onEach { state ->
+                _progressState.update { state }
+            }
+            .launchIn(coroutineScope)
+    }
 
-    suspend fun show(message: String) {
-        _message = message
-        _isVisible = true
-        _progress = 0f
-
-        val steps = 60
-        val stepDuration = (duration) / steps
-
-        repeat(steps) { step ->
-            delay(stepDuration)
-            _progress = (step + 1).toFloat() / steps
+    fun show(message: String) {
+        coroutineScope.launch {
+            _showProgress.emit(message)
         }
-
-        _isVisible = false
-        _progress = 0f
     }
 }
 
+internal data class ProgressState(
+    val message: String = "",
+    val isVisible: Boolean = false,
+    val progress: Float = 0f,
+)
+
 @Composable
 internal fun rememberVsSnackbarState(
-    duration: Duration = 2.seconds
-) = remember { VSSnackbarState(duration) }
+    duration: Duration = 1.seconds
+): VSSnackbarState {
+    val coroutineScope = rememberCoroutineScope()
+    return remember { VSSnackbarState(duration, coroutineScope) }
+}
 
