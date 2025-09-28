@@ -331,6 +331,7 @@ class TronFeeService @Inject constructor(
         val toAddress = transaction.to
         val isNativeCoin = transaction.coin.isNativeToken
         val hasMemo = !transaction.memo.isNullOrEmpty()
+        val isTokenTransfer = !transaction.coin.isNativeToken
 
         val isNewAccount = runCatching {
             tronApi.getAccount(toAddress).isNewAccount()
@@ -355,7 +356,15 @@ class TronFeeService @Inject constructor(
 
         val totalFee = baseFee + accountFee + memoFee
 
-        return BasicFee(totalFee)
+        val maxEnergyUnitsRequired = if (isTokenTransfer) {
+            BigInteger.ZERO // TODO: Check actual energy
+        } else {
+            BigInteger.ZERO
+        }
+        return TronFees(
+            maxEnergyRequired = maxEnergyUnitsRequired,
+            amount = totalFee
+        )
     }
 
     companion object {
