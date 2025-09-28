@@ -357,7 +357,7 @@ class TronFeeService @Inject constructor(
         val totalFee = baseFee + accountFee + memoFee
 
         val maxEnergyUnitsRequired = if (isTokenTransfer) {
-            BigInteger.ZERO // TODO: Check actual energy
+            DEFAULT_MAX_ENERGY_USED
         } else {
             BigInteger.ZERO
         }
@@ -378,6 +378,7 @@ class TronFeeService @Inject constructor(
         // Default inactive destination values
         private val DEFAULT_CREATE_ACCOUNT_FEE = "1000000".toBigInteger() // 1 TRX
         private val DEFAULT_CREATE_ACCOUNT_SYSTEM_FEE = "100000".toBigInteger() // 0.1 TRX
+        private val DEFAULT_MAX_ENERGY_USED = 50000000.toBigInteger()
 
         private val ENERGY_FACTOR = "10000".toBigDecimal()
     }
