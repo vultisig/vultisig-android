@@ -537,6 +537,7 @@
     <string name="share_sheet_more">Más</string>
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
+    <string name="error_saving_qr_code">No se pudo guardar el código QR. %1$s</string>
     <string name="transaction_buy">Comprar</string>
     <string name="transaction_receive">Recibir</string>
     <string name="search_bar_portfolio">Portafolio</string>

@@ -304,244 +304,263 @@ internal class SwapFormViewModel @Inject constructor(
             }
 
             viewModelScope.launch {
-                val dstTokenValue = quote.expectedDstValue
+                try {
+                    val dstTokenValue = quote.expectedDstValue
 
-                val transaction = when (quote) {
-                    is SwapQuote.ThorChain -> {
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                    val transaction = when (quote) {
+                        is SwapQuote.ThorChain -> {
+                            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
-                        val dstAddress =
-                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
-                        val allowance = allowanceRepository.getAllowance(
-                            chain = srcToken.chain,
-                            contractAddress = srcToken.contractAddress,
-                            srcAddress = srcAddress,
-                            dstAddress = dstAddress,
-                        )
-                        val isApprovalRequired =
-                            allowance != null && allowance < srcTokenValue.value
+                            val dstAddress =
+                                quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                            val allowance = allowanceRepository.getAllowance(
+                                chain = srcToken.chain,
+                                contractAddress = srcToken.contractAddress,
+                                srcAddress = srcAddress,
+                                dstAddress = dstAddress,
+                            )
+                            val isApprovalRequired =
+                                allowance != null && allowance < srcTokenValue.value
 
-                        val srcFiatValue = convertTokenValueToFiat(
-                            srcToken, srcTokenValue, AppCurrency.USD,
-                        )
+                            val srcFiatValue = convertTokenValueToFiat(
+                                srcToken, srcTokenValue, AppCurrency.USD,
+                            )
 
-                        val isAffiliate =
-                            srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+                            val isAffiliate =
+                                srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        RegularSwapTransaction(
-                            id = UUID.randomUUID().toString(),
-                            vaultId = vaultId,
-                            srcToken = srcToken,
-                            srcTokenValue = srcTokenValue,
-                            dstToken = dstToken,
-                            dstAddress = dstAddress,
-                            expectedDstTokenValue = dstTokenValue,
-                            blockChainSpecific = specificAndUtxo,
-                            estimatedFees = quote.fees,
-                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                            isApprovalRequired = isApprovalRequired,
-                            memo = quote.data.memo,
-                            gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.ThorChain(
-                                THORChainSwapPayload(
-                                    fromAddress = srcAddress,
-                                    fromCoin = srcToken,
-                                    toCoin = dstToken,
-                                    vaultAddress = quote.data.inboundAddress ?: srcAddress,
-                                    routerAddress = quote.data.router,
-                                    fromAmount = srcTokenValue.value,
-                                    toAmountDecimal = dstTokenValue.decimal,
-                                    toAmountLimit = "0",
-                                    streamingInterval = "1",
-                                    streamingQuantity = "0",
-                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
-                                    isAffiliate = isAffiliate,
+                            RegularSwapTransaction(
+                                id = UUID.randomUUID().toString(),
+                                vaultId = vaultId,
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstAddress = dstAddress,
+                                expectedDstTokenValue = dstTokenValue,
+                                blockChainSpecific = specificAndUtxo,
+                                estimatedFees = quote.fees,
+                                gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                isApprovalRequired = isApprovalRequired,
+                                memo = quote.data.memo,
+                                gasFeeFiatValue = gasFeeFiatValue,
+                                payload = SwapPayload.ThorChain(
+                                    THORChainSwapPayload(
+                                        fromAddress = srcAddress,
+                                        fromCoin = srcToken,
+                                        toCoin = dstToken,
+                                        vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                        routerAddress = quote.data.router,
+                                        fromAmount = srcTokenValue.value,
+                                        toAmountDecimal = dstTokenValue.decimal,
+                                        toAmountLimit = "0",
+                                        streamingInterval = "1",
+                                        streamingQuantity = "0",
+                                        expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
+                                        isAffiliate = isAffiliate,
+                                    )
                                 )
                             )
-                        )
-                    }
+                        }
 
-                    is SwapQuote.MayaChain -> {
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                        is SwapQuote.MayaChain -> {
+                            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
-                        val dstAddress =
-                            if (!srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM) {
-                                quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                            val dstAddress =
+                                if (!srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.EVM) {
+                                    quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                                } else {
+                                    quote.data.inboundAddress ?: srcAddress
+                                }
+
+                            val allowance = allowanceRepository.getAllowance(
+                                chain = srcToken.chain,
+                                contractAddress = srcToken.contractAddress,
+                                srcAddress = srcAddress,
+                                dstAddress = dstAddress,
+                            )
+                            val isApprovalRequired =
+                                allowance != null && allowance < srcTokenValue.value
+
+                            val srcFiatValue = convertTokenValueToFiat(
+                                srcToken, srcTokenValue, AppCurrency.USD,
+                            )
+
+                            val isAffiliate =
+                                srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                            val regularSwapTransaction = RegularSwapTransaction(
+                                id = UUID.randomUUID().toString(),
+                                vaultId = vaultId,
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstAddress = dstAddress,
+                                expectedDstTokenValue = dstTokenValue,
+                                blockChainSpecific = specificAndUtxo,
+                                estimatedFees = quote.fees,
+                                gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                memo = quote.data.memo,
+                                isApprovalRequired = isApprovalRequired,
+                                gasFeeFiatValue = gasFeeFiatValue,
+                                payload = SwapPayload.MayaChain(
+                                    THORChainSwapPayload(
+                                        fromAddress = srcAddress,
+                                        fromCoin = srcToken,
+                                        toCoin = dstToken,
+                                        vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                        routerAddress = quote.data.router,
+                                        fromAmount = srcTokenValue.value,
+                                        toAmountDecimal = dstTokenValue.decimal,
+                                        toAmountLimit = "0",
+                                        streamingInterval = "3",
+                                        streamingQuantity = "0",
+                                        expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
+                                        isAffiliate = isAffiliate,
+                                    )
+                                )
+                            )
+
+                            regularSwapTransaction
+                        }
+
+                        is SwapQuote.Kyber -> {
+                            val dstAddress = quote.data.tx.to
+                            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
+                            val allowance = allowanceRepository.getAllowance(
+                                chain = srcToken.chain,
+                                contractAddress = srcToken.contractAddress,
+                                srcAddress = srcAddress,
+                                dstAddress = dstAddress,
+                            )
+                            val isApprovalRequired =
+                                allowance != null && allowance < srcTokenValue.value
+
+                            val specific = specificAndUtxo.blockChainSpecific
+                            val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                                quote.data.copy(
+                                    data = quote.data.data.copy(gasPrice = specific.maxFeePerGasWei.toString())
+                                )
                             } else {
-                                quote.data.inboundAddress ?: srcAddress
+                                quote.data
                             }
 
-                        val allowance = allowanceRepository.getAllowance(
-                            chain = srcToken.chain,
-                            contractAddress = srcToken.contractAddress,
-                            srcAddress = srcAddress,
-                            dstAddress = dstAddress,
-                        )
-                        val isApprovalRequired =
-                            allowance != null && allowance < srcTokenValue.value
-
-                        val srcFiatValue = convertTokenValueToFiat(
-                            srcToken, srcTokenValue, AppCurrency.USD,
-                        )
-
-                        val isAffiliate =
-                            srcFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
-                        val regularSwapTransaction = RegularSwapTransaction(
-                            id = UUID.randomUUID().toString(),
-                            vaultId = vaultId,
-                            srcToken = srcToken,
-                            srcTokenValue = srcTokenValue,
-                            dstToken = dstToken,
-                            dstAddress = dstAddress,
-                            expectedDstTokenValue = dstTokenValue,
-                            blockChainSpecific = specificAndUtxo,
-                            estimatedFees = quote.fees,
-                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                            memo = quote.data.memo,
-                            isApprovalRequired = isApprovalRequired,
-                            gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.MayaChain(
-                                THORChainSwapPayload(
-                                    fromAddress = srcAddress,
-                                    fromCoin = srcToken,
-                                    toCoin = dstToken,
-                                    vaultAddress = quote.data.inboundAddress ?: srcAddress,
-                                    routerAddress = quote.data.router,
-                                    fromAmount = srcTokenValue.value,
-                                    toAmountDecimal = dstTokenValue.decimal,
-                                    toAmountLimit = "0",
-                                    streamingInterval = "3",
-                                    streamingQuantity = "0",
-                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes).inWholeSeconds.toULong(),
-                                    isAffiliate = isAffiliate,
+                            RegularSwapTransaction(
+                                id = UUID.randomUUID().toString(),
+                                vaultId = vaultId,
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstAddress = dstAddress,
+                                expectedDstTokenValue = dstTokenValue,
+                                blockChainSpecific = specificAndUtxo,
+                                estimatedFees = quote.fees,
+                                gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                memo = null,
+                                isApprovalRequired = isApprovalRequired,
+                                gasFeeFiatValue = gasFeeFiatValue,
+                                payload = SwapPayload.Kyber(
+                                    KyberSwapPayloadJson(
+                                        fromCoin = srcToken,
+                                        toCoin = dstToken,
+                                        fromAmount = srcTokenValue.value,
+                                        toAmountDecimal = dstTokenValue.decimal,
+                                        quote = quoteData,
+                                    )
                                 )
                             )
-                        )
-
-                        regularSwapTransaction
-                    }
-
-                    is SwapQuote.Kyber -> {
-                        val dstAddress = quote.data.tx.to
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-
-                        val allowance = allowanceRepository.getAllowance(
-                            chain = srcToken.chain,
-                            contractAddress = srcToken.contractAddress,
-                            srcAddress = srcAddress,
-                            dstAddress = dstAddress,
-                        )
-                        val isApprovalRequired =
-                            allowance != null && allowance < srcTokenValue.value
-
-                        val specific = specificAndUtxo.blockChainSpecific
-                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
-                            quote.data.copy(
-                                data = quote.data.data.copy(gasPrice = specific.maxFeePerGasWei.toString())
-                            )
-                        } else {
-                            quote.data
                         }
 
-                        RegularSwapTransaction(
-                            id = UUID.randomUUID().toString(),
-                            vaultId = vaultId,
-                            srcToken = srcToken,
-                            srcTokenValue = srcTokenValue,
-                            dstToken = dstToken,
-                            dstAddress = dstAddress,
-                            expectedDstTokenValue = dstTokenValue,
-                            blockChainSpecific = specificAndUtxo,
-                            estimatedFees = quote.fees,
-                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                            memo = null,
-                            isApprovalRequired = isApprovalRequired,
-                            gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.Kyber(
-                                KyberSwapPayloadJson(
-                                    fromCoin = srcToken,
-                                    toCoin = dstToken,
-                                    fromAmount = srcTokenValue.value,
-                                    toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quoteData,
+                        is SwapQuote.OneInch -> {
+                            val dstAddress = quote.data.tx.to
+                            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+
+                            val allowance = allowanceRepository.getAllowance(
+                                chain = srcToken.chain,
+                                contractAddress = srcToken.contractAddress,
+                                srcAddress = srcAddress,
+                                dstAddress = dstAddress,
+                            )
+                            val isApprovalRequired =
+                                allowance != null && allowance < srcTokenValue.value
+
+                            val specific = specificAndUtxo.blockChainSpecific
+                            val gasLimit = if (srcToken.chain == Chain.Mantle) {
+                                DEFAULT_MANTLE_SWAP_LIMIT.toLong()
+                            } else {
+                                quote.data.tx.gas
+                            }
+                            val quoteData = if (specific is BlockChainSpecific.Ethereum) {
+                                quote.data.copy(
+                                    tx = quote.data.tx.copy(
+                                        gasPrice = specific.maxFeePerGasWei.toString(),
+                                        gas = gasLimit,
+                                    )
+                                )
+                            } else {
+                                quote.data
+                            }
+
+                            RegularSwapTransaction(
+                                id = UUID.randomUUID().toString(),
+                                vaultId = vaultId,
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstAddress = dstAddress,
+                                expectedDstTokenValue = dstTokenValue,
+                                blockChainSpecific = specificAndUtxo,
+                                estimatedFees = quote.fees,
+                                gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                memo = null,
+                                isApprovalRequired = isApprovalRequired,
+                                gasFeeFiatValue = gasFeeFiatValue,
+                                payload = SwapPayload.EVM(
+                                    EVMSwapPayloadJson(
+                                        fromCoin = srcToken,
+                                        toCoin = dstToken,
+                                        fromAmount = srcTokenValue.value,
+                                        toAmountDecimal = dstTokenValue.decimal,
+                                        quote = quoteData,
+                                        provider = quote.provider,
+                                    ),
                                 )
                             )
-                        )
+                        }
                     }
 
-                    is SwapQuote.OneInch -> {
-                        val dstAddress = quote.data.tx.to
-                        val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                    swapTransactionRepository.addTransaction(transaction)
 
-                        val allowance = allowanceRepository.getAllowance(
-                            chain = srcToken.chain,
-                            contractAddress = srcToken.contractAddress,
-                            srcAddress = srcAddress,
-                            dstAddress = dstAddress,
-                        )
-                        val isApprovalRequired =
-                            allowance != null && allowance < srcTokenValue.value
-
-                        val specific = specificAndUtxo.blockChainSpecific
-                        val gasLimit = if (srcToken.chain == Chain.Mantle) {
-                            DEFAULT_MANTLE_SWAP_LIMIT.toLong()
-                        } else {
-                            quote.data.tx.gas
-                        }
-                        val quoteData = if (specific is BlockChainSpecific.Ethereum) {
-                            quote.data.copy(
-                                tx = quote.data.tx.copy(
-                                    gasPrice = specific.maxFeePerGasWei.toString(),
-                                    gas = gasLimit,
-                                )
-                            )
-                        } else {
-                            quote.data
-                        }
-
-                        RegularSwapTransaction(
-                            id = UUID.randomUUID().toString(),
+                    navigator.route(
+                        Route.VerifySwap(
+                            transactionId = transaction.id,
                             vaultId = vaultId,
-                            srcToken = srcToken,
-                            srcTokenValue = srcTokenValue,
-                            dstToken = dstToken,
-                            dstAddress = dstAddress,
-                            expectedDstTokenValue = dstTokenValue,
-                            blockChainSpecific = specificAndUtxo,
-                            estimatedFees = quote.fees,
-                            gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                            memo = null,
-                            isApprovalRequired = isApprovalRequired,
-                            gasFeeFiatValue = gasFeeFiatValue,
-                            payload = SwapPayload.EVM(
-                                EVMSwapPayloadJson(
-                                    fromCoin = srcToken,
-                                    toCoin = dstToken,
-                                    fromAmount = srcTokenValue.value,
-                                    toAmountDecimal = dstTokenValue.decimal,
-                                    quote = quoteData,
-                                    provider = quote.provider,
-                                ),
-                            )
                         )
-                    }
-                }
-
-                swapTransactionRepository.addTransaction(transaction)
-
-                navigator.route(
-                    Route.VerifySwap(
-                        transactionId = transaction.id,
-                        vaultId = vaultId,
                     )
-                )
-                isLoadingNextScreen = false
+                    isLoadingNextScreen = false
+                }
+                catch (e: InvalidTransactionDataException) {
+                    isLoadingNextScreen = false
+                    showError(e.text)
+                }  catch (e: Exception) {
+                    isLoadingNextScreen = false
+                    Timber.e(e)
+                    showError(
+                        UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
+                    )
+                }
             }
         } catch (e: InvalidTransactionDataException) {
             isLoadingNextScreen = false
             showError(e.text)
             return
+        }
+        catch (e: Exception) {
+            isLoadingNextScreen = false
+            Timber.e(e)
+            showError(
+                UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
+            )
         }
     }
 

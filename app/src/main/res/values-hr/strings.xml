@@ -538,6 +538,7 @@
 
     <string name="referral_not_found">Još nema preporuke</string>
     <string name="referral_cta">Pretvori svoj trezor u stroj za nagrade. Stvori svoju preporuku sada i počni zarađivati</string>
+    <string name="error_saving_qr_code">Spremanje QR koda nije uspjelo. %1$s</string>
     <string name="transaction_buy">Kupi</string>
     <string name="transaction_receive">Primi</string>
     <string name="search_bar_portfolio">Portfelj</string>
