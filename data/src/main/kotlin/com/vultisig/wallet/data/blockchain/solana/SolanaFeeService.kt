@@ -35,7 +35,8 @@ class SolanaFeeService @Inject constructor(
 
         val keySignPayload = buildKeySignPayload(coin, toAddress, amount)
 
-        val serializedTx = SolanaHelper(vaultHexPubKey).getZeroSignedTransaction(keySignPayload)
+        val serializedTx =
+            SolanaHelper(vaultHexPubKey).getVersionedMessage(keySignPayload)
 
         val baseFee = solanaApi.getFeeForMessage(serializedTx)
         val rentExemptionFee = calculateRentExemptionForTokens(toAddress, coin)
@@ -80,7 +81,7 @@ class SolanaFeeService @Inject constructor(
             solanaApi.getRecentBlockHash()
         }
 
-        val (fromAddress, toAddress, token2022) = if (!coin.isNativeToken) {
+        val (fromPubAddress, toPubAddress, token2022) = if (!coin.isNativeToken) {
             val fromAddressPubKeyDeferred = async {
                 solanaApi.getTokenAssociatedAccountByOwner(
                     coin.address,
@@ -112,8 +113,8 @@ class SolanaFeeService @Inject constructor(
             blockChainSpecific = BlockChainSpecific.Solana(
                 recentBlockHash = blockHash.await(),
                 priorityFee = PRIORITY_FEE_PRICE.toBigInteger() * PRIORITY_FEE_LIMIT.toBigInteger(),
-                fromAddressPubKey = fromAddress,
-                toAddressPubKey = toAddress,
+                fromAddressPubKey = fromPubAddress,
+                toAddressPubKey = toPubAddress,
                 programId = token2022,
             ),
             vaultPublicKeyECDSA = "",

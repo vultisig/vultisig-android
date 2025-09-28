@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.util.encodeBase64
 import wallet.core.jni.AnyAddress
+import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -207,5 +208,14 @@ class SolanaHelper(
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
             .checkError()
         return output.encoded
+    }
+
+    fun getVersionedMessage(keysignPayload: KeysignPayload) : String {
+        val input = getPreSignedInputData(keysignPayload)
+        val preHashes = TransactionCompiler.preImageHashes(coinType, input)
+        val dataMessage = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+                .checkError().data.toByteArray()
+
+       return Base64.encode(dataMessage)
     }
 }
