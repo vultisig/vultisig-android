@@ -3,12 +3,10 @@ package com.vultisig.wallet.ui.screens.v2.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -20,30 +18,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
+import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
-import com.vultisig.wallet.ui.screens.v2.home.components.AnimatedPrice
+import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
 import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
-import com.vultisig.wallet.ui.screens.v2.home.components.TabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
+import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButtonType
 import com.vultisig.wallet.ui.screens.v2.home.components.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletEarnSelect
 import com.vultisig.wallet.ui.theme.Theme
@@ -96,7 +93,7 @@ internal fun HomePage(
                 ) {
                     ChooseVaultButton(
                         vaultName = state.vaultName,
-                        isFastVault = false,
+                        isFastVault = state.isFastVault,
                         onClick = onToggleVaultListClick,
                     )
 
@@ -112,8 +109,8 @@ internal fun HomePage(
                             size = 2.dp
                         )
 
-                        AnimatedPrice(
-                            totalFiatValue = state.totalFiatValue,
+                        LoadableValue(
+                            value = state.totalFiatValue,
                             isVisible = state.isBalanceValueVisible,
                             style = Theme.satoshi.price.bodyS,
                             color = Theme.colors.text.primary,
@@ -135,28 +132,7 @@ internal fun HomePage(
             }
         },
         topBarExpandedContent = {
-            val context = LocalContext.current
-            val displayMetrics = context.resources.displayMetrics
-            val screenWidthPx = displayMetrics.widthPixels.toFloat()
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Theme.colors.primary.accent1,
-                                Theme.colors.backgrounds.primary
-                            ),
-                            radius = screenWidthPx,
-                            center = androidx.compose.ui.geometry.Offset(
-                                screenWidthPx / 2,
-                                -screenWidthPx * 0.5f
-                            )
-                        )
-                    )
-                    .padding(all = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+            ExpandedTopbarContainer {
                 TopRow(
                     onOpenSettingsClick = onOpenSettingsClick,
                     onToggleVaultListClick = onToggleVaultListClick,
@@ -183,16 +159,15 @@ internal fun HomePage(
                         Alignment.CenterHorizontally
                     )
                 ) {
-                    TransactionTypeButtonType.entries.forEach {
+                    TransactionTypeButton(
+                        txType = TransactionType.SEND,
+                        onClick = onSend
+                    )
+
+                    if (state.isSwapEnabled) {
                         TransactionTypeButton(
-                            txType = it,
-                            isSelected = false,
-                            onClick = {
-                                when (it) {
-                                    TransactionTypeButtonType.SEND -> onSend()
-                                    TransactionTypeButtonType.SWAP -> onSwap()
-                                }
-                            }
+                            txType = TransactionType.SWAP,
+                            onClick = onSwap
                         )
                     }
                 }
@@ -208,7 +183,6 @@ internal fun HomePage(
                 UiSpacer(
                     size = 20.dp
                 )
-
             }
         },
         bottomBarContent = if (isBottomBarVisible.value) {
@@ -260,7 +234,7 @@ internal fun HomePage(
                         UiSpacer(16.dp)
                     }
 
-                    TabMenuAndSearchBar(
+                    HomePageTabMenuAndSearchBar(
                         modifier = Modifier.padding(
                             horizontal = 16.dp,
                         ),
@@ -297,28 +271,13 @@ internal fun HomePage(
                     }
                 }
                 if (isTabMenu) {
-                    BottomFadeEffect()
+                    BottomFadeEffect(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter),
+                    )
                 }
             }
         }
-    )
-}
-
-@Composable
-private fun BoxScope.BottomFadeEffect() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(70.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        Theme.colors.backgrounds.primary
-                    )
-                )
-            )
-            .align(Alignment.BottomCenter),
     )
 }
 

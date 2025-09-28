@@ -23,7 +23,7 @@ internal fun AccountList(
     accounts: List<AccountUiModel>,
     isBalanceVisible: Boolean,
 ) {
-    val coroutineScope = rememberCoroutineScope()
+
     LazyColumn {
         itemsIndexed(
             items = accounts,
@@ -41,9 +41,7 @@ internal fun AccountList(
                         onAccountClick(account)
                     },
                     onCopy = {
-                        coroutineScope.launch {
-                            snackbarState.show("${account.chainName} Address Copied")
-                        }
+                        snackbarState.show("${account.chainName} Address Copied",)
                     },
                 )
 

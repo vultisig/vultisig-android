@@ -25,6 +25,7 @@
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
     <string name="send_to_address_hint">Inserir Quantidade</string>
@@ -96,7 +97,7 @@
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_src_amount_hint">Inserir Quantidade</string>
     <string name="swap_form_dst_token_title">Para</string>
-    <string name="swap_screen_title">Trocar</string>
+    <string name="transaction_type_button_swap">Trocar</string>
     <string name="swap_form_gas_title">Taxa de rede</string>
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
@@ -537,6 +538,8 @@
     <string name="referral_not_found">Ainda sem indicação</string>
     <string name="referral_cta">Transforme seu cofre em uma máquina de recompensas. Crie sua indicação agora e comece a ganhar</string>
     <string name="error_saving_qr_code">Falha ao guardar o código QR. %1$s</string>
+    <string name="transaction_type_button_buy">Comprar</string>
+    <string name="transaction_type_button_receive">Receber</string>
     <string name="vault_settings_view_vault">Visualizar nome, parte e tipo do cofre</string>
     <string name="vault_settings_biometric_fast">Assinatura biométrica rápida</string>
     <string name="vault_settings_enable_biometric">Ativar biometria para assinatura rápida</string>
@@ -567,4 +570,8 @@
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Selecionar correntes</string>
     <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
+    <string name="transaction_type_button_functions">Funções</string>
+    <string name="copy_address">Copiar endereço</string>
+    <string name="chain_tokens_tab_hidden">Oculto</string>
+    <string name="chain_tokens_qr_receive_label">Receber %1$s</string>
 </resources>

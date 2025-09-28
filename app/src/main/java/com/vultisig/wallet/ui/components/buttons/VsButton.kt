@@ -28,7 +28,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
 
 enum class VsButtonVariant {
-    Primary, Secondary, Error,
+    Primary, Secondary, Error, Tertiary,
 }
 
 enum class VsButtonState {
@@ -56,12 +56,14 @@ fun VsButton(
                 Primary -> Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttons.secondary
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttons.disabledSecondary
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
         label = "VsButton.backgroundColor"
@@ -74,12 +76,14 @@ fun VsButton(
                 Primary ->  Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttonBorders.default
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttonBorders.disabled
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
         label = "VsButton.borderColor"
@@ -241,6 +245,22 @@ private fun VsButtonPreview() {
             label = "Primary Mini Small",
             variant = Primary,
             state = Enabled,
+            size = Mini,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary enabled",
+            variant = Tertiary,
+            state = Enabled,
+            size = Mini,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary disabled",
+            variant = Tertiary,
+            state = Disabled,
             size = Mini,
             onClick = {}
         )

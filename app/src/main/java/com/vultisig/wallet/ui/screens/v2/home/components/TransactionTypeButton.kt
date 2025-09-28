@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -16,27 +14,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.R.*
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
-enum class TransactionTypeButtonType(
-    @DrawableRes val logo: Int,
-    @StringRes val title: Int
-) {
-    SWAP(drawable.swap, string.swap_screen_title),
-//    BUY(drawable.buy, string.transaction_buy),
-    SEND(drawable.send, string.send_screen_title),
-//    RECEIVE(drawable.receive, string.transaction_receive),
+enum class TransactionType {
+    SWAP,
+    BUY,
+    SEND,
+    RECEIVE,
+    FUNCTIONS,
 }
 
 
 @Composable
 fun TransactionTypeButton(
     modifier: Modifier = Modifier,
-    txType: TransactionTypeButtonType,
+    txType: TransactionType,
     isSelected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -44,6 +40,14 @@ fun TransactionTypeButton(
     val backgroundColor = if (isSelected)
         Theme.colors.buttons.primary
     else Theme.colors.backgrounds.tertiary
+
+    val (logo, title) = when (txType) {
+        TransactionType.SWAP -> R.drawable.swap to R.string.transaction_type_button_swap
+        TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
+        TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
+        TransactionType.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
+        TransactionType.FUNCTIONS -> R.drawable.functions to R.string.transaction_type_button_functions
+    }
 
 
     Column(
@@ -70,7 +74,7 @@ fun TransactionTypeButton(
             contentAlignment = Alignment.Center
         ) {
             UiIcon(
-                drawableResId = txType.logo,
+                drawableResId = logo,
                 size = 24.dp,
                 tint = Theme.colors.text.primary
             )
@@ -81,7 +85,7 @@ fun TransactionTypeButton(
         )
 
         Text(
-            text = stringResource(txType.title),
+            text = stringResource(title),
             color = Theme.colors.text.primary,
             style = Theme.brockmann.supplementary.caption
         )
@@ -92,7 +96,7 @@ fun TransactionTypeButton(
 @Composable
 private fun PreviewTransactionTypeButton() {
     TransactionTypeButton(
-        txType = TransactionTypeButtonType.SWAP,
+        txType = TransactionType.SWAP,
         isSelected = true
     )
 }
@@ -101,7 +105,7 @@ private fun PreviewTransactionTypeButton() {
 @Composable
 private fun PreviewTransactionTypeButton2() {
     TransactionTypeButton(
-        txType = TransactionTypeButtonType.SEND,
+        txType = TransactionType.SEND,
         isSelected = false
     )
 }
