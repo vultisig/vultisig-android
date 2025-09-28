@@ -31,6 +31,7 @@ import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.protobuf.ProtoBuf
 import java.math.BigDecimal
 import java.math.BigInteger

@@ -115,13 +115,22 @@ internal class RegisterVaultViewModel @Inject constructor(
 
     fun saveBitmap() {
         viewModelScope.launch(Dispatchers.IO) {
-            val uri = context.saveBitmapToDownloads(
-                requireNotNull(uiModel.value.bitmap),
-                requireNotNull(uiModel.value.fileName.takeIf { it.isNotEmpty() })
-            )
-            uiModel.value.bitmap?.recycle()
-            if (uri != null) {
-                showSnackbarMessage()
+            try {
+                val uri = context.saveBitmapToDownloads(
+                    requireNotNull(uiModel.value.bitmap),
+                    requireNotNull(uiModel.value.fileName.takeIf { it.isNotEmpty() })
+                )
+                uiModel.value.bitmap?.recycle()
+                if (uri != null) {
+                    showSnackbarMessage()
+                }
+            } catch (e: Exception) {
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.error_saving_qr_code,
+                        e.localizedMessage ?: ""
+                    )
+                )
             }
         }
     }

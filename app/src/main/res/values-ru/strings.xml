@@ -550,6 +550,7 @@
     <string name="share_sheet_more">Ещё</string>
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
+    <string name="error_saving_qr_code">Не удалось сохранить QR-код. %1$s</string>
     <string name="transaction_type_button_buy">Купить</string>
     <string name="transaction_type_button_receive">Получить</string>
     <string name="search_bar_portfolio">Портфель</string>

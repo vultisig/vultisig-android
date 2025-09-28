@@ -540,6 +540,7 @@
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
+    <string name="error_saving_qr_code">QR-Code konnte nicht gespeichert werden. %1$s</string>
     <string name="transaction_type_button_buy">Kaufen</string>
     <string name="transaction_type_button_receive">Erhalten</string>
     <string name="search_bar_portfolio">Portfolio-NFTs</string>

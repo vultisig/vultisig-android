@@ -785,6 +785,7 @@
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
+    <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="search_bar_portfolio">Portfolio</string>
