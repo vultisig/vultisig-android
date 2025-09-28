@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun ChainTokensTabMenuAndSearchBar(
@@ -97,7 +98,8 @@ fun ChainTokensTabMenuAndSearchBar(
                     UiIcon(
                         drawableResId = R.drawable.edit,
                         size = 16.dp,
-                        modifier = Modifier.padding(all = 12.dp)
+                        modifier = Modifier.padding(all = 12.dp),
+                        tint = Theme.colors.primary.accent4,
                     )
                 }
             }

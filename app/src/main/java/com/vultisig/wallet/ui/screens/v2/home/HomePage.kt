@@ -93,7 +93,7 @@ internal fun HomePage(
                 ) {
                     ChooseVaultButton(
                         vaultName = state.vaultName,
-                        isFastVault = false,
+                        isFastVault = state.isFastVault,
                         onClick = onToggleVaultListClick,
                     )
 
