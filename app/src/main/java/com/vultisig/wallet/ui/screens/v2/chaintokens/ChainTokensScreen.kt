@@ -187,7 +187,7 @@ internal fun ChainTokensScreen(
                     }
                     if (uiModel.canDeposit) {
                         TransactionTypeButton(
-                            txType = TransactionType.DEPOSIT,
+                            txType = TransactionType.FUNCTIONS,
                             isSelected = false,
                             onClick = onDeposit
                         )
@@ -226,7 +226,6 @@ internal fun ChainTokensScreen(
                         onSearchClick = {
                             isTabMenu = false
                         },
-                        onHiddenClick = {},
                         onTokensClick = {},
                         isTabMenu = isTabMenu,
                         onCancelSearchClick = {

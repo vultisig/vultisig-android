@@ -34,7 +34,6 @@ fun ChainTokensTabMenuAndSearchBar(
     onCancelSearchClick: () -> Unit,
     onEditClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onHiddenClick: () -> Unit,
     onTokensClick: () -> Unit,
 ) {
 
@@ -64,16 +63,6 @@ fun ChainTokensTabMenuAndSearchBar(
                                 }
                             )
                         },
-                        {
-                            VsTab(
-                                label = stringResource(R.string.chain_tokens_tab_hidden),
-                                onClick = {
-                                    onHiddenClick()
-                                    tabIndex = 1
-                                },
-                                isEnabled = false
-                            )
-                        }
                     ),
                     index = tabIndex
                 )
@@ -106,7 +95,7 @@ fun ChainTokensTabMenuAndSearchBar(
                         .clickOnce(onClick = onEditClick)
                 ) {
                     UiIcon(
-                        drawableResId = R.drawable.ic_search,
+                        drawableResId = R.drawable.edit,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp)
                     )
@@ -125,7 +114,6 @@ private fun PreviewChainTokensTabMenuAndSearchBar() {
     ChainTokensTabMenuAndSearchBar(
         onEditClick = {},
         onSearchClick = {},
-        onHiddenClick = {},
         onTokensClick = {},
         onCancelSearchClick = {},
         searchTextFieldState = rememberTextFieldState(),

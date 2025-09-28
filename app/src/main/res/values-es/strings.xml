@@ -37,6 +37,7 @@
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="choose_tokens">Elegir Tokens</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">A</string>
     <string name="send_to_address_hint">Ingresar Dirección</string>
@@ -135,7 +136,7 @@
     <string name="swap_form_src_amount_hint">Ingresar Cantidad</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
     <string name="swap_form_dst_token_title">A</string>
-    <string name="swap_screen_title">Intercambiar</string>
+    <string name="transaction_type_button_swap">Intercambiar</string>
     <string name="swap_form_gas_title">Tarifa de red</string>
     <string name="swap_form_total_fees_title">Tarifas totales</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
@@ -537,8 +538,8 @@
     <string name="share_sheet_more">Más</string>
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
-    <string name="transaction_buy">Comprar</string>
-    <string name="transaction_receive">Recibir</string>
+    <string name="transaction_type_button_buy">Comprar</string>
+    <string name="transaction_type_button_receive">Recibir</string>
     <string name="search_bar_portfolio">Portafolio</string>
     <string name="search_bar_nfts">NFT</string>
     <string name="search_bar_soon">Próximamente</string>
@@ -557,6 +558,7 @@
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleziona catene</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
     <string name="chain_tokens_tab_hidden">Oculto</string>
     <string name="chain_tokens_qr_receive_label">Oculto</string>

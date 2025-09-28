@@ -24,6 +24,7 @@
     <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
     <string name="choose_tokens">Tokens wählen</string>
     <string name="send_screen_title">Senden</string>
+    <string name="transaction_type_button_send">Senden</string>
     <string name="send_from_address">Von</string>
     <string name="send_to_address">Zu</string>
     <string name="swap_form_on_chain">auf</string>
@@ -93,7 +94,7 @@
     <string name="swap_form_from_title">Von</string>
     <string name="swap_form_src_amount_hint">Menge eingeben</string>
     <string name="swap_form_dst_token_title">Zu</string>
-    <string name="swap_screen_title">Tauschen</string>
+    <string name="transaction_type_button_swap">Tauschen</string>
     <string name="swap_form_gas_title">Netzwerkgebühr</string>
     <string name="swap_form_total_fees_title">Gesamtgebühren</string>
     <string name="home_scree_done">fertig</string>
@@ -539,8 +540,8 @@
 
     <string name="referral_not_found">Noch keine Empfehlung</string>
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
-    <string name="transaction_buy">Kaufen</string>
-    <string name="transaction_receive">Erhalten</string>
+    <string name="transaction_type_button_buy">Kaufen</string>
+    <string name="transaction_type_button_receive">Erhalten</string>
     <string name="search_bar_portfolio">Portfolio-NFTs</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Bald</string>
@@ -559,6 +560,7 @@
     <string name="search_bar_cancel">Abbrechen</string>
     <string name="chain_selection_select_chains">Ketten auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Ketten gefunden</string>
+    <string name="transaction_type_button_functions">Funktionen</string>
     <string name="copy_address">Adresse kopieren</string>
     <string name="chain_tokens_tab_hidden">Versteckt</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>

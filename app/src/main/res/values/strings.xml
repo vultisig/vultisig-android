@@ -165,7 +165,7 @@
     <string name="swap_form_src_amount_hint">Enter Amount</string>
     <string name="swap_form_estimated_fees_title">Swap fees</string>
     <string name="swap_form_dst_token_title">To</string>
-    <string name="swap_screen_title">Swap</string>
+    <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
     <string name="swap_form_vault" translatable="false">Vault</string>
@@ -785,8 +785,8 @@
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
-    <string name="transaction_buy">Buy</string>
-    <string name="transaction_receive">Receive</string>
+    <string name="transaction_type_button_buy">Buy</string>
+    <string name="transaction_type_button_receive">Receive</string>
     <string name="search_bar_portfolio">Portfolio</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Soon</string>
@@ -805,6 +805,8 @@
     <string name="search_bar_cancel">Cancel</string>
     <string name="chain_selection_select_chains">Select chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
+    <string name="transaction_type_button_send" >Send</string>
+    <string name="transaction_type_button_functions">Functions</string>
     <string name="copy_address">Copy Address</string>
     <string name="chain_tokens_tab_hidden">Hidden</string>
     <string name="chain_tokens_qr_receive_label">Receive %1$s</string>

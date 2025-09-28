@@ -56,12 +56,7 @@ internal fun QrContainer(
                 )
             )
             .drawBehind {
-                boxShadow(
-                    cornerRadius,
-                    startGradient,
-                    topOffsetDp = 2.dp,
-                    bottomOffsetDp = 3.dp
-                )
+                boxShadow(cornerRadius, startGradient, topOffsetDp = 2.dp, bottomOffsetDp = 3.dp)
             }
 
             .padding(

@@ -25,7 +25,7 @@ enum class TransactionType {
     BUY,
     SEND,
     RECEIVE,
-    DEPOSIT,
+    FUNCTIONS,
 }
 
 
@@ -42,11 +42,11 @@ fun TransactionTypeButton(
     else Theme.colors.backgrounds.tertiary
 
     val (logo, title) = when (txType) {
-        TransactionType.SWAP -> R.drawable.swap to R.string.swap_screen_title
-        TransactionType.BUY -> R.drawable.buy to R.string.transaction_buy
-        TransactionType.SEND -> R.drawable.send to R.string.send_screen_title
-        TransactionType.RECEIVE -> R.drawable.receive to R.string.transaction_receive
-        TransactionType.DEPOSIT -> R.drawable.receive to R.string.tx_overview_screen_tx_deposit
+        TransactionType.SWAP -> R.drawable.swap to R.string.transaction_type_button_swap
+        TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
+        TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
+        TransactionType.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
+        TransactionType.FUNCTIONS -> R.drawable.functions to R.string.transaction_type_button_functions
     }
 
 

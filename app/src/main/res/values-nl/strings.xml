@@ -36,6 +36,7 @@
     <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="choose_tokens">Kies Tokens</string>
     <string name="send_screen_title">Sturen</string>
+    <string name="transaction_type_button_send">Sturen</string>
     <string name="send_from_address">Van</string>
     <string name="send_to_address">Aan</string>
     <string name="send_to_address_hint">Adres invoeren</string>
@@ -149,7 +150,7 @@
     <string name="swap_form_src_amount_hint">Voer bedrag in</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
     <string name="swap_form_dst_token_title">Aan</string>
-    <string name="swap_screen_title">Wisselen</string>
+    <string name="transaction_type_button_swap">Wisselen</string>
     <string name="swap_form_gas_title">Netwerkkosten</string>
     <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
@@ -546,8 +547,8 @@
     <string name="share_sheet_more">Meer</string>
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
-    <string name="transaction_buy">Kopen</string>
-    <string name="transaction_receive">Ontvangen</string>
+    <string name="transaction_type_button_buy">Kopen</string>
+    <string name="transaction_type_button_receive">Ontvangen</string>
     <string name="search_bar_portfolio">Portfolio</string>
     <string name="search_bar_nfts">NFT\'s</string>
     <string name="search_bar_soon">Binnenkort</string>
@@ -566,6 +567,7 @@
     <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
+    <string name="transaction_type_button_functions">Functies</string>
     <string name="copy_address">Kopieer adres</string>
     <string name="chain_tokens_tab_hidden">Verborgen</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>

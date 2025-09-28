@@ -24,6 +24,7 @@
     <string name="select_chain_chain_title">Lanac</string>
     <string name="select_chain_balance_title">Stanje</string>
     <string name="send_screen_title">POŠALJI</string>
+    <string name="transaction_type_button_send">POŠALJI</string>
     <string name="send_from_address">Od</string>
     <string name="send_to_address">Do</string>
     <string name="send_to_address_hint">Unesite adresu</string>
@@ -95,7 +96,7 @@
     <string name="swap_error_no_amount">Iznos mora biti pozitivan broj. Pokušajte ponovno.</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokeni</string>
-    <string name="swap_screen_title">Zamijeni</string>
+    <string name="transaction_type_button_swap">Zamijeni</string>
     <string name="chain_account_view_swap">ZAMIJENI</string>
     <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
     <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
@@ -538,8 +539,8 @@
 
     <string name="referral_not_found">Još nema preporuke</string>
     <string name="referral_cta">Pretvori svoj trezor u stroj za nagrade. Stvori svoju preporuku sada i počni zarađivati</string>
-    <string name="transaction_buy">Kupi</string>
-    <string name="transaction_receive">Primi</string>
+    <string name="transaction_type_button_buy">Kupi</string>
+    <string name="transaction_type_button_receive">Primi</string>
     <string name="search_bar_portfolio">Portfelj</string>
     <string name="search_bar_nfts">NFT-ove</string>
     <string name="search_bar_soon">Uskoro</string>
@@ -558,6 +559,7 @@
     <string name="search_bar_cancel">Otkaži</string>
     <string name="chain_selection_select_chains">Odaberite lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
+    <string name="transaction_type_button_functions">Funkcije</string>
     <string name="copy_address">Kopiraj adresu</string>
     <string name="chain_tokens_tab_hidden">Skriveno</string>
     <string name="chain_tokens_qr_receive_label">Primi %1$s</string>

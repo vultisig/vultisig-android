@@ -24,6 +24,7 @@
     <string name="select_chain_chain_title">Catena</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_screen_title">Invia</string>
+    <string name="transaction_type_button_send">Invia</string>
     <string name="send_from_address">Da</string>
     <string name="send_to_address">A</string>
     <string name="send_to_address_hint">Inserisci Quantità</string>
@@ -95,7 +96,7 @@
     <string name="swap_error_no_amount">a quantità deve essere un numero positivo.</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
-    <string name="swap_screen_title">Scambia</string>
+    <string name="transaction_type_button_swap">Scambia</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
@@ -537,8 +538,8 @@
     <string name="share_sheet_more">Di più</string>
     <string name="referral_not_found">Nessun referral ancora</string>
     <string name="referral_cta">Trasforma il tuo caveau in una macchina di ricompense. Crea subito il tuo referral e inizia a guadagnare</string>
-    <string name="transaction_buy">Acquista</string>
-    <string name="transaction_receive">Ricevi</string>
+    <string name="transaction_type_button_buy">Acquista</string>
+    <string name="transaction_type_button_receive">Ricevi</string>
     <string name="search_bar_portfolio">Portafoglio</string>
     <string name="search_bar_nfts">NFT</string>
     <string name="search_bar_soon">Presto</string>
@@ -557,6 +558,7 @@
     <string name="search_bar_cancel">Annulla</string>
     <string name="chain_selection_select_chains">Seleziona catene</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="transaction_type_button_functions">Funzioni</string>
     <string name="copy_address">Copia indirizzo</string>
     <string name="chain_tokens_tab_hidden">Nascosto</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
