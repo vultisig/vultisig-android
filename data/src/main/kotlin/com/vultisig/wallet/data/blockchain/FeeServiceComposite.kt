@@ -14,6 +14,7 @@ class FeeServiceComposite @Inject constructor(
     @SuiFee private val suiFeeService: FeeService,
     @TonFee private val tonFeeService: FeeService,
     @TronFee private val tronFeeService: FeeService,
+    @SolanaFee private val solanaFeeService: FeeService,
 ) : FeeService {
     
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -47,6 +48,7 @@ class FeeServiceComposite @Inject constructor(
             TokenStandard.SUI -> suiFeeService
             TokenStandard.TON -> tonFeeService
             TokenStandard.TRC20 -> tronFeeService
+            TokenStandard.SOL -> solanaFeeService
             else -> error("Not Supported ")
         }
     }

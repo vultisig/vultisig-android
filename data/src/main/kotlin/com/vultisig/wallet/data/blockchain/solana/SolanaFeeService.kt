@@ -10,8 +10,11 @@ import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.toUnit
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -28,8 +31,9 @@ class SolanaFeeService @Inject constructor(
         val vaultHexPubKey = transaction.vault.vaultHexPublicKey
         val toAddress = transaction.to
         val coin = transaction.coin
+        val amount = transaction.amount
 
-        val keySignPayload = buildKeySignPayload()
+        val keySignPayload = buildKeySignPayload(coin, toAddress, amount)
 
         val serializedTx = SolanaHelper(vaultHexPubKey).getZeroSignedTransaction(keySignPayload)
 
@@ -58,7 +62,7 @@ class SolanaFeeService @Inject constructor(
                 solanaApi.getTokenAssociatedAccountByOwner(toAddress, contract).first ?: ""
 
             return if (toTokenAddress.isEmpty()) {
-                solanaApi.getMinimumBalanceForRentExemption()
+                solanaApi.getMinimumBalanceForRentExemption() // 165 bytes rpc call
             } else {
                 BigInteger.ZERO
             }
@@ -67,9 +71,56 @@ class SolanaFeeService @Inject constructor(
         return BigInteger.ZERO
     }
 
-    // TODO: Build KeySignPayload
-    private fun buildKeySignPayload(): KeysignPayload {
-        error("")
+    private suspend fun buildKeySignPayload(
+        coin: Coin,
+        toAddress: String,
+        amount: BigInteger
+    ): KeysignPayload = supervisorScope {
+        val blockHash = async {
+            solanaApi.getRecentBlockHash()
+        }
+
+        val (fromAddress, toAddress, token2022) = if (!coin.isNativeToken) {
+            val fromAddressPubKeyDeferred = async {
+                solanaApi.getTokenAssociatedAccountByOwner(
+                    coin.address,
+                    coin.contractAddress
+                )
+            }
+            val toAddressPubKeyDeferred = async {
+                solanaApi.getTokenAssociatedAccountByOwner(
+                    toAddress,
+                    coin.contractAddress
+                )
+            }
+
+            val fromAddressPubKey = fromAddressPubKeyDeferred.await().first
+                ?: error("Can't fetch fromAddressPubKey")
+            val isToken2022 = fromAddressPubKeyDeferred.await().second
+            val toAddressPubKey = toAddressPubKeyDeferred.await().first
+                ?: error("Can't fetch toAddressPubKey")
+
+            Triple(fromAddressPubKey, toAddressPubKey, isToken2022)
+        } else {
+            Triple("", "", false)
+        }
+
+        KeysignPayload(
+            coin = coin,
+            toAddress = toAddress,
+            toAmount = amount,
+            blockChainSpecific = BlockChainSpecific.Solana(
+                recentBlockHash = blockHash.await(),
+                priorityFee = PRIORITY_FEE_PRICE.toBigInteger() * PRIORITY_FEE_LIMIT.toBigInteger(),
+                fromAddressPubKey = fromAddress,
+                toAddressPubKey = toAddress,
+                programId = token2022,
+            ),
+            vaultPublicKeyECDSA = "",
+            vaultLocalPartyID = "",
+            libType = null,
+            wasmExecuteContractPayload = null,
+        )
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {

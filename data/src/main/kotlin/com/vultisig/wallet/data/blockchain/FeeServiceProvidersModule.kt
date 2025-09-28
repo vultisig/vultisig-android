@@ -3,10 +3,12 @@ package com.vultisig.wallet.data.blockchain
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
+import com.vultisig.wallet.data.blockchain.solana.SolanaFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
 import com.vultisig.wallet.data.blockchain.ton.TonFeeService
 import com.vultisig.wallet.data.blockchain.tron.TronFeeService
@@ -60,4 +62,11 @@ object FeeServiceProvidersModule {
     @Singleton
     @TonFee
     fun provideTonFeeService(): FeeService = TonFeeService()
+
+    @Provides
+    @Singleton
+    @SolanaFee
+    fun provideSolanaFeeService(
+        solanaApi: SolanaApi,
+    ): FeeService = SolanaFeeService(solanaApi)
 }

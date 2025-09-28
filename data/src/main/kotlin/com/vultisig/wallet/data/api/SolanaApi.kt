@@ -133,6 +133,7 @@ internal class SolanaApiImp @Inject constructor(
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
     }
 
+    @Deprecated("Perform proper calculation in fee service once decouple from helper")
     override suspend fun getHighPriorityFee(account: String): String {
         try {
             val payload = RpcPayload(
