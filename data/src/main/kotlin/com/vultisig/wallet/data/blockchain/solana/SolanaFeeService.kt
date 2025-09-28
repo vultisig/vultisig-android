@@ -20,6 +20,39 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
+/**
+ * Implementation of [FeeService] for Solana blockchain transactions.
+ *
+ * This service calculates fees for SOL and SPL token transfers, considering all necessary components:
+ *
+ * ### Components of a Solana Transaction Fee:
+ * 1. **Base Fee (Network Fee)**: Charged per transaction signature to cover validator processing.
+ *    - Retrieved from Solana RPC using the serialized transaction message (`getFeeForMessage`).
+ *
+ * 2. **Priority Fee (Optional)**: Extra fee to incentivize validators for faster processing.
+ *    - Defined by [PRIORITY_FEE_PRICE] and [PRIORITY_FEE_LIMIT].
+ *    - Often minimal due to Solana's high throughput.
+ *
+ * 3. **Rent-Exemption Fee (for SPL tokens)**:
+ *    - Solana requires token accounts to maintain a minimum balance to be rent-exempt.
+ *    - If the recipient does not have a token account for the SPL token, the sender pays the minimum balance to create it.
+ *    - Not applicable for native SOL transfers.
+ *
+ * ### Fee Calculation Logic:
+ * 1. Serialize the transaction using the sender’s vault public key.
+ * 2. Fetch the base network fee from RPC.
+ * 3. Check for token account creation and add rent-exemption if needed.
+ * 4. Add priority fee.
+ * 5. Sum all components to get the total transaction cost.
+ *
+ * ### Notes:
+ * - Fees are denominated in lamports (1 SOL = 1,000,000,000 lamports).
+ * - This service provides both exact fee calculation ([calculateFees]) and a default safe estimate ([calculateDefaultFees]).
+ * - IMPORTANT: Still to be done, proper fee priority estimation. As now, it is fixed values
+ * across all clients in SolanaHelper
+ *
+ * @property solanaApi API interface for interacting with Solana blockchain RPC endpoints.
+ */
 class SolanaFeeService @Inject constructor(
     private val solanaApi: SolanaApi,
 ) : FeeService {
