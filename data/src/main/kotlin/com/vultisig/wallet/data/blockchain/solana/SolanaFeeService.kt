@@ -99,7 +99,7 @@ class SolanaFeeService @Inject constructor(
                 ?: error("Can't fetch fromAddressPubKey")
             val isToken2022 = fromAddressPubKeyDeferred.await().second
             val toAddressPubKey = toAddressPubKeyDeferred.await().first
-                ?: error("Can't fetch toAddressPubKey")
+                ?: ""
 
             Triple(fromAddressPubKey, toAddressPubKey, isToken2022)
         } else {
