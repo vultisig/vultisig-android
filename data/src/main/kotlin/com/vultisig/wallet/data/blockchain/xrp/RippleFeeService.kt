@@ -78,7 +78,7 @@ class RippleFeeService(
         val baseServerState =
             ((state.validateLedger.baseFee * state.loadFactor) / state.loadBase).toBigInteger()
 
-        return baseServerState * BigInteger.TWO
+        return baseServerState * 2.toBigInteger()
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
