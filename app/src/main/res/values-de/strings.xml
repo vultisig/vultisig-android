@@ -549,5 +549,5 @@
     <string name="vault_settings_back_up_your">Sichern Sie Ihren Vault Share auf einem Gerät oder Server.</string>
     <string name="vault_settings_migrate_gg20">GG20 Vault DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Nachrichten erneut teilen, TSS ändern oder signieren.</string>
-    <string name="vault_settings_migration_title">Wandern</string>
+    <string name="vault_settings_migration_title">Migrieren</string>
 </resources>
