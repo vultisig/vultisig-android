@@ -130,7 +130,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         scanTransaction()
     }
 
-    private suspend fun calculateFees() {
+    private suspend fun calculateFees(transactionUiModel: SendTxUiModel) {
         val tx = transaction.value ?: return
         val chain = tx.token.chain
         val vault = withContext(Dispatchers.IO) {
@@ -162,10 +162,20 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 selectedToken = tx.token,
             )
             val uiFeeModel = gasFeeToEstimate.invoke(fromGas)
+            val updateTx = transactionUiModel.copy(
+                networkFeeTokenValue = uiFeeModel.formattedTokenValue,
+                networkFeeFiatValue = uiFeeModel.formattedFiatValue,
+            )
 
-            println(uiFeeModel)
+            uiState.update {
+                it.copy(isLoadingFees = false, transaction = updateTx)
+            }
         } catch (t: Throwable) {
             Timber.e(t, "Error calculating fees")
+
+            uiState.update {
+                it.copy(isLoadingFees = false)
+            }
         }
     }
 
@@ -304,7 +314,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 it.copy(transaction = transactionUiModel, isLoadingFees = true)
             }
 
-            calculateFees()
+            calculateFees(transactionUiModel)
         }
     }
 
