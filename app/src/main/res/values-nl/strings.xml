@@ -547,4 +547,14 @@
     <string name="referral_not_found">Nog geen verwijzing</string>
     <string name="referral_cta">Maak van je kluis een beloningsmachine. Maak nu je verwijzing aan en begin te verdienen</string>
     <string name="error_saving_qr_code">QR-code opslaan mislukt. %1$s</string>
+    <string name="vault_settings_view_vault">Bekijk kluisnaam, onderdeel en type</string>
+    <string name="vault_settings_biometric_fast">Biometrische snelle ondertekening</string>
+    <string name="vault_settings_enable_biometric">Schakel biometrie in voor snelle ondertekening</string>
+    <string name="vault_settings_password_hint">Wachtwoordhint</string>
+    <string name="vault_settings_set_a_password">Stel een wachtwoordhint in om uw kluis te beschermen</string>
+    <string name="vault_settings_backup_vault">Back-up maken van Vault Share</string>
+    <string name="vault_settings_back_up_your">Maak een back-up van uw Vault Share naar een apparaat of server.</string>
+    <string name="vault_settings_migrate_gg20">Migreer GG20-kluis DKLS</string>
+    <string name="vault_settings_reshare_change">Deel, wijzig TSS of onderteken berichten opnieuw.</string>
+    <string name="vault_settings_migration_title">Migreren</string>
 </resources>
