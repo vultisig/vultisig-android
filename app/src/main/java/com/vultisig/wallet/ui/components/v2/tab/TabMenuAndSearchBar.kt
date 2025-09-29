@@ -18,11 +18,11 @@ import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 @Composable
 internal fun TabMenuAndSearchBar(
     modifier: Modifier = Modifier,
-    tabMenuContent: @Composable () -> Unit,
     isTabMenu: Boolean,
     searchTextFiledState: TextFieldState,
     onCancelSearchClick: () -> Unit,
     isInitiallyFocused: Boolean,
+    tabMenuContent: @Composable () -> Unit,
 ){
     AnimatedContent(
         targetState = isTabMenu,
