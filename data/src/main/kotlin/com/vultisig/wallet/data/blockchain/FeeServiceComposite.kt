@@ -25,6 +25,9 @@ class FeeServiceComposite @Inject constructor(
         
         return try {
             service.calculateFees(transaction)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            Timber.e(e, "FeeServiceComposite: Coroutine has been cancelled")
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate fees for ${chain.name}, falling back to default")
             calculateDefaultFees(transaction)
