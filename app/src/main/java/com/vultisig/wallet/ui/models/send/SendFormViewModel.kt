@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -788,7 +787,7 @@ internal class SendFormViewModel @Inject constructor(
                     utxos = specific.utxos,
                     memo = memo,
                     estimatedFee = totalGasAndFee.formattedFiatValue,
-                    totalGass = totalGasAndFee.formattedTokenValue,
+                    totalGas = totalGasAndFee.formattedTokenValue,
                 )
 
                 transactionRepository.addTransaction(transaction)
