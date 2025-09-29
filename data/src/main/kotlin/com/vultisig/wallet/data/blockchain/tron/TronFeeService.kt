@@ -77,7 +77,7 @@ class TronFeeService @Inject constructor(
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): TronFees = coroutineScope {
         require(transaction is Transfer) {
-            "Transaction type not supported $"
+            "Transaction type not supported ${transaction::class.simpleName}"
         }
 
         val coin = transaction.coin
