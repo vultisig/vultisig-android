@@ -165,7 +165,7 @@
     <string name="swap_form_src_amount_hint">Enter Amount</string>
     <string name="swap_form_estimated_fees_title">Swap fees</string>
     <string name="swap_form_dst_token_title">To</string>
-    <string name="swap_screen_title">Swap</string>
+    <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
     <string name="swap_form_vault" translatable="false">Vault</string>
@@ -786,6 +786,8 @@
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
     <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
+    <string name="transaction_type_button_buy">Buy</string>
+    <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name,part and type</string>
     <string name="vault_settings_biometric_fast">Biometric fast sign</string>
     <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
@@ -796,4 +798,30 @@
     <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, change TSS, or sign messages.</string>
 
+    <string name="transaction_buy">Buy</string>
+    <string name="transaction_receive">Receive</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Soon</string>
+    <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
+    <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
+    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
+    <string name="home_portfolio_balance">Portfolio Balance</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Earn</string>
+    <string name="hide_balance">Hide balance</string>
+    <string name="show_balance">Show balance</string>
+    <string name="no_chains_found">No chains found</string>
+    <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
+    <string name="no_chain_customize_chains">Customize chains</string>
+    <string name="search_bar_search">Search</string>
+    <string name="search_bar_cancel">Cancel</string>
+    <string name="chain_selection_select_chains">Select chains</string>
+    <string name="chain_selection_no_chains_found">No chains found</string>
+    <string name="transaction_type_button_send" >Send</string>
+    <string name="transaction_type_button_functions">Functions</string>
+    <string name="copy_address">Copy Address</string>
+    <string name="chain_tokens_tab_hidden">Hidden</string>
+    <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
+    <string name="address_copied">%1$s address copied</string>
 </resources>

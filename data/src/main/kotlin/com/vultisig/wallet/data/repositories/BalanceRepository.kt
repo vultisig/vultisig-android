@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.models.Chain.Mantle
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
+import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,20 +71,20 @@ interface BalanceRepository {
 
     suspend fun getUnstakableTcyAmount(address: String): String?
 
-    suspend fun getCachedTokenBalance(
+    suspend fun getCachedTokenBalanceAndPrice(
         address: String,
         coin: Coin,
-    ): TokenBalance
+    ): TokenBalanceAndPrice
 
     suspend fun getCachedTokenBalances(
         addresses: List<String>,
         coins: List<Coin>
     ): List<TokenBalanceWrapped>
 
-    fun getTokenBalance(
+    fun getTokenBalanceAndPrice(
         address: String,
         coin: Coin,
-    ): Flow<TokenBalance>
+    ): Flow<TokenBalanceAndPrice>
 
     fun getTokenValue(
         address: String,
@@ -122,10 +123,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
         return thorChainApi.getTcyAutoCompoundAmount(address)
     }
 
-    override suspend fun getCachedTokenBalance(
+    override suspend fun getCachedTokenBalanceAndPrice(
         address: String,
         coin: Coin,
-    ): TokenBalance {
+    ): TokenBalanceAndPrice {
         val currency = appCurrencyRepository.currency.first()
 
         val tokenValue = getCachedTokenValue(address, coin)
@@ -143,9 +144,15 @@ internal class BalanceRepositoryImpl @Inject constructor(
             null
         }
 
-        return TokenBalance(
-            tokenValue = tokenValue,
-            fiatValue = fiatValue,
+        return TokenBalanceAndPrice(
+            tokenBalance = TokenBalance(
+                tokenValue = tokenValue,
+                fiatValue = fiatValue,
+            ),
+            price = if (price != null) FiatValue(
+                price.setScale(2, RoundingMode.HALF_UP),
+                currency.ticker
+            ) else null
         )
     }
 
@@ -193,22 +200,28 @@ internal class BalanceRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getTokenBalance(
+    override fun getTokenBalanceAndPrice(
         address: String,
         coin: Coin,
-    ): Flow<TokenBalance> =
+    ): Flow<TokenBalanceAndPrice> =
         appCurrencyRepository
             .currency
             .flatMapConcat { currency ->
                 tokenPriceRepository
                     .getPrice(coin, currency)
                     .zip(getTokenValue(address, coin)) { price, balance ->
-                        TokenBalance(
-                            tokenValue = balance,
-                            fiatValue = FiatValue(
-                                value = balance.decimal
-                                    .multiply(price)
-                                    .setScale(2, RoundingMode.HALF_UP),
+                        TokenBalanceAndPrice(
+                            tokenBalance =TokenBalance(
+                                tokenValue = balance,
+                                fiatValue = FiatValue(
+                                    value = balance.decimal
+                                        .multiply(price)
+                                        .setScale(2, RoundingMode.HALF_UP),
+                                    currency = currency.ticker,
+                                )
+                            ),
+                            price = FiatValue(
+                                value = price.setScale(2, RoundingMode.HALF_UP),
                                 currency = currency.ticker,
                             )
                         )

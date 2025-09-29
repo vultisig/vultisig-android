@@ -68,6 +68,7 @@ internal data class Colors(
     val alerts: AlertsColors = AlertsColors(),
     val neutrals: NeutralsColors = NeutralsColors.Default,
     val fills: FillsColors = FillsColors(),
+    val vibrant: Vibrant = Vibrant(),
 
     val gradients: Gradients = Gradients(),
 
@@ -158,6 +159,10 @@ internal data class NeutralsColors(
 
 internal data class FillsColors(
     val tertiary: Color = Color(0x1F787880),
+)
+
+internal data class Vibrant(
+    val primary: Color = Color(0xFF333333)
 )
 
 internal data class Gradients(
