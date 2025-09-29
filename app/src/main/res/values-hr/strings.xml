@@ -539,4 +539,14 @@
     <string name="referral_not_found">Još nema preporuke</string>
     <string name="referral_cta">Pretvori svoj trezor u stroj za nagrade. Stvori svoju preporuku sada i počni zarađivati</string>
     <string name="error_saving_qr_code">Spremanje QR koda nije uspjelo. %1$s</string>
+    <string name="vault_settings_view_vault">Prikaz naziva, dijela i vrste trezora</string>
+    <string name="vault_settings_biometric_fast">Biometrijski brzi potpis</string>
+    <string name="vault_settings_enable_biometric">Omogući biometrijski pristup za brzi potpis</string>
+    <string name="vault_settings_password_hint">Podsjetnik za lozinku</string>
+    <string name="vault_settings_set_a_password">Postavi podsjetnik za lozinku kako bi zaštitio svoj trezor</string>
+    <string name="vault_settings_backup_vault">Sigurnosna kopija dijeljenog trezora</string>
+    <string name="vault_settings_back_up_your">Sigurnosna kopija dijeljenog trezora na uređaj ili poslužitelj.</string>
+    <string name="vault_settings_migrate_gg20">Migracija DKLS-a trezora GG20</string>
+    <string name="vault_settings_reshare_change">Ponovno dijeljenje, promjena TSS-a ili potpisivanje poruka.</string>
+    <string name="vault_settings_migration_title">Migrirati</string>
 </resources>

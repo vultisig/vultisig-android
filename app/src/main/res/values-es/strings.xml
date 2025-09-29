@@ -538,4 +538,14 @@
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
     <string name="error_saving_qr_code">No se pudo guardar el código QR. %1$s</string>
+    <string name="vault_settings_view_vault">Ver nombre, parte y tipo de bóveda</string>
+    <string name="vault_settings_biometric_fast">Firma rápida biométrica</string>
+    <string name="vault_settings_enable_biometric">Habilitar la biometría para la firma rápida</string>
+    <string name="vault_settings_password_hint">Pista de contraseña</string>
+    <string name="vault_settings_set_a_password">Establecer una pista de contraseña para proteger su bóveda</string>
+    <string name="vault_settings_backup_vault">Copia de seguridad de la bóveda compartida</string>
+    <string name="vault_settings_back_up_your">Realice una copia de seguridad de su bóveda compartida en un dispositivo o servidor.</string>
+    <string name="vault_settings_migrate_gg20">Migrar DKLS de bóveda GG20</string>
+    <string name="vault_settings_reshare_change">Compartir, cambiar TSS o firmar mensajes.</string>
+    <string name="vault_settings_migration_title">Emigrar</string>
 </resources>

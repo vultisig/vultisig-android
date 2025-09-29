@@ -574,7 +574,7 @@
     <string name="vault_backup_screen_restart_keygen" translatable="false">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault" translatable="false">Start using your Vault</string>
     <string name="transaction_done_form_approve" translatable="false">Approve</string>
-    <string name="vault_settings_migration_title" translatable="false">Migrate</string>
+    <string name="vault_settings_migration_title" >Migrate</string>
     <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button" translatable="false">Swap</string>
     <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
@@ -786,5 +786,14 @@
     <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="vult" translatable="false">$VULT</string>
     <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
+    <string name="vault_settings_view_vault">View vault name,part and type</string>
+    <string name="vault_settings_biometric_fast">Biometric fast sign</string>
+    <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
+    <string name="vault_settings_password_hint">Password hint</string>
+    <string name="vault_settings_set_a_password">Set a password hint to protect your vault</string>
+    <string name="vault_settings_backup_vault">Backup Vault Share</string>
+    <string name="vault_settings_back_up_your">Back up your Vault Share to device or server.</string>
+    <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
+    <string name="vault_settings_reshare_change">Reshare, change TSS, or sign messages.</string>
 
 </resources>

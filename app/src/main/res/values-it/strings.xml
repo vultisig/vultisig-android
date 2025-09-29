@@ -538,4 +538,14 @@
     <string name="referral_not_found">Nessun referral ancora</string>
     <string name="referral_cta">Trasforma il tuo caveau in una macchina di ricompense. Crea subito il tuo referral e inizia a guadagnare</string>
     <string name="error_saving_qr_code">Impossibile salvare il codice QR. %1$s</string>
+    <string name="vault_settings_view_vault">Visualizza nome, parte e tipo del vault</string>
+    <string name="vault_settings_biometric_fast">Firma rapida biometrica</string>
+    <string name="vault_settings_enable_biometric">Abilita la firma biometrica per la firma rapida</string>
+    <string name="vault_settings_password_hint">Suggerimento password</string>
+    <string name="vault_settings_set_a_password">Imposta un suggerimento password per proteggere il tuo vault</string>
+    <string name="vault_settings_backup_vault">Esegui il backup della condivisione del vault</string>
+    <string name="vault_settings_back_up_your">Esegui il backup della condivisione del vault su dispositivo o server.</string>
+    <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
+    <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
+    <string name="vault_settings_migration_title">Migrare</string>
 </resources>
