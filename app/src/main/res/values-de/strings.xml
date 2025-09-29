@@ -555,7 +555,7 @@
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
     <string name="transaction_receive">Erhalten</string>
-    <string name="search_bar_portfolio">Portfolio-NFTs</string>
+    <string name="search_bar_portfolio">Portfolio</string>
     <string name="search_bar_nfts">NFTs</string>
     <string name="search_bar_soon">Bald</string>
     <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
@@ -567,7 +567,7 @@
     <string name="hide_balance">Guthaben verbergen</string>
     <string name="show_balance">Guthaben anzeigen</string>
     <string name="no_chains_found">Keine Ketten gefunden</string>
-    <string name="no_chian_make_sure_that">Stellen Sie sicher, dass die gesuchte Kette aktiviert ist.</string>
+    <string name="no_chain_make_sure_that">Stellen Sie sicher, dass die gesuchte Kette aktiviert ist.</string>
     <string name="no_chain_customize_chains">Ketten anpassen</string>
     <string name="search_bar_search">Suche</string>
     <string name="search_bar_cancel">Abbrechen</string>

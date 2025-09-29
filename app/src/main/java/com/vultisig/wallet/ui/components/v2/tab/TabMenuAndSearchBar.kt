@@ -19,7 +19,7 @@ import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 internal fun TabMenuAndSearchBar(
     modifier: Modifier = Modifier,
     isTabMenu: Boolean,
-    searchTextFiledState: TextFieldState,
+    searchTextFieldState: TextFieldState,
     onCancelSearchClick: () -> Unit,
     isInitiallyFocused: Boolean,
     tabMenuContent: @Composable () -> Unit,
@@ -56,7 +56,7 @@ internal fun TabMenuAndSearchBar(
         else {
             SearchBar(
                 modifier = modifier,
-                state = searchTextFiledState,
+                state = searchTextFieldState,
                 onCancelClick = {
                     onCancelSearchClick()
                 },
@@ -71,7 +71,7 @@ internal fun TabMenuAndSearchBar(
 private fun TabMenuAndSearchBarPreview(){
     TabMenuAndSearchBar(
         isTabMenu = false,
-        searchTextFiledState = rememberTextFieldState(),
+        searchTextFieldState = rememberTextFieldState(),
         onCancelSearchClick = {},
         isInitiallyFocused = true,
         tabMenuContent = {

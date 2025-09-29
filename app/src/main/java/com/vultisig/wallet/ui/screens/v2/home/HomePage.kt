@@ -246,7 +246,7 @@ internal fun HomePage(
                         onCancelSearchClick = {
                             isTabMenu = true
                         },
-                        searchTextFiledState = state.searchTextFieldState,
+                        searchTextFieldState = state.searchTextFieldState,
                     )
 
                     TopShineContainer(

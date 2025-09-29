@@ -141,7 +141,11 @@ internal fun ChainTokensScreen(
                 CopiableAddress(
                     address = uiModel.chainAddress,
                     onAddressCopied = {
-                        snackbarState.show("${uiModel.chainName} address copied")
+                        snackbarState.show(
+                            context.getString(
+                                R.string.address_copied,
+                                uiModel.chainName
+                            ))
                         onShowReviewPopUp()
                     },
                     modifier = Modifier
@@ -286,8 +290,16 @@ internal fun ChainTokensScreen(
                         },
                         onCopyAddressClick = {
                             isAddressBottomSheetVisible = false
-                            VsClipboardService.copy(context, uiModel.chainAddress)
-                            snackbarState.show("${uiModel.chainName} address copied")
+                            VsClipboardService.copy(
+                                context,
+                                uiModel.chainAddress
+                            )
+                            snackbarState.show(
+                                context.getString(
+                                    R.string.chain_token_screen_address_copied,
+                                    uiModel.chainName
+                                )
+                            )
                         }
                     )
             }

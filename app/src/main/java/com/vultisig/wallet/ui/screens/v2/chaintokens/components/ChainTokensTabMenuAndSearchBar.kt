@@ -45,7 +45,7 @@ fun ChainTokensTabMenuAndSearchBar(
     TabMenuAndSearchBar(
         modifier = modifier,
         isTabMenu = isTabMenu,
-        searchTextFiledState = searchTextFieldState,
+        searchTextFieldState = searchTextFieldState,
         isInitiallyFocused = true,
         tabMenuContent = {
             Row(

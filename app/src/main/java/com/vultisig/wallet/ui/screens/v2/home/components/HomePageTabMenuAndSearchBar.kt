@@ -13,7 +13,7 @@ import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 @Composable
 internal fun HomePageTabMenuAndSearchBar(
     modifier: Modifier = Modifier,
-    searchTextFiledState: TextFieldState,
+    searchTextFieldState: TextFieldState,
     onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
@@ -24,7 +24,7 @@ internal fun HomePageTabMenuAndSearchBar(
     TabMenuAndSearchBar(
         modifier = modifier,
         isTabMenu = isTabMenu,
-        searchTextFiledState = searchTextFiledState,
+        searchTextFieldState = searchTextFieldState,
         onCancelSearchClick = onCancelSearchClick,
         isInitiallyFocused = true,
         tabMenuContent = {
@@ -49,7 +49,7 @@ private fun PreviewHomePageTabMenuAndSearchBar() {
         isTabMenu = true,
         onSearchClick = {},
         onCancelSearchClick = {},
-        searchTextFiledState = rememberTextFieldState(),
+        searchTextFieldState = rememberTextFieldState(),
     )
 }
 
