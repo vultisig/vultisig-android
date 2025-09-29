@@ -167,9 +167,6 @@ internal fun RippleServerStateResponseJson.getBaseReserve(): BigInteger =
 internal fun RippleServerStateResponseJson.getIncReserve(): BigInteger =
     this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
 
-internal fun RippleServerStateResponseJson.getReserveFees(): BigInteger =
-    this.result?.state?.validateLedger?.reserveInc?.toBigInteger() ?: BigInteger.ZERO
-
 
 @Serializable
 data class RippleAccountInfoResponseJson(
