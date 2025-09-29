@@ -575,4 +575,5 @@
     <string name="copy_address">Copia indirizzo</string>
     <string name="chain_tokens_tab_hidden">Nascosto</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
+    <string name="address_copied">Indirizzo %1$s copiato</string>
 </resources>

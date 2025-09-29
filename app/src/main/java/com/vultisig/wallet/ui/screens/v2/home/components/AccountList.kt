@@ -9,6 +9,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.v2.AccountItem
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
@@ -41,7 +42,12 @@ internal fun AccountList(
                         onAccountClick(account)
                     },
                     onCopy = {
-                        snackbarState.show("${account.chainName} Address Copied",)
+                        snackbarState.show(
+                            context.getString(
+                                R.string.address_copied,
+                                account.chainName
+                            ),
+                        )
                     },
                 )
 

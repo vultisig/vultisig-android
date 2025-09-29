@@ -587,4 +587,5 @@
     <string name="copy_address">Копировать адрес</string>
     <string name="chain_tokens_tab_hidden">Скрыто</string>
     <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
+    <string name="address_copied">Адрес %1$s скопирован</string>
 </resources>
