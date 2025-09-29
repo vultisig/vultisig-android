@@ -13,7 +13,7 @@ interface FeeService {
     suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee
 }
 
-val supportsFeeService = setOf(
+internal val supportsFeeService = setOf(
     // Evm
     Chain.Arbitrum,
     Chain.Avalanche,
