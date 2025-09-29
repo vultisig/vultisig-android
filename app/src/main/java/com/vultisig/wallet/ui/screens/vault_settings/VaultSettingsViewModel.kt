@@ -64,7 +64,7 @@ internal sealed class VaultSettingsItem(
     data object Details : VaultSettingsItem(
         SettingsItemUiModel(
             title = UiText.StringResource(R.string.vault_settings_details_title),
-            subTitle = "View vault name,part and type".asUiText(),
+            subTitle = UiText.StringResource(R.string.vault_settings_view_vault),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.details
         ),
@@ -72,8 +72,8 @@ internal sealed class VaultSettingsItem(
 
     data object Rename : VaultSettingsItem(
         SettingsItemUiModel(
-            title = "Rename".asUiText(),
-            subTitle = "Edit your vault name".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_rename_title),
+            subTitle =UiText.StringResource(R.string.vault_settings_rename_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.reame
         )
@@ -82,17 +82,16 @@ internal sealed class VaultSettingsItem(
     data class BiometricFastSign(val isEnabled: Boolean, val isBiometricEnabled: Boolean) :
         VaultSettingsItem(
             SettingsItemUiModel(
-                title = "Biometric fast sign".asUiText(),
+                title = UiText.StringResource(R.string.vault_settings_biometric_fast),
                 trailingSwitch = isBiometricEnabled,
                 leadingIcon = R.drawable.biomatrics_fast
             ),
             enabled = isEnabled,
         )
-
     data object Security : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Security".asUiText(),
-            subTitle = "Enable biometric for fast sign".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_security_screen_title),
+            subTitle = UiText.StringResource(R.string.vault_settings_enable_biometric),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.security,
         ),
@@ -102,8 +101,8 @@ internal sealed class VaultSettingsItem(
 
     data object PasswordHint : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Password hint".asUiText(),
-            subTitle = "Set a password hint to protect your vault".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_password_hint),
+            subTitle = UiText.StringResource(R.string.vault_settings_set_a_password),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.pass_hint
         ),
@@ -112,8 +111,8 @@ internal sealed class VaultSettingsItem(
 
     data object BackupVaultShare : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Backup Vault Share".asUiText(),
-            subTitle = "Back up your Vault Share to device or server.".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_backup_vault),
+            subTitle = UiText.StringResource(R.string.vault_settings_back_up_your),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.backup_vault
         )
@@ -121,8 +120,8 @@ internal sealed class VaultSettingsItem(
 
     data class Migrate(val isEnabled: Boolean) : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Migrate".asUiText(),
-            subTitle = "Migrate GG20 vault DKLS".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_migration_title),
+            subTitle = UiText.StringResource(R.string.vault_settings_migrate_gg20),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.pass_hint,
         ),
@@ -131,45 +130,44 @@ internal sealed class VaultSettingsItem(
 
     data object Advanced : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Advanced".asUiText(),
-            subTitle = "Reshare, change TSS, or sign messages.".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_advanced_title),
+            subTitle = UiText.StringResource(R.string.vault_settings_reshare_change),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.advanced
         )
     )
-
     data class Reshare(val isEnabled: Boolean) : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Reshare".asUiText(),
-            subTitle = "Reshare vault with a new committee".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_reshare_title),
+            subTitle =  UiText.StringResource(R.string.vault_settings_reshare_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIcon = R.drawable.reame
+            leadingIcon = R.drawable.reshare
         ),
         enabled = isEnabled
     )
 
     data object Sign : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Sign".asUiText(),
-            subTitle = "Sign custom message".asUiText(),
+            title = UiText.StringResource(R.string.verify_swap_sign_button),
+            subTitle = UiText.StringResource(R.string.vault_settings_sign_message_description),
             trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIcon = R.drawable.reame
+            leadingIcon = R.drawable.sign
         )
     )
 
     data object OnChainSecurity : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "On-Chain Security".asUiText(),
-            subTitle = "Manage your on-chain security".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_security_title),
+            subTitle = UiText.StringResource(R.string.vault_settings_security_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIcon = R.drawable.reame
+            leadingIcon = R.drawable.onchain_security
         )
     )
 
     data object Delete : VaultSettingsItem(
         value = SettingsItemUiModel(
-            title = "Delete".asUiText(),
-            subTitle = "Delete your vault share permanently".asUiText(),
+            title = UiText.StringResource(R.string.vault_settings_delete_title),
+            subTitle = UiText.StringResource(R.string.vault_settings_delete_subtitle),
             trailingIcon = R.drawable.ic_small_caret_right,
             leadingIcon = R.drawable.delete
         )

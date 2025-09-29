@@ -537,4 +537,14 @@
     <string name="referral_not_found">Ainda sem indicação</string>
     <string name="referral_cta">Transforme seu cofre em uma máquina de recompensas. Crie sua indicação agora e comece a ganhar</string>
     <string name="error_saving_qr_code">Falha ao guardar o código QR. %1$s</string>
+    <string name="vault_settings_view_vault">Visualizar nome, parte e tipo do cofre</string>
+    <string name="vault_settings_biometric_fast">Assinatura biométrica rápida</string>
+    <string name="vault_settings_enable_biometric">Ativar biometria para assinatura rápida</string>
+    <string name="vault_settings_password_hint">Dica de palavra-passe</string>
+    <string name="vault_settings_set_a_password">Defina uma dica de palavra-passe para proteger o seu cofre</string>
+    <string name="vault_settings_backup_vault">Fazer backup da Partilha do Cofre</string>
+    <string name="vault_settings_back_up_your">Faça o backup da Partilha do Cofre para um dispositivo ou servidor.</string>
+    <string name="vault_settings_migrate_gg20">Migrar DKLS do cofre GG20</string>
+    <string name="vault_settings_reshare_change">Partilhar novamente, alterar o TSS ou subscrever mensagens.</string>
+    <string name="vault_settings_migration_title">Migrar</string>
 </resources>
