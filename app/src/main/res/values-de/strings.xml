@@ -541,13 +541,13 @@
     <string name="referral_cta">Verwandle dein Vault in eine Belohnungsmaschine. Erstelle jetzt deine Empfehlung und beginne zu verdienen</string>
     <string name="error_saving_qr_code">QR-Code konnte nicht gespeichert werden. %1$s</string>
     <string name="vault_settings_view_vault">Tresorname, -teil und -typ anzeigen</string>
-    <string name="vault_settings_biometric_fast">Biometrische Schnellsignatur</string>
-    <string name="vault_settings_enable_biometric">Biometrie für Schnellsignatur aktivieren</string>
+    <string name="vault_settings_biometric_fast">Fast Sign mit Biometrie</string>
+    <string name="vault_settings_enable_biometric">Biometrie für Fast Sign aktivieren</string>
     <string name="vault_settings_password_hint">Passworthinweis</string>
-    <string name="vault_settings_set_a_password">Passworthinweis zum Schutz Ihres Tresors festlegen</string>
-    <string name="vault_settings_backup_vault">Vault Share sichern</string>
-    <string name="vault_settings_back_up_your">Sichern Sie Ihren Vault Share auf einem Gerät oder Server.</string>
-    <string name="vault_settings_migrate_gg20">GG20 Vault DKLS migrieren</string>
-    <string name="vault_settings_reshare_change">Nachrichten erneut teilen, TSS ändern oder signieren.</string>
+    <string name="vault_settings_set_a_password">Legen Sie einen Passworthinweis zum Schutz Ihres Tresors fest</string>
+    <string name="vault_settings_backup_vault">Vault‑Freigabe sichern</string>
+    <string name="vault_settings_back_up_your">Sichern Sie Ihre Vault‑Freigabe auf einem Gerät oder auf dem Server.</string>
+    <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
+    <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_settings_migration_title">Migrieren</string>
 </resources>
