@@ -14,8 +14,8 @@ import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELE
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.blockchain.Eip1559
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.GasFees
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
@@ -54,7 +54,7 @@ interface BlockChainSpecificRepository {
         chain: Chain,
         address: String,
         token: Coin,
-        gasFee: TokenValue,
+        gasFee: TokenValue, // Deprecated
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
@@ -79,7 +79,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
-    private val ethereumFeeService: EthereumFeeService,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -176,7 +176,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 val nonce = evmApi.getNonce(address)
 
                 val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                val fees = ethereumFeeService.calculateFees(chain, estimateGasLimit, isSwap)
+                val fees = feeServiceComposite.calculateFees(chain, estimateGasLimit, isSwap)
 
                 val (maxFeePerGas, priorityFeeWei) = when (fees) {
                     is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
@@ -431,7 +431,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     lastLedgerSequence = accountInfo?.result?.ledgerCurrentIndex?.toULong()
                         ?.plus(60UL)
                         ?: 0UL,
-                    gas = gasFee.value.toLong().toULong(), // TODO: Inject
+                    gas = gasFee.value.toLong().toULong(),
                 ),
             )
         }
@@ -443,31 +443,21 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val rawData = specific.blockHeader.rawData
 
             val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
-            val estimation = if (token.isNativeToken) {
-                TRON_DEFAULT_ESTIMATION_FEE
-            } else {
-                val simulation = tronApi.getTriggerConstantContractFee(
-                    ownerAddressBase58 = token.address,
-                    contractAddressBase58 = token.contractAddress,
-                    recipientAddressHex = recipientAddressHex,
-                    functionSelector = TRANSFER_FUNCTION_SELECTOR,
-                    amount = tokenAmountValue ?: BigInteger.ZERO
-                )
 
-                val params = tronApi.getChainParameters()
-            }
+            val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
+                ?: run {
+                    val rawBalance = tronApi.getBalance(token)
+                    val triggerResult = tronApi.getTriggerConstantContractFee(
+                        ownerAddressBase58 = token.address,
+                        contractAddressBase58 = token.contractAddress,
+                        recipientAddressHex = recipientAddressHex,
+                        functionSelector = TRANSFER_FUNCTION_SELECTOR,
+                        amount = rawBalance
+                    )
 
-            /*TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
-            ?: run {
-                val rawBalance = tronApi.getBalance(token)
-                tronApi.getTriggerConstantContractFee(
-                    ownerAddressBase58 = token.address,
-                    contractAddressBase58 = token.contractAddress,
-                    recipientAddressHex = recipientAddressHex,
-                    functionSelector = TRANSFER_FUNCTION_SELECTOR,
-                    amount = rawBalance
-                )
-            } */
+                    val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
+                    totalEnergy * ENERGY_TO_SUN_FACTOR
+                }
 
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.Tron(
@@ -479,7 +469,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockHeaderTxTrieRoot = rawData.txTrieRoot,
                     blockHeaderParentHash = rawData.parentHash,
                     blockHeaderWitnessAddress = rawData.witnessAddress,
-                    gasFeeEstimation = "0".toULong(),// estimation.toULong()
+                    gasFeeEstimation = estimation.toULong(),
                 )
             )
         }
@@ -487,5 +477,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
+
+        private const val ENERGY_TO_SUN_FACTOR = 280
     }
 }

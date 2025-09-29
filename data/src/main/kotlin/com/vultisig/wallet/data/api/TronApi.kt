@@ -83,7 +83,6 @@ internal class TronApiImpl @Inject constructor(
             }
         }.body<TronSpecificBlockJson>()
 
-    // TODO: Review this for specific
     override suspend fun getTriggerConstantContractFee(
         ownerAddressBase58: String,
         contractAddressBase58: String,
@@ -111,10 +110,6 @@ internal class TronApiImpl @Inject constructor(
             setBody(body)
             accept(ContentType.Application.Json)
         }.bodyOrThrow<TronTriggerConstantContractJson>()
-
-        // val totalEnergy = triggerConstant.energyUsed + triggerConstant.energyPenalty
-        // val totalSun = totalEnergy * ENERGY_TO_SUN_FACTOR
-        // return totalSun
     }
 
     override suspend fun getChainParameters(): TronChainParametersJson {

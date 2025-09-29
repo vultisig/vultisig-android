@@ -148,11 +148,14 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 isMax = false,
             )
 
-            val fees = withContext(Dispatchers.IO){
-                feeServiceComposite.calculateFees(blockchainTransaction)
+            try {
+                val fees = withContext(Dispatchers.IO){
+                    feeServiceComposite.calculateFees(blockchainTransaction)
+                }
+                println(fees)
+            } catch (t: Throwable) {
+                Timber.e(t, "Error calculating fees")
             }
-
-            println(fees)
         }
     }
 
