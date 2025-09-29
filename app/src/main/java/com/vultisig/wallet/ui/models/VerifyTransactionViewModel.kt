@@ -9,6 +9,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.blockchain.VaultData
+import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.repositories.TransactionRepository
@@ -18,6 +20,7 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -28,7 +31,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.coin
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +46,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 @Immutable
@@ -71,6 +74,7 @@ internal data class VerifyTransactionUiModel(
     val functionInputs: String? = null,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
+    val isLoadingFees: Boolean = false,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst
@@ -96,6 +100,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val feeServiceComposite: FeeServiceComposite,
+    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -123,39 +128,44 @@ internal class VerifyTransactionViewModel @Inject constructor(
         loadTransaction()
         loadPassword()
         scanTransaction()
-        calculateFees()
     }
 
-    private fun calculateFees() {
-        viewModelScope.launch {
-            val tx = transaction.value ?: return@launch
-            val chain = tx.token.chain
-            val vault = withContext(Dispatchers.IO) {
-                vaultRepository.get(vaultId)
-            } ?: return@launch
+    private suspend fun calculateFees() {
+        val tx = transaction.value ?: return
+        val chain = tx.token.chain
+        val vault = withContext(Dispatchers.IO) {
+            vaultRepository.get(vaultId)
+        } ?: return
 
-            val vaultData = VaultData(
+        val blockchainTransaction = Transfer(
+            coin = tx.token,
+            vault = VaultData(
                 vaultHexChainCode = vault.hexChainCode,
                 vaultHexPublicKey = vault.getPubKeyByChain(chain),
-            )
+            ),
+            amount = tx.tokenValue.value,
+            to = tx.dstAddress,
+            memo = tx.memo,
+            isMax = false,
+        )
 
-            val blockchainTransaction = Transfer(
-                coin = tx.token,
-                vault = vaultData,
-                amount = tx.tokenValue.value,
-                to = tx.dstAddress,
-                memo = tx.memo,
-                isMax = false,
-            )
-
-            try {
-                val fees = withContext(Dispatchers.IO){
-                    feeServiceComposite.calculateFees(blockchainTransaction)
-                }
-                println(fees)
-            } catch (t: Throwable) {
-                Timber.e(t, "Error calculating fees")
+        try {
+            val fees = withContext(Dispatchers.IO) {
+                feeServiceComposite.calculateFees(blockchainTransaction)
             }
+            val fromGas = GasFeeParams(
+                gasLimit = BigInteger.ONE,
+                gasFee = TokenValue(
+                    value = fees.amount,
+                    token = tx.token,
+                ),
+                selectedToken = tx.token,
+            )
+            val uiFeeModel = gasFeeToEstimate.invoke(fromGas)
+
+            println(uiFeeModel)
+        } catch (t: Throwable) {
+            Timber.e(t, "Error calculating fees")
         }
     }
 
@@ -291,8 +301,10 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val transactionUiModel = mapTransactionToUiModel(transaction)
 
             uiState.update {
-                it.copy(transaction = transactionUiModel)
+                it.copy(transaction = transactionUiModel, isLoadingFees = true)
             }
+
+            calculateFees()
         }
     }
 
