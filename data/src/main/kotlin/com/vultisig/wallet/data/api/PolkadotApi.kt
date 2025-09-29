@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -160,7 +161,7 @@ internal class PolkadotApiImp @Inject constructor(
             setBody(payload)
         }
 
-        return response.body<PolkadotQueryInfoResponseJson>().result
+        return response.bodyOrThrow<PolkadotQueryInfoResponseJson>().result
             ?.partialFee
             ?.toBigIntegerOrNull()
             ?: throw Exception("Can't obtained Partial Fee")
