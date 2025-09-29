@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -24,6 +25,7 @@ internal fun AccountList(
     accounts: List<AccountUiModel>,
     isBalanceVisible: Boolean,
 ) {
+    val context = LocalContext.current
 
     LazyColumn {
         itemsIndexed(

@@ -164,7 +164,7 @@
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="send_amount_currency">Quantidade (em %s)</string>
     <string name="vault_settings_backup_subtitle">Faça backup do seu compartilhamento de cofre</string>
-    <string name="chains">Correntes</string>
+    <string name="chains">Cadeias</string>
     <string name="keygen_peer_discovery_looking_for_devices">Procurando por dispositivos…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecione os dispositivos de pareamento</string>
     <string name="peer_discovery_hint_connect_to_internet">Conecte todos os dispositivos à mesma rede com o Vultisig aberto</string>
@@ -563,7 +563,7 @@
     <string name="earn">Ganhe</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
-    <string name="no_chains_found">Nenhuma corrente encontrada</string>
+    <string name="no_chains_found">Nenhuma cadeia encontrada</string>
     <string name="no_chain_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
     <string name="no_chain_customize_chains">Personalizar correntes</string>
     <string name="search_bar_search">Pesquisar</string>

@@ -24,7 +24,7 @@
     <string name="select_chain_chain_title">Lanac</string>
     <string name="select_chain_balance_title">Stanje</string>
     <string name="send_screen_title">POŠALJI</string>
-    <string name="transaction_type_button_send">POŠALJI</string>
+    <string name="transaction_type_button_send">Pošalji</string>
     <string name="send_from_address">Od</string>
     <string name="send_to_address">Do</string>
     <string name="send_to_address_hint">Unesite adresu</string>
@@ -555,7 +555,7 @@
     <string name="transaction_buy">Kupi</string>
     <string name="transaction_receive">Primi</string>
     <string name="search_bar_portfolio">Portfelj</string>
-    <string name="search_bar_nfts">NFT-ove</string>
+    <string name="search_bar_nfts">NFT-ovi</string>
     <string name="search_bar_soon">Uskoro</string>
     <string name="upgrade_banner_sign_faster">Potpišite brže nego ikad prije</string>
     <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>

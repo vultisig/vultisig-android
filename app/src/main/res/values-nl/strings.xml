@@ -574,8 +574,8 @@
     <string name="hide_balance">Saldo verbergen</string>
     <string name="show_balance">Saldo weergeven</string>
     <string name="no_chains_found">Geen kettingen gevonden</string>
-    <string name="no_chain_make_sure_that">Zorg ervoor dat de ketting die je zoekt is ingeschakeld.</string>
-    <string name="no_chain_customize_chains">Kettingen aanpassen</string>
+    <string name="no_chain_make_sure_that">Zorg ervoor dat de keten die u zoekt is ingeschakeld.</string>
+    <string name="no_chain_customize_chains">Ketens aanpassen</string>
     <string name="search_bar_search">Zoeken</string>
     <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
@@ -584,5 +584,5 @@
     <string name="copy_address">Kopieer adres</string>
     <string name="chain_tokens_tab_hidden">Verborgen</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
-    <string name="address_copied">%1$s adres gekopieerd</string>
+    <string name="address_copied">%1$s-adres gekopieerd</string>
 </resources>

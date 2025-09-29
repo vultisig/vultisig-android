@@ -574,6 +574,6 @@
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
     <string name="chain_tokens_tab_hidden">Oculto</string>
-    <string name="chain_tokens_qr_receive_label">Oculto</string>
+    <string name="chain_tokens_qr_receive_label">Recibir %1$s</string>
     <string name="address_copied">Dirección %1$s copiada</string>
 </resources>
