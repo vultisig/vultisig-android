@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.models
 
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
@@ -57,12 +58,39 @@ internal data class TronBalanceResponseData(
 )
 
 @Serializable
-internal data class TronTriggerConstantContractJson(
+data class TronTriggerConstantContractJson(
+    @SerialName("result")
+    val result: Result? = Result(),
     @SerialName("energy_used")
-    val energyUsed: Long,
+    val energyUsed: Long = 0L,
     @SerialName("energy_penalty")
-    val energyPenalty: Long
-)
+    val energyPenalty: Long = 0L,
+    @SerialName("transaction")
+    val transaction: Transaction,
+) {
+    @Serializable
+    data class Result(
+        val result: Boolean = false,
+        val message: String = "",
+    )
+
+    @Serializable
+    data class RetItem(
+        val ret: String? = null,
+    )
+
+    @Serializable
+    data class Transaction(
+        @SerialName("ret")
+        val ret: List<RetItem>? = null,
+        @SerialName("raw_data_hex")
+        val rawDataHex: String = "",
+    )
+
+    fun isSuccessfulSimulation(): Boolean {
+        return result?.result == true && transaction.ret?.all { it.ret != "FAILED" } != false
+    }
+}
 
 @Serializable
 data class TronChainParametersJson(
@@ -78,6 +106,12 @@ data class TronChainParametersJson(
 
     val createNewAccountFeeEstimateContract: Long
         get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
+
+    val energyFee: Long
+        get() = chainParameterMapped["getEnergyFee"] ?: 0L
+
+    val maxEnergyFactor: Long
+        get() = chainParameterMapped["getDynamicEnergyMaxFactor"] ?: 0L
 
     // Atm according to network: 1 bandwidth -> 1000 SUN
     val bandwidthFeePrice: Long
@@ -95,6 +129,14 @@ internal data class TronAccountRequestJson(
     val address: String,
     val visible: Boolean,
 )
+
+@Serializable
+internal data class TronContractRequestJson(
+    val value: String,
+) {
+    @EncodeDefault
+    val visible: Boolean = true
+}
 
 @Serializable
 data class TronAccountResourceJson(
@@ -129,3 +171,15 @@ data class TronAccountJson(
     @SerialName("address")
     val address: String = "",
 )
+
+@Serializable
+data class TronContractInfoJson(
+    @SerialName("contract_state")
+    val contractState: ContractStateJson,
+) {
+    @Serializable
+    data class ContractStateJson(
+        @SerialName("energy_factor")
+        val energyFactor: Long = 0L,
+    )
+}

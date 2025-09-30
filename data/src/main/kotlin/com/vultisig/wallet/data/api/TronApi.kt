@@ -6,9 +6,11 @@ import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
+import com.vultisig.wallet.data.api.models.TronContractInfoJson
+import com.vultisig.wallet.data.api.models.TronContractRequestJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
-import com.vultisig.wallet.data.common.stripHexPrefix
+import com.vultisig.wallet.data.chains.helpers.TronFunctions.buildTrc20TransferParameters
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -41,14 +43,17 @@ interface TronApi {
         ownerAddressBase58: String,
         contractAddressBase58: String,
         recipientAddressHex: String,
+        functionSelector: String,
         amount: BigInteger
-    ): Long
+    ): TronTriggerConstantContractJson
 
     suspend fun getChainParameters(): TronChainParametersJson
 
     suspend fun getAccountResource(address: String): TronAccountResourceJson
 
     suspend fun getAccount(address: String): TronAccountJson
+
+    suspend fun getContractMetadata(contract: String): TronContractInfoJson
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -82,11 +87,11 @@ internal class TronApiImpl @Inject constructor(
         ownerAddressBase58: String,
         contractAddressBase58: String,
         recipientAddressHex: String,
+        functionSelector: String,
         amount: BigInteger
-    ): Long {
-        val functionSelector = FUNCTION_SELECTOR
+    ): TronTriggerConstantContractJson {
         val parameter =
-            buildTrc20TransParameter(
+            buildTrc20TransferParameters(
                 recipientBaseHex = recipientAddressHex,
                 amount = amount
             )
@@ -97,16 +102,14 @@ internal class TronApiImpl @Inject constructor(
             put("parameter", parameter)
             put("visible", true)
         }
-        val triggerConstant = httpClient.post(tronGrid) {
+
+        return httpClient.post(tronGrid) {
             url {
                 path("tron", "walletsolidity", "triggerconstantcontract")
             }
             setBody(body)
             accept(ContentType.Application.Json)
-        }.body<TronTriggerConstantContractJson>()
-        val totalEnergy = triggerConstant.energyUsed + triggerConstant.energyPenalty
-        val totalSun = totalEnergy * ENERGY_TO_SUN_FACTOR
-        return totalSun
+        }.bodyOrThrow<TronTriggerConstantContractJson>()
     }
 
     override suspend fun getChainParameters(): TronChainParametersJson {
@@ -114,13 +117,7 @@ internal class TronApiImpl @Inject constructor(
             url {
                 path("tron", "wallet", "getchainparameters")
             }
-        }.body<TronChainParametersJson>()
-    }
-
-    private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {
-        val paddedAddressHex = recipientBaseHex.stripHexPrefix().drop(2).padStart(64, '0')
-        val paddedAmountHex = amount.toString(16).padStart(64, '0')
-        return paddedAddressHex + paddedAmountHex
+        }.bodyOrThrow<TronChainParametersJson>()
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
@@ -164,9 +161,18 @@ internal class TronApiImpl @Inject constructor(
         }.bodyOrThrow<TronAccountJson>()
     }
 
+    override suspend fun getContractMetadata(contract: String): TronContractInfoJson {
+        return httpClient.post(tronGrid) {
+            url {
+                appendPathSegments("/wallet/getcontractinfo")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(TronContractRequestJson(contract))
+        }.bodyOrThrow<TronContractInfoJson>()
+    }
+
     companion object {
-        private const val FUNCTION_SELECTOR = "transfer(address,uint256)"
-        private const val ENERGY_TO_SUN_FACTOR = 280
+        const val TRANSFER_FUNCTION_SELECTOR = "transfer(address,uint256)"
         private const val DUP_TRANSACTION_ERROR_CODE = "DUP_TRANSACTION_ERROR"
     }
 }
