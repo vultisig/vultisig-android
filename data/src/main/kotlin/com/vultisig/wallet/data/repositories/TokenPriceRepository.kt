@@ -360,13 +360,16 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                             
                             val priceUsd = if (token.contractAddress == "x/staking-tcy") {
                                 // For sTCY, use nav (liquid_bond_size) / shares (liquid_bond_shares)
+                                val tcyPriceUSD = getCachedPrice("tcy", AppCurrency.USD)
+                                    ?: getPriceByPriceProviderId("tcy")
+
                                 val liquidBondSize = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: BigDecimal.ZERO
                                 val liquidBondShares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: BigDecimal.ZERO
-                                
+
                                 if (liquidBondShares > BigDecimal.ZERO) {
-                                    liquidBondSize.divide(liquidBondShares, 8, RoundingMode.HALF_UP)
+                                    liquidBondSize.divide(liquidBondShares, 8, RoundingMode.HALF_UP) * tcyPriceUSD
                                 } else {
-                                    BigDecimal.ONE
+                                    BigDecimal.ONE * tcyPriceUSD
                                 }
                             } else {
                                 // For NAMI tokens, use navPerShare
