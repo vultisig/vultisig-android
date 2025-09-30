@@ -153,7 +153,7 @@ class OneInchApiImpl @Inject constructor(
     }.body()
 
     companion object {
-        private const val ONEINCH_REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
+        private const val ONEINCH_REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val ONEINCH_REFERRER_FEE = 0.5
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }
