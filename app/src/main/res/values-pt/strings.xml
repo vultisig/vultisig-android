@@ -25,6 +25,7 @@
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
     <string name="send_to_address_hint">Inserir Quantidade</string>
@@ -96,7 +97,7 @@
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_src_amount_hint">Inserir Quantidade</string>
     <string name="swap_form_dst_token_title">Para</string>
-    <string name="swap_screen_title">Trocar</string>
+    <string name="transaction_type_button_swap">Trocar</string>
     <string name="swap_form_gas_title">Taxa de rede</string>
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
@@ -163,7 +164,7 @@
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="send_amount_currency">Quantidade (em %s)</string>
     <string name="vault_settings_backup_subtitle">Faça backup do seu compartilhamento de cofre</string>
-    <string name="chains">Correntes</string>
+    <string name="chains">Cadeias</string>
     <string name="keygen_peer_discovery_looking_for_devices">Procurando por dispositivos…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecione os dispositivos de pareamento</string>
     <string name="peer_discovery_hint_connect_to_internet">Conecte todos os dispositivos à mesma rede com o Vultisig aberto</string>
@@ -537,6 +538,8 @@
     <string name="referral_not_found">Ainda sem indicação</string>
     <string name="referral_cta">Transforme seu cofre em uma máquina de recompensas. Crie sua indicação agora e comece a ganhar</string>
     <string name="error_saving_qr_code">Falha ao guardar o código QR. %1$s</string>
+    <string name="transaction_type_button_buy">Comprar</string>
+    <string name="transaction_type_button_receive">Receber</string>
     <string name="vault_settings_view_vault">Visualizar nome, parte e tipo do cofre</string>
     <string name="vault_settings_biometric_fast">Assinatura biométrica rápida</string>
     <string name="vault_settings_enable_biometric">Ativar biometria para assinatura rápida</string>
@@ -547,4 +550,29 @@
     <string name="vault_settings_migrate_gg20">Migrar DKLS do cofre GG20</string>
     <string name="vault_settings_reshare_change">Partilhar novamente, alterar o TSS ou subscrever mensagens.</string>
     <string name="vault_settings_migration_title">Migrar</string>
+    <string name="transaction_buy">Comprar</string>
+    <string name="transaction_receive">Receber</string>
+    <string name="search_bar_portfolio">Carteira</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Em breve</string>
+    <string name="upgrade_banner_sign_faster">Assine mais rápido do que nunca</string>
+    <string name="upgrade_banner_upgrade_your">Atualize o seu cofre agora</string>
+    <string name="upgrade_banner_upgrade_now">Atualize agora</string>
+    <string name="home_portfolio_balance">Saldo da carteira</string>
+    <string name="wallet">Carteira</string>
+    <string name="earn">Ganhe</string>
+    <string name="hide_balance">Ocultar saldo</string>
+    <string name="show_balance">Mostrar saldo</string>
+    <string name="no_chains_found">Nenhuma cadeia encontrada</string>
+    <string name="no_chain_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
+    <string name="no_chain_customize_chains">Personalizar correntes</string>
+    <string name="search_bar_search">Pesquisar</string>
+    <string name="search_bar_cancel">Cancelar</string>
+    <string name="chain_selection_select_chains">Selecionar correntes</string>
+    <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
+    <string name="transaction_type_button_functions">Funções</string>
+    <string name="copy_address">Copiar endereço</string>
+    <string name="chain_tokens_tab_hidden">Oculto</string>
+    <string name="chain_tokens_qr_receive_label">Receber %1$s</string>
+    <string name="address_copied">Endereço %1$s copiado</string>
 </resources>

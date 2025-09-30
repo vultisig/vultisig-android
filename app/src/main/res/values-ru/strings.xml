@@ -36,6 +36,7 @@
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="choose_tokens">Выберите токены</string>
     <string name="send_screen_title">Отправить</string>
+    <string name="transaction_type_button_send">Отправить</string>
     <string name="send_from_address">От</string>
     <string name="send_to_address">Кому</string>
     <string name="send_to_address_hint">Введите адрес</string>
@@ -149,7 +150,7 @@
     <string name="swap_form_src_amount_hint">Введите сумму</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
     <string name="swap_form_dst_token_title">В</string>
-    <string name="swap_screen_title">Обмен</string>
+    <string name="transaction_type_button_swap">Обмен</string>
     <string name="swap_form_gas_title">Сетевой сбор</string>
     <string name="swap_form_total_fees_title">Общая сумма сборов</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
@@ -550,6 +551,8 @@
     <string name="referral_not_found">Рефералов пока нет</string>
     <string name="referral_cta">Преврати свой сейф в машину наград. Создай свою реферальную ссылку сейчас и начинай зарабатывать</string>
     <string name="error_saving_qr_code">Не удалось сохранить QR-код. %1$s</string>
+    <string name="transaction_type_button_buy">Купить</string>
+    <string name="transaction_type_button_receive">Получить</string>
     <string name="vault_settings_view_vault">Просмотр имени, части и типа хранилища</string>
     <string name="vault_settings_biometric_fast">Биометрическая быстрая подпись</string>
     <string name="vault_settings_enable_biometric">Включить биометрию для быстрой подписи</string>
@@ -560,4 +563,29 @@
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
     <string name="vault_settings_reshare_change">Повторный доступ, изменение TSS или подпись сообщений.</string>
     <string name="vault_settings_migration_title">Мигрировать</string>
+    <string name="transaction_buy">Купить</string>
+    <string name="transaction_receive">Получить</string>
+    <string name="search_bar_portfolio">Портфель</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Скоро</string>
+    <string name="upgrade_banner_sign_faster">Подписывайте быстрее, чем когда-либо прежде</string>
+    <string name="upgrade_banner_upgrade_your">Обновите хранилище прямо сейчас</string>
+    <string name="upgrade_banner_upgrade_now">Обновите сейчас</string>
+    <string name="home_portfolio_balance">Баланс портфеля</string>
+    <string name="wallet">Кошелек</string>
+    <string name="earn">Заработок</string>
+    <string name="hide_balance">Скрыть баланс</string>
+    <string name="show_balance">Показать баланс</string>
+    <string name="no_chains_found">Цепочки не найдены.</string>
+    <string name="no_chain_make_sure_that">Убедитесь, что искомая цепочка включена.</string>
+    <string name="no_chain_customize_chains">Настроить цепочки</string>
+    <string name="search_bar_search">Поиск</string>
+    <string name="search_bar_cancel">Отмена</string>
+    <string name="chain_selection_select_chains">Выбрать сети</string>
+    <string name="chain_selection_no_chains_found">Сети не найдены</string>
+    <string name="transaction_type_button_functions">Функции</string>
+    <string name="copy_address">Копировать адрес</string>
+    <string name="chain_tokens_tab_hidden">Скрыто</string>
+    <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
+    <string name="address_copied">Адрес %1$s скопирован</string>
 </resources>

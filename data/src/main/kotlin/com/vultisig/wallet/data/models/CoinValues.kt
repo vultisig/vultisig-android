@@ -8,6 +8,11 @@ data class TokenBalance(
     val fiatValue: FiatValue?,
 )
 
+data class TokenBalanceAndPrice(
+    val tokenBalance: TokenBalance,
+    val price: FiatValue?,
+)
+
 data class TokenBalanceWrapped(
     val tokenBalance: TokenBalance,
     val address: String,

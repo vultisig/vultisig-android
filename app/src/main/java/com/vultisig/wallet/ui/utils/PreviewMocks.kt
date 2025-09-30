@@ -23,6 +23,7 @@ internal val account
         token = coin,
         tokenValue = null,
         fiatValue = null,
+        price = null,
     )
 
 internal val address

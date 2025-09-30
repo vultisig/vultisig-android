@@ -19,7 +19,6 @@ import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAU
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Route.*
-import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
@@ -144,15 +143,8 @@ internal fun SetupNavGraph(
         ) {
             FolderScreen()
         }
-        composable(
-            route = AddChainAccount.route,
-            arguments = listOf(
-                navArgument(AddChainAccount.ARG_VAULT_ID) { type = NavType.StringType }
-            )
-        ) {
-            ChainSelectionScreen(
-                navController = navController
-            )
+        dialog<AddChainAccount> {
+            ChainSelectionScreen()
         }
         composable(
             route = Destination.VaultSettings.STATIC_ROUTE,

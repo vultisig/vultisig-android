@@ -37,6 +37,7 @@
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="choose_tokens">Elegir Tokens</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">A</string>
     <string name="send_to_address_hint">Ingresar Dirección</string>
@@ -135,7 +136,7 @@
     <string name="swap_form_src_amount_hint">Ingresar Cantidad</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
     <string name="swap_form_dst_token_title">A</string>
-    <string name="swap_screen_title">Intercambiar</string>
+    <string name="transaction_type_button_swap">Intercambiar</string>
     <string name="swap_form_gas_title">Tarifa de red</string>
     <string name="swap_form_total_fees_title">Tarifas totales</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
@@ -538,6 +539,8 @@
     <string name="referral_not_found">Aún no hay referencia</string>
     <string name="referral_cta">Convierte tu vault en una máquina de recompensas. Crea tu referencia ahora y empieza a ganar</string>
     <string name="error_saving_qr_code">No se pudo guardar el código QR. %1$s</string>
+    <string name="transaction_type_button_buy">Comprar</string>
+    <string name="transaction_type_button_receive">Recibir</string>
     <string name="vault_settings_view_vault">Ver el nombre, la parte y el tipo de tu bóveda</string>
     <string name="vault_settings_biometric_fast">Biometría para la firma rápida</string>
     <string name="vault_settings_enable_biometric">Habilitar la biometría para la firma rápida</string>
@@ -548,4 +551,29 @@
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Recompartir, cambiar TSS o firmar mensajes</string>
     <string name="vault_settings_migration_title">Migrar</string>
+    <string name="transaction_buy">Comprar</string>
+    <string name="transaction_receive">Recibir</string>
+    <string name="search_bar_portfolio">Portafolio</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Próximamente</string>
+    <string name="upgrade_banner_sign_faster">Firma más rápido que nunca</string>
+    <string name="upgrade_banner_upgrade_your">Actualiza tu bóveda ahora</string>
+    <string name="upgrade_banner_upgrade_now">Actualízate ahora</string>
+    <string name="home_portfolio_balance">Saldo de la cartera</string>
+    <string name="wallet">Monedero</string>
+    <string name="earn">Gana</string>
+    <string name="hide_balance">Ocultar saldo</string>
+    <string name="show_balance">Mostrar saldo</string>
+    <string name="no_chains_found">No se encontraron cadenas</string>
+    <string name="no_chain_make_sure_that">Asegúrate de que la cadena que buscas esté activada.</string>
+    <string name="no_chain_customize_chains">Personalizar cadenas</string>
+    <string name="search_bar_search">Buscar</string>
+    <string name="search_bar_cancel">Cancelar</string>
+    <string name="chain_selection_select_chains">Seleziona catene</string>
+    <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="transaction_type_button_functions">Funciones</string>
+    <string name="copy_address">Copiar dirección</string>
+    <string name="chain_tokens_tab_hidden">Oculto</string>
+    <string name="chain_tokens_qr_receive_label">Recibir %1$s</string>
+    <string name="address_copied">Dirección %1$s copiada</string>
 </resources>

@@ -24,6 +24,7 @@
     <string name="select_chain_chain_title">Catena</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_screen_title">Invia</string>
+    <string name="transaction_type_button_send">Invia</string>
     <string name="send_from_address">Da</string>
     <string name="send_to_address">A</string>
     <string name="send_to_address_hint">Inserisci Quantità</string>
@@ -95,7 +96,7 @@
     <string name="swap_error_no_amount">a quantità deve essere un numero positivo.</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
-    <string name="swap_screen_title">Scambia</string>
+    <string name="transaction_type_button_swap">Scambia</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
@@ -538,6 +539,8 @@
     <string name="referral_not_found">Nessun referral ancora</string>
     <string name="referral_cta">Trasforma il tuo caveau in una macchina di ricompense. Crea subito il tuo referral e inizia a guadagnare</string>
     <string name="error_saving_qr_code">Impossibile salvare il codice QR. %1$s</string>
+    <string name="transaction_type_button_buy">Acquista</string>
+    <string name="transaction_type_button_receive">Ricevi</string>
     <string name="vault_settings_view_vault">Visualizza nome, parte e tipo del vault</string>
     <string name="vault_settings_biometric_fast">Firma rapida biometrica</string>
     <string name="vault_settings_enable_biometric">Abilita la firma biometrica per la firma rapida</string>
@@ -548,4 +551,29 @@
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
     <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
     <string name="vault_settings_migration_title">Migrare</string>
+    <string name="transaction_buy">Acquista</string>
+    <string name="transaction_receive">Ricevi</string>
+    <string name="search_bar_portfolio">Portafoglio</string>
+    <string name="search_bar_nfts">NFT</string>
+    <string name="search_bar_soon">Presto</string>
+    <string name="upgrade_banner_sign_faster">Firma più velocemente che mai</string>
+    <string name="upgrade_banner_upgrade_your">Aggiorna il tuo vault ora</string>
+    <string name="upgrade_banner_upgrade_now">Aggiorna ora</string>
+    <string name="home_portfolio_balance">Saldo del portafoglio</string>
+    <string name="wallet">Portafoglio</string>
+    <string name="earn">Guadagna</string>
+    <string name="hide_balance">Nascondi saldo</string>
+    <string name="show_balance">Mostra saldo</string>
+    <string name="no_chains_found">Nessuna catena trovata</string>
+    <string name="no_chain_make_sure_that">Assicurati che la catena che stai cercando sia abilitata.</string>
+    <string name="no_chain_customize_chains">Personalizza catene</string>
+    <string name="search_bar_search">Cerca</string>
+    <string name="search_bar_cancel">Annulla</string>
+    <string name="chain_selection_select_chains">Seleziona catene</string>
+    <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="transaction_type_button_functions">Funzioni</string>
+    <string name="copy_address">Copia indirizzo</string>
+    <string name="chain_tokens_tab_hidden">Nascosto</string>
+    <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
+    <string name="address_copied">Indirizzo %1$s copiato</string>
 </resources>
