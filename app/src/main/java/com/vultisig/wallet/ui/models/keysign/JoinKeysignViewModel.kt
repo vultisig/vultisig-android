@@ -551,7 +551,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
 
-                        val feeToken = if (hasJupiterSwapProvider) srcToken else nativeToken
+                        val feeToken = when {
+                            hasJupiterSwapProvider -> srcToken
+                            !oneInchSwapTxJson.swapFeeTokenContract.isNullOrEmpty() -> {
+                                val feeTokenFromContract = tokenRepository.getEVMTokenByContract(
+                                    srcToken.chain.id,
+                                    oneInchSwapTxJson.swapFeeTokenContract
+                                )
+                                feeTokenFromContract ?: nativeToken
+                            }
+                            else -> nativeToken
+                        }
+                        
                         val estimatedTokenFees = TokenValue(
                             value = value,
                             token = feeToken
@@ -588,11 +599,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
                             providerFee = ValuedToken(
                                 token = feeToken,
-                                value = value.toString(),
+                                value = mapTokenValueToDecimalUiString(estimatedTokenFees), // Use formatted value
                                 fiatValue = fiatValueToStringMapper(estimatedFee),
                             ),
                             networkFee = ValuedToken(
-                                token = srcToken,
+                                token = nativeToken, // Network fee is always in native token
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
                                 fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
