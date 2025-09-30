@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -286,7 +287,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                         it.asset.lowercase() to it.assetTorPrice
                     }
             } catch (e: Exception) {
-                // Timber.e(e, "Failed to fetch prices from pools")
+                Timber.e(e, "Failed to fetch prices from pools")
                 return@supervisorScope
             }
 
