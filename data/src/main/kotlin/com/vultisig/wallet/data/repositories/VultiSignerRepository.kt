@@ -95,7 +95,8 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
     } catch (e: Exception) {
         when {
             e.message?.contains("401") == true || 
-            e.message?.contains("403") == true || 
+            e.message?.contains("403") == true ||
+            e.message?.contains("500") == true ||
             e.message?.contains("Unauthorized", ignoreCase = true) == true -> 
                 PasswordCheckResult.Invalid
                 
