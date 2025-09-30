@@ -149,7 +149,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             currency = currency,
         )
 
-        fetchThorNamiPrices(
+        fetchThorContractPrices(
             currency = currency,
             tokenList = tokens,
         )
@@ -286,7 +286,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                         it.asset.lowercase() to it.assetTorPrice
                     }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch prices from pools")
+                // Timber.e(e, "Failed to fetch prices from pools")
                 return@supervisorScope
             }
 
@@ -314,7 +314,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun fetchThorNamiPrices(
+    private suspend fun fetchThorContractPrices(
         tokenList: List<Coin>,
         currency: String
     ) = supervisorScope {
@@ -377,6 +377,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                             
                             tokenId to mapOf(currency to priceUsd * tetherPrice)
                         } catch (e: Exception) {
+                            Timber.e(e, "Failed to fetch price for contract: $contract")
                             null
                         }
                     }
