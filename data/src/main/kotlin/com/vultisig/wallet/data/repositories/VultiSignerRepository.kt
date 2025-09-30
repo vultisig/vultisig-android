@@ -7,6 +7,13 @@ import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
 import javax.inject.Inject
 
+sealed class PasswordCheckResult {
+    object Valid : PasswordCheckResult()
+    object Invalid : PasswordCheckResult()
+    data class NetworkError(val message: String = "No internet connection") : PasswordCheckResult()
+    data class Error(val message: String) : PasswordCheckResult()
+}
+
 interface VultiSignerRepository {
 
     suspend fun joinKeygen(
@@ -28,6 +35,11 @@ interface VultiSignerRepository {
         publicKeyEcdsa: String,
         password: String,
     ): Boolean
+    
+    suspend fun checkPassword(
+        publicKeyEcdsa: String,
+        password: String,
+    ): PasswordCheckResult
 
     suspend fun hasFastSign(
         publicKeyEcdsa: String,
@@ -72,6 +84,33 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         true
     } catch (e: Exception) {
         false
+    }
+    
+    override suspend fun checkPassword(
+        publicKeyEcdsa: String,
+        password: String,
+    ): PasswordCheckResult = try {
+        api.get(publicKeyEcdsa, password)
+        PasswordCheckResult.Valid
+    } catch (e: Exception) {
+        when {
+            e.message?.contains("401") == true || 
+            e.message?.contains("403") == true || 
+            e.message?.contains("Unauthorized", ignoreCase = true) == true -> 
+                PasswordCheckResult.Invalid
+                
+            e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+            e.message?.contains("UnknownHost", ignoreCase = true) == true ||
+            e is java.net.UnknownHostException ||
+            e is java.io.IOException && e.message?.contains("Network", ignoreCase = true) == true ->
+                PasswordCheckResult.NetworkError()
+                
+            e.message?.contains("timeout", ignoreCase = true) == true ||
+            e is java.net.SocketTimeoutException ->
+                PasswordCheckResult.NetworkError("Connection timeout")
+                
+            else -> PasswordCheckResult.Error(e.message ?: "Unknown error")
+        }
     }
 
     override suspend fun hasFastSign(
