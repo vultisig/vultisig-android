@@ -191,12 +191,12 @@ class THORChainSwaps(
             }
 
             Chain.Tron -> {
-                val helper = CosmosHelper(
-                    coinType = CoinType.COSMOS,
-                    denom = CosmosHelper.ATOM_DENOM,
+                val helper = TronHelper(
+                    coinType = CoinType.TRON,
+                    vaultHexPublicKey = vaultHexPublicKey,
+                    vaultHexChainCode = vaultHexChainCode
                 )
                 return helper.getSignedTransaction(
-                    input = inputData,
                     keysignPayload = keysignPayload,
                     signatures = signatures
                 )
