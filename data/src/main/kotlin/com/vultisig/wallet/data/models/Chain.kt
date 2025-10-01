@@ -156,6 +156,7 @@ val Chain.IsSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
+        Chain.Tron,
     )
 
 val Chain.isDepositSupported: Boolean
@@ -220,7 +221,7 @@ fun Chain.swapAssetName(): String {
         Chain.Noble -> "USDC"
         Chain.Ripple -> "XRP"
         Chain.Akash -> "AKT"
-        Chain.Tron -> "TRX"
+        Chain.Tron -> "TRON"
         Chain.Zcash -> "ZEC"
         Chain.Cardano -> "ADA"
         Chain.Mantle -> "MNT"

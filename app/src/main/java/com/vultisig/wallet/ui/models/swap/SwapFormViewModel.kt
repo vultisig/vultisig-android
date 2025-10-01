@@ -810,7 +810,7 @@ internal class SwapFormViewModel @Inject constructor(
     private fun calculateGas() {
         viewModelScope.launch {
             selectedSrc.filterNotNull().map {
-                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address)
+                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
                 }.catch {
                     // TODO handle error when querying gas fee
                     Timber.e(it)
