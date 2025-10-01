@@ -68,6 +68,18 @@ class THORChainSwaps(
                 )
             }
 
+            Chain.Tron -> {
+                val helper = TronHelper(
+                    coinType = CoinType.TRON,
+                    vaultHexPublicKey = vaultHexPublicKey,
+                    vaultHexChainCode = vaultHexChainCode
+                )
+
+                return helper.getPreSignedInputData(
+                    keysignPayload = keysignPayload,
+                )
+            }
+
             else -> {
                 throw Exception("Unsupported chain")
             }
@@ -173,6 +185,18 @@ class THORChainSwaps(
                 )
                 return helper.getSignedTransaction(
                     input = inputData,
+                    keysignPayload = keysignPayload,
+                    signatures = signatures
+                )
+            }
+
+            Chain.Tron -> {
+                val helper = TronHelper(
+                    coinType = CoinType.TRON,
+                    vaultHexPublicKey = vaultHexPublicKey,
+                    vaultHexChainCode = vaultHexChainCode
+                )
+                return helper.getSignedTransaction(
                     keysignPayload = keysignPayload,
                     signatures = signatures
                 )

@@ -26,6 +26,7 @@ interface GasFeeRepository {
     suspend fun getGasFee(
         chain: Chain,
         address: String,
+        isSwap: Boolean = false,
         isNativeToken: Boolean = false,
         to: String? = null,
         memo: String? = null,
@@ -48,6 +49,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     override suspend fun getGasFee(
         chain: Chain,
         address: String,
+        isSwap: Boolean,
         isNativeToken: Boolean,
         to: String?,
         memo: String?,
@@ -201,7 +203,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                                 tronApi.getAccountResource(address).calculateAvailableBandwidth()
                             }
                         val memoFee =
-                            async { getTronFeeMemo(memo) }
+                            async { getTronFeeMemo(memo, isSwap) }
 
                         // Check if destination needs activation (new account)
                         val activationFee = getTronInactiveDestinationFee(to)
@@ -257,8 +259,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun getTronFeeMemo(memo: String?): BigInteger =
-        if (!memo.isNullOrEmpty()) {
+    private suspend fun getTronFeeMemo(memo: String?, isSwap: Boolean): BigInteger =
+        if (!memo.isNullOrEmpty() || isSwap) {
             getCacheTronChainParameters().memoFeeEstimate.toBigInteger()
         } else {
             BigInteger.ZERO
