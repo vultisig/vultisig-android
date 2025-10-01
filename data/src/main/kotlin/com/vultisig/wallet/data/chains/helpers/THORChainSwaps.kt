@@ -190,6 +190,18 @@ class THORChainSwaps(
                 )
             }
 
+            Chain.Tron -> {
+                val helper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
+                return helper.getSignedTransaction(
+                    input = inputData,
+                    keysignPayload = keysignPayload,
+                    signatures = signatures
+                )
+            }
+
             else -> {
                 throw Exception("Unsupported chain")
             }
