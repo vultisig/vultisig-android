@@ -110,7 +110,7 @@ internal fun VaultCeil(
                     if (model.isFolder) {
                         UiIcon(
                             size = 16.dp,
-                            drawableResId = if (isSelected) R.drawable.copy else R.drawable.wallet,
+                            drawableResId = if (isSelected) R.drawable.folder_selected else R.drawable.folder,
                             tint = Theme.colors.alerts.info
                         )
                     } else {
