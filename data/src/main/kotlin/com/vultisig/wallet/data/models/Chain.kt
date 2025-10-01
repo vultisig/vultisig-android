@@ -156,6 +156,7 @@ val Chain.IsSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
+        Chain.Tron,
     )
 
 val Chain.isDepositSupported: Boolean
