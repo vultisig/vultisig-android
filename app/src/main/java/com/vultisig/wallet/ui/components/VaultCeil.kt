@@ -44,10 +44,10 @@ internal fun VaultCeil(
     model: VaultCeilUiModel,
     isInEditMode: Boolean,
     onSelect: (id: String) -> Unit,
-    trailingContent: @Composable (() -> Unit)? = null,
     isSelected: Boolean,
     activeVaultName: String?,
     vaultCounts: Int?,
+    trailingContent: @Composable (() -> Unit)? = null,
 ) {
 
     val (logo, containerType) =

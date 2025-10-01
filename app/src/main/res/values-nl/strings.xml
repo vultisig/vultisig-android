@@ -90,7 +90,7 @@
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_complete">Voltooid</string>
     <string name="transaction_done_form_title">Transactie</string>
-    <string name="home_screen_title">Kluisen</string>
+    <string name="vault_list_vaults_list">Kluisen</string>
     <string name="home_screen_add_new_vault">+ Nieuwe kluis toevoegen</string>
     <string name="import_file_screen_title">Importeren</string>
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
@@ -199,7 +199,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Zorg ervoor dat uw wachtwoorden overeenkomen</string>
     <string name="import_file_screen_password_error">Wachtwoord is niet correct.</string>
     <string name="backup_password_optional_password_protection">Optionele wachtwoordbeveiliging van uw kluis</string>
-    <string name="backup_password_screen_save">Redden</string>
+    <string name="add_vault_save">Redden</string>
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
     <string name="import_file_screen_enter_password">Voer wachtwoord in</string>
     <string name="backup_password_screen_verify_password">Wachtwoord verifiëren</string>
@@ -262,7 +262,7 @@
     <string name="reshare_start_screen_start_reshare">Start opnieuw delen</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nEr ontbreken voldoende initiële apparaten</string>
     <string name="create_folder_title">Map maken</string>
-    <string name="create_folder_name">Mapnaam</string>
+    <string name="add_folder_folder_name_title">Mapnaam</string>
     <string name="create_folder_create">Creëren</string>
     <string name="vault_settings_biometrics_screen_title">Biometrie inschakelen</string>
     <string name="vault_settings_biometrics_screen_description">Voer wachtwoord in voor snelle ondertekening</string>
@@ -278,7 +278,7 @@
     <string name="vault_settings_biometrics_description">Biometrie inschakelen voor snelle ondertekening</string>
     <string name="create_folder_list_title">Selecteer de kluizen die u aan de map wilt toevoegen.</string>
     <string name="generating_key_screen_reshare_failed">Opnieuw delen mislukt</string>
-    <string name="folders_list_title">Mappen</string>
+    <string name="vault_list_folders_list">Mappen</string>
     <string name="keygen_email_continue_button">Doorgaan</string>
     <string name="keygen_email_caption">Voer uw e-mailadres in om uw back-up te ontvangen</string>
     <string name="create_folder">Map maken</string>
@@ -454,6 +454,8 @@
     <string name="referral_create_create_referral_code">Verwijzingscode maken</string>
     <string name="referral_create_invalid">Ongeldig</string>
     <string name="referral_create_available">Beschikbaar</string>
+    <string name="add_folder_active_vaults">Actieve kluizen</string>
+    <string name="add_folder_available_vaults">Beschikbaar</string>
     <string name="referral_create_taken">Al in gebruik</string>
     <string name="referral_edit_external_title">Verwezen code bewerken</string>
     <string name="referral_use_referred_code">Verwezen code gebruiken</string>
@@ -585,4 +587,12 @@
     <string name="chain_tokens_tab_hidden">Verborgen</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
     <string name="address_copied">%1$s-adres gekopieerd</string>
+    <string name="vault_list_vaults_count">%d Kluis%s</string>
+    <string name="add_folder_title">Map toevoegen</string>
+    <string name="add_folder_list_title">Kluizen selecteren</string>
+    <string name="add_folder_edit_folder_title">Map bewerken</string>
+    <string name="vault_list_add_folder">Map toevoegen</string>
+    <string name="vault_list_edit_vaults_header">Kluizen bewerken</string>
+    <string name="token_details_bottom_sheet_price">Prijs</string>
+    <string name="token_details_bottom_sheet_network">Netwerk</string>
 </resources>

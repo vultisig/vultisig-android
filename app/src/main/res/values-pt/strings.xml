@@ -60,7 +60,7 @@
     <string name="transaction_done_title">Concluído</string>
     <string name="transaction_done_complete">Continuar</string>
     <string name="transaction_done_form_title">Transação</string>
-    <string name="home_screen_title">Cofres</string>
+    <string name="vault_list_vaults_list">Cofres</string>
     <string name="home_screen_add_new_vault">+ Adicionar Novo Cofre</string>
     <string name="import_file_screen_title">Importar</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
@@ -189,7 +189,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Certifique-se de que as suas palavras-passe correspondem</string>
     <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
     <string name="backup_password_optional_password_protection">Proteção opcional por palavra-passe do seu Vault</string>
-    <string name="backup_password_screen_save">Guardar</string>
+    <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
     <string name="import_file_screen_enter_password">Introduza a senha</string>
     <string name="backup_password_screen_verify_password">Verifique a palavra-passe</string>
@@ -251,7 +251,7 @@
     <string name="reshare_start_screen_start_reshare">Iniciar nova partilha</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="create_folder_title">Criar pasta</string>
-    <string name="create_folder_name">Nome da pasta</string>
+    <string name="add_folder_folder_name_title">Nome da pasta</string>
     <string name="create_folder_create">Criar</string>
     <string name="vault_settings_biometrics_screen_title">Ativar biometria</string>
     <string name="vault_settings_biometrics_screen_description">Introduza a senha para assinatura rápida</string>
@@ -267,7 +267,7 @@
     <string name="vault_settings_biometrics_description">Ativar a biometria para sinal rápido</string>
     <string name="create_folder_list_title">Selecione Vaults para adicionar à pasta.</string>
     <string name="generating_key_screen_reshare_failed">Falha ao partilhar novamente</string>
-    <string name="folders_list_title">Pastas</string>
+    <string name="vault_list_folders_list">Pastas</string>
     <string name="keygen_email_continue_button">Continuar</string>
     <string name="keygen_email_caption">Introduza o seu e-mail para receber o seu backup</string>
     <string name="create_folder">Criar pasta</string>
@@ -443,6 +443,8 @@
     <string name="referral_create_create_referral_code">Criar código de referência</string>
     <string name="referral_create_invalid">Inválido</string>
     <string name="referral_create_available">Disponível</string>
+    <string name="add_folder_active_vaults">Cofres Ativos</string>
+    <string name="add_folder_available_vaults">Disponível</string>
     <string name="referral_create_taken">Já está em uso</string>
     <string name="referral_edit_external_title">Editar código referido</string>
     <string name="referral_use_referred_code">Usar código referido</string>
@@ -575,4 +577,12 @@
     <string name="chain_tokens_tab_hidden">Oculto</string>
     <string name="chain_tokens_qr_receive_label">Receber %1$s</string>
     <string name="address_copied">Endereço %1$s copiado</string>
+    <string name="vault_list_vaults_count">%d Cofre%s</string>
+    <string name="add_folder_title">Adicionar Pasta</string>
+    <string name="add_folder_list_title">Selecionar Cofres</string>
+    <string name="add_folder_edit_folder_title">Editar Pasta</string>
+    <string name="vault_list_add_folder">Adicionar Pasta</string>
+    <string name="vault_list_edit_vaults_header">Editar Cofres</string>
+    <string name="token_details_bottom_sheet_price">Preço</string>
+    <string name="token_details_bottom_sheet_network">Rede</string>
 </resources>

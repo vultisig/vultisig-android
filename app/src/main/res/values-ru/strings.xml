@@ -90,7 +90,7 @@
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_complete">Завершено</string>
     <string name="transaction_done_form_title">Транзакция</string>
-    <string name="home_screen_title">Хранилища</string>
+    <string name="vault_list_vaults_list">Хранилища</string>
     <string name="home_screen_add_new_vault">+ Добавить новое хранилище</string>
     <string name="import_file_screen_title">Импорт</string>
     <string name="import_file_screen_duplicate_vault">Хранилище дублируется</string>
@@ -199,7 +199,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Пожалуйста, убедитесь, что ваши пароли совпадают.</string>
     <string name="import_file_screen_password_error">Пароль неверный.</string>
     <string name="backup_password_optional_password_protection">Дополнительная защита вашего хранилища паролем</string>
-    <string name="backup_password_screen_save">Сохранять</string>
+    <string name="add_vault_save">Сохранять</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>
     <string name="import_file_screen_enter_password">Введите пароль</string>
     <string name="backup_password_screen_verify_password">Подтвердите пароль</string>
@@ -262,7 +262,7 @@
     <string name="reshare_start_screen_start_reshare">Начать репост</string>
     <string name="threshold_error">Порог не достигнут\nОтсутствует достаточное количество начальных устройств</string>
     <string name="create_folder_title">Создать папку</string>
-    <string name="create_folder_name">Имя папки</string>
+    <string name="add_folder_folder_name_title">Имя папки</string>
     <string name="create_folder_create">Создавать</string>
     <string name="vault_settings_biometrics_screen_title">Включить биометрию</string>
     <string name="vault_settings_biometrics_screen_description">Введите пароль для быстрой подписи</string>
@@ -278,7 +278,7 @@
     <string name="vault_settings_biometrics_description">Включить биометрию для быстрой подписи</string>
     <string name="create_folder_list_title">Выберите Хранилища для добавления в папку.</string>
     <string name="generating_key_screen_reshare_failed">Повторная публикация не удалась</string>
-    <string name="folders_list_title">Папки</string>
+    <string name="vault_list_folders_list">Папки</string>
     <string name="keygen_email_continue_button">Продолжать</string>
     <string name="keygen_email_caption">Введите свой адрес электронной почты, чтобы получить резервную копию</string>
     <string name="create_folder">Создать папку</string>
@@ -454,6 +454,11 @@
     <string name="referral_create_create_referral_code">Создать реферальный код</string>
     <string name="referral_create_invalid">Недействительный</string>
     <string name="referral_create_available">Доступен</string>
+    <string name="vault_list_vaults_count">%d Хранилище%s</string>
+    <string name="add_folder_title">Добавить папку</string>
+    <string name="add_folder_list_title">Выбрать хранилища</string>
+    <string name="add_folder_active_vaults">Активные хранилища</string>
+    <string name="add_folder_available_vaults">Доступен</string>
     <string name="referral_create_taken">Уже занят</string>
     <string name="referral_edit_external_title">Редактировать реферальный код</string>
     <string name="referral_use_referred_code">Использовать реферальный код</string>
@@ -588,4 +593,9 @@
     <string name="chain_tokens_tab_hidden">Скрыто</string>
     <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
     <string name="address_copied">Адрес %1$s скопирован</string>
+    <string name="add_folder_edit_folder_title">Редактировать папку</string>
+    <string name="vault_list_add_folder">Добавить папку</string>
+    <string name="vault_list_edit_vaults_header">Редактировать хранилища</string>
+    <string name="token_details_bottom_sheet_price">Цена</string>
+    <string name="token_details_bottom_sheet_network">Сеть</string>
 </resources>

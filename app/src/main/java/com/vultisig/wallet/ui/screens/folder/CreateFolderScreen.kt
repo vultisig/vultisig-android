@@ -125,7 +125,7 @@ private fun CreateFolderScreen(
         )
 
         val title = if (isEditMode) stringResource(R.string.add_folder_edit_folder_title)
-        else stringResource(R.string.add_folder_add_folder_title)
+        else stringResource(R.string.add_folder_title)
 
         val button: @Composable BoxScope.() -> Unit = if (isEditMode) {
             {
@@ -321,7 +321,7 @@ private fun CreateFolderScreen(
         )
 
         VsButton(
-            label = if (isEditMode) stringResource(R.string.add_vault_edit_save_changes)
+            label = if (isEditMode) stringResource(R.string.save_changes)
             else stringResource(R.string.add_vault_save),
             modifier = Modifier.fillMaxWidth(),
             onClick = onAddVaultClick,
