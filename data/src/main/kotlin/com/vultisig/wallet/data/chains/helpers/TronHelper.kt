@@ -24,7 +24,7 @@ class TronHelper(
     private val vaultHexChainCode: String,
 ) {
 
-    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    internal fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val tronSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Tron
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         if (keysignPayload.coin.isNativeToken) {
