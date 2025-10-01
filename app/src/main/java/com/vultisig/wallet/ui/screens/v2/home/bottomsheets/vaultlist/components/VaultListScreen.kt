@@ -180,7 +180,7 @@ private fun VaultListScreen(
             },
         )
 
-        if (isInEditMode) {
+        if (isInEditMode && state.vaults.isNotEmpty()) {
             VsButton(
                 modifier = Modifier
                     .fillMaxWidth(),
