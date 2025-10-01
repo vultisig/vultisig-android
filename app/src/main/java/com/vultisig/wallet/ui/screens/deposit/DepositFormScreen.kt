@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
+import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
@@ -67,6 +68,7 @@ internal fun DepositFormScreen(
         assetsFieldState = model.assetsFieldState,
         lpUnitsFieldState = model.lpUnitsFieldState,
         rewardsAmountFieldState = model.rewardsAmountFieldState,
+        slippageFieldState = model.slippageFieldState,
         onAssetsLostFocus = model::validateAssets,
         onLpUnitsLostFocus = model::validateLpUnits,
         onTokenAmountLostFocus = model::validateTokenAmount,
@@ -77,6 +79,7 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
+        onSlippageLostFocus = model::validateSlippage,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -101,6 +104,8 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
+        onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
+        onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
     )
 }
 
@@ -115,6 +120,7 @@ internal fun DepositFormScreen(
     assetsFieldState: TextFieldState,
     lpUnitsFieldState: TextFieldState,
     rewardsAmountFieldState: TextFieldState,
+    slippageFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
     onAssetsLostFocus: () -> Unit = {},
     onLpUnitsLostFocus: () -> Unit = {},
@@ -122,6 +128,7 @@ internal fun DepositFormScreen(
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
     onCustomMemoLostFocus: () -> Unit = {},
+    onSlippageLostFocus: () -> Unit = {},
     basisPointsFieldState: TextFieldState,
     onBasisPointsLostFocus: () -> Unit = {},
     onSelectDepositOption: (DepositOption) -> Unit = {},
@@ -152,6 +159,8 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
+    onAutoCompoundTcyStake: (Boolean) -> Unit = {},
+    onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -207,6 +216,12 @@ internal fun DepositFormScreen(
                         DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
                         DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
                         DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_collect_ruji)
+                        DepositOption.MintYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
+                        DepositOption.MintYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
+                        DepositOption.RedeemYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
+                        DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
+                        DepositOption.AddCacaoPool -> stringResource(R.string.deposit_option_add_cacao_pool)
+                        DepositOption.RemoveCacaoPool -> stringResource(R.string.deposit_option_remove_cacao_pool)
                     }
                 })
 
@@ -291,7 +306,9 @@ internal fun DepositFormScreen(
                             DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                        )
+                            DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
+                            DepositOption.RedeemYRUNE)
+                        && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
                             SelectionCard(
@@ -306,29 +323,32 @@ internal fun DepositFormScreen(
                     val isRujiWithdrawRewards = depositOption == DepositOption.WithdrawRujiRewards
 
                     val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
+                    val isAddingCacaoPool = depositOption == DepositOption.AddCacaoPool
+                    val isRemovingCacaoPool = depositOption == DepositOption.RemoveCacaoPool
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
                     val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
                     val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
-                        isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         isRujiWithdraw -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
                         isRujiWithdrawRewards -> stringResource(R.string.deposit_form_rewards_title, rewardsBalance)
                         else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
                     }
 
                     val amountHint = when {
-                        isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
+                        isUnstakeTcy  || isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         isRujiWithdrawRewards -> stringResource(R.string.deposit_form_pending_rewards_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
 
                     if (
-                        isTcyOption ||
+                        isTcyOption || isAddingCacaoPool ||isRemovingCacaoPool ||
                         (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
-                        (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
+                        (depositOption == DepositOption.Custom  && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
-                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji
+                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
+                        depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -338,12 +358,33 @@ internal fun DepositFormScreen(
                             onLostFocus = onTokenAmountLostFocus,
                             error = state.tokenAmountError,
                         )
+
+                        if (depositOption == DepositOption.StakeTcy) {
+                            AutoCompoundToggle(
+                                title = stringResource(R.string.tcy_auto_compound_enable_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
+                                isChecked = state.isAutoCompoundTcyStake,
+                                onCheckedChange = onAutoCompoundTcyStake
+                            )
+                        }
+
+                        if (depositOption == DepositOption.UnstakeTcy) {
+                            AutoCompoundToggle(
+                                title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                                subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
+                                isChecked = state.isAutoCompoundTcyUnStake,
+                                onCheckedChange = onAutoCompoundTcyUnStake
+                            )
+                        }
                     }
 
                     if (depositOption !in arrayOf(
                             DepositOption.Custom, DepositOption.StakeTcy,
                             DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
+                            DepositOption.MintYTCY, DepositOption.MintYRUNE,
+                            DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
+                            DepositOption.RemoveCacaoPool,DepositOption.AddCacaoPool,
                         )
                     ) {
                         FormTextFieldCard(
@@ -425,6 +466,18 @@ internal fun DepositFormScreen(
                             error = state.tokenAmountError,
                         )
                     }
+
+                    if (depositOption == DepositOption.RedeemYRUNE ||
+                        depositOption == DepositOption.RedeemYTCY) {
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_operator_slippage_title),
+                                hint = stringResource(R.string.slippage_hint),
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = slippageFieldState,
+                                onLostFocus = onSlippageLostFocus,
+                                error = state.slippageError,
+                            )
+                    }
                 }
             }
             UiSpacer(size = 80.dp)
@@ -445,7 +498,6 @@ internal fun DepositFormScreen(
                 .padding(all = 16.dp),
         )
     }
-
 }
 
 @Preview
@@ -466,5 +518,6 @@ internal fun DepositFormScreenPreview() {
         memoFieldState = TextFieldState(),
         thorAddress = TextFieldState(),
         rewardsAmountFieldState = TextFieldState(),
+        slippageFieldState = TextFieldState(),
     )
 }

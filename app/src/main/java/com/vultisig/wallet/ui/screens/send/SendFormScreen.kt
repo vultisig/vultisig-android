@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -68,8 +69,10 @@ import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
@@ -731,9 +734,15 @@ private fun SendFormScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
+                state = if (state.isLoading)
+                    VsButtonState.Disabled
+                else
+                    VsButtonState.Enabled,
                 onClick = {
-                    focusManager.clearFocus()
-                    onSend()
+                    if (!state.isLoading) {
+                        focusManager.clearFocus()
+                        onSend()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -750,6 +759,7 @@ private fun SendFormScreen(
 internal fun EstimatedNetworkFee(
     tokenGas: String,
     fiatGas: String,
+    isLoading: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -765,17 +775,33 @@ internal fun EstimatedNetworkFee(
             modifier = Modifier
                 .weight(1f),
         ) {
-            Text(
-                text = tokenGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
-            )
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
 
-            Text(
-                text = fiatGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.extraLight,
-            )
+                UiSpacer(6.dp)
+
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
+            } else {
+                Text(
+                    text = tokenGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = fiatGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
     }
 }
@@ -791,10 +817,9 @@ internal fun FadingHorizontalDivider(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Theme.colors.borders.normal.copy(alpha = 0f),
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal.copy(alpha = 0f)
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
+                        Color(0xFF284570),
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
                     ),
                     startX = 0f,
                     endX = Float.POSITIVE_INFINITY,

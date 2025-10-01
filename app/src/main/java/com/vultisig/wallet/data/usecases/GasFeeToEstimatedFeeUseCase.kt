@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import kotlinx.coroutines.flow.first
-import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface GasFeeToEstimatedFeeUseCase :
@@ -42,7 +41,6 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
             tokenValue,
             appCurrency
         )
-
 
         tokenValue = when {
             chain.standard == TokenStandard.EVM ->

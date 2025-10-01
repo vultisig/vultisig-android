@@ -117,7 +117,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
                 coin.ticker,
             )!!.toBigInteger()
         } catch (e: Exception) {
-            Timber.e("get spl balance error", e)
+            Timber.e(e,"get spl balance error")
             BigInteger.ZERO
         }
     }

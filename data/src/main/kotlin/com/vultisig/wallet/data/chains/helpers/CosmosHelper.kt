@@ -244,7 +244,7 @@ class CosmosHelper(
         val coins = contractPayload.coins.filterNotNull().map { coin ->
             Amount.newBuilder().apply {
                 denom = coin.denom.lowercase()
-                amount = keysignPayload.toAmount.toString()
+                amount = coin.amount
             }.build()
         }
 

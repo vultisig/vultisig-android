@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.KyberSwap
+import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import com.vultisig.wallet.data.common.isHex
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
@@ -16,7 +17,6 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 
@@ -36,8 +36,6 @@ object SigningHelper {
                 .toHexString()
         )
     }
-
-
 
     fun getKeysignMessages(
         payload: KeysignPayload,
@@ -61,8 +59,7 @@ object SigningHelper {
                     messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
-
-                is SwapPayload.OneInch -> {
+                is SwapPayload.EVM -> {
                     val message = if (payload.coin.chain == Chain.Solana) {
                         SolanaSwap(vault.pubKeyEDDSA)
                             .getPreSignedImageHash(
@@ -82,9 +79,11 @@ object SigningHelper {
                     messages += KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
-                // mayachain is implemented through send transaction
                 else -> Unit
             }
+        } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
+            messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
         } else {
             val chain = payload.coin.chain
             messages += when (chain) {
@@ -98,7 +97,7 @@ object SigningHelper {
                     solanaHelper.getPreSignedImageHash(payload)
                 }
 
-                Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,
+                Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,Chain.Mantle,
                 Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync -> {
                     if (payload.coin.isNativeToken) {
                         EvmHelper(
@@ -199,7 +198,7 @@ object SigningHelper {
                         )
                 }
 
-                is SwapPayload.OneInch -> {
+                is SwapPayload.EVM -> {
                     return if (keysignPayload.blockChainSpecific is BlockChainSpecific.Solana)
                         SolanaSwap(vault.pubKeyEDDSA)
                             .getSignedTransaction(
@@ -226,7 +225,14 @@ object SigningHelper {
 
                 else -> {}
             }
-
+        } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
+            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getSignedTransaction(
+                    swapPayload.data,
+                    keysignPayload,
+                    signatures,
+                    nonceAcc
+                )
         }
 
         val chain = keysignPayload.coin.chain
@@ -263,7 +269,7 @@ object SigningHelper {
                 return solanaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,Chain.Mantle,
             Chain.Arbitrum, Chain.Optimism, Chain.Polygon, Chain.Base, Chain.ZkSync -> {
                 if (keysignPayload.coin.isNativeToken) {
                     val evmHelper = EvmHelper(

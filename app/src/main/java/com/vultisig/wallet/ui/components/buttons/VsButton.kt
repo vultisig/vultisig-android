@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -27,7 +28,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
 
 enum class VsButtonVariant {
-    Primary, Secondary, Error,
+    Primary, Secondary, Error, Tertiary,
 }
 
 enum class VsButtonState {
@@ -45,6 +46,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     forceClickable: Boolean = false, // TODO: Review with designer, we should stick to current pattern
+    shape: Shape? = null,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -54,12 +56,14 @@ fun VsButton(
                 Primary -> Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttons.secondary
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttons.disabledSecondary
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
         label = "VsButton.backgroundColor"
@@ -72,12 +76,14 @@ fun VsButton(
                 Primary ->  Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttonBorders.default
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
             Disabled ->  when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttonBorders.disabled
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
         label = "VsButton.borderColor"
@@ -89,12 +95,12 @@ fun VsButton(
         modifier = modifier
             .background(
                 color = backgroundColor,
-                shape = RoundedCornerShape(percent = 100)
+                shape = shape ?: RoundedCornerShape(percent = 100)
             )
             .border(
                 width = 1.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(percent = 100),
+                shape = shape ?: RoundedCornerShape(percent = 100),
             )
             .clickable(enabled = state == Enabled || forceClickable, onClick = onClick)
             .then(
@@ -129,6 +135,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     forceClickable: Boolean = false,
+    shape: Shape? = null,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -136,6 +143,7 @@ fun VsButton(
         variant = variant,
         state = state,
         size = size,
+        shape = shape,
         forceClickable = forceClickable,
         onClick = onClick,
     ) {
@@ -237,6 +245,22 @@ private fun VsButtonPreview() {
             label = "Primary Mini Small",
             variant = Primary,
             state = Enabled,
+            size = Mini,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary enabled",
+            variant = Tertiary,
+            state = Enabled,
+            size = Mini,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Tertiary disabled",
+            variant = Tertiary,
+            state = Disabled,
             size = Mini,
             onClick = {}
         )

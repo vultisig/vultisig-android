@@ -45,7 +45,7 @@ internal class VerifySignMessageViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val payload = customMessagePayloadRepo.get(transactionId)!!.payload
+            val payload = customMessagePayloadRepo.get(transactionId).payload
 
             state.update {
                 it.copy(

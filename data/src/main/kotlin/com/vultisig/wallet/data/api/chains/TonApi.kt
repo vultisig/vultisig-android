@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.chains
 
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -18,11 +19,17 @@ interface TonApi {
 
     suspend fun getBalance(address: String): BigInteger
 
+    suspend fun getJettonBalance(address: String, contract: String): BigInteger
+
     suspend fun broadcastTransaction(transaction: String): String?
 
     suspend fun getSpecificTransactionInfo(address: String): BigInteger
 
     suspend fun getWalletState(address: String): String
+
+    suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
+
+    suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger
 }
 
 internal class TonApiImpl @Inject constructor(
@@ -33,6 +40,11 @@ internal class TonApiImpl @Inject constructor(
 
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
+
+    override suspend fun getJettonBalance(address: String, contract: String): BigInteger {
+        val wallet = getJettonWallet(address, contract).jettonWallets.firstOrNull()
+        return wallet?.balance?.toBigIntegerOrNull() ?: BigInteger.ZERO
+    }
 
     private suspend fun getAddressInformation(address: String): TonAddressInfoResponseJson =
         http.get("$baseUrl/v3/addressInformation") {
@@ -74,6 +86,24 @@ internal class TonApiImpl @Inject constructor(
 
     override suspend fun getWalletState(address: String): String =
         getAddressInformation(address).status
+
+    override suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson {
+        return http.get("$baseUrl/v3/jetton/wallets") {
+            parameter("owner_address", address)
+            parameter("jetton_master_address", contract)
+        }.bodyOrThrow<JettonWalletsJson>()
+    }
+
+    override suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger {
+        val feeResponse = http.get("$baseUrl/v3/estimateFee") {
+            parameter("address", address)
+            parameter("body", serializedBoc)
+            parameter("ignore_chksig", true)
+        }.bodyOrThrow<TonEstimateFeeJson>()
+
+        return feeResponse.result?.sourceFees?.totalFee()?.toBigInteger()
+            ?: throw Exception("Can't calculate Fees")
+    }
 }
 
 @Serializable
@@ -123,5 +153,72 @@ private data class TonSpecificTransactionInfoResponseAccountStateJson(
     val seqno: JsonPrimitive?,
 )
 
+@Serializable
+data class JettonWalletsJson(
+    @SerialName("jetton_wallets")
+    val jettonWallets: List<JettonWalletJson> = emptyList(),
+    @SerialName("address_book")
+    val addressBook: Map<String, AddressEntryJson> = emptyMap()
+) {
+    fun getJettonsAddress(): String? {
+        val jettonAddress = jettonWallets.firstOrNull()?.address ?: ""
+        val address = addressBook[jettonAddress]
+        return address?.userFriendly
+    }
+}
 
+@Serializable
+data class JettonWalletJson(
+    @SerialName("address")
+    val address: String,
+    @SerialName("jetton")
+    val jetton: String,
+    @SerialName("balance")
+    val balance: String,
+)
 
+@Serializable
+data class AddressEntryJson(
+    @SerialName("user_friendly")
+    val userFriendly: String,
+)
+
+@Serializable
+data class TonEstimateFeeJson(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: TonFeeResult? = null,
+    @SerialName("error")
+    val error: String? = null,
+    @SerialName("code")
+    val code: Int? = null
+)
+
+@Serializable
+data class TonFeeResult(
+    @SerialName("@type")
+    val type: String,
+    @SerialName("source_fees")
+    val sourceFees: TonFees,
+    @SerialName("destination_fees")
+    val destinationFees: List<TonFees> = emptyList(),
+    @SerialName("@extra")
+    val extra: String? = null
+)
+
+@Serializable
+data class TonFees(
+    @SerialName("@type")
+    val type: String,
+    @SerialName("in_fwd_fee")
+    val inFwdFee: Long,
+    @SerialName("storage_fee")
+    val storageFee: Long,
+    @SerialName("gas_fee")
+    val gasFee: Long,
+    @SerialName("fwd_fee")
+    val fwdFee: Long
+) {
+    fun totalFee(): Long = inFwdFee + storageFee + gasFee + fwdFee
+}

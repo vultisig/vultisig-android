@@ -1,7 +1,15 @@
 package com.vultisig.wallet.ui.models
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +19,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -19,13 +28,22 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.utils.shareFileName
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +51,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -55,6 +72,8 @@ internal data class ChainTokensUiModel(
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
+    val searchTextFieldState: TextFieldState = TextFieldState(),
+    val qrCode: BitmapPainter? = null,
 )
 
 @Immutable
@@ -64,6 +83,7 @@ internal data class ChainTokenUiModel(
     val balance: String? = null,
     val fiatBalance: String? = null,
     val tokenLogo: ImageModel = "",
+    val price: String? = null,
     @DrawableRes val chainLogo: Int? = null,
     val mergeBalance: String? = null,
 )
@@ -72,6 +92,9 @@ internal data class ChainTokenUiModel(
 internal class ChainTokensViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    @ApplicationContext private val context: Context,
+    private val generateQrBitmap: GenerateQrBitmap,
+
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
@@ -79,12 +102,15 @@ internal class ChainTokensViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
+    private var currentVault: Vault? = null
+    private var qrBitmap: Bitmap? = null
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
@@ -161,8 +187,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun openToken(model: ChainTokenUiModel) {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.TokenDetail(
+            navigator.route(
+                Route.TokenDetail(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     tokenId = model.id,
@@ -179,7 +205,8 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
-
+            currentVault = vaultRepository.get(vaultId)
+                ?: error("No vault with $vaultId")
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
@@ -188,7 +215,11 @@ internal class ChainTokensViewModel @Inject constructor(
             }.catch {
                 updateRefreshing(false)
                 Timber.e(it)
-            }.onEach { (address, mergeBalances) ->
+            }.onCompletion {
+                updateRefreshing(false)
+            }.combine(
+                uiState.value.searchTextFieldState.textAsFlow()
+            ) { (address, mergeBalances), searchQuery ->
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
@@ -213,6 +244,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
                         mergeBalance = mergeBalances.findMergeBalance(token).toString(),
+                        price = account.price?.let { fiatValueToStringMapper(it) }
                     )
                 }
 
@@ -222,24 +254,54 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalBalance = totalFiatValue
                     ?.let { fiatValueToStringMapper(it) }
 
+                val logo = BitmapFactory.decodeResource(
+                    context.resources, chain.logo
+                )
+                val qr = generateQr(accountAddress, logo)
+
 
                 uiState.update {
                     it.copy(
                         chainName = chainRaw,
                         chainAddress = accountAddress,
                         chainLogo = chain.logo,
-                        tokens = uiTokens,
+                        tokens = uiTokens.filter { uiToken -> searchQuery.isBlank() || uiToken.name.contains(searchQuery, ignoreCase = true) },
                         explorerURL = explorerUrl,
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
-                        canSelectTokens = chain.canSelectTokens
+                        canSelectTokens = chain.canSelectTokens,
+                        qrCode = qr
                     )
                 }
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
         }
+    }
+
+    private suspend fun generateQr(address: String, logo: Bitmap?): BitmapPainter {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            generateQrBitmap(address, NeutralsColors.Default.n50, Color.Transparent, logo)
+        }
+        this.qrBitmap = qrBitmap
+
+        val bitmapPainter = BitmapPainter(
+            image = qrBitmap.asImageBitmap(),
+            filterQuality = FilterQuality.None
+        )
+        return bitmapPainter
+    }
+
+    internal fun shareQRCode(context: Context) {
+        val qrBitmap = qrBitmap ?: return
+        context.share(
+            qrBitmap,
+            shareFileName(
+                requireNotNull(currentVault),
+                ShareType.TOKENADDRESS
+            )
+        )
     }
 
     private fun fetchMergeBalanceFlow(

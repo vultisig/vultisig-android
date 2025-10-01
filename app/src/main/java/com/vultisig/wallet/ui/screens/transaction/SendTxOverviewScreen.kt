@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import java.math.BigInteger
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -103,6 +104,22 @@ internal fun SendTxOverviewScreen(
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_memo),
                         subtitle = tx.memo,
+                    )
+                }
+
+                if (tx.token.value.isNotEmpty() && try {
+                        tx.token.value.toBigInteger() > BigInteger.ZERO
+                    } catch (e: Exception) {
+                        false
+                    }
+                ) {
+                    VerifyCardDivider(
+                        size = 1.dp,
+                    )
+
+                    TextDetails(
+                        title = stringResource(R.string.deposit_screen_amount_title),
+                        subtitle = tx.token.value
                     )
                 }
 
@@ -190,7 +207,7 @@ internal fun TxDetails(
             )
 
             CopyIcon(
-                textToCopy = hash,
+                textToCopy = link,
                 size = 12.dp,
                 onCopyCompleted = onTxHashCopied
             )
@@ -219,11 +236,10 @@ private fun PreviewSendTxOverviewScreen() {
         tx = TransactionTypeUiModel.Deposit(
             depositTransactionUiModel = DepositTransactionUiModel(
                 token = ValuedToken.Empty,
-                fromAddress = "abx123abx123abx123abx123ab",
-                srcTokenValue = "1231232",
-                estimateFeesFiat = "",
+                srcAddress = "abx123abx123abx123abx123ab",
+                networkFeeFiatValue = "",
                 memo = "sdfsdfsdfsdfs",
-                nodeAddress = "abx123abx123abx123abx123ab"
+                dstAddress = "abx123abx123abx123abx123ab"
             )
         ).toUiTransactionInfo()
     )

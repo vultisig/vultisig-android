@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -170,6 +171,8 @@ class SchnorrKeygen(
                 } else {
                     delay(1000)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
                 delay(1000)
@@ -177,11 +180,9 @@ class SchnorrKeygen(
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
             if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+                error("timeout: Schnorr keygen did not finish within 60 seconds")
             }
         }
-
-        return false
     }
 
     private suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
@@ -280,8 +281,6 @@ class SchnorrKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
                 val keyshareHandler = Handle()
                 val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -295,6 +294,10 @@ class SchnorrKeygen(
                     chaincode = ""
                 )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                // slightly delay to give local party time to process outbound messages
+                delay(500)
+                setKeygenDone(true)
+                task.cancel()
             }
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
@@ -385,7 +388,7 @@ class SchnorrKeygen(
             }
 
             val reshareSetupMsg: ByteArray
-            if (isInitiatingDevice) {
+            if (isInitiatingDevice && attempt == 0) {
                 // DKLS/Schnorr reshare needs to upload a different setup message, thus here pass in an additional header as "eddsa" to make sure
                 // DKLS and Schnorr setup messages will be saved differently
                 reshareSetupMsg = getSchnorrReshareSetupMessage(keyshareHandle)
@@ -436,8 +439,6 @@ class SchnorrKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
                 val newKeyshareHandler = Handle()
                 val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -452,6 +453,9 @@ class SchnorrKeygen(
                     chaincode = ""
                 )
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
+                delay(500) // slightly delay to give local party time to process outbound messages
+                setKeygenDone(true)
+                task.cancel()
             }
         } catch (e: Exception) {
             Timber.d("Failed to reshare key, error: ${e.localizedMessage}")

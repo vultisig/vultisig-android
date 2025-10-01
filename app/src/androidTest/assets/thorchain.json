@@ -1,0 +1,337 @@
+[
+  {
+    "name": "Send THORChain RUNE",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUNE",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": true,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"",
+        "logo": "rune.png"
+      },
+      "to_address": "thor1tgxm5jw6hrlvslrd6lqpk4jwuu4g29dxytrean",
+      "to_amount": "100000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": false,
+          "transaction_type": 0
+        }
+      },
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": ["7e513b23957b2e3caf77e796ba1412851be066cd77f96a7d196c3c856c641ebf"]
+  },
+  {
+    "name": "Bond RUNE",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUNE",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": true,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"",
+        "logo": "rune.png"
+      },
+      "to_address": "",
+      "to_amount": "100000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 0
+        }
+      },
+      "memo": "bond:thor1tgxm5jw6hrlvslrd6lqpk4jwuu4g29dxytrean",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": ["7ed0c815c1f70f6d4670268e4df1439e7f340ebefeb26e0a8694d59e84d243ec"]
+  },
+  {
+    "name": "UnBond RUNE",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUNE",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": true,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"",
+        "logo": "rune.png"
+      },
+      "to_address": "",
+      "to_amount": "100000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 0
+        }
+      },
+      "memo": "unbond:thor1tgxm5jw6hrlvslrd6lqpk4jwuu4g29dxytrean",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": ["ea76ee8ac3f601a34d2b65d6c228484362ab075290cdb62a75c84678f90e93bc"]
+  },
+  {
+    "name": "Mint YRUNE",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUNE",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": true,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"",
+        "logo": "rune.png"
+      },
+      "to_address": "",
+      "to_amount": "100000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "receive:rune:10000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8",
+        "execute_msg": "{\"execute\":{\"contract_addr\":\"thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt\",\"msg\":\"eyJkZXBvc2l0Ijp7fX0=\",\"affiliate\":[\"thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04\",10]}}",
+        "coins": [
+          {
+            "denom": "rune",
+            "amount": "100000000"
+          }
+        ]
+      }
+    },
+    "expected_image_hash": ["2b7ee69b59f230163c8e4620d46289ec418f20847d336d538cd24292fe5ad86c"]
+  },
+  {
+    "name": "Redeem RUNE",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "YRUNE",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": true,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
+        "logo": "YRUNE"
+      },
+      "to_address": "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "sell:x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt",
+        "execute_msg": "{\"withdraw\":{\"slippage\":\"0.01\"}}",
+        "coins": [
+          {
+            "denom": "x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
+            "amount": "1000000"
+          }
+        ]
+      }
+    },
+    "expected_image_hash": ["20f6fb36702198ecf2b5757f391b90ccb8747a6b7e24aa306b40dc6c00ddfdf8"]
+  },
+  {
+    "name": "Stake Ruji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/ruji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "bond:x/ruji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+        "execute_msg": "{ \"account\": { \"bond\": {} } }",
+        "coins": [
+          {
+            "denom": "x/ruji",
+            "amount": "1000000"
+          }
+        ]
+      }
+    },
+    "expected_image_hash": ["8482277a76bb4aa0fc9d49e0862a21ca248b5b84848bfd7c2ffbe9d3686ded05"]
+  },
+  {
+    "name": "Unstake Ruji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "RUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"x/ruji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 8
+        }
+      },
+      "memo": "withdraw:x/ruji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS",
+      "wasm_execute_contract_payload": {
+        "sender_address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "contract_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
+        "execute_msg": "{ \"account\": { \"withdraw\": { \"amount\": \"1000000\" } } }",
+        "coins": []
+      }
+    },
+    "expected_image_hash": ["0e5a0f2d303ace7b1d210b182f231d64b177e48447146a5515f66d82617f247a"]
+  },
+  {
+    "name": "Merge Kuji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "KUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"thor.kuji",
+        "logo": "KUJI"
+      },
+      "to_address": "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 4
+        }
+      },
+      "memo": "merge:thor.kuji",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": ["1321dca67037384d6dec75351de2c7b9450280eff44e0b9548a198ca528473c3"]
+  },
+  {
+    "name": "UnMerge Kuji",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "KUJI",
+        "address": "thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+        "decimals": 8,
+        "price_provider_id": "rune",
+        "is_native_token": false,
+        "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+        "contract_address":"thor.kuji",
+        "logo": "RUJI"
+      },
+      "to_address": "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy",
+      "to_amount": "1000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 123456,
+          "sequence": 1,
+          "fee": 200000,
+          "is_deposit": true,
+          "transaction_type": 5
+        }
+      },
+      "memo": "unmerge:thor.kuji:1000000",
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": ["815f5f2cc595263c742dd3e2d37cb9c90a659e7bae427d31b0fa6fd950c5a8ba"]
+  }
+]

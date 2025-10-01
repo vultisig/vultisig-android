@@ -18,6 +18,8 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
+        const val ARG_EXPIRATION_ID = "expiration_id"
+        const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_ADDRESS = "address"
@@ -40,20 +42,6 @@ internal sealed class Destination(
         companion object {
             const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
-        }
-    }
-
-    data class TokenDetail(
-        val vaultId: String,
-        val chainId: String,
-        val tokenId: String,
-        val mergeId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/${tokenId}/${mergeId}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/{$ARG_TOKEN_ID}/{$ARG_MERGE_ID}"
         }
     }
 
@@ -130,22 +118,24 @@ internal sealed class Destination(
     data class AddressBook(
         val chain: Chain? = null,
         val requestId: String? = null,
+        val vaultId: String,
     ) : Destination(
-        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
+        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}&$ARG_VAULT_ID=$vaultId"
     ) {
         companion object {
             const val STATIC_ROUTE =
-                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
         }
     }
 
     data class AddressEntry(
         val chainId: String? = null,
         val address: String? = null,
-    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address") {
+        val vaultId: String,
+    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address&$ARG_VAULT_ID=$vaultId") {
         companion object {
             const val STATIC_ROUTE =
-                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}"
+                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
         }
     }
 
@@ -217,6 +207,67 @@ internal sealed class Destination(
     data object VultisigToken : Destination(route = "settings/vultisig_token")
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
+
+    data object CheckForUpdateSetting : Destination(route = "settings/check_for_update")
+
+    data class ReferralListVault(
+        val vaultId: String,
+    ): Destination(route = "referral/vaultlist/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/vaultlist/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralOnboarding(
+        val vaultId: String,
+    ): Destination(route = "referral/onboarding/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/onboarding/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralCode(
+        val vaultId: String
+    ): Destination(route = "referral/referral_screen/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralCreation(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_creation/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_creation/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class ReferralView(
+        val vaultId: String,
+        val code: String,
+    ): Destination(route = "referral/referral_view/$vaultId/$code") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_view/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}"
+        }
+    }
+
+    data class ReferralVaultEdition(
+        val vaultId: String,
+        val code: String,
+        val expiration: String,
+    ): Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
+        }
+    }
+
+    data class ReferralExternalEdition(
+        val vaultId: String,
+    ): Destination(route = "referral/referral_external_edition/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "referral/referral_external_edition/{$ARG_VAULT_ID}"
+        }
+    }
 
     data class QrAddressScreen(
         val vaultId: String? = null,
@@ -384,6 +435,12 @@ internal sealed class Route {
         val transactionId: TransactionId,
     )
 
+    @Serializable
+    data class VerifyDeposit(
+        val vaultId: VaultId,
+        val transactionId: TransactionId,
+    )
+
     // keysign
 
     data object Keysign {
@@ -412,11 +469,9 @@ internal sealed class Route {
                 Send, Swap, Deposit, Sign
             }
         }
-
     }
 
     // vault creation / keygen
-
     @Serializable
     data class ImportVault(
         val uri: String? = null,
@@ -559,9 +614,7 @@ internal sealed class Route {
     )
 
     // vault migration
-
     object Migration {
-
         @Serializable
         data class Onboarding(
             val vaultId: VaultId,
@@ -571,11 +624,9 @@ internal sealed class Route {
         data class Password(
             val vaultId: VaultId,
         )
-
     }
 
     // address book
-
     @Serializable
     data class AddressBook(
         val requestId: String,
@@ -583,4 +634,16 @@ internal sealed class Route {
         val excludeVaultId: VaultId,
     )
 
+    @Serializable
+    data class TokenDetail(
+        val vaultId: String,
+        val chainId: String,
+        val tokenId: String,
+        val mergeId: String,
+    )
+
+    @Serializable
+    data class AddChainAccount(
+        val vaultId: String
+    )
 }

@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper
+import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper.requireEthereumSpec
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toHexBytesInByteString
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
@@ -21,7 +21,7 @@ class OneInchSwap(
 ) {
 
     fun getPreSignedImageHash(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): List<String> {
@@ -34,7 +34,7 @@ class OneInchSwap(
     }
 
     fun getSignedTransaction(
-        swapPayload: OneInchSwapPayloadJson,
+        swapPayload: EVMSwapPayloadJson,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
         nonceIncrement: BigInteger,
@@ -46,7 +46,7 @@ class OneInchSwap(
     }
 
     private fun getPreSignedInputData(
-        quote: OneInchSwapQuoteJson,
+        quote: EVMSwapQuoteJson,
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): ByteArray {
@@ -57,15 +57,17 @@ class OneInchSwap(
                     .setContractGeneric(
                         Transaction.ContractGeneric.newBuilder()
                             .setAmount(
-                                quote.tx.value.toBigInteger().toByteArray().toByteString()
+                                quote.tx.value.toBigIntegerOrNull()?.toByteArray()?.toByteString()
+                                    ?: BigInteger.ZERO.toByteArray().toByteString()
                             )
-                            .setData(quote.tx.data.toHexBytesInByteString())
+                            .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                     )
             )
-
-        val gasPrice = quote.tx.gasPrice.toBigInteger()
-        val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+        val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val gas = maxOf(
+            (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+            requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit
+        )
         return EthereumGasHelper.setGasParameters(
             gas = gas,
             gasPrice = gasPrice,
@@ -75,5 +77,4 @@ class OneInchSwap(
             coinType = keysignPayload.coin.coinType
         ).build().toByteArray()
     }
-
 }

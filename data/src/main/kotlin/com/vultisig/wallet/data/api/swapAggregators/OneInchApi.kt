@@ -1,8 +1,9 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteErrorResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
@@ -11,7 +12,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -30,7 +30,7 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized
+    ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(
         chain: Chain,
@@ -61,9 +61,9 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized = coroutineScope {
+    ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
-            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}"
+            val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
             val requestParams: HttpRequestBuilder.() -> Unit = {
                 createQuoteParams(
                     srcTokenContractAddress,
@@ -86,8 +86,9 @@ class OneInchApiImpl @Inject constructor(
                     .also { responses ->
                         responses.forEach { response ->
                             if (!response.status.isSuccess()) {
-                                return@coroutineScope OneInchSwapQuoteDeserialized.Error(
-                                    error = HttpStatusCode.fromValue(response.status.value).description
+                                val resp = response.body<OneInchSwapQuoteErrorResponse>()
+                                return@coroutineScope EVMSwapQuoteDeserialized.Error(
+                                    error = resp.description
                                 )
                             }
                         }
@@ -101,7 +102,7 @@ class OneInchApiImpl @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
+            EVMSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
         }
     }
 
@@ -131,7 +132,7 @@ class OneInchApiImpl @Inject constructor(
     override suspend fun getTokens(
         chain: Chain,
     ): OneInchTokensJson =
-        httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/tokens")
+        httpClient.get("https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}/tokens")
             .body()
 
     override suspend fun getContractsWithBalance(chain: Chain, address: String): List<String> {
@@ -152,7 +153,7 @@ class OneInchApiImpl @Inject constructor(
     }.body()
 
     companion object {
-        private const val ONEINCH_REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
+        private const val ONEINCH_REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val ONEINCH_REFERRER_FEE = 0.5
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }

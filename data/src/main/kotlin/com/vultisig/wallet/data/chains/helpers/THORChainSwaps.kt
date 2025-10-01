@@ -22,6 +22,8 @@ class THORChainSwaps(
     companion object {
         const val AFFILIATE_FEE_ADDRESS = "va"
         const val AFFILIATE_FEE_RATE = "50" // 50 BP
+        const val AFFILIATE_FEE_RATE_PARTIAL = "35"
+        const val AFFILIATE_FEE_REFERRAL_RATE = "10"
     }
 
     private fun getPreSignedInputData(
@@ -45,7 +47,7 @@ class THORChainSwaps(
                 )
             }
 
-            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base -> {
+            Chain.Ethereum, Chain.BscChain, Chain.Avalanche,Chain.Base, Chain.Arbitrum -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSwapPreSignedInputData(
@@ -171,7 +173,7 @@ class THORChainSwaps(
             Chain.Ripple -> {
                 return RippleHelper.getSignedTransaction(keysignPayload,signatures)
             }
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base -> {
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain,Chain.Base,Chain.Arbitrum -> {
                 val helper =
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)

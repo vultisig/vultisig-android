@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.TopCenter
@@ -40,7 +41,10 @@ internal fun ShowQrHelperBottomSheet(
         containerColor = Theme.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        )
     ) {
         ScanQrHelpModalContent(onDismiss)
     }

@@ -168,7 +168,7 @@ class KyberApiImpl @Inject constructor(
                 ignoreCappedSlippage = false
             )
 
-            val respone = httpClient.post(aggregatorApiBaseUrl) {
+            val response = httpClient.post(aggregatorApiBaseUrl) {
                 url {
                     path(
                         chain.raw.lowercase(),
@@ -185,7 +185,7 @@ class KyberApiImpl @Inject constructor(
                 }
                 setBody(json.encodeToString(request))
             }
-            if (respone.bodyAsText().contains("TransferHelper") && respone.bodyAsText()
+            if (response.bodyAsText().contains("TransferHelper") && response.bodyAsText()
                     .contains("execution reverted")
             ) {
                 return getKyberSwapQuote(
@@ -196,15 +196,15 @@ class KyberApiImpl @Inject constructor(
                     isAffiliate = isAffiliate
                 )
             }
-            if (!respone.status.isSuccess()) {
+            if (!response.status.isSuccess()) {
                 val errorResponse = runCatching {
-                    json.decodeFromString<KyberSwapErrorResponse>(respone.bodyAsText())
+                    json.decodeFromString<KyberSwapErrorResponse>(response.bodyAsText())
                 }.getOrNull() ?: KyberSwapErrorResponse(
-                    message = HttpStatusCode.fromValue(respone.status.value).description
+                    message = HttpStatusCode.fromValue(response.status.value).description
                 )
                 throw SwapException.handleSwapException(errorResponse.message)
             }
-            return respone.bodyOrThrow<KyberSwapQuoteJson>()
+            return response.bodyOrThrow<KyberSwapQuoteJson>()
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message.toString())
         }
@@ -212,7 +212,7 @@ class KyberApiImpl @Inject constructor(
 
 
     companion object {
-        private const val REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
+        private const val REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val SLIPPAGE_TOLERANCE = 2.5

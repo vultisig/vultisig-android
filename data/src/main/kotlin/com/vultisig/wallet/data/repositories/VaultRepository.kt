@@ -40,6 +40,8 @@ interface VaultRepository {
 
     suspend fun delete(vaultId: VaultId)
 
+    suspend fun disableTokenFromVault(vaultId: VaultId, token: Coin)
+
     suspend fun deleteTokenFromVault(vaultId: VaultId, token: Coin)
 
     suspend fun deleteChainFromVault(vaultId: VaultId, chain: Chain)
@@ -97,7 +99,13 @@ internal class VaultRepositoryImpl @Inject constructor(
         vaultDao.delete(vaultId)
     }
 
+    // delete token from coins table
     override suspend fun deleteTokenFromVault(vaultId: String, token: Coin) {
+        vaultDao.deleteTokenFromVault(vaultId, token.id)
+    }
+
+    // delete token from coins table and add it to disabled coins table
+    override suspend fun disableTokenFromVault(vaultId: String, token: Coin) {
         vaultDao.disableTokenFromVault(vaultId, token.id, token.chain.id)
     }
 

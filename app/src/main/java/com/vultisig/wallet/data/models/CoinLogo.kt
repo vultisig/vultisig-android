@@ -101,6 +101,11 @@ internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
         "tcy" -> R.drawable.tcy
         "zec" -> R.drawable.zcash
         "ruji" -> R.drawable.ruji
+        "yrune" -> R.drawable.yrune
+        "ytcy" -> R.drawable.ytcy
+        "mantle" -> R.drawable.mantle
+        "stcy" -> R.drawable.stcy
+        "auto" -> R.drawable.auto_token_kujira
         else -> logoName
     }
 }

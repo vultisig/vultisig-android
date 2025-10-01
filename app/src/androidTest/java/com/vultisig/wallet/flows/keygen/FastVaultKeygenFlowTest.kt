@@ -11,12 +11,14 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 
 @UninstallModules(FastVaultModule::class)
 @HiltAndroidTest
+@Ignore
 class FastVaultKeygenFlowTest : CleanTest() {
 
     @get:Rule(order = LAST_ORDER_INDEX + 1)

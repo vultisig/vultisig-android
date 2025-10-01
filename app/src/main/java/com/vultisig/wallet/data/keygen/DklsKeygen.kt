@@ -215,8 +215,6 @@ class DKLSKeygen(
                 error("timeout: failed to create vault within 60 seconds")
             }
         }
-
-        return false
     }
 
     @Throws(Exception::class)
@@ -272,7 +270,7 @@ class DKLSKeygen(
         try {
             val keygenSetupMsg: ByteArray
 
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 keygenSetupMsg = getDklsSetupMessage()
 
                 sessionApi.uploadSetupMessage(
@@ -346,8 +344,7 @@ class DKLSKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
+
                 val keyshareHandler = Handle()
                 val keyShareResult = dkls_keygen_session_finish(handler, keyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -363,7 +360,9 @@ class DKLSKeygen(
                 )
                 Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
                 Timber.d("chaincode: ${chainCodeBytes.toHexString()}")
-                // dkls_keyshare_free(keyshareHandler)
+                delay(500 ) // wait for the last message to be sent
+                setKeygenDone(true)
+                task.cancel()
             }
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
@@ -453,7 +452,7 @@ class DKLSKeygen(
             }
 
             val reshareSetupMsg: ByteArray
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 reshareSetupMsg = getDklsReshareSetupMessage(keyshareHandle)
 
                 sessionApi.uploadSetupMessage(
@@ -494,8 +493,7 @@ class DKLSKeygen(
             }
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-                setKeygenDone(true)
-                task.cancel()
+
                 val newKeyshareHandler = Handle()
                 val keyShareResult = dkls_qc_session_finish(handler, newKeyshareHandler)
                 if (keyShareResult != LIB_OK) {
@@ -509,6 +507,9 @@ class DKLSKeygen(
                     keyshare = Base64.Default.encode(keyshareBytes),
                     chaincode = chainCodeBytes.toHexString()
                 )
+                delay(500)
+                setKeygenDone(true)
+                task.cancel()
                 Timber.d("reshare ECDSA key successfully")
                 Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
                 Timber.d("chaincode: ${chainCodeBytes.toHexString()}")

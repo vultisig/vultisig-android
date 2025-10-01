@@ -34,43 +34,43 @@ class TronHelper(
                 .setToAddress(keysignPayload.toAddress)
                 .setAmount(keysignPayload.toAmount.toLong())
                 .build()
-
-            val input = Tron.SigningInput.newBuilder()
-                .setTransaction(
-                    Tron.Transaction.newBuilder()
-                        .setTransfer(contract)
-                        .setTimestamp(tronSpecific.timestamp.toLong())
-                        .setBlockHeader(
-                            BlockHeader.newBuilder()
-                                .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
-                                .setNumber(tronSpecific.blockHeaderNumber.toLong())
-                                .setVersion(tronSpecific.blockHeaderVersion.toInt())
-                                .setTxTrieRoot(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderTxTrieRoot
-                                        ),
-                                    )
-                                )
-                                .setParentHash(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderParentHash
-                                        )
-                                    )
-                                )
-                                .setWitnessAddress(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderWitnessAddress
-                                        )
-                                    )
-                                )
-                                .build()
+            val txBuild = Tron.Transaction.newBuilder()
+                .setTransfer(contract)
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(
+                    BlockHeader.newBuilder()
+                        .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+                        .setNumber(tronSpecific.blockHeaderNumber.toLong())
+                        .setVersion(tronSpecific.blockHeaderVersion.toInt())
+                        .setTxTrieRoot(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderTxTrieRoot
+                                ),
+                            )
                         )
-                        .setExpiration(tronSpecific.expiration.toLong())
+                        .setParentHash(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderParentHash
+                                )
+                            )
+                        )
+                        .setWitnessAddress(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderWitnessAddress
+                                )
+                            )
+                        )
                         .build()
                 )
+                .setExpiration(tronSpecific.expiration.toLong())
+            keysignPayload.memo?.let { memo ->
+                txBuild.setMemo(memo)
+            }
+            val input = Tron.SigningInput.newBuilder()
+                .setTransaction(txBuild.build())
                 .build()
             return input.toByteArray()
         } else {
@@ -80,44 +80,44 @@ class TronHelper(
                 .setOwnerAddress(keysignPayload.coin.address)
                 .setAmount(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
                 .build()
-
-            val input = Tron.SigningInput.newBuilder()
-                .setTransaction(
-                    Tron.Transaction.newBuilder()
-                        .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
-                        .setTransferTrc20Contract(contract)
-                        .setTimestamp(tronSpecific.timestamp.toLong())
-                        .setBlockHeader(
-                            BlockHeader.newBuilder()
-                                .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
-                                .setNumber(tronSpecific.blockHeaderNumber.toLong())
-                                .setVersion(tronSpecific.blockHeaderVersion.toInt())
-                                .setTxTrieRoot(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderTxTrieRoot
-                                        )
-                                    )
+            val txBuild = Tron.Transaction.newBuilder()
+                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+                .setTransferTrc20Contract(contract)
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(
+                    BlockHeader.newBuilder()
+                        .setTimestamp(tronSpecific.blockHeaderTimestamp.toLong())
+                        .setNumber(tronSpecific.blockHeaderNumber.toLong())
+                        .setVersion(tronSpecific.blockHeaderVersion.toInt())
+                        .setTxTrieRoot(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderTxTrieRoot
                                 )
-                                .setParentHash(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderParentHash
-                                        )
-                                    )
-                                )
-                                .setWitnessAddress(
-                                    ByteString.copyFrom(
-                                        Numeric.hexStringToByteArray(
-                                            tronSpecific.blockHeaderWitnessAddress
-                                        )
-                                    )
-                                )
-                                .build()
+                            )
                         )
-                        .setExpiration(tronSpecific.expiration.toLong())
+                        .setParentHash(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderParentHash
+                                )
+                            )
+                        )
+                        .setWitnessAddress(
+                            ByteString.copyFrom(
+                                Numeric.hexStringToByteArray(
+                                    tronSpecific.blockHeaderWitnessAddress
+                                )
+                            )
+                        )
                         .build()
                 )
+                .setExpiration(tronSpecific.expiration.toLong())
+            keysignPayload.memo?.let { memo ->
+                txBuild.setMemo(memo)
+            }
+            val input = Tron.SigningInput.newBuilder()
+                .setTransaction(txBuild.build())
                 .build()
             return input.toByteArray()
         }

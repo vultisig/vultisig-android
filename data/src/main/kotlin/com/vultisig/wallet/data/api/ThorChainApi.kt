@@ -1,19 +1,24 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.GraphQLResponse
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.MetadataResponse
+import com.vultisig.wallet.data.api.models.MetadatasResponse
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
+import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -58,10 +63,12 @@ interface ThorChainApi {
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
+    suspend fun getTHORChainReferralFees(): NativeTxFeeRune
 
     suspend fun getNetworkChainId(): String
 
@@ -75,10 +82,18 @@ interface ThorChainApi {
 
     suspend fun getUnstakableTcyAmount(address: String): String?
 
+    suspend fun getTcyAutoCompoundAmount(address: String): String?
+
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
     suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
+    suspend fun existsReferralCode(code: String): Boolean
+    suspend fun getReferralCodeInfo(code: String): ThorOwnerData
+    suspend fun getReferralCodesByAddress(address: String): List<String>
+    suspend fun getLastBlock(): Long
+    suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
+    suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -104,6 +119,19 @@ internal class ThorChainApiImpl @Inject constructor(
         }
     }
 
+    override suspend fun getTcyAutoCompoundAmount(address: String): String? {
+        val url = "https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address"
+        val response = httpClient.get(url)
+        return if (!response.status.isSuccess()) {
+            null
+        } else {
+            val stakingTcyAmount = response.body<ThorTcyBalancesResponseJson>().balances
+                .find { it.denom == "x/staking-tcy" }
+                ?.amount
+            stakingTcyAmount
+        }
+    }
+
     private val xClientID = "X-Client-ID"
     private val xClientIDValue = "vultisig"
 
@@ -123,7 +151,14 @@ internal class ThorChainApiImpl @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        referralCode: String,
     ): THORChainSwapQuoteDeserialized {
+        val affiliateBPS = when {
+            isAffiliate && referralCode.isNotEmpty() -> THORChainSwaps.AFFILIATE_FEE_RATE_PARTIAL
+            isAffiliate -> THORChainSwaps.AFFILIATE_FEE_RATE
+            else -> "0"
+        }
+
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)
@@ -132,10 +167,11 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
                 parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter(
-                    "affiliate_bps",
-                    if (isAffiliate) THORChainSwaps.AFFILIATE_FEE_RATE else "0"
-                )
+                parameter("affiliate_bps", affiliateBPS)
+                if (referralCode.isNotEmpty() && isAffiliate) {
+                    parameter("affiliate", referralCode)
+                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_REFERRAL_RATE)
+                }
             }
         return try {
             json.decodeFromString(
@@ -168,6 +204,12 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         val content = response.body<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
+    }
+
+    override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
+        return httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<NativeTxFeeRune>()
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -280,7 +322,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
@@ -326,7 +368,7 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.rujira.network/api/graphql") {
+        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
@@ -353,9 +395,117 @@ internal class ThorChainApiImpl @Inject constructor(
         )
     }
 
+    override suspend fun existsReferralCode(code: String): Boolean {
+        try {
+            val response = httpClient
+                .get("$NNRLM_URL/thorname/$code") {
+                    header(xClientID, xClientIDValue)
+                }
+            return response.status.isSuccess()
+        } catch (e: Exception) {
+            Timber.tag("THORChainService").e("Error checking referral code: ${e.message}")
+            return false
+        }
+    }
+
+    override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {
+        val response = httpClient
+            .get("$NNRLM_URL/thorname/$code") {
+                header(xClientID, xClientIDValue)
+            }
+        return response.bodyOrThrow<ThorOwnerData>()
+    }
+
+    override suspend fun getReferralCodesByAddress(address: String): List<String> {
+        val response = httpClient
+            .get("$MIDGARD_URL/thorname/rlookup/$address") {
+                header(xClientID, xClientIDValue)
+            }
+        if (response.status.isSuccess()){
+            return response.bodyOrThrow<List<String>>()
+        }
+        return emptyList()
+    }
+
+    override suspend fun getLastBlock(): Long {
+        val response = httpClient
+            .get("$NNRLM_URL/lastblock") {
+                header(xClientID, xClientIDValue)
+            }
+        return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
+    }
+
+    override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
+        val url = "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<VaultRedemptionResponseJson>()
+    }
+
+    suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
+        return try {
+            val encodedDenom = java.net.URLEncoder.encode(
+                denom,
+                Charsets.UTF_8.name()
+            )
+            val response = httpClient
+                .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
+                .body<MetadataResponse>()
+            response.metadata
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to fetch denom metadata for $denom"
+            )
+            null
+        }
+    }
+
+    suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
+        return try {
+            val response =
+                httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
+                    .body<MetadatasResponse>()
+            response.metadatas
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to fetch denom metadata list"
+            )
+            emptyList()
+        }
+    }
+
+    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? =
+        getThorchainDenomMetadata(denom)
+            ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+        private const val THORNODE_BASE = "https://thornode.ninerealms.com"
+        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
     }
+}
+
+@Serializable
+data class ThorOwnerData(
+    @SerialName("name")
+    val name: String,
+    @SerialName("expire_block_height")
+    val expireBlockHeight: Long,
+    @SerialName("owner")
+    val owner: String,
+    @SerialName("preferred_asset")
+    val preferredAsset: String,
+    @SerialName("preferred_asset_swap_threshold_rune")
+    val preferredAssetSwapThresholdRune: String,
+    @SerialName("affiliate_collector_rune")
+    val affiliateCollectorRune: String,
+    @SerialName("aliases")
+    val aliases: List<Aliases> = emptyList(),
+) {
+    @Serializable
+    data class Aliases(val chain: String, val address: String)
 }
 
 @Serializable
@@ -480,9 +630,34 @@ data class Asset(
     val metadata: Metadata? = null,
 )
 
+@Serializable
+data class BlockNumber(
+    val thorchain: Long,
+)
+
 data class RujiStakeBalances(
     val stakeAmount: BigInteger = BigInteger.ZERO,
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
+)
+
+@Serializable
+data class VaultRedemptionResponseJson(
+    @SerialName("data")
+    val data: VaultRedemptionDataJson
+)
+
+@Serializable
+data class VaultRedemptionDataJson(
+    @SerialName("shares")
+    val shares: String = "",
+    @SerialName("nav")
+    val nav: String = "",
+    @SerialName("nav_per_share")
+    val navPerShare: String = "",
+    @SerialName("liquid_bond_shares")
+    val liquidBondShares: String = "",
+    @SerialName("liquid_bond_size")
+    val liquidBondSize: String = ""
 )

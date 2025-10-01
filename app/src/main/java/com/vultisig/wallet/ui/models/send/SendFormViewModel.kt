@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -74,6 +75,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -188,6 +190,7 @@ internal class SendFormViewModel @Inject constructor(
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -259,6 +262,20 @@ internal class SendFormViewModel @Inject constructor(
         loadVaultName()
         loadGasSettings()
         collectDstAddress()
+        collectAddress()
+    }
+
+    private fun collectAddress() {
+        viewModelScope.launch {
+            addressFieldState.textAsFlow()
+                .combine(selectedToken.filterNotNull()) { address, token ->
+                    val isAddressValid =
+                        chainAccountAddressRepository.isValid(token.chain, address.toString())
+                    if (isAddressValid) {
+                        expandSection(SendSections.Amount)
+                    }
+                }.collect()
+        }
     }
 
     private fun loadGasSettings() {
@@ -292,6 +309,10 @@ internal class SendFormViewModel @Inject constructor(
                 preSelectedChainIds = listOf(preSelectedChainId),
                 preSelectedTokenId = preSelectedTokenId,
             )
+        }
+
+        if (preSelectedTokenId != null) {
+            expandSection(SendSections.Address)
         }
     }
 
@@ -374,6 +395,7 @@ internal class SendFormViewModel @Inject constructor(
 
             if (newToken != null) {
                 selectToken(newToken)
+                expandSection(SendSections.Address)
             }
         }
     }
@@ -629,10 +651,10 @@ internal class SendFormViewModel @Inject constructor(
 
                 val specific = blockChainSpecificRepository
                     .getSpecific(
-                        chain,
-                        srcAddress,
-                        selectedToken,
-                        gasFee,
+                        chain = chain,
+                        address = srcAddress,
+                        token = selectedToken,
+                        gasFee = gasFee,
                         memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
                         tokenAmountValue = tokenAmountInt,
                         isSwap = false,
@@ -765,7 +787,7 @@ internal class SendFormViewModel @Inject constructor(
                     utxos = specific.utxos,
                     memo = memo,
                     estimatedFee = totalGasAndFee.formattedFiatValue,
-                    totalGass = totalGasAndFee.formattedTokenValue,
+                    totalGas = totalGasAndFee.formattedTokenValue,
                 )
 
                 transactionRepository.addTransaction(transaction)
@@ -983,18 +1005,28 @@ internal class SendFormViewModel @Inject constructor(
             combine(
                 selectedToken
                     .filterNotNull()
-                    .map {
-                        gasFeeRepository.getGasFee(it.chain, it.address)
+                    .combine(addressFieldState.textAsFlow()) { token, dst -> token to dst.toString() }
+                    .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
+                        Triple(token, dst, memo.toString())
+                    }
+                    .debounce(350)
+                    .map { (token, dst, memo) ->
+                        gasFeeRepository.getGasFee(
+                            chain = token.chain,
+                            address = token.address,
+                            isNativeToken = token.isNativeToken,
+                            to = dst,
+                            memo = memo
+
+                        )
                     }
                     .catch {
-                        // TODO handle error when querying gas fee
                         Timber.e(it)
                     },
                 gasSettings,
                 specific,
             )
-            {
-            gasFee, gasSettings, specific ->
+            { gasFee, gasSettings, specific ->
                 this@SendFormViewModel.gasFee.value = adjustGasFee(gasFee, gasSettings, specific)
             }.collect()
         }
@@ -1175,6 +1207,7 @@ internal class SendFormViewModel @Inject constructor(
                             token = token,
                             tokenValue = null,
                             fiatValue = null,
+                            price = null,
                         )
                     )
                 )
@@ -1184,9 +1217,8 @@ internal class SendFormViewModel @Inject constructor(
                     it.copy(
                         srcAddress = address,
                         selectedCoin = uiModel,
-                        hasMemo = hasMemo,
-
-                        )
+                        hasMemo = hasMemo
+                    )
                 }
             }.collect()
         }
@@ -1205,7 +1237,8 @@ internal class SendFormViewModel @Inject constructor(
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places
-                            value.multiply(price).setScale(3, RoundingMode.HALF_UP).stripTrailingZeros()
+                            value.multiply(price).setScale(3, RoundingMode.HALF_UP)
+                                .stripTrailingZeros()
                         } ?: return@combine
 
                     lastTokenValueUserInput = tokenString
@@ -1380,6 +1413,9 @@ internal class SendFormViewModel @Inject constructor(
                 gasFeeRepository.getGasFee(
                     chain = srcAddress.chain,
                     address = srcAddress.address,
+                    isNativeToken = srcAddress.isNativeToken,
+                    to = addressFieldState.text.toString(),
+                    memo = memoFieldState.text.toString(),
                 )
             } catch (e: Exception) {
                 uiState.update {
@@ -1439,8 +1475,11 @@ internal class SendFormViewModel @Inject constructor(
         if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
             val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
 
-            throw InvalidTransactionDataException(UiText.DynamicString(
-                "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."))
+            throw InvalidTransactionDataException(
+                UiText.DynamicString(
+                    "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."
+                )
+            )
         }
     }
 
@@ -1488,6 +1527,5 @@ internal fun List<Address>.findCurrentSrc(
     } else {
         return firstSendSrc(selectedTokenId, null)
     }
-
 }
 

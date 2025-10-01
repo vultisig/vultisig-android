@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -38,6 +40,7 @@ import javax.inject.Inject
 @Immutable
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
+    val isFastVault: Boolean = false,
     val showBackupWarning: Boolean = false,
     val showMonthlyBackupReminder: Boolean = false,
     val showMigration: Boolean = false,
@@ -46,8 +49,18 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
+    val searchTextFieldState: TextFieldState = TextFieldState()
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
+    val filteredAccounts : List<AccountUiModel>
+        get() = accounts.filter {
+            it.chainName.contains(
+                searchTextFieldState.text,
+                ignoreCase = true
+            )
+        }
+    val noChainFound: Boolean
+        get() = searchTextFieldState.text.isNotEmpty() && filteredAccounts.isEmpty()
 }
 
 internal data class AccountUiModel(
@@ -63,6 +76,7 @@ internal data class AccountUiModel(
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
+    private val requestResultRepository: RequestResultRepository,
 
     private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
@@ -91,6 +105,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
     }
+
 
     private fun showGlobalBackupReminder() {
         viewModelScope.launch {
@@ -162,7 +177,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadVaultNameJob = viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
-            uiState.update { it.copy(vaultName = vault.name) }
+            uiState.update {
+                it.copy(
+                    vaultName = vault.name,
+                    isFastVault = vault.isFastVault()
+                )
+            }
             val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
             uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
             val showMigration = vault.libType == SigningLibType.GG20
@@ -209,7 +229,8 @@ internal class VaultAccountsViewModel @Inject constructor(
 
         uiState.update {
             it.copy(
-                totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                totalFiatValue = totalFiatValue,
+                accounts = accountsUiModel,
             )
         }
         updateRefreshing(false)
@@ -266,4 +287,30 @@ internal class VaultAccountsViewModel @Inject constructor(
         dismissBackupReminder()
     }
 
+    fun openSettings() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                Timber.d("openSettings($vaultId)")
+                navigator.navigate(Destination.Settings(vaultId = vaultId))
+            }
+        }
+    }
+
+    fun openAddChainAccount() {
+        vaultId?.let { vaultId ->
+            viewModelScope.launch {
+                navigator.route(Route.AddChainAccount(vaultId))
+                requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
+
+
+                // Manually trigger loadData because dialog popBackStack in NavGraph
+                // doesn't automatically re-trigger LaunchedEffect
+                loadData(vaultId)
+            }
+        }
+    }
+
+    companion object {
+         internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
+    }
 }

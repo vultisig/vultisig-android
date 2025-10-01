@@ -23,10 +23,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VsCircularLoading(
+    modifier: Modifier = Modifier,
     strokeWidth: Float = 10f,
     color1: Color = Theme.colors.buttons.primary,
     color2: Color = Color.Transparent,
-    modifier: Modifier = Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(
         label = "VsCircularLoadingTransition"

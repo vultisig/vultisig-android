@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,8 +20,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 interface TokenPriceRepository {
@@ -93,7 +96,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
 
-        val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID }
+        val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID.lowercase() }
         val tokensByContractAddress = tokens.associateBy { it.contractAddress.lowercase() }
 
         val priceProviderIds = mutableListOf<String>()
@@ -113,7 +116,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(priceProviderIds, currencies)
             .asSequence()
             .mapNotNull { (priceProviderId, value) ->
-                val tokenIds = tokensByPriceProviderIds[priceProviderId]?.map { it.id }
+                val tokenIds = tokensByPriceProviderIds[priceProviderId.lowercase()]?.map { it.id }
                 tokenIds?.map { tokenId -> tokenId to value }
             }
             .flatten()
@@ -142,9 +145,14 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 savePrices(pricesWithContractAddress, currency)
             }
 
-        fetchThorPrices(
+        fetchThorPoolPrices(
             tokenList = tokens,
             currency = currency,
+        )
+
+        fetchThorContractPrices(
+            currency = currency,
+            tokenList = tokens,
         )
     }
 
@@ -178,8 +186,8 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokenIdToPrices: Map<TokenId, CurrencyToPrice>,
         currency: String,
     ) {
-        val tokenIdToPricesFiltered = tokenIdToPrices.filter {
-                (_, currencyToPrice) -> currencyToPrice.isNotEmpty()
+        val tokenIdToPricesFiltered = tokenIdToPrices.filter { (_, currencyToPrice) ->
+            currencyToPrice.isNotEmpty()
         }
         tokenIdToPricesFiltered.forEach { (tokenId, currencyToPrice) ->
             currencyToPrice[currency]?.toPlainString()?.let { price ->
@@ -267,11 +275,11 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private suspend fun fetchTetherPrice() =
         getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
-    private suspend fun fetchThorPrices(tokenList: List<Coin>, currency: String) {
-        coroutineScope {
+    private suspend fun fetchThorPoolPrices(tokenList: List<Coin>, currency: String) {
+        supervisorScope {
             // if we have any thorchain tokens, then fetch their pool prices
             val thorTokens = tokenList.filter { it.chain == Chain.ThorChain && !it.isNativeToken }
-            if (thorTokens.isEmpty()) return@coroutineScope // no tokens, no api request
+            if (thorTokens.isEmpty()) return@supervisorScope // no tokens, no api request
 
             val poolAssetToPriceMap = try {
                 thorApi.getPools()
@@ -280,7 +288,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to fetch prices from pools")
-                return@coroutineScope
+                return@supervisorScope
             }
 
             val tickerUsd = AppCurrency.USD.ticker.lowercase()
@@ -307,9 +315,83 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun fetchThorContractPrices(
+        tokenList: List<Coin>,
+        currency: String
+    ) = supervisorScope {
+        try {
+            val thorTokens =
+                Coins.coins[Chain.ThorChain]?.filter { 
+                    it.contractAddress.startsWith("x/nami") || 
+                    it.contractAddress == "x/staking-tcy"
+                } ?: emptyList()
+
+            val matchingTokens = tokenList.filter { token ->
+                thorTokens.any { it.id.equals(token.id, true) }
+            }
+
+            if (matchingTokens.isEmpty()) return@supervisorScope
+
+            val contracts = matchingTokens.map {
+                when {
+                    it.contractAddress.startsWith("x/nami") -> 
+                        it.contractAddress.substringAfter("nav-").substringBefore("-rcpt")
+                    it.contractAddress == "x/staking-tcy" -> 
+                        "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+                    else -> it.contractAddress
+                }
+            }
+
+            val tokenIds = matchingTokens.map { it.id }
+
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true)) {
+                BigDecimal.ONE
+            } else {
+                fetchTetherPrice()
+            }
+
+            val tokenIdToPrices = coroutineScope {
+                contracts.zip(tokenIds).mapIndexed { index, (contract, tokenId) ->
+                    async {
+                        try {
+                            val token = matchingTokens[index]
+
+                            val vaultData = thorApi.getThorchainTokenPriceByContract(contract)
+                            
+                            val priceUsd = if (token.contractAddress == "x/staking-tcy") {
+                                val tcyPriceUSD = getCachedPrice("tcy", AppCurrency.USD)
+                                    ?: getPriceByPriceProviderId("tcy")
+
+                                val liquidBondSize = vaultData.data.liquidBondSize.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                                val liquidBondShares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: BigDecimal.ZERO
+
+                                if (liquidBondShares > BigDecimal.ZERO) {
+                                    liquidBondSize.divide(liquidBondShares, 8, RoundingMode.HALF_UP) * tcyPriceUSD
+                                } else {
+                                    BigDecimal.ONE * tcyPriceUSD
+                                }
+                            } else {
+                                // For NAMI tokens, use navPerShare
+                                vaultData.data.navPerShare.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                            }
+                            
+                            tokenId to mapOf(currency to priceUsd * tetherPrice)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to fetch price for contract: $contract")
+                            null
+                        }
+                    }
+                }.awaitAll().filterNotNull().toMap()
+            }
+
+            savePrices(tokenIdToPrices, currency)
+        } catch (t: Throwable) {
+            Timber.e(t, "Could not update YTCY/YRUNE/sTCY prices")
+        }
+    }
 
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
     }
-
 }

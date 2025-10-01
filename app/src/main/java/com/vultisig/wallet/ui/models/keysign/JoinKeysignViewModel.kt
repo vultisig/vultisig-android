@@ -463,6 +463,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val vaultName = _currentVault.name
 
                 when (swapPayload) {
+                    // TODO: Remove this once all clients migrate from Kyber to 1inch payload
                     is SwapPayload.Kyber -> {
                         val kyberSwapTxJson = swapPayload.data.quote.tx
                         // Calculate fee from Kyber quote data
@@ -535,7 +536,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             )
                         )
                     }
-                    is SwapPayload.OneInch -> {
+                    is SwapPayload.EVM -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
                         //if swapFee is not null then it provider is Lifi otherwise 1inch
                         val value = if (!oneInchSwapTxJson.swapFee.isNullOrEmpty() &&
@@ -780,13 +781,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             value = mapTokenValueToDecimalUiString(tokenValue),
                             fiatValue = "",
                         ),
-                        fromAddress = payload.coin.address,
-                        nodeAddress = payload.toAddress,
-                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
-                            Pair(tokenValue, payload.coin.chain)
-                        ),
-                        estimatedFees = mapTokenValueToStringWithUnit(estimatedTokenFees),
-                        estimateFeesFiat = fiatValueToStringMapper(
+                        srcAddress = payload.coin.address,
+                        dstAddress = payload.toAddress,
+
+                        networkFeeTokenValue  = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        networkFeeFiatValue = fiatValueToStringMapper(
                             convertTokenValueToFiat(
                                 feeCurrency,
                                 estimatedTokenFees,
@@ -843,7 +842,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         memo = payload.memo.takeIf { functionInfo == null },
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
-                        totalGass = totalGasAndFee.formattedTokenValue
+                        totalGas = totalGasAndFee.formattedTokenValue
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
