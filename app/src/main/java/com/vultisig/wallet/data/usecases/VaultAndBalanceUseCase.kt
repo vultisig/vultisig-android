@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -24,7 +25,7 @@ internal class VaultAndBalanceUseCaseImpl @Inject constructor(
     override suspend fun invoke(vault: Vault): VaultAndBalance {
         val balance = accountsRepository.loadCachedAddresses(vault.id).map { addresses ->
             addresses.calculateAddressesTotalFiatValue()
-        }.first()
+        }.firstOrNull()
         return VaultAndBalance(
             vault = vault,
             balance = balance?.let { fiatValueToStringMapper(it) },

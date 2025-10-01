@@ -131,13 +131,7 @@ internal fun SetupNavGraph(
         composable<ImportVault> {
             ImportFileScreen(navController)
         }
-        composable(
-            route = Destination.Folder.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
-            )
-        ) {
-        }
+
         dialog<AddChainAccount> {
             ChainSelectionScreen()
         }

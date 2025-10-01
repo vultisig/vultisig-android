@@ -90,7 +90,7 @@
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_complete">Voltooid</string>
     <string name="transaction_done_form_title">Transactie</string>
-    <string name="vault_list_vaults_list">Kluisen</string>
+    <string name="vault_list_vaults_list">Kluizen</string>
     <string name="home_screen_add_new_vault">+ Nieuwe kluis toevoegen</string>
     <string name="import_file_screen_title">Importeren</string>
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
@@ -199,7 +199,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Zorg ervoor dat uw wachtwoorden overeenkomen</string>
     <string name="import_file_screen_password_error">Wachtwoord is niet correct.</string>
     <string name="backup_password_optional_password_protection">Optionele wachtwoordbeveiliging van uw kluis</string>
-    <string name="add_vault_save">Redden</string>
+    <string name="add_vault_save">Opslaan</string>
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
     <string name="import_file_screen_enter_password">Voer wachtwoord in</string>
     <string name="backup_password_screen_verify_password">Wachtwoord verifiëren</string>

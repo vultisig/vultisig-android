@@ -62,7 +62,6 @@ internal fun ChainSelectionItem(
                     color = if (isChecked) Theme.colors.backgrounds.secondary else Theme.colors.backgrounds.disabled
                 )
         ) {
-            // does not work when use "import ...". maybe ide bug!.
             androidx.compose.animation.AnimatedVisibility(
                 visible = isChecked,
                 enter = fadeIn(),
