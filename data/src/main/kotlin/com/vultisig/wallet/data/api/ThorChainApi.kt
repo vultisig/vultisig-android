@@ -437,7 +437,6 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
         val url = "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
-
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<VaultRedemptionResponseJson>()
@@ -651,12 +650,14 @@ data class VaultRedemptionResponseJson(
 
 @Serializable
 data class VaultRedemptionDataJson(
-    @SerialName("redemption_rate")
-    val redemptionRate: String,
     @SerialName("shares")
-    val shares: String,
+    val shares: String = "",
     @SerialName("nav")
-    val nav: String,
+    val nav: String = "",
     @SerialName("nav_per_share")
-    val navPerShare: String,
+    val navPerShare: String = "",
+    @SerialName("liquid_bond_shares")
+    val liquidBondShares: String = "",
+    @SerialName("liquid_bond_size")
+    val liquidBondSize: String = ""
 )
