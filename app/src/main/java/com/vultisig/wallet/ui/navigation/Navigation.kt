@@ -646,4 +646,25 @@ internal sealed class Route {
     data class AddChainAccount(
         val vaultId: String
     )
+
+    @Serializable
+    data class VaultList(
+        val vaultId: VaultId,
+    )
+
+
+    @Serializable
+    data class FolderList(
+        val folderId: String,
+        val vaultId: VaultId,
+    )
+
+
+    @Serializable
+    data class CreateFolder(
+        val folderId: String?,
+    )
+
+
+
 }

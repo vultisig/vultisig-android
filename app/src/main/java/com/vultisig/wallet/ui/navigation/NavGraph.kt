@@ -35,10 +35,9 @@ import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
-import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
-import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
-import com.vultisig.wallet.ui.screens.home.HomeScreen
+import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
+import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
@@ -61,10 +60,10 @@ import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
-import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
-import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralVaultListScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -126,14 +125,11 @@ internal fun SetupNavGraph(
                 }
             )
         ) {
-            HomeScreen(navController)
+            VaultAccountsScreen()
         }
 
         composable<ImportVault> {
             ImportFileScreen(navController)
-        }
-        composable(route = Destination.CreateFolder.route) {
-            CreateFolderScreen(navController)
         }
         composable(
             route = Destination.Folder.STATIC_ROUTE,
@@ -141,7 +137,7 @@ internal fun SetupNavGraph(
                 navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
             )
         ) {
-            FolderScreen()
+
         }
         dialog<AddChainAccount> {
             ChainSelectionScreen()
@@ -186,8 +182,8 @@ internal fun SetupNavGraph(
         ) {
             ChainTokensScreen(navController)
         }
-        composable<TokenDetail> {
-            TokenDetailScreen(navController)
+        dialog<TokenDetail> {
+            TokenDetailScreen()
         }
         composable(
             route = Destination.SelectTokens.STATIC_ROUTE,
@@ -693,6 +689,14 @@ internal fun SetupNavGraph(
             route = Destination.CheckForUpdateSetting.route,
         ) {
             CheckForUpdateScreen()
+        }
+
+
+        dialog<VaultList> { backStackEntry ->
+            VaultListBottomSheet(
+                vaultId = backStackEntry.toRoute<VaultList>().vaultId,
+                onDismiss = navController::popBackStack
+            )
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
@@ -16,6 +17,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun TopShineContainer(
     modifier: Modifier = Modifier,
+    backgroundColor: Color = Theme.colors.backgrounds.secondary,
     content: @Composable () -> Unit,
 ) {
     Card(
@@ -25,7 +27,7 @@ internal fun TopShineContainer(
             size = 12.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = Theme.colors.backgrounds.secondary
+            containerColor = backgroundColor
         ),
     ) {
         FadingHorizontalDivider()

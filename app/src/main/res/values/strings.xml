@@ -341,7 +341,7 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t">Share %1$dof%2$d</string>
+    <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Share %1$d of %2$d</string>
     <string name="vault_list_fast_badge">Fast</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
@@ -824,4 +824,21 @@
     <string name="chain_tokens_tab_hidden">Hidden</string>
     <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
     <string name="address_copied">%1$s address copied</string>
+    <string name="vault_list_vaults_count" translatable="false">%d Vault%s</string>
+    <string name="vault_list_vaults_list" translatable="false">Vaults</string>
+    <string name="vault_list_folders_list" translatable="false">Folders</string>
+    <string name="add_folder_title" translatable="false">Add Folder</string>
+    <string name="add_folder_list_title" translatable="false">Select Vaults</string>
+    <string name="add_folder_active_vaults" translatable="false">Active Vaults</string>
+    <string name="add_folder_available_vaults" translatable="false">Available</string>
+    <string name="add_vault_edit_save_changes" translatable="false">Save changes</string>
+    <string name="add_vault_save" translatable="false">Save</string>
+    <string name="add_folder_edit_folder_title" translatable="false">Edit Folder</string>
+    <string name="add_folder_add_folder_title" translatable="false">Add Folder</string>
+    <string name="add_folder_folder_name_title"  translatable="false">Folder Name</string>
+    <string name="vault_list_add_folder" translatable="false">Add folder</string>
+    <string name="vault_list_edit_vaults_header" translatable="false">Edit Vaults</string>
+    <string name="token_details_bottom_sheet_price" translatable="false">Price</string>
+    <string name="token_details_bottom_sheet_network" translatable="false">Network</string>
+
 </resources>

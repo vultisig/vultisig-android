@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -89,6 +90,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -96,6 +98,25 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
+
+    init {
+        collectLastOpenedVault()
+    }
+
+    private fun collectLastOpenedVault() {
+        viewModelScope.launch {
+            lastOpenedVaultRepository.lastOpenedVaultId
+                .map { lastOpenedVaultId ->
+                    lastOpenedVaultId?.let {
+                        vaultRepository.get(it)
+                    } ?: vaultRepository.getAll().firstOrNull()
+                }.collect { vault ->
+                    if (vault != null) {
+                        loadData(vault.id)
+                    }
+                }
+        }
+    }
 
     fun loadData(vaultId: VaultId) {
         this.vaultId = vaultId
@@ -307,6 +328,22 @@ internal class VaultAccountsViewModel @Inject constructor(
                 // doesn't automatically re-trigger LaunchedEffect
                 loadData(vaultId)
             }
+        }
+    }
+
+    fun openVaultList(){
+        vaultId?.let {
+            viewModelScope.launch {
+                navigator.route(Route.VaultList(it))
+            }
+        }
+    }
+
+    fun tempRemoveUpdateBanner(){
+        uiState.update {
+            it.copy(
+                showMigration = false,
+            )
         }
     }
 

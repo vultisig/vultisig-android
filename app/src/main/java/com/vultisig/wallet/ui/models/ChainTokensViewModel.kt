@@ -86,6 +86,7 @@ internal data class ChainTokenUiModel(
     val price: String? = null,
     @DrawableRes val chainLogo: Int? = null,
     val mergeBalance: String? = null,
+    val network: String = "",
 )
 
 @HiltViewModel
@@ -162,18 +163,6 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    internal fun navigateToQrAddressScreen() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.QrAddressScreen(
-                    vaultId,
-                    uiState.value.chainAddress,
-                    uiState.value.chainName,
-                )
-            )
-        }
-    }
-
     fun selectTokens() {
         viewModelScope.launch {
             navigator.navigate(
@@ -244,7 +233,8 @@ internal class ChainTokensViewModel @Inject constructor(
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
                         mergeBalance = mergeBalances.findMergeBalance(token).toString(),
-                        price = account.price?.let { fiatValueToStringMapper(it) }
+                        price = account.price?.let { fiatValueToStringMapper(it) },
+                        network = token.chain.raw,
                     )
                 }
 

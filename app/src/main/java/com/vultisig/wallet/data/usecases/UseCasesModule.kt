@@ -110,4 +110,10 @@ internal interface UseCasesModule {
         impl: ResolveProviderUseCaseImpl
     ): ResolveProviderUseCase
 
+    @Binds
+    @Singleton
+    fun bindVaultAndBalanceUseCaseUseCase(
+        impl: VaultAndBalanceUseCaseImpl
+    ): VaultAndBalanceUseCase
+
 }

@@ -47,6 +47,7 @@ internal fun VsCircleButton(
     size: VsCircleButtonSize = VsCircleButtonSize.Medium,
     type: VsCircleButtonType = VsCircleButtonType.Primary,
     designType: DesignType = DesignType.Solid,
+    hasBorder: Boolean = false,
 ) {
     val sizeInDp = when (size) {
         is VsCircleButtonSize.Custom -> size.size
@@ -79,7 +80,14 @@ internal fun VsCircleButton(
                             shape = CircleShape
                         )
                 } else {
-                    Modifier
+                    if (hasBorder) {
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        )
+                    } else
+                        Modifier
                 }
 
             ),

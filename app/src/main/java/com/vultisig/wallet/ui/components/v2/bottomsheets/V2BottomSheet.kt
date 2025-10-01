@@ -84,6 +84,48 @@ fun V2BottomSheet(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun V2BottomSheet(
+    modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit = {},
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
+    ModalBottomSheet(
+        modifier = modifier.statusBarsPadding(),
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
+        dragHandle = null,
+        containerColor = Color.Transparent,
+        shape = RectangleShape,
+        content = {
+            Box(
+                modifier = Modifier
+                    .clip(
+                        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                    )
+            ) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Theme.colors.buttons.secondary),
+                    content = content
+                )
+                DragHandler(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .align(Alignment.TopCenter)
+                )
+            }
+
+        }
+    )
+}
+
 @Composable
 private fun TopRow(
     leftAction: @Composable (() -> Unit)?,

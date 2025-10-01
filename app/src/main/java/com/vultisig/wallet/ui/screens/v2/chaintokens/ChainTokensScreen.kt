@@ -114,7 +114,10 @@ internal fun ChainTokensScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ChainLogo(uiModel)
+                    ChainLogo(
+                        name = uiModel.chainName,
+                        logo = uiModel.chainLogo
+                    )
                     UiSpacer(size = 8.dp)
                     Text(
                         text = uiModel.chainName,
