@@ -25,7 +25,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
@@ -239,11 +238,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         isAffiliate: Boolean,
         referralCode: String
     ): SwapQuote {
-        val isTrc20Swap = !srcToken.isNativeToken && srcToken.chain.standard == TokenStandard.TRC20
-        if (isTrc20Swap) {
-            throw SwapException.handleSwapException("No routes")
-        }
-
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val thorQuote = try {
