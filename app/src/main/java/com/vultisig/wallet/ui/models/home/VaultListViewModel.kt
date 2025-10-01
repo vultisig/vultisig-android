@@ -94,7 +94,7 @@ internal class VaultListViewModel @Inject constructor(
                 vaultAndBalanceUseCase(it).balanceFiatValue
             }
 
-            val totalBalance = fiatValues.takeIf { it.isNotEmpty() }?.reduce { acc, value -> acc + value }
+            val totalBalance = fiatValues.reduceOrNull { acc, value -> acc + value }
 
             state.update {
                 it.copy(

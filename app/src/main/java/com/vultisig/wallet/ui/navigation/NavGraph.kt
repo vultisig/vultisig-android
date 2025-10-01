@@ -137,7 +137,6 @@ internal fun SetupNavGraph(
                 navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
             )
         ) {
-
         }
         dialog<AddChainAccount> {
             ChainSelectionScreen()

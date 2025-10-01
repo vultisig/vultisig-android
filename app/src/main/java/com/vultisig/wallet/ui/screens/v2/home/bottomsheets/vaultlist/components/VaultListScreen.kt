@@ -215,7 +215,7 @@ private fun VaultsInfoHeader(
 ) {
     Row {
         VaultInfo(
-            vaultName = "Vaults",
+            vaultName = stringResource(R.string.vault_list_vaults_list),
             vaultCounts = vaultCounts,
             totalBalance = totalBalance
         )

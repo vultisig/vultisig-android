@@ -112,7 +112,7 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
-    fun bindVaultAndBalanceUseCaseUseCase(
+    fun bindVaultAndBalanceUseCase(
         impl: VaultAndBalanceUseCaseImpl
     ): VaultAndBalanceUseCase
 

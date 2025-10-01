@@ -54,10 +54,10 @@ internal class FolderViewModel @Inject constructor(
             val vaultAndBalances = orderedVaults.map {
                 vaultAndBalanceUseCase(it)
             }
-            val totalBalance = if (vaultAndBalances.isEmpty()) null else
-                vaultAndBalances.mapNotNull { it.balanceFiatValue }.takeIf { it.isNotEmpty() }?.reduce { acc, balance ->
-                    acc + balance
-                }
+
+            val totalBalance = vaultAndBalances
+                .mapNotNull { it.balanceFiatValue }
+                .reduceOrNull { acc, balance -> acc + balance }
             state.update {
                 it.copy(
                     vaults = vaultAndBalances,
