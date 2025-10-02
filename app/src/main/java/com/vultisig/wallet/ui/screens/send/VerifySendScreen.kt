@@ -256,6 +256,7 @@ internal fun VerifySendScreen(
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeTokenValue,
                         fiatGas = tx.networkFeeFiatValue,
+                        isLoading = state.isLoadingFees,
                     )
                 }
 
