@@ -130,11 +130,11 @@ internal class TokenDetailViewModel @Inject constructor(
                 updateRefreshing(false)
                 Timber.e(it)
             }.onEach { address ->
-                val token = address.accounts
-                    .first { it.token.id == tokenId }
-                    .let { account ->
+                address.accounts
+                    .firstOrNull { it.token.id == tokenId }
+                    ?.let { account ->
                         val token = account.token
-                        ChainTokenUiModel(
+                        val tokenUiModel = ChainTokenUiModel(
                             id = token.id,
                             name = token.ticker,
                             balance = account.tokenValue
@@ -145,18 +145,20 @@ internal class TokenDetailViewModel @Inject constructor(
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                             mergeBalance = mergedBalance,
-                            price =  account.price?.let { fiatValueToStringMapper(it) },
+                            price = account.price?.let { fiatValueToStringMapper(it) },
                             network = token.chain.raw,
                         )
-                    }
 
-                uiState.update {
-                    it.copy(
-                        token = token,
-                        canDeposit = chain.isDepositSupported,
-                        canSwap = chain.IsSwapSupported,
-                    )
-                }
+                        uiState.update {
+                            it.copy(
+                                token = tokenUiModel,
+                                canDeposit = chain.isDepositSupported,
+                                canSwap = chain.IsSwapSupported,
+                            )
+                        }
+                    } ?: run {
+                        updateRefreshing(false)
+                    }
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
