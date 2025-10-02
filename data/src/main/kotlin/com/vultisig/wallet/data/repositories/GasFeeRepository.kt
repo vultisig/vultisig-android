@@ -196,6 +196,14 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.Tron -> {
                 supervisorScope {
                     try {
+                        if (isSwap) {
+                            return@supervisorScope TokenValue(
+                                value = (8000000).toBigInteger(),
+                                unit = chain.feeUnit,
+                                decimals = 6,
+                            )
+                        }
+
                         val nativeToken =
                             async { tokenRepository.getNativeToken(chain.id) }
                         val bandwidth =
