@@ -11,4 +11,7 @@ abstract class VaultOrderDao : BaseOrderDao<VaultOrderEntity>("vaultOrder") {
 
     @Query("SELECT * FROM vaultOrder ORDER BY `order` DESC")
     abstract fun loadOrders(): Flow<List<VaultOrderEntity>>
+
+    @Query("SELECT COUNT(*) FROM vaultOrder WHERE parentId = :parentId")
+    abstract suspend fun getChildrenCountFor(parentId: String): Int
 }

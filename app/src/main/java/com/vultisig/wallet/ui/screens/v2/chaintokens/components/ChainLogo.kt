@@ -11,13 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun ChainLogo(uiModel: ChainTokensUiModel) {
+internal fun ChainLogo(
+    name: String,
+    logo: ImageModel?
+) {
     SubcomposeAsyncImage(
-        model = uiModel.chainLogo,
+        model = logo,
         contentDescription = null,
         modifier = Modifier
             .size(24.dp)
@@ -42,7 +45,7 @@ internal fun ChainLogo(uiModel: ChainTokensUiModel) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = uiModel.chainName.firstOrNull()?.toString() ?: "",
+                    text = name.firstOrNull()?.toString() ?: "",
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.supplementary.caption
                 )

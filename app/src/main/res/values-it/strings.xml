@@ -103,7 +103,7 @@
     <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
-    <string name="home_screen_title">Cassaforti</string>
+    <string name="vault_list_vaults_list">Cassaforti</string>
     <string name="swap_screen_invalid_vault">La transazione probabilmente fallirà, la cassaforte non è stata caricata.</string>
     <string name="join_keysign_waiting_keysign_start">In attesa dell\’avvio di Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">I token VULT vengono bruciati a causa delle commissioni.</string>
@@ -188,7 +188,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Assicurati che le tue password corrispondano</string>
     <string name="import_file_screen_password_error">La password non è corretta.</string>
     <string name="backup_password_optional_password_protection">Protezione facoltativa tramite password del tuo Vault</string>
-    <string name="backup_password_screen_save">Salva</string>
+    <string name="add_vault_save">Salva</string>
     <string name="backup_password_screen_enter_password">Inserisci la password</string>
     <string name="import_file_screen_enter_password">Inserisci la password</string>
     <string name="backup_password_screen_verify_password">Verifica password</string>
@@ -251,7 +251,7 @@
     <string name="reshare_start_screen_start_reshare">Inizia la condivisione</string>
     <string name="threshold_error">Soglia non raggiunta Mancano \n abbastanza dispositivi iniziali</string>
     <string name="create_folder_title">Crea cartella</string>
-    <string name="create_folder_name">Nome cartella</string>
+    <string name="add_folder_folder_name_title">Nome cartella</string>
     <string name="create_folder_create">Creare</string>
     <string name="vault_settings_biometrics_screen_title">Abilita la biometria</string>
     <string name="vault_settings_biometrics_screen_description">Inserisci la password per la firma rapida</string>
@@ -267,7 +267,7 @@
     <string name="vault_settings_biometrics_description">Abilita la biometria per la firma rapida</string>
     <string name="create_folder_list_title">Selezionare Vault da aggiungere alla cartella.</string>
     <string name="generating_key_screen_reshare_failed">Ricondivisione non riuscita</string>
-    <string name="folders_list_title">Cartelle</string>
+    <string name="vault_list_folders_list">Cartelle</string>
     <string name="keygen_email_continue_button">Continuare</string>
     <string name="keygen_email_caption">Inserisci la tua email per ricevere il tuo backup</string>
     <string name="create_folder">Crea cartella</string>
@@ -445,6 +445,8 @@
     <string name="referral_create_create_referral_code">Crea codice referral</string>
     <string name="referral_create_invalid">Non valido</string>
     <string name="referral_create_available">Disponibile</string>
+    <string name="add_folder_active_vaults">Vault attivi</string>
+    <string name="add_folder_available_vaults">Disponibile</string>
     <string name="referral_create_taken">Già in uso</string>
     <string name="referral_edit_external_title">Modifica codice referente</string>
     <string name="referral_use_referred_code">Usa codice referente</string>
@@ -576,4 +578,12 @@
     <string name="chain_tokens_tab_hidden">Nascosto</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
     <string name="address_copied">Indirizzo %1$s copiato</string>
+    <string name="vault_list_vaults_count">%d Vault%s</string>
+    <string name="add_folder_title">Aggiungi cartella</string>
+    <string name="add_folder_list_title">Seleziona Vault</string>
+    <string name="add_folder_edit_folder_title">Modifica cartella</string>
+    <string name="vault_list_add_folder">Aggiungi cartella</string>
+    <string name="vault_list_edit_vaults_header">Modifica Vault</string>
+    <string name="token_details_bottom_sheet_price">Prezzo</string>
+    <string name="token_details_bottom_sheet_network">Rete</string>
 </resources>

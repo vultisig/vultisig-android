@@ -104,7 +104,7 @@
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="swap_screen_invalid_vault">Transakcija će vjerojatno propasti, trezor se nije mogao učitati.</string>
     <string name="swap_form_min_pay">min. isplata</string>
-    <string name="home_screen_title">Sefovi</string>
+    <string name="vault_list_vaults_list">Sefovi</string>
     <string name="join_keysign_waiting_keysign_start">Čeka se da se Keysign pokrene.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokeni troše se od naknada.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokeni se ispuštaju korisnicima.</string>
@@ -188,7 +188,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Provjerite podudaraju li se vaše lozinke</string>
     <string name="import_file_screen_password_error">Lozinka nije ispravna.</string>
     <string name="backup_password_optional_password_protection">Dodatna zaštita lozinkom vašeg trezora</string>
-    <string name="backup_password_screen_save">Uštedjeti</string>
+    <string name="add_vault_save">Uštedjeti</string>
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
     <string name="import_file_screen_enter_password">Unesite lozinku</string>
     <string name="backup_password_screen_verify_password">Potvrdi lozinku</string>
@@ -251,7 +251,7 @@
     <string name="reshare_start_screen_start_reshare">Počnite ponovno dijeliti</string>
     <string name="threshold_error">Prag nije dosegnut Nedostaje dovoljno početnih uređaja</string>
     <string name="create_folder_title">Stvori mapu</string>
-    <string name="create_folder_name">Naziv mape</string>
+    <string name="add_folder_folder_name_title">Naziv mape</string>
     <string name="create_folder_create">Stvoriti</string>
     <string name="vault_settings_biometrics_screen_title">Omogući biometriju</string>
     <string name="vault_settings_biometrics_screen_description">Unesite lozinku za brzo potpisivanje</string>
@@ -267,7 +267,7 @@
     <string name="vault_settings_biometrics_description">Omogućite biometriju za Fast Sign</string>
     <string name="create_folder_list_title">Odaberite trezore za dodavanje u mapu.</string>
     <string name="generating_key_screen_reshare_failed">Ponovno dijeljenje nije uspjelo</string>
-    <string name="folders_list_title">mape</string>
+    <string name="vault_list_folders_list">mape</string>
     <string name="keygen_email_continue_button">Nastaviti</string>
     <string name="keygen_email_caption">Unesite svoju e-poštu da biste primili sigurnosnu kopiju</string>
     <string name="create_folder">Stvori mapu</string>
@@ -445,6 +445,8 @@
     <string name="referral_create_create_referral_code">Stvori kod preporuke</string>
     <string name="referral_create_invalid">Nevažeće</string>
     <string name="referral_create_available">Dostupno</string>
+    <string name="add_folder_active_vaults">Aktivni trezori</string>
+    <string name="add_folder_available_vaults">Dostupno</string>
     <string name="referral_create_taken">Već zauzeto</string>
     <string name="referral_edit_external_title">Uredi preporučeni kod</string>
     <string name="referral_use_referred_code">Koristi preporučeni kod</string>
@@ -577,4 +579,12 @@
     <string name="chain_tokens_tab_hidden">Skriveno</string>
     <string name="chain_tokens_qr_receive_label">Primi %1$s</string>
     <string name="address_copied">Adresa %1$s kopirana</string>
+    <string name="vault_list_vaults_count">%d Trezor%s</string>
+    <string name="add_folder_title">Dodaj mapu</string>
+    <string name="add_folder_list_title">Odaberi trezore</string>
+    <string name="add_folder_edit_folder_title">Uredi mapu</string>
+    <string name="vault_list_add_folder">Dodaj mapu</string>
+    <string name="vault_list_edit_vaults_header">Uredi trezore</string>
+    <string name="token_details_bottom_sheet_price">Cijena</string>
+    <string name="token_details_bottom_sheet_network">Mreža</string>
 </resources>

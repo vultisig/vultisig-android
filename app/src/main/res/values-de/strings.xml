@@ -104,7 +104,7 @@
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
-    <string name="home_screen_title">Tresore</string>
+    <string name="vault_list_vaults_list">Tresore</string>
     <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-Token werden durch Gebühren verbrannt.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-Token werden den Benutzern per Airdrop zugeschickt.</string>
@@ -188,7 +188,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Bitte stellen Sie sicher, dass Ihre Passwörter übereinstimmen</string>
     <string name="import_file_screen_password_error">Das Passwort ist nicht korrekt.</string>
     <string name="backup_password_optional_password_protection">Optionaler Passwortschutz für Ihren Tresor</string>
-    <string name="backup_password_screen_save">Speichern</string>
+    <string name="add_vault_save">Speichern</string>
     <string name="backup_password_screen_enter_password">Passwort eingeben</string>
     <string name="import_file_screen_enter_password">Passwort eingeben</string>
     <string name="backup_password_screen_verify_password">Kennwort bestätigen</string>
@@ -251,7 +251,7 @@
     <string name="reshare_start_screen_start_reshare">Neu teilen starten</string>
     <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen ausreichend Erstausrüstungen.</string>
     <string name="create_folder_title">Ordner erstellen</string>
-    <string name="create_folder_name">Ordnername</string>
+    <string name="add_folder_folder_name_title">Ordnername</string>
     <string name="create_folder_create">Erstellen</string>
     <string name="vault_settings_biometrics_screen_title">Biometrie aktivieren</string>
     <string name="vault_settings_biometrics_screen_description">Geben Sie das Passwort für die schnelle Signatur ein</string>
@@ -267,7 +267,7 @@
     <string name="vault_settings_biometrics_description">Biometrie für Fast Sign aktivieren</string>
     <string name="create_folder_list_title">Wählen Sie Tresore aus, die dem Ordner hinzugefügt werden sollen.</string>
     <string name="generating_key_screen_reshare_failed">Erneutes Teilen fehlgeschlagen</string>
-    <string name="folders_list_title">Ordner</string>
+    <string name="vault_list_folders_list">Ordner</string>
     <string name="keygen_email_continue_button">Weitermachen</string>
     <string name="keygen_email_caption">Geben Sie Ihre E-Mail-Adresse ein, um Ihr Backup zu erhalten</string>
     <string name="create_folder">Ordner erstellen</string>
@@ -445,6 +445,8 @@
     <string name="referral_create_create_referral_code">Empfehlungscode erstellen</string>
     <string name="referral_create_invalid">Ungültig</string>
     <string name="referral_create_available">Verfügbar</string>
+    <string name="add_folder_active_vaults">Aktive Vaults</string>
+    <string name="add_folder_available_vaults">Verfügbar</string>
     <string name="referral_create_taken">Bereits vergeben</string>
     <string name="referral_edit_external_title">Empfohlenen Code bearbeiten</string>
     <string name="referral_use_referred_code">Empfohlenen Code verwenden</string>
@@ -578,4 +580,12 @@
     <string name="chain_tokens_tab_hidden">Versteckt</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
     <string name="address_copied">%1$s Adresse kopiert</string>
+    <string name="vault_list_vaults_count">%d Vault%s</string>
+    <string name="add_folder_title">Ordner hinzufügen</string>
+    <string name="add_folder_list_title">Vaults auswählen</string>
+    <string name="add_folder_edit_folder_title">Ordner bearbeiten</string>
+    <string name="vault_list_add_folder">Ordner hinzufügen</string>
+    <string name="vault_list_edit_vaults_header">Vaults bearbeiten</string>
+    <string name="token_details_bottom_sheet_price">Preis</string>
+    <string name="token_details_bottom_sheet_network">Netzwerk</string>
 </resources>

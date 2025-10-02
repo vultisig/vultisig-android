@@ -104,7 +104,7 @@
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_complete">Complete</string>
     <string name="transaction_done_form_title">Transaction</string>
-    <string name="home_screen_title">Vaults</string>
+    <string name="vault_list_vaults_list">Vaults</string>
     <string name="home_screen_add_new_vault">+ Add New Vault</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
@@ -219,7 +219,7 @@
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_screen_password_error">Password is not correct.</string>
     <string name="backup_password_optional_password_protection">Optional password protection of your Vault</string>
-    <string name="backup_password_screen_save">Save</string>
+    <string name="add_vault_save">Save</string>
     <string name="backup_password_screen_enter_password">Enter Password</string>
     <string name="import_file_screen_enter_password">Enter Password</string>
     <string name="backup_password_screen_verify_password">Verify password</string>
@@ -296,7 +296,7 @@
     <string name="reshare_start_screen_start_reshare">Start Reshare</string>
     <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
     <string name="create_folder_title">Create Folder</string>
-    <string name="create_folder_name">Folder Name</string>
+    <string name="add_folder_folder_name_title">Folder Name</string>
     <string name="create_folder_create">Create</string>
 
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
@@ -318,7 +318,7 @@
     <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
-    <string name="folders_list_title">Folders</string>
+    <string name="vault_list_folders_list">Folders</string>
 
     <!--    fast&active vaults are temporarily disabled -->
     <!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
@@ -341,7 +341,7 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t">Share %1$dof%2$d</string>
+    <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Share %1$d of %2$d</string>
     <string name="vault_list_fast_badge">Fast</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
@@ -824,4 +824,15 @@
     <string name="chain_tokens_tab_hidden">Hidden</string>
     <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
     <string name="address_copied">%1$s address copied</string>
+    <string name="vault_list_vaults_count">%d Vault%s</string>
+    <string name="add_folder_title">Add Folder</string>
+    <string name="add_folder_list_title">Select Vaults</string>
+    <string name="add_folder_active_vaults">Active Vaults</string>
+    <string name="add_folder_available_vaults">Available</string>
+    <string name="add_folder_edit_folder_title">Edit Folder</string>
+    <string name="vault_list_add_folder">Add folder</string>
+    <string name="vault_list_edit_vaults_header">Edit Vaults</string>
+    <string name="token_details_bottom_sheet_price">Price</string>
+    <string name="token_details_bottom_sheet_network">Network</string>
+
 </resources>
