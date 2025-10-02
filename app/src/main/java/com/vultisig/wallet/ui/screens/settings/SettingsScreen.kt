@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
@@ -117,6 +118,12 @@ private fun SettingsScreen(
                     }
                 }
             }
+
+            UiSpacer(
+                size = 15.dp
+            )
+
+            AppVersionText()
         }
 
         if (state.hasToShowReferralCodeSheet) {
