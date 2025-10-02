@@ -86,7 +86,7 @@
     <string name="transaction_done_title">Hecho</string>
     <string name="transaction_done_complete">Completo</string>
     <string name="transaction_done_form_title">Transacción</string>
-    <string name="home_screen_title">Bóvedas</string>
+    <string name="vault_list_vaults_list">Bóvedas</string>
     <string name="home_screen_add_new_vault">+ Agregar Nueva Bóveda</string>
     <string name="import_file_screen_title">Importar</string>
     <string name="import_file_screen_duplicate_vault">La bóveda es una bóveda duplicadat</string>
@@ -189,7 +189,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Asegúrese de que sus contraseñas coincidan</string>
     <string name="import_file_screen_password_error">La contraseña no es correcta.</string>
     <string name="backup_password_optional_password_protection">Protección con contraseña opcional de su bóveda</string>
-    <string name="backup_password_screen_save">Guardar</string>
+    <string name="add_vault_save">Guardar</string>
     <string name="backup_password_screen_enter_password">Introducir contraseña</string>
     <string name="import_file_screen_enter_password">Introducir contraseña</string>
     <string name="backup_password_screen_verify_password">Verificar contraseña</string>
@@ -251,7 +251,7 @@
     <string name="reshare_start_screen_start_reshare">Empezar a compartir</string>
     <string name="threshold_error">Umbral no alcanzado\n Faltan suficientes dispositivos iniciales</string>
     <string name="create_folder_title">Crear carpeta</string>
-    <string name="create_folder_name">Nombre de la carpeta</string>
+    <string name="add_folder_folder_name_title">Nombre de la carpeta</string>
     <string name="create_folder_create">Crear</string>
     <string name="vault_settings_biometrics_screen_title">Habilitar la biometría</string>
     <string name="vault_settings_biometrics_screen_description">Introduzca la contraseña para iniciar sesión rápidamente</string>
@@ -267,7 +267,7 @@
     <string name="vault_settings_biometrics_description">Habilite la biometría para el registro rápido</string>
     <string name="create_folder_list_title">Seleccione Bóvedas para agregarlas a la carpeta.</string>
     <string name="generating_key_screen_reshare_failed">Error al compartir</string>
-    <string name="folders_list_title">Carpetas</string>
+    <string name="vault_list_folders_list">Carpetas</string>
     <string name="keygen_email_continue_button">Continuar</string>
     <string name="keygen_email_caption">Ingresa tu email para recibir tu backup</string>
     <string name="create_folder">Crear carpeta</string>
@@ -445,6 +445,11 @@
     <string name="referral_create_create_referral_code">Crear código de referido</string>
     <string name="referral_create_invalid">Inválido</string>
     <string name="referral_create_available">Disponible</string>
+    <string name="vault_list_vaults_count">%d Bóveda%s</string>
+    <string name="add_folder_title">Añadir carpeta</string>
+    <string name="add_folder_list_title">Seleccionar bóvedas</string>
+    <string name="add_folder_active_vaults">Bóvedas activas</string>
+    <string name="add_folder_available_vaults">Disponible</string>
     <string name="referral_create_taken">Ya está en uso</string>
     <string name="referral_edit_external_title">Editar código referido</string>
     <string name="referral_use_referred_code">Usar código referido</string>
@@ -576,4 +581,9 @@
     <string name="chain_tokens_tab_hidden">Oculto</string>
     <string name="chain_tokens_qr_receive_label">Recibir %1$s</string>
     <string name="address_copied">Dirección %1$s copiada</string>
+    <string name="add_folder_edit_folder_title">Editar carpeta</string>
+    <string name="vault_list_add_folder">Añadir carpeta</string>
+    <string name="vault_list_edit_vaults_header">Editar bóvedas</string>
+    <string name="token_details_bottom_sheet_price">Precio</string>
+    <string name="token_details_bottom_sheet_network">Red</string>
 </resources>

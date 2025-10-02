@@ -302,13 +302,6 @@ internal sealed class Destination(
 
     data object CreateFolder : Destination(route = "create_folder")
 
-    data class Folder(val folderId: String) : Destination(route = "folder/$folderId") {
-        companion object {
-            const val ARG_FOLDER_ID = "folder_id"
-            const val STATIC_ROUTE = "folder/{$ARG_FOLDER_ID}"
-        }
-    }
-
     data class ReshareStartScreen(val vaultId: String) :
         Destination(route = "reshare_start_screen/$vaultId") {
         companion object {
@@ -645,5 +638,23 @@ internal sealed class Route {
     @Serializable
     data class AddChainAccount(
         val vaultId: String
+    )
+
+    @Serializable
+    data class VaultList(
+        val vaultId: VaultId,
+    )
+
+
+    @Serializable
+    data class FolderList(
+        val folderId: String,
+        val vaultId: VaultId,
+    )
+
+
+    @Serializable
+    data class CreateFolder(
+        val folderId: String?,
     )
 }

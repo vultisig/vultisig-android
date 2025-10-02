@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
-import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.chainselectionbottomsheet.components.ChainSelectionItem
+import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.chainselection.components.ChainSelectionItem
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 import com.vultisig.wallet.ui.theme.Theme
 

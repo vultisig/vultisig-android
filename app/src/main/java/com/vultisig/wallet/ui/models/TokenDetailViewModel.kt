@@ -109,6 +109,12 @@ internal class TokenDetailViewModel @Inject constructor(
         }
     }
 
+    fun back(){
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
@@ -139,6 +145,8 @@ internal class TokenDetailViewModel @Inject constructor(
                             tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                             mergeBalance = mergedBalance,
+                            price =  account.price?.let { fiatValueToStringMapper(it) },
+                            network = token.chain.raw,
                         )
                     }
 

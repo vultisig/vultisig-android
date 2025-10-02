@@ -60,6 +60,7 @@ internal fun HomePage(
     onMigrateClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
+    onTempRemoveUpdateBanner: () -> Unit = {},
 ) {
 
     val snackbarState = rememberVsSnackbarState()
@@ -225,6 +226,7 @@ internal fun HomePage(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp),
                             onUpgradeClick = onMigrateClick,
+                            onCloseClick = onTempRemoveUpdateBanner,
                         )
                         UiSpacer(20.dp)
                         UiHorizontalDivider(
