@@ -14,7 +14,7 @@ import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 internal fun HomePageTabMenuAndSearchBar(
     modifier: Modifier = Modifier,
     searchTextFieldState: TextFieldState,
-    onTNFTsClick: () -> Unit = {},
+//    onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onSearchClick: () -> Unit,
@@ -30,7 +30,7 @@ internal fun HomePageTabMenuAndSearchBar(
         tabMenuContent = {
             HomePageTabMenu(
                 modifier = modifier,
-                onTNFTsClick = onTNFTsClick,
+//                onTNFTsClick = onTNFTsClick,
                 onPortfolioClick = onPortfolioClick,
                 onEditClick = onEditClick,
                 onSearchClick = {
