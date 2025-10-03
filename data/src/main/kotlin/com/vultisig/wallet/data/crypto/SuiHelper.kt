@@ -72,7 +72,7 @@ object SuiHelper {
                         .build()
                 )
         }.setSigner(keysignPayload.coin.address)
-            .setGasBudget(3000000L) // TODO: Remove hardcoded gasBudget, use proper calculation
+            .setGasBudget(keysignPayload.blockChainSpecific.gasBudget.toLong())
             .setReferenceGasPrice(referenceGasPrice.toLong())
             .build()
 
@@ -148,5 +148,4 @@ object SuiHelper {
             .checkError()
         return SignedTransactionResult(output.unsignedTx, "", output.signature)
     }
-
 }

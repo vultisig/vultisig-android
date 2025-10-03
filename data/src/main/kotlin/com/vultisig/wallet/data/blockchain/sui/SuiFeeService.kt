@@ -99,6 +99,7 @@ class SuiFeeService(
             blockChainSpecific = BlockChainSpecific.Sui(
                 referenceGasPrice = referenceGasPriceDeferred.await(),
                 coins = allCoinsDeferred.await(),
+                gasBudget = SUI_DEFAULT_GAS_BUDGET,
             ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",
@@ -110,20 +111,20 @@ class SuiFeeService(
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val gasPrice = suiApi.getReferenceGasPrice()
 
-        val estimatedFees = DEFAULT_GAS_BUDGET.increaseByPercent(15)
+        val estimatedFees = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
 
         return GasFees(
             price = gasPrice,
-            limit = DEFAULT_GAS_BUDGET,
+            limit = SUI_DEFAULT_GAS_BUDGET,
             amount = estimatedFees,
         )
         return BasicFee(amount = estimatedFees)
     }
 
-    private companion object {
+    internal companion object {
         // Min gas budget accepeted by the network
         val MIN_NETWORK_GAS_BUDGET = 2000.toBigInteger()
 
-        val DEFAULT_GAS_BUDGET = "3000000".toBigInteger()
+        val SUI_DEFAULT_GAS_BUDGET = "3000000".toBigInteger()
     }
 }

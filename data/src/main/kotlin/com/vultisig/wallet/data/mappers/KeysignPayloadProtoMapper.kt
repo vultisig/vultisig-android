@@ -198,6 +198,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.suicheSpecific != null -> from.suicheSpecific.let {
                     BlockChainSpecific.Sui(
                         referenceGasPrice = BigInteger(it.referenceGasPrice),
+                        gasBudget = BigInteger(it.gasBudget),
                         coins = it.coins.filterNotNull(),
                     )
                 }

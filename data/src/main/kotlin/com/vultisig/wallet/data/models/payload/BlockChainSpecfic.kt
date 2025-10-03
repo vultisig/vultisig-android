@@ -50,6 +50,7 @@ sealed class BlockChainSpecific {
 
     data class Sui(
         val referenceGasPrice: BigInteger,
+        val gasBudget: BigInteger,
         val coins: List<SuiCoin>
     ) : BlockChainSpecific()
 

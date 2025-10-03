@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -370,6 +371,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
                     referenceGasPrice = gasPriceDeferred.await(),
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
                     coins = coinsDeferred.await(),
                 ),
                 utxos = emptyList(),

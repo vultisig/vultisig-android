@@ -41,7 +41,10 @@ class EthereumFeeService @Inject constructor(
     }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
+        require(transaction is Transfer) {
+            "Invalid Transaction Type ${transaction::class.simpleName}"
+        }
+
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
