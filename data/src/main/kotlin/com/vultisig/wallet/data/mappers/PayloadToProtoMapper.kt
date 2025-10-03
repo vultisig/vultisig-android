@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.quotes.dstAmount
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -14,9 +12,6 @@ import vultisig.keysign.v1.CardanoChainSpecific
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
-import vultisig.keysign.v1.KyberSwapPayload
-import vultisig.keysign.v1.KyberSwapQuote
-import vultisig.keysign.v1.KyberSwapTransaction
 import vultisig.keysign.v1.MAYAChainSpecific
 import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload

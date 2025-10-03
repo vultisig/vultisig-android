@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.GasFees
+import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.supportsLegacyGas
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class EthereumFeeService @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : FeeService {
+
     override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val evmApi = evmApiFactory.createEvmApi(chain)
@@ -43,11 +45,11 @@ class EthereumFeeService @Inject constructor(
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
-    }
+        val chain = transaction.coin.chain
+        val defaultLimit = getDefaultLimit(transaction)
+        val isSwap = transaction is Transfer
 
-    private fun calculateLayer1Fees(): BigInteger {
-        return BigInteger.ZERO
+        return calculateFees(chain,  defaultLimit, isSwap)
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger, evmApi: EvmApi): GasFees {
@@ -134,6 +136,22 @@ class EthereumFeeService @Inject constructor(
         }
     }
 
+    private fun getDefaultLimit(transaction: BlockchainTransaction): BigInteger {
+        require(transaction is Transfer) {
+            "Transaction type not supported: ${transaction::class.simpleName}"
+        }
+        val isCoinTransfer = transaction.coin.isNativeToken
+
+        return when {
+            isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT.toBigInteger()
+            else -> DEFAULT_TOKEN_TRANSFER_LIMIT.toBigInteger().increaseByPercent(40)
+        }
+    }
+
+    private fun calculateLayer1Fees(): BigInteger {
+        return BigInteger.ZERO
+    }
+
     companion object {
         private val GWEI = BigInteger.TEN.pow(9)
 
@@ -142,7 +160,7 @@ class EthereumFeeService @Inject constructor(
 
         val DEFAULT_SWAP_LIMIT = "600000"
         val DEFAULT_COIN_TRANSFER_LIMIT = "23000"
-        val DEFAULT_TOKEN_TRANSFER_LIMIT = "120000"
+        val DEFAULT_TOKEN_TRANSFER_LIMIT = "150000"
 
         val DEFAULT_ARBITRUM_TRANSFER = "160000"
         val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000"
