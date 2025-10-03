@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun HomePageTabMenu(
     modifier: Modifier = Modifier,
-    onTNFTsClick: () -> Unit = {},
+//    onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
@@ -59,16 +59,16 @@ internal fun HomePageTabMenu(
                         isEnabled = true
                     )
                 },
-                {
-                    HomepageTab(
-                        onClick = {
-                            onTNFTsClick()
-                            state = 1
-                        },
-                        label = stringResource(R.string.search_bar_nfts),
-                        isEnabled = false
-                    )
-                },
+//                {
+//                    HomepageTab(
+//                        onClick = {
+//                            onTNFTsClick()
+//                            state = 1
+//                        },
+//                        label = stringResource(R.string.search_bar_nfts),
+//                        isEnabled = false
+//                    )
+//                },
             ),
         )
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -220,36 +221,42 @@ internal fun HomePage(
                         .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
-                    if (state.showMigration) {
-                        UiSpacer(12.dp)
-                        UpgradeBanner(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp),
-                            onUpgradeClick = onMigrateClick,
-                            onCloseClick = onTempRemoveUpdateBanner,
-                        )
-                        UiSpacer(20.dp)
-                        UiHorizontalDivider(
-                            color = Theme.colors.borders.light,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                        UiSpacer(16.dp)
-                    }
+                    LazyColumn {
+                        if (state.showMigration) {
+                            item {
+                                UiSpacer(12.dp)
+                                UpgradeBanner(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp),
+                                    onUpgradeClick = onMigrateClick,
+                                    onCloseClick = onTempRemoveUpdateBanner,
+                                )
+                                UiSpacer(20.dp)
+                                UiHorizontalDivider(
+                                    color = Theme.colors.borders.light,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                                UiSpacer(16.dp)
+                            }
+                        }
 
-                    HomePageTabMenuAndSearchBar(
-                        modifier = Modifier.padding(
-                            horizontal = 16.dp,
-                        ),
-                        onEditClick = onChooseChains,
-                        isTabMenu = isTabMenu,
-                        onSearchClick = {
-                            isTabMenu = false
-                        },
-                        onCancelSearchClick = {
-                            isTabMenu = true
-                        },
-                        searchTextFieldState = state.searchTextFieldState,
-                    )
+                        item {
+                            HomePageTabMenuAndSearchBar(
+                                modifier = Modifier.padding(
+                                    horizontal = 16.dp,
+                                ),
+                                onEditClick = onChooseChains,
+                                isTabMenu = isTabMenu,
+                                onSearchClick = {
+                                    isTabMenu = false
+                                },
+                                onCancelSearchClick = {
+                                    isTabMenu = true
+                                },
+                                searchTextFieldState = state.searchTextFieldState,
+                            )
+                        }
+                    }
 
                     TopShineContainer(
                         modifier = Modifier
