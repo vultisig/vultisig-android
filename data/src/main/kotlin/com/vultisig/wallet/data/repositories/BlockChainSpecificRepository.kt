@@ -153,14 +153,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                val defaultGasLimit = BigInteger(
+                val defaultGasLimit =
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
-                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
+                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
                         token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
                         else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                     }
-                )
 
                 val estimateGasLimit = if (token.isNativeToken) evmApi.estimateGasForEthTransaction(
                     senderAddress = token.address,
@@ -346,9 +345,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     val nonceDeferred = async { polkadotApi.getNonce(address) }
                     val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
                     val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
-                    
+
                     val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
-                    
+
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Polkadot(
                             recentBlockHash = blockHashDeferred.await(),
@@ -367,7 +366,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.SUI -> coroutineScope {
             val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
             val coinsDeferred = async { suiApi.getAllCoins(address) }
-            
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
                     referenceGasPrice = gasPriceDeferred.await(),

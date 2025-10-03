@@ -21,6 +21,7 @@ class EthereumFeeService @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : FeeService {
 
+    @Deprecated("Use calculateFees(transaction: BlockchainTransaction): Fee")
     override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val evmApi = evmApiFactory.createEvmApi(chain)
@@ -46,7 +47,7 @@ class EthereumFeeService @Inject constructor(
         }
         val chain = transaction.coin.chain
         val evmApi = evmApiFactory.createEvmApi(chain)
-        val limit = calculateLimit(transaction)
+        val limit = calculateLimit(transaction, evmApi)
 
         val fees = if (chain.supportsLegacyGas) {
             calculateLegacyGasFees(limit, evmApi)
@@ -63,10 +64,30 @@ class EthereumFeeService @Inject constructor(
         return fees.addL1Amount(l1Fees)
     }
 
-    private fun calculateLimit(transaction: Transfer): BigInteger {
+    private suspend fun calculateLimit(transaction: Transfer, evmApi: EvmApi): BigInteger {
         val isCoinTransfer = transaction.coin.isNativeToken
+        val token = transaction.coin
+        val toAddress = transaction.to
+        val amount = transaction.amount
+        val memo = transaction.memo
 
-        TODO("Not yet implemented")
+        val calculatedLimit = if (isCoinTransfer) {
+            evmApi.estimateGasForEthTransaction(
+                senderAddress = token.address,
+                recipientAddress = toAddress,
+                value = amount,
+                memo = memo,
+            )
+        } else {
+            evmApi.estimateGasForERC20Transfer(
+                senderAddress = token.address,
+                recipientAddress = toAddress,
+                contractAddress = token.contractAddress,
+                value = amount,
+            ).increaseByPercent(50)
+        }
+
+        return maxOf(calculatedLimit, getDefaultLimit(transaction))
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
@@ -166,10 +187,12 @@ class EthereumFeeService @Inject constructor(
             "Transaction type not supported: ${transaction::class.simpleName}"
         }
         val isCoinTransfer = transaction.coin.isNativeToken
+        val chain = transaction.coin.chain
 
         return when {
-            isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT.toBigInteger()
-            else -> DEFAULT_TOKEN_TRANSFER_LIMIT.toBigInteger().increaseByPercent(40)
+            chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
+            isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT
+            else -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
         }
     }
 
@@ -183,11 +206,11 @@ class EthereumFeeService @Inject constructor(
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
 
-        val DEFAULT_SWAP_LIMIT = "600000"
-        val DEFAULT_COIN_TRANSFER_LIMIT = "23000"
-        val DEFAULT_TOKEN_TRANSFER_LIMIT = "150000"
+        val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
+        val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()
+        val DEFAULT_TOKEN_TRANSFER_LIMIT = "150000".toBigInteger()
 
-        val DEFAULT_ARBITRUM_TRANSFER = "160000"
-        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000"
+        val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
+        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
     }
 }
