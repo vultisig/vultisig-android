@@ -26,7 +26,7 @@ object SuiHelper {
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Sui) { "Coin is not SUI" }
 
-        val (referenceGasPrice, coins) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Sui
+        val (referenceGasPrice, _, coins) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Sui
             ?: throw RuntimeException("getPreSignedInputData fail to get SUI transaction information from RPC")
 
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)

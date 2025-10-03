@@ -1319,8 +1319,6 @@ internal class SendFormViewModel @Inject constructor(
                     }
                 }
             }
-
-
         }
     }
 

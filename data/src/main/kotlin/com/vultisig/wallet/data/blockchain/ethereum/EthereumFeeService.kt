@@ -44,7 +44,29 @@ class EthereumFeeService @Inject constructor(
         require(transaction is Transfer) {
             "Invalid Transaction Type ${transaction::class.simpleName}"
         }
+        val chain = transaction.coin.chain
+        val evmApi = evmApiFactory.createEvmApi(chain)
+        val limit = calculateLimit(transaction)
 
+        val fees = if (chain.supportsLegacyGas) {
+            calculateLegacyGasFees(limit, evmApi)
+        } else {
+            calculateEip1559Fees(limit, chain, false, evmApi)
+        }
+
+        val l1Fees = if (chain.isLayer2) {
+            calculateLayer1Fees()
+        } else {
+            BigInteger.ZERO
+        }
+
+        return fees.addL1Amount(l1Fees)
+    }
+
+    private fun calculateLimit(transaction: Transfer): BigInteger {
+        val isCoinTransfer = transaction.coin.isNativeToken
+
+        TODO("Not yet implemented")
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
