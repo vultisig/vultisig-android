@@ -50,7 +50,8 @@ internal data class VaultAccountsUiModel(
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
-    val searchTextFieldState: TextFieldState = TextFieldState()
+    val searchTextFieldState: TextFieldState = TextFieldState(),
+    val isBannerVisible: Boolean = true,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
     val filteredAccounts : List<AccountUiModel>
@@ -339,10 +340,10 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun tempRemoveUpdateBanner(){
+    fun tempRemoveBanner(){
         uiState.update {
             it.copy(
-                showMigration = false,
+                isBannerVisible = false,
             )
         }
     }
