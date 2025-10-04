@@ -116,4 +116,9 @@ internal interface UseCasesModule {
         impl: VaultAndBalanceUseCaseImpl
     ): VaultAndBalanceUseCase
 
+    @Binds
+    @Singleton
+    fun bindConverTokenToToken(
+        impl: ConvertTokenToTokenImpl
+    ): ConvertTokenToToken
 }

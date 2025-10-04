@@ -64,5 +64,4 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
     companion object {
         private const val CURRENCY_KEY = "currency_key"
     }
-
 }
