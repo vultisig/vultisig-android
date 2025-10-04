@@ -185,16 +185,15 @@ internal fun PeerDiscoveryScreen(
                     modifier = Modifier
                         .padding(horizontal = 24.dp)
                         .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    val shape = RoundedCornerShape(24.dp)
-
                     QrCodeContainer(
                         qrCode = state.qr,
                         modifier = Modifier
                             .padding(
-                                vertical = 36.dp,
+                                vertical = 20.dp,
                             )
-                            .fillMaxWidth(),
+                            .fillMaxWidth(0.80f),
                         devicesSize = devicesSize,
                     )
 
@@ -227,6 +226,7 @@ internal fun PeerDiscoveryScreen(
                             selectedDevicesSize,
                             state.minimumDevicesDisplayed,
                         ),
+                        textAlign = TextAlign.Start,
                         style = Theme.brockmann.headings.title2,
                         color = Theme.colors.text.primary,
                     )
