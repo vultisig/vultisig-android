@@ -33,8 +33,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.protobuf.ProtoBuf
+import okhttp3.ConnectionPool
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -52,6 +54,25 @@ internal interface DataModule {
         fun provideHttpClient(
             json: Json,
         ): HttpClient = HttpClient(OkHttp) {
+
+            engine {
+                config {
+                    connectTimeout(15, TimeUnit.SECONDS)
+                    readTimeout(30, TimeUnit.SECONDS)
+                    writeTimeout(30, TimeUnit.SECONDS)
+
+                    connectionPool(
+                        ConnectionPool(
+                            5,
+                            5,
+                            TimeUnit.MINUTES
+                        )
+                    )
+
+                    retryOnConnectionFailure(true)
+                }
+            }
+
             if (BuildConfig.DEBUG) {
                 install(Logging) {
                     logger = Logger.ANDROID
@@ -69,8 +90,9 @@ internal interface DataModule {
             }
 
             install(HttpTimeout) {
-                requestTimeoutMillis = 15000
+                requestTimeoutMillis = 30000
                 connectTimeoutMillis = 15000
+                socketTimeoutMillis = 30000
             }
         }
 
