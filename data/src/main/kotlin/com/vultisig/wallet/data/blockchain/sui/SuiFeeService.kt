@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
+import javax.inject.Inject
 
 /**
  * Service responsible for estimating and preparing gas payment details for Sui blockchain transactions.
@@ -42,7 +43,7 @@ import java.math.BigInteger
  *  - Small transactions may still require a minimum network gas budget.
  *  - Reference documentation: [Sui Gas Concepts](https://docs.sui.io/concepts/tokenomics/gas-in-sui)
  */
-class SuiFeeService(
+class SuiFeeService @Inject constructor(
     private val suiApi: SuiApi,
 ) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {

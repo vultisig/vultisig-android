@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.blockchain.cosmos.CosmosFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.ZkFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
@@ -86,4 +87,9 @@ object FeeServiceProvidersModule {
     fun provideThorchainService(
         thorChainApi: ThorChainApi,
     ): FeeService = ThorchainFeeService(thorChainApi)
+
+    @Provides
+    @Singleton
+    @CosmosFee
+    fun provideCosmosService(): FeeService = CosmosFeeService()
 }

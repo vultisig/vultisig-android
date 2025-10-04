@@ -18,6 +18,7 @@ class FeeServiceComposite @Inject constructor(
     @TronFee private val tronFeeService: FeeService,
     @SolanaFee private val solanaFeeService: FeeService,
     @ThorFee private val thorchainFeeService: FeeService,
+    @CosmosFee private val cosmosFeeService: FeeService,
 ) : FeeService {
     
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -58,6 +59,7 @@ class FeeServiceComposite @Inject constructor(
     private fun getFeeServiceForChain(chain: Chain): FeeService {
         return when {
             chain == Chain.ZkSync -> zkFeeService
+            chain.standard == TokenStandard.COSMOS -> cosmosFeeService
             chain.standard == TokenStandard.EVM -> ethereumFeeService
             chain.standard == TokenStandard.SUBSTRATE -> polkadotFeeService
             chain.standard == TokenStandard.RIPPLE -> rippleFeeService

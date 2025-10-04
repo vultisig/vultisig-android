@@ -6,8 +6,9 @@ import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.GasFees
 import com.vultisig.wallet.data.models.Chain
+import javax.inject.Inject
 
-class ThorchainFeeService(
+class ThorchainFeeService @Inject constructor(
     private val thorChainApi: ThorChainApi,
 ): FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
