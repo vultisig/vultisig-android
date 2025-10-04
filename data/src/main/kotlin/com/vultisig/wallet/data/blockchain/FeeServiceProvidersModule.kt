@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.blockchain.ethereum.ZkFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.blockchain.solana.SolanaFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
@@ -29,6 +30,13 @@ object FeeServiceProvidersModule {
     fun provideEthereumFeeService(
         evmApiFactory: EvmApiFactory
     ): FeeService = EthereumFeeService(evmApiFactory)
+
+    @Provides
+    @Singleton
+    @EthereumFee
+    fun provideZkSyncFeeService(
+        evmApiFactory: EvmApiFactory
+    ): FeeService = ZkFeeService(evmApiFactory)
     
     @Provides
     @Singleton

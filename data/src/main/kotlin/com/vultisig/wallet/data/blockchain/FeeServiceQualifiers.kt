@@ -8,6 +8,10 @@ annotation class EthereumFee
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class ZkSyncFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class PolkadotFee
 
 @Qualifier

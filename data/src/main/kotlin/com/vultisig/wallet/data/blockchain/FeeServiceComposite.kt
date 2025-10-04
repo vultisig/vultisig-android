@@ -10,6 +10,7 @@ import javax.inject.Singleton
 @Singleton
 class FeeServiceComposite @Inject constructor(
     @EthereumFee private val ethereumFeeService: FeeService,
+    @ZkSyncFee private val zkFeeService: FeeService,
     @PolkadotFee private val polkadotFeeService: FeeService,
     @RippleFee private val rippleFeeService: FeeService,
     @SuiFee private val suiFeeService: FeeService,
@@ -54,15 +55,16 @@ class FeeServiceComposite @Inject constructor(
     }
     
     private fun getFeeServiceForChain(chain: Chain): FeeService {
-        return when (chain.standard) {
-            TokenStandard.EVM -> ethereumFeeService
-            TokenStandard.SUBSTRATE -> polkadotFeeService
-            TokenStandard.RIPPLE -> rippleFeeService
-            TokenStandard.SUI -> suiFeeService
-            TokenStandard.TON -> tonFeeService
-            TokenStandard.TRC20 -> tronFeeService
-            TokenStandard.SOL -> solanaFeeService
-            else -> error("Not Supported ")
+        return when {
+            chain == Chain.ZkSync -> zkFeeService
+            chain.standard == TokenStandard.EVM -> ethereumFeeService
+            chain.standard == TokenStandard.SUBSTRATE -> polkadotFeeService
+            chain.standard == TokenStandard.RIPPLE -> rippleFeeService
+            chain.standard == TokenStandard.SUI -> suiFeeService
+            chain.standard == TokenStandard.TON -> tonFeeService
+            chain.standard == TokenStandard.TRC20 -> tronFeeService
+            chain.standard == TokenStandard.SOL -> solanaFeeService
+            else -> error("FeeServiceComposite not supported chain: ${chain.name}")
         }
     }
 }
