@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -100,7 +101,8 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val feeServiceComposite: FeeServiceComposite,
-    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl
+    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -153,11 +155,14 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val fees = withContext(Dispatchers.IO) {
                 feeServiceComposite.calculateFees(blockchainTransaction)
             }
+            val nativeCoin = withContext (Dispatchers.IO) {
+                tokenRepository.getNativeToken(chain.id)
+            }
             val fromGas = GasFeeParams(
                 gasLimit = BigInteger.ONE,
                 gasFee = TokenValue(
                     value = fees.amount,
-                    token = tx.token,
+                    token = nativeCoin,
                 ),
                 selectedToken = tx.token,
             )
