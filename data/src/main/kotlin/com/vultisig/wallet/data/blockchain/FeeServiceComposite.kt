@@ -17,6 +17,7 @@ class FeeServiceComposite @Inject constructor(
     @TonFee private val tonFeeService: FeeService,
     @TronFee private val tronFeeService: FeeService,
     @SolanaFee private val solanaFeeService: FeeService,
+    @ThorFee private val thorchainFeeService: FeeService,
 ) : FeeService {
     
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -64,6 +65,7 @@ class FeeServiceComposite @Inject constructor(
             chain.standard == TokenStandard.TON -> tonFeeService
             chain.standard == TokenStandard.TRC20 -> tronFeeService
             chain.standard == TokenStandard.SOL -> solanaFeeService
+            chain.standard == TokenStandard.THORCHAIN -> thorchainFeeService
             else -> error("FeeServiceComposite not supported chain: ${chain.name}")
         }
     }

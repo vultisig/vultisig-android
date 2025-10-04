@@ -33,3 +33,7 @@ annotation class TronFee
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class SolanaFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ThorFee
