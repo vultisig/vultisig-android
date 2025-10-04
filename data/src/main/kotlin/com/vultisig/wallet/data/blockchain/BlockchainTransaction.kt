@@ -27,6 +27,7 @@ data class Swap(
     val to: String,
     val callData: String,
     val approvalData: String?,
+    val limit: BigInteger = BigInteger.ZERO,
 ): BlockchainTransaction
 
 data class VaultData(

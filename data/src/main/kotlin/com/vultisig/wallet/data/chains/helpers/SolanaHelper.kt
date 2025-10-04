@@ -47,12 +47,12 @@ class SolanaHelper(
             .setSender(keysignPayload.coin.address)
             .setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(PRIORITY_FEE_PRICE)
+                    .setPrice(solanaSpecific.priorityFee.toLong())
                     .build()
             )
             .setPriorityFeeLimit(
                 Solana.PriorityFeeLimit.newBuilder()
-                    .setLimit(PRIORITY_FEE_LIMIT)
+                    .setLimit(solanaSpecific.computeLimit.toInt())
                     .build()
             )
 
