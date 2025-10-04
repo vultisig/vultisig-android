@@ -64,9 +64,9 @@ internal fun VsCircleButton(
 
     Box(
         modifier = modifier
-            .clickOnce(onClick = onClick)
             .size(sizeInDp)
             .clip(CircleShape)
+            .clickOnce(onClick = onClick)
             .background(
                 color = backgroundColor
             )
