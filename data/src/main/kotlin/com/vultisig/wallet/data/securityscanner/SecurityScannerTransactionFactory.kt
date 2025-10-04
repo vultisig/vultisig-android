@@ -145,6 +145,7 @@ class SecurityScannerTransactionFactory(
                     fromAddressPubKey = fromAddressPubKey,
                     toAddressPubKey = solanaBlockchainSpecific.toAddressPubKey,
                     programId = solanaBlockchainSpecific.programId,
+                    computeLimit = solanaBlockchainSpecific.computeLimit,
                 ) to SecurityTransactionType.TOKEN_TRANSFER
             }
 

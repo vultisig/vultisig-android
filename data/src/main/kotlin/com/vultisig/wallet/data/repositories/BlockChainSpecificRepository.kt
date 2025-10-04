@@ -21,6 +21,8 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -275,7 +277,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
                     recentBlockHash = recentBlockHashResult,
-                    priorityFee = gasFee.value,
+                    priorityFee = PRIORITY_FEE_PRICE.toBigInteger(),
+                    computeLimit = PRIORITY_FEE_LIMIT.toBigInteger(),
                     fromAddressPubKey = fromAddressPubKeyResult?.first,
                     toAddressPubKey = toAddressPubKeyResult?.first,
                     programId = fromAddressPubKeyResult?.second == true

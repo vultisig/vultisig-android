@@ -43,6 +43,7 @@ sealed class BlockChainSpecific {
     data class Solana(
         val recentBlockHash: String,
         val priorityFee: BigInteger,
+        val computeLimit: BigInteger,
         val fromAddressPubKey: String? = null,
         val toAddressPubKey: String? = null,
         val programId: Boolean = false,
