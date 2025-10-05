@@ -835,8 +835,8 @@
     <string name="token_details_bottom_sheet_price">Price</string>
     <string name="token_details_bottom_sheet_network">Network</string>
 
-    <string name="invite_to_x_banner_title" translatable="false">Vultisig is building with you.</string>
-    <string name="invite_to_x_banner_desc" translatable="false">Follow us on X</string>
-    <string name="invite_to_x_banner_button" translatable="false">Follow %s</string>
+    <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
+    <string name="invite_to_x_banner_desc">Follow us on X</string>
+    <string name="invite_to_x_banner_button">Follow %s</string>
 
 </resources>

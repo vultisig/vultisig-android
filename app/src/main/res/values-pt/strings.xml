@@ -585,4 +585,7 @@
     <string name="vault_list_edit_vaults_header">Editar Cofres</string>
     <string name="token_details_bottom_sheet_price">Preço</string>
     <string name="token_details_bottom_sheet_network">Rede</string>
+    <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
+    <string name="invite_to_x_banner_desc">Siga-nos no X</string>
+    <string name="invite_to_x_banner_button">Siga %s</string>
 </resources>

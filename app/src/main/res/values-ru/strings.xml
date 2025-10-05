@@ -598,4 +598,7 @@
     <string name="vault_list_edit_vaults_header">Редактировать хранилища</string>
     <string name="token_details_bottom_sheet_price">Цена</string>
     <string name="token_details_bottom_sheet_network">Сеть</string>
+    <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
+    <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
+    <string name="invite_to_x_banner_button">Подписаться на %s</string>
 </resources>

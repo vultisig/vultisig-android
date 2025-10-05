@@ -143,13 +143,13 @@ private fun PreviewAccounts() {
         onCopy = {},
         account = AccountUiModel(
             chainName = "Ethereum",
-            logo = R.drawable.bitcoin,
+            logo = R.drawable.ethereum,
             address = "0x123abc456bca123abc456bca123abc456bca",
             nativeTokenAmount = "0.01",
             fiatAmount = "999$",
             assetsSize = 4,
             model = Address(
-                chain = Chain.Bitcoin,
+                chain = Chain.Ethereum,
                 address = "123abc456bca123abc456bca123abc456bca",
                 accounts = emptyList()
             )

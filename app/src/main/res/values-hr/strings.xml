@@ -587,4 +587,7 @@
     <string name="vault_list_edit_vaults_header">Uredi trezore</string>
     <string name="token_details_bottom_sheet_price">Cijena</string>
     <string name="token_details_bottom_sheet_network">Mreža</string>
+    <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
+    <string name="invite_to_x_banner_desc">Pratite nas na X</string>
+    <string name="invite_to_x_banner_button">Pratite %s</string>
 </resources>

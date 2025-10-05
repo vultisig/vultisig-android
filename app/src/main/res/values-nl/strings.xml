@@ -595,4 +595,7 @@
     <string name="vault_list_edit_vaults_header">Kluizen bewerken</string>
     <string name="token_details_bottom_sheet_price">Prijs</string>
     <string name="token_details_bottom_sheet_network">Netwerk</string>
+    <string name="invite_to_x_banner_title">Vultisig bouwt met je mee.</string>
+    <string name="invite_to_x_banner_desc">Volg ons op X</string>
+    <string name="invite_to_x_banner_button">Volg %s</string>
 </resources>

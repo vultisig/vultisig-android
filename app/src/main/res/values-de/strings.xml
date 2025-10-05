@@ -588,4 +588,7 @@
     <string name="vault_list_edit_vaults_header">Vaults bearbeiten</string>
     <string name="token_details_bottom_sheet_price">Preis</string>
     <string name="token_details_bottom_sheet_network">Netzwerk</string>
+    <string name="invite_to_x_banner_title">Vultisig entwickelt mit Ihnen.</string>
+    <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>
+    <string name="invite_to_x_banner_button">Folgen Sie %s</string>
 </resources>
