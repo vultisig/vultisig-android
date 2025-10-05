@@ -79,10 +79,11 @@ internal fun FollowXBanner(
 
         Box(
             modifier = Modifier
+                .fillMaxSize()
         ) {
             Image(
                 painter = painterResource(
-                    id = R.drawable.invide_x_banner
+                    id = R.drawable.invite_x_banner
                 ),
                 contentDescription = null,
                 modifier = Modifier
@@ -104,7 +105,7 @@ private fun PreviewInviteToXBanner() {
                 .height(140.dp)
     ) {
         FollowXBanner {
-            
+
         }
     }
 }

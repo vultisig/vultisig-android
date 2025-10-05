@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 
 @Stable
-internal class VsPagerState internal constructor() {
+internal class VsPagerState {
     private val _pages = mutableStateListOf<@Composable () -> Unit>()
 
     val pages: List<@Composable () -> Unit>
@@ -16,28 +16,25 @@ internal class VsPagerState internal constructor() {
     val pageCount: Int
         get() = _pages.size
 
-    val currentPageValue = mutableIntStateOf(0)
-
     val currentPage: Int
-        get() = currentPageValue.intValue
+        get() = _currentPage.intValue
+    private val _currentPage = mutableIntStateOf(0)
 
     fun item(content: @Composable () -> Unit) {
         _pages.add(content)
     }
 
     fun updateCurrentPage(page: Int) {
-        currentPageValue.intValue = page
+        _currentPage.intValue = page
     }
 
-    internal fun clear() {
+    fun clear() {
         _pages.clear()
     }
 
 }
 
 @Composable
-internal fun rememberVsPagerState(key1: Any?): VsPagerState {
-    return remember(key1 = key1) {
-        VsPagerState()
-    }
+internal fun rememberVsPagerState(key: Any?) = remember(key1 = key) {
+    VsPagerState()
 }

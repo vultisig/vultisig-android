@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,7 +31,6 @@ import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AccountItem(
     modifier: Modifier = Modifier,
@@ -145,7 +143,7 @@ private fun PreviewAccounts() {
         onCopy = {},
         account = AccountUiModel(
             chainName = "Ethereum",
-            logo = R.drawable.ethereum,
+            logo = R.drawable.bitcoin,
             address = "0x123abc456bca123abc456bca123abc456bca",
             nativeTokenAmount = "0.01",
             fiatAmount = "999$",

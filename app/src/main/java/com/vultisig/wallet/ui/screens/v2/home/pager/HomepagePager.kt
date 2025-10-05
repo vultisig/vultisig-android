@@ -23,7 +23,7 @@ internal fun HomepagePager(
     onUpgradeClick: () -> Unit,
     onFollowXClick: () -> Unit,
 ) {
-    val state = rememberVsPagerState(key1 = params)
+    val state = rememberVsPagerState(key = params)
 
     Column(
         modifier = modifier

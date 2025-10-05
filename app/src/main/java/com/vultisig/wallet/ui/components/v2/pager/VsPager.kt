@@ -28,12 +28,8 @@ internal fun VsPager(
         pageCount = { state.pageCount }
     )
 
-    val currentPage by remember {
-        derivedStateOf { pagerState.currentPage }
-    }
-
-    if (state.currentPage != currentPage) {
-        state.updateCurrentPage(currentPage)
+    LaunchedEffect(pagerState.currentPage) {
+        state.updateCurrentPage(pagerState.currentPage)
     }
 
     HorizontalPager(

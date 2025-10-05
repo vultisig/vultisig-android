@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.home
 
 import android.content.Context
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -228,11 +229,14 @@ internal fun HomePage(
                         .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
-                    LazyColumn {
+                    LazyColumn(
+                        modifier = Modifier
+                            .animateContentSize()
+                    ) {
                         if (state.isBannerVisible)
                             item {
                                 Banners(
-                                    state = state,
+                                    hasMigration = state.showMigration,
                                     onMigrateClick = onMigrateClick,
                                     context = context,
                                     onDismissBanner = onDismissBanner
@@ -293,7 +297,7 @@ internal fun HomePage(
 
 @Composable
 private fun Banners(
-    state: VaultAccountsUiModel,
+    hasMigration: Boolean,
     onMigrateClick: () -> Unit,
     context: Context,
     onDismissBanner: () -> Unit,
@@ -303,7 +307,7 @@ private fun Banners(
         modifier = Modifier
             .padding(horizontal = 16.dp),
         params = HomepagePagerParams(
-            hasMigration = state.showMigration
+            hasMigration = hasMigration
         ),
         onUpgradeClick = onMigrateClick,
         onFollowXClick = {
