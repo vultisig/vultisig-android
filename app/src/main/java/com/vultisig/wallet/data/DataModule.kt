@@ -64,7 +64,7 @@ internal interface DataModule {
                     connectionPool(
                         ConnectionPool(
                             5,
-                            5,
+                            2,
                             TimeUnit.MINUTES
                         )
                     )
@@ -90,7 +90,7 @@ internal interface DataModule {
             }
 
             install(HttpTimeout) {
-                requestTimeoutMillis = 30000
+                requestTimeoutMillis = 15000
                 connectTimeoutMillis = 15000
                 socketTimeoutMillis = 30000
             }
