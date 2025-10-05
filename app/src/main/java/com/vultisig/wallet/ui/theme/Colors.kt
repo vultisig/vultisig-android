@@ -100,7 +100,12 @@ internal data class BackgroundsColors(
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
     val neutral: Color = Color(0xFF061B3A),
-    val disabled: Color = Color(0x800B1A3A)
+    val disabled: Color = Color(0x800B1A3A),
+    val states: BackgroundStateColors = BackgroundStateColors(),
+)
+
+internal data class BackgroundStateColors(
+    val success: Color = Color(0xFF042436),
 )
 
 internal data class PrimaryColors(
