@@ -13,7 +13,6 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.UiText
@@ -153,7 +152,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.ic_small_caret_right
             )
         )
-    
+
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
@@ -278,11 +277,11 @@ internal class SettingsViewModel @Inject constructor(
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
             AddressBook -> {
-                routeTo(Route.AddressEntry(vaultId = vaultId))
+                navigateTo(Destination.AddressBook(vaultId = vaultId))
             }
 
             CheckForUpdates -> {
-               navigateTo(Destination.CheckForUpdateSetting)
+                navigateTo(Destination.CheckForUpdateSetting)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)
@@ -380,12 +379,6 @@ internal class SettingsViewModel @Inject constructor(
                 }
             }
         )
-    }
-
-    private fun routeTo(route: Any) {
-        viewModelScope.launch {
-            navigator.route(route)
-        }
     }
 
     private fun navigateTo(destination: Destination) {
