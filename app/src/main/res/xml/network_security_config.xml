@@ -5,8 +5,6 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    
-    <!-- Domain-specific configuration for vultisig.com -->
     <domain-config>
         <domain includeSubdomains="true">vultisig.com</domain>
         <trust-anchors>
@@ -14,4 +12,11 @@
             <certificates src="@raw/cloudflare_tls_issuing_ecc_ca_1" />
         </trust-anchors>
     </domain-config>
+
+    <domain-config>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <cleartextTrafficPermitted>true</cleartextTrafficPermitted>
+    </domain-config>
+
 </network-security-config>
