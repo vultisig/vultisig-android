@@ -7,24 +7,26 @@ import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import javax.inject.Inject
 
 interface ConvertTokenToToken {
     suspend fun convertTokenToToken(
         fromAmount: BigInteger,
-        fromToken: Coin,
+        coinAndFiatValue: CoinAndFiatValue,
         toToken: Coin,
     ): BigInteger
 }
 
-internal class ConvertTokenToTokenImpl(
+internal class ConvertTokenToTokenImpl @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
 ): ConvertTokenToToken {
     override suspend fun convertTokenToToken(
         fromAmount: BigInteger,
-        fromToken: Coin,
+        coinAndFiatValue: CoinAndFiatValue,
         toToken: Coin,
     ): BigInteger {
+        val fromToken = coinAndFiatValue.coin
         if (fromToken.id == toToken.id) {
             return fromAmount
         }
@@ -35,15 +37,9 @@ internal class ConvertTokenToTokenImpl(
         
         val appCurrency = appCurrencyRepository.currency.first()
         val fromAmountDecimal = fromToken.toDecimalValue(fromAmount)
-        val fromPrice = tokenPriceRepository.getCachedPrice(
-            tokenId = fromToken.priceProviderID,
-            appCurrency = appCurrency,
-        ) ?: BigDecimal.ZERO
+        val fromPrice = coinAndFiatValue.fiatValue.value
         
-        val toPrice = tokenPriceRepository.getCachedPrice(
-            tokenId = toToken.priceProviderID,
-            appCurrency = appCurrency
-        ) ?: BigDecimal.ZERO
+        val toPrice = tokenPriceRepository.getPrice(toToken, appCurrency).first()
         
         if (fromPrice == BigDecimal.ZERO || toPrice == BigDecimal.ZERO) {
             return BigInteger.ZERO
@@ -61,7 +57,7 @@ internal class ConvertTokenToTokenImpl(
     }
     
     companion object {
-        private const val CALCULATION_SCALE = 6
+        private const val CALCULATION_SCALE = 18
     }
 }
 
