@@ -410,7 +410,7 @@ internal class KeysignViewModel(
                 navigator.route(
                     Route.AddressEntry(
                         vaultId = vault.id,
-                        address = tx.srcAddress,
+                        address = tx.dstAddress,
                         chainId = tx.token.token.chain.id
                     )
                 )
