@@ -119,7 +119,7 @@ fun WalletEarnSelect(
                         isWalletSelected = false
                         onEarnClick()
                     },
-                    text = stringResource(R.string.earn),
+                    text = stringResource(R.string.defi),
                     icon = R.drawable.coins_add,
                     enabled = !isWalletSelected,
                     isClickable = IS_EARN_ENABLED,

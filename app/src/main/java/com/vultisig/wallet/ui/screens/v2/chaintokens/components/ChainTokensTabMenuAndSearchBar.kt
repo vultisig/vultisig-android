@@ -96,7 +96,7 @@ fun ChainTokensTabMenuAndSearchBar(
                         .clickOnce(onClick = onEditClick)
                 ) {
                     UiIcon(
-                        drawableResId = R.drawable.edit,
+                        drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
                         tint = Theme.colors.primary.accent4,

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -132,7 +133,8 @@ internal fun VaultCeil(
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.primary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 150.dp),
                     )
                     UiSpacer(
                         size = 2.dp
@@ -150,15 +152,47 @@ internal fun VaultCeil(
                                 size = 4.dp
                             )
                         }
-                        Text(
-                            text = activeVaultName?.let { "'$activeVaultName' Active" }
-                                ?: if (model.isFolder) "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}" else model.balance
-                                    ?: "",
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = if (model.isFolder && isSelected)
-                                Theme.colors.alerts.info else Theme.colors.text.extraLight,
 
-                            )
+                        if (activeVaultName != null) {
+                            Row {
+
+                                ActiveVaultName(
+                                    isSelected = isSelected,
+                                    isFolder = model.isFolder,
+                                    content = "'"
+                                )
+                                ActiveVaultName(
+                                    isSelected = isSelected,
+                                    isFolder = model.isFolder,
+                                    content = activeVaultName
+                                )
+                                ActiveVaultName(
+                                    isSelected = isSelected,
+                                    isFolder = model.isFolder,
+                                    content = "'"
+                                )
+
+                                UiSpacer(
+                                    size = 4.dp
+                                )
+
+                                ActiveVaultName(
+                                    isSelected = isSelected,
+                                    isFolder = model.isFolder,
+                                    content = stringResource(R.string.vault_ceil_active)
+                                )
+
+                            }
+                        } else {
+                            Text(
+                                text = if (model.isFolder) "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}" else model.balance
+                                    ?: "",
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = if (model.isFolder && isSelected)
+                                    Theme.colors.alerts.info else Theme.colors.text.extraLight,
+
+                                )
+                        }
                     }
                 }
 
@@ -217,6 +251,23 @@ internal fun VaultCeil(
             }
         }
     }
+}
+
+@Composable
+private fun ActiveVaultName(
+    isSelected: Boolean,
+    isFolder: Boolean,
+    content: String,
+) {
+    Text(
+        text = content,
+        style = Theme.brockmann.supplementary.footnote,
+        color = if (isFolder && isSelected)
+            Theme.colors.alerts.info else Theme.colors.text.extraLight,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.widthIn(max = 150.dp),
+    )
 }
 
 @Preview

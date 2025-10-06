@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -262,7 +264,9 @@ internal fun VaultInfo(
             size = 4.dp
         )
 
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
 
             Text(
                 text = "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}",
@@ -270,10 +274,20 @@ internal fun VaultInfo(
                 color = Theme.colors.text.extraLight,
             )
 
-            Text(
-                text = " . ",
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.extraLight,
+            UiSpacer(
+                size = 6.dp
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(2.dp)
+                    .background(
+                        color = Theme.colors.text.primary,
+                    )
+            )
+
+            UiSpacer(
+                size = 6.dp
             )
             LoadableValue(
                 value = totalBalance,
@@ -296,7 +310,7 @@ private fun VaultsRearrangeHeader(
             designType = DesignType.Shined,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Primary,
-            icon = R.drawable.ic_check,
+            drawableResId = R.drawable.big_tick,
             onClick = onCommitClick,
         )
     }

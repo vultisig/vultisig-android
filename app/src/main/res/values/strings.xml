@@ -834,5 +834,7 @@
     <string name="vault_list_edit_vaults_header">Edit Vaults</string>
     <string name="token_details_bottom_sheet_price">Price</string>
     <string name="token_details_bottom_sheet_network">Network</string>
+    <string name="defi" translatable="false">DeFi</string>
+    <string name="vault_ceil_active" translatable="false">Active</string>
 
 </resources>
