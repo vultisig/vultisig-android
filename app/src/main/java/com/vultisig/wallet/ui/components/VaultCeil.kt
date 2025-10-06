@@ -134,7 +134,7 @@ internal fun VaultCeil(
                         color = Theme.colors.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 150.dp),
+                        modifier = Modifier.widthIn(max = 140.dp),
                     )
                     UiSpacer(
                         size = 2.dp
@@ -266,7 +266,7 @@ private fun ActiveVaultName(
             Theme.colors.alerts.info else Theme.colors.text.extraLight,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.widthIn(max = 150.dp),
+        modifier = Modifier.widthIn(max = 140.dp),
     )
 }
 

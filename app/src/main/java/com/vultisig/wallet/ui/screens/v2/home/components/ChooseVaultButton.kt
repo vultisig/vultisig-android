@@ -61,7 +61,7 @@ internal fun ChooseVaultButton(
                 color = Theme.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 150.dp),
+                modifier = Modifier.widthIn(max = 138.dp),
             )
             UiSpacer(
                 size = 4.dp

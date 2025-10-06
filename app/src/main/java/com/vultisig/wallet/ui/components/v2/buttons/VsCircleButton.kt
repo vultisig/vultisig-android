@@ -107,12 +107,12 @@ internal fun VsCircleButton(
 internal fun VsCircleButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    content: @Composable BoxScope.() -> Unit,
     size: VsCircleButtonSize = VsCircleButtonSize.Medium,
     type: VsCircleButtonType = VsCircleButtonType.Primary,
     designType: DesignType = DesignType.Solid,
     hasBorder: Boolean = false,
-) {
+    content: @Composable BoxScope.() -> Unit,
+    ) {
     val sizeInDp = when (size) {
         is VsCircleButtonSize.Custom -> size.size
         VsCircleButtonSize.Medium -> 64.dp
