@@ -1145,6 +1145,8 @@ internal class SwapFormViewModel @Inject constructor(
                                     Pair(BigInteger.ZERO, srcNativeToken)
                                 }
 
+                                val updatedTx = quote.tx.copy(swapFee = feeAmount.toString())
+
                                 val tokenFees = TokenValue(
                                     value = feeAmount, token = feeCoin
                                 )
@@ -1152,7 +1154,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
-                                    data = quote,
+                                    data = quote.copy(tx = updatedTx),
                                     expiredAt = Clock.System.now() + expiredAfter,
                                     provider = provider.getSwapProviderId(),
                                 )
