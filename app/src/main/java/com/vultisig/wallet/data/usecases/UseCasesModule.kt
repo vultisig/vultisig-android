@@ -118,7 +118,7 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
-    fun bindConverTokenToToken(
+    fun bindConvertTokenToToken(
         impl: ConvertTokenToTokenImpl
     ): ConvertTokenToToken
 }
