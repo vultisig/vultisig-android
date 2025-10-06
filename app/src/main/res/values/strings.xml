@@ -836,5 +836,6 @@
     <string name="token_details_bottom_sheet_network">Network</string>
     <string name="defi" translatable="false">DeFi</string>
     <string name="vault_ceil_active" translatable="false">Active</string>
+    <string name="send_tx_overview_add_to_address_book" translatable="false">Add to Address Book</string>
 
 </resources>
