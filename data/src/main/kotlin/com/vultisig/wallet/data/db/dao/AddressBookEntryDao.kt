@@ -20,4 +20,7 @@ interface AddressBookEntryDao {
     @Query("DELETE FROM address_book_entry WHERE chainId = :chainId AND address = :address")
     suspend fun delete(chainId: String, address: String)
 
+    @Query("SELECT EXISTS(SELECT 1 FROM address_book_entry WHERE chainId = :chainId AND address = :address)")
+    suspend fun entryExists(chainId: String, address: String): Boolean
+
 }

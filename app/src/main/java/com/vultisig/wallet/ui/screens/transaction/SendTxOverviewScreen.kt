@@ -1,17 +1,21 @@
 package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +31,7 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -39,10 +44,12 @@ import java.math.BigInteger
 @Composable
 internal fun SendTxOverviewScreen(
     showToolbar: Boolean = true,
+    showSaveToAddressBook: Boolean,
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
+    onAddToAddressBook: () -> Unit,
     tx: UiTransactionInfo,
 ) {
 
@@ -91,10 +98,33 @@ internal fun SendTxOverviewScreen(
                     size = 1.dp,
                 )
 
-                TextDetails(
-                    title = stringResource(R.string.tx_overview_screen_tx_to),
-                    subtitle = tx.to,
-                )
+
+                if (showSaveToAddressBook) {
+                    Column {
+                        TextDetails(
+                            title = stringResource(R.string.tx_overview_screen_tx_to),
+                            subtitle = tx.to,
+                        )
+
+                        UiSpacer(
+                            8.dp
+                        )
+
+                        AddToAddressBookButton(
+                            modifier = Modifier
+                                .align(Alignment.End),
+                            onClick = onAddToAddressBook
+                        )
+                        UiSpacer(
+                            size = 12.dp
+                        )
+                    }
+                } else {
+                    TextDetails(
+                        title = stringResource(R.string.tx_overview_screen_tx_to),
+                        subtitle = tx.to,
+                    )
+                }
 
                 if (tx.memo.isNotEmpty()) {
                     VerifyCardDivider(
@@ -177,6 +207,51 @@ internal fun SendTxOverviewScreen(
 }
 
 @Composable
+private fun AddToAddressBookButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            4.dp,
+            Alignment.End
+        ),
+        modifier = modifier
+            .clip(CircleShape)
+            .background(
+                color = Theme.colors.backgrounds.states.success,
+                shape = CircleShape
+            )
+            .border(
+                width = 1.dp,
+                color = Theme.colors.alerts.success,
+                shape = CircleShape
+            )
+            .clickOnce(
+                onClick = onClick
+            )
+            .padding(
+                vertical = 8.dp,
+                horizontal = 10.dp
+            ),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.plus,
+            size = 16.dp,
+            tint = Theme.colors.alerts.success,
+        )
+
+
+        Text(
+            text = stringResource(R.string.send_tx_overview_add_to_address_book),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.colors.alerts.success,
+        )
+    }
+}
+
+@Composable
 internal fun TxDetails(
     title: String,
     hash: String,
@@ -233,6 +308,7 @@ private fun PreviewSendTxOverviewScreen() {
         transactionHash = "",
         transactionLink = "",
         onComplete = {},
+        onAddToAddressBook = {},
         tx = TransactionTypeUiModel.Deposit(
             depositTransactionUiModel = DepositTransactionUiModel(
                 token = ValuedToken.Empty,
@@ -241,7 +317,8 @@ private fun PreviewSendTxOverviewScreen() {
                 memo = "sdfsdfsdfsdfs",
                 dstAddress = "abx123abx123abx123abx123ab"
             )
-        ).toUiTransactionInfo()
+        ).toUiTransactionInfo(),
+        showSaveToAddressBook = true,
     )
 }
 
