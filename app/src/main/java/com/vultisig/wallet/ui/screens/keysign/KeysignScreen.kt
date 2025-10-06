@@ -126,6 +126,8 @@ private fun Keysign(
         showToolbar = true,
         onBack = {
             viewModel.navigateToHome()
-        }
+        },
+        onAddToAddressBook = keysignViewModel::navigateToAddressBook,
+        showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
     )
 }
