@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -54,11 +56,13 @@ internal class AddressEntryViewModel @Inject constructor(
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
-    private val addressBookEntryChainId = savedStateHandle.get<String?>(Destination.ARG_CHAIN_ID)
+    private val addressBookEntryChainId = savedStateHandle.toRoute<Route.AddressEntry>().chainId
 
-    private val addressBookEntryAddress = savedStateHandle.get<String?>(Destination.ARG_ADDRESS)
+    private val addressBookEntryAddress = savedStateHandle.toRoute<Route.AddressEntry>().address
 
-    private val vaultId = savedStateHandle.get<String>(Destination.ARG_VAULT_ID)
+    private val vaultId = savedStateHandle.toRoute<Route.AddressEntry>().vaultId
+
+    private var addressExist : Boolean = false
 
     val titleTextFieldState = TextFieldState()
     val addressTextFieldState = TextFieldState()
@@ -66,18 +70,22 @@ internal class AddressEntryViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             if (addressBookEntryChainId != null && addressBookEntryAddress != null) {
-                val addressBookEntry = addressBookRepository.getEntry(
-                    chainId = addressBookEntryChainId,
-                    address = addressBookEntryAddress
+                addressExist = addressBookRepository.entryExists(
+                    addressBookEntryChainId,
+                    addressBookEntryAddress
                 )
-                state.update {
-                    it.copy(
-                        titleRes = R.string.edit_address_title,
-                        selectedChain = addressBookEntry.chain,
+
+                if (addressExist) {
+                    editAddress(
+                        addressBookEntryChainId = addressBookEntryChainId,
+                        addressBookEntryAddress = addressBookEntryAddress
+                    )
+                } else {
+                    createAddress(
+                        addressBookEntryChainId = addressBookEntryChainId,
+                        addressBookEntryAddress = addressBookEntryAddress
                     )
                 }
-                titleTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntry.title)
-                addressTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntry.address)
             }
         }
 
@@ -98,6 +106,38 @@ internal class AddressEntryViewModel @Inject constructor(
         }
             .launchIn(viewModelScope)
 
+    }
+
+    private fun createAddress(
+        addressBookEntryChainId: String,
+        addressBookEntryAddress: String,
+    ) {
+        state.update {
+            it.copy(
+                titleRes = R.string.add_address_title,
+                selectedChain = Chain.fromRaw(addressBookEntryChainId),
+            )
+        }
+        addressTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntryAddress)
+    }
+
+    private suspend fun editAddress(
+        addressBookEntryChainId: String,
+        addressBookEntryAddress: String,
+    ) {
+        val addressBookEntry = addressBookRepository.getEntry(
+            chainId = addressBookEntryChainId,
+            address = addressBookEntryAddress
+        )
+        state.update {
+            it.copy(
+                titleRes = R.string.edit_address_title,
+                selectedChain = addressBookEntry.chain,
+            )
+        }
+
+        titleTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntry.title)
+        addressTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntry.address)
     }
 
 
@@ -129,7 +169,7 @@ internal class AddressEntryViewModel @Inject constructor(
     fun selectChain(chain: Chain) {
         viewModelScope.launch {
             val selectedChain = selectNetwork(
-                vaultId = vaultId ?: return@launch,
+                vaultId = vaultId,
                 selectedChain = chain,
             ) ?: return@launch
 
@@ -156,7 +196,7 @@ internal class AddressEntryViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            if (addressBookEntryChainId != null && addressBookEntryAddress != null) {
+            if (addressBookEntryChainId != null && addressBookEntryAddress != null && addressExist) {
                 addressBookRepository.delete(addressBookEntryChainId, addressBookEntryAddress)
                 val orderName = "${addressBookEntryChainId}-${addressBookEntryAddress}"
                 val order = orderRepository.find(parentId = null, name = orderName)
@@ -170,8 +210,16 @@ internal class AddressEntryViewModel @Inject constructor(
                     title = title
                 )
             )
-
-            navigator.navigate(Destination.Back)
+            if (addressBookEntryChainId != null && addressBookEntryAddress != null && addressExist.not()) {
+                navigator.navigate(
+                    dst = Destination.Home(),
+                    opts = NavigationOptions(
+                        clearBackStack = true
+                    )
+                )
+            } else {
+                navigator.navigate(Destination.Back)
+            }
         }
     }
 

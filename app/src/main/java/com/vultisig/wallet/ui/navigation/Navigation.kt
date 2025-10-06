@@ -128,17 +128,6 @@ internal sealed class Destination(
         }
     }
 
-    data class AddressEntry(
-        val chainId: String? = null,
-        val address: String? = null,
-        val vaultId: String,
-    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address&$ARG_VAULT_ID=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE =
-                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
-        }
-    }
-
 
     data object Back : Destination(
         route = "back"
@@ -657,4 +646,12 @@ internal sealed class Route {
     data class CreateFolder(
         val folderId: String?,
     )
+
+    @Serializable
+    data class AddressEntry(
+        val chainId: String? = null,
+        val address: String? = null,
+        val vaultId: String,
+    )
+
 }
