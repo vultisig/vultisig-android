@@ -13,10 +13,9 @@
         </trust-anchors>
     </domain-config>
 
-    <domain-config>
+    <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">localhost</domain>
-        <cleartextTrafficPermitted>true</cleartextTrafficPermitted>
     </domain-config>
 
 </network-security-config>
