@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config>
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
@@ -12,5 +12,4 @@
             <certificates src="@raw/cloudflare_tls_issuing_ecc_ca_1" />
         </trust-anchors>
     </domain-config>
-
 </network-security-config>
