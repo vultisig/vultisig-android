@@ -354,11 +354,19 @@ internal open class VaultSettingsViewModel @Inject constructor(
             }
 
             is VaultSettingsItem.BiometricFastSign -> {
-                val newItem = uiModel.value.copy(
-                    isBiometricFastSignBottomSheetVisible = true,
-                )
-                uiModel.update {
-                    newItem
+                if (!item.isBiometricEnabled) {
+                    val newItem = uiModel.value.copy(
+                        isBiometricFastSignBottomSheetVisible = true,
+                    )
+                    uiModel.update {
+                        newItem
+                    }
+                } else {
+                    viewModelScope.launch {
+                        vaultPasswordRepository.clearPassword(vaultId)
+                        isBiometricFastSignEnabled = false
+                        showSnackbarMessage()
+                    }
                 }
             }
 
@@ -531,13 +539,8 @@ internal open class VaultSettingsViewModel @Inject constructor(
             isBiometricFastSignEnabled = true
             passwordTextFieldState.clearText()
             hideBiometricFastVaultBottomSheet()
-        } else {
-            vaultPasswordRepository.clearPassword(vaultId)
-            isBiometricFastSignEnabled = false
-            passwordTextFieldState.clearText()
-            hideBiometricFastVaultBottomSheet()
+            showSnackbarMessage()
         }
-        showSnackbarMessage()
     }
 
     private fun hideBiometricFastVaultBottomSheet() {
