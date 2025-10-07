@@ -9,7 +9,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import androidx.navigation.toRoute
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
@@ -237,24 +236,7 @@ internal fun SetupNavGraph(
             AddressBookScreen(navController = navController)
         }
 
-        composable(
-            route = Destination.AddressEntry.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_CHAIN_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument(ARG_ADDRESS) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = false
-                },
-
-                )
-        ) {
+        composable<AddressEntry> {
             AddAddressEntryScreen(
                 navController = navController,
             )

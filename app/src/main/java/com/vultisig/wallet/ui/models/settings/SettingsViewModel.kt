@@ -152,7 +152,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.ic_small_caret_right
             )
         )
-    
+
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
@@ -281,7 +281,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             CheckForUpdates -> {
-               navigateTo(Destination.CheckForUpdateSetting)
+                navigateTo(Destination.CheckForUpdateSetting)
             }
             is Currency -> {
                 navigateTo(Destination.CurrencyUnitSetting)

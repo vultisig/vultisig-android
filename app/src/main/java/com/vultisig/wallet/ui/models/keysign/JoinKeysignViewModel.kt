@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -184,6 +185,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val broadcastTx: BroadcastTxUseCase,
     private val fourByteRepository: FourByteRepository,
     private val securityScannerService: SecurityScannerContract,
+    private val addressBookRepository: AddressBookRepository,
 ) : ViewModel() {
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
@@ -235,6 +237,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             pullTssMessages = pullTssMessages,
             customMessagePayload = customMessagePayload,
             isInitiatingDevice = false,
+            addressBookRepository = addressBookRepository,
         )
 
     val verifyUiModel =

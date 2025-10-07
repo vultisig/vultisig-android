@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -112,6 +113,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
+    private val addressBookRepository: AddressBookRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -176,6 +178,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             transactionTypeUiModel = transactionTypeUiModel,
             pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
+            addressBookRepository = addressBookRepository,
         )
 
     init {

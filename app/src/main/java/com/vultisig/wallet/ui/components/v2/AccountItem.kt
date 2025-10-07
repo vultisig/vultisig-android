@@ -19,9 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -130,6 +134,41 @@ internal fun AccountItem(
             }
 
         }
+
+        UiSpacer(
+            size = 8.dp
+        )
+
+        UiIcon(
+            drawableResId = R.drawable.ic_small_caret_right,
+            size = 16.dp,
+            tint = Theme.colors.text.primary,
+        )
     }
 
+}
+
+
+@Preview
+@Composable
+private fun AccountItemPreview(){
+    AccountItem(
+        modifier = Modifier,
+        account = AccountUiModel(
+            chainName = "Bitcoin",
+            logo = R.drawable.bitcoin,
+            address = "123abc456bca123abc456bca123abc456bca",
+            nativeTokenAmount = "0.01",
+            fiatAmount = "1000$",
+            assetsSize = 1,
+            model = Address(
+                chain = Chain.Bitcoin,
+                address = "123abc456bca123abc456bca123abc456bca",
+                accounts = emptyList()
+            )
+        ),
+        isBalanceVisible = true,
+        onClick = {},
+        onCopy = {},
+    )
 }
