@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -68,10 +69,13 @@ internal fun VsSnackBar(
         V2Container(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             type = ContainerType.TERTIARY,
             borderType = ContainerBorderType.Bordered(
                 color = Theme.colors.borders.normal,
+            ),
+            cornerType = CornerType.RoundedCornerShape(
+                size = 24.dp
             ),
         ) {
             Column(

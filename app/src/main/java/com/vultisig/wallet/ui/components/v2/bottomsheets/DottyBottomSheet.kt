@@ -40,7 +40,7 @@ internal fun DottyBottomSheet(
         sheetState = sheetState,
         dragHandle = null,
         containerColor = Color.Companion.Transparent,
-        scrimColor = Color.Companion.Black.copy(alpha = 0.8f),
+        scrimColor = Color.Companion.Black.copy(alpha = 0.32f),
         shape = RectangleShape,
         content = {
             Box {
