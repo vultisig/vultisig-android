@@ -198,11 +198,11 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     private fun decimalsFromMeta(metadata: DenomMetadata): Int? {
         val denomUnits = metadata.denomUnits ?: return null
-        metadata.display?.let { display ->
-            denomUnits.firstOrNull { it.denom == display }?.let { return it.exponent }
-        }
         metadata.symbol?.let { symbol ->
-            denomUnits.firstOrNull { it.denom == symbol }?.let { return it.exponent }
+            denomUnits.firstOrNull { it.denom == symbol && it.exponent != 0 }?.let { return it.exponent }
+        }
+        metadata.display?.let { display ->
+            denomUnits.firstOrNull { it.denom == display && it.exponent != 0 }?.let { return it.exponent }
         }
         return denomUnits.maxByOrNull { it.exponent ?: 0 }?.exponent
     }
