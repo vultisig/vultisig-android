@@ -115,7 +115,7 @@ internal class KeysignViewModel(
         sendTx?.tx?.let { tx ->
             viewModelScope.launch {
                 val isSavedBefore = addressBookRepository.entryExists(
-                    address = tx.srcAddress,
+                    address = tx.dstAddress,
                     chainId = tx.token.token.chain.id
                 )
 
