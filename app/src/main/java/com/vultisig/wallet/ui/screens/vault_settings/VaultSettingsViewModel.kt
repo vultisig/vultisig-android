@@ -365,9 +365,9 @@ internal open class VaultSettingsViewModel @Inject constructor(
                     viewModelScope.launch {
                         vaultPasswordRepository.clearPassword(vaultId)
                         isBiometricFastSignEnabled = false
+                        showSnackbarMessage()
                     }
                 }
-                showSnackbarMessage()
             }
 
             VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
