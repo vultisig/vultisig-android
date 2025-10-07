@@ -147,7 +147,7 @@ internal class BackupPasswordViewModel @Inject constructor(
             val currentVault = if (isVaultLoaded.value) {
                 vault.value
             } else {
-                vault.firstOrNull()
+                vault.firstOrNull { it != null }
             }
             
             if (currentVault == null) {
