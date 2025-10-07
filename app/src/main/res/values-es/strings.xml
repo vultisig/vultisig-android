@@ -586,4 +586,7 @@
     <string name="vault_list_edit_vaults_header">Editar bóvedas</string>
     <string name="token_details_bottom_sheet_price">Precio</string>
     <string name="token_details_bottom_sheet_network">Red</string>
+    <string name="invite_to_x_banner_title">Vultisig construye contigo.</string>
+    <string name="invite_to_x_banner_desc">Síguenos en X</string>
+    <string name="invite_to_x_banner_button">Sigue a %s</string>
 </resources>
