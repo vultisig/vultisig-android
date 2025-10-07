@@ -27,11 +27,14 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class BackupPasswordState(
@@ -62,12 +65,18 @@ internal class BackupPasswordViewModel @Inject constructor(
     val passwordTextFieldState = passwordDelegate.passwordTextFieldState
     val confirmPasswordTextFieldState = passwordDelegate.confirmPasswordTextFieldState
 
-    private val args = savedStateHandle.toRoute<Route.BackupPassword>()
+    private val args = try {
+        savedStateHandle.toRoute<Route.BackupPassword>()
+    } catch (e: Exception) {
+        Timber.e(e)
+        null
+    }
 
-    private val vaultId = args.vaultId
-    private val vaultType = args.vaultType
+    private val vaultId = args?.vaultId
+    private val vaultType = args?.vaultType
 
     private val vault = MutableStateFlow<Vault?>(null)
+    private val isVaultLoaded = MutableStateFlow(false)
 
     val state = MutableStateFlow(BackupPasswordState())
 
@@ -80,9 +89,26 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
 
     init {
-        viewModelScope.launch {
-            vault.value = vaultRepository.get(vaultId)
-                ?: error("Vault with id $vaultId not found")
+        if (vaultId == null) {
+            viewModelScope.launch {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_error_backup_file)
+                )
+                navigator.navigate(Destination.Back)
+            }
+        } else {
+            viewModelScope.launch {
+                val loadedVault = vaultRepository.get(vaultId)
+                if (loadedVault == null) {
+                    snackbarFlow.showMessage(
+                        context.getString(R.string.vault_settings_error_backup_file)
+                    )
+                    navigator.navigate(Destination.Back)
+                } else {
+                    vault.value = loadedVault
+                    isVaultLoaded.value = true
+                }
+            }
         }
 
         viewModelScope.launch {
@@ -118,8 +144,19 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     fun backupEncryptedVault() {
         viewModelScope.launch {
-            val vault = vault.firstOrNull() ?: error("No vault found")
-            val fileName = createVaultBackupFileName(vault)
+            val currentVault = if (isVaultLoaded.value) {
+                vault.value
+            } else {
+                vault.firstOrNull()
+            }
+            
+            if (currentVault == null) {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_error_backup_file)
+                )
+                return@launch
+            }
+            val fileName = createVaultBackupFileName(currentVault)
             createDocumentRequestFlow.emit(fileName)
         }
     }
@@ -149,24 +186,54 @@ internal class BackupPasswordViewModel @Inject constructor(
                 snackbarFlow.showMessage(
                     context.getString(R.string.backup_password_screen_permission_required)
                 )
-                navigator.navigate(
-                    Destination.VaultSettings(vaultId),
-                    NavigationOptions(clearBackStack = true)
-                )
+                
+                if (vaultId != null) {
+                    navigator.navigate(
+                        Destination.VaultSettings(vaultId),
+                        NavigationOptions(clearBackStack = true)
+                    )
+                } else {
+                    navigator.navigate(Destination.Back)
+                }
             }
         }
     }
 
     fun saveContentToUriResult(uri: Uri) {
+        if (!isVaultLoaded.value) {
+            viewModelScope.launch {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_error_backup_file)
+                )
+            }
+            return
+        }
+        
         val password = passwordTextFieldState.text.toString()
 
         if (isFileExtensionValid(uri)) {
-            val vault = vault.value ?: error("No vault on saveContent")
+            val vault = vault.value
+            if (vault == null) {
+                viewModelScope.launch {
+                    snackbarFlow.showMessage(
+                        context.getString(R.string.vault_settings_error_backup_file)
+                    )
+                }
+                return
+            }
 
             val backup = createVaultBackup(
                 mapVaultToProto(vault),
                 password,
-            ) ?: error("Failed to create vault backup data returns null")
+            )
+            if (backup == null) {
+                viewModelScope.launch {
+                    snackbarFlow.showMessage(
+                        context.getString(R.string.vault_settings_error_backup_file)
+                    )
+                }
+                return
+            }
 
             val isSuccess = context.saveContentToUri(uri, backup)
             completeBackupVault(isSuccess)
@@ -189,7 +256,17 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun completeBackupVault(backupSuccess: Boolean) {
         viewModelScope.launch {
             if (backupSuccess) {
-                vaultDataStoreRepository.setBackupStatus(vaultId, true)
+                if (vaultId != null) {
+                    withContext(Dispatchers.IO) {
+                        vaultDataStoreRepository.setBackupStatus(vaultId, true)
+                    }
+                } else {
+                    snackbarFlow.showMessage(
+                        context.getString(R.string.vault_settings_error_backup_file)
+                    )
+                    return@launch
+                }
+                
                 snackbarFlow.showMessage(
                     context.getString(
                         R.string.vault_settings_success_backup_message
@@ -200,7 +277,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                         Route.VaultConfirmation(
                             vaultId = vaultId,
                             vaultType = vaultType,
-                            action = args.action,
+                            action = args?.action,
                         )
                     )
                 } else {
