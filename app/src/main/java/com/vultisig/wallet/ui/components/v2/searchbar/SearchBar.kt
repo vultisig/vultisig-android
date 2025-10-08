@@ -43,12 +43,11 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun SearchBar(
+internal fun SearchBar(
     modifier: Modifier = Modifier,
     state: TextFieldState,
     onCancelClick: () -> Unit,
     isInitiallyFocused: Boolean,
-    maxHeight : Dp = 40.dp
 ) {
     var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
@@ -92,7 +91,6 @@ fun SearchBar(
                     )
                 ),
                 modifier = Modifier
-                    .heightIn(max = maxHeight)
                     .padding(
                         all = 12.dp,
                     )
