@@ -25,10 +25,7 @@ internal fun HomePagePagerContainer(
 ) {
     V2Container(
         modifier = modifier
-            .fillMaxWidth()
-            .height(
-                height = 140.dp
-            ),
+            .fillMaxWidth(),
         type = containerType,
         borderType = ContainerBorderType.Bordered()
     ) {
