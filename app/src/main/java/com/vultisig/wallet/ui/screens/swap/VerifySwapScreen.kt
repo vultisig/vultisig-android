@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
@@ -406,7 +405,7 @@ internal fun SwapToken(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenLogo(
-            logo = Tokens.getCoinLogo(token.logo),
+            logo = getCoinLogo(token.logo),
             title = token.ticker,
             errorLogoModifier = Modifier
                 .size(24.dp),

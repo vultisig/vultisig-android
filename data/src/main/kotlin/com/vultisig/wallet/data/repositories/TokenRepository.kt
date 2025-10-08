@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
 import kotlinx.coroutines.async
@@ -358,7 +357,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
 
-    private val enabledByDefaultTokens = listOf(Tokens.tcy)
+    private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY)
         .groupBy { it.chain }
 
     companion object {
