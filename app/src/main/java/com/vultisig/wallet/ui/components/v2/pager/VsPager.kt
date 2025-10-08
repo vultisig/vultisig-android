@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -23,7 +24,7 @@ internal fun VsPager(
     state: VsPagerState,
     content: VsPagerState.() -> Unit,
 ) {
-    var maxHeight by remember { mutableStateOf(0.dp) }
+    var maxHeight by remember { mutableStateOf(140.dp) }
     val density = LocalDensity.current
 
     val pagerState = rememberPagerState(
@@ -40,13 +41,18 @@ internal fun VsPager(
         state.updateCurrentPage(pagerState.currentPage)
     }
 
+    val onMeasure: (IntSize) -> Unit = remember {
+        { coordinates ->
+            val heightDp = with(density) { coordinates.height.toDp() }
+            if (heightDp > maxHeight) {
+                maxHeight = heightDp
+            }
+        }
+    }
+
     HorizontalPager(
         state = pagerState,
-        modifier = modifier.then(
-            if (maxHeight > 0.dp)
-                Modifier.height(maxHeight)
-            else Modifier
-        ),
+        modifier = modifier.height(maxHeight),
         key = { it },
         pageSpacing = 8.dp,
     ) { index ->
@@ -54,11 +60,9 @@ internal fun VsPager(
             modifier = Modifier
                 .fillMaxWidth()
                 .onGloballyPositioned { coordinates ->
-                    val heightDp = with(density) {
-                        coordinates.size.height.toDp()
-                    }
-                    if (heightDp > maxHeight) {
-                        maxHeight = heightDp
+                    val size = coordinates.size
+                    if (pagerState.currentPage == index) {
+                        onMeasure(size)
                     }
                 }
         ) {
