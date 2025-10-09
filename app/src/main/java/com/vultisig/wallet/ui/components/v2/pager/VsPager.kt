@@ -2,21 +2,23 @@ package com.vultisig.wallet.ui.components.v2.pager
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import com.vultisig.wallet.ui.components.v2.pager.utils.VsPagerState
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.ui.components.v2.pager.utils.VsPagerState
 
 @Composable
 internal fun VsPager(
@@ -41,18 +43,31 @@ internal fun VsPager(
         state.updateCurrentPage(pagerState.currentPage)
     }
 
-    val onMeasure: (IntSize) -> Unit = remember {
-        { coordinates ->
-            val heightDp = with(density) { coordinates.height.toDp() }
-            if (heightDp > maxHeight) {
-                maxHeight = heightDp
+    val pageHeights = remember { mutableStateMapOf<Int, Dp>() }
+
+    val updateMaxHeight = remember {
+        { index: Int, newHeight: Dp ->
+            val oldHeight = pageHeights[index]
+            if (oldHeight != newHeight) {
+                pageHeights[index] = newHeight
+                if (newHeight > maxHeight) {
+                    maxHeight = newHeight
+                }
             }
+        }
+    }
+
+    val onPageMeasured = remember(density, updateMaxHeight) {
+        { index: Int, size: IntSize ->
+            val heightDp = with(density) { size.height.toDp() }
+            updateMaxHeight(index, heightDp)
         }
     }
 
     HorizontalPager(
         state = pagerState,
-        modifier = modifier.height(maxHeight),
+        modifier = modifier
+            .heightIn(min = maxHeight),
         key = { it },
         pageSpacing = 8.dp,
     ) { index ->
@@ -60,10 +75,7 @@ internal fun VsPager(
             modifier = Modifier
                 .fillMaxWidth()
                 .onGloballyPositioned { coordinates ->
-                    val size = coordinates.size
-                    if (pagerState.currentPage == index) {
-                        onMeasure(size)
-                    }
+                    onPageMeasured(index, coordinates.size)
                 }
         ) {
             state.pages[index]()
