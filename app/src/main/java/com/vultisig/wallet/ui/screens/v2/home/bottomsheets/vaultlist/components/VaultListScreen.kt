@@ -53,7 +53,7 @@ import java.math.BigDecimal
 @Composable
 internal fun VaultListScreen(
     vaultId: VaultId,
-    navController: VsBottomSheetNavController
+    navController: VsBottomSheetNavController,
 ) {
     val viewModel = hiltViewModel<VaultListViewModel>()
     val state by viewModel.state.collectAsState()
@@ -127,6 +127,11 @@ private fun VaultListScreen(
 
 
         VerticalDoubleReorderList(
+            modifier = Modifier
+                .weight(
+                    weight = 1f,
+                    fill = false
+                ),
             midContents = listOf {
                 UiSpacer(size = 16.dp)
                 Text(
@@ -213,7 +218,7 @@ private fun VaultsInfoHeader(
     vaultCounts: Int,
     totalBalance: String?,
     onToggleRearrangeMode: () -> Unit,
-    onCreateNewVault: () -> Unit
+    onCreateNewVault: () -> Unit,
 ) {
     Row {
         VaultInfo(
@@ -230,7 +235,7 @@ private fun VaultsInfoHeader(
             designType = DesignType.Shined,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Secondary,
-            icon = R.drawable.ic_edit_pencil,
+            icon = R.drawable.pen_v2,
             onClick = onToggleRearrangeMode
         )
 
@@ -251,7 +256,7 @@ private fun VaultsInfoHeader(
 @Composable
 internal fun VaultInfo(
     vaultName: String,
-    vaultCounts: Int, totalBalance: String?
+    vaultCounts: Int, totalBalance: String?,
 ) {
     Column {
         Text(
