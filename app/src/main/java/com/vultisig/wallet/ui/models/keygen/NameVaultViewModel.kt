@@ -107,7 +107,7 @@ internal class NameVaultViewModel @Inject constructor(
     }
 
     private fun isNameAvailable(name: String): Boolean =
-        vaultNamesList.none { it == name }
+        vaultNamesList.none { it == name.trim() }
 
     fun navigateToEmail() {
         val name = nameFieldState.text.toString()
