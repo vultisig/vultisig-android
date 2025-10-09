@@ -85,7 +85,7 @@ internal class NameVaultViewModel @Inject constructor(
     }
 
     private fun validate() = viewModelScope.launch {
-        val name = nameFieldState.text.toString()
+        val name = nameFieldState.text.toString().trim()
 
         val errorMessage = when {
             !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
@@ -107,7 +107,7 @@ internal class NameVaultViewModel @Inject constructor(
     }
 
     private fun isNameAvailable(name: String): Boolean =
-        vaultNamesList.none { it == name.trim() }
+        vaultNamesList.none { it == name }
 
     fun navigateToEmail() {
         val name = nameFieldState.text.toString()
