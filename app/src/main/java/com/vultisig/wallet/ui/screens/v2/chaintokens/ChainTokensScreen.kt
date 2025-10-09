@@ -251,7 +251,7 @@ internal fun ChainTokensScreen(
                                 Column {
                                     ChainAccount(
                                         title = token.name,
-                                        isBalanceVisible = uiModel.isBalanceVisible,
+                                        isBalanceVisible = true,
                                         balance = token.balance,
                                         fiatBalance = token.fiatBalance,
                                         tokenLogo = token.tokenLogo,

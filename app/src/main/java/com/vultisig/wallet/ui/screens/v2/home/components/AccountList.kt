@@ -35,7 +35,7 @@ internal fun AccountList(
                         vertical = 12.dp
                     ),
                     account = account,
-                    isBalanceVisible = isBalanceVisible,
+                    isBalanceVisible = true,
                     onClick = {
                         onAccountClick(account)
                     },

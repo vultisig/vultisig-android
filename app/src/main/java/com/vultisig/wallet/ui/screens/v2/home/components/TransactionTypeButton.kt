@@ -42,7 +42,7 @@ fun TransactionTypeButton(
     else Theme.colors.backgrounds.tertiary
 
     val (logo, title) = when (txType) {
-        TransactionType.SWAP -> R.drawable.swap to R.string.transaction_type_button_swap
+        TransactionType.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
         TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
         TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
         TransactionType.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
