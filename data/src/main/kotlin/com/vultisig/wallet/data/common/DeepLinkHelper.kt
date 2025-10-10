@@ -6,6 +6,12 @@ class DeepLinkHelper(input: String) {
     private val scheme: String
     private val parameters: Map<String, String>
 
+    /**
+     * Retrieve a query parameter value by key.
+     *
+     * @param key The parameter name to look up.
+     * @return The parameter value, or `null` if the key is not present.
+     */
     fun getParameter(key: String): String? {
         return parameters[key]
     }

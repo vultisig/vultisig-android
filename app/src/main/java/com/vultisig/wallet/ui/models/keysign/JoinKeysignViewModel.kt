@@ -250,6 +250,13 @@ internal class JoinKeysignViewModel @Inject constructor(
         setScanResult(qrBase64)
     }
 
+    /**
+     * Processes a URL-safe Base64 QR payload, extracts and decodes its keysign or custom message, and advances the join-keysign flow state accordingly.
+     *
+     * This parses the provided Base64-encoded QR content into a deep link and proto payload, initializes session and server-related fields, validates and handles custom message payloads or embedded/remote keysign payloads, and sets the UI state to either service discovery or join flow. Network resolution failures set a connection error state; parsing failures set an invalid-QR error state.
+     *
+     * @param qrBase64 The URL-safe Base64 string obtained from scanning the QR code.
+     */
     @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
