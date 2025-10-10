@@ -173,7 +173,7 @@ internal fun FastVaultPasswordScreen(
                             ),
                             innerState = state.innerState,
                             footNote = (state.errorMessage ?: UiText.Empty).asString(),
-                            imeAction = ImeAction.Go,
+                            imeAction = if (state.isNextButtonEnabled) ImeAction.Go else ImeAction.None,
                             onKeyboardAction = {
                                 onNextClick()
                             },
