@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.vultisig.wallet.ui.components.v2.pager.utils.VsPagerState
 
 @Composable
@@ -50,9 +51,7 @@ internal fun VsPager(
             val oldHeight = pageHeights[index]
             if (oldHeight != newHeight) {
                 pageHeights[index] = newHeight
-                if (newHeight > maxHeight) {
-                    maxHeight = newHeight
-                }
+                maxHeight = max(newHeight, maxHeight)
             }
         }
     }

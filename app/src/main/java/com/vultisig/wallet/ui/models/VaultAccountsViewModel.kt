@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
@@ -78,8 +77,6 @@ internal data class AccountUiModel(
 
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
 
@@ -96,8 +93,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
 ) : ViewModel() {
-
-    private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
     private var vaultId: String? = null
 
     val uiState = MutableStateFlow(VaultAccountsUiModel())
@@ -109,17 +104,8 @@ internal class VaultAccountsViewModel @Inject constructor(
         collectLastOpenedVault()
     }
 
-    private suspend fun updateLastOpenedVault() {
-        val requestedVaultId = requestedVaultId
-        if (requestedVaultId != null) {
-            lastOpenedVaultRepository.setLastOpenedVaultId(requestedVaultId)
-            this@VaultAccountsViewModel.requestedVaultId = null
-        }
-    }
-
     private fun collectLastOpenedVault() {
         viewModelScope.launch {
-            updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
                     lastOpenedVaultId?.let {
@@ -133,7 +119,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun loadData(vaultId: VaultId) {
+    fun loadData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
