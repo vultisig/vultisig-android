@@ -187,6 +187,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
 ) : ViewModel() {
+    companion object {
+        private const val VAULT_PARAMETER = "vault"
+    }
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
@@ -276,7 +279,13 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val customMessagePayload = payloadProto.customMessagePayload
                 if (customMessagePayload != null) {
-                    if (!handleCustomMessage(customMessagePayload)) {
+                    val vaultPublicKeyEcdsa = customMessagePayload.vaultPublicKeyEcdsa.ifEmpty {
+                        deepLinkHelper.value?.getParameter(VAULT_PARAMETER) ?: ""
+                    }
+                    val payloadWithVaultKey = customMessagePayload.copy(
+                        vaultPublicKeyEcdsa = vaultPublicKeyEcdsa
+                    )
+                    if (!handleCustomMessage(payloadWithVaultKey)) {
                         return@launch
                     }
                 } else {
