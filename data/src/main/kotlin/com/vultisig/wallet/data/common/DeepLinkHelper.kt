@@ -6,6 +6,10 @@ class DeepLinkHelper(input: String) {
     private val scheme: String
     private val parameters: Map<String, String>
 
+    fun getParameter(key: String): String? {
+        return parameters[key]
+    }
+
     init {
         val parts = input.split("?")
         scheme = parts[0]
