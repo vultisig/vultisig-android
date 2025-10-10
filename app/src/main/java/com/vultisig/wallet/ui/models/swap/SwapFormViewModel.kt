@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
+import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -141,6 +142,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val searchToken: SearchTokenUseCase,
     private val referralRepository: ReferralCodeSettingsRepository,
+    private val convertTokenToTokenUseCase: ConvertTokenToToken,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -1125,24 +1127,34 @@ internal class SwapFormViewModel @Inject constructor(
                                     token = dstToken,
                                 )
 
-                                val feeCoin = if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
-                                    val tokenContract = quote.tx.swapFeeTokenContract
-                                    val chainId = srcNativeToken.chain.id
-                                    searchToken(
-                                        chainId, tokenContract
-                                    )?.coin ?: srcNativeToken
-                                } else {
-                                    srcNativeToken
+                                val (feeAmount, feeCoin) = try {
+                                    if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                        val tokenContract = quote.tx.swapFeeTokenContract
+                                        val chainId = srcNativeToken.chain.id
+                                        val amount = quote.tx.swapFee.toBigInteger()
+                                        val coinAndFiatValue = searchToken(chainId, tokenContract)
+                                            ?: error("Can't find token or price")
+                                        val newNativeAmount =
+                                            convertTokenToTokenUseCase.convertTokenToToken(amount, coinAndFiatValue, srcNativeToken)
+                                        Pair(newNativeAmount, srcNativeToken)
+                                    } else {
+                                        Pair(quote.tx.swapFee.toBigInteger(), srcNativeToken)
+                                    }
+                                } catch (t: Throwable) {
+                                    Timber.e(t)
+                                    Pair(BigInteger.ZERO, srcNativeToken)
                                 }
 
+                                val updatedTx = quote.tx.copy(swapFee = feeAmount.toString())
+
                                 val tokenFees = TokenValue(
-                                    value = quote.tx.swapFee.toBigInteger(), token = feeCoin
+                                    value = feeAmount, token = feeCoin
                                 )
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
-                                    data = quote,
+                                    data = quote.copy(tx = updatedTx),
                                     expiredAt = Clock.System.now() + expiredAfter,
                                     provider = provider.getSwapProviderId(),
                                 )

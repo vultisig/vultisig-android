@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.home
 
+import android.content.Context
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,32 +21,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
-import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
-import com.vultisig.wallet.ui.screens.v2.home.components.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletEarnSelect
+import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
+import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePagerParams
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.SocialUtils
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +67,7 @@ internal fun HomePage(
     onMigrateClick: () -> Unit = {},
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
-    onTempRemoveUpdateBanner: () -> Unit = {},
+    onDismissBanner: () -> Unit = {},
 ) {
 
     val snackbarState = rememberVsSnackbarState()
@@ -75,6 +81,8 @@ internal fun HomePage(
     val isShowingSearchResult = remember {
         derivedStateOf { isTabMenu.not() }
     }
+
+    val context = LocalContext.current
 
     ScaffoldWithExpandableTopBar(
         snackbarState = snackbarState,
@@ -221,30 +229,27 @@ internal fun HomePage(
                         .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
-                    LazyColumn {
-                        if (state.showMigration) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .animateContentSize()
+                    ) {
+                        if (state.isBannerVisible)
                             item {
-                                UiSpacer(12.dp)
-                                UpgradeBanner(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp),
-                                    onUpgradeClick = onMigrateClick,
-                                    onCloseClick = onTempRemoveUpdateBanner,
+                                Banners(
+                                    hasMigration = state.showMigration,
+                                    onMigrateClick = onMigrateClick,
+                                    context = context,
+                                    onDismissBanner = onDismissBanner
                                 )
-                                UiSpacer(20.dp)
-                                UiHorizontalDivider(
-                                    color = Theme.colors.borders.light,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
-                                UiSpacer(16.dp)
                             }
-                        }
 
                         item {
                             HomePageTabMenuAndSearchBar(
-                                modifier = Modifier.padding(
-                                    horizontal = 16.dp,
-                                ),
+                                modifier = Modifier
+                                    .animateItem()
+                                    .padding(
+                                        horizontal = 16.dp,
+                                    ),
                                 onEditClick = onChooseChains,
                                 isTabMenu = isTabMenu,
                                 onSearchClick = {
@@ -288,6 +293,37 @@ internal fun HomePage(
             }
         }
     )
+}
+
+@Composable
+private fun Banners(
+    hasMigration: Boolean,
+    onMigrateClick: () -> Unit,
+    context: Context,
+    onDismissBanner: () -> Unit,
+) {
+    UiSpacer(12.dp)
+    HomepagePager(
+        modifier = Modifier
+            .padding(horizontal = 16.dp),
+        params = HomepagePagerParams(
+            hasMigration = hasMigration
+        ),
+        onUpgradeClick = onMigrateClick,
+        onFollowXClick = {
+            SocialUtils.openTwitter(
+                context = context,
+                twitterHandle = VsAuxiliaryLinks.TWITTER_ID
+            )
+        },
+        onCloseClick = onDismissBanner,
+    )
+    UiSpacer(20.dp)
+    UiHorizontalDivider(
+        color = Theme.colors.borders.light,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+    UiSpacer(16.dp)
 }
 
 

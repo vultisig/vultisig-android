@@ -106,7 +106,7 @@ internal fun FolderScreen(
             )
 
             VsCircleButton(
-                icon = R.drawable.ic_edit_pencil,
+                icon = R.drawable.pen_v2,
                 onClick = onEditClick,
                 type = VsCircleButtonType.Secondary,
                 size = VsCircleButtonSize.Small,

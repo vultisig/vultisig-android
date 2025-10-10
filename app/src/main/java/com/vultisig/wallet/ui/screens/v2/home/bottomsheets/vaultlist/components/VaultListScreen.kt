@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,7 +53,7 @@ import java.math.BigDecimal
 @Composable
 internal fun VaultListScreen(
     vaultId: VaultId,
-    navController: VsBottomSheetNavController
+    navController: VsBottomSheetNavController,
 ) {
     val viewModel = hiltViewModel<VaultListViewModel>()
     val state by viewModel.state.collectAsState()
@@ -125,6 +127,11 @@ private fun VaultListScreen(
 
 
         VerticalDoubleReorderList(
+            modifier = Modifier
+                .weight(
+                    weight = 1f,
+                    fill = false
+                ),
             midContents = listOf {
                 UiSpacer(size = 16.dp)
                 Text(
@@ -211,7 +218,7 @@ private fun VaultsInfoHeader(
     vaultCounts: Int,
     totalBalance: String?,
     onToggleRearrangeMode: () -> Unit,
-    onCreateNewVault: () -> Unit
+    onCreateNewVault: () -> Unit,
 ) {
     Row {
         VaultInfo(
@@ -228,7 +235,7 @@ private fun VaultsInfoHeader(
             designType = DesignType.Shined,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Secondary,
-            icon = R.drawable.ic_edit_pencil,
+            icon = R.drawable.pen_v2,
             onClick = onToggleRearrangeMode
         )
 
@@ -249,7 +256,7 @@ private fun VaultsInfoHeader(
 @Composable
 internal fun VaultInfo(
     vaultName: String,
-    vaultCounts: Int, totalBalance: String?
+    vaultCounts: Int, totalBalance: String?,
 ) {
     Column {
         Text(
@@ -262,7 +269,9 @@ internal fun VaultInfo(
             size = 4.dp
         )
 
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
 
             Text(
                 text = "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}",
@@ -270,10 +279,20 @@ internal fun VaultInfo(
                 color = Theme.colors.text.extraLight,
             )
 
-            Text(
-                text = " . ",
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.extraLight,
+            UiSpacer(
+                size = 6.dp
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(2.dp)
+                    .background(
+                        color = Theme.colors.text.primary,
+                    )
+            )
+
+            UiSpacer(
+                size = 6.dp
             )
             LoadableValue(
                 value = totalBalance,
@@ -296,7 +315,7 @@ private fun VaultsRearrangeHeader(
             designType = DesignType.Shined,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Primary,
-            icon = R.drawable.ic_check,
+            drawableResId = R.drawable.big_tick,
             onClick = onCommitClick,
         )
     }

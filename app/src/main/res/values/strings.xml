@@ -834,5 +834,12 @@
     <string name="vault_list_edit_vaults_header">Edit Vaults</string>
     <string name="token_details_bottom_sheet_price">Price</string>
     <string name="token_details_bottom_sheet_network">Network</string>
+    <string name="defi" translatable="false">DeFi</string>
+    <string name="vault_ceil_active" translatable="false">Active</string>
+    <string name="send_tx_overview_add_to_address_book" translatable="false">Add to Address Book</string>
+
+    <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
+    <string name="invite_to_x_banner_desc">Follow us on X</string>
+    <string name="invite_to_x_banner_button">Follow %s</string>
 
 </resources>

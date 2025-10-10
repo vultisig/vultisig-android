@@ -2,10 +2,12 @@ package com.vultisig.wallet.ui.screens.v2.home.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -20,7 +22,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 
 @Composable
-fun ChooseVaultButton(
+internal fun ChooseVaultButton(
     modifier: Modifier = Modifier,
     vaultName: String,
     isFastVault: Boolean,
@@ -57,6 +59,9 @@ fun ChooseVaultButton(
                 text = vaultName,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.colors.text.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 138.dp),
             )
             UiSpacer(
                 size = 4.dp
@@ -74,6 +79,16 @@ fun ChooseVaultButton(
 private fun PreviewChooseVaultButton() {
     ChooseVaultButton(
         vaultName = "Main vault",
+        isFastVault = false,
+        onClick = {}
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewChooseVaultButton2() {
+    ChooseVaultButton(
+        vaultName = "Main vault very long name",
         isFastVault = false,
         onClick = {}
     )

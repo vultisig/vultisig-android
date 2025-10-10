@@ -155,11 +155,14 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val fees = withContext(Dispatchers.IO) {
                 feeServiceComposite.calculateFees(blockchainTransaction)
             }
+            val nativeCoin = withContext (Dispatchers.IO) {
+                tokenRepository.getNativeToken(chain.id)
+            }
             val fromGas = GasFeeParams(
                 gasLimit = BigInteger.ONE,
                 gasFee = TokenValue(
                     value = fees.amount,
-                    token = tokenRepository.getNativeToken(chain.id),
+                    token = nativeCoin,
                 ),
                 selectedToken = tx.token,
             )

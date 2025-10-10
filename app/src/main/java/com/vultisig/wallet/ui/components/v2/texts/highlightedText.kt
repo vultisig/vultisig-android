@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.components.v2
+package com.vultisig.wallet.ui.components.v2.texts
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color

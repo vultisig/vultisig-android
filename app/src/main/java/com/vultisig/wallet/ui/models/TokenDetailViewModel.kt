@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -44,7 +44,7 @@ internal class TokenDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
@@ -138,7 +138,7 @@ internal class TokenDetailViewModel @Inject constructor(
                             id = token.id,
                             name = token.ticker,
                             balance = account.tokenValue
-                                ?.let(mapTokenValueToDecimalUiString)
+                                ?.let(mapTokenValueToStringWithUnitMapper)
                                 ?: "",
                             fiatBalance = account.fiatValue
                                 ?.let { fiatValueToStringMapper(it) },

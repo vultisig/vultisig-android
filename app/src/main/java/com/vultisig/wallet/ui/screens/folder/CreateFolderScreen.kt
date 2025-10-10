@@ -143,7 +143,7 @@ private fun CreateFolderScreen(
                     designType = DesignType.Solid,
                     size = VsCircleButtonSize.Small,
                     type = VsCircleButtonType.Secondary,
-                    icon = R.drawable.x,
+                    drawableResId = R.drawable.big_close,
                     onClick = onCloseClick,
                 )
             }

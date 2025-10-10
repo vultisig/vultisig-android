@@ -32,7 +32,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -97,7 +97,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val generateQrBitmap: GenerateQrBitmap,
 
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val discoverTokenUseCase: DiscoverTokenUseCase,
 
     private val explorerLinkRepository: ExplorerLinkRepository,
@@ -226,7 +226,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         id = token.id,
                         name = token.ticker,
                         balance = account.tokenValue
-                            ?.let(mapTokenValueToDecimalUiString)
+                            ?.let(mapTokenValueToStringWithUnitMapper)
                             ?: "",
                         fiatBalance = account.fiatValue
                             ?.let { fiatValueToStringMapper(it) },

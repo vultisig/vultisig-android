@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -64,9 +65,9 @@ internal fun VsCircleButton(
 
     Box(
         modifier = modifier
-            .clickOnce(onClick = onClick)
             .size(sizeInDp)
             .clip(CircleShape)
+            .clickOnce(onClick = onClick)
             .background(
                 color = backgroundColor
             )
@@ -99,6 +100,93 @@ internal fun VsCircleButton(
             size = 20.dp
         )
     }
+}
+
+
+@Composable
+internal fun VsCircleButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    size: VsCircleButtonSize = VsCircleButtonSize.Medium,
+    type: VsCircleButtonType = VsCircleButtonType.Primary,
+    designType: DesignType = DesignType.Solid,
+    hasBorder: Boolean = false,
+    content: @Composable BoxScope.() -> Unit,
+    ) {
+    val sizeInDp = when (size) {
+        is VsCircleButtonSize.Custom -> size.size
+        VsCircleButtonSize.Medium -> 64.dp
+        VsCircleButtonSize.Small -> 44.dp
+    }
+
+    val backgroundColor = when (type) {
+        VsCircleButtonType.Primary -> Theme.colors.primary.accent3
+        VsCircleButtonType.Secondary -> Theme.colors.backgrounds.tertiary
+        VsCircleButtonType.Tertiary -> Theme.colors.fills.tertiary.copy(alpha = 0.32f)
+        is VsCircleButtonType.Custom -> type.color
+    }
+
+    Box(
+        modifier = modifier
+            .clickOnce(onClick = onClick)
+            .size(sizeInDp)
+            .clip(CircleShape)
+            .background(
+                color = backgroundColor
+            )
+            .then(
+                if (designType == DesignType.Shined) {
+                    Modifier
+                        .shinedBottom()
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        )
+                } else {
+                    if (hasBorder) {
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        )
+                    } else
+                        Modifier
+                }
+
+            ),
+        contentAlignment = Alignment.Center,
+        content = content
+    )
+}
+
+@Composable
+internal fun VsCircleButton(
+    modifier : Modifier = Modifier,
+    @DrawableRes drawableResId: Int,
+    tint: Color = Theme.colors.neutrals.n100,
+    onClick: () -> Unit,
+    size: VsCircleButtonSize = VsCircleButtonSize.Small,
+    type: VsCircleButtonType = VsCircleButtonType.Primary,
+    designType: DesignType = DesignType.Shined,
+    iconSize: Dp = 48.dp,
+    hasBorder: Boolean = false,
+){
+    VsCircleButton(
+        modifier = modifier,
+        onClick = onClick,
+        size = size,
+        designType = designType,
+        type = type,
+        hasBorder = hasBorder,
+        content = {
+            UiIcon(
+                drawableResId = drawableResId,
+                tint = tint,
+                size = iconSize
+            )
+        }
+    )
 }
 
 @Preview
@@ -144,5 +232,17 @@ private fun PreviewVsCircleButton4() {
         icon = R.drawable.camera,
         type = VsCircleButtonType.Tertiary,
         designType = DesignType.Shined
+    )
+}
+
+
+@Preview
+@Composable
+private fun PreviewVsCircleButton5() {
+    VsCircleButton(
+        onClick = {},
+        size = VsCircleButtonSize.Small,
+        designType = DesignType.Shined,
+        drawableResId = R.drawable.big_tick,
     )
 }

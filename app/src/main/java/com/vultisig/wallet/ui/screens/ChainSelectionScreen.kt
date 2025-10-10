@@ -66,7 +66,7 @@ private fun ChainSelectionScreen(
         onDismissRequest = onCancelClick,
         leftAction = {
             VsCircleButton(
-                icon = R.drawable.x,
+                drawableResId = R.drawable.big_close,
                 onClick = onCancelClick,
                 type = VsCircleButtonType.Tertiary,
                 size = VsCircleButtonSize.Small,
@@ -74,7 +74,7 @@ private fun ChainSelectionScreen(
         },
         rightAction = {
             VsCircleButton(
-                icon = R.drawable.ic_check,
+                drawableResId = R.drawable.big_tick,
                 onClick = onDoneClick,
                 size = VsCircleButtonSize.Small,
             )

@@ -91,7 +91,7 @@ internal fun HomePageTabMenu(
                 UiIcon(
                     drawableResId = R.drawable.ic_search,
                     size = 16.dp,
-                    tint = Theme.colors.primary.accent4,
+                    tint = Theme.colors.text.primary,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -103,7 +103,7 @@ internal fun HomePageTabMenu(
                 borderType = ContainerBorderType.Borderless
             ) {
                 UiIcon(
-                    drawableResId = R.drawable.write,
+                    drawableResId = R.drawable.edit_chain,
                     size = 16.dp,
                     tint = Theme.colors.primary.accent4,
                     modifier = Modifier.padding(12.dp)

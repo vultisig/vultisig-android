@@ -9,6 +9,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -43,9 +44,6 @@ internal fun ScaffoldWithExpandableTopBar(
         Scaffold(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            snackbarHost = {
-                VsSnackBar(snackbarState = snackbarState)
-            },
             topBar = {
                 if (topBarCollapsedContent != null) {
                     VsExpandableTopBar(
@@ -63,6 +61,12 @@ internal fun ScaffoldWithExpandableTopBar(
             bottomBar = bottomBarContent,
             content = content
         )
+        VsSnackBar(
+            snackbarState = snackbarState,
+            modifier = Modifier
+                .align(alignment = Alignment.BottomCenter)
+        )
+
     }
 
 

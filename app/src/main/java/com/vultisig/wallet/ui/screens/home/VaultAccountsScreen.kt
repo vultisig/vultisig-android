@@ -39,7 +39,8 @@ internal fun VaultAccountsScreen(
         onOpenSettingsClick = viewModel::openSettings,
         onToggleVaultListClick = viewModel::openVaultList,
         onChooseChains = viewModel::openAddChainAccount,
-        onTempRemoveUpdateBanner = viewModel::tempRemoveUpdateBanner,
+        onMigrateClick = viewModel::migrate,
+        onDismissBanner = viewModel::tempRemoveBanner,
     )
 
 }
