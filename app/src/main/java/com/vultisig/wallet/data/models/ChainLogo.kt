@@ -42,26 +42,26 @@ internal val Chain.logo: Int
 
 internal val Chain.monoToneLogo: Int
     get() = when (this) {
-        Chain.ThorChain -> R.drawable.rune
+        Chain.ThorChain -> R.drawable.rune_mono
         Chain.Solana -> R.drawable.sol_mono
         Chain.Ethereum -> R.drawable.eth_mono
         Chain.Avalanche -> R.drawable.ava_mono
         Chain.Base -> R.drawable.base_mono
         Chain.Blast -> R.drawable.blast_mono
         Chain.Arbitrum -> R.drawable.arb_mono
-        Chain.Polygon -> R.drawable.polygon
+        Chain.Polygon -> R.drawable.pol_mono
         Chain.Optimism -> R.drawable.opti_mono
         Chain.BscChain -> R.drawable.bsc_mono
         Chain.Bitcoin -> R.drawable.btc_mono
         Chain.BitcoinCash -> R.drawable.bch_mono
         Chain.Litecoin -> R.drawable.ltc_mono
-        Chain.Dogecoin -> R.drawable.doge
+        Chain.Dogecoin -> R.drawable.doge_mono
         Chain.Dash -> R.drawable.dash_mono
         Chain.GaiaChain -> R.drawable.cosmos_mono
         Chain.Kujira -> R.drawable.kuji_mono
-        Chain.MayaChain -> R.drawable.cacao
+        Chain.MayaChain -> R.drawable.maya_mono
         Chain.CronosChain -> R.drawable.cronos_mono
-        Chain.Polkadot -> R.drawable.dot
+        Chain.Polkadot -> R.drawable.dot_mono
         Chain.Dydx -> R.drawable.dxdy_mono
         Chain.ZkSync -> R.drawable.zksync_mono
         Chain.Sui -> R.drawable.sui_mono
