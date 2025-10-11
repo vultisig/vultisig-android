@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
@@ -219,7 +219,7 @@ private fun SelectAssetScreenPreview() {
         state = SelectAssetUiModel(
             assets = listOf(
                 AssetUiModel(
-                    token = Tokens.wewe,
+                    token = Coins.Base.WEWE,
                     logo = "btc",
                     title = "BTC",
                     subtitle = "Bitcoin",
@@ -227,7 +227,7 @@ private fun SelectAssetScreenPreview() {
                     value = "$0.00",
                 ),
                 AssetUiModel(
-                    token = Tokens.wewe,
+                    token = Coins.Base.WEWE,
                     logo = "eth",
                     title = "ETH",
                     subtitle = "Ethereum",
