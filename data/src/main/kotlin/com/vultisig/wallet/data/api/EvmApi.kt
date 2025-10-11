@@ -58,12 +58,9 @@ interface EvmApi {
         recipientAddress: String,
         value: BigInteger,
     ): BigInteger
-
     suspend fun getBalances(
         address: String,
     ): VultisigBalanceJson
-
-
 }
 
 interface EvmApiFactory {

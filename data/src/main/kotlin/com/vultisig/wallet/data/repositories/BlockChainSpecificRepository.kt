@@ -20,6 +20,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.chains.helpers.PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -152,14 +155,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                val defaultGasLimit = BigInteger(
+                val defaultGasLimit =
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
-                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
+                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
                         token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
                         else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                     }
-                )
 
                 val estimateGasLimit = if (token.isNativeToken) evmApi.estimateGasForEthTransaction(
                     senderAddress = token.address,
@@ -275,7 +277,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
                     recentBlockHash = recentBlockHashResult,
-                    priorityFee = gasFee.value,
+                    priorityFee = PRIORITY_FEE_PRICE.toBigInteger(),
+                    computeLimit = PRIORITY_FEE_LIMIT.toBigInteger(),
                     fromAddressPubKey = fromAddressPubKeyResult?.first,
                     toAddressPubKey = toAddressPubKeyResult?.first,
                     programId = fromAddressPubKeyResult?.second == true
@@ -345,9 +348,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     val nonceDeferred = async { polkadotApi.getNonce(address) }
                     val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
                     val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
-                    
+
                     val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
-                    
+
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Polkadot(
                             recentBlockHash = blockHashDeferred.await(),
@@ -366,10 +369,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.SUI -> coroutineScope {
             val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
             val coinsDeferred = async { suiApi.getAllCoins(address) }
-            
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
                     referenceGasPrice = gasPriceDeferred.await(),
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
                     coins = coinsDeferred.await(),
                 ),
                 utxos = emptyList(),
