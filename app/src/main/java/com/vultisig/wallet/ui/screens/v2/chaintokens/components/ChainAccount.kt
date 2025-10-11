@@ -75,6 +75,10 @@ internal fun ChainAccount(
                             color = Theme.colors.backgrounds.secondary,
                             shape = CircleShape
                         )
+                        .background(
+                            Theme.colors.text.primary,
+                            CircleShape
+                        )
                         .align(Alignment.BottomEnd)
                 )
             }
