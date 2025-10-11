@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.IsSwapSupported
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -143,7 +142,7 @@ internal class SelectAssetViewModel @Inject constructor(
                             .map { coin ->
                                 AssetUiModel(
                                     token = coin,
-                                    logo = Tokens.getCoinLogo(coin.logo),
+                                    logo = getCoinLogo(coin.logo),
                                     title = coin.ticker,
                                     subtitle = coin.chain.raw,
                                     amount = "0",
@@ -178,7 +177,7 @@ internal class SelectAssetViewModel @Inject constructor(
                 .map {
                     AssetUiModel(
                         token = it.token,
-                        logo = Tokens.getCoinLogo(it.token.logo),
+                        logo = getCoinLogo(it.token.logo),
                         title = it.token.ticker,
                         subtitle = it.token.chain.raw,
                         amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",

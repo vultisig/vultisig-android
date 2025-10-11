@@ -98,7 +98,7 @@ internal fun TokenSelectionItem(
             }
 
             if (hasTokenSwitch) {
-                VaultSwitch(
+                VsSwitch(
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Theme.colors.neutral0,
                         checkedBorderColor = Theme.colors.turquoise800,
