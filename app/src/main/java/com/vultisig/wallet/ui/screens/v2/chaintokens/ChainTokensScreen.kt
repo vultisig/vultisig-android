@@ -256,6 +256,7 @@ internal fun ChainTokensScreen(
                                         fiatBalance = token.fiatBalance,
                                         tokenLogo = token.tokenLogo,
                                         chainLogo = token.chainLogo,
+                                        monoToneChainLogo = token.monotoneChainLogo,
                                         price = token.price,
                                         onClick = clickOnce { onTokenClick(token) },
                                         mergedBalance = token.mergeBalance,
