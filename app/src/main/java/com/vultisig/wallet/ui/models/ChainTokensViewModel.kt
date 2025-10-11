@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.IsSwapSupported
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
@@ -232,7 +231,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?: "",
                         fiatBalance = account.fiatValue
                             ?.let { fiatValueToStringMapper(it) },
-                        tokenLogo = Tokens.getCoinLogo(token.logo),
+                        tokenLogo = getCoinLogo(token.logo),
                         chainLogo = chain.logo,
                         monotoneChainLogo = chain.monoToneLogo,
                         mergeBalance = mergeBalances.findMergeBalance(token).toString(),

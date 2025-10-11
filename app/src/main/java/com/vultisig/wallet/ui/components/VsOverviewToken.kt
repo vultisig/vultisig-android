@@ -23,7 +23,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -69,7 +68,7 @@ internal fun VsOverviewToken(
 
         Box {
             TokenLogo(
-                logo = Tokens.getCoinLogo(token.logo),
+                logo = getCoinLogo(token.logo),
                 title = token.ticker,
                 modifier = Modifier
                     .size(36.dp)
@@ -83,7 +82,7 @@ internal fun VsOverviewToken(
                     .size(36.dp)
             )
 
-            chainLogo.takeIf { it != Tokens.getCoinLogo(token.logo) }?.let {
+            chainLogo.takeIf { it != getCoinLogo(token.logo) }?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,

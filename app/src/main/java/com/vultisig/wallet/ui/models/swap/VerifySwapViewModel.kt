@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -59,7 +59,7 @@ internal data class ValuedToken(
 ) {
     companion object {
         val Empty = ValuedToken(
-            token = Tokens.wewe,
+            token = Coins.Base.WEWE,
             value = "0",
             fiatValue = "0",
         )
