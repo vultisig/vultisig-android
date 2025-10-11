@@ -52,8 +52,8 @@ internal val Chain.monoToneLogo: Int
         Chain.Polygon -> R.drawable.polygon
         Chain.Optimism -> R.drawable.opti_mono
         Chain.BscChain -> R.drawable.bsc_mono
-        Chain.Bitcoin -> R.drawable.bsc_mono
-        Chain.BitcoinCash -> R.drawable.btc_mono
+        Chain.Bitcoin -> R.drawable.btc_mono
+        Chain.BitcoinCash -> R.drawable.bch_mono
         Chain.Litecoin -> R.drawable.ltc_mono
         Chain.Dogecoin -> R.drawable.doge
         Chain.Dash -> R.drawable.dash_mono
