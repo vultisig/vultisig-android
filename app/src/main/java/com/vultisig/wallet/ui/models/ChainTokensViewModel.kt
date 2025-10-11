@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -85,6 +86,7 @@ internal data class ChainTokenUiModel(
     val tokenLogo: ImageModel = "",
     val price: String? = null,
     @DrawableRes val chainLogo: Int? = null,
+    @DrawableRes val monotoneChainLogo: Int? = null,
     val mergeBalance: String? = null,
     val network: String = "",
 )
@@ -232,6 +234,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?.let { fiatValueToStringMapper(it) },
                         tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
+                        monotoneChainLogo = chain.monoToneLogo,
                         mergeBalance = mergeBalances.findMergeBalance(token).toString(),
                         price = account.price?.let { fiatValueToStringMapper(it) },
                         network = token.chain.raw,

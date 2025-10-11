@@ -41,6 +41,7 @@ internal fun ChainAccount(
     isBalanceVisible: Boolean,
     tokenLogo: ImageModel,
     @DrawableRes chainLogo: Int?,
+    @DrawableRes monoToneChainLogo: Int?,
     onClick: () -> Unit = {},
     mergedBalance: String? = null,
 ) {
@@ -63,7 +64,7 @@ internal fun ChainAccount(
                     .clip(CircleShape)
                     .background(Theme.colors.neutral100),
             )
-            chainLogo.takeIf { it != tokenLogo }?.let {
+            monoToneChainLogo.takeIf { chainLogo != tokenLogo }?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,
