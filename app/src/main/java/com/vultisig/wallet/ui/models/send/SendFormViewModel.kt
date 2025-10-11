@@ -22,13 +22,13 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
@@ -1289,12 +1289,12 @@ internal class SendFormViewModel @Inject constructor(
 
                 val existentialDeposit = when {
                     selectedChain == Chain.Polkadot &&
-                            selectedToken.ticker == Tokens.polkadot.ticker -> {
+                            selectedToken.ticker == Coins.Polkadot.DOT.ticker -> {
                         PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
                     }
 
                     selectedChain == Chain.Ripple &&
-                            selectedToken.ticker == Tokens.xrp.ticker -> {
+                            selectedToken.ticker == Coins.Ripple.XRP.ticker -> {
                         RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
                     }
 

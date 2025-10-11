@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -310,7 +310,7 @@ private fun VerifyDepositScreenPreview() {
         state = VerifyDepositUiModel(
             depositTransactionUiModel = DepositTransactionUiModel(
                 token = ValuedToken(
-                    token = Tokens.rune,
+                    token = Coins.ThorChain.RUNE,
                     value = "1 RUNE",
                     fiatValue = "$1.37"
                 ),

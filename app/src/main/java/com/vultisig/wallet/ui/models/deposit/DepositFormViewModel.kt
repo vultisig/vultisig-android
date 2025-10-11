@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -108,7 +107,7 @@ internal enum class DepositOption {
 
 @Immutable
 internal data class DepositFormUiModel(
-    val selectedToken: Coin = Tokens.rune,
+    val selectedToken: Coin = Coins.ThorChain.RUNE,
 
     val depositMessage: UiText = UiText.Empty,
     val depositOption: DepositOption = DepositOption.Bond,
@@ -489,12 +488,12 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                 DepositOption.MintYRUNE ->
                     state.update {
-                        it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
+                        it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
 
                 DepositOption.MintYTCY -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy)
+                        it.copy(selectedToken = Coins.ThorChain.TCY)
                     }
                 }
 
@@ -516,7 +515,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy, unstakableAmount = null)
+                        it.copy(selectedToken = Coins.ThorChain.TCY, unstakableAmount = null)
                     }
                 }
 
@@ -2351,7 +2350,7 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private suspend fun handleRujiDepositOption(depositOption: DepositOption) {
-        val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return
+        val rujiToken = Coins.ThorChain.RUJI
         state.update {
             it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
         }
