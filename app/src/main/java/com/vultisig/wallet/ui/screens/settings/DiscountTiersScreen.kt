@@ -89,9 +89,14 @@ internal fun DiscountTiersScreen(
             UiSpacer(size = 16.dp)
 
             TierCard(TierType.BRONZE)
+
             TierCard(TierType.SILVER)
+
             TierCard(TierType.GOLD)
+
             TierCard(TierType.PLATINIUM)
+
+            UiSpacer(size = 16.dp)
         }
     }
 }
