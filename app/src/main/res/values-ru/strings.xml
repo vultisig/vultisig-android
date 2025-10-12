@@ -31,6 +31,7 @@
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>
     <string name="vault_settings_security_subtitle">Управляйте своей безопасностью в сети</string>
+    <string name="vault_settings_discounts">$VULT Уровни Скидок</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="join_keysign_discovery_service">Обнаружение службы</string>
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>

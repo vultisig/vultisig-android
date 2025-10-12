@@ -24,6 +24,7 @@
     <string name="vault_settings_security_screen_content_bottomsheet">Desactivar la seguridad en cadena significa que Blockaid no puede verificar las transacciones. Estará menos protegido.</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
     <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
+    <string name="vault_settings_discounts">$VULT Niveles de Descuento</string>
     <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>
     <string name="vault_settings_security_screen_title_content">Puedes desactivar la seguridad en cadena en tiempo real proporcionada por Blockaid.</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>

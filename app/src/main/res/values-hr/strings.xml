@@ -13,6 +13,7 @@
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
+    <string name="vault_settings_discounts">$VULT Razine Popusta</string>
     <string name="join_keysign_missing_required_vault">Nemate potreban trezor za Keysign</string>
     <string name="vault_settings_security_screen_title">Sigurnost</string>
     <string name="swap_form_on_chain">na</string>

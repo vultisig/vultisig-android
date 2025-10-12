@@ -16,6 +16,7 @@
     <string name="select_chain_balance_title">Guthaben</string>
     <string name="vault_settings_security_title">On-Chain-Sicherheit</string>
     <string name="vault_settings_security_subtitle">Verwalten Sie Ihre On-Chain-Sicherheit</string>
+    <string name="vault_settings_discounts">$VULT Rabattstufen</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
     <string name="vault_settings_security_screen_title_switch">Ihre On-Chain-Sicherheit verwalten</string>
     <string name="vault_settings_security_screen_title_content">Sie können Ihre von Blockaid bereitgestellte Echtzeit-On-Chain-Sicherheit deaktivieren.</string>

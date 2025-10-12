@@ -75,6 +75,7 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
+import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
 import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
@@ -283,6 +284,12 @@ internal fun SetupNavGraph(
             route = Destination.VultisigToken.route,
         ) {
             VultisigTokenScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.DiscountTiers.route,
+        ) {
+            DiscountTiersScreen(navController = navController)
         }
 
         composable(

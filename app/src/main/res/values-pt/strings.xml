@@ -16,6 +16,7 @@
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_security_title">Segurança On-chain</string>
     <string name="vault_settings_security_subtitle">Gerencie sua segurança on-chain</string>
+    <string name="vault_settings_discounts">$VULT Níveis de Desconto</string>
     <string name="join_keysign_missing_required_vault">Não tem o cofre necessário para o Keysign</string>
     <string name="vault_settings_security_screen_title">Segurança</string>
     <string name="vault_settings_security_screen_title_switch">Gerencie sua segurança on-chain</string>

@@ -26,6 +26,7 @@
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent</string>
     <string name="vault_settings_security_title">On-chain beveiliging</string>
     <string name="vault_settings_security_subtitle">Beheer uw on-chain beveiliging</string>
+    <string name="vault_settings_discounts">$VULT Kortingsniveaus</string>
     <string name="join_keysign_missing_required_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
     <string name="vault_settings_security_screen_title_switch">Beheer uw on-chain beveiliging</string>
     <string name="vault_settings_security_screen_title_content">U kunt uw realtime on-chain beveiliging uitschakelen</string>

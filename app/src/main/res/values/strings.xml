@@ -42,6 +42,7 @@
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
     <string name="vault_settings_security_title">On-chain Security</string>
     <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
+    <string name="vault_settings_discounts">$VULT Discount Tiers</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
