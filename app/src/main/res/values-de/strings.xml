@@ -67,6 +67,8 @@
     <string name="vault_detail_screen_vault_name">Tresorname</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EdDSA</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">ECDSA-Schlüssel kopiert</string>
+    <string name="vault_detail_screen_eddsa_key_copied">EdDSA-Schlüssel kopiert</string>
     <string name="welcome_screen_skip">Überspringen</string>
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
