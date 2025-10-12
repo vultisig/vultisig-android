@@ -27,6 +27,14 @@
     <string name="vault_settings_security_title">On-chain beveiliging</string>
     <string name="vault_settings_security_subtitle">Beheer uw on-chain beveiliging</string>
     <string name="vault_settings_discounts">$VULT Kortingsniveaus</string>
+    <string name="vault_tier_bronze">Brons</string>
+    <string name="vault_tier_silver">Zilver</string>
+    <string name="vault_tier_gold">Goud</string>
+    <string name="vault_tier_platinum">Platina</string>
+    <string name="vault_tier_bronze_discount">Korting: 10bps</string>
+    <string name="vault_tier_silver_discount">Korting: 20bps</string>
+    <string name="vault_tier_gold_discount">Korting: 30bps</string>
+    <string name="vault_tier_platinum_discount">Korting: 35bps</string>
     <string name="join_keysign_missing_required_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
     <string name="vault_settings_security_screen_title_switch">Beheer uw on-chain beveiliging</string>
     <string name="vault_settings_security_screen_title_content">U kunt uw realtime on-chain beveiliging uitschakelen</string>

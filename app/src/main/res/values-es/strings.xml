@@ -25,6 +25,14 @@
     <string name="vault_settings_security_title">Seguridad en cadena</string>
     <string name="vault_settings_security_subtitle">Gestione su seguridad en cadena</string>
     <string name="vault_settings_discounts">$VULT Niveles de Descuento</string>
+    <string name="vault_tier_bronze">Bronce</string>
+    <string name="vault_tier_silver">Plata</string>
+    <string name="vault_tier_gold">Oro</string>
+    <string name="vault_tier_platinum">Platino</string>
+    <string name="vault_tier_bronze_discount">Descuento: 10bps</string>
+    <string name="vault_tier_silver_discount">Descuento: 20bps</string>
+    <string name="vault_tier_gold_discount">Descuento: 30bps</string>
+    <string name="vault_tier_platinum_discount">Descuento: 35bps</string>
     <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>
     <string name="vault_settings_security_screen_title_content">Puedes desactivar la seguridad en cadena en tiempo real proporcionada por Blockaid.</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>

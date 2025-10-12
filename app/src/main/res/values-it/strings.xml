@@ -14,6 +14,14 @@
     <string name="vault_settings_security_title">Sicurezza On-chain</string>
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>
     <string name="vault_settings_discounts">$VULT Livelli di Sconto</string>
+    <string name="vault_tier_bronze">Bronzo</string>
+    <string name="vault_tier_silver">Argento</string>
+    <string name="vault_tier_gold">Oro</string>
+    <string name="vault_tier_platinum">Platino</string>
+    <string name="vault_tier_bronze_discount">Sconto: 10bps</string>
+    <string name="vault_tier_silver_discount">Sconto: 20bps</string>
+    <string name="vault_tier_gold_discount">Sconto: 30bps</string>
+    <string name="vault_tier_platinum_discount">Sconto: 35bps</string>
     <string name="join_keysign_missing_required_vault">Non hai il vault richiesto per Keysign</string>
     <string name="vault_settings_security_screen_title">Sicurezza</string>
     <string name="swap_form_on_chain">su</string>

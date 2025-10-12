@@ -14,6 +14,14 @@
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
     <string name="vault_settings_discounts">$VULT Razine Popusta</string>
+    <string name="vault_tier_bronze">Bronca</string>
+    <string name="vault_tier_silver">Srebro</string>
+    <string name="vault_tier_gold">Zlato</string>
+    <string name="vault_tier_platinum">Platina</string>
+    <string name="vault_tier_bronze_discount">Popust: 10bps</string>
+    <string name="vault_tier_silver_discount">Popust: 20bps</string>
+    <string name="vault_tier_gold_discount">Popust: 30bps</string>
+    <string name="vault_tier_platinum_discount">Popust: 35bps</string>
     <string name="join_keysign_missing_required_vault">Nemate potreban trezor za Keysign</string>
     <string name="vault_settings_security_screen_title">Sigurnost</string>
     <string name="swap_form_on_chain">na</string>

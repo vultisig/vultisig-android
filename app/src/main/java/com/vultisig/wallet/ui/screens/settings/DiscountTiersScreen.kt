@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.settings
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,7 +76,7 @@ fun DiscountTiersScreen(navController: NavHostController) {
             }
 
             UiSpacer(size = 24.dp)
-            
+
             Text(
                 text = "Hold VULT to unlock lower trading fees.",
                 style = Theme.brockmann.body.s.regular,
@@ -87,6 +86,9 @@ fun DiscountTiersScreen(navController: NavHostController) {
             UiSpacer(size = 16.dp)
 
             TierCard(TierType.BRONZE)
+            TierCard(TierType.SILVER)
+            TierCard(TierType.GOLD)
+            TierCard(TierType.PLATINIUM)
         }
     }
 }
@@ -95,6 +97,8 @@ fun DiscountTiersScreen(navController: NavHostController) {
 private fun TierCard(
     tierType: TierType,
 ) {
+    val styleTier = getStyleByTier(tierType)
+
     val borderGradient = Brush.verticalGradient(
         colors = listOf(
             Theme.colors.error.copy(alpha = 0.6f),
@@ -128,7 +132,7 @@ private fun TierCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.tier_bronze),
+                        painter = painterResource(styleTier.icon),
                         contentDescription = null,
                         modifier = Modifier
                             .size(55.dp)
@@ -136,7 +140,7 @@ private fun TierCard(
                     )
 
                     Text(
-                        text = "Bronze",
+                        text = styleTier.titleText,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -154,7 +158,7 @@ private fun TierCard(
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = "Discount: 10bps",
+                        text = styleTier.discountText,
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -164,8 +168,14 @@ private fun TierCard(
             UiSpacer(size = 8.dp)
 
             Text(
-                text = "Stake 1,000 \$VULT (~\$1,000)",
-                style = Theme.brockmann.body.m.regular,
+                text = "Hold",
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.extraLight
+            )
+
+            Text(
+                text = styleTier.amountText,
+                style = Theme.brockmann.body.l.regular,
                 color = Theme.v2.colors.text.primary
             )
 
@@ -188,6 +198,46 @@ private fun TierCard(
         }
     }
 }
+
+@Composable
+internal fun getStyleByTier(type: TierType): TierStyle {
+    return when (type) {
+        TierType.BRONZE -> TierStyle(
+            icon = R.drawable.tier_bronze,
+            titleText = stringResource(R.string.vault_tier_bronze),
+            discountText = stringResource(R.string.vault_tier_bronze_discount),
+            amountText = "1,000 \$VULT (~\$1,000)",
+        )
+
+        TierType.SILVER -> TierStyle(
+            icon = R.drawable.tier_silver,
+            titleText = stringResource(R.string.vault_tier_silver),
+            discountText = stringResource(R.string.vault_tier_silver_discount),
+            amountText = "5,000 \$VULT (~\$5,000)",
+        )
+
+        TierType.GOLD -> TierStyle(
+            icon = R.drawable.tier_gold,
+            titleText = stringResource(R.string.vault_tier_gold),
+            discountText = stringResource(R.string.vault_tier_gold_discount),
+            amountText = "10,000 \$VULT (~\$10,000)",
+        )
+
+        TierType.PLATINIUM -> TierStyle(
+            icon = R.drawable.tier_platinium,
+            titleText = stringResource(R.string.vault_tier_platinum),
+            discountText = stringResource(R.string.vault_tier_platinum_discount),
+            amountText = "50,000 \$VULT (~\$50,000)",
+        )
+    }
+}
+
+internal data class TierStyle(
+    val icon: Int,
+    val titleText: String,
+    val discountText: String,
+    val amountText: String,
+)
 
 
 internal enum class TierType { BRONZE, SILVER, GOLD, PLATINIUM }
