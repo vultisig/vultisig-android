@@ -29,7 +29,12 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
+import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
@@ -41,90 +46,108 @@ internal fun VaultDetailScreen(
     model: VaultDetailViewModel = hiltViewModel()
 ) {
     val state by model.uiModel.collectAsState()
+    val snackbarState = rememberVsSnackbarState()
 
     VaultDetailScreen(
         state = state,
+        snackBarState = snackbarState,
         onBackClick = {
             navHostController.popBackStack()
-        }
+        },
     )
 }
 
 @Composable
 private fun VaultDetailScreen(
     state: VaultDetailUiModel,
+    snackBarState: VSSnackbarState,
     onBackClick: () -> Unit,
 ) {
-
-    V2Scaffold(
-        title = stringResource(R.string.vault_settings_details_title),
-        onBackClick = onBackClick
-    ){
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-        ) {
-            VaultDetailGroup(
-                title = "Vault Info"
+    val ecdsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_ecdsa_key_copied)
+    val eddsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_eddsa_key_copied)
+    
+    Box(modifier = Modifier.fillMaxSize()) {
+        V2Scaffold(
+            title = stringResource(R.string.vault_settings_details_title),
+            onBackClick = onBackClick
+        ){
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
             ) {
-                InfoItem(
-                    key = stringResource(R.string.vault_detail_screen_vault_name),
-                    value = state.name
-                )
-                InfoItem(
-                    key = stringResource(R.string.vault_details_screen_vault_part),
-                    value = stringResource(
-                        R.string.vault_details_screen_vault_part_desc,
-                        state.vaultPart,
-                        state.vaultSize
-                    ),
-                )
-                InfoItem(
-                    key = stringResource(R.string.vault_details_screen_vault_type),
-                    value = state.libType ?: "error"
-                )
-            }
-
-            UiSpacer(24.dp)
-
-            VaultDetailGroup(title = "keys") {
-                KeyItem(
-                    type = "ECDSA",
-                    value = state.pubKeyECDSA
-                )
-                KeyItem(
-                    type = "EdDSA",
-                    value = state.pubKeyEDDSA
-                )
-            }
-
-            UiSpacer(24.dp)
-
-            VaultDetailGroup(
-                title = String.format(
-                    stringResource(id = R.string.s_of_s_vault),
-                    Utils.getThreshold(state.deviceList.size),
-                    state.deviceList.size.toString(),
-                ),
-            ) {
-                FlowRow(
-                    modifier = Modifier.fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                VaultDetailGroup(
+                    title = "Vault Info"
                 ) {
-                    state.deviceList.forEachIndexed { index, it ->
-                        DeviceItem(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(0.5f),
-                            order = "Signer ${index + 1}",
-                            name = it.name,
-                            isThisDevice = it.isThisDevice
-                        )
+                    InfoItem(
+                        key = stringResource(R.string.vault_detail_screen_vault_name),
+                        value = state.name
+                    )
+                    InfoItem(
+                        key = stringResource(R.string.vault_details_screen_vault_part),
+                        value = stringResource(
+                            R.string.vault_details_screen_vault_part_desc,
+                            state.vaultPart,
+                            state.vaultSize
+                        ),
+                    )
+                    InfoItem(
+                        key = stringResource(R.string.vault_details_screen_vault_type),
+                        value = state.libType ?: "error"
+                    )
+                }
+
+                UiSpacer(24.dp)
+
+                VaultDetailGroup(title = "keys") {
+                    KeyItem(
+                        type = "ECDSA",
+                        value = state.pubKeyECDSA,
+                        onCopyCompleted = {
+                            snackBarState.show(ecdsaKeyCopiedMessage)
+                        },
+                    )
+                    KeyItem(
+                        type = "EdDSA",
+                        value = state.pubKeyEDDSA,
+                        onCopyCompleted = {
+                            snackBarState.show(eddsaKeyCopiedMessage)
+                        },
+                    )
+                }
+
+                UiSpacer(24.dp)
+
+                VaultDetailGroup(
+                    title = String.format(
+                        stringResource(id = R.string.s_of_s_vault),
+                        Utils.getThreshold(state.deviceList.size),
+                        state.deviceList.size.toString(),
+                    ),
+                ) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxHeight(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        state.deviceList.forEachIndexed { index, it ->
+                            DeviceItem(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .weight(0.5f),
+                                order = "Signer ${index + 1}",
+                                name = it.name,
+                                isThisDevice = it.isThisDevice
+                            )
+                        }
                     }
                 }
             }
         }
+        
+        VsSnackBar(
+            snackbarState = snackBarState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -182,7 +205,8 @@ private fun VaultDetailScreenPreview() {
                 )
             )
         ),
-        onBackClick = {}
+        snackBarState = rememberVsSnackbarState(),
+        onBackClick = {},
     )
 }
 
@@ -232,7 +256,7 @@ internal fun Modifier.itemModifier(): Modifier = border(
     )
 
 @Composable
-private fun KeyItem(type: String, value: String) {
+private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Unit = {}) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -258,7 +282,7 @@ private fun KeyItem(type: String, value: String) {
             )
         }
         UiSpacer(16.dp)
-        CopyIcon(textToCopy = value)
+        CopyIcon(textToCopy = value, onCopyCompleted = onCopyCompleted)
     }
 }
 
