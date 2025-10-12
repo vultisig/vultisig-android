@@ -97,11 +97,11 @@ private fun TierCard(
 ) {
     val borderGradient = Brush.verticalGradient(
         colors = listOf(
-            Theme.colors.error.copy(alpha = 0.6f),    // bright orange at the top
-            Color.Transparent     // fade to transparent bottom
+            Theme.colors.error.copy(alpha = 0.6f),
+            Color.Transparent,
         ),
         startY = 0f,
-        endY = 400f // controls where it fades out; adjust based on card height
+        endY = 400f
     )
 
     Box(
@@ -122,6 +122,7 @@ private fun TierCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -130,27 +131,32 @@ private fun TierCard(
                         painter = painterResource(R.drawable.tier_bronze),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(50.dp)
+                            .size(55.dp)
                             .padding(8.dp)
                     )
 
                     Text(
                         text = "Bronze",
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                     )
                 }
 
-                // Discount badge example
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Theme.colors.backgrounds.secondary)
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.normal,
+                            shape = RoundedCornerShape(50)
+                        )
+                        .background(Theme.v2.colors.backgrounds.surface2)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "Discount: 10bps",
-                        style = Theme.brockmann.body.s.regular,
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.primary,
                     )
                 }
             }
@@ -160,12 +166,12 @@ private fun TierCard(
             Text(
                 text = "Stake 1,000 \$VULT (~\$1,000)",
                 style = Theme.brockmann.body.m.regular,
-                color = Theme.colors.text.primary
+                color = Theme.v2.colors.text.primary
             )
 
             UiSpacer(size = 16.dp)
 
-            Box(
+            /*Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
@@ -178,7 +184,7 @@ private fun TierCard(
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.colors.text.primary
                 )
-            }
+            } */
         }
     }
 }
