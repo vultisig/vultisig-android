@@ -1,11 +1,15 @@
 package com.vultisig.wallet.ui.screens.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,8 +21,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -31,7 +40,7 @@ fun DiscountTiersScreen(navController: NavHostController) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.colors.backgrounds.primary),
+            .background(Theme.colors.backgrounds.secondary),
         topBar = {
             TopBar(
                 navController = navController,
@@ -45,52 +54,35 @@ fun DiscountTiersScreen(navController: NavHostController) {
                 .padding(it)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(
+                        width = 1.dp,
+                        color = Theme.colors.borders.light,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.tiers_header),
+                    contentDescription = "Provider Logo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+            }
+
             UiSpacer(size = 24.dp)
             
             Text(
-                text = "Vault Discount Tiers",
-                style = Theme.montserrat.heading5,
-            )
-            
-            UiSpacer(size = 8.dp)
-            
-            Text(
-                text = "Get discounts on swap fees based on your vault tier",
-                style = Theme.montserrat.body2,
-            )
-            
-            UiSpacer(size = 32.dp)
-            
-            TierCard(
-                tierName = "Tier 1",
-                requirement = "1-2 Vaults",
-                discount = "0% Discount",
-                isActive = true
-            )
-            
-            TierCard(
-                tierName = "Tier 2",
-                requirement = "3-5 Vaults",
-                discount = "10% Discount",
-                isActive = false
-            )
-            
-            TierCard(
-                tierName = "Tier 3",
-                requirement = "6-10 Vaults",
-                discount = "20% Discount",
-                isActive = false
+                text = "Hold VULT to unlock lower trading fees.",
+                style = Theme.brockmann.body.s.regular,
+                textAlign = TextAlign.Start,
             )
 
-            TierCard(
-                tierName = "Tier 4",
-                requirement = "11+ Vaults",
-                discount = "30% Discount",
-                isActive = false
-            )
-            
             UiSpacer(size = 32.dp)
         }
     }
