@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.settings
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,9 +33,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
-fun DiscountTiersScreen(navController: NavHostController) {
+internal fun DiscountTiersScreen(
+    navController: NavHostController
+) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -95,7 +98,7 @@ fun DiscountTiersScreen(navController: NavHostController) {
 
 @Composable
 private fun TierCard(
-    tierType: TierType,
+    tierType: TierType
 ) {
     val styleTier = getStyleByTier(tierType)
 
@@ -206,28 +209,28 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_bronze,
             titleText = stringResource(R.string.vault_tier_bronze),
             discountText = stringResource(R.string.vault_tier_bronze_discount),
-            amountText = "1,000 \$VULT (~\$1,000)",
+            amountText = formatVultAmount(1000),
         )
 
         TierType.SILVER -> TierStyle(
             icon = R.drawable.tier_silver,
             titleText = stringResource(R.string.vault_tier_silver),
             discountText = stringResource(R.string.vault_tier_silver_discount),
-            amountText = "5,000 \$VULT (~\$5,000)",
+            amountText = formatVultAmount(5000),
         )
 
         TierType.GOLD -> TierStyle(
             icon = R.drawable.tier_gold,
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = "10,000 \$VULT (~\$10,000)",
+            amountText = formatVultAmount(10000),
         )
 
         TierType.PLATINIUM -> TierStyle(
             icon = R.drawable.tier_platinium,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
-            amountText = "50,000 \$VULT (~\$50,000)",
+            amountText = formatVultAmount(50000),
         )
     }
 }
@@ -241,3 +244,11 @@ internal data class TierStyle(
 
 
 internal enum class TierType { BRONZE, SILVER, GOLD, PLATINIUM }
+
+private fun formatVultAmount(vultAmount: Int): String {
+    val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
+    val formattedVult = numberFormat.format(vultAmount)
+    val formattedUsd = numberFormat.format(vultAmount)
+
+    return "$formattedVult \$VULT (~\$$formattedUsd USD)"
+}
