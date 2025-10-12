@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,12 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -83,75 +84,104 @@ fun DiscountTiersScreen(navController: NavHostController) {
                 textAlign = TextAlign.Start,
             )
 
-            UiSpacer(size = 32.dp)
+            UiSpacer(size = 16.dp)
+
+            TierCard(TierType.BRONZE)
         }
     }
 }
 
 @Composable
 private fun TierCard(
-    tierName: String,
-    requirement: String,
-    discount: String,
-    isActive: Boolean
+    tierType: TierType,
 ) {
-    val colors = Theme.colors
-    
-    Card(
+    val borderGradient = Brush.verticalGradient(
+        colors = listOf(
+            Theme.colors.error.copy(alpha = 0.6f),    // bright orange at the top
+            Color.Transparent     // fade to transparent bottom
+        ),
+        startY = 0f,
+        endY = 400f // controls where it fades out; adjust based on card height
+    )
+
+    Box(
         modifier = Modifier
             .padding(vertical = 8.dp)
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isActive) colors.turquoise600Main.copy(alpha = 0.1f) else colors.oxfordBlue600Main
-        )
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                brush = borderGradient,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.colors.backgrounds.neutral)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = tierName,
-                        style = Theme.montserrat.body1.copy(fontWeight = FontWeight.Bold),
-                        color = if (isActive) colors.turquoise600Main else colors.neutral0
+                    Image(
+                        painter = painterResource(R.drawable.tier_bronze),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(8.dp)
                     )
-                    if (isActive) {
-                        UiSpacer(size = 8.dp)
-                        Card(
-                            shape = RoundedCornerShape(4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colors.turquoise600Main
-                            )
-                        ) {
-                            Text(
-                                text = "ACTIVE",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = Theme.montserrat.caption.copy(fontWeight = FontWeight.Bold),
-                                color = colors.oxfordBlue800
-                            )
-                        }
-                    }
+
+                    Text(
+                        text = "Bronze",
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.colors.text.primary,
+                    )
                 }
-                UiSpacer(size = 4.dp)
+
+                // Discount badge example
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Theme.colors.backgrounds.secondary)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Discount: 10bps",
+                        style = Theme.brockmann.body.s.regular,
+                    )
+                }
+            }
+
+            UiSpacer(size = 8.dp)
+
+            Text(
+                text = "Stake 1,000 \$VULT (~\$1,000)",
+                style = Theme.brockmann.body.m.regular,
+                color = Theme.colors.text.primary
+            )
+
+            UiSpacer(size = 16.dp)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Theme.colors.backgrounds.secondary)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = requirement,
-                    style = Theme.montserrat.body3,
-                    color = colors.neutral200
+                    text = "Unlock Tier",
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.colors.text.primary
                 )
             }
-            
-            Text(
-                text = discount,
-                style = Theme.montserrat.body1.copy(fontWeight = FontWeight.Bold),
-                color = colors.turquoise600Main
-            )
         }
     }
 }
+
+
+internal enum class TierType { BRONZE, SILVER, GOLD, PLATINIUM }
