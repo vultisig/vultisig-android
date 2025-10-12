@@ -66,10 +66,7 @@ internal fun ScaffoldWithExpandableTopBar(
             modifier = Modifier
                 .align(alignment = Alignment.BottomCenter)
         )
-
     }
-
-
 }
 
 

@@ -65,6 +65,8 @@
     <string name="vault_detail_screen_vault_name">Ime sefa</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EdDSA</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">ECDSA ključ kopiran</string>
+    <string name="vault_detail_screen_eddsa_key_copied">EdDSA ključ kopiran</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA…</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>
