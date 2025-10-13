@@ -22,6 +22,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -130,7 +132,13 @@ internal fun TierDiscounBottomSheetContent(
             UiSpacer(32.dp)
 
             Text(
-                text = stringResource(R.string.vault_tier_bronze_description),
+                text = buildAnnotatedString {
+                    append(tierStyle.descriptionPart1)
+                    pushStyle(Theme.brockmann.body.s.regular.copy(fontWeight = FontWeight.Bold).toSpanStyle())
+                    append(" " + tierStyle.descriptionPart2 + " ")
+                    pop()
+                    append(tierStyle.descriptionPart3)
+                },
                 style = Theme.brockmann.body.s.regular,
                 textAlign = TextAlign.Center,
                 color = Theme.colors.text.primary,
