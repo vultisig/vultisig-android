@@ -25,6 +25,7 @@
     <string name="vault_tier_silver_discount">Desconto: 20bps</string>
     <string name="vault_tier_gold_discount">Desconto: 30bps</string>
     <string name="vault_tier_platinum_discount">Desconto: 35bps</string>
+    <string name="vault_tier_description">Hold $VULT para desbloquear taxas de negociação mais baixas.</string>
     <string name="join_keysign_missing_required_vault">Não tem o cofre necessário para o Keysign</string>
     <string name="vault_settings_security_screen_title">Segurança</string>
     <string name="vault_settings_security_screen_title_switch">Gerencie sua segurança on-chain</string>

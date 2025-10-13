@@ -35,6 +35,7 @@
     <string name="vault_tier_silver_discount">Korting: 20bps</string>
     <string name="vault_tier_gold_discount">Korting: 30bps</string>
     <string name="vault_tier_platinum_discount">Korting: 35bps</string>
+    <string name="vault_tier_description">Hold $VULT om lagere handelskosten te ontgrendelen.</string>
     <string name="join_keysign_missing_required_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
     <string name="vault_settings_security_screen_title_switch">Beheer uw on-chain beveiliging</string>
     <string name="vault_settings_security_screen_title_content">U kunt uw realtime on-chain beveiliging uitschakelen</string>

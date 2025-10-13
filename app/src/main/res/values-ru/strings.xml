@@ -40,6 +40,7 @@
     <string name="vault_tier_silver_discount">Скидка: 20bps</string>
     <string name="vault_tier_gold_discount">Скидка: 30bps</string>
     <string name="vault_tier_platinum_discount">Скидка: 35bps</string>
+    <string name="vault_tier_description">Hold $VULT для разблокировки более низких торговых комиссий.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="join_keysign_discovery_service">Обнаружение службы</string>
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>

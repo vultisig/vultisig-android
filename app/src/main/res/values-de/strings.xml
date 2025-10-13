@@ -25,6 +25,7 @@
     <string name="vault_tier_silver_discount">Rabatt: 20bps</string>
     <string name="vault_tier_gold_discount">Rabatt: 30bps</string>
     <string name="vault_tier_platinum_discount">Rabatt: 35bps</string>
+    <string name="vault_tier_description">Hold $VULT, um niedrigere Handelsgebühren freizuschalten.</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
     <string name="vault_settings_security_screen_title_switch">Ihre On-Chain-Sicherheit verwalten</string>
     <string name="vault_settings_security_screen_title_content">Sie können Ihre von Blockaid bereitgestellte Echtzeit-On-Chain-Sicherheit deaktivieren.</string>

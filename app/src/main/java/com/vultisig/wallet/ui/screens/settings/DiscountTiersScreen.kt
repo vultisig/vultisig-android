@@ -85,7 +85,7 @@ internal fun DiscountTiersScreen(
             UiSpacer(size = 24.dp)
 
             Text(
-                text = "Hold VULT to unlock lower trading fees.",
+                text = stringResource(R.string.vault_tier_description),
                 style = Theme.brockmann.body.s.regular,
                 textAlign = TextAlign.Start,
             )
