@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -105,7 +106,7 @@ internal fun DiscountTiersScreen(
 
             TierCard(tierType = TierType.BRONZE, onClickUnlock = {
                 model.navigateToSwaps(navController, vaultId)
-            })
+            }, true)
 
             TierCard(tierType = TierType.SILVER, onClickUnlock = {
                 model.navigateToSwaps(navController, vaultId)
@@ -128,6 +129,7 @@ internal fun DiscountTiersScreen(
 private fun TierCard(
     tierType: TierType,
     onClickUnlock: () -> Unit,
+    isActive: Boolean = false,
 ) {
     val styleTier = getStyleByTier(tierType)
 
@@ -197,11 +199,33 @@ private fun TierCard(
                 color = Theme.v2.colors.text.extraLight
             )
 
-            Text(
-                text = styleTier.amountText,
-                style = Theme.brockmann.body.l.regular,
-                color = Theme.v2.colors.text.primary
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ){
+                Text(
+                    text = styleTier.amountText,
+                    style = Theme.brockmann.body.l.regular,
+                    color = Theme.v2.colors.text.primary
+                )
+
+                if (isActive) {
+                    UiSpacer(1f)
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_check,
+                        tint = Theme.v2.colors.alerts.success,
+                        size = 18.dp,
+                        modifier = Modifier.padding(4.dp),
+                    )
+
+                    Text(
+                        text = "Active",
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.alerts.success,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+            }
 
             UiSpacer(size = 16.dp)
 
