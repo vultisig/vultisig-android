@@ -51,6 +51,7 @@
     <string name="vault_tier_silver_discount">Discount: 20bps</string>
     <string name="vault_tier_gold_discount">Discount: 30bps</string>
     <string name="vault_tier_platinum_discount">Discount: 35bps</string>
+    <string name="vault_tier_hold" translatable="false">Hold</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>

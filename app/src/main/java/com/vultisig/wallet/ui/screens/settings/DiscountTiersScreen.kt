@@ -107,22 +107,13 @@ private fun TierCard(
 ) {
     val styleTier = getStyleByTier(tierType)
 
-    val borderGradient = Brush.verticalGradient(
-        colors = listOf(
-            Theme.colors.error.copy(alpha = 0.6f),
-            Color.Transparent,
-        ),
-        startY = 0f,
-        endY = 400f
-    )
-
     Box(
         modifier = Modifier
             .padding(vertical = 8.dp)
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                brush = borderGradient,
+                brush = styleTier.gradient,
                 shape = RoundedCornerShape(16.dp)
             )
             .clip(RoundedCornerShape(16.dp))
@@ -176,7 +167,7 @@ private fun TierCard(
             UiSpacer(size = 8.dp)
 
             Text(
-                text = "Hold",
+                text = stringResource(R.string.vault_tier_hold),
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.extraLight
             )
@@ -215,6 +206,14 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             titleText = stringResource(R.string.vault_tier_bronze),
             discountText = stringResource(R.string.vault_tier_bronze_discount),
             amountText = formatVultAmount(1000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFFDB5727).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.light,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
         )
 
         TierType.SILVER -> TierStyle(
@@ -222,6 +221,14 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             titleText = stringResource(R.string.vault_tier_silver),
             discountText = stringResource(R.string.vault_tier_silver_discount),
             amountText = formatVultAmount(5000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFFC9D6E8).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.light,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
         )
 
         TierType.GOLD -> TierStyle(
@@ -229,6 +236,14 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
             amountText = formatVultAmount(10000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFFFFC25C).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.light,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
         )
 
         TierType.PLATINIUM -> TierStyle(
@@ -236,6 +251,14 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
             amountText = formatVultAmount(50000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF33E6BF).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.normal,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
         )
     }
 }
@@ -245,6 +268,7 @@ internal data class TierStyle(
     val titleText: String,
     val discountText: String,
     val amountText: String,
+    val gradient: Brush
 )
 
 
