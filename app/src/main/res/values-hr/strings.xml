@@ -22,6 +22,8 @@
     <string name="vault_tier_silver_discount">Popust: 20bps</string>
     <string name="vault_tier_gold_discount">Popust: 30bps</string>
     <string name="vault_tier_platinum_discount">Popust: 35bps</string>
+    <string name="vault_tier_unlock">Otključaj razinu</string>
+    <string name="vault_tier_active">Aktivno</string>
     <string name="vault_tier_description">Hold $VULT za otključavanje nižih naknada za trgovanje.</string>
     <string name="vault_tier_bronze_description">Držanjem 1.000 $VULT, otključat ćete Brončanu razinu i dobiti popust od 10 baznih bodova na naknade za trgovanje na svim swapovima.</string>
     <string name="vault_tier_silver_description">Držanjem 2.500 $VULT, otključat ćete Srebrnu razinu i dobiti popust od 20 baznih bodova na naknade za trgovanje na svim swapovima.</string>

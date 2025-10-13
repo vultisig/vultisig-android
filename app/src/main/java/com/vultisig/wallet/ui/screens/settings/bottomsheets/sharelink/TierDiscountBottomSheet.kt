@@ -146,3 +146,9 @@ internal fun TierDiscounBottomSheetContent(
         }
     }
 }
+
+internal data class BottomSheetTierStyle(
+    val logoTier: Int,
+    val title: String,
+    val description: String,
+)

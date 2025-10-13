@@ -243,7 +243,7 @@ private fun TierCard(
                     )
 
                     Text(
-                        text = "Active",
+                        text = stringResource(R.string.vault_tier_active),
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.alerts.success,
                         modifier = Modifier.padding(end = 8.dp)
@@ -254,7 +254,7 @@ private fun TierCard(
             UiSpacer(size = 16.dp)
 
             VsButton(
-                label = "Unlock Tier",
+                label = stringResource(R.string.vault_tier_unlock),
                 modifier = Modifier
                     .fillMaxWidth(),
                 onClick = onClickUnlock,
