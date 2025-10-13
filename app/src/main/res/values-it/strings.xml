@@ -74,6 +74,8 @@
     <string name="vault_detail_screen_vault_name">Nome Cassaforte</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EdDSA</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">Chiave ECDSA Copiata</string>
+    <string name="vault_detail_screen_eddsa_key_copied">Chiave EdDSA Copiata</string>
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>

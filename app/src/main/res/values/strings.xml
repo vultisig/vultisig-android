@@ -130,6 +130,8 @@
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
     <string name="vault_detail_screen_eddsa">EdDSA Key</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
+    <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
@@ -798,7 +800,7 @@
     <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
-    <string name="vault_settings_view_vault">View vault name,part and type</string>
+    <string name="vault_settings_view_vault">View vault name, part and type</string>
     <string name="vault_settings_biometric_fast">Biometric fast sign</string>
     <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
     <string name="vault_settings_password_hint">Password hint</string>
