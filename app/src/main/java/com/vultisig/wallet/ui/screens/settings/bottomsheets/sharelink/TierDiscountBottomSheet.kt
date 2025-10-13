@@ -60,6 +60,8 @@ internal fun TierDiscounBottomSheetContent(
             .fillMaxWidth()
             .background(Theme.colors.backgrounds.secondary)
             .drawBehind {
+                // Draw dots with 0.05 alpha, starting on 80% of the height
+                // we gradually make them dissapear to match the bottom bar color
                 val baseColor = Color.White
                 val spacingPx = 12.dp.toPx()
                 val radiusPx = 1.dp.toPx()
@@ -137,7 +139,7 @@ internal fun TierDiscounBottomSheetContent(
 
             VsButton(
                 label = "Unlock Tier",
-                onClick = {},
+                onClick = onContinue,
                 modifier = Modifier
                     .fillMaxWidth(),
             )
