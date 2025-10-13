@@ -319,7 +319,7 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             DiscountTiers -> {
-                navigateTo(Destination.DiscountTiers)
+                navigateTo(Destination.DiscountTiers(vaultId))
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))

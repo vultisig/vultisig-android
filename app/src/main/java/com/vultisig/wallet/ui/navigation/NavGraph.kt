@@ -287,9 +287,16 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.DiscountTiers.route,
+            route = Destination.DiscountTiers.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
+            )
         ) {
-            DiscountTiersScreen(navController = navController)
+            val vaultId = it.arguments?.getString(ARG_VAULT_ID) ?: ""
+            DiscountTiersScreen(
+                navController = navController,
+                vaultId = vaultId
+            )
         }
 
         composable(

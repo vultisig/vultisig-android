@@ -32,14 +32,17 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
 
 @Composable
 internal fun DiscountTiersScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    vaultId: String
 ) {
     Scaffold(
         modifier = Modifier
@@ -89,13 +92,21 @@ internal fun DiscountTiersScreen(
 
             UiSpacer(size = 16.dp)
 
-            TierCard(TierType.BRONZE)
+            TierCard(tierType = TierType.BRONZE, onClickUnlock = {
+                navController.navigate(Route.Swap(vaultId = vaultId))
+            })
 
-            TierCard(TierType.SILVER)
+            TierCard(tierType = TierType.SILVER, onClickUnlock = {
+                navController.navigate(Route.Swap(vaultId = vaultId))
+            })
 
-            TierCard(TierType.GOLD)
+            TierCard(tierType = TierType.GOLD, onClickUnlock = {
+                navController.navigate(Route.Swap(vaultId = vaultId))
+            })
 
-            TierCard(TierType.PLATINIUM)
+            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {
+                navController.navigate(Route.Swap(vaultId = vaultId))
+            })
 
             UiSpacer(size = 16.dp)
         }

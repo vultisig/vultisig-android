@@ -194,7 +194,13 @@ internal sealed class Destination(
     data object DefaultChainSetting : Destination(route = "settings/default_chains")
     data object FAQSetting : Destination(route = "settings/faq")
     data object VultisigToken : Destination(route = "settings/vultisig_token")
-    data object DiscountTiers : Destination(route = "settings/discount_tiers")
+    data class DiscountTiers(
+        val vaultId: String
+    ) : Destination(route = "settings/discount_tiers/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "settings/discount_tiers/{$ARG_VAULT_ID}"
+        }
+    }
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
