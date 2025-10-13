@@ -54,6 +54,18 @@
     <string name="vault_tier_hold" translatable="false">Hold</string>
     <string name="vault_tier_unlock">Unlock Tier</string>
     <string name="vault_tier_active">Active</string>
+    <string name="vault_tier_unlock_bronze_part1">Unlock </string>
+    <string name="vault_tier_unlock_bronze_part2">Bronze</string>
+    <string name="vault_tier_unlock_bronze_part3"> Tier</string>
+    <string name="vault_tier_unlock_silver_part1">Unlock </string>
+    <string name="vault_tier_unlock_silver_part2">Silver</string>
+    <string name="vault_tier_unlock_silver_part3"> Tier</string>
+    <string name="vault_tier_unlock_gold_part1">Unlock </string>
+    <string name="vault_tier_unlock_gold_part2">Gold</string>
+    <string name="vault_tier_unlock_gold_part3"> Tier</string>
+    <string name="vault_tier_unlock_platinum_part1">Unlock </string>
+    <string name="vault_tier_unlock_platinum_part2">Platinum</string>
+    <string name="vault_tier_unlock_platinum_part3"> Tier</string>
     <string name="vault_tier_description">Hold $VULT to unlock lower trading fees.</string>
     <string name="vault_tier_bronze_description">By holding 1,000 $VULT, you\'ll unlock the Bronze Tier and receive a 10 bps trading fee discount on all swaps.</string>
     <string name="vault_tier_silver_description">By holding 2,500 $VULT, you\'ll unlock the Silver Tier and receive a 20 bps trading fee discount on all swaps.</string>

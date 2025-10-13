@@ -123,7 +123,13 @@ internal fun TierDiscounBottomSheetContent(
             UiSpacer(32.dp)
 
             Text(
-                text = "Unlock Bronze Tier",
+                text = buildAnnotatedString {
+                    append(tierStyle.titlePart1 + " ")
+                    pushStyle(Theme.brockmann.headings.title1.copy(color = tierStyle.tierColor).toSpanStyle())
+                    append(tierStyle.titlePart2)
+                    pop()
+                    append(" "+ tierStyle.titlePart3)
+                },
                 style = Theme.brockmann.headings.title1,
                 textAlign = TextAlign.Center,
                 color = Theme.colors.text.primary,
@@ -164,28 +170,40 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
     return when (tier){
         TierType.BRONZE -> BottomSheetTierStyle(
             logoTier = R.drawable.tier_bronze_bottomsheet,
-            title = "",
+            titlePart1 = stringResource(R.string.vault_tier_unlock_bronze_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_bronze_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_bronze_part3),
+            tierColor = Color(0xFFFF6333),
             descriptionPart1 = stringResource(R.string.vault_tier_bronze_description_part1),
             descriptionPart2 = stringResource(R.string.vault_tier_bronze_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_bronze_description_part3),
         )
         TierType.SILVER -> BottomSheetTierStyle(
             logoTier = R.drawable.tier_silver_bottomsheet,
-            title = "",
+            titlePart1 = stringResource(R.string.vault_tier_unlock_silver_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_silver_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_silver_part3),
+            tierColor = Color(0xFFC9D6E8),
             descriptionPart1 = stringResource(R.string.vault_tier_silver_description_part1),
             descriptionPart2 = stringResource(R.string.vault_tier_silver_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_silver_description_part3),
         )
         TierType.GOLD -> BottomSheetTierStyle(
             logoTier = R.drawable.tier_gold_bottomsheet,
-            title = "",
+            titlePart1 = stringResource(R.string.vault_tier_unlock_gold_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_gold_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_gold_part3),
+            tierColor = Color(0xFFFFC25C),
             descriptionPart1 = stringResource(R.string.vault_tier_gold_description_part1),
             descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
         )
         TierType.PLATINIUM -> BottomSheetTierStyle(
             logoTier = R.drawable.tier_platinium_bottomsheet,
-            title = "",
+            titlePart1 = stringResource(R.string.vault_tier_unlock_platinum_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_platinum_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_platinum_part3),
+            tierColor = Color(0xFF38CDCD),
             descriptionPart1 = stringResource(R.string.vault_tier_platinum_description_part1),
             descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
@@ -195,7 +213,10 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
 
 internal data class BottomSheetTierStyle(
     val logoTier: Int,
-    val title: String,
+    val titlePart1: String,
+    val titlePart2: String,
+    val titlePart3: String,
+    val tierColor: Color,
     val descriptionPart1: String,
     val descriptionPart2: String,
     val descriptionPart3: String,
