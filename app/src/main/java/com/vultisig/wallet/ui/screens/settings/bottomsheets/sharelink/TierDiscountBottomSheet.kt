@@ -46,6 +46,7 @@ internal fun TierDiscountBottomSheet(
         dragHandle = null,
     ) {
         TierDiscounBottomSheetContent(
+            tier = tier,
             onContinue = onContinue,
         )
     }
@@ -53,8 +54,11 @@ internal fun TierDiscountBottomSheet(
 
 @Composable
 internal fun TierDiscounBottomSheetContent(
+    tier: TierType,
     onContinue: () -> Unit,
 ) {
+    val tierStyle = getStyleByTier(tier)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -109,7 +113,7 @@ internal fun TierDiscounBottomSheetContent(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.tier_bronze_bottomsheet),
+                    painter = painterResource(id = tierStyle.logoTier),
                     contentDescription = "image",
                 )
             }
@@ -138,7 +142,7 @@ internal fun TierDiscounBottomSheetContent(
             UiSpacer(32.dp)
 
             VsButton(
-                label = "Unlock Tier",
+                label = stringResource(R.string.vault_tier_unlock),
                 onClick = onContinue,
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -147,8 +151,44 @@ internal fun TierDiscounBottomSheetContent(
     }
 }
 
+@Composable
+private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
+    return when (tier){
+        TierType.BRONZE -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_bronze_bottomsheet,
+            title = "",
+            descriptionPart1 = stringResource(R.string.vault_tier_bronze_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_bronze_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_bronze_description_part3),
+        )
+        TierType.SILVER -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_silver_bottomsheet,
+            title = "",
+            descriptionPart1 = stringResource(R.string.vault_tier_silver_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_silver_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_silver_description_part3),
+        )
+        TierType.GOLD -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_gold_bottomsheet,
+            title = "",
+            descriptionPart1 = stringResource(R.string.vault_tier_gold_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
+        )
+        TierType.PLATINIUM -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_platinium_bottomsheet,
+            title = "",
+            descriptionPart1 = stringResource(R.string.vault_tier_platinum_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
+        )
+    }
+}
+
 internal data class BottomSheetTierStyle(
     val logoTier: Int,
     val title: String,
-    val description: String,
+    val descriptionPart1: String,
+    val descriptionPart2: String,
+    val descriptionPart3: String,
 )
