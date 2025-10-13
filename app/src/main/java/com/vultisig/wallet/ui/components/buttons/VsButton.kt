@@ -171,7 +171,7 @@ fun VsButton(
         if (label != null) {
             Text(
                 text = label,
-                style = Theme.brockmann.button.semibold,
+                style = Theme.brockmann.button.medium,
                 color = contentColor,
             )
         }
