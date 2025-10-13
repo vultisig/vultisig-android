@@ -28,21 +28,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import java.text.NumberFormat
-import java.util.Currency
 import java.util.Locale
 
 @Composable
 internal fun DiscountTiersScreen(
     navController: NavHostController,
-    vaultId: String
+    vaultId: String,
+    model: DiscountTiersViewModel = hiltViewModel(),
 ) {
     Scaffold(
         modifier = Modifier
@@ -93,19 +93,19 @@ internal fun DiscountTiersScreen(
             UiSpacer(size = 16.dp)
 
             TierCard(tierType = TierType.BRONZE, onClickUnlock = {
-                navController.navigate(Route.Swap(vaultId = vaultId))
+                model.navigateToSwaps(navController, vaultId)
             })
 
             TierCard(tierType = TierType.SILVER, onClickUnlock = {
-                navController.navigate(Route.Swap(vaultId = vaultId))
+                model.navigateToSwaps(navController, vaultId)
             })
 
             TierCard(tierType = TierType.GOLD, onClickUnlock = {
-                navController.navigate(Route.Swap(vaultId = vaultId))
+                model.navigateToSwaps(navController, vaultId)
             })
 
             TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {
-                navController.navigate(Route.Swap(vaultId = vaultId))
+                model.navigateToSwaps(navController, vaultId)
             })
 
             UiSpacer(size = 16.dp)
