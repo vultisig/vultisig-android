@@ -41,6 +41,10 @@
     <string name="vault_tier_gold_discount">Скидка: 30bps</string>
     <string name="vault_tier_platinum_discount">Скидка: 35bps</string>
     <string name="vault_tier_description">Hold $VULT для разблокировки более низких торговых комиссий.</string>
+    <string name="vault_tier_bronze_description">Удерживая 1 000 $VULT, вы разблокируете Бронзовый уровень и получите скидку 10 базисных пунктов на торговые комиссии при всех обменах.</string>
+    <string name="vault_tier_silver_description">Удерживая 2 500 $VULT, вы разблокируете Серебряный уровень и получите скидку 20 базисных пунктов на торговые комиссии при всех обменах.</string>
+    <string name="vault_tier_gold_description">Удерживая 5 000 $VULT, вы разблокируете Золотой уровень и получите скидку 30 базисных пунктов на торговые комиссии при всех обменах.</string>
+    <string name="vault_tier_platinum_description">Удерживая 10 000 $VULT, вы разблокируете Платиновый уровень и получите скидку 35 базисных пунктов на торговые комиссии при всех обменах.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="join_keysign_discovery_service">Обнаружение службы</string>
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>

@@ -29,6 +29,7 @@ import javax.inject.Inject
 internal data class DiscountTiersUiModel(
     val activeTier: TierType? = null,
     val isLoading: Boolean = true,
+    val showBottomSheetDialog: Boolean = false,
 )
 
 @HiltViewModel

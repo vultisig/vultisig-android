@@ -26,6 +26,10 @@
     <string name="vault_tier_gold_discount">Rabatt: 30bps</string>
     <string name="vault_tier_platinum_discount">Rabatt: 35bps</string>
     <string name="vault_tier_description">Hold $VULT, um niedrigere Handelsgebühren freizuschalten.</string>
+    <string name="vault_tier_bronze_description">Durch das Halten von 1.000 $VULT schalten Sie die Bronze-Stufe frei und erhalten einen Rabatt von 10 Basispunkten auf die Handelsgebühren bei allen Swaps.</string>
+    <string name="vault_tier_silver_description">Durch das Halten von 2.500 $VULT schalten Sie die Silber-Stufe frei und erhalten einen Rabatt von 20 Basispunkten auf die Handelsgebühren bei allen Swaps.</string>
+    <string name="vault_tier_gold_description">Durch das Halten von 5.000 $VULT schalten Sie die Gold-Stufe frei und erhalten einen Rabatt von 30 Basispunkten auf die Handelsgebühren bei allen Swaps.</string>
+    <string name="vault_tier_platinum_description">Durch das Halten von 10.000 $VULT schalten Sie die Platin-Stufe frei und erhalten einen Rabatt von 35 Basispunkten auf die Handelsgebühren bei allen Swaps.</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
     <string name="vault_settings_security_screen_title_switch">Ihre On-Chain-Sicherheit verwalten</string>
     <string name="vault_settings_security_screen_title_content">Sie können Ihre von Blockaid bereitgestellte Echtzeit-On-Chain-Sicherheit deaktivieren.</string>
