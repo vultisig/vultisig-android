@@ -144,9 +144,9 @@ internal fun DiscountTiersScreen(
         }
     }
 
-    if (true) {
-        TierDiscountBottomSheet(TierType.BRONZE, {}, {})
-    }
+    //if (true) {
+    //    TierDiscountBottomSheet(TierType.BRONZE, {}, {})
+    //}
 }
 
 @Composable

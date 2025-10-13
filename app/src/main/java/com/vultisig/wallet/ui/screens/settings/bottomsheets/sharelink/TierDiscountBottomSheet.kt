@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -221,3 +222,30 @@ internal data class BottomSheetTierStyle(
     val descriptionPart2: String,
     val descriptionPart3: String,
 )
+
+@Preview(showBackground = true)
+@Composable
+private fun TierDiscountBottomSheetPreview() {
+    TierDiscounBottomSheetContent(
+        tier = TierType.GOLD,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Bronze Tier")
+@Composable
+private fun TierDiscountBottomSheetBronzePreview() {
+    TierDiscounBottomSheetContent(
+        tier = TierType.BRONZE,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Platinum Tier")
+@Composable
+private fun TierDiscountBottomSheetPlatinumPreview() {
+    TierDiscounBottomSheetContent(
+        tier = TierType.PLATINIUM,
+        onContinue = {}
+    )
+}
