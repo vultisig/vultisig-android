@@ -289,7 +289,10 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.DiscountTiers.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                }
             )
         ) {
             val vaultId = it.arguments?.getString(ARG_VAULT_ID) ?: ""

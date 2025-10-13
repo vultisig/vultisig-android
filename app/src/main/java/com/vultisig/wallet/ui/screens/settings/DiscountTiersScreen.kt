@@ -20,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,7 +53,8 @@ internal fun DiscountTiersScreen(
     model: DiscountTiersViewModel = hiltViewModel(),
 ) {
     val uriHandler = VsUriHandler()
-    
+    val state by model.state.collectAsState()
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -104,21 +107,37 @@ internal fun DiscountTiersScreen(
 
             UiSpacer(size = 16.dp)
 
-            TierCard(tierType = TierType.BRONZE, onClickUnlock = {
-                model.navigateToSwaps(navController, vaultId)
-            }, true)
+            TierCard(
+                tierType = TierType.BRONZE,
+                isActive = state.activeTier == TierType.BRONZE,
+                onClickUnlock = {
+                    model.navigateToSwaps(navController, vaultId)
+                }
+            )
 
-            TierCard(tierType = TierType.SILVER, onClickUnlock = {
-                model.navigateToSwaps(navController, vaultId)
-            })
+            TierCard(
+                tierType = TierType.SILVER,
+                isActive = state.activeTier == TierType.SILVER,
+                onClickUnlock = {
+                    model.navigateToSwaps(navController, vaultId)
+                }
+            )
 
-            TierCard(tierType = TierType.GOLD, onClickUnlock = {
-                model.navigateToSwaps(navController, vaultId)
-            })
+            TierCard(
+                tierType = TierType.GOLD,
+                isActive = state.activeTier == TierType.GOLD,
+                onClickUnlock = {
+                    model.navigateToSwaps(navController, vaultId)
+                }
+            )
 
-            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {
-                model.navigateToSwaps(navController, vaultId)
-            })
+            TierCard(
+                tierType = TierType.PLATINIUM,
+                isActive = state.activeTier == TierType.PLATINIUM,
+                onClickUnlock = {
+                    model.navigateToSwaps(navController, vaultId)
+                }
+            )
 
             UiSpacer(size = 16.dp)
         }
@@ -128,8 +147,8 @@ internal fun DiscountTiersScreen(
 @Composable
 private fun TierCard(
     tierType: TierType,
-    onClickUnlock: () -> Unit,
     isActive: Boolean = false,
+    onClickUnlock: () -> Unit,
 ) {
     val styleTier = getStyleByTier(tierType)
 
@@ -201,7 +220,7 @@ private fun TierCard(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-            ){
+            ) {
                 Text(
                     text = styleTier.amountText,
                     style = Theme.brockmann.body.l.regular,
