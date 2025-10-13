@@ -50,7 +50,7 @@ internal fun TierDiscounBottomSheetContent(
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 32.dp)
+            .padding(32.dp)
             .fillMaxWidth()
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,27 +64,27 @@ internal fun TierDiscounBottomSheetContent(
                 painter = painterResource(id = R.drawable.tier_bronze_bottomsheet),
                 contentDescription = "image",
             )
-
-            UiSpacer(16.dp)
-
-            Text(
-                text = "Unlock Bronze Tier",
-                style = Theme.brockmann.headings.title1,
-                textAlign = TextAlign.Center,
-                color = Theme.colors.text.primary,
-            )
-
-            UiSpacer(32.dp)
-
-            Text(
-                text = stringResource(R.string.vault_tier_bronze_description),
-                style = Theme.brockmann.headings.title1,
-                textAlign = TextAlign.Center,
-                color = Theme.colors.text.primary,
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-                    .fillMaxWidth()
-            )
         }
+
+        UiSpacer(32.dp)
+
+        Text(
+            text = "Unlock Bronze Tier",
+            style = Theme.brockmann.headings.title1,
+            textAlign = TextAlign.Center,
+            color = Theme.colors.text.primary,
+        )
+
+        UiSpacer(32.dp)
+
+        Text(
+            text = stringResource(R.string.vault_tier_bronze_description),
+            style = Theme.brockmann.body.s.regular,
+            textAlign = TextAlign.Center,
+            color = Theme.colors.text.primary,
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .fillMaxWidth()
+        )
     }
 }

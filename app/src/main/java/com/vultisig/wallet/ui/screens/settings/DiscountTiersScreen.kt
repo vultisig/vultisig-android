@@ -39,6 +39,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
@@ -141,6 +142,10 @@ internal fun DiscountTiersScreen(
 
             UiSpacer(size = 16.dp)
         }
+    }
+
+    if (true) {
+        TierDiscountBottomSheet(TierType.BRONZE, {}, {})
     }
 }
 
