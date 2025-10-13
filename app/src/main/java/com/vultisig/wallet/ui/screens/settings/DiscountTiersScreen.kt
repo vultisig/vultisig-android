@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -295,4 +297,22 @@ private fun formatVultAmount(vultAmount: Int): String {
     val formattedUsd = numberFormat.format(vultAmount)
 
     return "$formattedVult \$VULT (~\$$formattedUsd)"
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DiscountTiersScreenPreview() {
+    MaterialTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TierCard(tierType = TierType.BRONZE, onClickUnlock = {})
+            TierCard(tierType = TierType.SILVER, onClickUnlock = {})
+            TierCard(tierType = TierType.GOLD, onClickUnlock = {})
+            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {})
+        }
+    }
 }

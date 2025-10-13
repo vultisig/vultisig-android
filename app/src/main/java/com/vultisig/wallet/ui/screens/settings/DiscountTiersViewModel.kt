@@ -15,6 +15,10 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
+internal data class DiscountTiersUiModel(
+    val activeTier: TierType? = null,
+)
+
 @HiltViewModel
 internal class DiscountTiersViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
