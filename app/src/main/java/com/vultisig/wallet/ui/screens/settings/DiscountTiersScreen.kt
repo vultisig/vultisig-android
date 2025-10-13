@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -147,8 +148,9 @@ private fun TierCard(
                         painter = painterResource(styleTier.icon),
                         contentDescription = null,
                         modifier = Modifier
+                            .offset(x = (-4).dp) // compensate internal image padding
                             .size(55.dp)
-                            .padding(8.dp)
+                            .padding(start = 0.dp, end = 6.dp, bottom = 6.dp, top = 6.dp)
                     )
 
                     Text(
@@ -167,7 +169,7 @@ private fun TierCard(
                             shape = RoundedCornerShape(50)
                         )
                         .background(Theme.v2.colors.backgrounds.surface2)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = styleTier.discountText,
