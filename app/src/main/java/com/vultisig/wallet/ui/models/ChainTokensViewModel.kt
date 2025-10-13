@@ -44,6 +44,10 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Backgrounds
+import com.vultisig.wallet.ui.theme.v2.Colors
+import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
@@ -281,7 +285,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         android.graphics.Path.Direction.CCW
                     )
                     canvas.clipPath(path)
-                    canvas.drawColor(NeutralsColors.Default.secondary.toArgb())
+                    canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
                     drawable.setBounds(
                         0,
                         0,

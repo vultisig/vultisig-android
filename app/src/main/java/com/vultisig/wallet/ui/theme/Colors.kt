@@ -156,7 +156,6 @@ internal data class NeutralsColors(
     val n700: Color = Color(0xFF374151),
     val n800: Color = Color(0xFF1F2A37),
     val n900: Color = Color(0xFF000000),
-    val secondary: Color = Color(0xFF061B3A),
 ) {
     companion object{
         val Default = NeutralsColors()
@@ -168,7 +167,7 @@ internal data class FillsColors(
 )
 
 internal data class Vibrant(
-    val primary: Color = Color(0xFFF0F4FC),
+    val primary: Color = Color(0xFF333333)
 )
 
 internal data class Gradients(
