@@ -32,6 +32,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import java.text.NumberFormat
 import java.util.Locale
@@ -103,7 +104,8 @@ internal fun DiscountTiersScreen(
 
 @Composable
 private fun TierCard(
-    tierType: TierType
+    tierType: TierType,
+    onClickUnlock: () -> Unit,
 ) {
     val styleTier = getStyleByTier(tierType)
 
@@ -180,20 +182,12 @@ private fun TierCard(
 
             UiSpacer(size = 16.dp)
 
-            /*Box(
+            VsButton(
+                label = "Unlock Tier",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Theme.colors.backgrounds.secondary)
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Unlock Tier",
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.colors.text.primary
-                )
-            } */
+                    .fillMaxWidth(),
+                onClick = onClickUnlock,
+            )
         }
     }
 }
@@ -279,5 +273,5 @@ private fun formatVultAmount(vultAmount: Int): String {
     val formattedVult = numberFormat.format(vultAmount)
     val formattedUsd = numberFormat.format(vultAmount)
 
-    return "$formattedVult \$VULT (~\$$formattedUsd USD)"
+    return "$formattedVult \$VULT (~\$$formattedUsd)"
 }
