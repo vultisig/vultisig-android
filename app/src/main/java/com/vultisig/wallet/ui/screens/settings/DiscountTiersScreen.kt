@@ -36,6 +36,8 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
+import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -45,6 +47,8 @@ internal fun DiscountTiersScreen(
     vaultId: String,
     model: DiscountTiersViewModel = hiltViewModel(),
 ) {
+    val uriHandler = VsUriHandler()
+    
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -53,7 +57,11 @@ internal fun DiscountTiersScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.vault_settings_discounts),
-                startIcon = R.drawable.ic_caret_left
+                startIcon = R.drawable.ic_caret_left,
+                endIcon = R.drawable.settings_globe,
+                onEndIconClick = {
+                    uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS)
+                }
             )
         }
     ) {
