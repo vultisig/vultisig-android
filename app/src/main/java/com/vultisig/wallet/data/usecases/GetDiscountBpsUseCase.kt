@@ -52,12 +52,12 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
                 vault
             )
             
-            val balanceAndPrice = balanceRepository.getCachedTokenBalanceAndPrice(
-                address,
-                vultCoin
-            )
+            val tokenBalance = balanceRepository.getCachedTokenBalances(
+                listOf(address),
+                listOf(vultCoin),
+            ).firstOrNull()?.tokenBalance?.tokenValue?.value ?: BigInteger.ZERO
             
-            return balanceAndPrice.tokenBalance.tokenValue?.value
+            return tokenBalance
         } catch (e: Exception) {
             Timber.e(e)
             return null
