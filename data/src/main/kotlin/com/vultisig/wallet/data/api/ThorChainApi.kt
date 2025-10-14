@@ -64,6 +64,7 @@ interface ThorChainApi {
         interval: String,
         isAffiliate: Boolean,
         referralCode: String,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -152,12 +153,15 @@ internal class ThorChainApiImpl @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
         referralCode: String,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         val affiliateBPS = when {
             isAffiliate && referralCode.isNotEmpty() -> THORChainSwaps.AFFILIATE_FEE_RATE_PARTIAL
             isAffiliate -> THORChainSwaps.AFFILIATE_FEE_RATE
             else -> "0"
         }
+
+        val affiliateUpdated = maxOf(affiliateBPS.toInt() - bpsDiscount, 0).toString()
 
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
@@ -169,7 +173,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                 parameter("affiliate_bps", affiliateBPS)
                 if (referralCode.isNotEmpty() && isAffiliate) {
-                    parameter("affiliate", referralCode)
+                    parameter("affiliate", affiliateUpdated)
                     parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_REFERRAL_RATE)
                 }
             }

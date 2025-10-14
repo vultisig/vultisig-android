@@ -30,6 +30,7 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(
@@ -61,6 +62,7 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
             val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"

@@ -949,7 +949,8 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
-                                        referralCode = referral.orEmpty()
+                                        referralCode = referral.orEmpty(),
+                                        bpsDiscount = vultBPSDiscount,
                                     )
                                     thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }
@@ -1067,6 +1068,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     isAffiliate = isAffiliate,
+                                    bpsDiscount = vultBPSDiscount,
                                 )
 
                                 val expectedDstValue = TokenValue(
