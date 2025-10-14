@@ -373,9 +373,8 @@ internal enum class TierType { BRONZE, SILVER, GOLD, PLATINIUM }
 private fun formatVultAmount(vultAmount: Int): String {
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
     val formattedVult = numberFormat.format(vultAmount)
-    val formattedUsd = numberFormat.format(vultAmount)
 
-    return "$formattedVult \$VULT (~\$$formattedUsd)"
+    return "$formattedVult \$VULT"
 }
 
 @Preview(showBackground = true)
