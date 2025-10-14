@@ -20,8 +20,8 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Solana
 import java.math.BigInteger
 
-internal const val PRIORITY_FEE_PRICE = 1000000L
-internal const val PRIORITY_FEE_LIMIT = 100000
+internal const val SOLANA_PRIORITY_FEE_PRICE = 1000000L
+internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
 
 class SolanaHelper(
     private val vaultHexPublicKey: String,
@@ -47,12 +47,12 @@ class SolanaHelper(
             .setSender(keysignPayload.coin.address)
             .setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(PRIORITY_FEE_PRICE)
+                    .setPrice(SOLANA_PRIORITY_FEE_PRICE)
                     .build()
             )
             .setPriorityFeeLimit(
                 Solana.PriorityFeeLimit.newBuilder()
-                    .setLimit(PRIORITY_FEE_LIMIT)
+                    .setLimit(solanaSpecific.priorityLimit.toInt())
                     .build()
             )
 

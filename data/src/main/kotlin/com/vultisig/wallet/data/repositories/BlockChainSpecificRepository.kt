@@ -20,7 +20,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
+import com.vultisig.wallet.data.crypto.DEFAULT_SUI_GAS_BUDGET
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -278,7 +280,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     priorityFee = gasFee.value,
                     fromAddressPubKey = fromAddressPubKeyResult?.first,
                     toAddressPubKey = toAddressPubKeyResult?.first,
-                    programId = fromAddressPubKeyResult?.second == true
+                    programId = fromAddressPubKeyResult?.second == true,
+                    priorityLimit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
                 )
             )
         }
@@ -355,7 +358,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                             currentBlockNumber = blockHeaderDeferred.await(),
                             specVersion = specVersion.toLong().toUInt(),
                             transactionVersion = transactionVersion.toLong().toUInt(),
-                            genesisHash = genesisHashDeferred.await()
+                            genesisHash = genesisHashDeferred.await(),
+                            gas = gasFee.value.toLong().toULong(),
                         )
                     )
                 }
@@ -371,6 +375,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecific.Sui(
                     referenceGasPrice = gasPriceDeferred.await(),
                     coins = coinsDeferred.await(),
+                    gasBudget = DEFAULT_SUI_GAS_BUDGET,
                 ),
                 utxos = emptyList(),
             )
