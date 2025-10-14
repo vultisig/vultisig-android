@@ -791,7 +791,7 @@
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>
-    <string name="vault_settings_biometric_fast">Biometric fast sign</string>
+    <string name="vault_settings_biometric_fast">Biometrics fast sign</string>
     <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
     <string name="vault_settings_password_hint">Password hint</string>
     <string name="vault_settings_set_a_password">Set a password hint to protect your vault</string>
