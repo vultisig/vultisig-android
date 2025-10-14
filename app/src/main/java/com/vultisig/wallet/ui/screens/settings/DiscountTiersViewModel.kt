@@ -10,7 +10,10 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.utils.toUnit
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +26,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -197,13 +199,5 @@ internal class DiscountTiersViewModel @Inject constructor(
                 showBottomSheetDialog = false
             )
         }
-    }
-
-    private companion object {
-        // $VULT has same decimals as ETH (18)
-        private val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000".toBigInteger())
-        private val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
-        private val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
-        private val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("50000".toBigInteger())
     }
 }

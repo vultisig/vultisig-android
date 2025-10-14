@@ -6,7 +6,9 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.toUnit
 import timber.log.Timber
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -81,11 +83,10 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
         const val GOLD_DISCOUNT_BPS = 30
         const val PLATINUM_DISCOUNT_BPS = 35
         
-        private val ONE_TOKEN = BigInteger.TEN.pow(18)
-        val BRONZE_TIER_THRESHOLD: BigInteger = BigInteger("1000").multiply(ONE_TOKEN)
-        val SILVER_TIER_THRESHOLD: BigInteger = BigInteger("2500").multiply(ONE_TOKEN)
-        val GOLD_TIER_THRESHOLD: BigInteger = BigInteger("5000").multiply(ONE_TOKEN)
-        val PLATINUM_TIER_THRESHOLD: BigInteger = BigInteger("10000").multiply(ONE_TOKEN)
+        val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000".toBigInteger())
+        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
+        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
+        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("50000".toBigInteger())
 
         private val supportedProviders = setOf(
             SwapProvider.THORCHAIN,
