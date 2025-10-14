@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -29,6 +30,10 @@ import javax.inject.Inject
 internal data class DiscountTiersUiModel(
     val activeTier: TierType? = null,
     val tierClicked: TierType? = null,
+    val tierBronzeCollapsed: Boolean = false,
+    val tierSilverCollapsed: Boolean = false,
+    val tierGoldCollapsed: Boolean = false,
+    val tierPlatiniumCollapsed: Boolean = false,
     val isLoading: Boolean = true,
     val showBottomSheetDialog: Boolean = false,
 )
@@ -83,6 +88,10 @@ internal class DiscountTiersViewModel @Inject constructor(
                             activeTier = tier,
                             isLoading = false
                         )
+
+                        if (tier != null) {
+                            onClickCard(tier)
+                        }
                         
                         Timber.d("VULT balance: $vultBalance, Active tier: $tier")
                     } else {
@@ -159,6 +168,33 @@ internal class DiscountTiersViewModel @Inject constructor(
                     srcTokenId = null,
                     dstTokenId = null
                 ))
+            }
+        }
+    }
+
+    fun onClickCard(tierClicked: TierType) {
+        viewModelScope.launch {
+            when (tierClicked) {
+                TierType.BRONZE -> {
+                    _state.update {
+                        it.copy(tierBronzeCollapsed = true)
+                    }
+                }
+                TierType.SILVER -> {
+                    _state.update {
+                        it.copy(tierSilverCollapsed = true)
+                    }
+                }
+                TierType.GOLD -> {
+                    _state.update {
+                        it.copy(tierGoldCollapsed = true)
+                    }
+                }
+                TierType.PLATINIUM -> {
+                    _state.update {
+                        it.copy(tierPlatiniumCollapsed = true)
+                    }
+                }
             }
         }
     }

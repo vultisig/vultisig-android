@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,49 +112,63 @@ internal fun DiscountTiersScreen(
             TierCard(
                 tierType = TierType.BRONZE,
                 isActive = state.activeTier == TierType.BRONZE,
+                isCollapsed = state.tierBronzeCollapsed,
                 onClickUnlock = {
                     model.navigateToSwaps(navController, vaultId)
+                },
+                onClickCard = {
+                    model.onClickCard(TierType.BRONZE)
                 }
             )
 
             TierCard(
                 tierType = TierType.SILVER,
                 isActive = state.activeTier == TierType.SILVER,
+                isCollapsed = state.tierSilverCollapsed,
                 onClickUnlock = {
                     model.navigateToSwaps(navController, vaultId)
+                },
+                onClickCard = {
+                    model.onClickCard(TierType.SILVER)
                 }
             )
 
             TierCard(
                 tierType = TierType.GOLD,
                 isActive = state.activeTier == TierType.GOLD,
+                isCollapsed = state.tierGoldCollapsed,
                 onClickUnlock = {
                     model.navigateToSwaps(navController, vaultId)
+                },
+                onClickCard = {
+                    model.onClickCard(TierType.GOLD)
                 }
             )
 
             TierCard(
                 tierType = TierType.PLATINIUM,
                 isActive = state.activeTier == TierType.PLATINIUM,
+                isCollapsed = state.tierPlatiniumCollapsed,
                 onClickUnlock = {
                     model.navigateToSwaps(navController, vaultId)
+                },
+                onClickCard = {
+                    model.onClickCard(TierType.PLATINIUM)
                 }
             )
 
             UiSpacer(size = 16.dp)
         }
     }
-
-    //if (true) {
-    //    TierDiscountBottomSheet(TierType.BRONZE, {}, {})
-    //}
 }
 
 @Composable
 private fun TierCard(
     tierType: TierType,
     isActive: Boolean = false,
+    isCollapsed: Boolean = false,
     onClickUnlock: () -> Unit,
+    onClickCard: () -> Unit,
 ) {
     val styleTier = getStyleByTier(tierType)
 
@@ -168,6 +183,7 @@ private fun TierCard(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(Theme.colors.backgrounds.neutral)
+            .clickable { onClickCard.invoke() }
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -215,50 +231,52 @@ private fun TierCard(
                 }
             }
 
-            UiSpacer(size = 8.dp)
+            if (isCollapsed) {
+                UiSpacer(size = 8.dp)
 
-            Text(
-                text = stringResource(R.string.vault_tier_hold),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
                 Text(
-                    text = styleTier.amountText,
-                    style = Theme.brockmann.body.l.regular,
-                    color = Theme.v2.colors.text.primary
+                    text = stringResource(R.string.vault_tier_hold),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight
                 )
 
-                if (isActive) {
-                    UiSpacer(1f)
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_check,
-                        tint = Theme.v2.colors.alerts.success,
-                        size = 18.dp,
-                        modifier = Modifier.padding(4.dp),
-                    )
-
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = stringResource(R.string.vault_tier_active),
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.alerts.success,
-                        modifier = Modifier.padding(end = 8.dp)
+                        text = styleTier.amountText,
+                        style = Theme.brockmann.body.l.regular,
+                        color = Theme.v2.colors.text.primary
                     )
+
+                    if (isActive) {
+                        UiSpacer(1f)
+
+                        UiIcon(
+                            drawableResId = R.drawable.ic_check,
+                            tint = Theme.v2.colors.alerts.success,
+                            size = 18.dp,
+                            modifier = Modifier.padding(4.dp),
+                        )
+
+                        Text(
+                            text = stringResource(R.string.vault_tier_active),
+                            style = Theme.brockmann.supplementary.footnote,
+                            color = Theme.v2.colors.alerts.success,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
                 }
+
+                UiSpacer(size = 16.dp)
+
+                VsButton(
+                    label = stringResource(R.string.vault_tier_unlock),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onClickUnlock,
+                )
             }
-
-            UiSpacer(size = 16.dp)
-
-            VsButton(
-                label = stringResource(R.string.vault_tier_unlock),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onClick = onClickUnlock,
-            )
         }
     }
 }
@@ -357,10 +375,10 @@ private fun DiscountTiersScreenPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TierCard(tierType = TierType.BRONZE, onClickUnlock = {})
-            TierCard(tierType = TierType.SILVER, onClickUnlock = {})
-            TierCard(tierType = TierType.GOLD, onClickUnlock = {})
-            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {})
+            TierCard(tierType = TierType.BRONZE, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.SILVER, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.GOLD, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {}, onClickCard = {})
         }
     }
 }
