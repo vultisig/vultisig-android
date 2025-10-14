@@ -72,7 +72,8 @@ class OneInchApiImpl @Inject constructor(
                     dstTokenContractAddress,
                     amount,
                     srcAddress,
-                    isAffiliate
+                    isAffiliate,
+                    bpsDiscount,
                 )
             }
             val swapResponseAsync = async {
@@ -114,7 +115,11 @@ class OneInchApiImpl @Inject constructor(
         amount: String,
         srcAddress: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ) {
+        val bpsDiscount = bpsDiscount.toDouble() / 100
+        val referrerFeeUpdated = ONEINCH_REFERRER_FEE - bpsDiscount
+
         parameter(
             "src",
             srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
@@ -127,7 +132,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-        parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
+        parameter("fee", if(isAffiliate) referrerFeeUpdated else "0")
     }
 
 
