@@ -53,6 +53,7 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
+    val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
     val filteredAccounts : List<AccountUiModel>
@@ -75,6 +76,11 @@ internal data class AccountUiModel(
     val fiatAmount: String?,
     val assetsSize: Int = 0,
 )
+
+internal enum class CryptoConnectionType{
+    Wallet,
+    Defi,
+}
 
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
@@ -358,6 +364,14 @@ internal class VaultAccountsViewModel @Inject constructor(
         uiState.update {
             it.copy(
                 isBannerVisible = false,
+            )
+        }
+    }
+
+    fun setCryptoConnectionType(type: CryptoConnectionType){
+        uiState.update {
+            it.copy(
+                cryptoConnectionType = type,
             )
         }
     }

@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.CryptoConnectionType
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
@@ -45,7 +46,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
-import com.vultisig.wallet.ui.screens.v2.home.components.WalletEarnSelect
+import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePagerParams
 import com.vultisig.wallet.ui.theme.Theme
@@ -68,6 +69,7 @@ internal fun HomePage(
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
     onDismissBanner: () -> Unit = {},
+    onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
 
     val snackbarState = rememberVsSnackbarState()
@@ -142,58 +144,14 @@ internal fun HomePage(
             }
         },
         topBarExpandedContent = {
-            ExpandedTopbarContainer {
-                TopRow(
-                    onOpenSettingsClick = onOpenSettingsClick,
-                    onToggleVaultListClick = onToggleVaultListClick,
-                    vaultName = state.vaultName,
-                    isFastVault = state.isFastVault,
-                )
-                UiSpacer(
-                    40.dp
-                )
-                BalanceBanner(
-                    isVisible = state.isBalanceValueVisible,
-                    balance = state.totalFiatValue,
-                    onToggleVisibility = onToggleBalanceVisibility
-                )
-
-                UiSpacer(32.dp)
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(
-                        20.dp,
-                        Alignment.CenterHorizontally
-                    )
-                ) {
-                    TransactionTypeButton(
-                        txType = TransactionType.SEND,
-                        onClick = onSend
-                    )
-
-                    if (state.isSwapEnabled) {
-                        TransactionTypeButton(
-                            txType = TransactionType.SWAP,
-                            onClick = onSwap
-                        )
-                    }
-                }
-
-                UiSpacer(
-                    size = 32.dp
-                )
-
-                UiHorizontalDivider(
-                    color = Theme.colors.borders.light
-                )
-
-                UiSpacer(
-                    size = 20.dp
-                )
-            }
+            WalletModeExpandedTopBar(
+                state = state,
+                onOpenSettingsClick = onOpenSettingsClick,
+                onToggleVaultListClick = onToggleVaultListClick,
+                onToggleBalanceVisibility = onToggleBalanceVisibility,
+                onSend = onSend,
+                onSwap = onSwap
+            )
         },
         bottomBarContent = if (isBottomBarVisible.value) {
             {
@@ -208,7 +166,10 @@ internal fun HomePage(
                             .align(Alignment.BottomCenter),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        WalletEarnSelect()
+                        CryptoConnectionSelect(
+                            onTypeClick = onCryptoConnectionTypeClick,
+                            activeType = state.cryptoConnectionType
+                        )
                         CameraButton(
                             onClick = openCamera
                         )
@@ -293,6 +254,69 @@ internal fun HomePage(
             }
         }
     )
+}
+
+@Composable
+private fun WalletModeExpandedTopBar(
+    state: VaultAccountsUiModel,
+    onOpenSettingsClick: () -> Unit,
+    onToggleVaultListClick: () -> Unit,
+    onToggleBalanceVisibility: () -> Unit,
+    onSend: () -> Unit,
+    onSwap: () -> Unit,
+) {
+    ExpandedTopbarContainer {
+        TopRow(
+            onOpenSettingsClick = onOpenSettingsClick,
+            onToggleVaultListClick = onToggleVaultListClick,
+            vaultName = state.vaultName,
+            isFastVault = state.isFastVault,
+        )
+        UiSpacer(
+            40.dp
+        )
+        BalanceBanner(
+            isVisible = state.isBalanceValueVisible,
+            balance = state.totalFiatValue,
+            onToggleVisibility = onToggleBalanceVisibility
+        )
+
+        UiSpacer(32.dp)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(
+                20.dp,
+                Alignment.CenterHorizontally
+            )
+        ) {
+            TransactionTypeButton(
+                txType = TransactionType.SEND,
+                onClick = onSend
+            )
+
+            if (state.isSwapEnabled) {
+                TransactionTypeButton(
+                    txType = TransactionType.SWAP,
+                    onClick = onSwap
+                )
+            }
+        }
+
+        UiSpacer(
+            size = 32.dp
+        )
+
+        UiHorizontalDivider(
+            color = Theme.colors.borders.light
+        )
+
+        UiSpacer(
+            size = 20.dp
+        )
+    }
 }
 
 @Composable
