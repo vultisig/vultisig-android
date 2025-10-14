@@ -64,6 +64,9 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
     return shareFileName(vault.name, uid, shareType)
 }
 
+internal fun shareVaultDetailName(vaultName: String, vaultPart: String) =
+    "vultisig_detail_${vaultName}_${vaultPart}.png"
+
 internal fun shareFileName(vaultName: String, uid: String, shareType: ShareType): String {
     val date = Date()
     val format = SimpleDateFormat(
