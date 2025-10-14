@@ -162,7 +162,7 @@ internal fun HomePage(
                 )
 
                 UiSpacer(
-                    size = 32.dp
+                    size = 16.dp
                 )
 
             }

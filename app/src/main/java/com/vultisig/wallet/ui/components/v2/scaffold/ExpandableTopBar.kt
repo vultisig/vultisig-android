@@ -152,9 +152,9 @@ private fun MeasurementPhase(
             modifier = Modifier
                 .alpha(0f)
                 .fillMaxWidth()
-                .onGloballyPositioned { coords ->
-                    if (!hasMeasuredExpanded.value && coords.size.height > 0) {
-                        onExpandedHeightMeasured(coords.size.height)
+                .onGloballyPositioned { coordinates ->
+                    if (!hasMeasuredExpanded.value && coordinates.size.height > 0) {
+                        onExpandedHeightMeasured(coordinates.size.height)
                         hasMeasuredExpanded.value = true
                     }
                 },
@@ -165,9 +165,9 @@ private fun MeasurementPhase(
             modifier = Modifier
                 .alpha(0f)
                 .fillMaxWidth()
-                .onGloballyPositioned { coords ->
-                    if (!hasMeasuredCollapsed.value && coords.size.height > 0) {
-                        onCollapsedHeightMeasured(coords.size.height)
+                .onGloballyPositioned { coordinates ->
+                    if (!hasMeasuredCollapsed.value && coordinates.size.height > 0) {
+                        onCollapsedHeightMeasured(coordinates.size.height)
                         hasMeasuredCollapsed.value = true
                     }
                 },
