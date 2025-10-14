@@ -73,26 +73,53 @@ internal class DiscountTiersViewModel @Inject constructor(
                             vault
                         )
 
-                        // Get VULT balance
-                        val balanceAndPrice = balanceRepository.getTokenBalanceAndPrice(
-                            address,
-                            vultCoin
-                        ).first()
+                        // Get VULT balance from cache first
+                        val vultBalanceCache = balanceRepository.getCachedTokenBalances(
+                            listOf(address),
+                            listOf(vultCoin)
+                        ).find { it.coinId == Coins.Ethereum.VULT.id }
 
-                        val vultBalance = balanceAndPrice.tokenBalance.tokenValue?.value ?:
-                        error("Can't fetch vult balance")
-                        val tier = determineTier(vultBalance)
-
-                        _state.value = DiscountTiersUiModel(
-                            activeTier = tier,
-                            isLoading = false
-                        )
-
-                        if (tier != null) {
-                            expandOrCollapseTierInfo(tier)
+                        val cachedVultBalance = vultBalanceCache?.tokenBalance?.tokenValue?.value
+                        
+                        // Update UI with cached value if available
+                        if (cachedVultBalance != null) {
+                            val cachedTier = cachedVultBalance.determineTier()
+                            _state.value = DiscountTiersUiModel(
+                                activeTier = cachedTier,
+                                isLoading = false
+                            )
+                            if (cachedTier != null) {
+                                expandOrCollapseTierInfo(cachedTier)
+                            }
+                            Timber.d("VULT cached balance: $cachedVultBalance, Active tier: $cachedTier")
                         }
 
-                        Timber.d("VULT balance: $vultBalance, Active tier: $tier")
+                        // Fetch fresh balance from network
+                        try {
+                            val freshTokenValue = balanceRepository.getTokenValue(
+                                address,
+                                vultCoin
+                            ).first() // Collect first emission from the Flow
+                            
+                            val vultBalance = freshTokenValue.value
+                            val tier = vultBalance.determineTier()
+
+                            _state.value = DiscountTiersUiModel(
+                                activeTier = tier,
+                                isLoading = false
+                            )
+
+                            if (tier != null) {
+                                expandOrCollapseTierInfo(tier)
+                            }
+
+                            Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            if (cachedVultBalance == null) {
+                                throw e
+                            }
+                        }
                     } else {
                         _state.value = DiscountTiersUiModel(
                             activeTier = null,
@@ -109,12 +136,12 @@ internal class DiscountTiersViewModel @Inject constructor(
         }
     }
 
-    private fun determineTier(balance: BigInteger): TierType? {
+    private fun BigInteger.determineTier(): TierType? {
         return when {
-            balance >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINIUM
-            balance >= GOLD_TIER_THRESHOLD -> TierType.GOLD
-            balance >= SILVER_TIER_THRESHOLD -> TierType.SILVER
-            balance >= BRONZE_TIER_THRESHOLD -> TierType.BRONZE
+            this >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINIUM
+            this >= GOLD_TIER_THRESHOLD -> TierType.GOLD
+            this >= SILVER_TIER_THRESHOLD -> TierType.SILVER
+            this >= BRONZE_TIER_THRESHOLD -> TierType.BRONZE
             else -> null
         }
     }
