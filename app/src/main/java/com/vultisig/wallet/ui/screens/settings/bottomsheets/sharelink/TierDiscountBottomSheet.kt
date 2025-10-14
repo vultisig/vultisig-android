@@ -48,7 +48,7 @@ internal fun TierDiscountBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
     ) {
-        TierDiscounBottomSheetContent(
+        TierDiscountBottomSheetContent(
             tier = tier,
             onContinue = onContinue,
         )
@@ -56,7 +56,7 @@ internal fun TierDiscountBottomSheet(
 }
 
 @Composable
-internal fun TierDiscounBottomSheetContent(
+internal fun TierDiscountBottomSheetContent(
     tier: TierType,
     onContinue: () -> Unit,
 ) {
@@ -226,7 +226,7 @@ internal data class BottomSheetTierStyle(
 @Preview(showBackground = true)
 @Composable
 private fun TierDiscountBottomSheetPreview() {
-    TierDiscounBottomSheetContent(
+    TierDiscountBottomSheetContent(
         tier = TierType.GOLD,
         onContinue = {}
     )
@@ -235,7 +235,7 @@ private fun TierDiscountBottomSheetPreview() {
 @Preview(showBackground = true, name = "Bronze Tier")
 @Composable
 private fun TierDiscountBottomSheetBronzePreview() {
-    TierDiscounBottomSheetContent(
+    TierDiscountBottomSheetContent(
         tier = TierType.BRONZE,
         onContinue = {}
     )
@@ -244,7 +244,7 @@ private fun TierDiscountBottomSheetBronzePreview() {
 @Preview(showBackground = true, name = "Platinum Tier")
 @Composable
 private fun TierDiscountBottomSheetPlatinumPreview() {
-    TierDiscounBottomSheetContent(
+    TierDiscountBottomSheetContent(
         tier = TierType.PLATINIUM,
         onContinue = {}
     )
