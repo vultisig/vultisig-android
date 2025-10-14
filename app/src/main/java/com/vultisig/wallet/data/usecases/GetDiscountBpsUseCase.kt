@@ -55,7 +55,8 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
             val tokenBalance = balanceRepository.getCachedTokenBalances(
                 listOf(address),
                 listOf(vultCoin),
-            ).firstOrNull()?.tokenBalance?.tokenValue?.value ?: BigInteger.ZERO
+            ).find { it.coinId == Coins.Ethereum.VULT.id }?.tokenBalance?.tokenValue?.value
+                ?: BigInteger.ZERO
             
             return tokenBalance
         } catch (e: Exception) {
