@@ -1364,7 +1364,7 @@ object Coins {
             address = "",
             decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "",
+            priceProviderID = "vultisig",
             contractAddress = "0xb788144DF611029C60b859DF47e79B7726C4DEBa",
             isNativeToken = false,
 
