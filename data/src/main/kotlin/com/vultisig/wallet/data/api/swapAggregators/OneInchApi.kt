@@ -20,6 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.math.round
 
 interface OneInchApi {
 
@@ -117,8 +118,8 @@ class OneInchApiImpl @Inject constructor(
         isAffiliate: Boolean,
         bpsDiscount: Int,
     ) {
-        val bpsDiscount = bpsDiscount.toDouble() / 100
-        val referrerFeeUpdated = ONEINCH_REFERRER_FEE - bpsDiscount
+        val bpsDiscountTransformed = round(bpsDiscount.toDouble()) / 100.0
+        val referrerFeeUpdated = round((ONEINCH_REFERRER_FEE - bpsDiscountTransformed) * 100) / 100.0
 
         parameter(
             "src",
