@@ -112,53 +112,66 @@ internal fun DiscountTiersScreen(
             TierCard(
                 tierType = TierType.BRONZE,
                 isActive = state.activeTier == TierType.BRONZE,
-                isCollapsed = state.tierBronzeCollapsed,
+                isExpanded = state.expandedTiers.contains(TierType.BRONZE),
                 onClickUnlock = {
-                    model.navigateToSwaps(navController, vaultId)
+                    model.onTierUnlockClick(TierType.BRONZE)
                 },
                 onClickCard = {
-                    model.onClickCard(TierType.BRONZE)
+                    model.expandOrCollapseTierInfo(TierType.BRONZE)
                 }
             )
 
             TierCard(
                 tierType = TierType.SILVER,
                 isActive = state.activeTier == TierType.SILVER,
-                isCollapsed = state.tierSilverCollapsed,
+                isExpanded = state.expandedTiers.contains(TierType.SILVER),
                 onClickUnlock = {
-                    model.navigateToSwaps(navController, vaultId)
+                    model.onTierUnlockClick(TierType.SILVER)
                 },
                 onClickCard = {
-                    model.onClickCard(TierType.SILVER)
+                    model.expandOrCollapseTierInfo(TierType.SILVER)
                 }
             )
 
             TierCard(
                 tierType = TierType.GOLD,
                 isActive = state.activeTier == TierType.GOLD,
-                isCollapsed = state.tierGoldCollapsed,
+                isExpanded = state.expandedTiers.contains(TierType.GOLD),
                 onClickUnlock = {
-                    model.navigateToSwaps(navController, vaultId)
+                    model.onTierUnlockClick(TierType.GOLD)
                 },
                 onClickCard = {
-                    model.onClickCard(TierType.GOLD)
+                    model.expandOrCollapseTierInfo(TierType.GOLD)
                 }
             )
 
             TierCard(
                 tierType = TierType.PLATINIUM,
                 isActive = state.activeTier == TierType.PLATINIUM,
-                isCollapsed = state.tierPlatiniumCollapsed,
+                isExpanded = state.expandedTiers.contains(TierType.PLATINIUM),
                 onClickUnlock = {
-                    model.navigateToSwaps(navController, vaultId)
+                    model.onTierUnlockClick(TierType.PLATINIUM)
                 },
                 onClickCard = {
-                    model.onClickCard(TierType.PLATINIUM)
+                    model.expandOrCollapseTierInfo(TierType.PLATINIUM)
                 }
             )
 
             UiSpacer(size = 16.dp)
         }
+    }
+
+    if (state.showBottomSheetDialog && state.tierClicked != null) {
+        TierDiscountBottomSheet(
+            tier = state.tierClicked!!,
+            onContinue = {
+                model.dismissBottomSheet()
+                model.navigateToSwaps(navController, vaultId)
+            },
+            onDismissRequest = {
+                model.dismissBottomSheet()
+            }
+        )
     }
 }
 
@@ -166,7 +179,7 @@ internal fun DiscountTiersScreen(
 private fun TierCard(
     tierType: TierType,
     isActive: Boolean = false,
-    isCollapsed: Boolean = false,
+    isExpanded: Boolean = false,
     onClickUnlock: () -> Unit,
     onClickCard: () -> Unit,
 ) {
@@ -231,7 +244,7 @@ private fun TierCard(
                 }
             }
 
-            if (isCollapsed) {
+            if (isExpanded) {
                 UiSpacer(size = 8.dp)
 
                 Text(

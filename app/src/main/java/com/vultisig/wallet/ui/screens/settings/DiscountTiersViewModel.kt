@@ -30,10 +30,7 @@ import javax.inject.Inject
 internal data class DiscountTiersUiModel(
     val activeTier: TierType? = null,
     val tierClicked: TierType? = null,
-    val tierBronzeCollapsed: Boolean = false,
-    val tierSilverCollapsed: Boolean = false,
-    val tierGoldCollapsed: Boolean = false,
-    val tierPlatiniumCollapsed: Boolean = false,
+    val expandedTiers: Set<TierType> = emptySet(),
     val isLoading: Boolean = true,
     val showBottomSheetDialog: Boolean = false,
 )
@@ -90,7 +87,7 @@ internal class DiscountTiersViewModel @Inject constructor(
                         )
 
                         if (tier != null) {
-                            onClickCard(tier)
+                            expandOrCollapseTierInfo(tier)
                         }
                         
                         Timber.d("VULT balance: $vultBalance, Active tier: $tier")
@@ -172,30 +169,33 @@ internal class DiscountTiersViewModel @Inject constructor(
         }
     }
 
-    fun onClickCard(tierClicked: TierType) {
-        viewModelScope.launch {
-            when (tierClicked) {
-                TierType.BRONZE -> {
-                    _state.update {
-                        it.copy(tierBronzeCollapsed = true)
-                    }
+    fun expandOrCollapseTierInfo(tier: TierType) {
+        _state.update { current ->
+            current.copy(
+                expandedTiers = if (current.expandedTiers.contains(tier)) {
+                    current.expandedTiers - tier  // Collapse
+                } else {
+                    current.expandedTiers + tier  // Expand
                 }
-                TierType.SILVER -> {
-                    _state.update {
-                        it.copy(tierSilverCollapsed = true)
-                    }
-                }
-                TierType.GOLD -> {
-                    _state.update {
-                        it.copy(tierGoldCollapsed = true)
-                    }
-                }
-                TierType.PLATINIUM -> {
-                    _state.update {
-                        it.copy(tierPlatiniumCollapsed = true)
-                    }
-                }
-            }
+            )
+        }
+    }
+
+    fun onTierUnlockClick(tier: TierType) {
+        _state.update {
+            it.copy(
+                tierClicked = tier,
+                showBottomSheetDialog = true
+            )
+        }
+    }
+
+    fun dismissBottomSheet() {
+        _state.update {
+            it.copy(
+                tierClicked = null,
+                showBottomSheetDialog = false
+            )
         }
     }
 
