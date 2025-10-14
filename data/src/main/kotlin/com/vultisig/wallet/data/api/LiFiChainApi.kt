@@ -22,6 +22,7 @@ interface LiFiChainApi {
         fromAmount: String,
         fromAddress: String,
         toAddress: String,
+        bpsDiscount: Int,
     ) : LiFiSwapQuoteDeserialized
 }
 
@@ -38,9 +39,13 @@ internal class LiFiChainApiImpl @Inject constructor(
         fromAmount: String,
         fromAddress: String,
         toAddress: String,
+        bpsDiscount: Int,
     ): LiFiSwapQuoteDeserialized {
         val isSolanaChainInvolved = fromChain.toLong() == Chain.Solana.oneInchChainId() ||
                 toChain.toLong() == Chain.Solana.oneInchChainId()
+        val bpsDiscountFee = bpsDiscount.toDouble() / 1000
+        val updatedFeeIntegrator = (INTEGRATOR_FEE.toDouble() - bpsDiscountFee).toString()
+
             val response = httpClient
                 .get("https://li.quest/v1/quote") {
                     parameter("fromChain", fromChain)
@@ -55,7 +60,7 @@ internal class LiFiChainApiImpl @Inject constructor(
                             "integrator",
                             INTEGRATOR_ACCOUNT
                         )
-                        parameter("fee", INTEGRATOR_FEE)
+                        parameter("fee", updatedFeeIntegrator)
                     }
                 }
         return try {

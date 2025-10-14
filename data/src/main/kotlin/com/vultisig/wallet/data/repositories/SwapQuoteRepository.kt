@@ -74,6 +74,7 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        bpsDiscount: Int,
     ): EVMSwapQuoteJson
 
     suspend fun getJupiterSwapQuote(
@@ -297,6 +298,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        bpsDiscount: Int,
     ): EVMSwapQuoteJson {
 
         val fromToken =
@@ -314,6 +316,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 fromAmount = tokenValue.value.toString(),
                 fromAddress = srcAddress,
                 toAddress = dstAddress,
+                bpsDiscount = bpsDiscount,
             )
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message ?: "Unknown error")
