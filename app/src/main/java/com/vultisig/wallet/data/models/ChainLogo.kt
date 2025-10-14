@@ -48,7 +48,7 @@ internal val Chain.monoToneLogo: Int
         Chain.Avalanche -> R.drawable.ava_mono
         Chain.Base -> R.drawable.base_mono
         Chain.Blast -> R.drawable.blast_mono
-        Chain.Arbitrum -> R.drawable.arbitrum
+        Chain.Arbitrum -> R.drawable.arb_mono
         Chain.Polygon -> R.drawable.pol_mono
         Chain.Optimism -> R.drawable.opti_mono
         Chain.BscChain -> R.drawable.bsc_mono
