@@ -1360,7 +1360,7 @@ object Coins {
 
             chain = Chain.Ethereum,
             ticker = "VULT",
-            logo = "vult",
+            logo = "vulti",
             address = "",
             decimal = 18,
             hexPublicKey = "",
