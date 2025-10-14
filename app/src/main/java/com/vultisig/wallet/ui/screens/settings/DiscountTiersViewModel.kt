@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,10 +18,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import wallet.core.jni.CoinType
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal data class DiscountTiersUiModel(
@@ -34,12 +39,13 @@ internal data class DiscountTiersUiModel(
 internal class DiscountTiersViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
-    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val balanceRepository: BalanceRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val vaultId: String = requireNotNull(savedStateHandle.get<String>(ARG_VAULT_ID))
-    
+
     private val _state = MutableStateFlow(DiscountTiersUiModel())
     val state: StateFlow<DiscountTiersUiModel> = _state.asStateFlow()
 
@@ -50,29 +56,64 @@ internal class DiscountTiersViewModel @Inject constructor(
     private fun loadTierType() {
         viewModelScope.launch {
             try {
-                // Use the use case to get the tier directly
-                val tier = withContext(Dispatchers.IO) {
-                    getDiscountBpsUseCase.getTier(vaultId)
+                val vault = withContext(Dispatchers.IO) {
+                    vaultRepository.get(vaultId)
                 }
-                
-                val discountBps = withContext(Dispatchers.IO) {
-                    getDiscountBpsUseCase(vaultId)
-                }
-                
-                _state.value = DiscountTiersUiModel(
-                    activeTier = tier,
-                    isLoading = false
-                )
 
-                if (tier != null) {
-                    expandOrCollapseTierInfo(tier)
+                if (vault != null) {
+                    // Check if VULT token is enabled
+                    val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
+
+                    if (vultCoin != null) {
+                        // Get the Ethereum address for this vault
+                        val (address, _) = chainAccountAddressRepository.getAddress(
+                            Chain.Ethereum,
+                            vault
+                        )
+
+                        // Get VULT balance
+                        val balanceAndPrice = balanceRepository.getTokenBalanceAndPrice(
+                            address,
+                            vultCoin
+                        ).first()
+
+                        val vultBalance = balanceAndPrice.tokenBalance.tokenValue?.value ?:
+                        error("Can't fetch vult balance")
+                        val tier = determineTier(vultBalance)
+
+                        _state.value = DiscountTiersUiModel(
+                            activeTier = tier,
+                            isLoading = false
+                        )
+
+                        if (tier != null) {
+                            expandOrCollapseTierInfo(tier)
+                        }
+
+                        Timber.d("VULT balance: $vultBalance, Active tier: $tier")
+                    } else {
+                        _state.value = DiscountTiersUiModel(
+                            activeTier = null,
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
                 }
-                
-                Timber.d("Active tier: $tier, Discount: $discountBps BPS")
             } catch (e: Exception) {
-                Timber.e(e, "Error loading VULT tier")
+                Timber.e(e, "Error loading VULT balance")
                 _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
             }
+        }
+    }
+
+    private fun determineTier(balance: BigInteger): TierType? {
+        return when {
+            balance >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINIUM
+            balance >= GOLD_TIER_THRESHOLD -> TierType.GOLD
+            balance >= SILVER_TIER_THRESHOLD -> TierType.SILVER
+            balance >= BRONZE_TIER_THRESHOLD -> TierType.BRONZE
+            else -> null
         }
     }
 
@@ -95,7 +136,7 @@ internal class DiscountTiersViewModel @Inject constructor(
                             Timber.e(e, "Failed to enable Ethereum chain")
                         }
                     }
-                    
+
                     // Check and enable VULT token, if not enable it
                     val hasVult = vault.coins.any { it.id == Coins.Ethereum.VULT.id }
                     if (!hasVult) {
@@ -156,5 +197,13 @@ internal class DiscountTiersViewModel @Inject constructor(
                 showBottomSheetDialog = false
             )
         }
+    }
+
+    private companion object {
+        // $VULT has same decimals as ETH (18)
+        private val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000".toBigInteger())
+        private val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
+        private val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
+        private val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("50000".toBigInteger())
     }
 }
