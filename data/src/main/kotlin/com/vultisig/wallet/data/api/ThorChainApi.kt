@@ -171,9 +171,9 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
                 parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter("affiliate_bps", affiliateBPS)
+                parameter("affiliate_bps", affiliateUpdated)
                 if (referralCode.isNotEmpty() && isAffiliate) {
-                    parameter("affiliate", affiliateUpdated)
+                    parameter("affiliate", referralCode)
                     parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_REFERRAL_RATE)
                 }
             }
