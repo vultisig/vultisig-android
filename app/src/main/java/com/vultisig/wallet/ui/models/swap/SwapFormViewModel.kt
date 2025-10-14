@@ -1125,6 +1125,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
+                                        bpsDiscount = vultBPSDiscount,
                                     ) else swapQuoteRepository.getJupiterSwapQuote(
                                         srcAddress = src.address.address,
                                         srcToken = srcToken,
