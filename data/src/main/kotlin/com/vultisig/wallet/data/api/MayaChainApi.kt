@@ -42,6 +42,7 @@ interface MayaChainApi {
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -72,8 +73,12 @@ internal class MayaChainApiImp @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         try {
+            val affiliateFeeRate =
+                maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
+
             val response = httpClient
                 .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
                     parameter("from_asset", fromAsset)
@@ -82,7 +87,7 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", if (isAffiliate) THORChainSwaps.AFFILIATE_FEE_RATE else "0")
+                    parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {

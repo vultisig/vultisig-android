@@ -63,6 +63,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): SwapQuote
 
     suspend fun getLiFiSwapQuote(
@@ -188,6 +189,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
@@ -198,6 +200,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = thorTokenValue.toString(),
             interval = srcToken.mayaStreamingInterval,
             isAffiliate = isAffiliate,
+            bpsDiscount = bpsDiscount,
         )
 
         when (mayaQuoteResult) {
