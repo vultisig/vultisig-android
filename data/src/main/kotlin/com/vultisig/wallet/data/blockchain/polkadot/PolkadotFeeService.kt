@@ -91,7 +91,7 @@ class PolkadotFeeService(
                 specVersion = specVersion.toLong().toUInt(),
                 transactionVersion = transactionVersion.toLong().toUInt(),
                 genesisHash = genesisHashDeferred.await(),
-                gas = POLKADOT_DEFAULT_FEE.toLong().toULong(), // no need for Fee
+                gas = POLKADOT_DEFAULT_FEE.toString().toULong(), // no need for Fee
             ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",

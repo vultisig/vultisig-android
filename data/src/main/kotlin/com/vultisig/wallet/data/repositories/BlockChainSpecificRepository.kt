@@ -359,7 +359,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                             specVersion = specVersion.toLong().toUInt(),
                             transactionVersion = transactionVersion.toLong().toUInt(),
                             genesisHash = genesisHashDeferred.await(),
-                            gas = gasFee.value.toLong().toULong(),
+                            gas = gasFee.value.toString().toULong(),
                         )
                     )
                 }
