@@ -141,6 +141,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 specVersion = polkadotSpecific.specVersion.toUInt(),
                 transactionVersion = polkadotSpecific.transactionVersion.toUInt(),
                 genesisHash = polkadotSpecific.genesisHash,
+                gas = polkadotSpecific.gas.toULong(),
             )
         }
 
@@ -152,6 +153,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 fromAddressPubKey = solanaSpecific.fromAddressPubKey,
                 toAddressPubKey = solanaSpecific.toAddressPubKey,
                 programId = solanaSpecific.hasProgramId,
+                priorityLimit = solanaSpecific.priorityLimit?.toBigInteger() ?: BigInteger.ZERO
             )
         }
 
@@ -189,6 +191,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
             val suiSpecific = this.suiSpecific ?: error("Specific empty $this")
             BlockChainSpecific.Sui(
                 referenceGasPrice = suiSpecific.referenceGasPrice.toBigInteger(),
+                gasBudget = suiSpecific.gasBudget.toBigInteger(),
                 coins = suiSpecific.coins.map {
                     vultisig.keysign.v1.SuiCoin(
                         coinType = it.coinType,

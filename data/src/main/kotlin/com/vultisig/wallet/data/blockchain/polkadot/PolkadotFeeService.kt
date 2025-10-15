@@ -90,7 +90,8 @@ class PolkadotFeeService(
                 currentBlockNumber = blockHeaderDeferred.await(),
                 specVersion = specVersion.toLong().toUInt(),
                 transactionVersion = transactionVersion.toLong().toUInt(),
-                genesisHash = genesisHashDeferred.await()
+                genesisHash = genesisHashDeferred.await(),
+                gas = POLKADOT_DEFAULT_FEE.toString().toULong(), // no need for Fee
             ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",

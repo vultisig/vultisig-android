@@ -18,7 +18,8 @@
         "SolanaSpecific": {
           "recent_block_hash": "5597ocjCZMPy8B5x9krWAVRfs5khPrSZTFxf2t55fK6c",
           "priority_fee": "0",
-          "has_program_id": false
+          "has_program_id": false,
+          "priority_limit": "100000"
         }
       },
       "utxo_info": [],
@@ -47,7 +48,8 @@
         "SolanaSpecific": {
           "recent_block_hash": "5597ocjCZMPy8B5x9krWAVRfs5khPrSZTFxf2t55fK6c",
           "priority_fee": "0",
-          "has_program_id": false
+          "has_program_id": false,
+          "priority_limit": "100000"
         }
       },
       "memo": "helloworld",
@@ -80,7 +82,8 @@
           "from_address_pub_key": "FpDgmLkZkVi3k3oMEKbP6TgwjhfZqiLXB7dpLFQUQfvk",
           "priority_fee": "0",
           "from_token_associated_address": "D8QPZUruhENG1fwrH42DXyDSjc4ZAEJtqGZhp1XcYq42",
-          "has_program_id": false
+          "has_program_id": false,
+          "priority_limit": "100000"
         }
       },
       "memo": "helloworld",
@@ -113,7 +116,8 @@
           "from_address_pub_key": "FH7bbXZWL9MNuXnRB4rrThT1CAhBfhJHkrEUffZjr33f",
           "priority_fee": "0",
           "from_token_associated_address": "FH7bbXZWL9MNuXnRB4rrThT1CAhBfhJHkrEUffZjr33f",
-          "has_program_id": false
+          "has_program_id": false,
+          "priority_limit": "100000"
         }
       },
       "memo": "",

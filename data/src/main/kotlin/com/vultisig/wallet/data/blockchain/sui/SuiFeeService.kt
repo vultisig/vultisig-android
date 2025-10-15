@@ -99,6 +99,7 @@ class SuiFeeService(
             blockChainSpecific = BlockChainSpecific.Sui(
                 referenceGasPrice = referenceGasPriceDeferred.await(),
                 coins = allCoinsDeferred.await(),
+                gasBudget = DEFAULT_GAS_BUDGET,
             ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",

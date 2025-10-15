@@ -118,6 +118,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                 SuiSpecific(
                     referenceGasPrice = specific.referenceGasPrice.toString(),
                     coins = specific.coins,
+                    gasBudget = specific.gasBudget.toString(),
                 )
             } else null,
             rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
