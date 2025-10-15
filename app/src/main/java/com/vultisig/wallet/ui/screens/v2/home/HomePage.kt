@@ -245,7 +245,7 @@ internal fun HomePage(
                                     onAccountClick = onAccountClick,
                                     snackbarState = snackbarState,
                                     isBalanceVisible = state.isBalanceValueVisible,
-                                    accounts = state.filteredAccounts,
+                                    accounts = state.accounts,
                                 )
                             }
                         }
