@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.home
 
 import android.content.Context
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -133,11 +132,7 @@ internal fun HomePage(
                 )
 
                 UiHorizontalDivider(
-                    color = Theme.colors.borders.light
-                )
-
-                UiSpacer(
-                    size = 8.dp
+                    color = Theme.colors.borders.light,
                 )
             }
         },
@@ -160,39 +155,16 @@ internal fun HomePage(
 
                 UiSpacer(32.dp)
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(
-                        20.dp,
-                        Alignment.CenterHorizontally
-                    )
-                ) {
-                    TransactionTypeButton(
-                        txType = TransactionType.SEND,
-                        onClick = onSend
-                    )
-
-                    if (state.isSwapEnabled) {
-                        TransactionTypeButton(
-                            txType = TransactionType.SWAP,
-                            onClick = onSwap
-                        )
-                    }
-                }
-
-                UiSpacer(
-                    size = 32.dp
-                )
-
-                UiHorizontalDivider(
-                    color = Theme.colors.borders.light
+                TxButtons(
+                    isSwapEnabled = state.isSwapEnabled,
+                    onSend = onSend,
+                    onSwap = onSwap
                 )
 
                 UiSpacer(
-                    size = 20.dp
+                    size = 16.dp
                 )
+
             }
         },
         bottomBarContent = if (isBottomBarVisible.value) {
@@ -224,63 +196,58 @@ internal fun HomePage(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .animateContentSize()
-                    ) {
-                        if (state.isBannerVisible)
-                            item {
-                                Banners(
-                                    hasMigration = state.showMigration,
-                                    onMigrateClick = onMigrateClick,
-                                    context = context,
-                                    onDismissBanner = onDismissBanner
-                                )
-                            }
-
+                    if (state.isBannerVisible)
                         item {
-                            HomePageTabMenuAndSearchBar(
-                                modifier = Modifier
-                                    .animateItem()
-                                    .padding(
-                                        horizontal = 16.dp,
-                                    ),
-                                onEditClick = onChooseChains,
-                                isTabMenu = isTabMenu,
-                                onSearchClick = {
-                                    isTabMenu = false
-                                },
-                                onCancelSearchClick = {
-                                    isTabMenu = true
-                                },
-                                searchTextFieldState = state.searchTextFieldState,
+                            Banners(
+                                hasMigration = state.showMigration,
+                                onMigrateClick = onMigrateClick,
+                                context = context,
+                                onDismissBanner = onDismissBanner
                             )
                         }
+
+                    item {
+                        HomePageTabMenuAndSearchBar(
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(
+                                    horizontal = 16.dp,
+                                )
+                                .padding(bottom = 16.dp),
+                            onEditClick = onChooseChains,
+                            isTabMenu = isTabMenu,
+                            onSearchClick = {
+                                isTabMenu = false
+                            },
+                            onCancelSearchClick = {
+                                isTabMenu = true
+                            },
+                            searchTextFieldState = state.searchTextFieldState,
+                        )
                     }
 
-                    TopShineContainer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        if (isShowingSearchResult.value && state.noChainFound) {
-                            NoChainFound(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onChooseChains = onChooseChains
-                            )
-                        } else {
-                            AccountList(
-                                onAccountClick = onAccountClick,
-                                snackbarState = snackbarState,
-                                isBalanceVisible = state.isBalanceValueVisible,
-                                accounts = state.filteredAccounts,
-                            )
+                    item {
+                        TopShineContainer(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            if (isShowingSearchResult.value && state.noChainFound) {
+                                NoChainFound(
+                                    onChooseChains = onChooseChains
+                                )
+                            } else {
+                                AccountList(
+                                    onAccountClick = onAccountClick,
+                                    snackbarState = snackbarState,
+                                    isBalanceVisible = state.isBalanceValueVisible,
+                                    accounts = state.accounts,
+                                )
+                            }
                         }
                     }
                 }
@@ -296,13 +263,42 @@ internal fun HomePage(
 }
 
 @Composable
+private fun TxButtons(
+    modifier: Modifier = Modifier,
+    isSwapEnabled: Boolean,
+    onSend: () -> Unit,
+    onSwap: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            20.dp,
+            Alignment.CenterHorizontally
+        )
+    ) {
+        TransactionTypeButton(
+            txType = TransactionType.SEND,
+            onClick = onSend
+        )
+
+        if (isSwapEnabled) {
+            TransactionTypeButton(
+                txType = TransactionType.SWAP,
+                onClick = onSwap
+            )
+        }
+    }
+}
+
+@Composable
 private fun Banners(
     hasMigration: Boolean,
     onMigrateClick: () -> Unit,
     context: Context,
     onDismissBanner: () -> Unit,
 ) {
-    UiSpacer(12.dp)
     HomepagePager(
         modifier = Modifier
             .padding(horizontal = 16.dp),

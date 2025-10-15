@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.ui.components.FormSearchBar
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
@@ -142,7 +143,7 @@ private fun LazyListScope.tokensSection(
             title = coin.ticker,
             subtitle = coin.chain.raw,
             logo = getCoinLogo(logoName = coin.logo),
-            chainLogo = token.coin.chain.logo.takeIf { token.coin.chain.isLayer2 || !token.coin.isNativeToken },
+            chainLogo = coin.chain.monoToneLogo.takeIf { token.coin.chain.isLayer2 || !token.coin.isNativeToken },
             hasTokenSwitch = hasTokenSwitch,
             isChecked = token.isEnabled,
             onCheckedChange = { checked ->

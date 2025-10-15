@@ -70,6 +70,8 @@
     <string name="vault_detail_screen_vault_name">Nome do Cofre</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EdDSA</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">Chave ECDSA Copiada</string>
+    <string name="vault_detail_screen_eddsa_key_copied">Chave EdDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
     <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
