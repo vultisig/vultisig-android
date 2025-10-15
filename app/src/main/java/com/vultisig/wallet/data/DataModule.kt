@@ -24,17 +24,17 @@ import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.protobuf.ProtoBuf
+import okhttp3.ConnectionSpec
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -50,27 +50,42 @@ internal interface DataModule {
         @Provides
         @Singleton
         fun provideHttpClient(
+            @ApplicationContext context: Context,
             json: Json,
         ): HttpClient = HttpClient(OkHttp) {
+            engine {
+                config {
+                    connectionSpecs(listOf(
+                        ConnectionSpec.MODERN_TLS,
+                        ConnectionSpec.COMPATIBLE_TLS // Fallback for older servers
+                    ))
+                    
+                    readTimeout(15, TimeUnit.SECONDS)
+                    writeTimeout(15, TimeUnit.SECONDS)
+                }
+            }
+
+            install(HttpCache)
+
             if (BuildConfig.DEBUG) {
                 install(Logging) {
                     logger = Logger.ANDROID
                     level = LogLevel.ALL
                 }
             }
-            install(HttpCache)
+
             install(DefaultRequest) {
-                headers.appendIfNameAbsent(
-                    HttpHeaders.ContentType, "application/json"
-                )
+                headers.appendIfNameAbsent(HttpHeaders.ContentType, "application/json")
             }
+
             install(ContentNegotiation) {
-                json(json, ContentType.Any)
+                json(json)
             }
 
             install(HttpTimeout) {
-                requestTimeoutMillis = 15000
-                connectTimeoutMillis = 15000
+                requestTimeoutMillis = 15_000
+                connectTimeoutMillis = 15_000
+                socketTimeoutMillis = 15_000
             }
         }
 
