@@ -199,7 +199,7 @@ private fun ImportFileScreen(
                         .background(
                             color = when {
                                 uiModel.error != null -> Theme.colors.backgrounds.error
-                                uiModel.fileName != null -> Theme.colors.backgrounds.success
+                                !uiModel.fileName.isNullOrBlank() -> Theme.colors.backgrounds.success
                                 else -> Theme.colors.backgrounds.neutral
                             },
                             shape = RoundedCornerShape(12.dp),
@@ -208,7 +208,7 @@ private fun ImportFileScreen(
                             width = 1.dp,
                             color = when {
                                 uiModel.error != null -> Theme.colors.alerts.error
-                                uiModel.fileName != null -> Theme.colors.alerts.success
+                                !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
                                 else -> Theme.colors.borders.normal
                             },
                             cornerRadius = 12.dp,
@@ -225,14 +225,14 @@ private fun ImportFileScreen(
                     Icon(
                         painter = painterResource(
                             id = when {
-                                uiModel.fileName != null -> R.drawable.ic_page_check
+                                !uiModel.fileName.isNullOrBlank() -> R.drawable.ic_page_check
                                 else -> R.drawable.ic_cloud_upload
                             }
                         ),
                         contentDescription = null,
                         tint = when {
                             uiModel.error != null -> Theme.colors.alerts.error
-                            uiModel.fileName != null -> Theme.colors.alerts.success
+                            !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
                             else -> Theme.colors.primary.accent4
                         },
                         modifier = Modifier
@@ -245,7 +245,7 @@ private fun ImportFileScreen(
                             ?: "Import your vault share",
                         color = when {
                             uiModel.error != null -> Theme.colors.alerts.error
-                            uiModel.fileName != null -> Theme.colors.alerts.success
+                            !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
                             else -> Theme.colors.text.light
                         },
                         style = Theme.brockmann.headings.subtitle,

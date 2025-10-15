@@ -196,7 +196,7 @@ internal class AddressEntryViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            if (addressBookEntryChainId != null && addressBookEntryAddress != null && addressExist) {
+            if (!addressBookEntryChainId.isNullOrBlank() && !addressBookEntryAddress.isNullOrBlank() && addressExist) {
                 addressBookRepository.delete(addressBookEntryChainId, addressBookEntryAddress)
                 val orderName = "${addressBookEntryChainId}-${addressBookEntryAddress}"
                 val order = orderRepository.find(parentId = null, name = orderName)
@@ -210,7 +210,7 @@ internal class AddressEntryViewModel @Inject constructor(
                     title = title
                 )
             )
-            if (addressBookEntryChainId != null && addressBookEntryAddress != null && addressExist.not()) {
+            if (!addressBookEntryChainId.isNullOrBlank() && !addressBookEntryAddress.isNullOrBlank() && addressExist.not()) {
                 navigator.navigate(
                     dst = Destination.Home(),
                     opts = NavigationOptions(
@@ -236,7 +236,7 @@ internal class AddressEntryViewModel @Inject constructor(
     fun scanAddress() {
         viewModelScope.launch {
             val qr = requestQrScan()
-            if (qr != null) {
+            if (!qr.isNullOrBlank()) {
                 setOutputAddress(qr)
             }
         }

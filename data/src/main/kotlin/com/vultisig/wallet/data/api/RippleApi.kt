@@ -62,7 +62,7 @@ internal class RippleApiImp @Inject constructor(
                         ignoreCase = true
                     )
                 ) {
-                    if (rpcResp.result.txJson?.hash != null) {
+                    if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
                         return rpcResp.result.txJson.hash
                     }
                 }

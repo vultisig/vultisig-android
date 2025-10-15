@@ -16,7 +16,7 @@ internal class SnackbarFlow @Inject constructor() {
 
     suspend fun collectMessage(onMessageReceived: suspend (String) -> Unit) {
         messageFlow.receiveAsFlow().collect {
-            if (it != null)
+            if (!it.isNullOrBlank())
                 onMessageReceived(it)
         }
     }

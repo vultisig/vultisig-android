@@ -743,11 +743,11 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         this.chain = chainId?.let(Chain::fromRaw)
 
-        if (srcTokenId != null && this.selectedSrcId.value == null) {
+        if (!srcTokenId.isNullOrBlank() && this.selectedSrcId.value == null) {
             selectedSrcId.value = srcTokenId
         }
 
-        if (dstTokenId != null && this.selectedDstId.value == null) {
+        if (!dstTokenId.isNullOrBlank() && this.selectedDstId.value == null) {
             selectedDstId.value = dstTokenId
         }
 
@@ -1328,13 +1328,13 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        !selectedTokenId.isNullOrBlank() -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }
 
     val account = when {
-        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
+        !selectedTokenId.isNullOrBlank() -> address.accounts.first { it.token.id == selectedTokenId }
         filterByChain != null -> address.accounts.first { it.token.isNativeToken }
         else -> address.accounts.first()
     }

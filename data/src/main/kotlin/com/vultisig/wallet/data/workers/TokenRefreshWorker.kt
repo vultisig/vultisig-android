@@ -89,8 +89,8 @@ internal class TokenRefreshWorker @AssistedInject constructor(
             enabledCoin.contractAddress == refreshToken.contractAddress
         }
 
-        if (withSameContractCoin != null) {
-            vaultRepository.deleteTokenFromVault(vault.id, withSameContractCoin)
+        withSameContractCoin?.let {
+            vaultRepository.deleteTokenFromVault(vault.id, it)
         }
 
         vaultRepository.addTokenToVault(vault.id, refreshToken)
