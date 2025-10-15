@@ -343,7 +343,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
         )
 
         TierType.PLATINUM -> TierStyle(
-            icon = R.drawable.tier_platinium,
+            icon = R.drawable.tier_platinum,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
             amountText = formatVultAmount(10000),
