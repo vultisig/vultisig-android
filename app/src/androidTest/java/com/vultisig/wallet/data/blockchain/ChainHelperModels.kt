@@ -204,6 +204,8 @@ data class SolanaSpecific(
     val fromAddressPubKey: String? = null,
     @SerialName("to_token_associated_address")
     val toAddressPubKey: String? = null,
+    @SerialName("priority_limit")
+    val priorityLimit: String? = null,
 )
 
 @Serializable
@@ -219,6 +221,8 @@ data class PolkadotSpecific(
     val transactionVersion: Int,
     @SerialName("genesis_hash")
     val genesisHash: String,
+    @SerialName("gas")
+    val gas: Long,
 )
 
 @Serializable
@@ -287,6 +291,8 @@ data class SuiCoin(
 data class SuiSpecific(
     @SerialName("reference_gas_price")
     val referenceGasPrice: String,
+    @SerialName("gas_budget")
+    val gasBudget: String,
     @SerialName("coins")
     val coins: List<SuiCoin>
 )

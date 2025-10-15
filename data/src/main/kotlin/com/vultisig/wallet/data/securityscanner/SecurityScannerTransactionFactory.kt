@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.crypto.DEFAULT_SUI_GAS_BUDGET
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -144,6 +145,7 @@ class SecurityScannerTransactionFactory(
                     fromAddressPubKey = fromAddressPubKey,
                     toAddressPubKey = solanaBlockchainSpecific.toAddressPubKey,
                     programId = solanaBlockchainSpecific.programId,
+                    priorityLimit = solanaBlockchainSpecific.priorityLimit,
                 ) to SecurityTransactionType.TOKEN_TRANSFER
             }
 
@@ -183,6 +185,7 @@ class SecurityScannerTransactionFactory(
         val updatedSuiBlockChainSpecific = BlockChainSpecific.Sui(
             referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
             coins = coins,
+            gasBudget = DEFAULT_SUI_GAS_BUDGET,
         )
 
         val keySignPayload = KeysignPayload(
