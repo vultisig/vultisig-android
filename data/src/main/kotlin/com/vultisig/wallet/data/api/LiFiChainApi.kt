@@ -48,7 +48,7 @@ internal class LiFiChainApiImpl @Inject constructor(
         val bpsDiscountFee =
             round(bpsDiscount.toDouble()) / 10000.0
         val updatedFeeIntegrator =
-            (round((INTEGRATOR_FEE.toDouble() - bpsDiscountFee) * 10000) / 10000.0).toString()
+            (round(maxOf(INTEGRATOR_FEE.toDouble() - bpsDiscountFee, 0.0) * 10000) / 10000.0).toString()
 
             val response = httpClient
                 .get("https://li.quest/v1/quote") {
