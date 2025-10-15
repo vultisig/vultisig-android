@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
