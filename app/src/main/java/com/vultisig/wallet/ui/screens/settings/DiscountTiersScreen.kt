@@ -316,7 +316,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_silver,
             titleText = stringResource(R.string.vault_tier_silver),
             discountText = stringResource(R.string.vault_tier_silver_discount),
-            amountText = formatVultAmount(5000),
+            amountText = formatVultAmount(2500),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFC9D6E8).copy(alpha = 0.5f),
@@ -331,7 +331,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_gold,
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = formatVultAmount(10000),
+            amountText = formatVultAmount(5000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFFFC25C).copy(alpha = 0.5f),
@@ -346,7 +346,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_platinium,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
-            amountText = formatVultAmount(50000),
+            amountText = formatVultAmount(10000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF33E6BF).copy(alpha = 0.5f),

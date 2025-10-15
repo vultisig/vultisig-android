@@ -80,9 +80,9 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
         const val PLATINUM_DISCOUNT_BPS = 35
         
         val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000".toBigInteger())
-        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
-        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
-        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("50000".toBigInteger())
+        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("2500".toBigInteger())
+        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
+        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
 
         private val supportedProviders = setOf(
             SwapProvider.THORCHAIN,
