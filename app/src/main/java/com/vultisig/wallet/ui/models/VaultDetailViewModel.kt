@@ -74,13 +74,22 @@ internal class VaultDetailViewModel @Inject constructor(
         context: Context,
     ) {
         viewModelScope.launch {
-            context.share(
-                bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap(),
-                fileName = shareVaultDetailName(
-                    vaultName = uiModel.value.name,
-                    vaultPart = uiModel.value.vaultPart,
+            try {
+                val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                context.share(
+                    bitmap = bitmap,
+                    fileName = shareVaultDetailName(
+                        vaultName = uiModel.value.name,
+                        vaultPart = uiModel.value.vaultPart,
+                    )
                 )
-            )
+                bitmap.recycle()
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Failed to capture screenshot"
+                )
+            }
         }
     }
 }
