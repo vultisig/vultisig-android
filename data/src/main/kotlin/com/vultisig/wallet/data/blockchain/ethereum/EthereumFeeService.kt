@@ -19,6 +19,8 @@ import javax.inject.Inject
 class EthereumFeeService @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : FeeService {
+
+    @Deprecated("Use calculateFees(transaction: BlockchainTransaction): Fee")
     override suspend fun calculateFees(chain: Chain, limit: BigInteger, isSwap: Boolean, to: String?): Fee {
         require(limit > BigInteger.ZERO) { "Limit should not be 0" }
         val evmApi = evmApiFactory.createEvmApi(chain)
@@ -140,11 +142,11 @@ class EthereumFeeService @Inject constructor(
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
 
-        val DEFAULT_SWAP_LIMIT = "600000"
-        val DEFAULT_COIN_TRANSFER_LIMIT = "23000"
-        val DEFAULT_TOKEN_TRANSFER_LIMIT = "120000"
+        val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
+        val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()
+        val DEFAULT_TOKEN_TRANSFER_LIMIT = "150000".toBigInteger()
 
-        val DEFAULT_ARBITRUM_TRANSFER = "160000"
-        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000"
+        val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
+        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
     }
 }
