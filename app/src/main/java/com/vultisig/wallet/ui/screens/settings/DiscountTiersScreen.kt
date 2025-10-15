@@ -146,14 +146,14 @@ internal fun DiscountTiersScreen(
             )
 
             TierCard(
-                tierType = TierType.PLATINIUM,
-                isActive = state.activeTier == TierType.PLATINIUM,
-                isExpanded = state.expandedTiers.contains(TierType.PLATINIUM),
+                tierType = TierType.PLATINUM,
+                isActive = state.activeTier == TierType.PLATINUM,
+                isExpanded = state.expandedTiers.contains(TierType.PLATINUM),
                 onClickUnlock = {
-                    model.onTierUnlockClick(TierType.PLATINIUM)
+                    model.onTierUnlockClick(TierType.PLATINUM)
                 },
                 onClickCard = {
-                    model.expandOrCollapseTierInfo(TierType.PLATINIUM)
+                    model.expandOrCollapseTierInfo(TierType.PLATINUM)
                 }
             )
 
@@ -342,7 +342,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             )
         )
 
-        TierType.PLATINIUM -> TierStyle(
+        TierType.PLATINUM -> TierStyle(
             icon = R.drawable.tier_platinium,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
@@ -368,7 +368,7 @@ internal data class TierStyle(
 )
 
 
-internal enum class TierType { BRONZE, SILVER, GOLD, PLATINIUM }
+internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM }
 
 private fun formatVultAmount(vultAmount: Int): String {
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
@@ -390,7 +390,7 @@ private fun DiscountTiersScreenPreview() {
             TierCard(tierType = TierType.BRONZE, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.SILVER, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.GOLD, onClickUnlock = {}, onClickCard = {})
-            TierCard(tierType = TierType.PLATINIUM, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.PLATINUM, onClickUnlock = {}, onClickCard = {})
         }
     }
 }

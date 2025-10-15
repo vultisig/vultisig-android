@@ -199,7 +199,7 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
             descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
         )
-        TierType.PLATINIUM -> BottomSheetTierStyle(
+        TierType.PLATINUM -> BottomSheetTierStyle(
             logoTier = R.drawable.tier_platinium_bottomsheet,
             titlePart1 = stringResource(R.string.vault_tier_unlock_platinum_part1),
             titlePart2 = stringResource(R.string.vault_tier_unlock_platinum_part2),
@@ -245,7 +245,7 @@ private fun TierDiscountBottomSheetBronzePreview() {
 @Composable
 private fun TierDiscountBottomSheetPlatinumPreview() {
     TierDiscountBottomSheetContent(
-        tier = TierType.PLATINIUM,
+        tier = TierType.PLATINUM,
         onContinue = {}
     )
 }

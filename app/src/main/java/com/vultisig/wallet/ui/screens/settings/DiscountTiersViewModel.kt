@@ -138,7 +138,7 @@ internal class DiscountTiersViewModel @Inject constructor(
 
     private fun BigInteger.determineTier(): TierType? {
         return when {
-            this >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINIUM
+            this >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINUM
             this >= GOLD_TIER_THRESHOLD -> TierType.GOLD
             this >= SILVER_TIER_THRESHOLD -> TierType.SILVER
             this >= BRONZE_TIER_THRESHOLD -> TierType.BRONZE
