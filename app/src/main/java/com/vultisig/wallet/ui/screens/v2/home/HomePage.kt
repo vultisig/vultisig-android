@@ -1,7 +1,12 @@
 package com.vultisig.wallet.ui.screens.v2.home
 
 import android.content.Context
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,15 +43,14 @@ import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.CryptoConnectionType
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
-import com.vultisig.wallet.ui.screens.v2.home.components.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
 import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
+import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
+import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePagerParams
 import com.vultisig.wallet.ui.theme.Theme
@@ -83,6 +87,8 @@ internal fun HomePage(
     val isShowingSearchResult = remember {
         derivedStateOf { isTabMenu.not() }
     }
+
+    val isWallet = state.cryptoConnectionType == CryptoConnectionType.Wallet
 
     val context = LocalContext.current
 
@@ -135,23 +141,43 @@ internal fun HomePage(
                 )
 
                 UiHorizontalDivider(
-                    color = Theme.colors.borders.light
-                )
-
-                UiSpacer(
-                    size = 8.dp
+                    color = Theme.colors.borders.light,
                 )
             }
         },
         topBarExpandedContent = {
-            WalletModeExpandedTopBar(
-                state = state,
-                onOpenSettingsClick = onOpenSettingsClick,
-                onToggleVaultListClick = onToggleVaultListClick,
-                onToggleBalanceVisibility = onToggleBalanceVisibility,
-                onSend = onSend,
-                onSwap = onSwap
-            )
+            ExpandedTopbarContainer {
+                TopRow(
+                    onOpenSettingsClick = onOpenSettingsClick,
+                    onToggleVaultListClick = onToggleVaultListClick,
+                    vaultName = state.vaultName,
+                    isFastVault = state.isFastVault,
+                )
+                AnimatedContent(targetState = isWallet) { isWalletTabSelected ->
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        if (isWalletTabSelected) {
+                            WalletExpandedTopbarContent(
+                                state = state,
+                                onToggleBalanceVisibility = onToggleBalanceVisibility,
+                                onSend = onSend,
+                                onSwap = onSwap,
+                            )
+                        } else {
+                            DefiExpandedTopbarContent(
+                                state = state,
+                                onToggleBalanceVisibility = onToggleBalanceVisibility,
+                            )
+                        }
+                    }
+                }
+
+                UiSpacer(
+                    size = 16.dp
+                )
+            }
         },
         bottomBarContent = if (isBottomBarVisible.value) {
             {
@@ -185,63 +211,60 @@ internal fun HomePage(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .animateContentSize()
-                    ) {
-                        if (state.isBannerVisible)
-                            item {
-                                Banners(
-                                    hasMigration = state.showMigration,
-                                    onMigrateClick = onMigrateClick,
-                                    context = context,
-                                    onDismissBanner = onDismissBanner
-                                )
-                            }
-
-                        item {
-                            HomePageTabMenuAndSearchBar(
-                                modifier = Modifier
-                                    .animateItem()
-                                    .padding(
-                                        horizontal = 16.dp,
-                                    ),
-                                onEditClick = onChooseChains,
-                                isTabMenu = isTabMenu,
-                                onSearchClick = {
-                                    isTabMenu = false
-                                },
-                                onCancelSearchClick = {
-                                    isTabMenu = true
-                                },
-                                searchTextFieldState = state.searchTextFieldState,
+                    item {
+                        AnimatedVisibility(
+                            visible = state.isBannerVisible,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            Banners(
+                                hasMigration = state.showMigration,
+                                onMigrateClick = onMigrateClick,
+                                context = context,
+                                onDismissBanner = onDismissBanner
                             )
                         }
                     }
 
-                    TopShineContainer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        if (isShowingSearchResult.value && state.noChainFound) {
-                            NoChainFound(
-                                modifier = Modifier
-                                    .weight(1f),
-                                onChooseChains = onChooseChains
-                            )
-                        } else {
-                            AccountList(
-                                onAccountClick = onAccountClick,
-                                snackbarState = snackbarState,
-                                isBalanceVisible = state.isBalanceValueVisible,
-                                accounts = state.filteredAccounts,
-                            )
+                    item {
+                        HomePageTabMenuAndSearchBar(
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(all = 16.dp),
+                            onEditClick = onChooseChains,
+                            isTabMenu = isTabMenu,
+                            onSearchClick = {
+                                isTabMenu = false
+                            },
+                            onCancelSearchClick = {
+                                isTabMenu = true
+                            },
+                            searchTextFieldState = state.searchTextFieldState,
+                        )
+                    }
+
+                    item {
+                        TopShineContainer(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            if (isShowingSearchResult.value && state.noChainFound) {
+                                NoChainFound(
+                                    onChooseChains = onChooseChains
+                                )
+                            } else {
+                                AccountList(
+                                    onAccountClick = onAccountClick,
+                                    snackbarState = snackbarState,
+                                    isBalanceVisible = state.isBalanceValueVisible,
+                                    accounts = state.accounts,
+                                )
+                            }
                         }
                     }
                 }
@@ -257,76 +280,12 @@ internal fun HomePage(
 }
 
 @Composable
-private fun WalletModeExpandedTopBar(
-    state: VaultAccountsUiModel,
-    onOpenSettingsClick: () -> Unit,
-    onToggleVaultListClick: () -> Unit,
-    onToggleBalanceVisibility: () -> Unit,
-    onSend: () -> Unit,
-    onSwap: () -> Unit,
-) {
-    ExpandedTopbarContainer {
-        TopRow(
-            onOpenSettingsClick = onOpenSettingsClick,
-            onToggleVaultListClick = onToggleVaultListClick,
-            vaultName = state.vaultName,
-            isFastVault = state.isFastVault,
-        )
-        UiSpacer(
-            40.dp
-        )
-        BalanceBanner(
-            isVisible = state.isBalanceValueVisible,
-            balance = state.totalFiatValue,
-            onToggleVisibility = onToggleBalanceVisibility
-        )
-
-        UiSpacer(32.dp)
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(
-                20.dp,
-                Alignment.CenterHorizontally
-            )
-        ) {
-            TransactionTypeButton(
-                txType = TransactionType.SEND,
-                onClick = onSend
-            )
-
-            if (state.isSwapEnabled) {
-                TransactionTypeButton(
-                    txType = TransactionType.SWAP,
-                    onClick = onSwap
-                )
-            }
-        }
-
-        UiSpacer(
-            size = 32.dp
-        )
-
-        UiHorizontalDivider(
-            color = Theme.colors.borders.light
-        )
-
-        UiSpacer(
-            size = 20.dp
-        )
-    }
-}
-
-@Composable
 private fun Banners(
     hasMigration: Boolean,
     onMigrateClick: () -> Unit,
     context: Context,
     onDismissBanner: () -> Unit,
 ) {
-    UiSpacer(12.dp)
     HomepagePager(
         modifier = Modifier
             .padding(horizontal = 16.dp),
@@ -347,7 +306,6 @@ private fun Banners(
         color = Theme.colors.borders.light,
         modifier = Modifier.padding(horizontal = 16.dp)
     )
-    UiSpacer(16.dp)
 }
 
 

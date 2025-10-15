@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScaffoldWithExpandableTopBar(
+    modifier: Modifier = Modifier,
     snackbarState: VSSnackbarState = rememberVsSnackbarState(),
     backgroundColor: Color = Theme.colors.backgrounds.primary,
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
@@ -42,7 +43,7 @@ internal fun ScaffoldWithExpandableTopBar(
         isRefreshing = isRefreshing,
     ) {
         Scaffold(
-            modifier = Modifier
+            modifier = modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 if (topBarCollapsedContent != null) {

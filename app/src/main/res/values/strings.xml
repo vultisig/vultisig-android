@@ -791,7 +791,7 @@
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>
-    <string name="vault_settings_biometric_fast">Biometric fast sign</string>
+    <string name="vault_settings_biometric_fast">Biometrics fast sign</string>
     <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
     <string name="vault_settings_password_hint">Password hint</string>
     <string name="vault_settings_set_a_password">Set a password hint to protect your vault</string>
@@ -843,5 +843,6 @@
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
     <string name="invite_to_x_banner_button">Follow %s</string>
+    <string name="home_defi_portfolio" translatable="false">DeFi Portfolio</string>
 
 </resources>

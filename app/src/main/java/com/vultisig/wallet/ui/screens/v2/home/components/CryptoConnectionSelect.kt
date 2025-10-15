@@ -46,7 +46,7 @@ internal fun CryptoConnectionSelect(
     val isWalletSelected = activeType == CryptoConnectionType.Wallet
 
     LookaheadScope {
-        val c1 = Theme.colors.neutrals.n100.copy(alpha = 0.1f)
+        val c1 = Color(0xFF284570)
         val c2 = Theme.colors.backgrounds.secondary
         Box(
             modifier = Modifier
@@ -58,7 +58,7 @@ internal fun CryptoConnectionSelect(
                         colors = listOf(c2, c1, c1, c1, c2, c2)
                     )
                 )
-                .padding(2.dp)
+                .padding(1.dp)
         ) {
             Box(
                 modifier = modifier
