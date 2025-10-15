@@ -200,7 +200,7 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
             descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
         )
         TierType.PLATINUM -> BottomSheetTierStyle(
-            logoTier = R.drawable.tier_platinium_bottomsheet,
+            logoTier = R.drawable.tier_platinum_bottomsheet,
             titlePart1 = stringResource(R.string.vault_tier_unlock_platinum_part1),
             titlePart2 = stringResource(R.string.vault_tier_unlock_platinum_part2),
             titlePart3 = stringResource(R.string.vault_tier_unlock_platinum_part3),
