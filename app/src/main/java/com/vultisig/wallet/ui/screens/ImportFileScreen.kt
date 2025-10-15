@@ -168,7 +168,7 @@ private fun ImportFileScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
-                state = if (uiModel.fileName == null)
+                state = if (uiModel.fileName.isNullOrBlank())
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
                 onClick = onContinue,
@@ -255,7 +255,7 @@ private fun ImportFileScreen(
 
                 UiSpacer(16.dp)
 
-                if (uiModel.fileName == null) {
+                if (uiModel.fileName.isNullOrBlank()) {
                     Text(
                         text = "Supported file types: .dat & .bak & .vult",
                         color = Theme.colors.text.extraLight,

@@ -69,7 +69,7 @@ internal class AddressEntryViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (addressBookEntryChainId != null && addressBookEntryAddress != null) {
+            if (!addressBookEntryChainId.isNullOrBlank() && !addressBookEntryAddress.isNullOrBlank()) {
                 addressExist = addressBookRepository.entryExists(
                     addressBookEntryChainId,
                     addressBookEntryAddress
