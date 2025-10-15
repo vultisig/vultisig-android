@@ -15,12 +15,7 @@ import javax.inject.Inject
 /**
  * Use case to calculate the discount in basis points (BPS) based on VULT token balance.
  * Fetches the VULT balance internally from the vault.
- * 
- * Tier structure:
- * - Bronze: 1,000+ VULT = 10 BPS discount
- * - Silver: 2,500+ VULT = 20 BPS discount  
- * - Gold: 5,000+ VULT = 30 BPS discount
- * - Platinum: 10,000+ VULT = 35 BPS discount
+ *
  */
 interface GetDiscountBpsUseCase {
     suspend operator fun invoke(vaultId: String, swapProvider: SwapProvider): Int
