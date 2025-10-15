@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
@@ -31,10 +32,13 @@ internal fun LoadableValue(
                 color = color,
             )
         } else {
+            val fontHeight = with(LocalDensity.current) {
+                style.fontSize.toDp()
+            }
             UiPlaceholderLoader(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .width(48.dp)
-                    .height(16.dp),
+                    .height(fontHeight),
             )
         }
     }
