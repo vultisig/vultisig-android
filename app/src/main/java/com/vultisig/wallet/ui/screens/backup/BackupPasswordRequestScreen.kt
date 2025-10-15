@@ -172,6 +172,10 @@ private fun BackupPasswordRequestScreen(
                 weight = 1f
             )
 
+            UiSpacer(
+                size = 24.dp
+            )
+
             VsButton(
                 label = stringResource(R.string.backup_password_request_no_password_action),
                 onClick = onNoPasswordClick,

@@ -7,6 +7,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
@@ -31,12 +33,15 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -60,17 +65,11 @@ internal data class VaultAccountsUiModel(
     val isBannerVisible: Boolean = true,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
-    val filteredAccounts : List<AccountUiModel>
-        get() = accounts.filter {
-            it.chainName.contains(
-                searchTextFieldState.text,
-                ignoreCase = true
-            )
-        }
     val noChainFound: Boolean
-        get() = searchTextFieldState.text.isNotEmpty() && filteredAccounts.isEmpty()
+        get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
 }
 
+@Immutable
 internal data class AccountUiModel(
     val model: Address,
     val chainName: String,
@@ -79,6 +78,7 @@ internal data class AccountUiModel(
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
     val assetsSize: Int = 0,
+    val nativeTokenTicker: String = "",
 )
 
 @HiltViewModel
@@ -279,9 +279,15 @@ internal class VaultAccountsViewModel @Inject constructor(
 
                     // TODO handle error
                     Timber.e(it)
-                }.collect { accounts ->
-                    accounts.updateUiStateFromList()
                 }
+                .combine(
+                    uiState.value.searchTextFieldState.textAsFlow()
+                ) { accounts, searchQuery ->
+                    accounts.updateUiStateFromList(
+                        searchQuery = searchQuery.toString(),
+                    )
+                }
+                .launchIn(this)
         }
     }
 
@@ -292,7 +298,9 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.chain.raw
         }))
 
-    private suspend fun List<Address>.updateUiStateFromList() {
+    private suspend fun List<Address>.updateUiStateFromList(
+        searchQuery: String,
+    ) {
         val totalFiatValue = this.calculateAddressesTotalFiatValue()
             ?.let { fiatValueToStringMapper(it) }
         val accountsUiModel = this.map {
@@ -302,11 +310,28 @@ internal class VaultAccountsViewModel @Inject constructor(
         uiState.update {
             it.copy(
                 totalFiatValue = totalFiatValue,
-                accounts = accountsUiModel,
+                accounts = accountsUiModel.filteredAccounts(searchQuery),
             )
         }
         updateRefreshing(false)
     }
+
+    private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
+        if (searchQuery.isBlank()) return this
+        val query = searchQuery.trim()
+        return filter { account ->
+            listOf(
+                account.chainName,
+                account.nativeTokenTicker
+            ).any { field ->
+                field.contains(
+                    other = query,
+                    ignoreCase = true
+                )
+            }
+        }
+    }
+
 
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }

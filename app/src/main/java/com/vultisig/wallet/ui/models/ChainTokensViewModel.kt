@@ -3,16 +3,22 @@ package com.vultisig.wallet.ui.models
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.TypedValue
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.zxing.WriterException
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -37,6 +43,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Backgrounds
+import com.vultisig.wallet.ui.theme.v2.Colors
+import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
@@ -106,6 +117,10 @@ internal class ChainTokensViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {
+    companion object {
+        private const val LOGO_RADIUS_DIVISOR = 2.3f
+        private const val LOGO_SIZE_DP = 32
+    }
     private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -246,10 +261,45 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalBalance = totalFiatValue
                     ?.let { fiatValueToStringMapper(it) }
 
-                val logo = BitmapFactory.decodeResource(
-                    context.resources, chain.logo
+                val logo = AppCompatResources.getDrawable(
+                    context,
+                    chain.logo
+                )?.let { drawable ->
+                    val desiredSize = TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        LOGO_SIZE_DP.toFloat(),
+                        context.resources.displayMetrics
+                    ).toInt()
+                    val bitmap = createBitmap(
+                        desiredSize,
+                        desiredSize
+                    )
+                    val canvas = android.graphics.Canvas(bitmap)
+                    val path = android.graphics.Path()
+                    val radius = minOf(canvas.width, canvas.height) / LOGO_RADIUS_DIVISOR
+
+                    path.addCircle(
+                        canvas.width / 2f,
+                        canvas.height / 2f,
+                        radius,
+                        android.graphics.Path.Direction.CCW
+                    )
+                    canvas.clipPath(path)
+                    canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
+                    drawable.setBounds(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    )
+                    drawable.draw(canvas)
+                    bitmap
+                }
+
+                val qr = generateQr(
+                    accountAddress,
+                    logo
                 )
-                val qr = generateQr(accountAddress, logo)
 
 
                 uiState.update {
