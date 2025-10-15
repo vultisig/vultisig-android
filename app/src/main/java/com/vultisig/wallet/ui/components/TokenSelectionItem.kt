@@ -68,11 +68,15 @@ internal fun TokenSelectionItem(
                         painter = painterResource(id = chainLogo),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(12.dp)
+                            .size(16.dp)
                             .border(
                                 width = 1.dp,
-                                color = Theme.colors.neutral0,
-                                shape = RoundedCornerShape(4.dp)
+                                color = Theme.colors.backgrounds.secondary,
+                                shape = CircleShape
+                            )
+                            .background(
+                                Theme.colors.neutral200,
+                                CircleShape
                             )
                             .align(Alignment.BottomEnd)
                     )

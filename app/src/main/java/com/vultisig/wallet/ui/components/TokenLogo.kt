@@ -37,7 +37,7 @@ internal fun TokenLogo(
         contentDescription = null,
          modifier = modifier
              .clip(CircleShape)
-             .background(Theme.colors.neutral100, CircleShape),
+             .background(Theme.colors.transparent, CircleShape),
         error = {
             Box(
                 modifier = errorLogoModifier,
