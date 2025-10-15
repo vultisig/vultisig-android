@@ -62,7 +62,7 @@ internal fun ChainAccount(
                 errorLogoModifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Theme.colors.neutral100),
+                    .background(Theme.colors.body),
             )
             monoToneChainLogo.takeIf { chainLogo != tokenLogo }?.let {
                 Image(
@@ -76,7 +76,7 @@ internal fun ChainAccount(
                             shape = CircleShape
                         )
                         .background(
-                            Theme.colors.text.primary,
+                            Theme.colors.neutral200,
                             CircleShape
                         )
                         .align(Alignment.BottomEnd)
