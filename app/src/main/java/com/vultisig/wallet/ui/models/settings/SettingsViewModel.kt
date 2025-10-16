@@ -45,6 +45,14 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         )
     )
 
+    data object DiscountTiers : SettingsItem(
+        SettingsItemUiModel(
+            title = UiText.StringResource(R.string.vault_settings_discounts),
+            leadingIcon = R.drawable.coins_tier,
+            trailingIcon = R.drawable.ic_small_caret_right
+        )
+    )
+
     data object RegisterVault : SettingsItem(
         SettingsItemUiModel(
             title = UiText.StringResource(R.string.settings_screen_register_your_vaults),
@@ -228,6 +236,7 @@ internal class SettingsViewModel @Inject constructor(
                 title = UiText.StringResource(R.string.vault),
                 items = listOf(
                     VaultSetting,
+                    DiscountTiers,
                     RegisterVault
                 )
             ),
@@ -307,6 +316,10 @@ internal class SettingsViewModel @Inject constructor(
 
             VultisigEducation -> {
                 // TODO: Implement education section navigation
+            }
+
+            DiscountTiers -> {
+                navigateTo(Destination.DiscountTiers(vaultId))
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))

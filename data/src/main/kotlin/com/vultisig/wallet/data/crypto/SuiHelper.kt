@@ -26,7 +26,7 @@ object SuiHelper {
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Sui) { "Coin is not SUI" }
 
-        val (referenceGasPrice, _, coins) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Sui
+        val (referenceGasPrice, gasBudget, coins) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Sui
             ?: throw RuntimeException("getPreSignedInputData fail to get SUI transaction information from RPC")
 
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
@@ -72,7 +72,7 @@ object SuiHelper {
                         .build()
                 )
         }.setSigner(keysignPayload.coin.address)
-            .setGasBudget(keysignPayload.blockChainSpecific.gasBudget.toLong())
+            .setGasBudget(gasBudget.toLong())
             .setReferenceGasPrice(referenceGasPrice.toLong())
             .build()
 
@@ -148,4 +148,7 @@ object SuiHelper {
             .checkError()
         return SignedTransactionResult(output.unsignedTx, "", output.signature)
     }
+
 }
+
+internal val DEFAULT_SUI_GAS_BUDGET = "3000000".toBigInteger()

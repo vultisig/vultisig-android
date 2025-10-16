@@ -182,6 +182,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
                         programId = it.programId == true,
+                        priorityLimit = it.computeLimit?.toBigInteger() ?: BigInteger.ZERO
                     )
                 }
 
@@ -193,6 +194,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         specVersion = it.specVersion,
                         transactionVersion = it.transactionVersion,
                         genesisHash = it.genesisHash,
+                        gas = it.gas
                     )
                 }
 
@@ -201,6 +203,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         referenceGasPrice = BigInteger(it.referenceGasPrice),
                         gasBudget = BigInteger(it.gasBudget),
                         coins = it.coins.filterNotNull(),
+                        gasBudget = it.gasBudget.toBigInteger(),
                     )
                 }
 

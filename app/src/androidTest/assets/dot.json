@@ -21,7 +21,8 @@
           "current_block_number": "27313159",
           "spec_version": 1006001,
           "transaction_version": 26,
-          "genesis_hash": "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+          "genesis_hash": "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
+          "gas": "250000000"
         }
       },
       "utxo_info": [],
