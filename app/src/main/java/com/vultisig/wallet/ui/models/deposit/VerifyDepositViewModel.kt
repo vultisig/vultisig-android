@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -14,7 +15,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +80,12 @@ internal class VerifyDepositViewModel @Inject constructor(
                 }
             } catch (t: Throwable) {
                 Timber.e(t)
-                state.update { it.copy(errorText = "Transaction error please try again".asUiText(), isLoading = false) }
+                state.update { 
+                    it.copy(
+                        errorText = UiText.StringResource(R.string.try_again),
+                        isLoading = false
+                    )
+                }
             }
         }
 
