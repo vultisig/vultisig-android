@@ -8,9 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -32,6 +34,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -41,6 +44,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -101,6 +105,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
@@ -146,6 +151,36 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
+        enableVultTokenIfNeeded(vaultId)
+    }
+
+    private fun enableVultTokenIfNeeded(vaultId: VaultId) {
+        viewModelScope.launch {
+            try {
+                val vault = vaultRepository.get(vaultId) ?: return@launch
+                
+                // Check if vault has Ethereum chain enabled
+                val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
+                if (!hasEthereum) {
+                    Timber.d("Ethereum chain not enabled, skipping VULT token auto-enable")
+                    return@launch
+                }
+                
+                // Check if VULT token is already enabled
+                val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
+                
+                if (vultCoin == null) {
+                    // Enable VULT token in background
+                    Timber.d("VULT token not enabled, enabling it now for vault: $vaultId")
+                    withContext(Dispatchers.IO) {
+                        enableTokenUseCase(vaultId, Coins.Ethereum.VULT)
+                    }
+                    Timber.d("VULT token enabled successfully")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to auto-enable VULT token")
+            }
+        }
     }
 
 
