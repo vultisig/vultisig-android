@@ -333,32 +333,37 @@ internal class KeysignFlowViewModel @Inject constructor(
                                         depositTransactionRepository.getTransaction(transactionId)
                                         true
                                     } catch (e: Exception) {
+                                        Timber.e(e)
                                         false
                                     }
 
                         else -> false
                     }
-
-                    transactionTypeUiModel = when {
-                        isSwap -> TransactionTypeUiModel.Swap(
-                            mapSwapTransactionToUiModel(
-                                swapTransactionRepository.getTransaction(transactionId)
+                    try {
+                        transactionTypeUiModel = when {
+                            isSwap -> TransactionTypeUiModel.Swap(
+                                mapSwapTransactionToUiModel(
+                                    swapTransactionRepository.getTransaction(transactionId)
+                                )
                             )
-                        )
 
-                        isDeposit -> TransactionTypeUiModel.Deposit(
-                            mapDepositTransactionUiModel(
-                                depositTransactionRepository.getTransaction(transactionId)
+                            isDeposit -> TransactionTypeUiModel.Deposit(
+                                mapDepositTransactionUiModel(
+                                    depositTransactionRepository.getTransaction(transactionId)
+                                )
                             )
-                        )
 
-                        else -> TransactionTypeUiModel.Send(
-                            mapTransactionToUiModel(
-                                transactionRepository.getTransaction(
-                                    transactionId
-                                ).first()
+                            else -> TransactionTypeUiModel.Send(
+                                mapTransactionToUiModel(
+                                    transactionRepository.getTransaction(
+                                        transactionId
+                                    ).first()
+                                )
                             )
-                        )
+                        }
+                    } catch (t: Throwable) {
+                        Timber.e(t)
+                        moveToState(KeysignFlowState.Error(t.message ?: "Transaction not found due to timeout or process recreation"))
                     }
                 }
             }
