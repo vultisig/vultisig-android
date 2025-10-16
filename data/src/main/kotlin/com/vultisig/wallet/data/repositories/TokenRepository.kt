@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
@@ -52,6 +53,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val currencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val oneInchToCoins: OneInchToCoinsUseCase,
+    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
@@ -330,10 +332,17 @@ internal class TokenRepositoryImpl @Inject constructor(
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.coins.flatMap { it.value })
 
     override val nativeTokens: Flow<List<Coin>> = builtInTokens
-        .map { it.filterNatives() }
+        .map {
+            it.filter { coin->
+                coin.isNativeToken && coin.filterConnectionType()
+            }
+        }
 
-    private fun Iterable<Coin>.filterNatives() =
-        filter { it.isNativeToken }
+
+    private fun Coin.filterConnectionType(): Boolean =
+        cryptoConnectionTypeRepository.activeCryptoConnection == CryptoConnectionType.Wallet ||
+                (cryptoConnectionTypeRepository.activeCryptoConnection == CryptoConnectionType.Defi &&
+                        cryptoConnectionTypeRepository.isDefi(chain))
 
     private fun String.decodeContractString(): String? {
         try {

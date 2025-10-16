@@ -635,7 +635,6 @@ internal sealed class Route {
     @Serializable
     data class AddChainAccount(
         val vaultId: String,
-        val connectionType: CryptoConnectionType,
     )
 
     @Serializable

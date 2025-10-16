@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -102,6 +103,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
+    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
@@ -284,8 +286,8 @@ internal class VaultAccountsViewModel @Inject constructor(
                 accounts
                     .filter {
                         when (cryptoConnectionType) {
-                            CryptoConnectionType.Wallet -> it.chain.isWallet()
-                            CryptoConnectionType.Defi -> it.chain.isDefi()
+                            CryptoConnectionType.Wallet -> true
+                            CryptoConnectionType.Defi -> cryptoConnectionTypeRepository.isDefi(it.chain)
                         }
                     }
                     .updateUiStateFromList(
@@ -403,7 +405,6 @@ internal class VaultAccountsViewModel @Inject constructor(
             viewModelScope.launch {
                 navigator.route(Route.AddChainAccount(
                     vaultId = vaultId,
-                    connectionType = uiState.value.cryptoConnectionType
                 ))
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
 
@@ -432,6 +433,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun setCryptoConnectionType(type: CryptoConnectionType){
+        cryptoConnectionTypeRepository.setActiveCryptoConnection(type)
         uiState.update {
             it.copy(
                 cryptoConnectionType = type,
@@ -444,7 +446,3 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 }
 
-
-// some pseudo logic to filter accounts
-internal fun Chain.isDefi() = false
-internal fun Chain.isWallet() = true
