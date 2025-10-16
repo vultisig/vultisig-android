@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -16,11 +17,11 @@ import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
@@ -65,16 +66,26 @@ internal class VerifyDepositViewModel @Inject constructor(
         requireNotNull(vaultId) { "vaultId is null" }
 
         viewModelScope.launch {
-            state.update {
-                it.copy(isLoading = true)
-            }
-            val transaction = depositTransactionRepository.getTransaction(transactionId!!)
-            val depositTransactionUiModel = mapTransactionToUiModel(transaction)
-            state.update {
-                it.copy(
-                    depositTransactionUiModel = depositTransactionUiModel,
-                    isLoading = false,
-                )
+            try {
+                state.update {
+                    it.copy(isLoading = true)
+                }
+                val transaction = depositTransactionRepository.getTransaction(transactionId!!)
+                val depositTransactionUiModel = mapTransactionToUiModel(transaction)
+                state.update {
+                    it.copy(
+                        depositTransactionUiModel = depositTransactionUiModel,
+                        isLoading = false,
+                    )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
+                state.update { 
+                    it.copy(
+                        errorText = UiText.StringResource(R.string.try_again),
+                        isLoading = false
+                    )
+                }
             }
         }
 
