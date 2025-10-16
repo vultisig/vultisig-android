@@ -178,7 +178,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     BlockChainSpecific.Solana(
                         recentBlockHash = it.recentBlockHash,
                         priorityFee = it.priorityFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
-                        computeLimit = it.computeLimit?.toBigIntegerOrNull() ?: BigInteger.ZERO,
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
                         programId = it.programId == true,
@@ -201,7 +200,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.suicheSpecific != null -> from.suicheSpecific.let {
                     BlockChainSpecific.Sui(
                         referenceGasPrice = BigInteger(it.referenceGasPrice),
-                        gasBudget = BigInteger(it.gasBudget),
                         coins = it.coins.filterNotNull(),
                         gasBudget = it.gasBudget.toBigInteger(),
                     )

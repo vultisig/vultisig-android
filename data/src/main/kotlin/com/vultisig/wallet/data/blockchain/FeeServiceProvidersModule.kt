@@ -36,7 +36,7 @@ object FeeServiceProvidersModule {
 
     @Provides
     @Singleton
-    @EthereumFee
+    @ZkSyncFee
     fun provideZkSyncFeeService(
         evmApiFactory: EvmApiFactory
     ): FeeService = ZkFeeService(evmApiFactory)

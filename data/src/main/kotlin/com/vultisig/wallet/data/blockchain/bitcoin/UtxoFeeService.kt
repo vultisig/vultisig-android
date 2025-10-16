@@ -25,7 +25,7 @@ class UtxoFeeServizce @Inject constructor(
 
         val blockchairInfo = utxoApi.getAddressInfo(chain, address) ?: error("Can't fetch address Info")
 
-        error()
+        error("")
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {

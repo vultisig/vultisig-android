@@ -154,7 +154,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                val defaultGasLimit = BigInteger(
+                val defaultGasLimit =
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
                         chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
