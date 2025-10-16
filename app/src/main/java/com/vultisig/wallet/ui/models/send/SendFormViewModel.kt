@@ -230,6 +230,7 @@ internal class SendFormViewModel @Inject constructor(
         )
 
     private val planFee = MutableStateFlow<Long?>(null)
+    private val planUtxo = MutableStateFlow<List<String>?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
@@ -829,7 +830,7 @@ internal class SendFormViewModel @Inject constructor(
         specific: BlockChainSpecificAndUtxo,
         memo: String?,
     ): Bitcoin.TransactionPlan {
-        val vault = vaultRepository.get(vaultId)!!
+        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
 
         val keysignPayload = KeysignPayload(
             coin = selectedToken,
@@ -857,6 +858,15 @@ internal class SendFormViewModel @Inject constructor(
     ): BlockChainSpecificAndUtxo {
         val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
 
+        return specific
+    }
+    /*private fun selectUtxosIfNeeded(
+        chain: Chain,
+        tokenAmount: BigInteger,
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
         val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
         val resultingUtxos = mutableListOf<UtxoInfo>()
         val existingUtxos = specific.utxos
@@ -873,7 +883,7 @@ internal class SendFormViewModel @Inject constructor(
         }
 
         return specific.copy(utxos = resultingUtxos)
-    }
+    } */
 
     private fun hideLoading() {
         uiState.update {
