@@ -43,6 +43,7 @@ sealed class BlockChainSpecific {
     data class Solana(
         val recentBlockHash: String,
         val priorityFee: BigInteger,
+        val priorityLimit: BigInteger,
         val fromAddressPubKey: String? = null,
         val toAddressPubKey: String? = null,
         val programId: Boolean = false,
@@ -50,6 +51,7 @@ sealed class BlockChainSpecific {
 
     data class Sui(
         val referenceGasPrice: BigInteger,
+        val gasBudget: BigInteger,
         val coins: List<SuiCoin>
     ) : BlockChainSpecific()
 
@@ -60,6 +62,7 @@ sealed class BlockChainSpecific {
         val specVersion: UInt,
         val transactionVersion: UInt,
         val genesisHash: String,
+        val gas: ULong,
     ) : BlockChainSpecific()
 
     data class Ton(
