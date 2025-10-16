@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.home
 
-import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.animation.slideAndFadeSpec
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.CryptoConnectionType
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
+import com.vultisig.wallet.ui.screens.v2.home.components.Banners
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
 import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
@@ -51,11 +52,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
-import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
-import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePagerParams
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.SocialUtils
-import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,11 +150,17 @@ internal fun HomePage(
                     vaultName = state.vaultName,
                     isFastVault = state.isFastVault,
                 )
-                AnimatedContent(targetState = isWallet) { isWalletTabSelected ->
+                AnimatedContent(
+                    targetState = isWallet,
+                    transitionSpec = slideAndFadeSpec(),
+                ) { isWalletTabSelected ->
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+                        UiSpacer(
+                            size = 24.dp
+                        )
                         if (isWalletTabSelected) {
                             WalletExpandedTopbarContent(
                                 state = state,
@@ -174,9 +177,6 @@ internal fun HomePage(
                     }
                 }
 
-                UiSpacer(
-                    size = 16.dp
-                )
             }
         },
         bottomBarContent = if (isBottomBarVisible.value) {
@@ -235,7 +235,9 @@ internal fun HomePage(
                         HomePageTabMenuAndSearchBar(
                             modifier = Modifier
                                 .animateItem()
-                                .padding(all = 16.dp),
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                            ,
                             onEditClick = onChooseChains,
                             isTabMenu = isTabMenu,
                             onSearchClick = {
@@ -276,35 +278,6 @@ internal fun HomePage(
                 }
             }
         }
-    )
-}
-
-@Composable
-private fun Banners(
-    hasMigration: Boolean,
-    onMigrateClick: () -> Unit,
-    context: Context,
-    onDismissBanner: () -> Unit,
-) {
-    HomepagePager(
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
-        params = HomepagePagerParams(
-            hasMigration = hasMigration
-        ),
-        onUpgradeClick = onMigrateClick,
-        onFollowXClick = {
-            SocialUtils.openTwitter(
-                context = context,
-                twitterHandle = VsAuxiliaryLinks.TWITTER_ID
-            )
-        },
-        onCloseClick = onDismissBanner,
-    )
-    UiSpacer(20.dp)
-    UiHorizontalDivider(
-        color = Theme.colors.borders.light,
-        modifier = Modifier.padding(horizontal = 16.dp)
     )
 }
 
