@@ -149,7 +149,7 @@ private fun NoChainFound() {
                 .padding(vertical = 24.dp),
         ) {
             Image(
-                painter = painterResource(com.vultisig.wallet.R.drawable.iconcrypto),
+                painter = painterResource(R.drawable.iconcrypto),
                 contentDescription = null,
                 modifier = Modifier
                     .size(20.dp),

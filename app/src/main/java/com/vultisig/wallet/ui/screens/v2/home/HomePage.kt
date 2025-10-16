@@ -40,7 +40,7 @@ import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.Banners
@@ -51,6 +51,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
+import com.vultisig.wallet.ui.screens.v2.home.components.NoChainEnabled
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -260,12 +261,17 @@ internal fun HomePage(
                                     onChooseChains = onChooseChains
                                 )
                             } else {
-                                AccountList(
-                                    onAccountClick = onAccountClick,
-                                    snackbarState = snackbarState,
-                                    isBalanceVisible = state.isBalanceValueVisible,
-                                    accounts = state.accounts,
-                                )
+                                if(state.accounts.isEmpty()){
+                                    NoChainEnabled()
+                                }
+                                 else {
+                                    AccountList(
+                                        onAccountClick = onAccountClick,
+                                        snackbarState = snackbarState,
+                                        isBalanceVisible = state.isBalanceValueVisible,
+                                        accounts = state.accounts,
+                                    )
+                                }
                             }
                         }
                     }

@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.animatePlacementInScope
-import com.vultisig.wallet.ui.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.theme.Theme
 
 

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import kotlinx.serialization.Serializable
 
 internal open class Dst(
@@ -633,7 +634,8 @@ internal sealed class Route {
 
     @Serializable
     data class AddChainAccount(
-        val vaultId: String
+        val vaultId: String,
+        val connectionType: CryptoConnectionType,
     )
 
     @Serializable

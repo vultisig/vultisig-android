@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -46,6 +47,7 @@ internal class ChainSelectionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.AddChainAccount>().vaultId
+    private val connectionType: CryptoConnectionType = savedStateHandle.toRoute<Route.AddChainAccount>().connectionType
     val uiState = MutableStateFlow(ChainSelectionUiModel())
 
     val searchTextFieldState = TextFieldState()
@@ -132,7 +134,13 @@ internal class ChainSelectionViewModel @Inject constructor(
                 vaultRepository.getEnabledChains(vaultId),
                 searchTextFieldState.textAsFlow(),
             ) { tokens, enabledChains, query ->
-                tokens
+                val tokensByConnection = tokens.filter {
+                    when(connectionType){
+                        CryptoConnectionType.Wallet -> it.chain.isWallet()
+                        CryptoConnectionType.Defi -> it.chain.isDefi()
+                    }
+                }
+                tokensByConnection
                     .filter {
                         query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||

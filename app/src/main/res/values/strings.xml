@@ -885,5 +885,7 @@
     <string name="invite_to_x_banner_desc">Follow us on X</string>
     <string name="invite_to_x_banner_button">Follow %s</string>
     <string name="home_defi_portfolio" translatable="false">DeFi Portfolio</string>
+    <string name="home_page_no_chains_enabled" translatable="false">No chains enabled</string>
+    <string name="home_page_no_chain_enabled_desc" translatable="false">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
 
 </resources>
