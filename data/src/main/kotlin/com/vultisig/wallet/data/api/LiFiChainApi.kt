@@ -12,6 +12,7 @@ import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import kotlin.math.round
 
 interface LiFiChainApi {
     suspend fun getSwapQuote(
@@ -22,6 +23,7 @@ interface LiFiChainApi {
         fromAmount: String,
         fromAddress: String,
         toAddress: String,
+        bpsDiscount: Int,
     ) : LiFiSwapQuoteDeserialized
 }
 
@@ -38,9 +40,16 @@ internal class LiFiChainApiImpl @Inject constructor(
         fromAmount: String,
         fromAddress: String,
         toAddress: String,
+        bpsDiscount: Int,
     ): LiFiSwapQuoteDeserialized {
         val isSolanaChainInvolved = fromChain.toLong() == Chain.Solana.oneInchChainId() ||
                 toChain.toLong() == Chain.Solana.oneInchChainId()
+
+        val bpsDiscountFee =
+            round(bpsDiscount.toDouble()) / 10000.0
+        val updatedFeeIntegrator =
+            (round(maxOf(INTEGRATOR_FEE.toDouble() - bpsDiscountFee, 0.0) * 10000) / 10000.0).toString()
+
             val response = httpClient
                 .get("https://li.quest/v1/quote") {
                     parameter("fromChain", fromChain)
@@ -55,7 +64,7 @@ internal class LiFiChainApiImpl @Inject constructor(
                             "integrator",
                             INTEGRATOR_ACCOUNT
                         )
-                        parameter("fee", INTEGRATOR_FEE)
+                        parameter("fee", updatedFeeIntegrator)
                     }
                 }
         return try {

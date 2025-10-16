@@ -121,4 +121,10 @@ internal interface UseCasesModule {
     fun bindConvertTokenToToken(
         impl: ConvertTokenToTokenImpl
     ): ConvertTokenToToken
+
+    @Binds
+    @Singleton
+    fun bindGetDiscountBpsUseCase(
+        impl: GetDiscountBpsUseCaseImpl
+    ): GetDiscountBpsUseCase
 }
