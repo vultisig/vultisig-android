@@ -37,7 +37,6 @@ interface GasFeeRepository {
         isNativeToken: Boolean = false,
         to: String? = null,
         memo: String? = null,
-        isMax: Boolean? = null,
     ): TokenValue
 }
 
@@ -62,13 +61,11 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         isNativeToken: Boolean,
         to: String?,
         memo: String?,
-        isMax: Boolean?,
     ): TokenValue = when (chain.standard) {
         TokenStandard.EVM -> {
-             if (isMax == true) {
+             if (!isSwap) {
                 getDefaultEVMFee(chain, isSwap, isNativeToken)
             } else {
-                // Original logic for non-max transactions
                 val evmApi = evmApiFactory.createEvmApi(chain)
                 TokenValue(
                     evmApi.getGasPrice().multiply(BigInteger("3")).divide(BigInteger("2")),
@@ -297,6 +294,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         val accountExists = try {
             tronApi.getAccount(to).address.isNotEmpty()
         } catch (e: Exception) {
+            Timber.e(e)
             false
         }
 
@@ -337,7 +335,6 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     ): TokenValue {
         val defaultGasLimit =
             when {
-                isSwap -> DEFAULT_SWAP_LIMIT
                 chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
                 isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
                 else -> DEFAULT_TOKEN_TRANSFER_LIMIT

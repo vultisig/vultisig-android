@@ -237,7 +237,6 @@ internal class SendFormViewModel @Inject constructor(
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
     private var maxAmount = BigDecimal.ZERO
-    private val isMaxAmount = MutableStateFlow(false)
 
     private var lastTokenValueUserInput = ""
     private var lastFiatValueUserInput = ""
@@ -531,7 +530,6 @@ internal class SendFormViewModel @Inject constructor(
             val max = fetchPercentageOfAvailableBalance(1f)
 
             maxAmount = max
-            isMaxAmount.value = true  // Set isMax to true when max is selected
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
                 max?.toPlainString() ?: ""
             )
@@ -540,12 +538,9 @@ internal class SendFormViewModel @Inject constructor(
 
     fun choosePercentageAmount(percentage: Float) {
         viewModelScope.launch {
-            val amount = fetchPercentageOfAvailableBalance(percentage)
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                amount?.toPlainString() ?: ""
+                fetchPercentageOfAvailableBalance(percentage)?.toPlainString() ?: ""
             )
-            // Check if this amount equals max amount
-            isMaxAmount.value = percentage == 1f && amount == maxAmount
         }
     }
 
@@ -700,9 +695,7 @@ internal class SendFormViewModel @Inject constructor(
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
                         selectedAccount,
-                        gasFee.value.multiply(
-                            calculateGasLimit(chain, specific.blockChainSpecific)
-                        )
+                        gasFee.value,
                     )?.value ?: BigInteger.ZERO
 
                     if (tokenAmountInt > availableTokenBalance) {
@@ -748,11 +741,7 @@ internal class SendFormViewModel @Inject constructor(
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
-                        gasLimit = if (chain.standard == TokenStandard.EVM) {
-                            (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                        } else {
-                            BigInteger.valueOf(1)
-                        },
+                        gasLimit = BigInteger.valueOf(1),
                         gasFee = if (chain.standard == TokenStandard.UTXO) {
                             val plan = planFee.value ?: throw InvalidTransactionDataException(
                                 UiText.StringResource(R.string.send_error_invalid_plan_fee)
@@ -1010,19 +999,14 @@ internal class SendFormViewModel @Inject constructor(
                     .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
                         Triple(token, dst, memo.toString())
                     }
-                    .combine(isMaxAmount) { (token, dst, memo), isMax ->
-                        Quadruple(token, dst, memo, isMax)
-                    }
                     .debounce(350)
-                    .map { (token, dst, memo, isMax) ->
-                        
+                    .map { (token, dst, memo) ->
                         gasFeeRepository.getGasFee(
                             chain = token.chain,
                             address = token.address,
                             isNativeToken = token.isNativeToken,
                             to = dst,
                             memo = memo,
-                            isMax = isMax,
                         )
                     }
                     .catch {
@@ -1097,10 +1081,7 @@ internal class SendFormViewModel @Inject constructor(
                             if (gasSettings is GasSettings.Eth)
                                 gasSettings.gasLimit
                             else
-                                (specific.value?.blockChainSpecific
-                                        as? BlockChainSpecific.Ethereum)
-                                    ?.gasLimit
-                                    ?: BigInteger.valueOf(1)
+                                BigInteger.valueOf(1)
                         } else {
                             BigInteger.valueOf(1)
                         },
@@ -1239,12 +1220,6 @@ internal class SendFormViewModel @Inject constructor(
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
                 if (lastTokenValueUserInput != tokenString) {
-                    // Check if the new amount is different from max amount
-                    val tokenDecimal = tokenString.toBigDecimalOrNull()
-                    if (tokenDecimal != maxAmount) {
-                        isMaxAmount.value = false  // Reset isMax when user manually changes amount
-                    }
-                    
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places
@@ -1257,9 +1232,6 @@ internal class SendFormViewModel @Inject constructor(
 
                     fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
                 } else if (lastFiatValueUserInput != fiatString) {
-                    // User changed fiat amount, so it's not max
-                    isMaxAmount.value = false
-                    
                     val tokenValue =
                         convertValue(fiatString, selectedToken) { value, price, token ->
                             value.divide(price, token.decimal, RoundingMode.HALF_UP)
@@ -1431,7 +1403,6 @@ internal class SendFormViewModel @Inject constructor(
                     isNativeToken = srcAddress.isNativeToken,
                     to = addressFieldState.text.toString(),
                     memo = memoFieldState.text.toString(),
-                    isMax = isMaxAmount.value,
                 )
             } catch (e: Exception) {
                 uiState.update {
@@ -1544,18 +1515,3 @@ internal fun List<Address>.findCurrentSrc(
         return firstSendSrc(selectedTokenId, null)
     }
 }
-
-// Helper data class for combining four values
-private data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
-
-// Extension to destructure Quadruple
-private operator fun <A, B, C, D> Quadruple<A, B, C, D>.component1() = first
-private operator fun <A, B, C, D> Quadruple<A, B, C, D>.component2() = second
-private operator fun <A, B, C, D> Quadruple<A, B, C, D>.component3() = third
-private operator fun <A, B, C, D> Quadruple<A, B, C, D>.component4() = fourth
-
