@@ -86,7 +86,7 @@ internal class FastVaultEmailViewModel @Inject constructor(
                 return@launch
             val enteredEmail = emailFieldState.text.toString()
 
-            if (args.password != null) {
+            if (!args.password.isNullOrBlank()) {
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
                         vaultName = vaultName,
