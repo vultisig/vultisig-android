@@ -281,7 +281,7 @@ private fun QrContainer(
                 )
                 .padding(30.dp)
         ) {
-            if (qrBitmapPainter != null && shareVaultQrString != null) {
+            if (qrBitmapPainter != null && !shareVaultQrString.isNullOrBlank()) {
                 Image(
                     painter = qrBitmapPainter,
                     contentDescription = "qr",

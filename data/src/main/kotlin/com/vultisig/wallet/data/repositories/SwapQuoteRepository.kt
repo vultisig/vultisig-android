@@ -41,6 +41,7 @@ interface SwapQuoteRepository {
         tokenValue: TokenValue,
         isAffiliate: Boolean,
         referralCode: String = "",
+        bpsDiscount: Int = 0,
     ): SwapQuote
 
     suspend fun getKyberSwapQuote(
@@ -55,6 +56,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int = 0,
     ): EVMSwapQuoteJson
 
     suspend fun getMayaSwapQuote(
@@ -63,6 +65,7 @@ interface SwapQuoteRepository {
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int = 0,
     ): SwapQuote
 
     suspend fun getLiFiSwapQuote(
@@ -71,6 +74,7 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        bpsDiscount: Int,
     ): EVMSwapQuoteJson
 
     suspend fun getJupiterSwapQuote(
@@ -101,6 +105,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): EVMSwapQuoteJson {
         val oneInchQuote = oneInchApi.getSwapQuote(
             chain = srcToken.chain,
@@ -109,6 +114,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             srcAddress = srcToken.address,
             amount = tokenValue.value.toString(),
             isAffiliate = isAffiliate,
+            bpsDiscount = bpsDiscount,
         )
         when (oneInchQuote) {
             is EVMSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(
@@ -188,6 +194,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
@@ -198,6 +205,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = thorTokenValue.toString(),
             interval = srcToken.mayaStreamingInterval,
             isAffiliate = isAffiliate,
+            bpsDiscount = bpsDiscount,
         )
 
         when (mayaQuoteResult) {
@@ -236,7 +244,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue,
         isAffiliate: Boolean,
-        referralCode: String
+        referralCode: String,
+        bpsDiscount: Int,
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
@@ -249,6 +258,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 interval = "1",
                 isAffiliate = isAffiliate,
                 referralCode = referralCode,
+                bpsDiscount = bpsDiscount,
             )
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message ?: "Unknown error")
@@ -288,6 +298,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        bpsDiscount: Int,
     ): EVMSwapQuoteJson {
 
         val fromToken =
@@ -305,6 +316,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 fromAmount = tokenValue.value.toString(),
                 fromAddress = srcAddress,
                 toAddress = dstAddress,
+                bpsDiscount = bpsDiscount,
             )
         } catch (e: Exception) {
             throw SwapException.handleSwapException(e.message ?: "Unknown error")

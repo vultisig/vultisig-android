@@ -140,7 +140,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val transactionId = args.transactionId
 
     val isFastSign: Boolean
-        get() = password != null
+        get() = !password.isNullOrBlank()
 
     private val isRelayEnabled by derivedStateOf {
         networkOption.value == NetworkOption.Internet || isFastSign
@@ -425,7 +425,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
             Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
-            if (password != null) {
+            if (!password.isNullOrBlank()) {
                 val vault = _currentVault!!
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(

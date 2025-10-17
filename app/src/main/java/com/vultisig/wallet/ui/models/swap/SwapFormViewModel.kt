@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
@@ -143,6 +144,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val searchToken: SearchTokenUseCase,
     private val referralRepository: ReferralCodeSettingsRepository,
     private val convertTokenToTokenUseCase: ConvertTokenToToken,
+    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -743,11 +745,11 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         this.chain = chainId?.let(Chain::fromRaw)
 
-        if (srcTokenId != null && this.selectedSrcId.value == null) {
+        if (!srcTokenId.isNullOrBlank() && this.selectedSrcId.value == null) {
             selectedSrcId.value = srcTokenId
         }
 
-        if (dstTokenId != null && this.selectedDstId.value == null) {
+        if (!dstTokenId.isNullOrBlank() && this.selectedDstId.value == null) {
             selectedDstId.value = dstTokenId
         }
 
@@ -909,6 +911,11 @@ internal class SwapFormViewModel @Inject constructor(
                         }
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+                        val vultBPSDiscount = if (vaultId != null) {
+                            getDiscountBpsUseCase.invoke(vaultId!!, provider)
+                        } else {
+                            0
+                        }
 
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
@@ -926,6 +933,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
+                                        bpsDiscount = vultBPSDiscount,
                                     )
                                     mayaSwapQuote as SwapQuote.MayaChain to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
@@ -941,7 +949,8 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
-                                        referralCode = referral.orEmpty()
+                                        referralCode = referral.orEmpty(),
+                                        bpsDiscount = vultBPSDiscount,
                                     )
                                     thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }
@@ -1059,6 +1068,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     isAffiliate = isAffiliate,
+                                    bpsDiscount = vultBPSDiscount,
                                 )
 
                                 val expectedDstValue = TokenValue(
@@ -1115,6 +1125,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
+                                        bpsDiscount = vultBPSDiscount,
                                     ) else swapQuoteRepository.getJupiterSwapQuote(
                                         srcAddress = src.address.address,
                                         srcToken = srcToken,
@@ -1328,13 +1339,13 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        !selectedTokenId.isNullOrBlank() -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }
 
     val account = when {
-        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
+        !selectedTokenId.isNullOrBlank() -> address.accounts.first { it.token.id == selectedTokenId }
         filterByChain != null -> address.accounts.first { it.token.isNativeToken }
         else -> address.accounts.first()
     }

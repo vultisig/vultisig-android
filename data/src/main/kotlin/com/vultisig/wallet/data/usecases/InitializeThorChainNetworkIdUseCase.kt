@@ -15,7 +15,7 @@ internal class InitializeThorChainNetworkIdUseCaseImpl @Inject constructor(
         Timber.d("Initializing THORChain network id")
 
         val cachedNetworkChainId = thorChainRepository.getCachedNetworkChainId()
-        if (cachedNetworkChainId != null) {
+        if (!cachedNetworkChainId.isNullOrBlank()) {
             ThorChainHelper.THORCHAIN_NETWORK_ID = cachedNetworkChainId
             Timber.d("THORChain network id initialized from cache with: $cachedNetworkChainId")
         }

@@ -20,6 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.math.round
 
 interface OneInchApi {
 
@@ -30,6 +31,7 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(
@@ -61,6 +63,7 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
             val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
@@ -70,7 +73,8 @@ class OneInchApiImpl @Inject constructor(
                     dstTokenContractAddress,
                     amount,
                     srcAddress,
-                    isAffiliate
+                    isAffiliate,
+                    bpsDiscount,
                 )
             }
             val swapResponseAsync = async {
@@ -112,7 +116,11 @@ class OneInchApiImpl @Inject constructor(
         amount: String,
         srcAddress: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ) {
+        val bpsDiscountTransformed = round(bpsDiscount.toDouble()) / 100.0
+        val referrerFeeUpdated = round((ONEINCH_REFERRER_FEE - bpsDiscountTransformed) * 100) / 100.0
+
         parameter(
             "src",
             srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
@@ -125,7 +133,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-        parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
+        parameter("fee", if(isAffiliate) referrerFeeUpdated else "0")
     }
 
 

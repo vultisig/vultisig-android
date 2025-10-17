@@ -34,6 +34,7 @@ private class VsUriHandler(
             VsAuxiliaryLinks.PRIVACY,
             VsAuxiliaryLinks.TERMS_OF_SERVICE,
             VsAuxiliaryLinks.VULT_TOKEN,
+            VsAuxiliaryLinks.VULT_TOKEN_DOCS,
             VsAuxiliaryLinks.VULT_WEBSITE,
         ).contains(this)
 

@@ -1360,11 +1360,11 @@ object Coins {
 
             chain = Chain.Ethereum,
             ticker = "VULT",
-            logo = "vult",
+            logo = "vulti",
             address = "",
             decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "",
+            priceProviderID = "vultisig",
             contractAddress = "0xb788144DF611029C60b859DF47e79B7726C4DEBa",
             isNativeToken = false,
 
@@ -2822,7 +2822,18 @@ object Coins {
     }
 
     object Cardano {
-        val all = listOf<Coin>()
+        val ADA = Coin(
+            chain = Chain.Cardano,
+            ticker = "ADA",
+            logo = "ada",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "cardano",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(ADA)
     }
 
     val coins: Map<Chain, List<Coin>> = mapOf(

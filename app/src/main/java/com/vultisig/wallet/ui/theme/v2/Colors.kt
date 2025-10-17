@@ -13,7 +13,6 @@ data class Colors(
     val neutrals: Neutrals = Neutrals()
 )
 
-
 data class Gradients(
     val primary: List<Color> = listOf(
         Color(0xFF33E6BF),
@@ -33,6 +32,7 @@ data class Backgrounds(
     val primary: Color = Color(0xFF02122B),
     val primary50: Color = Color(0x8002122B),
     val secondary: Color = Color(0xFF061B3A),
+    val surface2: Color = Color(0xFF12284A),
     val tertiary: Color = Color(0xFF0B1A3A),
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
@@ -66,6 +66,7 @@ data class Border(
     val normal: Color = Color(0xFF1B3F73),
     val light: Color = Color(0xFF12284A),
     val extraLight: Color = Color(0xFF02122B),
+    val primaryAccent4: Color = Color(0xFF4879FD),
 )
 
 data class Alerts(

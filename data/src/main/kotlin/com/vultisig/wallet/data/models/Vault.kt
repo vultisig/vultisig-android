@@ -52,7 +52,7 @@ fun Vault.getSignersExceptLocalParty(): List<String> {
 }
 
 fun Vault.containsServerSigner(): Boolean {
-    return signers.firstOrNull { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) } != null
+    return signers.any { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) }
 }
 
 fun Vault.isServerVault(): Boolean {
