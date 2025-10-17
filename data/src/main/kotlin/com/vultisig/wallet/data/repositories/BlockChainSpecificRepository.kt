@@ -226,8 +226,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             } else {
                 val utxos = blockChairApi.getAddressInfo(
-                    chain,
-                    address
+                    chain = chain,
+                    address = address,
                 )
 
                 val byteFee = gasFee.value

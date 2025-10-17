@@ -694,8 +694,7 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             it
                         }
-                    }.let { selectUtxosIfNeeded(chain, tokenAmountInt, it) }
-
+                    }
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -850,40 +849,6 @@ internal class SendFormViewModel @Inject constructor(
         val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
         return plan
     }
-
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        tokenAmount: BigInteger,
-        specific: BlockChainSpecificAndUtxo
-    ): BlockChainSpecificAndUtxo {
-        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        return specific
-    }
-    /*private fun selectUtxosIfNeeded(
-        chain: Chain,
-        tokenAmount: BigInteger,
-        specific: BlockChainSpecificAndUtxo
-    ): BlockChainSpecificAndUtxo {
-        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
-        val resultingUtxos = mutableListOf<UtxoInfo>()
-        val existingUtxos = specific.utxos
-        var total = 0L
-        for (utxo in existingUtxos) {
-            if (utxo.amount < chain.getDustThreshold.toLong()) {
-                continue
-            }
-            resultingUtxos.add(utxo)
-            total += utxo.amount
-            if (total >= totalAmount.toLong()) {
-                break
-            }
-        }
-
-        return specific.copy(utxos = resultingUtxos)
-    } */
 
     private fun hideLoading() {
         uiState.update {
@@ -1082,6 +1047,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
                     println(planFee)
                     planFee.value = plan.fee
+                    plan.uto
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
