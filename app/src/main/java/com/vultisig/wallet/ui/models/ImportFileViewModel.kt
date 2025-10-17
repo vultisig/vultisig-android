@@ -83,7 +83,7 @@ internal class ImportFileViewModel @Inject constructor(
     fun decryptVaultData() {
         val key: String = passwordTextFieldState.text.toString()
         val vaultFileContent = uiModel.value.fileContent
-        if (vaultFileContent != null) {
+        if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
                 try {
                     saveToDb(vaultFileContent, key)

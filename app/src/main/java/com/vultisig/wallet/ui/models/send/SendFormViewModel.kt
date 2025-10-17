@@ -407,13 +407,13 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun setAddressFromQrCode(qrCode: String?) {
-        if (qrCode != null) {
+        if (!qrCode.isNullOrBlank()) {
             Timber.d("setAddressFromQrCode(address = $qrCode)")
 
             addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
 
             val vaultId = vaultId
-            if (vaultId != null) {
+            if (!vaultId.isNullOrBlank()) {
                 val chainValidForAddress = Chain.entries.filter { chain ->
                     chainAccountAddressRepository.isValid(chain, qrCode)
                 }
@@ -451,7 +451,7 @@ internal class SendFormViewModel @Inject constructor(
         val chainIdNotInAccounts = accounts.value.none {
             it.token.chain.id.equals(chainIdForAddition, ignoreCase = true)
         }
-        if (chainIdForAddition != null && chainIdNotInAccounts) {
+        if (!chainIdForAddition.isNullOrBlank() && chainIdNotInAccounts) {
             viewModelScope.launch {
                 addNativeTokenToVault(chainIdForAddition)
                 loadAccounts(vaultId)
@@ -482,7 +482,7 @@ internal class SendFormViewModel @Inject constructor(
     fun scanAddress() {
         viewModelScope.launch {
             val qr = requestQrScan.invoke()
-            if (qr != null) {
+            if (!qr.isNullOrBlank()) {
                 setAddressFromQrCode(qr)
             }
         }
@@ -1493,13 +1493,13 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        !selectedTokenId.isNullOrBlank() -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }
 
     val account = when {
-        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
+        !selectedTokenId.isNullOrBlank() -> address.accounts.first { it.token.id == selectedTokenId }
         filterByChain != null -> address.accounts.first { it.token.isNativeToken }
         else -> address.accounts.first()
     }

@@ -169,7 +169,7 @@ internal fun SwapTransactionOverviewScreen(
                         vertical = 12.dp,
                     ),
             ) {
-                if (progressLink != null && progressLink.isNotEmpty()) {
+                if (!progressLink.isNullOrBlank()) {
                     val uriHandler = VsUriHandler()
                     VsButton(
                         label = "Track",

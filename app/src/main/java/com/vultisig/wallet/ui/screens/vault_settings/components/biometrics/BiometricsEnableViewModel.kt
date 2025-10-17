@@ -59,7 +59,7 @@ internal class BiometricsEnableViewModel @Inject constructor(
 
     private fun initSwitchState() = viewModelScope.launch {
         vaultPasswordRepository.getPassword(vaultId).let { password ->
-            if (password != null) {
+            if (!password.isNullOrBlank()) {
                 uiModel.update { it.copy(isSwitchEnabled = true) }
             }
         }

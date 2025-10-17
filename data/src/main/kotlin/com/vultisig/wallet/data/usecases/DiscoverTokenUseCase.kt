@@ -19,10 +19,10 @@ internal class DiscoverTokenUseCaseImpl @Inject constructor(
 ) : DiscoverTokenUseCase {
     override fun invoke(vaultId: String?, chainId: String?) {
         val dataBuilder = Data.Builder()
-        if (vaultId != null) {
+        if (!vaultId.isNullOrBlank()) {
             dataBuilder.putString(TokenRefreshWorker.ARG_VAULT_ID, vaultId)
         }
-        if (chainId != null) {
+        if (!chainId.isNullOrBlank()) {
             dataBuilder.putString(TokenRefreshWorker.ARG_CHAIN, chainId)
         }
         val workData = dataBuilder.build()

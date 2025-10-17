@@ -128,8 +128,8 @@ internal class SessionApiImpl @Inject constructor(
 
     override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
         httpClient.post(serverUrl) {
-            messageId?.let {
-                header(MESSAGE_ID_HEADER_TITLE, it)
+            if (!messageId.isNullOrEmpty()) {
+                header(MESSAGE_ID_HEADER_TITLE, messageId)
             }
             setBody(json.encodeToString(message))
         }.throwIfUnsuccessful()
@@ -191,10 +191,10 @@ internal class SessionApiImpl @Inject constructor(
         messageId2: String?
     ): String {
         return httpClient.get("$serverUrl/setup-message/$sessionId") {
-            if (messageId != null) {
+            if (!messageId.isNullOrEmpty()) {
                 header(MESSAGE_ID_HEADER_TITLE, messageId)
             }
-            if (messageId2 != null) {
+            if (!messageId2.isNullOrEmpty()) {
                 header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
             }
         }
@@ -210,10 +210,10 @@ internal class SessionApiImpl @Inject constructor(
         messageId2: String?
     ) {
         httpClient.post("$serverUrl/setup-message/$sessionId") {
-            if (messageId != null) {
+            if (!messageId.isNullOrEmpty()) {
                 header(MESSAGE_ID_HEADER_TITLE, messageId)
             }
-            if (messageId2 != null) {
+            if (!messageId2.isNullOrEmpty()) {
                 header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
             }
             setBody(message)
