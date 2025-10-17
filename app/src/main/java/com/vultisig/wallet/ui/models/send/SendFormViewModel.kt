@@ -241,6 +241,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
     private var maxAmount = BigDecimal.ZERO
+    private val isMaxAmount = MutableStateFlow(false)
 
     private var lastTokenValueUserInput = ""
     private var lastFiatValueUserInput = ""
@@ -267,6 +268,7 @@ internal class SendFormViewModel @Inject constructor(
         loadGasSettings()
         collectDstAddress()
         collectAddress()
+        collectMaxAmount()
     }
 
     private fun collectAddress() {
@@ -534,6 +536,7 @@ internal class SendFormViewModel @Inject constructor(
             val max = fetchPercentageOfAvailableBalance(1f)
 
             maxAmount = max
+            isMaxAmount.value = true
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
                 max?.toPlainString() ?: ""
             )
@@ -1079,6 +1082,25 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun collectMaxAmount() {
+        viewModelScope.launch {
+            isMaxAmount.collect { isMax ->
+                val chain = selectedAccount?.token?.chain ?: return@collect
+                // Only require to re-trigger utxo chains, due to no change output utxo and therefore
+                // less fees
+                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                    val spec = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO ?: return@collect
+                    val updatedSpec = specific.value?.copy(
+                        blockChainSpecific = spec.copy(
+                            sendMaxAmount = isMax
+                        )
+                    )
+                    specific.value = updatedSpec
+                }
+            }
+        }
+    }
+
     private fun collectEstimatedFee() {
         viewModelScope.launch {
             combine(
@@ -1133,6 +1155,7 @@ internal class SendFormViewModel @Inject constructor(
                 advanceGasUiRepository.updateTokenStandard(
                     token.chain.standard
                 )
+
                 try {
                     val spec = blockChainSpecificRepository.getSpecific(
                         chain,
@@ -1235,6 +1258,9 @@ internal class SendFormViewModel @Inject constructor(
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
                 if (lastTokenValueUserInput != tokenString) {
+                    val tokenDecimal = tokenString.toBigDecimalOrNull()
+                    isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
+                    
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places
@@ -1251,6 +1277,9 @@ internal class SendFormViewModel @Inject constructor(
                         convertValue(fiatString, selectedToken) { value, price, token ->
                             value.divide(price, token.decimal, RoundingMode.HALF_UP)
                         } ?: return@combine
+
+                    val tokenDecimal = tokenValue.toBigDecimalOrNull()
+                    isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
 
                     lastTokenValueUserInput = tokenValue
                     lastFiatValueUserInput = fiatString
