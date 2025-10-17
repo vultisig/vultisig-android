@@ -200,7 +200,7 @@ internal class KeygenViewModel @Inject constructor(
                 val ecdsaShare = vault.getKeyshare(vault.pubKeyECDSA)
                 val eddsaShare = vault.getKeyshare(vault.pubKeyEDDSA)
 
-                if (ecdsaShare == null || eddsaShare == null) {
+                if (ecdsaShare.isNullOrBlank() || eddsaShare.isNullOrBlank()) {
                     throw RuntimeException("Missing key shares required for migration")
                 }
 
@@ -419,7 +419,7 @@ internal class KeygenViewModel @Inject constructor(
         val vaultId = vault.id
 
         val password = args.password
-        if (args.email != null && password != null) {
+        if (!args.email.isNullOrBlank() && !password.isNullOrBlank()) {
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,

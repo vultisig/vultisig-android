@@ -29,7 +29,7 @@ internal class ScanQrViewModel @Inject constructor(
 
     fun process(qr: String) {
         when {
-            args.requestId != null -> {
+            !args.requestId.isNullOrBlank() -> {
                 viewModelScope.launch {
                     requestResultRepository.respond(
                         requestId = args.requestId,

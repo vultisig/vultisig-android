@@ -153,7 +153,7 @@ internal interface DepositMemo {
         override fun toString(): String =
             buildString {
                 append("${dstChain.raw}:${ibcChannel}:${dstAddress}")
-                if (memo != null) {
+                if (!memo.isNullOrBlank()) {
                     append(":$memo")
                 }
             }

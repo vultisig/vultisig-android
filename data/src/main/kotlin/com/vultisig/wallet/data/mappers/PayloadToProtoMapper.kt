@@ -14,9 +14,6 @@ import vultisig.keysign.v1.CardanoChainSpecific
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
-import vultisig.keysign.v1.KyberSwapPayload
-import vultisig.keysign.v1.KyberSwapQuote
-import vultisig.keysign.v1.KyberSwapTransaction
 import vultisig.keysign.v1.MAYAChainSpecific
 import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload

@@ -68,7 +68,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor(
 
         var finalHeight = height + 2 * padding
         finalHeight += (textSize * 2).toInt()
-        if (description != null) {
+        if (!description.isNullOrBlank()) {
             val descNumberLines = descLines?.size ?: 0
             finalHeight += (textSize * 3 / 2 * descNumberLines).toInt()
         }
