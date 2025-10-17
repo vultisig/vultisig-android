@@ -62,14 +62,14 @@ internal class RippleApiImp @Inject constructor(
                         ignoreCase = true
                     )
                 ) {
-                    if (rpcResp.result.txJson?.hash != null) {
+                    if (!rpcResp.result.txJson?.hash.isNullOrBlank()) {
                         return rpcResp.result.txJson.hash
                     }
                 }
                 return resultMessage ?: ""
             } else {
                 val hash = rpcResp.result.txJson?.hash
-                return if (hash?.isNotEmpty() == true) {
+                return if (!hash.isNullOrBlank()) {
                     hash
                 } else {
                     resultMessage ?: ""

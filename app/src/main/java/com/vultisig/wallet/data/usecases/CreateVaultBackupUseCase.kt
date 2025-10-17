@@ -26,7 +26,7 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
     ): String? {
         val vaultBytes = protoBuf.encodeToByteArray(vault)
 
-        val contentBytes = if (password != null) {
+        val contentBytes = if (!password.isNullOrBlank()) {
             try {
                 encryption.encrypt(vaultBytes, password.toByteArray())
             } catch (e: Exception) {
@@ -41,7 +41,7 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
             VaultContainerProto(
                 version = VAULT_BACKUP_VERSION,
                 vault = contentBytes,
-                isEncrypted = password != null
+                isEncrypted = !password.isNullOrBlank()
             )
         ).encodeBase64()
     }
