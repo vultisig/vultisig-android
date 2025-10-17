@@ -170,7 +170,7 @@ internal fun CoinItem(
                 )
             }
 
-            if (balance != null && mergedBalance != null && mergedBalance != "0") {
+            if (!balance.isNullOrBlank() && !mergedBalance.isNullOrBlank() && mergedBalance != "0") {
                 UiSpacer(1f)
 
                 ToggleVisibilityText(

@@ -264,7 +264,7 @@ internal class KeysignViewModel(
         val transactionDetail = thorChainApi.getTransactionDetail(txHash.value)
 
         // https://docs.cosmos.network/v0.46/building-modules/errors.html#registration
-        if (transactionDetail.code != null && transactionDetail.codeSpace != null) {
+        if (transactionDetail.code != null && !transactionDetail.codeSpace.isNullOrBlank()) {
             throw Exception(transactionDetail.rawLog)
         }
     }

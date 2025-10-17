@@ -706,7 +706,7 @@ internal class DepositFormViewModel @Inject constructor(
     fun scan() {
         viewModelScope.launch {
             val qr = requestQrScan()
-            if (qr != null) {
+            if (!qr.isNullOrBlank()) {
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
             }
         }
