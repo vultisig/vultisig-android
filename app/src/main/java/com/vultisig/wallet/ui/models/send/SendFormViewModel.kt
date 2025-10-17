@@ -86,6 +86,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -230,7 +231,6 @@ internal class SendFormViewModel @Inject constructor(
         )
 
     private val planFee = MutableStateFlow<Long?>(null)
-    private val planUtxo = MutableStateFlow<List<String>?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
@@ -1020,7 +1020,6 @@ internal class SendFormViewModel @Inject constructor(
                     val chain = token.chain
                     if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano){
                         planFee.value = 1
-                        planUtxo.value = emptyList()
                     }
 
                     val vaultId = vaultId
@@ -1045,9 +1044,12 @@ internal class SendFormViewModel @Inject constructor(
                         specific,
                         memo.toString(),
                     )
-                    println(planFee)
+
+                    if (plan.error != SigningError.OK) {
+                        throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
+                    }
+
                     planFee.value = plan.fee
-                    plan.uto
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -1128,9 +1130,7 @@ internal class SendFormViewModel @Inject constructor(
                             specific = spec
                         )
                     }
-
                 } catch (e: Exception) {
-                    // todo handle errors
                     Timber.e(e)
                 }
             }.collect()

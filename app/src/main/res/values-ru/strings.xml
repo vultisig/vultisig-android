@@ -223,6 +223,7 @@
     <string name="vault_name_too_long_error">Имя хранилища слишком длинное</string>
     <string name="swap_form_invalid_amount">Недопустимая сумма</string>
     <string name="send_from_invalid_amount">Недопустимая сумма</string>
+    <string name="insufficient_utxos_error">Недостаточно доступных UTXO для покрытия выбранной суммы. Пожалуйста, добавьте больше средств или уменьшите отправляемую сумму</string>
     <string name="keygen_peer_discovery_looking_for_devices">Поиск устройств…</string>
     <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Выберите сопрягаемые устройства</string>
