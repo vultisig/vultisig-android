@@ -101,12 +101,12 @@ internal fun VsTextInputField(
             .animateContentSize()
             .clickable(onClick = { focusRequester?.requestFocus() }),
     ) {
-        if (label != null || labelIcon != null) {
+        if (!label.isNullOrBlank() || labelIcon != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (label != null) {
+                if (!label.isNullOrBlank()) {
                     Text(
                         text = label,
                         color = Theme.colors.text.primary,

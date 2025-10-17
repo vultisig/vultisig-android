@@ -383,7 +383,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val cleanSessionID = sessionID.trim()
-        val key = if (prefix != null) {
+        val key = if (!prefix.isNullOrBlank()) {
             "$prefix-session-$cleanSessionID"
         } else {
             "session-$cleanSessionID"
@@ -419,7 +419,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val cleanSessionID = sessionID.trim()
-        val key = if (prefix != null) {
+        val key = if (!prefix.isNullOrBlank()) {
             "$prefix-session-$cleanSessionID"
         } else {
             "session-$cleanSessionID"
