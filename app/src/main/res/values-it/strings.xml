@@ -181,6 +181,7 @@
     <string name="vault_name_too_long_error">Il nome del caveau è troppo lungo</string>
     <string name="swap_form_invalid_amount">importo non valido</string>
     <string name="send_from_invalid_amount">importo non valido</string>
+    <string name="insufficient_utxos_error">UTXO disponibili insufficienti per coprire l\'importo selezionato. Aggiungi più fondi o riduci l\'importo che stai inviando</string>
     <string name="send_error_insufficient_balance">Fondi insufficienti</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\’importo che riceverò dopo lo scambio</string>
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>

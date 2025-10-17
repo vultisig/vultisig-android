@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
