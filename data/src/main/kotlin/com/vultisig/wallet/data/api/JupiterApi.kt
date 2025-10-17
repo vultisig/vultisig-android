@@ -75,7 +75,7 @@ internal class JupiterApiImpl @Inject constructor(
         )
     }
 
-    private companion object {
+    internal companion object {
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
         val MAX_PRIORITY_FEE_LAMPORTS = 6000000
         val PRIORITY_LEVEL = "high"

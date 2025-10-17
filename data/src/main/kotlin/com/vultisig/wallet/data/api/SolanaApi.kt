@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
@@ -66,8 +67,8 @@ internal class SolanaApiImp @Inject constructor(
 
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
-    private val splTokensInfoEndpoint2 = "https://api.vultisig.com/jup/tokens/v2/search"
-    private val jupiterTokensUrl = "https://api.vultisig.com/jup/tokens/v2/tag"
+    private val splTokensInfoEndpoint2 = "$JUPITER_URL/tokens/v2/search"
+    private val jupiterTokensUrl = "$JUPITER_URL/tokens/v2/tag"
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload = RpcPayload(
