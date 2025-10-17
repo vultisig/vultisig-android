@@ -1,4 +1,4 @@
-@file:kotlin.OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+@file:kotlin.OptIn(kotlin.uuid.ExperimentalUuidApi::class, kotlin.ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.send
 
