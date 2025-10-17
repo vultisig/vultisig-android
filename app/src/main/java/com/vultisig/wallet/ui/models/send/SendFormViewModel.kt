@@ -1053,8 +1053,10 @@ internal class SendFormViewModel @Inject constructor(
             ) { token, dstAddress, tokenAmount, specific, memo ->
                 try {
                     val chain = token.chain
-                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano)
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano){
                         planFee.value = 1
+                        planUtxo.value = emptyList()
+                    }
 
                     val vaultId = vaultId
                         ?: throw InvalidTransactionDataException(
@@ -1078,6 +1080,7 @@ internal class SendFormViewModel @Inject constructor(
                         specific,
                         memo.toString(),
                     )
+                    println(planFee)
                     planFee.value = plan.fee
                 } catch (e: Exception) {
                     Timber.e(e)
