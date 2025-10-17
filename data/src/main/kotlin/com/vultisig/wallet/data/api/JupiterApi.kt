@@ -35,7 +35,7 @@ internal class JupiterApiImpl @Inject constructor(
         toToken: String,
         fromAddress: String,
     ): QuoteSwapTotalDataJson {
-        val quoteResponse = httpClient.get("https://lite-api.jup.ag/swap/v1/quote") {
+        val quoteResponse = httpClient.get("$JUPITER_URL/swap/v1/quote") {
             parameter("inputMint", fromToken)
             parameter("outputMint", toToken)
             parameter("amount", fromAmount)
@@ -55,7 +55,7 @@ internal class JupiterApiImpl @Inject constructor(
                 })
             })
         }
-        val quoteSwapData = httpClient.post("https://lite-api.jup.ag/swap/v1/swap") {
+        val quoteSwapData = httpClient.post("$JUPITER_URL/swap/v1/swap") {
             setBody(quoteSwapRequestBody)
         }.body<QuoteSwapTransactionJson>()
 
@@ -79,5 +79,7 @@ internal class JupiterApiImpl @Inject constructor(
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
         val MAX_PRIORITY_FEE_LAMPORTS = 6000000
         val PRIORITY_LEVEL = "high"
+
+        val JUPITER_URL = "https://api.vultisig.com/jup"
     }
 }
