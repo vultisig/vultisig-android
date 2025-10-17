@@ -2822,7 +2822,18 @@ object Coins {
     }
 
     object Cardano {
-        val all = listOf<Coin>()
+        val ADA = Coin(
+            chain = Chain.Cardano,
+            ticker = "ADA",
+            logo = "ada",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "cardano",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(ADA)
     }
 
     val coins: Map<Chain, List<Coin>> = mapOf(
