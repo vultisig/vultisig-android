@@ -700,7 +700,25 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             it
                         }
-                    }.let { selectUtxosIfNeeded(chain, it) }
+                    }.let { specific ->
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            planBtc.value ?: getBitcoinTransactionPlan(
+                                vaultId = vaultId,
+                                selectedToken = selectedToken,
+                                dstAddress = dstAddress,
+                                tokenAmountInt = tokenAmountInt,
+                                specific = specific,
+                                memo = memo
+                            ).also { plan ->
+                                planBtc.value = plan
+                                planFee.value = plan.fee
+                            }
+
+                            selectUtxosIfNeeded(chain, specific)
+                        } else {
+                            specific
+                        }
+                    }
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
