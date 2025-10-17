@@ -55,6 +55,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -170,6 +171,7 @@ internal data class InvalidTransactionDataException(
     val text: UiText,
 ) : Exception()
 
+@ExperimentalStdlibApi
 @HiltViewModel
 internal class SendFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -231,6 +233,7 @@ internal class SendFormViewModel @Inject constructor(
         )
 
     private val planFee = MutableStateFlow<Long?>(null)
+    private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
@@ -694,7 +697,7 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             it
                         }
-                    }
+                    }.let { selectUtxosIfNeeded(chain, it) }
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -809,6 +812,23 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun selectUtxosIfNeeded(
+        chain: Chain,
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
+        val updatedUtxo = planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
+            UtxoInfo(
+                hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
+                index = planUtxo.outPoint.index.toUInt(),
+                amount = planUtxo.amount,
+            )
+        } ?: return specific
+
+        return specific.copy(utxos = updatedUtxo)
+    }
+
     private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
         val minAmount = chain.getDustThreshold
         if (tokenAmountInt < minAmount) {
@@ -818,6 +838,10 @@ internal class SendFormViewModel @Inject constructor(
             throw InvalidTransactionDataException(
                 UiText.DynamicString("Minimum send amount is $formattedMinAmount $symbol. $name requires this to prevent spam.")
             )
+        }
+
+        if (planBtc.value?.error != SigningError.OK) {
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
         }
     }
 
@@ -1045,11 +1069,8 @@ internal class SendFormViewModel @Inject constructor(
                         memo.toString(),
                     )
 
-                    if (plan.error != SigningError.OK) {
-                        throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
-                    }
-
                     planFee.value = plan.fee
+                    planBtc.value = plan
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
