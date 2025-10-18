@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
