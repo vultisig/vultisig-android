@@ -2,18 +2,23 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoChainFound
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainSelectionScreen(
@@ -42,6 +47,13 @@ private fun ChainSelectionScreen(
 ) {
 
     TokenSelectionList(
+        titleContent = {
+            Text(
+                text = stringResource(R.string.chain_selection_select_chains),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.colors.neutrals.n100,
+            )
+        },
         items = state.chains,
         mapper = {
             TokenSelectionGridUiModel(
@@ -53,6 +65,9 @@ private fun ChainSelectionScreen(
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
+        notFoundContent = {
+            NoChainFound()
+        },
         onCheckChange = { checked, chain ->
             if (checked) {
                 onEnableAccount(chain.coin)

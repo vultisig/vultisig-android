@@ -80,7 +80,7 @@ internal class VerifyDepositViewModel @Inject constructor(
                 }
             } catch (t: Throwable) {
                 Timber.e(t)
-                state.update {
+                state.update { 
                     it.copy(
                         errorText = UiText.StringResource(R.string.try_again),
                         isLoading = false

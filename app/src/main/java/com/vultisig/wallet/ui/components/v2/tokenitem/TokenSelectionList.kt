@@ -7,10 +7,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -19,16 +17,18 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
-import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun <T> TokenSelectionList(
     items: List<T>,
     mapper: (T) -> TokenSelectionGridUiModel,
     searchTextFieldState: TextFieldState,
+    titleContent: @Composable () -> Unit,
+    notFoundContent: @Composable () -> Unit,
     onCheckChange: (Boolean, T) -> Unit,
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
+    onPlusClick: (() -> Unit)? = null,
 ) {
     V2BottomSheet(
         onDismissRequest = onCancelClick,
@@ -57,11 +57,7 @@ internal fun <T> TokenSelectionList(
                 size = 24.dp
             )
 
-            Text(
-                text = stringResource(R.string.chain_selection_select_chains),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.colors.neutrals.n100,
-            )
+            titleContent()
 
             UiSpacer(
                 size = 16.dp
@@ -77,13 +73,21 @@ internal fun <T> TokenSelectionList(
             )
 
             if (items.isEmpty()) {
-                NoChainFound()
+                notFoundContent()
             } else
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 74.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    onPlusClick?.let {
+                        item {
+                            GridPlus(
+                                title = "Custom",
+                                onClick = it
+                            )
+                        }
+                    }
                     items(items) { item ->
                         TokenSelectionGridItem(
                             uiModel = mapper(item),
