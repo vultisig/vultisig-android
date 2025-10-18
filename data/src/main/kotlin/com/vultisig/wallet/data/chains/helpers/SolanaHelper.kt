@@ -48,7 +48,6 @@ class SolanaHelper(
             .setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
                     .setPrice(SOLANA_PRIORITY_FEE_PRICE)
-                    .setPrice(solanaSpecific.priorityFee.toLong())
                     .build()
             )
             .setPriorityFeeLimit(
