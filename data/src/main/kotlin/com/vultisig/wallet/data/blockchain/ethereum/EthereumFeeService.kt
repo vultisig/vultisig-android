@@ -90,6 +90,10 @@ class EthereumFeeService @Inject constructor(
         return maxOf(calculatedLimit, getDefaultLimit(transaction))
     }
 
+    private fun calculateLayer1Fees(): BigInteger {
+        return BigInteger.ZERO
+    }
+
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
         val defaultLimit = getDefaultLimit(transaction)
@@ -194,10 +198,6 @@ class EthereumFeeService @Inject constructor(
             isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT
             else -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
         }
-    }
-
-    private fun calculateLayer1Fees(): BigInteger {
-        return BigInteger.ZERO
     }
 
     companion object {
