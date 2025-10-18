@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
@@ -17,8 +16,6 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.zxing.WriterException
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -34,19 +31,17 @@ import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REFRESH_TOKEN_DATA
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
-import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.Backgrounds
-import com.vultisig.wallet.ui.theme.v2.Colors
-import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
 import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
@@ -116,6 +111,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val vaultRepository: VaultRepository,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
     companion object {
         private const val LOGO_RADIUS_DIVISOR = 2.3f
@@ -181,12 +177,14 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun selectTokens() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.SelectTokens(
+            navigator.route(
+                Route.SelectTokens(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
             )
+            requestResultRepository.request<Unit>(REFRESH_TOKEN_DATA)
+            loadData()
         }
     }
 

@@ -223,6 +223,7 @@
     <string name="swap_form_invalid_amount">Ongeldig bedrag</string>
     <string name="vault_name_too_long_error">O nome do cofre é demasiado longo</string>
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
+    <string name="insufficient_utxos_error">Onvoldoende beschikbare UTXO\'s om het geselecteerde bedrag te dekken. Voeg meer fondsen toe of verlaag het bedrag dat u verzendt</string>
     <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecteer de koppelingsapparaten</string>
     <string name="swap_screen_invalid_vault">De transactie zal waarschijnlijk mislukken, de kluis kon niet worden geladen.</string>
