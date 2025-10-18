@@ -1,22 +1,9 @@
-package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.chainselectionbottomsheet.components
+package com.vultisig.wallet.ui.components.v2.tokenitem
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -26,81 +13,10 @@ import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.theme.Theme
-
-@Composable
-internal fun ChainSelectionItem(
-    modifier: Modifier = Modifier,
-    chain: Chain,
-    isChecked: Boolean,
-    onCheckedChange: (Boolean) -> Unit = {}
-) {
-
-    Column(
-        modifier = modifier.toggleable(
-            value = isChecked,
-            onValueChange = onCheckedChange,
-        ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(74.dp)
-                .clip(
-                    shape = RoundedCornerShape(size = 24.dp)
-                )
-                .background(
-                    color = if (isChecked) Theme.colors.backgrounds.secondary else Theme.colors.backgrounds.disabled
-                )
-        ) {
-            // does not work when use "import ...". maybe ide bug!.
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isChecked,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                RoundedBorderWithLeaf()
-            }
-
-            Image(
-                painter = painterResource(chain.logo),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-
-        UiSpacer(
-            size = 10.dp
-        )
-
-        Text(
-            text = chain.raw,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.primary,
-            modifier = Modifier
-                .widthIn(max = 74.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-
-
-}
-
-@Composable
-internal fun Dp.toPx() = with(LocalDensity.current) {
-    toPx()
-}
 
 @Composable
 internal fun RoundedBorderWithLeaf(
@@ -157,8 +73,8 @@ internal fun RoundedBorderWithLeaf(
             color = borderColor,
             style = Stroke(
                 width = borderWidthPx,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round
+                cap = StrokeCap.Companion.Round,
+                join = StrokeJoin.Companion.Round
             )
         )
 
@@ -183,7 +99,7 @@ internal fun RoundedBorderWithLeaf(
                     )
                 )
             },
-            operation = PathOperation.Intersect
+            operation = PathOperation.Companion.Intersect
         )
 
 
@@ -228,28 +144,9 @@ internal fun RoundedBorderWithLeaf(
             checkMarkColor,
             style = Stroke(
                 width = checkMarkWidth,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round
+                cap = StrokeCap.Companion.Round,
+                join = StrokeJoin.Companion.Round
             )
         )
     }
 }
-
-@Preview
-@Composable
-fun PreviewRChainSelectionItem() {
-    ChainSelectionItem(
-        chain = Chain.Bitcoin,
-        isChecked = true
-    )
-}
-
-@Preview
-@Composable
-fun PreviewChainSelectionItem2() {
-    ChainSelectionItem(
-        chain = Chain.Bitcoin,
-        isChecked = false
-    )
-}
-

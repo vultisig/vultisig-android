@@ -85,37 +85,6 @@ internal sealed class Destination(
         }
     }
 
-    data class SelectTokens(
-        val vaultId: String,
-        val chainId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/select_tokens"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/select_tokens"
-        }
-    }
-
-    data class SelectToken(
-        val vaultId: String,
-        val targetArg: String,
-        val swapSelect: Boolean = false,
-    ) : Destination(
-        route = "select_token?${ARG_VAULT_ID}=$vaultId&${ARG_TARGET_ARG}=$targetArg" +
-                "&${ARG_SWAP_SELECT}=$swapSelect"
-    ) {
-        companion object {
-            const val ARG_SELECTED_TOKEN_ID = "arg_selected_token_id"
-            const val ARG_TARGET_ARG = "target_arg"
-            const val ARG_SWAP_SELECT = "swap_select"
-
-            const val STATIC_ROUTE =
-                "select_token?$ARG_VAULT_ID={$ARG_VAULT_ID}&$ARG_TARGET_ARG={$ARG_TARGET_ARG}" +
-                        "&$ARG_SWAP_SELECT={$ARG_SWAP_SELECT}"
-        }
-    }
-
     data class AddressBook(
         val chain: Chain? = null,
         val requestId: String? = null,
@@ -660,6 +629,12 @@ internal sealed class Route {
         val chainId: String? = null,
         val address: String? = null,
         val vaultId: String,
+    )
+
+    @Serializable
+    data class SelectTokens(
+        val vaultId: String,
+        val chainId: String,
     )
 
 }

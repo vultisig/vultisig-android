@@ -154,14 +154,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                val defaultGasLimit = BigInteger(
+                val defaultGasLimit =
                     when {
                         isSwap -> DEFAULT_SWAP_LIMIT
                         chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
                         token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
                         else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                     }
-                )
 
                 val estimateGasLimit = if (token.isNativeToken) evmApi.estimateGasForEthTransaction(
                     senderAddress = token.address,
