@@ -241,6 +241,7 @@
     <string name="vault_name_too_long_error">Vault name is too long</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
+    <string name="insufficient_utxos_error">Not enough available UTXOs to cover the selected amount. Please add more funds or reduce the amount you\'re sending</string>
     <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
     <string name="peer_discovery_hint_connect_to_internet">Connect all devices to the same Network with Vultisig open</string>
