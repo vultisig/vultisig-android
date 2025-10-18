@@ -4,12 +4,16 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.blockchain.cosmos.CosmosFeeService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.blockchain.ethereum.ZkFeeService
 import com.vultisig.wallet.data.blockchain.polkadot.PolkadotFeeService
 import com.vultisig.wallet.data.blockchain.solana.SolanaFeeService
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainFeeService
 import com.vultisig.wallet.data.blockchain.ton.TonFeeService
 import com.vultisig.wallet.data.blockchain.tron.TronFeeService
 import com.vultisig.wallet.data.blockchain.xrp.RippleFeeService
@@ -29,6 +33,13 @@ object FeeServiceProvidersModule {
     fun provideEthereumFeeService(
         evmApiFactory: EvmApiFactory
     ): FeeService = EthereumFeeService(evmApiFactory)
+
+    @Provides
+    @Singleton
+    @ZkSyncFee
+    fun provideZkSyncFeeService(
+        evmApiFactory: EvmApiFactory
+    ): FeeService = ZkFeeService(evmApiFactory)
     
     @Provides
     @Singleton
@@ -69,4 +80,16 @@ object FeeServiceProvidersModule {
     fun provideSolanaFeeService(
         solanaApi: SolanaApi,
     ): FeeService = SolanaFeeService(solanaApi)
+
+    @Provides
+    @Singleton
+    @ThorFee
+    fun provideThorchainService(
+        thorChainApi: ThorChainApi,
+    ): FeeService = ThorchainFeeService(thorChainApi)
+
+    @Provides
+    @Singleton
+    @CosmosFee
+    fun provideCosmosService(): FeeService = CosmosFeeService()
 }

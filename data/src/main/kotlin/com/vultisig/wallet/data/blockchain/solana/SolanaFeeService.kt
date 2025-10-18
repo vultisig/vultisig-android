@@ -145,7 +145,7 @@ class SolanaFeeService @Inject constructor(
             toAmount = amount,
             blockChainSpecific = BlockChainSpecific.Solana(
                 recentBlockHash = blockHash.await(),
-                priorityFee = SOLANA_PRIORITY_FEE_PRICE.toBigInteger() * SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
+                priorityFee = SOLANA_PRIORITY_FEE_PRICE.toBigInteger(),
                 fromAddressPubKey = fromPubAddress,
                 toAddressPubKey = toPubAddress,
                 programId = token2022,

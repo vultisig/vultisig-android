@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper

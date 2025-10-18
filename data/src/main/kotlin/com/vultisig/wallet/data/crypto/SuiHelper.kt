@@ -148,6 +148,7 @@ object SuiHelper {
             .checkError()
         return SignedTransactionResult(output.unsignedTx, "", output.signature)
     }
+
 }
 
 internal val DEFAULT_SUI_GAS_BUDGET = "3000000".toBigInteger()

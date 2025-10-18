@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.blockchain.Eip1559
 import com.vultisig.wallet.data.blockchain.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.GasFees
+import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.supportsLegacyGas
@@ -41,15 +42,64 @@ class EthereumFeeService @Inject constructor(
     }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
+        require(transaction is Transfer) {
+            "Invalid Transaction Type ${transaction::class.simpleName}"
+        }
+        val chain = transaction.coin.chain
+        val evmApi = evmApiFactory.createEvmApi(chain)
+        val limit = calculateLimit(transaction, evmApi)
+
+        val fees = if (chain.supportsLegacyGas) {
+            calculateLegacyGasFees(limit, evmApi)
+        } else {
+            calculateEip1559Fees(limit, chain, false, evmApi)
+        }
+
+        val l1Fees = if (chain.isLayer2) {
+            calculateLayer1Fees()
+        } else {
+            BigInteger.ZERO
+        }
+
+        return fees.addL1Amount(l1Fees)
     }
 
-    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        TODO("Not yet implemented")
+    private suspend fun calculateLimit(transaction: Transfer, evmApi: EvmApi): BigInteger {
+        val isCoinTransfer = transaction.coin.isNativeToken
+        val token = transaction.coin
+        val toAddress = transaction.to
+        val amount = transaction.amount
+        val memo = transaction.memo
+
+        val calculatedLimit = if (isCoinTransfer) {
+            evmApi.estimateGasForEthTransaction(
+                senderAddress = token.address,
+                recipientAddress = toAddress,
+                value = amount,
+                memo = memo,
+            )
+        } else {
+            evmApi.estimateGasForERC20Transfer(
+                senderAddress = token.address,
+                recipientAddress = toAddress,
+                contractAddress = token.contractAddress,
+                value = amount,
+            ).increaseByPercent(50)
+        }
+
+        return maxOf(calculatedLimit, getDefaultLimit(transaction))
     }
 
     private fun calculateLayer1Fees(): BigInteger {
         return BigInteger.ZERO
+    }
+
+    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
+        val chain = transaction.coin.chain
+        val defaultLimit = getDefaultLimit(transaction)
+        val isSwap = transaction is Transfer
+
+        return calculateFees(chain,  defaultLimit, isSwap)
     }
 
     private suspend fun calculateLegacyGasFees(limit: BigInteger, evmApi: EvmApi): GasFees {
@@ -133,6 +183,20 @@ class EthereumFeeService @Inject constructor(
             this.copy(amount = this.amount + l1FeesAmount)
         } else {
             error("Fee Type Not Supported")
+        }
+    }
+
+    private fun getDefaultLimit(transaction: BlockchainTransaction): BigInteger {
+        require(transaction is Transfer) {
+            "Transaction type not supported: ${transaction::class.simpleName}"
+        }
+        val isCoinTransfer = transaction.coin.isNativeToken
+        val chain = transaction.coin.chain
+
+        return when {
+            chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
+            isCoinTransfer -> DEFAULT_COIN_TRANSFER_LIMIT
+            else -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
         }
     }
 

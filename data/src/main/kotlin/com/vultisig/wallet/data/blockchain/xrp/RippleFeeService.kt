@@ -12,6 +12,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import java.math.BigInteger
+import javax.inject.Inject
 
 /**
  * Fee service implementation for the XRP Ledger.
@@ -29,7 +30,7 @@ import java.math.BigInteger
  *
  * Reference: https://xrpl.org/docs/concepts/transactions/transaction-cost
  */
-class RippleFeeService(
+class RippleFeeService @Inject constructor(
     private val rippleApi: RippleApi
 ) : FeeService {
     override suspend fun calculateFees(

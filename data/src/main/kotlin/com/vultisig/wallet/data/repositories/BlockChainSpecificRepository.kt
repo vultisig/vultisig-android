@@ -21,8 +21,8 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
-import com.vultisig.wallet.data.crypto.DEFAULT_SUI_GAS_BUDGET
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -348,9 +348,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     val nonceDeferred = async { polkadotApi.getNonce(address) }
                     val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
                     val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
-                    
+
                     val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
-                    
+
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Polkadot(
                             recentBlockHash = blockHashDeferred.await(),
@@ -370,12 +370,12 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.SUI -> coroutineScope {
             val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
             val coinsDeferred = async { suiApi.getAllCoins(address) }
-            
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
                     referenceGasPrice = gasPriceDeferred.await(),
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
                     coins = coinsDeferred.await(),
-                    gasBudget = DEFAULT_SUI_GAS_BUDGET,
                 ),
                 utxos = emptyList(),
             )
