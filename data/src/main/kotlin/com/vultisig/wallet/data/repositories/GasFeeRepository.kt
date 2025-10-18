@@ -8,6 +8,11 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -15,6 +20,8 @@ import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.utils.decimals
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -42,6 +49,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val tronApi: TronApi,
     private val polkadotApi: PolkadotApi,
+    private val ethereumFeeService: EthereumFeeService,
 ) : GasFeeRepository {
 
     var chainParameters: TronChainParametersJson? = null
@@ -55,12 +63,16 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         memo: String?,
     ): TokenValue = when (chain.standard) {
         TokenStandard.EVM -> {
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            TokenValue(
-                evmApi.getGasPrice().multiply(BigInteger("3")).divide(BigInteger("2")),
-                chain.feeUnit,
-                9
-            )
+             if (!isSwap) {
+                getDefaultEVMFee(chain, isSwap, isNativeToken)
+            } else {
+                val evmApi = evmApiFactory.createEvmApi(chain)
+                TokenValue(
+                    evmApi.getGasPrice().multiply(BigInteger("3")).divide(BigInteger("2")),
+                    chain.feeUnit,
+                    9
+                )
+            }
         }
 
         TokenStandard.UTXO -> {
@@ -282,6 +294,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         val accountExists = try {
             tronApi.getAccount(to).address.isNotEmpty()
         } catch (e: Exception) {
+            Timber.e(e)
             false
         }
 
@@ -313,6 +326,27 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         val stakingBandwidth = netLimit - netUsed
 
         return freeBandwidth + stakingBandwidth
+    }
+
+    private suspend fun getDefaultEVMFee(
+        chain: Chain,
+        isSwap: Boolean,
+        isNativeToken: Boolean
+    ): TokenValue {
+        val defaultGasLimit =
+            when {
+                chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
+                isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
+                else -> DEFAULT_TOKEN_TRANSFER_LIMIT
+            }
+
+        val fees = ethereumFeeService.calculateFees(chain, defaultGasLimit, isSwap, null)
+        
+        return TokenValue(
+            value = fees.amount,
+            unit = chain.feeUnit,
+            decimals = chain.coinType.decimals,
+        )
     }
 
     internal companion object {

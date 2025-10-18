@@ -554,14 +554,10 @@ internal class SendFormViewModel @Inject constructor(
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal? {
         val selectedAccount = selectedAccount ?: return null
         val gasFee = gasFee.value ?: return null
-        val chain = selectedAccount.token.chain
 
-        val specific = specific.value?.blockChainSpecific
-
-        val gasLimit = calculateGasLimit(chain, specific)
         val availableTokenBalance = getAvailableTokenBalance(
             selectedAccount,
-            gasFee.value.multiply(gasLimit)
+            gasFee.value
         )
 
         return availableTokenBalance?.decimal
@@ -723,9 +719,7 @@ internal class SendFormViewModel @Inject constructor(
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
                         selectedAccount,
-                        gasFee.value.multiply(
-                            calculateGasLimit(chain, specific.blockChainSpecific)
-                        )
+                        gasFee.value,
                     )?.value ?: BigInteger.ZERO
 
                     if (tokenAmountInt > availableTokenBalance) {
@@ -771,11 +765,7 @@ internal class SendFormViewModel @Inject constructor(
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
-                        gasLimit = if (chain.standard == TokenStandard.EVM) {
-                            (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                        } else {
-                            BigInteger.valueOf(1)
-                        },
+                        gasLimit = BigInteger.valueOf(1),
                         gasFee = if (chain.standard == TokenStandard.UTXO) {
                             val plan = planFee.value ?: throw InvalidTransactionDataException(
                                 UiText.StringResource(R.string.send_error_invalid_plan_fee)
@@ -1037,8 +1027,7 @@ internal class SendFormViewModel @Inject constructor(
                             address = token.address,
                             isNativeToken = token.isNativeToken,
                             to = dst,
-                            memo = memo
-
+                            memo = memo,
                         )
                     }
                     .catch {
@@ -1135,10 +1124,7 @@ internal class SendFormViewModel @Inject constructor(
                             if (gasSettings is GasSettings.Eth)
                                 gasSettings.gasLimit
                             else
-                                (specific.value?.blockChainSpecific
-                                        as? BlockChainSpecific.Ethereum)
-                                    ?.gasLimit
-                                    ?: BigInteger.valueOf(1)
+                                BigInteger.valueOf(1)
                         } else {
                             BigInteger.valueOf(1)
                         },
@@ -1455,6 +1441,7 @@ internal class SendFormViewModel @Inject constructor(
                     isRefreshing = true
                 )
             }
+
             val gasFee = try {
                 gasFeeRepository.getGasFee(
                     chain = srcAddress.chain,
@@ -1574,4 +1561,3 @@ internal fun List<Address>.findCurrentSrc(
         return firstSendSrc(selectedTokenId, null)
     }
 }
-
