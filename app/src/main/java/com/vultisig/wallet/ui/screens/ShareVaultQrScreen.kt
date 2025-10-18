@@ -46,7 +46,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
@@ -136,10 +136,9 @@ internal fun ShareVaultQrScreen(
 ) {
     Scaffold(
         topBar = {
-            VsTopAppBar(
+            V2Topbar(
                 title = stringResource(R.string.share_vault_qr_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
+                onBackClick = onBackClick,
             )
         },
         containerColor = Theme.colors.backgrounds.primary,

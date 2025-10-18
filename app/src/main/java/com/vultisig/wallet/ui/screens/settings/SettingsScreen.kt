@@ -84,15 +84,8 @@ private fun SettingsScreen(
     V2Scaffold(
         title = stringResource(R.string.settings_screen_title),
         onBackClick = onBackClick,
-        actions = {
-            UiIcon(
-                drawableResId = R.drawable.navigation_qr_code,
-                size = 16.dp,
-                onClick = onShareVaultQrClick,
-                modifier = Modifier
-                    .padding(16.dp)
-            )
-        }
+        rightIcon = R.drawable.navigation_qr_code,
+        onRightIconClick = onShareVaultQrClick,
     ) {
         Column(
             modifier = Modifier
