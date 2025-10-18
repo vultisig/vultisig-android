@@ -1139,7 +1139,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val (feeAmount, feeCoin) = try {
-                                    if (quote.tx.swapFeeTokenContract.isNotEmpty()) {
+                                    if (!quote.tx.swapFeeTokenContract.isNullOrEmpty()) {
                                         val tokenContract = quote.tx.swapFeeTokenContract
                                         val chainId = srcNativeToken.chain.id
                                         val amount = quote.tx.swapFee.toBigInteger()

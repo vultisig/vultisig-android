@@ -390,6 +390,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val swapFee = jupiterQuote.routePlan
             .firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount ?: "0"
 
+        val swapFeeTokenContract = jupiterQuote.routePlan.firstOrNull()?.swapInfo?.feeMint ?: ""
 
         return EVMSwapQuoteJson(
             dstAmount = jupiterQuote.dstAmount,
@@ -401,6 +402,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 value = "0",
                 gasPrice = "0",
                 swapFee = swapFee,
+                swapFeeTokenContract = swapFeeTokenContract
             )
         )
     }
