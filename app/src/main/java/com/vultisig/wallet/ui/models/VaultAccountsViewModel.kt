@@ -7,17 +7,18 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -39,6 +40,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -62,6 +64,7 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
+    val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
     val noChainFound: Boolean
@@ -100,6 +103,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
+    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
@@ -261,31 +265,35 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun closeLoadAccountJob() {
-        loadAccountsJob?.cancel()
-    }
-
     private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
-            accountsRepository
-                .loadAddresses(vaultId, isRefresh)
-                .map { it ->
-                    it.sortByAccountsTotalFiatValue()
-                }
-                .catch {
-                    updateRefreshing(false)
+            combine(
+                accountsRepository
+                    .loadAddresses(vaultId, isRefresh)
+                    .map { it ->
+                        it.sortByAccountsTotalFiatValue()
+                    }
+                    .catch {
+                        updateRefreshing(false)
 
-                    // TODO handle error
-                    Timber.e(it)
-                }
-                .combine(
-                    uiState.value.searchTextFieldState.textAsFlow()
-                ) { accounts, searchQuery ->
-                    accounts.updateUiStateFromList(
+                        // TODO handle error
+                        Timber.e(it)
+                    },
+                uiState.value.searchTextFieldState.textAsFlow(),
+                uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
+            ) { accounts, searchQuery, cryptoConnectionType ->
+                accounts
+                    .filter {
+                        when (cryptoConnectionType) {
+                            CryptoConnectionType.Wallet -> true
+                            CryptoConnectionType.Defi -> cryptoConnectionTypeRepository.isDefi(it.chain)
+                        }
+                    }
+                    .updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                     )
-                }
+            }
                 .launchIn(this)
         }
     }
@@ -395,7 +403,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun openAddChainAccount() {
         vaultId?.let { vaultId ->
             viewModelScope.launch {
-                navigator.route(Route.AddChainAccount(vaultId))
+                navigator.route(Route.AddChainAccount(
+                    vaultId = vaultId,
+                ))
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
 
 
@@ -422,7 +432,17 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun setCryptoConnectionType(type: CryptoConnectionType){
+        cryptoConnectionTypeRepository.setActiveCryptoConnection(type)
+        uiState.update {
+            it.copy(
+                cryptoConnectionType = type,
+            )
+        }
+    }
+
     companion object {
          internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
     }
 }
+
