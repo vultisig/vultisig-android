@@ -1,18 +1,13 @@
 package com.vultisig.wallet.ui.components.v2.tab
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.vultisig.wallet.ui.components.v2.animation.slideAndFadeSpec
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 
 @Composable
@@ -26,30 +21,7 @@ internal fun TabMenuAndSearchBar(
 ){
     AnimatedContent(
         targetState = isTabMenu,
-        transitionSpec = {
-            if (targetState) {
-                (slideInHorizontally(
-                    animationSpec = tween(),
-                    initialOffsetX = { fullWidth -> -fullWidth })
-                        + fadeIn(animationSpec = tween()))
-                    .togetherWith(
-                        exit = slideOutHorizontally(
-                            animationSpec = tween(),
-                            targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(animationSpec = tween())
-                    )
-            } else {
-                (slideInHorizontally(
-                    animationSpec = tween(),
-                    initialOffsetX = { fullWidth -> fullWidth }
-                ) + fadeIn(animationSpec = tween()))
-                    .togetherWith(
-                        exit = slideOutHorizontally(
-                            animationSpec = tween(),
-                            targetOffsetX = { fullWidth -> -fullWidth }
-                        ) + fadeOut(animationSpec = tween()))
-            }
-
-        },
+        transitionSpec = slideAndFadeSpec(),
     ) {
         if (it)
             tabMenuContent()

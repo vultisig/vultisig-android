@@ -41,6 +41,7 @@ internal fun VaultAccountsScreen(
         onChooseChains = viewModel::openAddChainAccount,
         onMigrateClick = viewModel::migrate,
         onDismissBanner = viewModel::tempRemoveBanner,
+        onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
     )
 
 }

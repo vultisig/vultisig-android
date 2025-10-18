@@ -263,6 +263,12 @@ internal interface RepositoriesModule {
     fun bindTemporaryVaultRepository(
         impl: TemporaryVaultRepositoryImpl
     ): TemporaryVaultRepository
+
+    @Binds
+    @Singleton
+    fun bindCryptoConnectionTypeRepository(
+        impl: CryptoConnectionTypeRepositoryImpl
+    ): CryptoConnectionTypeRepository
 }
 
 @Qualifier

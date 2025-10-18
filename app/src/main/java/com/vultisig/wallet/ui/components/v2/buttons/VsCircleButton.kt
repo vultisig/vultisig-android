@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -63,6 +64,14 @@ internal fun VsCircleButton(
         is VsCircleButtonType.Custom -> type.color
     }
 
+    val brushColors = listOf(
+        Theme.colors.neutrals.n100,
+        Color.Transparent,
+        Color.Transparent,
+        Theme.colors.neutrals.n100,
+    )
+
+
     Box(
         modifier = modifier
             .size(sizeInDp)
@@ -77,7 +86,9 @@ internal fun VsCircleButton(
                         .shinedBottom()
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            brush = Brush.linearGradient(
+                                colors = brushColors
+                            ),
                             shape = CircleShape
                         )
                 } else {
@@ -112,7 +123,7 @@ internal fun VsCircleButton(
     designType: DesignType = DesignType.Solid,
     hasBorder: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
-    ) {
+) {
     val sizeInDp = when (size) {
         is VsCircleButtonSize.Custom -> size.size
         VsCircleButtonSize.Medium -> 64.dp
@@ -162,7 +173,7 @@ internal fun VsCircleButton(
 
 @Composable
 internal fun VsCircleButton(
-    modifier : Modifier = Modifier,
+    modifier: Modifier = Modifier,
     @DrawableRes drawableResId: Int,
     tint: Color = Theme.colors.neutrals.n100,
     onClick: () -> Unit,
@@ -171,7 +182,7 @@ internal fun VsCircleButton(
     designType: DesignType = DesignType.Shined,
     iconSize: Dp = 48.dp,
     hasBorder: Boolean = false,
-){
+) {
     VsCircleButton(
         modifier = modifier,
         onClick = onClick,
