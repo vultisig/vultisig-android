@@ -75,30 +75,6 @@ data class RippleFees(
 ) : Fee
 
 /**
- * UTXO-based blockchain transaction fees (Bitcoin, Litecoin, etc.).
- *
- * @param feeRate Fee rate in satoshis per byte for the transaction.
- * @param utxoPlan List of UTXOs (unspent transaction outputs) to be used as inputs.
- * @param amount Total fee amount in the smallest unit (e.g., satoshis for Bitcoin).
- */
-data class UtxoFees(
-    val feeRate: Long,
-    val utxoPlan: List<UtxoPlan>,
-    override val amount: BigInteger,
-): Fee {
-    /**
-     * Represents a specific UTXO to be used as an input in the transaction.
-     *
-     * @param hash Transaction hash of the UTXO.
-     * @param index Output index within the transaction (vout).
-     */
-    data class UtxoPlan(
-        val hash: String,
-        val index: Long,
-    )
-}
-
-/**
  * Generic fee type when no specific blockchain logic is required.
  */
 data class BasicFee(
