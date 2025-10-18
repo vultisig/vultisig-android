@@ -31,6 +31,11 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
@@ -47,10 +52,19 @@ internal fun VaultDetailScreen(
 ) {
     val state by model.uiModel.collectAsState()
     val snackbarState = rememberVsSnackbarState()
+    val graphicsLayer = rememberGraphicsLayer()
+    val context = LocalContext.current
 
     VaultDetailScreen(
         state = state,
         snackBarState = snackbarState,
+        graphicsLayer = graphicsLayer,
+        onShareClick = {
+            model.takeScreenShot(
+                graphicsLayer = graphicsLayer,
+                context = context,
+            )
+        },
         onBackClick = {
             navHostController.popBackStack()
         },
@@ -62,6 +76,8 @@ private fun VaultDetailScreen(
     state: VaultDetailUiModel,
     snackBarState: VSSnackbarState,
     onBackClick: () -> Unit,
+    graphicsLayer: GraphicsLayer,
+    onShareClick: () -> Unit,
 ) {
     val ecdsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_ecdsa_key_copied)
     val eddsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_eddsa_key_copied)
@@ -69,11 +85,19 @@ private fun VaultDetailScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         V2Scaffold(
             title = stringResource(R.string.vault_settings_details_title),
-            onBackClick = onBackClick
+            onBackClick = onBackClick,
+            rightIcon = R.drawable.ic_share,
+            onRightIconClick = onShareClick,
         ){
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
+                    .drawWithContent {
+                        graphicsLayer.record {
+                            this@drawWithContent.drawContent()
+                        }
+                        drawLayer(graphicsLayer)
+                    }
             ) {
                 VaultDetailGroup(
                     title = "Vault Info"
@@ -206,6 +230,8 @@ private fun VaultDetailScreenPreview() {
             )
         ),
         snackBarState = rememberVsSnackbarState(),
+        graphicsLayer = rememberGraphicsLayer(),
+        onShareClick = {},
         onBackClick = {},
     )
 }
