@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.chainselection.components.toPx
+import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.textAsFlow
 import kotlin.math.roundToInt
