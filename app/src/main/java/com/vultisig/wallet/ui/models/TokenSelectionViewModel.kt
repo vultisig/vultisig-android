@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -12,13 +13,14 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -29,8 +31,8 @@ import javax.inject.Inject
 
 @Immutable
 internal data class TokenSelectionUiModel(
-    val selectedTokens: List<TokenUiModel> = emptyList(),
-    val otherTokens: List<TokenUiModel> = emptyList(),
+    val tokens: List<TokenUiModel> = emptyList(),
+    val tempSelections: List<TokenUiModel> = emptyList(),
 )
 
 @Immutable
@@ -49,11 +51,9 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val getChainTokens: GetChainTokensUseCase
 ) : ViewModel() {
 
-    private val vaultId: String =
-        requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private val vaultId: String = savedStateHandle.toRoute<Route.SelectTokens>().vaultId
 
-    private val chainId: String =
-        requireNotNull(savedStateHandle[ARG_CHAIN_ID])
+    private val chainId: String = savedStateHandle.toRoute<Route.SelectTokens>().chainId
 
     private val enabledTokenIds = MutableStateFlow(emptySet<String>())
 
@@ -78,22 +78,45 @@ internal class TokenSelectionViewModel @Inject constructor(
         }
     }
 
-    fun enableToken(coin: Coin) = viewModelScope.launch {
-        enableTokenUseCase(vaultId, coin)?.let { updatedCoinId ->
-            enabledTokenIds.update { it + updatedCoinId }
-        }
-    }
-
-    fun disableToken(coin: Coin) {
-        viewModelScope.launch {
-            vaultRepository.disableTokenFromVault(vaultId, coin)
-            enabledTokenIds.update { it - coin.id }
-        }
-    }
-
     fun navigateToCustomTokenScreen() {
         viewModelScope.launch {
             navigator.navigate(Destination.CustomToken(chainId))
+        }
+    }
+
+    fun enableTokenTemp(coin: Coin) {
+        val tokens = uiState.value.tempSelections + TokenUiModel(
+            isEnabled = true,
+            coin = coin
+        )
+        uiState.update {
+            it.copy(tempSelections = tokens)
+        }
+    }
+
+    fun disableTokenTemp(coin: Coin) {
+        val tokens = uiState.value.tempSelections + TokenUiModel(
+            isEnabled = false,
+            coin = coin
+        )
+        uiState.update {
+            it.copy(tempSelections = tokens)
+        }
+    }
+
+    fun onCommitChanges() {
+        val toEnableAccounts = uiState.value.tokens.filter { it.isEnabled }
+        val toDisableAccounts = uiState.value.tokens - toEnableAccounts
+
+        viewModelScope.launch {
+            toEnableAccounts.forEach {
+                enableTokenUseCase(vaultId, it.coin)
+            }
+            toDisableAccounts.forEach {
+                vaultRepository.disableTokenFromVault(vaultId, it.coin)
+            }
+            requestResultRepository.respond(REFRESH_TOKEN_DATA, Unit)
+            navigator.back()
         }
     }
 
@@ -132,12 +155,13 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     private fun collectTokens() {
         combine(
+            uiState.map { it.tempSelections }.distinctUntilChanged(),
             enabledTokenIds,
             enabledTokens,
             disabledTokens,
             searchTextFieldState.textAsFlow()
                 .map { it.toString() },
-        ) { enabledTokenIds, enabledTokens, disabledTokens, query ->
+        ) { tempSelections, enabledTokenIds, enabledTokens, disabledTokens, query ->
             val selectedUiTokens = enabledTokens
                 .filter { it.ticker.contains(query, ignoreCase = true) }
                 .asUiTokens(enabledTokenIds)
@@ -148,10 +172,14 @@ internal class TokenSelectionViewModel @Inject constructor(
                 disabledTokens
             }.asUiTokens(enabledTokenIds)
 
-            uiState.update {
-                it.copy(
-                    selectedTokens = selectedUiTokens,
-                    otherTokens = otherUiTokens,
+            val tokens = (selectedUiTokens + otherUiTokens + tempSelections)
+                .associateBy(TokenUiModel::coin)
+                .values
+                .toList()
+
+            uiState.update { uiState ->
+                uiState.copy(
+                    tokens = tokens
                 )
             }
         }.launchIn(viewModelScope)
@@ -171,13 +199,20 @@ internal class TokenSelectionViewModel @Inject constructor(
             coin.apply {
                 if (enabledTokenIds.value.contains(id))
                     return@apply
-                enableToken(this).join()
+                enableTokenUseCase(vaultId, this)
                 loadTokens()
             }
         }
     }
 
+    fun back(){
+        viewModelScope.launch {
+            navigator.back()
+        }
+    }
+
     companion object {
         const val REQUEST_SEARCHED_TOKEN_ID = "request_searched_token_id"
+        const val REFRESH_TOKEN_DATA = "refresh_token_data"
     }
 }
