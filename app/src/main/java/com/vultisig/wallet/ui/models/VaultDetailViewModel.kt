@@ -12,9 +12,11 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareVaultDetailName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -73,21 +75,15 @@ internal class VaultDetailViewModel @Inject constructor(
         graphicsLayer: GraphicsLayer,
         context: Context,
     ) {
-        viewModelScope.launch {
-            try {
-                val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+        viewModelScope.launch(Dispatchers.Main) {
+            val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+            withContext(Dispatchers.IO) {
                 context.share(
                     bitmap = bitmap,
                     fileName = shareVaultDetailName(
                         vaultName = uiModel.value.name,
                         vaultPart = uiModel.value.vaultPart,
                     )
-                )
-                bitmap.recycle()
-            } catch (e: Exception) {
-                Timber.e(
-                    e,
-                    "Failed to capture screenshot"
                 )
             }
         }
