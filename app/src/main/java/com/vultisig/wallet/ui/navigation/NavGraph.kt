@@ -17,9 +17,35 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
-import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
-import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
-import com.vultisig.wallet.ui.navigation.Route.*
+import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Route.AddressBook
+import com.vultisig.wallet.ui.navigation.Route.AddressEntry
+import com.vultisig.wallet.ui.navigation.Route.BackupPassword
+import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
+import com.vultisig.wallet.ui.navigation.Route.BackupVault
+import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
+import com.vultisig.wallet.ui.navigation.Route.FastVaultPasswordReminder
+import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
+import com.vultisig.wallet.ui.navigation.Route.ImportVault
+import com.vultisig.wallet.ui.navigation.Route.Keygen
+import com.vultisig.wallet.ui.navigation.Route.Keysign
+import com.vultisig.wallet.ui.navigation.Route.Migration
+import com.vultisig.wallet.ui.navigation.Route.Onboarding
+import com.vultisig.wallet.ui.navigation.Route.ScanError
+import com.vultisig.wallet.ui.navigation.Route.ScanQr
+import com.vultisig.wallet.ui.navigation.Route.Secret
+import com.vultisig.wallet.ui.navigation.Route.SelectAsset
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
+import com.vultisig.wallet.ui.navigation.Route.Send
+import com.vultisig.wallet.ui.navigation.Route.Swap
+import com.vultisig.wallet.ui.navigation.Route.TokenDetail
+import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
+import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VaultList
+import com.vultisig.wallet.ui.navigation.Route.VerifyDeposit
+import com.vultisig.wallet.ui.navigation.Route.VerifySend
+import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
@@ -27,7 +53,6 @@ import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
-import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -38,7 +63,6 @@ import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
-import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
@@ -89,6 +113,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
+import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
@@ -180,29 +205,8 @@ internal fun SetupNavGraph(
         dialog<TokenDetail> {
             TokenDetailScreen()
         }
-        composable(
-            route = Destination.SelectTokens.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
-            )
-        ) {
-            TokenSelectionScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            route = Destination.SelectToken.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_TARGET_ARG) { type = NavType.StringType },
-                navArgument(ARG_SWAP_SELECT) { type = NavType.BoolType }
-            )
-        ) {
-            SelectTokenScreen(
-                navController = navController
-            )
+        dialog<Route.SelectTokens> {
+            TokenSelectionScreen()
         }
 
         composable(
