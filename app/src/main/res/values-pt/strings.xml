@@ -631,4 +631,6 @@
     <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
     <string name="invite_to_x_banner_button">Siga %s</string>
+    <string name="retry">Repetir</string>
+    <string name="custom_token_screen_title">Encontrar token personalizado</string>
 </resources>

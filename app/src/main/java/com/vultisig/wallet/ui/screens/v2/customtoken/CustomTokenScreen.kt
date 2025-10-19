@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -81,7 +82,7 @@ private fun CustomTokenScreen(
                 size = 24.dp
             )
             Text(
-                text = "Find custom token",
+                text = stringResource(R.string.custom_token_screen_title),
                 color = Theme.colors.text.primary,
                 style = Theme.brockmann.headings.title2,
             )

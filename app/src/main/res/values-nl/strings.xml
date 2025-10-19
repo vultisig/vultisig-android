@@ -641,4 +641,6 @@
     <string name="invite_to_x_banner_title">Vultisig bouwt met je mee.</string>
     <string name="invite_to_x_banner_desc">Volg ons op X</string>
     <string name="invite_to_x_banner_button">Volg %s</string>
+    <string name="retry">Opnieuw proberen</string>
+    <string name="custom_token_screen_title">Aangepaste token zoeken</string>
 </resources>

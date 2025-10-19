@@ -89,7 +89,7 @@ internal fun CustomTokenSearchBar(
                         ) {
                             if (state.text.isEmpty()) {
                                 Text(
-                                    text = context.getString(R.string.enter_contract_address),
+                                    text = context.getString(R.string.custom_token_enter_contract_address),
                                     style = Theme.brockmann.supplementary.footnote,
                                     color = Theme.colors.text.extraLight
                                 )

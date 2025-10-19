@@ -633,4 +633,6 @@
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
     <string name="invite_to_x_banner_button">Pratite %s</string>
+    <string name="retry">Pokušajte ponovno</string>
+    <string name="custom_token_screen_title">Pronađite prilagođeni token</string>
 </resources>

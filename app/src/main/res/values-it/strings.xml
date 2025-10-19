@@ -632,4 +632,6 @@
     <string name="invite_to_x_banner_title">Vultisig sta costruendo con te.</string>
     <string name="invite_to_x_banner_desc">Seguici su X</string>
     <string name="invite_to_x_banner_button">Segui %s</string>
+    <string name="retry">Riprova</string>
+    <string name="custom_token_screen_title">Trova token personalizzato</string>
 </resources>

@@ -57,7 +57,7 @@ internal fun TokenNotFoundError(
         )
 
         VsButton(
-            label = "Retry",
+            label = stringResource(R.string.retry),
             modifier = Modifier.Companion.fillMaxWidth(),
             onClick = onRetryClick
         )
