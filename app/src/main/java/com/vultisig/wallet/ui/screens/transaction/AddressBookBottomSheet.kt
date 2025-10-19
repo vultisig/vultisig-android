@@ -30,11 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ColorGenerator
@@ -67,7 +69,7 @@ private fun AddressBookContent(
         topBar = {
             Column {
                 Text(
-                    text = "Address Book",
+                    text = stringResource(R.string.address_book_title),
                     style = Theme.brockmann.headings.title3,
                     color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
@@ -91,7 +93,7 @@ private fun AddressBookContent(
                         .fillMaxWidth(),
                 ) {
                     PickerItem(
-                        title = "Saved Addresses",
+                        title = stringResource(R.string.address_book_saved_addresses),
                         isSelected = isShowingAddresses,
                         onClick = {
                             isShowingAddresses = true
@@ -99,7 +101,7 @@ private fun AddressBookContent(
                     )
 
                     PickerItem(
-                        title = "My Vaults",
+                        title = stringResource(R.string.address_book_my_vaults),
                         isSelected = !isShowingAddresses,
                         onClick = {
                             isShowingAddresses = false

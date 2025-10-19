@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,7 +66,7 @@ internal fun SwapTransactionOverviewScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     VsOverviewToken(
-                        header = "From",
+                        header = stringResource(R.string.swap_transaction_overview_from),
                         valuedToken = transactionTypeUiModel.src,
                         shape = RoundedWithCutoutShape(
                             cutoutPosition = CutoutPosition.End,
@@ -77,7 +78,7 @@ internal fun SwapTransactionOverviewScreen(
                     )
 
                     VsOverviewToken(
-                        header = "To",
+                        header = stringResource(R.string.swap_transaction_overview_to),
                         valuedToken = transactionTypeUiModel.dst,
                         shape = RoundedWithCutoutShape(
                             cutoutPosition = CutoutPosition.Start,
@@ -112,7 +113,7 @@ internal fun SwapTransactionOverviewScreen(
                 // TODO make check more sane
                 if (approveTransactionHash.isNotEmpty()) {
                     TxDetails(
-                        title = "Approval Tx Hash",
+                        title = stringResource(R.string.swap_transaction_overview_approval_tx_hash),
                         hash = approveTransactionHash,
                         link = approveTransactionLink,
                         modifier = Modifier.padding(
@@ -136,7 +137,7 @@ internal fun SwapTransactionOverviewScreen(
                 }
 
                 TextDetails(
-                    title = "From",
+                    title = stringResource(R.string.swap_transaction_overview_from),
                     subtitle = transactionTypeUiModel.src.token.address,
                 )
 
@@ -145,7 +146,7 @@ internal fun SwapTransactionOverviewScreen(
                 )
 
                 TextDetails(
-                    title = "To",
+                    title = stringResource(R.string.swap_transaction_overview_to),
                     subtitle = transactionTypeUiModel.dst.token.address,
                 )
 
@@ -154,7 +155,7 @@ internal fun SwapTransactionOverviewScreen(
                 )
 
                 TextDetails(
-                    title = "Total Fees",
+                    title = stringResource(R.string.swap_transaction_overview_total_fees),
                     subtitle = transactionTypeUiModel.totalFee,
                 )
             }
@@ -172,7 +173,7 @@ internal fun SwapTransactionOverviewScreen(
                 if (!progressLink.isNullOrBlank()) {
                     val uriHandler = VsUriHandler()
                     VsButton(
-                        label = "Track",
+                        label = stringResource(R.string.swap_transaction_overview_track),
                         variant = VsButtonVariant.Secondary,
                         size = VsButtonSize.Small,
                         modifier = Modifier
@@ -184,7 +185,7 @@ internal fun SwapTransactionOverviewScreen(
                 }
 
                 VsButton(
-                    label = "Done",
+                    label = stringResource(R.string.swap_transaction_overview_done),
                     variant = VsButtonVariant.Primary,
                     size = VsButtonSize.Small,
                     modifier = Modifier

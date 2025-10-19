@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -94,7 +95,7 @@ internal fun WarningView(
 
         VsButton(
             variant = VsButtonVariant.Secondary,
-            label = "Try Again",
+            label = stringResource(R.string.warning_view_try_again),
             modifier = Modifier.fillMaxWidth(),
             onClick = onTryAgainClick
         )

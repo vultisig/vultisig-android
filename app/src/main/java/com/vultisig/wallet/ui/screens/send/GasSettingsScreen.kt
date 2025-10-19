@@ -114,7 +114,7 @@ private fun GasSettingsScreen(
             )
 
             Text(
-                text = "Advanced gas fee",
+                text = stringResource(R.string.gas_settings_advanced_gas_fee),
                 style = Theme.brockmann.headings.title3,
                 color = Theme.colors.text.primary
             )
@@ -149,7 +149,7 @@ private fun GasSettingsScreen(
         UiSpacer(14.dp)
 
         VsButton(
-            label = "Save",
+            label = stringResource(R.string.gas_settings_save),
             onClick = onSaveClick,
             modifier = Modifier
                 .fillMaxWidth(),
@@ -179,7 +179,7 @@ private fun EthGasSettings(
     priorityFeeState: TextFieldState,
 ) {
     Text(
-        text = "Max base fee (GWEI)",
+        text = stringResource(R.string.gas_settings_max_base_fee_gwei),
         style = Theme.brockmann.body.s.medium,
         color = Theme.colors.text.primary,
     )
@@ -194,7 +194,7 @@ private fun EthGasSettings(
     UiSpacer(14.dp)
 
     Text(
-        text = "Priority fee (GWEI)",
+        text = stringResource(R.string.gas_settings_priority_fee_gwei),
         style = Theme.brockmann.body.s.medium,
         color = Theme.colors.text.primary,
     )

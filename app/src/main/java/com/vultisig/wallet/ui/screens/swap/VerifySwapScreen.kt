@@ -184,7 +184,7 @@ private fun VerifySwapScreen(
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
-                    title = "Swap overview",
+                    title = stringResource(R.string.verify_swap_swap_overview),
                     onBackClick = onBackClick,
                 )
             }
@@ -261,7 +261,7 @@ private fun VerifySwapScreen(
                         }
 
                         Text(
-                            "To",
+                            stringResource(R.string.verify_swap_to),
                             style = Theme.brockmann.supplementary.captionSmall,
                             color = Theme.colors.text.extraLight,
                         )
@@ -360,7 +360,7 @@ private fun VerifySwapScreen(
 
                 if (hasFastSign) {
                     Text(
-                        text = "Hold for paired sign",
+                        text = stringResource(R.string.verify_swap_hold_for_paired_sign),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,

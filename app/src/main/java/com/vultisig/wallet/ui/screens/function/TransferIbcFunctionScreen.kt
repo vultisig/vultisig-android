@@ -41,7 +41,7 @@ internal fun TransferIbcFunctionScreen(
     memoError: UiText?,
 ) {
     FormEntry(
-        title = "Destination Chain",
+        title = stringResource(R.string.transfer_ibc_destination_chain),
     ) {
         FormSelection(
             selected = selectedChain,
@@ -52,7 +52,7 @@ internal fun TransferIbcFunctionScreen(
     }
 
     FormEntry(
-        title = "Asset"
+        title = stringResource(R.string.transfer_ibc_asset)
     ) {
         FormSelection(
             selected = selectedToken,

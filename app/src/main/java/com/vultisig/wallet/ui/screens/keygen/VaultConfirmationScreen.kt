@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -68,13 +69,13 @@ private fun VaultConfirmationScreen(
 
         val wellDoneText = when (action) {
             TssAction.Migrate -> buildAnnotatedString {
-                appendLine("Vault upgraded ")
+                appendLine(stringResource(R.string.vault_confirmation_vault_upgraded))
                 withStyle(
                     SpanStyle(
                         brush = Theme.colors.gradients.primary,
                     )
                 ) {
-                    append("successfully")
+                    append(stringResource(R.string.vault_confirmation_successfully))
                 }
             }
 
@@ -84,9 +85,9 @@ private fun VaultConfirmationScreen(
                         brush = Theme.colors.gradients.primary,
                     )
                 ) {
-                    appendLine("Well done.")
+                    appendLine(stringResource(R.string.vault_confirmation_well_done))
                 }
-                append("You’re ready to use a new wallet standard.")
+                append(stringResource(R.string.vault_confirmation_you_re_ready_to_use_a_new_wallet_standard))
             }
         }
 

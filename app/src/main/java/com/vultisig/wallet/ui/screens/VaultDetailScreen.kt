@@ -100,7 +100,7 @@ private fun VaultDetailScreen(
                     }
             ) {
                 VaultDetailGroup(
-                    title = "Vault Info"
+                    title = stringResource(R.string.vault_detail_vault_info)
                 ) {
                     InfoItem(
                         key = stringResource(R.string.vault_detail_screen_vault_name),
@@ -122,7 +122,7 @@ private fun VaultDetailScreen(
 
                 UiSpacer(24.dp)
 
-                VaultDetailGroup(title = "keys") {
+                VaultDetailGroup(title = stringResource(R.string.vault_details_keys)) {
                     KeyItem(
                         type = "ECDSA",
                         value = state.pubKeyECDSA,
@@ -392,7 +392,7 @@ private fun DeviceItem(
         content = if (isThisDevice) {
             {
                 Text(
-                    text = "This device",
+                    text = stringResource(R.string.vault_detail_this_device_2),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.light
                 )

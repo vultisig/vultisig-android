@@ -119,7 +119,7 @@ private fun getPages(
                     coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
             ),
-            buttonText = "Next"
+            buttonText = stringResource(R.string.migration_onboarding_next)
         )
     } else null,
     MigrationOnboardingPage(
@@ -134,7 +134,7 @@ private fun getPages(
                 coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
         ),
-        buttonText = "Next"
+        buttonText = stringResource(R.string.migration_onboarding_next)
     ),
 )
 

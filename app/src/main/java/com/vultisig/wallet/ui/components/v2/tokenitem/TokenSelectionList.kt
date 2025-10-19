@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -83,7 +84,7 @@ internal fun <T> TokenSelectionList(
                     onPlusClick?.let {
                         item {
                             GridPlus(
-                                title = "Custom",
+                                title = stringResource(R.string.token_selection_list_custom),
                                 onClick = it
                             )
                         }

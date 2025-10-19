@@ -74,7 +74,7 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
                 }
                 is PasswordCheckResult.Invalid -> {
                     state.update {
-                        it.copy(error = UiText.DynamicString("Invalid password"))
+                        it.copy(error = UiText.StringResource(R.string.fast_vault_invalid_password))
                     }
                 }
                 is PasswordCheckResult.NetworkError -> {

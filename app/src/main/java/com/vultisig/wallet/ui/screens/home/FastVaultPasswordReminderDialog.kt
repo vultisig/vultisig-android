@@ -83,7 +83,7 @@ private fun FastVaultPasswordReminderDialog(
 
         VsTextInputField(
             textFieldState = passwordFieldState,
-            hint = "Password",
+            hint = stringResource(R.string.fast_vault_password_hint),
             type = VsTextInputFieldType.Password(
                 isVisible = state.isPasswordVisible,
                 onVisibilityClick = onPasswordVisibilityClick,
@@ -99,7 +99,7 @@ private fun FastVaultPasswordReminderDialog(
         )
 
         VsButton(
-            label = "Verify",
+            label = stringResource(R.string.fast_vault_verify_hint),
             onClick = onVerifyClick,
             modifier = Modifier
                 .fillMaxWidth(),

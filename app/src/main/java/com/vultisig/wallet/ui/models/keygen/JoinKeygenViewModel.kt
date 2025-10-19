@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -53,10 +54,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class JoinKeygenError(val message: UiText) {
-    data object DuplicateVaultName : JoinKeygenError("Vault with duplicate name exists".asUiText())
-    data object InvalidQr : JoinKeygenError("Invalid QR code".asUiText())
-    data object UnknownTss : JoinKeygenError("Unknown TssAction".asUiText())
-    data object WrongResharePrefix : JoinKeygenError("Wrong reshare prefix".asUiText())
+    data object DuplicateVaultName : JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+    data object InvalidQr : JoinKeygenError(R.string.join_key_gen_invalid_qr_code.asUiText())
+    data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
+    data object WrongResharePrefix : JoinKeygenError(R.string.join_key_gen_wrong_reshare_prefix.asUiText())
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
 

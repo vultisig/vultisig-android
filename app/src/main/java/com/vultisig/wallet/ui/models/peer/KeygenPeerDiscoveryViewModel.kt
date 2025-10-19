@@ -162,8 +162,8 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         state.update {
             it.copy(
                 warning = ErrorUiModel(
-                    title = "No Connection available".asUiText(),
-                    description = "Please enable WiFi or mobile to sign transaction".asUiText()
+                    title = R.string.key_gen_discovery_no_connection_available.asUiText(),
+                    description = R.string.key_gen_discovery_enable_wifi.asUiText()
                 )
             )
         }

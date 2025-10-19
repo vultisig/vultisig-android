@@ -60,7 +60,7 @@ internal fun SendTxOverviewScreen(
         onBack = onBack,
         bottomBarContent = {
             VsButton(
-                label = "Done",
+                label = stringResource(R.string.sent_tx_overview_done),
                 variant = VsButtonVariant.Primary,
                 size = VsButtonSize.Small,
                 modifier = Modifier

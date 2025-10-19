@@ -87,7 +87,7 @@ internal fun KeygenScreen(
 
             TssAction.Migrate -> {
                 VsSigningProgressIndicator(
-                    text = "Upgrading vault",
+                    text = stringResource(R.string.keygen_screen_upgrading_vault),
                 )
             }
         }

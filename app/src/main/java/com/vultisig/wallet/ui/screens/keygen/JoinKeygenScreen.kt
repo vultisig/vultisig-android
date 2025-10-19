@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +40,7 @@ internal fun JoinKeygenScreen(
     } else {
         ErrorView(
             errorLabel = error.message.asString(),
-            buttonText = "Back",
+            buttonText = stringResource(R.string.join_key_gen_back),
             onButtonClick = model::navigateBack
         )
     }
@@ -62,7 +63,7 @@ private fun JoinKeygenScreen(
             )
     ) {
         Text(
-            text = "Waiting for other devices to join",
+            text = stringResource(R.string.join_key_gen_waiting_for_other_devices_to_join),
             style = Theme.brockmann.headings.title1,
             color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
@@ -71,7 +72,7 @@ private fun JoinKeygenScreen(
         UiSpacer(12.dp)
 
         Text(
-            text = "Your vault will start generating from the moment you finalize setting up your vault on your main device",
+            text = stringResource(R.string.join_key_gen_your_vault_will_start_generating),
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
