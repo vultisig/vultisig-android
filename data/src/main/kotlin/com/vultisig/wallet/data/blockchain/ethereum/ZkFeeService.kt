@@ -20,11 +20,7 @@ class ZkFeeService @Inject constructor(
         val coin = transaction.coin
         val toAddress = transaction.to
         val evmApi = evmApiFactory.createEvmApi(chain)
-        val memoDataHex = "0xffffffff".toByteArray().joinToString(separator = "") {
-            byte -> String.format("%02x", byte)
-        }
-
-        val data = "0x$memoDataHex"
+        val data = "0xffffffff"
 
         val feeEstimate = evmApi.zkEstimateFee(
             srcAddress = coin.address,
