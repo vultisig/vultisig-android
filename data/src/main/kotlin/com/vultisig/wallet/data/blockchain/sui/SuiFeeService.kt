@@ -116,7 +116,7 @@ class SuiFeeService @Inject constructor(
 
         return GasFees(
             price = gasPrice,
-            limit = SUI_DEFAULT_GAS_BUDGET,
+            limit = estimatedFees,
             amount = estimatedFees,
         )
         return BasicFee(amount = estimatedFees)
