@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.customtoken.components
 
+import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -28,6 +30,7 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
 internal fun CustomTokenSearchBar(
@@ -37,6 +40,8 @@ internal fun CustomTokenSearchBar(
     onCloseClick: () -> Unit,
     initialDisplay: Boolean,
 ) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier.Companion
             .height(intrinsicSize = IntrinsicSize.Max)
@@ -84,7 +89,7 @@ internal fun CustomTokenSearchBar(
                         ) {
                             if (state.text.isEmpty()) {
                                 Text(
-                                    text = "Enter contract address",
+                                    text = context.getString(R.string.enter_contract_address),
                                     style = Theme.brockmann.supplementary.footnote,
                                     color = Theme.colors.text.extraLight
                                 )

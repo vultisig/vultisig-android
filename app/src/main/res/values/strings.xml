@@ -887,5 +887,6 @@
     <string name="invite_to_x_banner_button">Follow %s</string>
     <string name="custom_token_not_found_desc" translatable="false">Possible reasons: wrong contract, unsupported chain, or token removed from registries.</string>
     <string name="custom_token_screen_finding_token" translatable="false">Finding token</string>
+    <string name="enter_contract_address">Enter contract address</string>
 
 </resources>
