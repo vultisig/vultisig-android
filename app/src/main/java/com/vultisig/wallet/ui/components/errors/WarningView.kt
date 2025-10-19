@@ -95,7 +95,7 @@ internal fun WarningView(
 
         VsButton(
             variant = VsButtonVariant.Secondary,
-            label = stringResource(R.string.warning_view_try_again),
+            label = stringResource(R.string.try_again),
             modifier = Modifier.fillMaxWidth(),
             onClick = onTryAgainClick
         )

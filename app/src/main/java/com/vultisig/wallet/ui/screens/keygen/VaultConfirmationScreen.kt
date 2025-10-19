@@ -75,7 +75,7 @@ private fun VaultConfirmationScreen(
                         brush = Theme.colors.gradients.primary,
                     )
                 ) {
-                    append(stringResource(R.string.vault_confirmation_successfully))
+                    append(stringResource(R.string.vault_created_success_part_2))
                 }
             }
 

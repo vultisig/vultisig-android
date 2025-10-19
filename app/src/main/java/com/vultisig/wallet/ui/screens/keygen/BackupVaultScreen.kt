@@ -92,7 +92,7 @@ private fun BackupVaultScreen(
                             )
                         )
                     ) {
-                        append(stringResource(R.string.backup_vault_learn_more))
+                        append(stringResource(R.string.feature_item_learn_more))
                     }
                 }
 

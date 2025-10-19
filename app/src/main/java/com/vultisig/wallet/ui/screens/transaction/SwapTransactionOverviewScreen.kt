@@ -66,7 +66,7 @@ internal fun SwapTransactionOverviewScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     VsOverviewToken(
-                        header = stringResource(R.string.swap_transaction_overview_from),
+                        header = stringResource(R.string.swap_form_from_title),
                         valuedToken = transactionTypeUiModel.src,
                         shape = RoundedWithCutoutShape(
                             cutoutPosition = CutoutPosition.End,
@@ -78,7 +78,7 @@ internal fun SwapTransactionOverviewScreen(
                     )
 
                     VsOverviewToken(
-                        header = stringResource(R.string.swap_transaction_overview_to),
+                        header = stringResource(R.string.swap_form_dst_token_title),
                         valuedToken = transactionTypeUiModel.dst,
                         shape = RoundedWithCutoutShape(
                             cutoutPosition = CutoutPosition.Start,
@@ -137,7 +137,7 @@ internal fun SwapTransactionOverviewScreen(
                 }
 
                 TextDetails(
-                    title = stringResource(R.string.swap_transaction_overview_from),
+                    title = stringResource(R.string.swap_form_from_title),
                     subtitle = transactionTypeUiModel.src.token.address,
                 )
 
@@ -146,7 +146,7 @@ internal fun SwapTransactionOverviewScreen(
                 )
 
                 TextDetails(
-                    title = stringResource(R.string.swap_transaction_overview_to),
+                    title = stringResource(R.string.swap_form_dst_token_title),
                     subtitle = transactionTypeUiModel.dst.token.address,
                 )
 
@@ -155,7 +155,7 @@ internal fun SwapTransactionOverviewScreen(
                 )
 
                 TextDetails(
-                    title = stringResource(R.string.swap_transaction_overview_total_fees),
+                    title = stringResource(R.string.swap_form_total_fees_title),
                     subtitle = transactionTypeUiModel.totalFee,
                 )
             }
@@ -185,7 +185,7 @@ internal fun SwapTransactionOverviewScreen(
                 }
 
                 VsButton(
-                    label = stringResource(R.string.swap_transaction_overview_done),
+                    label = stringResource(R.string.transaction_done_title),
                     variant = VsButtonVariant.Primary,
                     size = VsButtonSize.Small,
                     modifier = Modifier

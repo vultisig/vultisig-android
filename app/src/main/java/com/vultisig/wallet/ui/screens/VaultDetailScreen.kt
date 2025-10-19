@@ -392,7 +392,7 @@ private fun DeviceItem(
         content = if (isThisDevice) {
             {
                 Text(
-                    text = stringResource(R.string.vault_detail_this_device_2),
+                    text = stringResource(R.string.peer_discovery_this_device),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.light
                 )

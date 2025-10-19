@@ -185,9 +185,9 @@ internal class ReferralViewModel @Inject constructor(
                 withContext(Dispatchers.IO) {
                     referralCodeRepository.saveExternalReferral(vaultId, referralCode)
                 }
-               R.string.referral_code_successfully_linked.asUiText() to VsTextInputFieldInnerState.Success
+               R.string.referral_external_linked.asUiText() to VsTextInputFieldInnerState.Success
             } else {
-                R.string.referral_code_does_not_exist.asUiText() to VsTextInputFieldInnerState.Error
+                R.string.referral_external_not_linked.asUiText() to VsTextInputFieldInnerState.Error
             }
             val isSavedEnabled = innerState != VsTextInputFieldInnerState.Success
 
@@ -202,7 +202,7 @@ internal class ReferralViewModel @Inject constructor(
         }.onFailure {
             state.update {
                 it.copy(
-                    referralMessage = UiText.StringResource(R.string.failed_to_check_referral_code),
+                    referralMessage = UiText.StringResource(R.string.referral_external_not_failed),
                     referralMessageState = VsTextInputFieldInnerState.Error,
                     isLoading = false,
                 )

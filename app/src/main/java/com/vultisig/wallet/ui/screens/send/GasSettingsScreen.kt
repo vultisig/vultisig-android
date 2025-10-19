@@ -149,7 +149,7 @@ private fun GasSettingsScreen(
         UiSpacer(14.dp)
 
         VsButton(
-            label = stringResource(R.string.gas_settings_save),
+            label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
             modifier = Modifier
                 .fillMaxWidth(),

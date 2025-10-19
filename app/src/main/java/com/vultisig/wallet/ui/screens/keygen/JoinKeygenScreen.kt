@@ -40,7 +40,7 @@ internal fun JoinKeygenScreen(
     } else {
         ErrorView(
             errorLabel = error.message.asString(),
-            buttonText = stringResource(R.string.join_key_gen_back),
+            buttonText = stringResource(R.string.scan_qr_code_error_button),
             onButtonClick = model::navigateBack
         )
     }

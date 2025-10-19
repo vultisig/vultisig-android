@@ -154,7 +154,7 @@ internal fun VerifySendScreen(
                         )
                 ) {
                     Text(
-                        text = stringResource(R.string.verify_send_you_re_sending),
+                        text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.colors.text.light,
                     )
@@ -218,7 +218,7 @@ internal fun VerifySendScreen(
                             )
                     ) {
                         Text(
-                            text = stringResource(R.string.verify_send_network),
+                            text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
                             color = Theme.colors.text.extraLight,
                             maxLines = 1,
@@ -304,13 +304,13 @@ internal fun VerifySendScreen(
                 }
                 if (state.hasFastSign) {
                     Text(
-                        text = stringResource(R.string.verify_send_hold_for_paired_sign),
+                        text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
-                        label = stringResource(R.string.verify_send_sign_transaction),
+                        label = stringResource(R.string.verify_swap_sign_button),
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),

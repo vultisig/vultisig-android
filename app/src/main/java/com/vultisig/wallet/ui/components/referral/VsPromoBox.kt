@@ -128,23 +128,23 @@ private fun ReferralBoxes() {
 
         VsPromoTag(
             icon = R.drawable.ic_cup,
-            text = stringResource(R.string.promo_box_referral_program)
+            text = stringResource(R.string.referral_create_info_title)
         )
 
         UiSpacer(32.dp)
 
         VsPromoBox(
             icon = R.drawable.ic_cup,
-            title = stringResource(R.string.promo_box_create_your_referral_code),
-            description = stringResource(R.string.promo_box_pick_a_short_code_and_set_your_reward_payout)
+            title = stringResource(R.string.referral_create_code_title),
+            description = stringResource(R.string.referral_create_code_description)
         )
 
         UiSpacer(32.dp)
 
         VsPromoBox(
             icon = R.drawable.ic_cup,
-            title = stringResource(R.string.promo_box_share_with_friends),
-            description = stringResource(R.string.promo_box_invite_friends_to_use_your_code_while_swapping)
+            title = stringResource(R.string.referral_share_title),
+            description = stringResource(R.string.referral_share_description)
         )
     }
 }

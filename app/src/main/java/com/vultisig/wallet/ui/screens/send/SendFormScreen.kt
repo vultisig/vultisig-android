@@ -241,7 +241,7 @@ private fun SendFormScreen(
                                 )
                         ) {
                             ChainSelector(
-                                title = stringResource(R.string.send_form_from),
+                                title = stringResource(R.string.send_from_address),
                                 // TODO selectedChain should not be nullable
                                 //  or default value should be something else
                                 chain = state.selectedCoin?.model?.address?.chain
@@ -297,7 +297,7 @@ private fun SendFormScreen(
                     FoldableSection(
                         expanded = state.expandedSection == SendSections.Address,
                         complete = state.isDstAddressComplete,
-                        title = stringResource(R.string.send_form_address),
+                        title = stringResource(R.string.add_address_address_title),
                         onToggle = {
                             onExpandSection(SendSections.Address)
                         },
@@ -456,7 +456,7 @@ private fun SendFormScreen(
                                 }
                             }
                         },
-                        title = stringResource(R.string.send_form_amount)
+                        title = stringResource(R.string.send_amount)
                     ) {
                         Column(
                             modifier = Modifier
@@ -594,7 +594,7 @@ private fun SendFormScreen(
                                 )
 
                                 PercentageChip(
-                                    title = stringResource(R.string.send_form_max),
+                                    title = stringResource(R.string.send_screen_max),
                                     isSelected = false,
                                     onClick = onChooseMaxTokenAmount,
                                     modifier = Modifier

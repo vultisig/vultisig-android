@@ -261,7 +261,7 @@ private fun VerifySwapScreen(
                         }
 
                         Text(
-                            stringResource(R.string.verify_swap_to),
+                            stringResource(R.string.swap_form_dst_token_title),
                             style = Theme.brockmann.supplementary.captionSmall,
                             color = Theme.colors.text.extraLight,
                         )
@@ -360,7 +360,7 @@ private fun VerifySwapScreen(
 
                 if (hasFastSign) {
                     Text(
-                        text = stringResource(R.string.verify_swap_hold_for_paired_sign),
+                        text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,

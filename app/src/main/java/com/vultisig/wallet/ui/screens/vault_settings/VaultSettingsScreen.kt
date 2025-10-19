@@ -144,7 +144,7 @@ private fun BiometricFastSignBottomSheet(
             passwordTextFieldState = biometricTextFieldState,
             onToggleVisibilityClick = onToggleVisibilityClick,
             onSaveClick = onSaveBiometricsClick,
-            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString() ?: stringResource(R.string.vault_settings_biometeric_password_hint),
+            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString() ?: stringResource(R.string.import_file_screen_hint_password),
             errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
             isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
             isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
@@ -220,7 +220,7 @@ private fun BiometricFastSignBottomSheetContent(
                 VsButtonState.Enabled
             else
                 VsButtonState.Disabled,
-            label = stringResource(R.string.vault_password_biometeric_save),
+            label = stringResource(R.string.add_vault_save),
             onClick = onSaveClick,
             modifier = Modifier
                 .fillMaxWidth()

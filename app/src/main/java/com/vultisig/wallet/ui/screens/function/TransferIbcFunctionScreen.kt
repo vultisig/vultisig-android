@@ -52,7 +52,7 @@ internal fun TransferIbcFunctionScreen(
     }
 
     FormEntry(
-        title = stringResource(R.string.transfer_ibc_asset)
+        title = stringResource(R.string.form_token_selection_asset)
     ) {
         FormSelection(
             selected = selectedToken,

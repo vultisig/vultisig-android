@@ -69,7 +69,7 @@ private fun AddressBookContent(
         topBar = {
             Column {
                 Text(
-                    text = stringResource(R.string.address_book_title),
+                    text = stringResource(R.string.address_book_toolbar_title),
                     style = Theme.brockmann.headings.title3,
                     color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,

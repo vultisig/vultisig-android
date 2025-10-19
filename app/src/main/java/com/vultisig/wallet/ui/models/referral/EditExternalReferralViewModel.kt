@@ -115,7 +115,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
                 }
                 R.string.referral_code_linked_successfully.asUiText() to VsTextInputFieldInnerState.Success
             } else {
-                R.string.referral_code_does_not_exist.asUiText() to VsTextInputFieldInnerState.Error
+                R.string.referral_external_not_linked.asUiText() to VsTextInputFieldInnerState.Error
             }
             state.update {
                 it.copy(
@@ -126,7 +126,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
         }.onFailure {
             state.update {
                 it.copy(
-                    referralMessage = R.string.failed_to_check_referral_code.asUiText(),
+                    referralMessage = R.string.referral_external_not_failed.asUiText(),
                     referralMessageState = VsTextInputFieldInnerState.Error,
                 )
             }

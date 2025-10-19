@@ -94,7 +94,7 @@ internal fun AddAddressEntryScreen(
         },
         bottomBar = {
             VsButton(
-                label = stringResource(R.string.address_entry_save),
+                label = stringResource(R.string.add_vault_save),
                 onClick = onSaveAddressClick,
                 modifier = Modifier
                     .fillMaxWidth()

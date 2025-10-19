@@ -1508,7 +1508,6 @@ internal class SendFormViewModel @Inject constructor(
         if (totalBalance < totalNeeded) {
             val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
             val errorMessage = if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
-                "Insufficient balance.  Try 'Send Max' to send $totalBalanceADA ADA instead."
                 UiText.FormattedText(
                     R.string.insufficient_balance_try_send,
                     listOf(totalBalanceADA)

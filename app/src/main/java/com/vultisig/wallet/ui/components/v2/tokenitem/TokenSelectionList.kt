@@ -84,7 +84,7 @@ internal fun <T> TokenSelectionList(
                     onPlusClick?.let {
                         item {
                             GridPlus(
-                                title = stringResource(R.string.token_selection_list_custom),
+                                title = stringResource(R.string.deposit_option_custom),
                                 onClick = it
                             )
                         }
