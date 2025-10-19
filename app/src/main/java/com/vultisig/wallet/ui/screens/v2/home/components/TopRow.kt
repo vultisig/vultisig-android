@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
@@ -29,7 +30,8 @@ internal fun TopRow(
             onClick = onOpenSettingsClick,
             icon = R.drawable.gear,
             size = VsCircleButtonSize.Small,
-            type = VsCircleButtonType.Secondary
+            type = VsCircleButtonType.Secondary,
+            designType = DesignType.Shined,
         )
     }
 }
