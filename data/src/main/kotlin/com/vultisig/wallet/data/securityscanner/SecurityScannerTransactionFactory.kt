@@ -2,10 +2,10 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.crypto.DEFAULT_SUI_GAS_BUDGET
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -185,7 +185,7 @@ class SecurityScannerTransactionFactory(
         val updatedSuiBlockChainSpecific = BlockChainSpecific.Sui(
             referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
             coins = coins,
-            gasBudget = DEFAULT_SUI_GAS_BUDGET,
+            gasBudget = SUI_DEFAULT_GAS_BUDGET,
         )
 
         val keySignPayload = KeysignPayload(

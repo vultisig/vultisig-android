@@ -8,6 +8,10 @@ annotation class EthereumFee
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class ZkSyncFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class PolkadotFee
 
 @Qualifier
@@ -29,3 +33,11 @@ annotation class TronFee
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class SolanaFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ThorFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class CosmosFee

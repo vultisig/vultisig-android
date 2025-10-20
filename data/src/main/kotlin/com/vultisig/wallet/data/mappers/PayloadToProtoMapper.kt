@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.quotes.dstAmount
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload

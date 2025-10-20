@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
+import javax.inject.Inject
 
 /**
  * Fee service for the Polkadot blockchain.
@@ -34,7 +35,7 @@ import java.math.BigInteger
  *
  * https://docs.polkadot.com/polkadot-protocol/parachain-basics/blocks-transactions-fees/fees/
  */
-class PolkadotFeeService(
+class PolkadotFeeService @Inject constructor(
     private val polkadotApi: PolkadotApi,
 ): FeeService {
     override suspend fun calculateFees(

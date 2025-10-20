@@ -177,7 +177,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.solanaSpecific != null -> from.solanaSpecific.let {
                     BlockChainSpecific.Solana(
                         recentBlockHash = it.recentBlockHash,
-                        priorityFee = BigInteger(it.priorityFee),
+                        priorityFee = it.priorityFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
                         programId = it.programId == true,

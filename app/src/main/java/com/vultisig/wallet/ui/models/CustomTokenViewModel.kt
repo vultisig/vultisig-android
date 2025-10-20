@@ -3,10 +3,12 @@ package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.logo
@@ -17,6 +19,7 @@ import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_S
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -30,6 +33,7 @@ internal data class CustomTokenUiModel(
     val token: Coin? = null,
     val price: String = "",
     @DrawableRes val chainLogo: Int,
+    val isInitial: Boolean = true
 )
 
 
@@ -42,13 +46,17 @@ internal class CustomTokenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val searchFieldState: TextFieldState = TextFieldState()
-    private val chainId =
-        requireNotNull(savedStateHandle.get<String>(Destination.CustomToken.ARG_CHAIN_ID))
+    private val chainId = savedStateHandle.toRoute<Route.CustomToken>().chainId
     val uiModel = MutableStateFlow(
         CustomTokenUiModel(chainLogo = Chain.fromRaw(chainId).logo)
     )
     fun searchCustomToken() {
         viewModelScope.launch {
+            uiModel.update {
+                it.copy(
+                    isInitial = false
+                )
+            }
             showLoading()
             val searchedToken: CoinAndFiatValue? =
                 searchToken(
@@ -96,8 +104,8 @@ internal class CustomTokenViewModel @Inject constructor(
         }
     }
 
-    fun pasteToSearchField(data: String) {
-        searchFieldState.setTextAndPlaceCursorAtEnd(data)
+    fun pasteToSearchField(data: String?) {
+        searchFieldState.setTextAndPlaceCursorAtEnd(data.orEmpty())
     }
 
     fun addCoinToTempRepo() {
@@ -106,5 +114,18 @@ internal class CustomTokenViewModel @Inject constructor(
             requestResultRepository.respond(REQUEST_SEARCHED_TOKEN_ID, foundCoin)
             navigator.navigate(Destination.Back)
         }
+    }
+
+    fun back(){
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun close(){
+        uiModel.update {
+            it.copy(isInitial = true)
+        }
+        searchFieldState.clearText()
     }
 }
