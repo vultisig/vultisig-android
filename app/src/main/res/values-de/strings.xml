@@ -694,4 +694,5 @@
     <string name="retry">Erneut versuchen</string>
     <string name="custom_token_screen_title">Benutzerdefinierten Token suchen</string>
     <string name="rename_vault_screen_rename_vault">Tresor umbenennen</string>
+    <string name="custom_token_not_found_desc">Mögliche Gründe: falscher Vertrag, nicht unterstützte Chain oder Token wurde aus Registern entfernt</string>
 </resources>
