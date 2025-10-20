@@ -49,7 +49,7 @@ import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
-import com.vultisig.wallet.ui.screens.CustomTokenScreen
+import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
@@ -341,10 +341,8 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable(
-            route = Destination.CustomToken.STATIC_ROUTE,
-        ) {
-            CustomTokenScreen(navController)
+        dialog<Route.CustomToken>{
+            CustomTokenScreen()
         }
 
         composable(
