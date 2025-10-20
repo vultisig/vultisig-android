@@ -688,4 +688,7 @@
     <string name="backup_vault_online_storage_is_recommended">O armazenamento online é recomendado e seguro — as partilhas de cofres foram concebidas para isso.</string>
     <string name="deposit_form_enter_asset_hint">Inserir Ativos</string>
     <string name="share_balance_loading">Carregando...</string>
+    <string name="retry">Repetir</string>
+    <string name="custom_token_screen_title">Encontrar token personalizado</string>
+    <string name="rename_vault_screen_rename_vault">Renomear cofre</string>
 </resources>

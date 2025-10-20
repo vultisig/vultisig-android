@@ -698,4 +698,7 @@
     <string name="backup_vault_online_storage_is_recommended">Online opslag wordt aanbevolen en is veilig - gedeelde kluisbestanden zijn hiervoor ontworpen.</string>
     <string name="deposit_form_enter_asset_hint">Activa invoeren</string>
     <string name="share_balance_loading">Laden...</string>
+    <string name="retry">Opnieuw proberen</string>
+    <string name="custom_token_screen_title">Aangepaste token zoeken</string>
+    <string name="rename_vault_screen_rename_vault">Kluis hernoemen</string>
 </resources>

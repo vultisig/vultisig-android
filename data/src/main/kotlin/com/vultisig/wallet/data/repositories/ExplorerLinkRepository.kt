@@ -46,8 +46,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         is SwapPayload.EVM -> {
             if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
                 if (payload.data.fromCoin.chain == payload.data.toCoin.chain && payload.data.fromCoin.chain == Chain.Solana) {
-                    "https://solana.fm/tx/${tx}"
-
+                    "https://solscan.io/tx/${tx}"
                 } else
                     "https://scan.li.fi/tx/${tx}"
             } else {

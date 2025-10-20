@@ -72,7 +72,19 @@ internal fun TokenSelectionGridItem(
             SubcomposeAsyncImage(
                 model = uiModel.logo,
                 contentDescription = null,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
+                error = {
+                    Box(
+                        modifier = Modifier.size(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = uiModel.name.firstOrNull()?.toString().orEmpty(),
+                            color = Theme.colors.text.primary,
+                            style = Theme.brockmann.body.m.medium
+                        )
+                    }
+                }
             )
         }
 
