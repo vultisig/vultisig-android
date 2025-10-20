@@ -242,7 +242,7 @@ private fun ImportFileScreen(
                     Text(
                         text = uiModel.error?.asString()
                             ?: uiModel.fileName
-                            ?: "Import your vault share",
+                            ?: stringResource(R.string.import_file_import_your_vault_share),
                         color = when {
                             uiModel.error != null -> Theme.colors.alerts.error
                             !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
@@ -257,7 +257,7 @@ private fun ImportFileScreen(
 
                 if (uiModel.fileName.isNullOrBlank()) {
                     Text(
-                        text = "Supported file types: .dat & .bak & .vult",
+                        text = stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
                         color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.supplementary.footnote,
                     )

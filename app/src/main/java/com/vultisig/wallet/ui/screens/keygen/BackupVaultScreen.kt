@@ -79,7 +79,7 @@ private fun BackupVaultScreen(
                 )
 
                 val link = buildAnnotatedString {
-                    append("Online storage is recommended and safe - vault shares are designed for this.")
+                    append(stringResource(R.string.backup_vault_online_storage_is_recommended))
                     append(" ")
                     withLink(
                         link = LinkAnnotation.Url(
@@ -92,7 +92,7 @@ private fun BackupVaultScreen(
                             )
                         )
                     ) {
-                        append("Learn more")
+                        append(stringResource(R.string.feature_item_learn_more))
                     }
                 }
 

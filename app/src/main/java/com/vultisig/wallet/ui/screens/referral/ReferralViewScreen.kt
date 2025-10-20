@@ -126,7 +126,7 @@ internal fun ReferralViewScreen(
     if (state.error.isNotEmpty()) {
         UiAlertDialog(
             title = stringResource(R.string.dialog_default_error_title),
-            text = "Error Loading Information",
+            text = stringResource(R.string.error_loading_information),
             confirmTitle = stringResource(R.string.try_again),
             onDismiss = onDismissErrorDialog,
         )
@@ -311,7 +311,7 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
         Text(
             color = Theme.colors.text.extraLight,
             style = Theme.brockmann.body.s.medium,
-            text = "Expires on"
+            text = stringResource(R.string.referral_view_expires_on)
         )
         if (isLoading) {
             UiSpacer(2.dp)
