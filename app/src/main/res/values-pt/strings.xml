@@ -634,7 +634,7 @@
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Está pronto para usar um novo padrão de carteira.</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
-    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Activar Assinatura Rápida por Biometria</string>
+    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>
     <string name="verify_send_send_overview">Enviar visão geral</string>
     <string name="verify_swap_swap_overview">Visão geral da troca</string>
     <string name="token_selecton_screen_enable_at_least_one">Ative pelo menos um token para visualizar saldos e gerir posições.</string>
@@ -677,7 +677,7 @@
     <string name="gas_settings_priority_fee_gwei">Taxa de prioridade (GWEI)</string>
     <string name="import_file_import_your_vault_share">Importe a sua partilha de cofre</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Tipos de ficheiro suportados: .dat & .bak & .vult]]></string>
-    <string name="must_be_enabled_before_proceeding">%1$s deve ser activado antes de prosseguir.</string>
+    <string name="must_be_enabled_before_proceeding">%1$s deve ser ativado antes de prosseguir.</string>
     <string name="referral_code_removed_successfully">Código de indicação removido com sucesso</string>
     <string name="referral_code_linked_successfully">Código de indicação ligado com sucesso</string>
     <string name="fast_vault_invalid_password">Senha inválida</string>
