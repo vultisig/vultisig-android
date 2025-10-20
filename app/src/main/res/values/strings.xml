@@ -945,6 +945,5 @@
     <string name="vault_password_biometeric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
-    <string name="rename_vault_screen_save">Save</string>
     <string name="rename_vault_screen_rename_vault">Rename Vault</string>
 </resources>

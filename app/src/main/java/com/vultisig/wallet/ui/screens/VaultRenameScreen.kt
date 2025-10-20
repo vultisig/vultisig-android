@@ -77,7 +77,7 @@ private fun VaultRenameScreen(
                 weight = 1f
             )
             VsButton(
-                label = stringResource(id = R.string.rename_vault_screen_save),
+                label = stringResource(id = R.string.add_vault_save),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSaveClick,
                 state = VsButtonState.Disabled.takeIf { isLoading }
