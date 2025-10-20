@@ -1086,6 +1086,95 @@
     <!-- Address Book -->
     <string name="address_book_empty_description">将所有重要地址整理在一个地方。</string>
     <string name="address_book_empty_title">您的地址簿为空</string>
+    <string name="address_book_saved_addresses">已保存的地址</string>
+    <string name="address_book_my_vaults">我的金库</string>
+    <string name="address_entry_select">选择</string>
+    
+    <!-- Backup & Import -->
+    <string name="backup_vault_online_storage_is_recommended">推荐使用在线存储且安全 - 金库份额就是为此设计的。</string>
+    <string name="import_file_import_your_vault_share">导入您的金库份额</string>
+    <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[支持的文件类型：.dat & .bak & .vult]]></string>
+    
+    <!-- Deposit & Send -->
+    <string name="deposit_form_enter_asset_hint">输入资产</string>
+    <string name="share_balance_loading">加载中...</string>
+    <string name="send_form_balance_available">可用余额：</string>
+    <string name="send_form_add_memo">添加备注</string>
+    <string name="send_form_enter_memo">输入备注</string>
+    <string name="send_form_est_network_fee">预估网络费用</string>
+    <string name="send_form_minimum_send_amount_is_requires_this">最小发送金额为 %1$s %2$s。%3$s 要求此限制以防止垃圾交易。</string>
+    <string name="minimum_send_amount_is_ada">最小发送金额为 %1$s ADA。Cardano 要求此限制以防止垃圾交易。</string>
+    <string name="insufficient_balance_try_send">余额不足。尝试"发送最大"以发送 %1$s ADA。</string>
+    <string name="insufficient_balance_ada">余额不足（%1$s ADA）。您需要更多 ADA 来完成此交易。</string>
+    <string name="this_amount_would_leave_too_little_change">此金额将留下太少的找零。💡 尝试"发送最大"（%1$s ADA）以避免此问题。</string>
+    
+    <!-- Referral -->
+    <string name="must_be_enabled_before_proceeding">在继续之前必须启用 %1$s。</string>
+    <string name="referral_code_removed_successfully">推荐代码已成功移除</string>
+    <string name="referral_code_linked_successfully">推荐代码已成功链接</string>
+    <string name="referral_create_status">状态</string>
+    <string name="referral_create_unknown">未知</string>
+    <string name="referral_code_cannot_be_empty">推荐代码不能为空</string>
+    <string name="referral_code_can_be_up_to_characters">推荐代码最多可以有 %1$d 个字符</string>
+    <string name="referral_view_expires_on">到期时间</string>
+    
+    <!-- Fast Vault & Folders -->
+    <string name="fast_vault_invalid_password">密码无效</string>
+    <string name="folder">文件夹</string>
+    
+    <!-- Gas Settings -->
+    <string name="gas_settings_advanced_gas_fee">高级燃料费</string>
+    <string name="gas_settings_max_base_fee_gwei">最大基础费用（GWEI）</string>
+    <string name="gas_settings_priority_fee_gwei">优先费用（GWEI）</string>
+    
+    <!-- Keygen & Keysign -->
+    <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的金库</string>
+    <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>
+    <string name="join_key_gen_waiting_for_other_devices_to_join">等待其他设备加入</string>
+    <string name="join_key_gen_your_vault_will_start_generating">您的金库将在您在主设备上完成设置后开始生成</string>
+    <string name="join_key_sign_wrong_signing_library_type">错误的签名库类型</string>
+    <string name="key_gen_discovery_no_connection_available">无可用连接</string>
+    <string name="key_gen_discovery_enable_wifi">请启用 WiFi 或移动网络以签署交易</string>
+    <string name="keygen_screen_upgrading_vault">升级金库中</string>
+    <string name="keysign_password_enter_your_password">输入您的密码</string>
+    
+    <!-- Migration -->
+    <string name="migration_password_enter_your_password_to_unlock">输入您的密码以解锁服务器份额并开始升级</string>
+    
+    <!-- Vault Names -->
+    <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的金库</string>
+    
+    <!-- Errors -->
+    <string name="error_loading_information">加载信息时出错</string>
+    
+    <!-- Swap -->
+    <string name="swap_form_native">原生</string>
+    <string name="swap_transaction_overview_approval_tx_hash">批准交易哈希</string>
+    <string name="swap_transaction_overview_track">跟踪</string>
+    
+    <!-- Token Selection -->
+    <string name="token_selection_screen_select_tokens">选择代币</string>
+    <string name="token_selecton_screen_enable_at_least_one">启用至少一个代币以查看余额和管理仓位。</string>
+    
+    <!-- Transfer -->
+    <string name="transfer_ibc_destination_chain">目标链</string>
+    
+    <!-- Transaction -->
+    <string name="tx_done_transaction_details">交易详情</string>
+    
+    <!-- Vault Confirmation -->
+    <string name="vault_confirmation_vault_upgraded">金库已升级</string>
+    <string name="vault_confirmation_well_done">做得好。</string>
+    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">您已准备好使用新的钱包标准。</string>
+    
+    <!-- Vault Details -->
+    <string name="vault_detail_vault_info">金库信息</string>
+    <string name="vault_details_keys">密钥</string>
+    <string name="vault_password_biometeric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
+    
+    <!-- Verify -->
+    <string name="verify_send_send_overview">发送概览</string>
+    <string name="verify_swap_swap_overview">交换概览</string>
     
     <!-- Settings -->
     <string name="education_settings_title">Vultisig 教育</string>
