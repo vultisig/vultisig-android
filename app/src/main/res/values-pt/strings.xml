@@ -676,7 +676,7 @@
     <string name="gas_settings_max_base_fee_gwei">Taxa básica máxima (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Taxa de prioridade (GWEI)</string>
     <string name="import_file_import_your_vault_share">Importe a sua partilha de cofre</string>
-    <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Tipos de ficheiro suportados: . dat & . bak & . vult]]></string>
+    <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Tipos de ficheiro suportados: .dat & .bak & .vult]]></string>
     <string name="must_be_enabled_before_proceeding">%1$s deve ser activado antes de prosseguir.</string>
     <string name="referral_code_removed_successfully">Código de indicação removido com sucesso</string>
     <string name="referral_code_linked_successfully">Código de indicação ligado com sucesso</string>
