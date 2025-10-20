@@ -1,15 +1,17 @@
 package com.vultisig.wallet.data.models.settings
 
-enum class AppLanguage(val mainName: String, val engName: String?, val localeCode: String) {
-    EN("English", "(UK)", "en"),
-    DE("Deutsch", "German", "de"),
-    ES("Espanol", "Spanish", "es"),
-    IT("Italiano", "Italian", "it"),
-    HR("Hrvatski", "Croatian", "hr"),
-    RU("Русский", "Russian", "ru"),
-    NL("Nederlands", "Dutch", "nl"),
-    PT("Português", "Portuguese", "pt"),
-    ZH_CN("简体中文", "Chinese (Simplified)", "zh-CN"),;
+enum class AppLanguage(val mainName: String, val engName: String?) {
+    EN("English", "(UK)"),
+    DE("Deutsch", "German"),
+    ES("Espanol", "Spanish"),
+    IT("Italiano", "Italian"),
+    HR("Hrvatski", "Croatian"),
+    RU("Русский", "Russian"),
+    NL("Nederlands", "Dutch"),
+    PT("Português", "Portuguese"),
+    ZH_CN("简体中文", "Chinese (Simplified)") {
+        override fun toString(): String = "zh-CN"
+    },;
 
     companion object {
         fun String.fromName(): AppLanguage {
