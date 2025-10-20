@@ -1339,13 +1339,19 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        !selectedTokenId.isNullOrBlank() -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+        !selectedTokenId.isNullOrBlank() -> firstOrNull() { it ->
+            it.accounts.any {
+                it.token.id == selectedTokenId
+            }
+        } ?: this.first()
+
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }
-
     val account = when {
-        !selectedTokenId.isNullOrBlank() -> address.accounts.first { it.token.id == selectedTokenId }
+        !selectedTokenId.isNullOrBlank() -> address.accounts.firstOrNull() { it.token.id == selectedTokenId }
+            ?: address.accounts.first()
+
         filterByChain != null -> address.accounts.first { it.token.isNativeToken }
         else -> address.accounts.first()
     }
