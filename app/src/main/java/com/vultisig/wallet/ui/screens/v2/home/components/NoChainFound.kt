@@ -27,6 +27,7 @@ internal fun NoChainFound(
         modifier = modifier
             .padding(
                 horizontal = 40.dp,
+                vertical = 16.dp,
             ),
         horizontalAlignment = Alignment.Companion.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
