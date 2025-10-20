@@ -7,7 +7,7 @@ enum class AppCurrency(
 ) {
     USD(
         ticker = "USD",
-        fullName = "US Dollar ($)"
+        fullName = "US Dollar (US$)"
     ),
 
     AUD(

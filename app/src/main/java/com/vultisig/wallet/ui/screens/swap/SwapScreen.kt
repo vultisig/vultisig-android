@@ -142,7 +142,7 @@ internal fun SwapScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
-                title = "Swap",
+                title = stringResource(R.string.chain_account_view_swap),
                 iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
                 actions = {
@@ -186,7 +186,7 @@ internal fun SwapScreen(
                     ) {
                         TokenInput(
                             isLoading = state.isLoading,
-                            title = "From",
+                            title = stringResource(R.string.swap_form_from_title),
                             selectedToken = state.selectedSrcToken,
                             fiatValue = state.srcFiatValue,
                             onSelectNetworkClick = onSelectSrcNetworkClick,
@@ -220,7 +220,7 @@ internal fun SwapScreen(
                         )
 
                         TokenInput(
-                            title = "To",
+                            title = stringResource(R.string.swap_form_dst_token_title),
                             isLoading = state.isLoading,
                             selectedToken = state.selectedDstToken,
                             fiatValue = state.estimatedDstFiatValue,
@@ -545,7 +545,7 @@ private fun TokenInput(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalAlignment = Alignment.End,
             ) {
-                if (isLoading && title == "To") {
+                if (isLoading && title == stringResource(R.string.swap_form_dst_token_title)) {
                     UiPlaceholderLoader(
                         modifier = Modifier
                             .height(24.dp)
@@ -613,7 +613,7 @@ internal fun TokenChip(
 
             if (selectedToken?.isNativeToken == true) {
                 Text(
-                    text = "Native",
+                    text = stringResource(R.string.swap_form_native),
                     style = Theme.brockmann.supplementary.captionSmall,
                     color = Theme.colors.text.extraLight,
                 )

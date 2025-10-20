@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.referral.EditExternalReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun ReferralEditExternalScreen(
@@ -86,7 +87,7 @@ internal fun ReferralEditExternalScreen(
                         if (content.isNullOrEmpty()) return@VsTextInputField
                         model.onPasteIconClick(content)
                     },
-                    footNote = state.referralMessage,
+                    footNote = state.referralMessage?.asString(),
                     focusRequester = null,
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Text,

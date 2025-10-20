@@ -94,7 +94,7 @@ internal fun AddAddressEntryScreen(
         },
         bottomBar = {
             VsButton(
-                label = "Save",
+                label = stringResource(R.string.add_vault_save),
                 onClick = onSaveAddressClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -203,7 +203,7 @@ internal fun SelectChain(
 
             if (selectedChain == null) {
                 Text(
-                    text = "Select",
+                    text = stringResource(R.string.address_entry_select),
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.colors.text.extraLight,
                 )

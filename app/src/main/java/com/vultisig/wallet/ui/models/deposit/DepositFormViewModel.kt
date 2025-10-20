@@ -125,7 +125,7 @@ internal data class DepositFormUiModel(
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
-    val sharesBalance: UiText = "Loading...".asUiText(),
+    val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -406,7 +406,10 @@ internal class DepositFormViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         balance = UiText.Empty,
-                        amountError = "$tickerToActivate must be enabled before proceeding.".asUiText()
+                        amountError = UiText.FormattedText(
+                            R.string.must_be_enabled_before_proceeding,
+                            listOf(tickerToActivate.orEmpty())
+                        )
                     )
                 }
             }

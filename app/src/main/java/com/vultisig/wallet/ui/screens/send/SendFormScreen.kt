@@ -241,7 +241,7 @@ private fun SendFormScreen(
                                 )
                         ) {
                             ChainSelector(
-                                title = "From",
+                                title = stringResource(R.string.send_from_address),
                                 // TODO selectedChain should not be nullable
                                 //  or default value should be something else
                                 chain = state.selectedCoin?.model?.address?.chain
@@ -297,7 +297,7 @@ private fun SendFormScreen(
                     FoldableSection(
                         expanded = state.expandedSection == SendSections.Address,
                         complete = state.isDstAddressComplete,
-                        title = "Address",
+                        title = stringResource(R.string.add_address_address_title),
                         onToggle = {
                             onExpandSection(SendSections.Address)
                         },
@@ -456,7 +456,7 @@ private fun SendFormScreen(
                                 }
                             }
                         },
-                        title = "Amount"
+                        title = stringResource(R.string.send_amount)
                     ) {
                         Column(
                             modifier = Modifier
@@ -594,7 +594,7 @@ private fun SendFormScreen(
                                 )
 
                                 PercentageChip(
-                                    title = "Max",
+                                    title = stringResource(R.string.send_screen_max),
                                     isSelected = false,
                                     onClick = onChooseMaxTokenAmount,
                                     modifier = Modifier
@@ -616,7 +616,7 @@ private fun SendFormScreen(
                                     )
                             ) {
                                 Text(
-                                    text = "Balance available:",
+                                    text = stringResource(R.string.send_form_balance_available),
                                     style = Theme.brockmann.body.s.medium,
                                     color = Theme.colors.text.primary,
                                 )
@@ -655,7 +655,7 @@ private fun SendFormScreen(
                                         )
                                 ) {
                                     Text(
-                                        text = "Add MEMO",
+                                        text = stringResource(R.string.send_form_add_memo),
                                         style = Theme.brockmann.supplementary.caption,
                                         color = Theme.colors.text.extraLight,
                                         modifier = Modifier
@@ -679,7 +679,7 @@ private fun SendFormScreen(
                                     val clipboardData = VsClipboardService.getClipboardData()
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
-                                        hint = "Enter Memo",
+                                        hint = stringResource(R.string.send_form_enter_memo),
                                         trailingIcon = R.drawable.ic_paste,
                                         onTrailingIconClick = {
                                             clipboardData.value
@@ -765,7 +765,7 @@ internal fun EstimatedNetworkFee(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Est. network fee",
+            text = stringResource(R.string.send_form_est_network_fee),
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
         )

@@ -23,6 +23,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("not enough asset to pay for fees") -> InsufficentSwapAmount(error)
                     contains("outbound amount does not meet requirements") -> InsufficentSwapAmount(error)
                     contains("failed to simulate swap: pool") -> SwapRouteNotAvailable(error)
+                    contains("failed to simulate handler: pool") -> SwapRouteNotAvailable(error)
                     contains("insufficient funds") -> InsufficientFunds(error)
                     contains("No available quotes for the requested") -> SwapRouteNotAvailable(error)
                     contains("amount less than dust threshold: invalid request") -> SmallSwapAmount(error)
