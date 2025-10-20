@@ -11,7 +11,7 @@ enum class AppLanguage(val mainName: String, val engName: String?) {
     PT("Português", "Portuguese"),
     ZH_CN("简体中文", "Chinese (Simplified)") {
         override fun toString(): String = "zh-CN"
-    },;
+    };
 
     companion object {
         fun String.fromName(): AppLanguage {
