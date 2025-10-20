@@ -692,4 +692,5 @@
     <string name="share_balance_loading">Učitavanje...</string>
     <string name="retry">Pokušajte ponovno</string>
     <string name="custom_token_screen_title">Pronađite prilagođeni token</string>
+    <string name="rename_vault_screen_rename_vault">Preimenuj trezor</string>
 </resources>

@@ -944,6 +944,7 @@
     <string name="vault_password_biometeric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
+    <string name="rename_vault_screen_rename_vault">Rename Vault</string>
     <string name="custom_token_not_found_desc" translatable="false">Possible reasons: wrong contract, unsupported chain, or token removed from registries.</string>
     <string name="custom_token_screen_finding_token" translatable="false">Finding token</string>
     <string name="retry">Retry</string>

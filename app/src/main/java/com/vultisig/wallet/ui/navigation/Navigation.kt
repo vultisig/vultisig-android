@@ -139,13 +139,6 @@ internal sealed class Destination(
         }
     }
 
-    data class Rename(val vaultId: String) :
-        Destination(route = "vault_detail/$vaultId/settings/rename") {
-        companion object {
-            const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/rename"
-        }
-    }
-
     data class Settings(val vaultId: String) : Destination(route = "settings/$vaultId") {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
@@ -632,6 +625,11 @@ internal sealed class Route {
     @Serializable
     data class CustomToken(
         val chainId: String,
+    )
+
+    @Serializable
+    data class Rename(
+        val vaultId: String
     )
 
 }

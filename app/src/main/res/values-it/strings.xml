@@ -691,4 +691,5 @@
     <string name="share_balance_loading">Caricamento in corso...</string>
     <string name="retry">Riprova</string>
     <string name="custom_token_screen_title">Trova token personalizzato</string>
+    <string name="rename_vault_screen_rename_vault">Rinomina Vault</string>
 </resources>

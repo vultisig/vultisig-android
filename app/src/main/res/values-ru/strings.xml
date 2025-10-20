@@ -703,4 +703,5 @@
     <string name="share_balance_loading">Загрузка...</string>
     <string name="retry">Повторить попытку</string>
     <string name="custom_token_screen_title">Найти пользовательский токен</string>
+    <string name="rename_vault_screen_rename_vault">Переименовать хранилище</string>
 </resources>

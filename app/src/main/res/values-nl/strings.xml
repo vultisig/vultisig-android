@@ -700,4 +700,5 @@
     <string name="share_balance_loading">Laden...</string>
     <string name="retry">Opnieuw proberen</string>
     <string name="custom_token_screen_title">Aangepaste token zoeken</string>
+    <string name="rename_vault_screen_rename_vault">Kluis hernoemen</string>
 </resources>

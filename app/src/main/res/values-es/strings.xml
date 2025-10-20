@@ -691,4 +691,5 @@
     <string name="share_balance_loading">Cargando...</string>
     <string name="retry">Reintentar</string>
     <string name="custom_token_screen_title">Buscar token personalizado</string>
+    <string name="rename_vault_screen_rename_vault">Cambiar el nombre de la bóveda</string>
 </resources>
