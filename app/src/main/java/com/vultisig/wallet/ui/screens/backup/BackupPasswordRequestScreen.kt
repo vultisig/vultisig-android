@@ -145,6 +145,15 @@ private fun BackupPasswordRequestScreen(
             )
 
             BackupCaution(
+                icon = R.drawable.remember,
+                mainText = stringResource(R.string.backup_password_request_caution_secure_without_desc),
+                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_secure_without))
+            )
+
+            UiSpacer(
+                size = 16.dp,
+            )
+            BackupCaution(
                 icon = R.drawable.backup_passowrd_lock,
                 mainText = stringResource(R.string.backup_password_request_caution_encrypt_desc),
                 highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_encrypt))
@@ -157,15 +166,6 @@ private fun BackupPasswordRequestScreen(
                 icon = R.drawable.encrypt,
                 mainText = stringResource(R.string.backup_password_request_caution_cannot_reset_desc),
                 highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_cannot))
-            )
-
-            UiSpacer(
-                size = 16.dp,
-            )
-            BackupCaution(
-                icon = R.drawable.remember,
-                mainText = stringResource(R.string.backup_password_request_caution_secure_without_desc),
-                highlightedWords = listOf(stringResource(R.string.backup_password_request_highlight_secure_without))
             )
 
             UiSpacer(

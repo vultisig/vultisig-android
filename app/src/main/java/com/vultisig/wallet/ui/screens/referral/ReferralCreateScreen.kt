@@ -206,7 +206,7 @@ private fun ReferralCreateScreen(
                         Text(
                             color = Theme.colors.text.extraLight,
                             style = Theme.brockmann.body.s.medium,
-                            text = "Status",
+                            text = stringResource(R.string.referral_create_status),
                             textAlign = TextAlign.Start,
                         )
 
@@ -343,7 +343,7 @@ private fun SearchReferralTag(
         SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_invalid))
         SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, stringResource(R.string.referral_create_available))
         SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_taken))
-        else -> Pair(Theme.colors.alerts.error, "Unknown")
+        else -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_unknown))
     }
 
     Box(

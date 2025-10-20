@@ -48,6 +48,7 @@ import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
+import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
@@ -151,7 +152,7 @@ private fun ReferralScreen(
                         if (content.isNullOrEmpty()) return@VsTextInputField
                         onPasteIcon(content)
                     },
-                    footNote = state.referralMessage,
+                    footNote = state.referralMessage?.asString(),
                     focusRequester = null, //focusRequester,
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Text,

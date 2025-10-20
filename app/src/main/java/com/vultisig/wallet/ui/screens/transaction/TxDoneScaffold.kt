@@ -154,7 +154,7 @@ internal fun TxDoneScaffold(
 
                     AnimatedVisibility(isTransactionDetailVisible.not()) {
                         Details(
-                            title = "Transaction Details",
+                            title = stringResource(R.string.tx_done_transaction_details),
                             modifier = Modifier
                                 .clickable(onClick = {
                                     isTransactionDetailVisible = true

@@ -416,7 +416,7 @@ internal fun DepositFormScreen(
                         if (depositChain == Chain.MayaChain) {
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_assets),
-                                hint = "Enter Assets",
+                                hint = stringResource(R.string.deposit_form_enter_asset_hint),
                                 keyboardType = KeyboardType.Text,
                                 textFieldState = assetsFieldState,
                                 onLostFocus = onAssetsLostFocus,

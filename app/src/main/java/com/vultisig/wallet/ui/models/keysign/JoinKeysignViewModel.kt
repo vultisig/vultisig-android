@@ -116,7 +116,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
     data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
-    data object WrongLibType : JoinKeysignError(UiText.DynamicString("Wrong signing library type"))
+    data object WrongLibType : JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
 }
 
 sealed interface JoinKeysignState {
