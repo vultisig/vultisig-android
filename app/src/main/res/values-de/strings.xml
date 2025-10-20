@@ -691,4 +691,6 @@
     <string name="backup_vault_online_storage_is_recommended">Online-Speicherung ist empfehlenswert und sicher – Tresorfreigaben sind dafür konzipiert.</string>
     <string name="deposit_form_enter_asset_hint">Assets eingeben</string>
     <string name="share_balance_loading">Wird geladen...</string>
+    <string name="retry">Erneut versuchen</string>
+    <string name="custom_token_screen_title">Benutzerdefinierten Token suchen</string>
 </resources>

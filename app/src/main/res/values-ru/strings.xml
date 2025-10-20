@@ -701,4 +701,6 @@
     <string name="backup_vault_online_storage_is_recommended">Рекомендуется использовать онлайн-хранилище, поскольку оно безопасно — для этого предназначены общие хранилища.</string>
     <string name="deposit_form_enter_asset_hint">Введите активы</string>
     <string name="share_balance_loading">Загрузка...</string>
+    <string name="retry">Повторить попытку</string>
+    <string name="custom_token_screen_title">Найти пользовательский токен</string>
 </resources>

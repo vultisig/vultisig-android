@@ -283,14 +283,6 @@ internal sealed class Destination(
     }
 
     data object OnChainSecurity: Destination(route = "onchain_security")
-
-    internal data class CustomToken(val chainId: String) :
-        Destination(route = "custom_token/$chainId") {
-        companion object {
-            const val ARG_CHAIN_ID = "chain_id"
-            const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
-        }
-    }
 }
 
 internal sealed class Route {
@@ -634,6 +626,11 @@ internal sealed class Route {
     @Serializable
     data class SelectTokens(
         val vaultId: String,
+        val chainId: String,
+    )
+
+    @Serializable
+    data class CustomToken(
         val chainId: String,
     )
 

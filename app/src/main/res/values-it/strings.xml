@@ -689,4 +689,6 @@
     <string name="backup_vault_online_storage_is_recommended">L\'archiviazione online è consigliata e sicura: le condivisioni Vault sono progettate per questo scopo.</string>
     <string name="deposit_form_enter_asset_hint">Inserisci risorse</string>
     <string name="share_balance_loading">Caricamento in corso...</string>
+    <string name="retry">Riprova</string>
+    <string name="custom_token_screen_title">Trova token personalizzato</string>
 </resources>
