@@ -89,7 +89,7 @@ internal class NameVaultViewModel @Inject constructor(
 
         val errorMessage = when {
             !isNameValid(name) -> StringResource(R.string.naming_vault_screen_invalid_name)
-            !isNameAvailable(name) -> DynamicString("Vault with this name already exists")
+            !isNameAvailable(name) -> StringResource(R.string.name_vault_vault_with_this_name_already_exists)
             else -> null
         }
 

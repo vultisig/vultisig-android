@@ -848,7 +848,14 @@ internal class SendFormViewModel @Inject constructor(
             val name = chain.raw
             val formattedMinAmount = chain.toValue(minAmount).toString()
             throw InvalidTransactionDataException(
-                UiText.DynamicString("Minimum send amount is $formattedMinAmount $symbol. $name requires this to prevent spam.")
+                UiText.FormattedText(
+                    R.string.send_form_minimum_send_amount_is_requires_this,
+                    listOf(
+                        formattedMinAmount,
+                        symbol,
+                        name
+                    )
+                )
             )
         }
 
@@ -1489,7 +1496,10 @@ internal class SendFormViewModel @Inject constructor(
         if (sendAmount < minUTXOValue) {
             val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
             throw InvalidTransactionDataException(
-                UiText.DynamicString("Minimum send amount is $minAmountADA ADA. Cardano requires this to prevent spam.")
+                UiText.FormattedText(
+                    R.string.minimum_send_amount_is_ada,
+                    listOf(minAmountADA)
+                )
             )
         }
 
@@ -1498,11 +1508,17 @@ internal class SendFormViewModel @Inject constructor(
         if (totalBalance < totalNeeded) {
             val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
             val errorMessage = if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
-                "Insufficient balance.  Try 'Send Max' to send $totalBalanceADA ADA instead."
+                UiText.FormattedText(
+                    R.string.insufficient_balance_try_send,
+                    listOf(totalBalanceADA)
+                )
             } else {
-                "Insufficient balance ($totalBalanceADA ADA). You need more ADA to complete this transaction."
+                UiText.FormattedText(
+                    R.string.insufficient_balance_ada,
+                    listOf(totalBalanceADA)
+                )
             }
-            throw InvalidTransactionDataException(UiText.DynamicString(errorMessage))
+            throw InvalidTransactionDataException(errorMessage)
         }
 
         // 3. Check remaining balance (change) meets minimum UTXO requirement
@@ -1511,8 +1527,9 @@ internal class SendFormViewModel @Inject constructor(
             val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
 
             throw InvalidTransactionDataException(
-                UiText.DynamicString(
-                    "This amount would leave too little change. 💡 Try 'Send Max' ($totalBalanceADA ADA) to avoid this issue."
+                UiText.FormattedText(
+                    R.string.this_amount_would_leave_too_little_change,
+                    listOf(totalBalanceADA)
                 )
             )
         }

@@ -7,9 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -61,13 +63,13 @@ internal fun TokenSelectionScreen(
         titleContent = {
             Column {
                 Text(
-                    text = "Select Tokens",
+                    text = stringResource(R.string.token_selection_screen_select_tokens),
                     style = Theme.brockmann.headings.title2,
                     color = Theme.colors.neutrals.n100,
                 )
                 UiSpacer(16.dp)
                 Text(
-                    text = "Enable at least one token to view balances and manage positions.",
+                    text = stringResource(R.string.token_selecton_screen_enable_at_least_one),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.colors.text.extraLight,
                 )
