@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
+import javax.inject.Inject
 
 /**
  * Service responsible for estimating and preparing gas payment details for Sui blockchain transactions.
@@ -42,7 +43,7 @@ import java.math.BigInteger
  *  - Small transactions may still require a minimum network gas budget.
  *  - Reference documentation: [Sui Gas Concepts](https://docs.sui.io/concepts/tokenomics/gas-in-sui)
  */
-class SuiFeeService(
+class SuiFeeService @Inject constructor(
     private val suiApi: SuiApi,
 ) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
@@ -99,7 +100,7 @@ class SuiFeeService(
             blockChainSpecific = BlockChainSpecific.Sui(
                 referenceGasPrice = referenceGasPriceDeferred.await(),
                 coins = allCoinsDeferred.await(),
-                gasBudget = DEFAULT_GAS_BUDGET,
+                gasBudget = SUI_DEFAULT_GAS_BUDGET,
             ),
             vaultPublicKeyECDSA = "",
             vaultLocalPartyID = "",
@@ -111,20 +112,20 @@ class SuiFeeService(
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val gasPrice = suiApi.getReferenceGasPrice()
 
-        val estimatedFees = DEFAULT_GAS_BUDGET.increaseByPercent(15)
+        val estimatedFees = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
 
         return GasFees(
             price = gasPrice,
-            limit = DEFAULT_GAS_BUDGET,
+            limit = estimatedFees,
             amount = estimatedFees,
         )
         return BasicFee(amount = estimatedFees)
     }
 
-    private companion object {
+    internal companion object {
         // Min gas budget accepeted by the network
         val MIN_NETWORK_GAS_BUDGET = 2000.toBigInteger()
 
-        val DEFAULT_GAS_BUDGET = "3000000".toBigInteger()
+        val SUI_DEFAULT_GAS_BUDGET = "3000000".toBigInteger()
     }
 }
