@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MoreInfoBox
@@ -244,7 +245,11 @@ private fun WarningCard(
         Text(
             stringResource(R.string.fast_vault_password_screen_warning),
             style = Theme.brockmann.supplementary.footnote,
-            color = warningColor
+            color = warningColor,
+            modifier = Modifier.weight(1f)
+        )
+        UiSpacer(
+            size = 16.dp
         )
         UiIcon(
             R.drawable.alert,

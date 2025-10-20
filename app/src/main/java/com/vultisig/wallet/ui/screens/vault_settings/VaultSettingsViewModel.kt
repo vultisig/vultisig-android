@@ -21,7 +21,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -401,7 +400,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun openRename() {
         viewModelScope.launch {
-            navigator.navigate(Destination.Rename(vaultId))
+            navigator.route(Route.Rename(vaultId))
         }
     }
 

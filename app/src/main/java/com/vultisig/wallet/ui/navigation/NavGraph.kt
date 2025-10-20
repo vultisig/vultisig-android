@@ -179,13 +179,8 @@ internal fun SetupNavGraph(
             VaultDetailScreen(navController)
         }
 
-        composable(
-            route = Destination.Rename.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
-            )
-        ) {
-            VaultRenameScreen(navController)
+        composable<Route.Rename> {
+            VaultRenameScreen()
         }
 
         composable(
