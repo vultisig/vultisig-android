@@ -80,7 +80,7 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun navigateToCustomTokenScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.CustomToken(chainId))
+            navigator.route(Route.CustomToken(chainId))
         }
     }
 
