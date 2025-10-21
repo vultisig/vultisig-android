@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAU
 import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Route.AddressBook
 import com.vultisig.wallet.ui.navigation.Route.AddressEntry
-import com.vultisig.wallet.ui.navigation.Route.BackupPassword
 import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
 import com.vultisig.wallet.ui.navigation.Route.BackupVault
 import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
@@ -46,7 +45,6 @@ import com.vultisig.wallet.ui.navigation.Route.VaultList
 import com.vultisig.wallet.ui.navigation.Route.VerifyDeposit
 import com.vultisig.wallet.ui.navigation.Route.VerifySend
 import com.vultisig.wallet.ui.navigation.Route.VerifySwap
-import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
@@ -59,6 +57,7 @@ import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
+import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
@@ -123,6 +122,7 @@ import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import kotlin.reflect.typeOf
 
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @ExperimentalAnimationApi
@@ -464,12 +464,12 @@ internal fun SetupNavGraph(
             BackupVaultScreen()
         }
 
-        composable<BackupPasswordRequest> {
+        composable<BackupPasswordRequest>(
+            typeMap = mapOf(
+                typeOf<BackupType>() to BackupTypeNavType
+            )
+        ) {
             BackupPasswordRequestScreen()
-        }
-
-        composable<BackupPassword> {
-            BackupPasswordScreen()
         }
 
         composable<VaultBackupSummary> {
@@ -688,6 +688,10 @@ internal fun SetupNavGraph(
                 vaultId = backStackEntry.toRoute<VaultList>().vaultId,
                 onDismiss = navController::popBackStack
             )
+        }
+
+        composable<Route.VaultsToBackup> {
+            VaultsToBackupScreen()
         }
     }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.ui.navigation.BackupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -24,8 +25,10 @@ internal class BackupVaultViewModel @Inject constructor(
             navigator.route(
                 Route.BackupPasswordRequest(
                     vaultId = args.vaultId,
-                    vaultType = args.vaultType,
-                    action = args.action,
+                    backupType = BackupType.CurrentVault(
+                        vaultType = args.vaultType,
+                        action = args.action,
+                    )
                 )
             )
         }

@@ -17,7 +17,8 @@ import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCase
-import com.vultisig.wallet.ui.models.BackupPasswordState
+import com.vultisig.wallet.ui.navigation.BackupType
+import com.vultisig.wallet.ui.navigation.BackupTypeNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -33,6 +34,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.typeOf
+
+internal data class BackupPasswordState(
+    var isMoreInfoVisible: Boolean = false,
+    val passwordErrorMessage: UiText? = null,
+    val isPasswordVisible: Boolean = false,
+    val isConfirmPasswordVisible: Boolean = false,
+    val isNextButtonEnabled: Boolean = false,
+    val error: UiText? = null,
+)
 
 @HiltViewModel
 internal class BackupPasswordRequestViewModel @Inject constructor(
@@ -50,10 +61,14 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
     private val mapVaultToProto: MapVaultToProto,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.BackupPasswordRequest>()
+    private val args = savedStateHandle.toRoute<Route.BackupPasswordRequest>(
+        typeMap = mapOf(
+            typeOf<BackupType>() to BackupTypeNavType
+        )
+    )
 
     private val vaultId = args.vaultId
-    private val vaultType = args.vaultType
+    private val backupType = args.backupType
 
     private val vault = MutableStateFlow<Vault?>(null)
 
@@ -125,12 +140,12 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
                     )
                 )
 
-                if (vaultType != null) {
+                if (backupType is BackupType.CurrentVault && backupType.vaultType != null) {
                     navigator.route(
                         Route.VaultConfirmation(
                             vaultId = vaultId,
-                            vaultType = vaultType,
-                            action = args.action,
+                            vaultType = backupType.vaultType,
+                            action = backupType.action,
                         )
                     )
                 } else {
@@ -154,15 +169,15 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
         }
     }
 
-    fun backupWithPassword() {
+    fun backupWithPassword() { //
         viewModelScope.launch {
-            navigator.route(
+            /*navigator.route(
                 Route.BackupPassword(
                     vaultId = vaultId,
                     vaultType = vaultType,
                     action = args.action,
                 )
-            )
+            )*/
         }
     }
 

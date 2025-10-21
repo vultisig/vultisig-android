@@ -21,9 +21,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -36,13 +38,17 @@ internal fun VaultsToBackupScreen() {
     VaultsToBackupScreen(
         onBackClick = viewModel::back,
         backupVaultUiModel = uiState,
+        onCurrentVaultBackupClick = viewModel::backupCurrentVault,
+        onAllVaultsBackupClick = viewModel::backupAllVaults,
     )
 }
 
 @Composable
 internal fun VaultsToBackupScreen(
-    onBackClick: () -> Unit,
     backupVaultUiModel: BackupVaultUiModel,
+    onBackClick: () -> Unit,
+    onCurrentVaultBackupClick: () -> Unit,
+    onAllVaultsBackupClick: () -> Unit,
 ) {
     V2Scaffold(
         onBackClick = onBackClick,
@@ -74,7 +80,8 @@ internal fun VaultsToBackupScreen(
                 title = stringResource(R.string.backup_this_vault_only),
                 vaults = listOf(
                     backupVaultUiModel.currentVault,
-                )
+                ),
+                onClick = onCurrentVaultBackupClick
             )
             UiSpacer(
                 size = 16.dp,
@@ -84,6 +91,7 @@ internal fun VaultsToBackupScreen(
                 title = stringResource(R.string.backup_all_vaults),
                 vaults = backupVaultUiModel.vaultsToBackup,
                 remainedCount = backupVaultUiModel.remainedCount,
+                onClick = onAllVaultsBackupClick
             )
         }
     }
@@ -94,10 +102,12 @@ private fun BackupVaultContainer(
     title: String,
     vaults: List<VaultToBackupUiModel>,
     remainedCount: Int? = null,
+    onClick: () -> Unit,
 ) {
     V2Container(
         type = ContainerType.PRIMARY,
         borderType = ContainerBorderType.Bordered(),
+        modifier = Modifier.clickOnce(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
@@ -107,11 +117,21 @@ private fun BackupVaultContainer(
                     vertical = 14.dp,
                 ),
         ) {
-            Text(
-                text = title,
-                color = Theme.colors.text.extraLight,
-                style = Theme.brockmann.body.s.medium,
-            )
+            Row {
+                Text(
+                    text = title,
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.body.s.medium,
+                )
+                UiSpacer(
+                    weight = 1f
+                )
+                UiIcon(
+                    drawableResId = R.drawable.ic_small_caret_right,
+                    size = 16.dp,
+                    tint = Theme.colors.text.extraLight,
+                )
+            }
             UiSpacer(
                 size = 12.dp,
             )
@@ -203,17 +223,7 @@ private fun VaultMetaInfo(model: VaultToBackupUiModel) {
             ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-
-            UiIcon(
-                drawableResId = if (model.isFast) {
-                    R.drawable.thunder
-                } else {
-                    R.drawable.ic_shield
-                },
-                contentDescription = "vault type logo",
-                size = 16.dp,
-                tint = if (model.isFast) Theme.colors.alerts.warning else Theme.colors.alerts.success,
-            )
+            VaultIcon(isFastVault = model.isFast)
             UiSpacer(
                 size = 4.dp,
             )
@@ -238,6 +248,8 @@ private fun VaultMetaInfo(model: VaultToBackupUiModel) {
 internal fun PreviewVaultsToBackupScreen() {
     VaultsToBackupScreen(
         onBackClick = {},
+        onCurrentVaultBackupClick = {},
+        onAllVaultsBackupClick = {},
         backupVaultUiModel = BackupVaultUiModel(
             currentVault = VaultToBackupUiModel(
                 name = "Vault Name",
