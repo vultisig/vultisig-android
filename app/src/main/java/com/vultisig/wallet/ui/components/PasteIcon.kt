@@ -16,7 +16,7 @@ internal fun PasteIcon(
     val clipboardData = VsClipboardService.getClipboardData()
     UiIcon(
         modifier = modifier,
-        drawableResId = R.drawable.ic_paste,
+        drawableResId = R.drawable.paste,
         size = size,
         onClick = {
             val value = clipboardData.value
