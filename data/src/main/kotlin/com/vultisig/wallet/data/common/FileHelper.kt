@@ -15,6 +15,9 @@ import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
 import java.io.OutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import kotlin.collections.forEach
 
 private const val DIRECTORY_NAME = "Vultisig"
 private const val QRCODE_DIRECTORY_NAME = "QRCodes"
@@ -68,6 +71,27 @@ fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
         return false
     }
 }
+
+fun Context.saveContentToUri(uri: Uri, contentList: List<ZipFileEntry>): Boolean {
+    try {
+        contentResolver.openOutputStream(uri).use { outputStream ->
+            ZipOutputStream(outputStream).use { zipOutputStream ->
+                contentList.forEach { content ->
+                    val zipEntry = ZipEntry(content.name)
+                    zipOutputStream.putNextEntry(zipEntry)
+                    content.content.byteInputStream().use { input ->
+                        input.copyTo(zipOutputStream, DEFAULT_BUFFER_SIZE)
+                    }
+                    zipOutputStream.closeEntry()
+                }
+            }
+        }
+        return true
+    } catch (e: Exception) {
+        return false
+    }
+}
+
 
 internal fun backupVaultToDownloadsDir(json: String, backupFileName: String): Boolean {
     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {

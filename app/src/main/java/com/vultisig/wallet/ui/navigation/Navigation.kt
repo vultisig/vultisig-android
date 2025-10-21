@@ -543,6 +543,12 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class BackupPassword(
+        val vaultId: VaultId,
+        val backupType: BackupType = BackupType.CurrentVault(),
+    )
+
+    @Serializable
     data class VaultBackupSummary(
         val vaultId: VaultId,
         val vaultType: VaultInfo.VaultType,
