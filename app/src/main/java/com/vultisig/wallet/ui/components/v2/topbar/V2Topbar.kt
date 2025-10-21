@@ -24,7 +24,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun V2Topbar(
     title: String?,
-    onBackClick: () -> Unit = {},
+    onBackClick: (() -> Unit)? = null,
 ) {
     CenterAlignedTopAppBar(
         modifier = Modifier,
@@ -35,17 +35,19 @@ internal fun V2Topbar(
                 color = Theme.colors.text.primary,
             )
         },
-        navigationIcon = {
-            VsCircleButton(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp),
-                onClick = onBackClick,
-                size = VsCircleButtonSize.Small,
-                type = VsCircleButtonType.Secondary,
-                designType = DesignType.Shined,
-                icon = R.drawable.ic_caret_left,
-            )
-        },
+        navigationIcon = onBackClick?.let {
+            {
+                VsCircleButton(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp),
+                    onClick = onBackClick,
+                    size = VsCircleButtonSize.Small,
+                    type = VsCircleButtonType.Secondary,
+                    designType = DesignType.Shined,
+                    icon = R.drawable.ic_caret_left,
+                )
+            }
+        } ?: {},
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Theme.colors.backgrounds.primary,
         ),
@@ -99,7 +101,7 @@ fun V2Topbar(
 @Composable
 private fun PreviewV2Topbar() {
     V2Topbar(
-        title = "Title"
+        title = "Title",
     )
 }
 @Preview
