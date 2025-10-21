@@ -691,4 +691,5 @@
     <string name="retry">Repetir</string>
     <string name="custom_token_screen_title">Encontrar token personalizado</string>
     <string name="rename_vault_screen_rename_vault">Renomear cofre</string>
+    <string name="custom_token_not_found_desc">Possíveis causas: contrato incorreto, cadeia não suportada ou token removido dos registros</string>
 </resources>
