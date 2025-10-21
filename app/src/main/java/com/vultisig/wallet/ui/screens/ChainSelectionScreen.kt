@@ -33,6 +33,7 @@ internal fun ChainSelectionScreen(
         onDisableAccount = viewModel::disableAccountTemp,
         onDoneClick = viewModel::onCommitChanges,
         onCancelClick = viewModel::cancelChanges,
+        onSetSearchText = viewModel::setSearchText,
     )
 }
 
@@ -44,6 +45,7 @@ private fun ChainSelectionScreen(
     onDisableAccount: (Coin) -> Unit,
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
+    onSetSearchText: (String) -> Unit = {},
 ) {
 
     TokenSelectionList(
@@ -74,7 +76,8 @@ private fun ChainSelectionScreen(
             } else {
                 onDisableAccount(chain.coin)
             }
-        }
+        },
+        onSetSearchText = onSetSearchText,
     )
 }
 

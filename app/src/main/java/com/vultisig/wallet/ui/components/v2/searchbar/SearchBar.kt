@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,9 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
@@ -48,6 +47,8 @@ internal fun SearchBar(
     state: TextFieldState,
     onCancelClick: () -> Unit,
     isInitiallyFocused: Boolean,
+    isPasteEnabled: Boolean = false,
+    onSetSearchText: (String) -> Unit = {},
 ) {
     var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
@@ -126,6 +127,12 @@ internal fun SearchBar(
                                 color = Theme.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
+                            UiSpacer(
+                                weight = 1f
+                            )
+                            if (isPasteEnabled) {
+                                PasteIcon(onPaste = onSetSearchText)
+                            }
                         } else {
                             input()
                             UiSpacer(
