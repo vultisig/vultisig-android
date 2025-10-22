@@ -100,7 +100,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             send(addresses)
         }
         awaitClose()
-        }
+    }
 
     override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
         val addresses = buildCacheAddresses(vaultId).addresses
@@ -125,24 +125,24 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
     private suspend fun MutableList<Address>.fetchAccountFromDb(){
 
-            val balances = balanceRepository.getCachedTokenBalances(
-                this.map { adr -> adr.address },
-                this.map { adr -> adr.accounts.map { it.token } }.flatten()
-            )
+        val balances = balanceRepository.getCachedTokenBalances(
+            this.map { adr -> adr.address },
+            this.map { adr -> adr.accounts.map { it.token } }.flatten()
+        )
 
-            mapIndexed { index, account ->
-                val newAccounts = account.accounts.map { acc ->
-                    val balance = balances.firstOrNull {
-                        it.address == account.address && it.coinId == acc.token.id
-                    }
-                    if (balance != null) {
-                        acc.applyBalance(balance.tokenBalance)
-                    } else {
-                        acc
-                    }
+        mapIndexed { index, account ->
+            val newAccounts = account.accounts.map { acc ->
+                val balance = balances.firstOrNull {
+                    it.address == account.address && it.coinId == acc.token.id
                 }
-                this@fetchAccountFromDb[index] = account.copy(accounts = newAccounts)
+                if (balance != null) {
+                    acc.applyBalance(balance.tokenBalance)
+                } else {
+                    acc
+                }
             }
+            this@fetchAccountFromDb[index] = account.copy(accounts = newAccounts)
+        }
 
     }
     private suspend fun getSPLCoins(
@@ -186,10 +186,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         emit(account)
 
-        val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(updatedCoins) }
-        }
-
         val address = account.address
 
         emit(
@@ -205,17 +201,22 @@ internal class AccountsRepositoryImpl @Inject constructor(
             )
         )
 
+        val loadPrices = supervisorScope {
+            async { tokenPriceRepository.refresh(updatedCoins) }
+        }
+
+
         loadPrices.await()
 
         emit(
             account.copy(
-            accounts = account.accounts.map {
-                val balance = balanceRepository.getTokenBalanceAndPrice(address, it.token)
-                    .first()
+                accounts = account.accounts.map {
+                    val balance = balanceRepository.getTokenBalanceAndPrice(address, it.token)
+                        .first()
 
-                it.applyBalance(balance.tokenBalance, balance.price)
-            }
-        ))
+                    it.applyBalance(balance.tokenBalance, balance.price)
+                }
+            ))
     }
 
     override suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount> {
