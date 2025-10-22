@@ -10,6 +10,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
@@ -88,6 +89,7 @@ fun Context.saveContentToUri(uri: Uri, contentList: List<ZipFileEntry>): Boolean
         }
         return true
     } catch (e: Exception) {
+        Timber.e(e, "Failed to save ZIP content to URI")
         return false
     }
 }

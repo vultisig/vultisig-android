@@ -61,7 +61,7 @@ internal class VaultsToBackupViewModel @Inject constructor(
                 it.copy(
                     currentVault = currentVault,
                     vaultsToBackup = allVaults,
-                    remainedCount = -100
+                    remainedCount = null
                 )
             }
         }
