@@ -30,6 +30,7 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() : Crypto
         Chain.Optimism,
         Chain.Polygon,
         Chain.Avalanche,
+        Chain.ThorChain,
         Chain.BscChain -> true
         else -> false
     }
