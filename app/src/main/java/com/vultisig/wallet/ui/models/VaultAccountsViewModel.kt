@@ -238,12 +238,24 @@ internal class VaultAccountsViewModel @Inject constructor(
         val chainId = account.model.chain.id
 
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.ChainTokens(
-                    vaultId = vaultId,
-                    chainId = chainId,
-                )
-            )
+            when (uiState.value.cryptoConnectionType) {
+                CryptoConnectionType.Wallet -> {
+                    navigator.navigate(
+                        Destination.ChainTokens(
+                            vaultId = vaultId,
+                            chainId = chainId,
+                        )
+                    )
+                }
+                CryptoConnectionType.Defi -> {
+                    navigator.navigate(
+                        Destination.PositionTokens(
+                            vaultId = vaultId,
+                            chainId = chainId,
+                        )
+                    )
+                }
+            }
         }
     }
 

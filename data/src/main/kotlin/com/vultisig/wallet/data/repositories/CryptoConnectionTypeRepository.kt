@@ -24,14 +24,7 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() : Crypto
     }
 
     override fun isDefi(chain: Chain) = when (chain) {
-        Chain.Ethereum,
-        Chain.Arbitrum,
-        Chain.Base,
-        Chain.Optimism,
-        Chain.Polygon,
-        Chain.Avalanche,
-        Chain.ThorChain,
-        Chain.BscChain -> true
+         Chain.ThorChain -> true
         else -> false
     }
 }
