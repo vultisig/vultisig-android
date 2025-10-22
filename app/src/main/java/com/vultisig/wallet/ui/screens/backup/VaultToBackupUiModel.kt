@@ -29,7 +29,6 @@ internal data class VaultToBackupUiModel(
 internal data class BackupVaultUiModel(
     val currentVault: VaultToBackupUiModel = VaultToBackupUiModel(),
     val vaultsToBackup: List<VaultToBackupUiModel> = emptyList(),
-    val remainedCount: Int? = null,
 )
 
 
@@ -61,7 +60,6 @@ internal class VaultsToBackupViewModel @Inject constructor(
                 it.copy(
                     currentVault = currentVault,
                     vaultsToBackup = allVaults,
-                    remainedCount = null
                 )
             }
         }
