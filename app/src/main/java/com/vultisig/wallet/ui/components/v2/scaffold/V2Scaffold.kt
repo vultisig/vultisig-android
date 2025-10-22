@@ -19,7 +19,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun V2Scaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
-    onBackClick: () -> Unit,
+    onBackClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
 
