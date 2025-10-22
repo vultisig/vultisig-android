@@ -3,11 +3,14 @@ package com.vultisig.wallet.ui.screens.peer
 import android.icu.text.MessageFormat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,15 +27,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -71,8 +80,10 @@ import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
-import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.asString
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun KeygenPeerDiscoveryScreen(
@@ -147,6 +158,7 @@ internal fun PeerDiscoveryScreen(
 
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
 
+    var isExpanded by remember { mutableStateOf(false) }
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -195,6 +207,9 @@ internal fun PeerDiscoveryScreen(
                             )
                             .fillMaxWidth(0.80f),
                         devicesSize = devicesSize,
+                        onEnlargeImageClick = {
+                            isExpanded = true
+                        }
                     )
 
                     AnimatedVisibility(
@@ -294,6 +309,12 @@ internal fun PeerDiscoveryScreen(
                     }
                 }
 
+                if (isExpanded && state.qr != null) {
+                    ExpandedQrOverlay(
+                        qrCode = state.qr,
+                        onDismiss = { isExpanded = false }
+                    )
+                }
             }
         },
         bottomBar = {
@@ -383,6 +404,7 @@ private fun QrCodeContainer(
     modifier: Modifier = Modifier,
     devicesSize: Int = 0,
     qrCode: BitmapPainter? = null,
+    onEnlargeImageClick : () -> Unit
 ) {
     Box(
         modifier = modifier
@@ -404,18 +426,103 @@ private fun QrCodeContainer(
             enter = fadeIn(),
         ) {
             if (qrCode != null) {
-                Image(
-                    painter = qrCode,
-                    contentDescription = "QR",
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                )
+                Box {
+                    Image(
+                        painter = qrCode,
+                        contentDescription = "QR",
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                    )
+                    UiIcon(
+                        drawableResId = R.drawable.enlarge,
+                        size = 24.dp,
+                        onClick = onEnlargeImageClick,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .background(
+                                Theme.colors.backgrounds.primary.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(
+                                    size = 2.dp
+                                )
+                            )
+                            .padding(8.dp)
+                            .align(Alignment.BottomEnd)
+                    )
+                }
             }
         }
     }
 }
 
+@Composable
+private fun ExpandedQrOverlay(
+    qrCode: BitmapPainter,
+    onDismiss: () -> Unit
+) {
+    val scale = remember { Animatable(0.8f) }
+    val alpha = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        launch { scale.animateTo(1f, tween(300)) }
+        launch { alpha.animateTo(1f, tween(300)) }
+    }
+
+    suspend fun close() {
+        coroutineScope {
+            launch {
+                scale.animateTo(0.8f, tween(300))
+            }
+            launch {
+                alpha.animateTo(0f, tween(300))
+            }
+        }
+        onDismiss()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = alpha.value * 0.9f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                scope.launch { close() }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        IconButton(
+            onClick = {
+                scope.launch { close() }
+            },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        Image(
+            painter = qrCode,
+            contentDescription = "QR Expanded",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize(0.9f)
+                .graphicsLayer(
+                    scaleX = scale.value,
+                    scaleY = scale.value,
+                    alpha = alpha.value
+                )
+        )
+    }
+}
 @Composable
 private fun LocalModeHint() {
     val shape = RoundedCornerShape(12.dp)
