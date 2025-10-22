@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +9,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -106,6 +106,9 @@ internal class ChainSelectionViewModel @Inject constructor(
         }
     }
 
+    fun setSearchText(searchText: String) {
+        searchTextFieldState.setTextAndPlaceCursorAtEnd(text = searchText)
+    }
 
     private suspend fun enableAccount(nativeToken: Coin, vault: Vault) {
         val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(

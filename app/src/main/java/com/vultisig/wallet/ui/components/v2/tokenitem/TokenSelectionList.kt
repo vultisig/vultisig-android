@@ -30,6 +30,7 @@ internal fun <T> TokenSelectionList(
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
     onPlusClick: (() -> Unit)? = null,
+    onSetSearchText: (String) -> Unit = {},
 ) {
     V2BottomSheet(
         onDismissRequest = onCancelClick,
@@ -67,7 +68,9 @@ internal fun <T> TokenSelectionList(
             SearchBar(
                 state = searchTextFieldState,
                 onCancelClick = {},
-                isInitiallyFocused = false
+                isInitiallyFocused = false,
+                isPasteEnabled = true,
+                onSetSearchText = onSetSearchText,
             )
             UiSpacer(
                 size = 24.dp

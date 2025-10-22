@@ -680,7 +680,7 @@ private fun SendFormScreen(
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
                                         hint = stringResource(R.string.send_form_enter_memo),
-                                        trailingIcon = R.drawable.ic_paste,
+                                        trailingIcon = R.drawable.paste,
                                         onTrailingIconClick = {
                                             clipboardData.value
                                                 ?.takeIf { it.isNotEmpty() }
