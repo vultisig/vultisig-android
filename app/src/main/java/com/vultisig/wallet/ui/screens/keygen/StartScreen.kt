@@ -90,8 +90,6 @@ private fun StartScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = CenterHorizontally
             ) {
-
-
                 Image(
                     painter = painterResource(id = R.drawable.vultisig),
                     contentDescription = "vultisig",
@@ -106,6 +104,7 @@ private fun StartScreen(
                     style = Theme.brockmann.headings.largeTitle
                 )
             }
+
             Column(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -187,7 +186,6 @@ private fun SeparatorWithText(
         )
     }
 }
-
 
 @Preview
 @Composable
