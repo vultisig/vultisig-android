@@ -276,7 +276,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     }
                     .catch {
                         updateRefreshing(false)
-
                         // TODO handle error
                         Timber.e(it)
                     },
@@ -407,7 +406,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     vaultId = vaultId,
                 ))
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
-
 
                 // Manually trigger loadData because dialog popBackStack in NavGraph
                 // doesn't automatically re-trigger LaunchedEffect

@@ -197,6 +197,17 @@ internal fun SetupNavGraph(
         ) {
             ChainTokensScreen(navController)
         }
+
+        composable(
+            route = Destination.PositionTokens.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+            )
+        ) {
+
+        }
+
         dialog<TokenDetail> {
             TokenDetailScreen()
         }
