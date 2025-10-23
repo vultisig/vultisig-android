@@ -511,7 +511,7 @@ private fun ExpandedQrOverlay(
 
         Image(
             painter = qrCode,
-            contentDescription = "QR Expanded",
+            contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxSize(0.9f)
