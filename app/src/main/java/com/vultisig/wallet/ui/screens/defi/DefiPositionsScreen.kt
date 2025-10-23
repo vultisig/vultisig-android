@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -39,7 +38,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.home.components.BondedTabs
@@ -78,18 +82,17 @@ internal fun DefiPositionScreenContent(onBackClick: () -> Unit) {
                 onTabSelected = { selectedTab = it },
                 selectedTab = selectedTab,
                 content = {
-                    Box(
+                    V2Container(
+                        type = ContainerType.SECONDARY,
+                        cornerType = CornerType.Circular,
                         modifier = Modifier
-                            .size(36.dp)
-                            .background(Color(0xFF121A2E), CircleShape)
-                            .clickable { /* TODO: Manage positions */ },
-                        contentAlignment = Alignment.Center
+                            .clickOnce(onClick = {} )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = Color(0xFF3D6EFF),
-                            modifier = Modifier.size(20.dp)
+                        UiIcon(
+                            drawableResId = R.drawable.edit_chain,
+                            size = 16.dp,
+                            modifier = Modifier.padding(all = 12.dp),
+                            tint = Theme.colors.primary.accent4,
                         )
                     }
                 }
@@ -155,4 +158,12 @@ private fun ReferralRewardsBanner(
             )
         }
     }
+}
+
+@Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+private fun DefiPositionsScreenPreview() {
+    DefiPositionScreenContent(
+        onBackClick = {}
+    )
 }
