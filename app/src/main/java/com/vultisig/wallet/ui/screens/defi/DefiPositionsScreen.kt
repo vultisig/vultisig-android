@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
+import com.vultisig.wallet.ui.screens.v2.home.components.BondedTabs
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -155,59 +156,3 @@ private fun ReferralRewardsBanner(
         }
     }
 }
-
-@Composable
-fun BondedTabs(
-    tabs: List<String>,
-    selectedTab: String,
-    onTabSelected: (String) -> Unit,
-    content: @Composable (() -> Unit)? = null,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            tabs.forEach { tab ->
-                Column(
-                    horizontalAlignment = CenterHorizontally,
-                    modifier = Modifier
-                        .width(IntrinsicSize.Max)
-                        .clickable { onTabSelected(tab) }
-                ) {
-                    Text(
-                        text = tab,
-                        color = if (tab == selectedTab){
-                            Theme.v2.colors.text.primary
-                        } else {
-                            Theme.v2.colors.text.extraLight
-                        },
-                        style = Theme.brockmann.body.s.medium,
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .height(2.dp)
-                            .fillMaxWidth()
-                            .background(
-                                color = if (tab == selectedTab){
-                                    Theme.v2.colors.primary.accent4
-                                } else {
-                                    Color.Transparent
-                                },
-                                shape = RoundedCornerShape(1.dp)
-                            )
-                    )
-                }
-            }
-        }
-
-        if (content != null) {
-            content()
-        }
-    }
-}
-
