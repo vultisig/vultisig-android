@@ -693,4 +693,6 @@
     <string name="custom_token_screen_title">Buscar token personalizado</string>
     <string name="rename_vault_screen_rename_vault">Cambiar el nombre de la bóveda</string>
     <string name="custom_token_not_found_desc">Posibles razones: contrato incorrecto, cadena no compatible o token eliminado de los registros</string>
+    <string name="defi_no_positions_selected">No hay posiciones seleccionadas</string>
+    <string name="defi_no_positions_selected_desc">Has deshabilitado todas las posiciones para esta cadena. Habilita al menos una posición para ver saldos y gestionar acciones.</string>
 </resources>

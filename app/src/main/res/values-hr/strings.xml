@@ -693,4 +693,6 @@
     <string name="retry">Pokušajte ponovno</string>
     <string name="custom_token_screen_title">Pronađite prilagođeni token</string>
     <string name="rename_vault_screen_rename_vault">Preimenuj trezor</string>
+    <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
+    <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
 </resources>
