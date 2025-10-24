@@ -95,6 +95,13 @@ interface ThorChainApi {
     suspend fun getLastBlock(): Long
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
     suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
+
+    // Bonded nodes API
+    suspend fun getBondedNodes(address: String): BondedNodesResponse
+    suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
+    suspend fun getChurns(): ChurnsResponse
+    suspend fun getChurnInterval(): Long
+
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -492,10 +499,48 @@ internal class ThorChainApiImpl @Inject constructor(
         getThorchainDenomMetadata(denom)
             ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
 
+    override suspend fun getBondedNodes(address: String): BondedNodesResponse {
+        val url = "$MIDGARD_URL/bonds/$address"
+        val response = httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }
+        response.throwIfUnsuccessful()
+        return response.body()
+    }
+
+    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
+        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
+        val response = httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }
+        response.throwIfUnsuccessful()
+        return response.body()
+    }
+
+    override suspend fun getChurns(): ChurnsResponse {
+        val url = "$MIDGARD_URL/churns"
+        val response = httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }
+        response.throwIfUnsuccessful()
+        return response.body()
+    }
+
+    override suspend fun getChurnInterval(): Long {
+        val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
+        val response = httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }
+        response.throwIfUnsuccessful()
+        // The response is a plain number as a string
+        val responseText = response.bodyAsText()
+        return responseText.toLongOrNull() ?: 0L
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val THORNODE_BASE = "https://thornode.ninerealms.com"
-        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
+        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2"
     }
 }
 
@@ -672,4 +717,141 @@ data class VaultRedemptionDataJson(
     val liquidBondShares: String = "",
     @SerialName("liquid_bond_size")
     val liquidBondSize: String = ""
+)
+
+// Bonded nodes response models
+@Serializable
+data class BondedNodesResponse(
+    @SerialName("bonds")
+    val bonds: List<BondedNode>
+)
+
+@Serializable
+data class BondedNode(
+    @SerialName("node_address")
+    val nodeAddress: String,
+    @SerialName("units")
+    val units: String,
+    @SerialName("bond")
+    val bond: String,
+    @SerialName("award")
+    val award: String,
+    @SerialName("status")
+    val status: String
+)
+
+@Serializable
+data class NodeDetailsResponse(
+    @SerialName("node_address")
+    val nodeAddress: String,
+    @SerialName("status")
+    val status: String,
+    @SerialName("pub_key_set")
+    val pubKeySet: PubKeySet?,
+    @SerialName("validator_cons_pub_key")
+    val validatorConsPubKey: String?,
+    @SerialName("bond")
+    val bond: String,
+    @SerialName("active_block_height")
+    val activeBlockHeight: String,
+    @SerialName("bond_address")
+    val bondAddress: String,
+    @SerialName("status_since")
+    val statusSince: String,
+    @SerialName("signer_membership")
+    val signerMembership: List<String>,
+    @SerialName("requested_to_leave")
+    val requestedToLeave: Boolean,
+    @SerialName("forced_to_leave")
+    val forcedToLeave: Boolean,
+    @SerialName("leave_height")
+    val leaveHeight: String,
+    @SerialName("ip_address")
+    val ipAddress: String,
+    @SerialName("version")
+    val version: String,
+    @SerialName("slash_points")
+    val slashPoints: String,
+    @SerialName("jail")
+    val jail: Jail?,
+    @SerialName("current_award")
+    val currentAward: String,
+    @SerialName("observe_chains")
+    val observeChains: List<ChainHeight>,
+    @SerialName("preflight_status")
+    val preflightStatus: PreflightStatus?,
+    @SerialName("bond_providers")
+    val bondProviders: BondProviders?
+)
+
+@Serializable
+data class PubKeySet(
+    @SerialName("secp256k1")
+    val secp256k1: String,
+    @SerialName("ed25519")
+    val ed25519: String
+)
+
+@Serializable
+data class Jail(
+    @SerialName("node_address")
+    val nodeAddress: String,
+    @SerialName("release_height")
+    val releaseHeight: String,
+    @SerialName("reason")
+    val reason: String
+)
+
+@Serializable
+data class ChainHeight(
+    @SerialName("chain")
+    val chain: String,
+    @SerialName("height")
+    val height: String
+)
+
+@Serializable
+data class PreflightStatus(
+    @SerialName("status")
+    val status: String,
+    @SerialName("reason")
+    val reason: String,
+    @SerialName("code")
+    val code: Int
+)
+
+@Serializable
+data class BondProviders(
+    @SerialName("node_address")
+    val nodeAddress: String,
+    @SerialName("node_operator_fee")
+    val nodeOperatorFee: String,
+    @SerialName("providers")
+    val providers: List<BondProvider>
+)
+
+@Serializable
+data class BondProvider(
+    @SerialName("bond_address")
+    val bondAddress: String,
+    @SerialName("bond")
+    val bond: String
+)
+
+@Serializable
+data class ChurnsResponse(
+    @SerialName("intervals")
+    val intervals: List<ChurnInterval>
+)
+
+@Serializable
+data class ChurnInterval(
+    @SerialName("start_time")
+    val startTime: String,
+    @SerialName("end_time")
+    val endTime: String,
+    @SerialName("churned_in")
+    val churnedIn: List<String>,
+    @SerialName("churned_out")
+    val churnedOut: List<String>
 )
