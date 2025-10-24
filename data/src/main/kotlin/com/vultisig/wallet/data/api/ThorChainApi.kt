@@ -99,7 +99,7 @@ interface ThorChainApi {
     // Bonded nodes API
     suspend fun getBondedNodes(address: String): BondedNodesResponse
     suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
-    suspend fun getChurns(): ChurnsResponse
+    suspend fun getChurns(): List<ChurnEntry>
     suspend fun getChurnInterval(): Long
 
 }
@@ -515,11 +515,11 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<NodeDetailsResponse>()
     }
 
-    override suspend fun getChurns(): ChurnsResponse {
+    override suspend fun getChurns(): List<ChurnEntry> {
         val url = "$MIDGARD_URL/churns"
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
-        }.bodyOrThrow<ChurnsResponse>()
+        }.bodyOrThrow<List<ChurnEntry>>()
     }
 
     override suspend fun getChurnInterval(): Long {
@@ -711,23 +711,22 @@ data class VaultRedemptionDataJson(
     val liquidBondSize: String = ""
 )
 
-// Bonded nodes response models
 @Serializable
 data class BondedNodesResponse(
-    @SerialName("bonds")
-    val bonds: List<BondedNode>
+    @SerialName("address")
+    val address: String,
+    @SerialName("nodes")
+    val nodes: List<BondedNode>,
+    @SerialName("totalBonded")
+    val totalBonded: String
 )
 
 @Serializable
 data class BondedNode(
-    @SerialName("node_address")
-    val nodeAddress: String,
-    @SerialName("units")
-    val units: String,
+    @SerialName("address")
+    val address: String,
     @SerialName("bond")
     val bond: String,
-    @SerialName("award")
-    val award: String,
     @SerialName("status")
     val status: String
 )
@@ -738,78 +737,12 @@ data class NodeDetailsResponse(
     val nodeAddress: String,
     @SerialName("status")
     val status: String,
-    @SerialName("pub_key_set")
-    val pubKeySet: PubKeySet?,
-    @SerialName("validator_cons_pub_key")
-    val validatorConsPubKey: String?,
-    @SerialName("bond")
-    val bond: String,
-    @SerialName("active_block_height")
-    val activeBlockHeight: String,
     @SerialName("bond_address")
     val bondAddress: String,
-    @SerialName("status_since")
-    val statusSince: String,
-    @SerialName("signer_membership")
-    val signerMembership: List<String>,
-    @SerialName("requested_to_leave")
-    val requestedToLeave: Boolean,
-    @SerialName("forced_to_leave")
-    val forcedToLeave: Boolean,
-    @SerialName("leave_height")
-    val leaveHeight: String,
-    @SerialName("ip_address")
-    val ipAddress: String,
-    @SerialName("version")
-    val version: String,
-    @SerialName("slash_points")
-    val slashPoints: String,
-    @SerialName("jail")
-    val jail: Jail?,
     @SerialName("current_award")
     val currentAward: String,
-    @SerialName("observe_chains")
-    val observeChains: List<ChainHeight>,
-    @SerialName("preflight_status")
-    val preflightStatus: PreflightStatus?,
-    @SerialName("bond_providers")
+     @SerialName("bond_providers")
     val bondProviders: BondProviders?
-)
-
-@Serializable
-data class PubKeySet(
-    @SerialName("secp256k1")
-    val secp256k1: String,
-    @SerialName("ed25519")
-    val ed25519: String
-)
-
-@Serializable
-data class Jail(
-    @SerialName("node_address")
-    val nodeAddress: String,
-    @SerialName("release_height")
-    val releaseHeight: String,
-    @SerialName("reason")
-    val reason: String
-)
-
-@Serializable
-data class ChainHeight(
-    @SerialName("chain")
-    val chain: String,
-    @SerialName("height")
-    val height: String
-)
-
-@Serializable
-data class PreflightStatus(
-    @SerialName("status")
-    val status: String,
-    @SerialName("reason")
-    val reason: String,
-    @SerialName("code")
-    val code: Int
 )
 
 @Serializable
@@ -831,11 +764,14 @@ data class BondProvider(
 )
 
 @Serializable
-data class ChurnsResponse(
-    @SerialName("intervals")
-    val intervals: List<ChurnInterval>
+data class ChurnEntry(
+    @SerialName("date")
+    val date: String,
+    @SerialName("height")
+    val height: String
 )
 
+/*
 @Serializable
 data class ChurnInterval(
     @SerialName("start_time")
@@ -847,3 +783,4 @@ data class ChurnInterval(
     @SerialName("churned_out")
     val churnedOut: List<String>
 )
+ */

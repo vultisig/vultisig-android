@@ -269,12 +269,6 @@ internal interface RepositoriesModule {
     fun bindCryptoConnectionTypeRepository(
         impl: CryptoConnectionTypeRepositoryImpl
     ): CryptoConnectionTypeRepository
-
-    @Binds
-    @Singleton
-    fun bindBondedNodesRepository(
-        impl: BondedNodesRepositoryImpl
-    ): BondedNodesRepository
 }
 
 @Qualifier

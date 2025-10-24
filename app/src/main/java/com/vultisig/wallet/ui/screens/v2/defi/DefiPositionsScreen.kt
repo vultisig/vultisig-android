@@ -44,7 +44,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun DefiPositionsScreen(
     navController: NavHostController,
-    viewModel: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
+    model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
 ) {
     DefiPositionScreenContent(
         onBackClick = navController::popBackStack,
