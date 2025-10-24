@@ -501,40 +501,32 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getBondedNodes(address: String): BondedNodesResponse {
         val url = "$MIDGARD_URL/bonds/$address"
-        val response = httpClient.get(url) {
+
+        return httpClient.get(url) {
             header(xClientID, xClientIDValue)
-        }
-        response.throwIfUnsuccessful()
-        return response.body()
+        }.bodyOrThrow<BondedNodesResponse>()
     }
 
     override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
         val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
-        val response = httpClient.get(url) {
+
+        return httpClient.get(url) {
             header(xClientID, xClientIDValue)
-        }
-        response.throwIfUnsuccessful()
-        return response.body()
+        }.bodyOrThrow<NodeDetailsResponse>()
     }
 
     override suspend fun getChurns(): ChurnsResponse {
         val url = "$MIDGARD_URL/churns"
-        val response = httpClient.get(url) {
+        return httpClient.get(url) {
             header(xClientID, xClientIDValue)
-        }
-        response.throwIfUnsuccessful()
-        return response.body()
+        }.bodyOrThrow<ChurnsResponse>()
     }
 
     override suspend fun getChurnInterval(): Long {
         val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
-        val response = httpClient.get(url) {
+        return httpClient.get(url) {
             header(xClientID, xClientIDValue)
-        }
-        response.throwIfUnsuccessful()
-        // The response is a plain number as a string
-        val responseText = response.bodyAsText()
-        return responseText.toLongOrNull() ?: 0L
+        }.bodyOrThrow<Long>()
     }
 
     companion object {
