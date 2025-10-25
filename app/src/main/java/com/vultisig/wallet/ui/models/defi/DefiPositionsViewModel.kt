@@ -10,6 +10,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+internal data class DefiPositionsUiModel(
+    val totalAmountPrice: String,
+    val selectedTab: String,
+    val bonded: BondedTabUiModel,
+)
+
+internal data class BondedTabUiModel(
+    val totalBondedAmount: String,
+    val nodes: BondedNodeUiModel,
+)
+
+internal data class BondedNodeUiModel(
+    val address: String,
+    val status: String,
+    val apy: String,
+    val bondedAmount: String,
+    val nextAward: String,
+    val nextChurn: String,
+)
+
 @HiltViewModel
 class DefiPositionsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
