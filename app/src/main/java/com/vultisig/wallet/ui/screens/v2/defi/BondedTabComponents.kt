@@ -5,7 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -207,22 +210,24 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ActionButton(
-                text = "Unbond",
+                title = "Unbond",
                 icon = Icons.Default.Add,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Color(0xFF5A6BFF)),
                 contentColor = Color(0xFFB0B9FF),
                 onClick = {},
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                iconCircleColor = Color(0x33FFFFFF)
             )
 
             ActionButton(
-                text = "Bond",
+                title = "Bond",
                 icon = Icons.Default.Add,
                 background = Color(0xFF3E55FF),
                 contentColor = Color.White,
                 onClick = {},
-                        modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                iconCircleColor = Color(0x33FFFFFF)
             )
         }
     }
@@ -260,12 +265,13 @@ fun InfoItem(icon: Int, label: String, value: String) {
 
 @Composable
 fun ActionButton(
-    text: String,
+    title: String,
     icon: ImageVector,
     background: Color,
     modifier: Modifier = Modifier,
     border: BorderStroke? = null,
     contentColor: Color,
+    iconCircleColor: Color,
     onClick: () -> Unit,
 ) {
     Button(
@@ -276,18 +282,27 @@ fun ActionButton(
         ),
         border = border,
         shape = RoundedCornerShape(50),
-        modifier = modifier
-            .height(42.dp)
+        contentPadding = PaddingValues(horizontal = 6.dp),
+        modifier = modifier.height(42.dp)
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp)
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(iconCircleColor, RoundedCornerShape(50)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        Text(
+            text = title,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
         )
-
-        UiSpacer(6.dp)
-
-        Text(text)
     }
 }
 
