@@ -42,7 +42,6 @@ internal fun DefiExpandedTopbarContent(
             )
     ) {
 
-
         CoinsAround()
 
         Column(

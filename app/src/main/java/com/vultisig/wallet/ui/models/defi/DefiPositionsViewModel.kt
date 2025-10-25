@@ -27,14 +27,17 @@ class DefiPositionsViewModel @Inject constructor(
     private fun loadBondedNodes() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { // thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c
-                val nodes = thorChainApi.getBondedNodes("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
-                println(nodes)
+                val nodesResponse = thorChainApi.getBondedNodes("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
+                println(nodesResponse)
+                val node = nodesResponse.nodes.first().address
+                val details = thorChainApi.getNodeDetails(node)
+                println(details)
 
                 val churns = thorChainApi.getChurns()
                 println(churns)
 
-                //val churnsInterval = thorChainApi.getChurnInterval()
-                //println(churnsInterval)
+                val churnsInterval = thorChainApi.getChurnInterval()
+                println(churnsInterval)
             }
         }
     }
