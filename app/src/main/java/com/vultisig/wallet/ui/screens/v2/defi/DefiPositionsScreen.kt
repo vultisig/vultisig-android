@@ -33,8 +33,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
@@ -96,7 +99,8 @@ internal fun DefiPositionScreenContent(
             )
 
             BondedTabContent(
-                managePositionsOnClick = {}
+                managePositionsOnClick = {},
+                bondToNodeOnClick = {},
             )
         }
     }
@@ -154,8 +158,11 @@ private fun BalanceBanner(
 }
 
 @Composable
-fun BondedTabContent(managePositionsOnClick: () -> Unit) {
-    TotalBondWidget()
+fun BondedTabContent(managePositionsOnClick: () -> Unit, bondToNodeOnClick: () -> Unit) {
+
+    TotalBondWidget(
+        onClickBondToNode = bondToNodeOnClick,
+    )
 
     NotEnabledContainer(
         title = stringResource(R.string.defi_no_positions_selected),
@@ -181,7 +188,9 @@ fun BondedTabContent(managePositionsOnClick: () -> Unit) {
 }
 
 @Composable
-fun TotalBondWidget() {
+fun TotalBondWidget(
+    onClickBondToNode: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -206,7 +215,7 @@ fun TotalBondWidget() {
 
             Column {
                 Text(
-                    text = "Bonded Rune",
+                    text = "Total Bonded Rune",
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.extraLight,
                 )
@@ -220,6 +229,19 @@ fun TotalBondWidget() {
                 )
             }
         }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = "Bond to Node",
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClickBondToNode,
+            state = VsButtonState.Enabled,
+        )
     }
 }
 
