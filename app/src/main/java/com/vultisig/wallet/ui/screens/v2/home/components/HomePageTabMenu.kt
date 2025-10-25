@@ -53,6 +53,7 @@ internal fun HomePageTabMenu(
                 VsTab(
                     label = stringResource(R.string.search_bar_portfolio),
                     onClick = {
+                        onPortfolioClick()
                         state = 0
                     },
                     isEnabled = true
