@@ -356,7 +356,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             mapTransactionToUiModel(
                                 transactionRepository.getTransaction(
                                     transactionId
-                                ).first()
+                                )
                             )
                         )
                     }

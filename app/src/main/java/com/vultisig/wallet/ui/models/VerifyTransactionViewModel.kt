@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.blockchain.Transfer
 import com.vultisig.wallet.data.blockchain.VaultData
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -94,7 +95,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
-    transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
@@ -110,12 +111,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val transactionId: TransactionId = args.transactionId
     private val vaultId: String = args.vaultId
 
-    private val transaction = transactionRepository.getTransaction(transactionId)
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = null
-        )
+    private lateinit var transaction: Transaction
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -133,7 +129,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     private suspend fun calculateFees(transactionUiModel: SendTxUiModel) {
-        val tx = transaction.value ?: return
+        val tx = transaction
         val chain = tx.token.chain
         val vault = withContext(Dispatchers.IO) {
             vaultRepository.get(vaultId)
@@ -311,8 +307,16 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     private fun loadTransaction() {
         viewModelScope.launch {
-            val transaction = transaction.filterNotNull().first()
-
+            transaction = runCatching {
+                transactionRepository.getTransaction(transactionId)
+            }.getOrElse {
+                Timber.e(
+                    it,
+                    "Failed to load transaction"
+                )
+                navigator.back()
+                return@launch
+            }
             val transactionUiModel = mapTransactionToUiModel(transaction)
 
             uiState.update {
@@ -326,7 +330,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun scanTransaction() {
         viewModelScope.launch {
             try {
-                val transaction = transaction.filterNotNull().firstOrNull() ?: return@launch
+                val transaction = transaction
                 val chain = transaction.token.chain
 
                 val isSupported = securityScannerService
