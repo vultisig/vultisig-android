@@ -54,19 +54,18 @@ fun ChainTokensTabMenuAndSearchBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 VsTabGroup(
-                    tabs = listOf(
-                        {
-                            VsTab(
-                                label = stringResource(R.string.tokens),
-                                onClick = {
-                                    onTokensClick()
-                                    tabIndex = 0
-                                }
-                            )
-                        },
-                    ),
                     index = tabIndex
-                )
+                ) {
+                    tab {
+                        VsTab(
+                            label = stringResource(R.string.tokens),
+                            onClick = {
+                                onTokensClick()
+                                tabIndex = 0
+                            }
+                        )
+                    }
+                }
 
                 UiSpacer(
                     weight = 1f
