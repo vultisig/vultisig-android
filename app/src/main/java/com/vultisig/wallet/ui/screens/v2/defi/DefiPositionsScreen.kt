@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +68,7 @@ internal fun DefiPositionScreenContent(onBackClick: () -> Unit) {
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            ReferralRewardsBanner(isLoading = false)
+            BalanceBanner(isLoading = false)
 
             BondedTabs(
                 tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
@@ -89,19 +91,13 @@ internal fun DefiPositionScreenContent(onBackClick: () -> Unit) {
                 }
             )
 
-            NotEnabledContainer(
-                title = stringResource(R.string.defi_no_positions_selected),
-                content = stringResource(R.string.defi_no_positions_selected_desc),
-                action = {
-
-                }
-            )
+            BondedTabContent()
         }
     }
 }
 
 @Composable
-private fun ReferralRewardsBanner(
+private fun BalanceBanner(
     isLoading: Boolean,
 ) {
     Box(
@@ -147,6 +143,66 @@ private fun ReferralRewardsBanner(
                 color = Theme.colors.text.primary,
                 style = Theme.satoshi.price.title1,
             )
+        }
+    }
+}
+
+@Composable
+fun BondedTabContent() {
+    TotalBondWidget()
+
+    NotEnabledContainer(
+        title = stringResource(R.string.defi_no_positions_selected),
+        content = stringResource(R.string.defi_no_positions_selected_desc),
+        action = {
+
+        }
+    )
+}
+
+@Composable
+fun TotalBondWidget() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Token icon
+            /*val CircleShape = null
+
+            Image(
+                painter = tokenIcon,
+                contentDescription = "$tokenName logo",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+            ) */
+
+            //UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = "Bonded Rune",
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                Text(
+                    text = "0 RUNE",
+                    style = Theme.brockmann.headings.title1,
+                    color = Theme.colors.text.primary,
+                )
+            }
         }
     }
 }
