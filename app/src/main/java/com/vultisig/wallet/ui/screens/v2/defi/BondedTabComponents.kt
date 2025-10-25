@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -115,11 +116,22 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
             )
             .padding(16.dp)
     ) {
-        Text(
-            text = "Active Nodes",
-            style = Theme.brockmann.button.medium,
-            color = Theme.v2.colors.text.light,
-        )
+        Row {
+            Text(
+                text = "Active Nodes",
+                style = Theme.brockmann.button.medium,
+                color = Theme.v2.colors.text.light,
+            )
+
+            UiSpacer(1f)
+
+            UiIcon(
+                drawableResId = R.drawable.ic_caret_down,
+                size = 16.dp,
+                tint = Theme.colors.text.light,
+                modifier = Modifier.rotate(180f)
+            )
+        }
 
         UiSpacer(16.dp)
 
