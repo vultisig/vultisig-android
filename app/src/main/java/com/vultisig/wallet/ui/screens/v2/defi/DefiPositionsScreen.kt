@@ -101,7 +101,6 @@ internal fun DefiPositionScreenContent(
             when (selectedTab) {
                 BONDED_TAB -> {
                     BondedTabContent(
-                        managePositionsOnClick = { },
                         bondToNodeOnClick = { },
                     )
                 }

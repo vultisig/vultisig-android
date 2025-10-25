@@ -22,10 +22,11 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun BondedTabContent(managePositionsOnClick: () -> Unit, bondToNodeOnClick: () -> Unit) {
+fun BondedTabContent(bondToNodeOnClick: () -> Unit) {
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
     )
@@ -47,7 +48,6 @@ fun TotalBondWidget(
             )
             .padding(16.dp)
     ) {
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = R.drawable.rune),
@@ -89,12 +89,77 @@ fun TotalBondWidget(
     }
 }
 
+@Composable
+internal fun NodeList(nodes: List<BondedNodeUiModel>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Active Nodes",
+            style = Theme.brockmann.button.medium,
+            color = Theme.v2.colors.text.light,
+        )
+
+        UiSpacer(16.dp)
+
+        Row {
+            Text(
+                text = "Node Address:",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.extraLight,
+            )
+
+            UiSpacer(1f)
+
+            Text(
+                text = "Churned Out",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.alerts.warning,
+            )
+        }
+
+        UiSpacer(16.dp)
+
+        Text(
+            text = "Bonded 800 RUNE",
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        UiSpacer(16.dp)
+
+        Row {
+            Text(
+                text = "APY",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.extraLight,
+            )
+
+            UiSpacer(1f)
+
+            Text(
+                text = "0%",
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.alerts.success,
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun BondedTabContentPreview() {
     BondedTabContent(
-        managePositionsOnClick = {},
-        bondToNodeOnClick = {}
+        bondToNodeOnClick = { }
     )
 }
 
@@ -102,6 +167,39 @@ private fun BondedTabContentPreview() {
 @Composable
 private fun TotalBondWidgetPreview() {
     TotalBondWidget(
-        onClickBondToNode = {}
+        onClickBondToNode = { }
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun NodeListPreview() {
+    NodeList(
+        nodes = listOf(
+            BondedNodeUiModel(
+                address = "thor1abcd...xyz",
+                status = "Active",
+                apy = "12.5%",
+                bondedAmount = "1000 RUNE",
+                nextAward = "2 days",
+                nextChurn = "5 days"
+            ),
+            BondedNodeUiModel(
+                address = "thor2efgh...uvw",
+                status = "Standby",
+                apy = "10.2%",
+                bondedAmount = "500 RUNE",
+                nextAward = "1 day",
+                nextChurn = "3 days"
+            ),
+            BondedNodeUiModel(
+                address = "thor3ijkl...rst",
+                status = "Active",
+                apy = "11.8%",
+                bondedAmount = "750 RUNE",
+                nextAward = "3 days",
+                nextChurn = "7 days"
+            )
+        )
     )
 }
