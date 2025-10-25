@@ -406,7 +406,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun navigateToBackupPasswordScreen() {
         viewModelScope.launch {
-            navigator.route(Route.BackupPasswordRequest(vaultId))
+            navigator.route(Route.VaultsToBackup(vaultId))
         }
     }
 

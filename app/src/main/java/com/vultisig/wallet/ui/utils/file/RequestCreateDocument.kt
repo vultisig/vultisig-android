@@ -17,7 +17,7 @@ import timber.log.Timber
 @Composable
 internal fun RequestCreateDocument(
     mimeType: String,
-    onDocumentCreated: (uri: Uri) -> Unit,
+    onDocumentCreated: (uri: Uri, mimeType: String) -> Unit,
     createDocumentRequestFlow: Flow<String>,
 ) {
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -26,7 +26,7 @@ internal fun RequestCreateDocument(
         )
     ) { result ->
         result?.let { uri ->
-            onDocumentCreated(uri)
+            onDocumentCreated(uri, mimeType)
         }
     }
 
