@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.defi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -59,7 +62,7 @@ fun TotalBondWidget(
 
             Column {
                 Text(
-                    text = "Total Bonded Rune",
+                    text = stringResource(R.string.total_bonded_rune),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.extraLight,
                 )
@@ -81,7 +84,7 @@ fun TotalBondWidget(
         UiSpacer(16.dp)
 
         VsButton(
-            label = "Bond to Node",
+            label = stringResource(R.string.bond_to_node),
             modifier = Modifier.fillMaxWidth(),
             onClick = onClickBondToNode,
             state = VsButtonState.Enabled,
@@ -152,6 +155,59 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
                 color = Theme.v2.colors.alerts.success,
             )
         }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            InfoItem(
+                icon = R.drawable.calendar_days,
+                label = "Next Churn",
+                value = "Oct 15, 25",
+            )
+
+            InfoItem(
+                icon = R.drawable.ic_cup,
+                label = "Next award",
+                value = "20 RUNE"
+            )
+        }
+    }
+}
+
+@Composable
+fun InfoItem(icon: Int, label: String, value: String) {
+    Column(horizontalAlignment = Alignment.Start) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UiIcon(
+                size = 16.dp,
+                drawableResId = icon,
+                contentDescription = null,
+                tint = Theme.v2.colors.text.extraLight,
+            )
+
+            UiSpacer(4.dp)
+
+            Text(
+                text = label,
+                color = Theme.v2.colors.text.extraLight,
+                style = Theme.brockmann.body.s.medium,
+            )
+        }
+
+        UiSpacer(6.dp)
+
+        Text(
+            text = value,
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.text.light,
+        )
     }
 }
 

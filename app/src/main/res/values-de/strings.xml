@@ -392,7 +392,9 @@
     <string name="network_connection_lost">Netzwerkverbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung</string>
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
     <string name="deposit_option_bond">Bond</string>
-    <string name="deposit_option_unbond">Unbond</string>    
+    <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Gesamt gebundene Rune</string>
+    <string name="bond_to_node">An Knoten binden</string>    
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
