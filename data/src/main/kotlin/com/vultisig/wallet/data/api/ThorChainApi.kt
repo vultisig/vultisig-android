@@ -737,18 +737,14 @@ data class NodeDetailsResponse(
     val nodeAddress: String,
     @SerialName("status")
     val status: String,
-    @SerialName("bond_address")
-    val bondAddress: String,
     @SerialName("current_award")
     val currentAward: String,
-     @SerialName("bond_providers")
-    val bondProviders: BondProviders?
+    @SerialName("bond_providers")
+    val bondProviders: BondProviders? = null
 )
 
 @Serializable
 data class BondProviders(
-    @SerialName("node_address")
-    val nodeAddress: String,
     @SerialName("node_operator_fee")
     val nodeOperatorFee: String,
     @SerialName("providers")
@@ -770,17 +766,3 @@ data class ChurnEntry(
     @SerialName("height")
     val height: String
 )
-
-/*
-@Serializable
-data class ChurnInterval(
-    @SerialName("start_time")
-    val startTime: String,
-    @SerialName("end_time")
-    val endTime: String,
-    @SerialName("churned_in")
-    val churnedIn: List<String>,
-    @SerialName("churned_out")
-    val churnedOut: List<String>
-)
- */
