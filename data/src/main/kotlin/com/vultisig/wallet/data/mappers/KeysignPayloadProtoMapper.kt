@@ -182,7 +182,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
                         programId = it.programId == true,
-                        priorityLimit = it.computeLimit?.toBigDecimal()?.toBigInteger()
+                        priorityLimit = it.computeLimit?.toBigInteger()
                             ?: SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
                     )
                 }
