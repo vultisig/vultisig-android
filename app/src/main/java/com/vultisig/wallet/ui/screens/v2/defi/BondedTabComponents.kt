@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,14 +8,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -178,6 +187,32 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
                 value = "20 RUNE"
             )
         }
+
+        UiSpacer(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActionButton(
+                text = "Unbond",
+                icon = Icons.Default.Add,
+                background = Color.Transparent,
+                border = BorderStroke(1.dp, Color(0xFF5A6BFF)),
+                contentColor = Color(0xFFB0B9FF),
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            )
+
+            ActionButton(
+                text = "Bond",
+                icon = Icons.Default.Add,
+                background = Color(0xFF3E55FF),
+                contentColor = Color.White,
+                onClick = {},
+                        modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -208,6 +243,39 @@ fun InfoItem(icon: Int, label: String, value: String) {
             style = Theme.brockmann.body.m.medium,
             color = Theme.v2.colors.text.light,
         )
+    }
+}
+
+@Composable
+fun ActionButton(
+    text: String,
+    icon: ImageVector,
+    background: Color,
+    modifier: Modifier = Modifier,
+    border: BorderStroke? = null,
+    contentColor: Color,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = background,
+            contentColor = contentColor
+        ),
+        border = border,
+        shape = RoundedCornerShape(50),
+        modifier = modifier
+            .height(42.dp)
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
+        )
+
+        UiSpacer(6.dp)
+
+        Text(text)
     }
 }
 
