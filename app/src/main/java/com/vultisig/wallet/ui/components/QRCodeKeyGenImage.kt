@@ -70,7 +70,7 @@ internal fun QRCodeKeyGenImage(
             if (bitmapPainter == null) return@Surface
             Image(
                 painter = bitmapPainter,
-                contentDescription = "qr",
+                contentDescription = null,
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .padding(8.dp)
