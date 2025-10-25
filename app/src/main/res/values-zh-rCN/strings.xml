@@ -3,6 +3,8 @@
     <!-- Deposit Options -->
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
+    <string name="total_bonded_rune">总绑定 Rune</string>
+    <string name="bond_to_node">绑定到节点</string>
     <string name="deposit_option_leave">离开</string>
     <string name="deposit_option_stake">质押</string>
     <string name="deposit_option_unstake">取消质押</string>

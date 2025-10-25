@@ -393,6 +393,8 @@
     <string name="edit_address_title">Editar dirección</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Total de Rune Vinculado</string>
+    <string name="bond_to_node">Vincular al Nodo</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
