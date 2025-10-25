@@ -22,7 +22,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun NotEnabledContainer(
     title: String,
     content: String,
-    action: (() -> Unit)? = null,
+    action: @Composable (() -> Unit)? = null,
 ) {
     TopShineContainer {
         Column(
@@ -56,6 +56,8 @@ internal fun NotEnabledContainer(
             )
 
             if (action != null) {
+                UiSpacer(16.dp)
+
                 action()
             }
         }

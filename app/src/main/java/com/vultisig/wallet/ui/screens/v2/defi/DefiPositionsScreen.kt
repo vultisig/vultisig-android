@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,7 +56,9 @@ internal fun DefiPositionsScreen(
 }
 
 @Composable
-internal fun DefiPositionScreenContent(onBackClick: () -> Unit) {
+internal fun DefiPositionScreenContent(
+    onBackClick: () -> Unit,
+) {
     val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
     var selectedTab by remember { mutableStateOf(tabs.first()) }
 
@@ -91,7 +95,9 @@ internal fun DefiPositionScreenContent(onBackClick: () -> Unit) {
                 }
             )
 
-            BondedTabContent()
+            BondedTabContent(
+                managePositionsOnClick = {}
+            )
         }
     }
 }
@@ -148,14 +154,28 @@ private fun BalanceBanner(
 }
 
 @Composable
-fun BondedTabContent() {
+fun BondedTabContent(managePositionsOnClick: () -> Unit) {
     TotalBondWidget()
 
     NotEnabledContainer(
         title = stringResource(R.string.defi_no_positions_selected),
         content = stringResource(R.string.defi_no_positions_selected_desc),
         action = {
-
+            Text(
+                text = "Manage Positions",
+                style = Theme.brockmann.button.medium,
+                color = Theme.colors.text.primary,
+                modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .clickOnce(onClick = managePositionsOnClick)
+                    .background(
+                        color = Theme.v2.colors.border.primaryAccent4
+                    )
+                    .padding(
+                        vertical = 8.dp,
+                        horizontal = 16.dp
+                    )
+            )
         }
     )
 }
@@ -166,27 +186,23 @@ fun TotalBondWidget() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.colors.borders.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
     ) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Token icon
-            /*val CircleShape = null
-
             Image(
-                painter = tokenIcon,
-                contentDescription = "$tokenName logo",
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-            ) */
+                painter = painterResource(id = R.drawable.rune),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp)
+            )
 
-            //UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
             Column {
                 Text(
