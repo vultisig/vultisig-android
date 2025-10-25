@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -24,36 +22,12 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun BondedTabContent(managePositionsOnClick: () -> Unit, bondToNodeOnClick: () -> Unit) {
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
-    )
-
-    NotEnabledContainer(
-        title = stringResource(R.string.defi_no_positions_selected),
-        content = stringResource(R.string.defi_no_positions_selected_desc),
-        action = {
-            Text(
-                text = "Manage Positions",
-                style = Theme.brockmann.button.medium,
-                color = Theme.colors.text.primary,
-                modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .clickOnce(onClick = managePositionsOnClick)
-                    .background(
-                        color = Theme.v2.colors.border.primaryAccent4
-                    )
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 16.dp
-                    )
-            )
-        }
     )
 }
 

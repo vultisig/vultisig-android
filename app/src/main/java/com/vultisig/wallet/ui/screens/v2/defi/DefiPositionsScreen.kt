@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,7 +39,9 @@ import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
-import com.vultisig.wallet.ui.screens.v2.home.components.BondedTabs
+import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
+import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -44,14 +49,18 @@ internal fun DefiPositionsScreen(
     navController: NavHostController,
     model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
 ) {
+    val state by model.state.collectAsState()
+
     DefiPositionScreenContent(
         onBackClick = navController::popBackStack,
+        model = state,
     )
 }
 
 @Composable
 internal fun DefiPositionScreenContent(
     onBackClick: () -> Unit,
+    model: DefiPositionsUiModel = DefiPositionsUiModel(),
 ) {
     val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
     var selectedTab by remember { mutableStateOf(tabs.first()) }
@@ -68,7 +77,7 @@ internal fun DefiPositionScreenContent(
         ) {
             BalanceBanner(isLoading = false)
 
-            BondedTabs(
+            VsTabs(
                 tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
                 onTabSelected = { selectedTab = it },
                 selectedTab = selectedTab,
@@ -89,10 +98,60 @@ internal fun DefiPositionScreenContent(
                 }
             )
 
-            BondedTabContent(
-                managePositionsOnClick = {},
-                bondToNodeOnClick = {},
-            )
+            when (selectedTab) {
+                BONDED_TAB -> {
+                    BondedTabContent(
+                        managePositionsOnClick = { },
+                        bondToNodeOnClick = { },
+                    )
+                }
+                STAKING_TAB -> {
+                    NotEnabledContainer(
+                        title = stringResource(R.string.defi_no_positions_selected),
+                        content = stringResource(R.string.defi_no_positions_selected_desc),
+                        action = {
+                            Text(
+                                text = "Manage Positions",
+                                style = Theme.brockmann.button.medium,
+                                color = Theme.colors.text.primary,
+                                modifier = Modifier
+                                    .clip(shape = CircleShape)
+                                    .clickOnce(onClick = {})
+                                    .background(
+                                        color = Theme.v2.colors.border.primaryAccent4
+                                    )
+                                    .padding(
+                                        vertical = 8.dp,
+                                        horizontal = 16.dp
+                                    )
+                            )
+                        }
+                    )
+                }
+                LPs_TAB -> {
+                    NotEnabledContainer(
+                        title = stringResource(R.string.defi_no_positions_selected),
+                        content = stringResource(R.string.defi_no_positions_selected_desc),
+                        action = {
+                            Text(
+                                text = "Manage Positions",
+                                style = Theme.brockmann.button.medium,
+                                color = Theme.colors.text.primary,
+                                modifier = Modifier
+                                    .clip(shape = CircleShape)
+                                    .clickOnce(onClick = {})
+                                    .background(
+                                        color = Theme.v2.colors.border.primaryAccent4
+                                    )
+                                    .padding(
+                                        vertical = 8.dp,
+                                        horizontal = 16.dp
+                                    )
+                            )
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -152,7 +211,8 @@ private fun BalanceBanner(
 @Preview(showBackground = true)
 private fun DefiPositionsScreenPreview() {
     DefiPositionScreenContent(
-        onBackClick = { }
+        onBackClick = { },
+        model = DefiPositionsUiModel()
     )
 }
 

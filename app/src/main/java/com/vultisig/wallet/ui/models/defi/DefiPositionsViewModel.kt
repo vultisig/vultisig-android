@@ -4,21 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
-    val totalAmountPrice: String,
-    val selectedTab: String,
-    val bonded: BondedTabUiModel,
+    val totalAmountPrice: String = "0",
+    val selectedTab: String = BONDED_TAB,
+    val isLoading: Boolean = false,
+    val bonded: BondedTabUiModel = BondedTabUiModel(),
 )
 
 internal data class BondedTabUiModel(
-    val totalBondedAmount: String,
-    val nodes: BondedNodeUiModel,
+    val totalBondedAmount: String = "0",
+    val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
 internal data class BondedNodeUiModel(
@@ -31,10 +34,12 @@ internal data class BondedNodeUiModel(
 )
 
 @HiltViewModel
-class DefiPositionsViewModel @Inject constructor(
+internal class DefiPositionsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
+
+    val state = MutableStateFlow(DefiPositionsUiModel())
 
     init {
         loadBondedNodes()

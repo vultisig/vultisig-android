@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun BondedTabs(
+internal fun VsTabs(
     tabs: List<String>,
     selectedTab: String,
     onTabSelected: (String) -> Unit,
@@ -94,7 +94,7 @@ private fun PreviewBondedTabsWithContent() {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        BondedTabs(
+        VsTabs(
             tabs = listOf("Bonded", "Staked", "LPs"),
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it },
@@ -127,7 +127,7 @@ private fun PreviewBondedTabs() {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        BondedTabs(
+        VsTabs(
             tabs = listOf("Bonded", "Staked", "LPs"),
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it }
