@@ -159,7 +159,6 @@ private fun BalanceBanner(
 
 @Composable
 fun BondedTabContent(managePositionsOnClick: () -> Unit, bondToNodeOnClick: () -> Unit) {
-
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
     )
