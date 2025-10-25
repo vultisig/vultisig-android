@@ -105,54 +105,45 @@ internal fun DefiPositionScreenContent(
                     )
                 }
                 STAKING_TAB -> {
-                    NotEnabledContainer(
-                        title = stringResource(R.string.defi_no_positions_selected),
-                        content = stringResource(R.string.defi_no_positions_selected_desc),
-                        action = {
-                            Text(
-                                text = "Manage Positions",
-                                style = Theme.brockmann.button.medium,
-                                color = Theme.colors.text.primary,
-                                modifier = Modifier
-                                    .clip(shape = CircleShape)
-                                    .clickOnce(onClick = {})
-                                    .background(
-                                        color = Theme.v2.colors.border.primaryAccent4
-                                    )
-                                    .padding(
-                                        vertical = 8.dp,
-                                        horizontal = 16.dp
-                                    )
-                            )
-                        }
+                    NoPositionsContainer(
+                        onManagePositionsClick = { }
                     )
                 }
                 LPs_TAB -> {
-                    NotEnabledContainer(
-                        title = stringResource(R.string.defi_no_positions_selected),
-                        content = stringResource(R.string.defi_no_positions_selected_desc),
-                        action = {
-                            Text(
-                                text = "Manage Positions",
-                                style = Theme.brockmann.button.medium,
-                                color = Theme.colors.text.primary,
-                                modifier = Modifier
-                                    .clip(shape = CircleShape)
-                                    .clickOnce(onClick = {})
-                                    .background(
-                                        color = Theme.v2.colors.border.primaryAccent4
-                                    )
-                                    .padding(
-                                        vertical = 8.dp,
-                                        horizontal = 16.dp
-                                    )
-                            )
-                        }
+                    NoPositionsContainer(
+                        onManagePositionsClick = { }
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun NoPositionsContainer(
+    onManagePositionsClick: () -> Unit = {}
+) {
+    NotEnabledContainer(
+        title = stringResource(R.string.defi_no_positions_selected),
+        content = stringResource(R.string.defi_no_positions_selected_desc),
+        action = {
+            Text(
+                text = "Manage Positions",
+                style = Theme.brockmann.button.medium,
+                color = Theme.colors.text.primary,
+                modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .clickOnce(onClick = onManagePositionsClick)
+                    .background(
+                        color = Theme.v2.colors.border.primaryAccent4
+                    )
+                    .padding(
+                        vertical = 8.dp,
+                        horizontal = 16.dp
+                    )
+            )
+        }
+    )
 }
 
 @Composable
