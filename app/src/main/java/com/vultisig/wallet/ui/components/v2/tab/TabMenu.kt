@@ -24,11 +24,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
+internal class VsTabGroupScope {
+    val tabs = mutableListOf<@Composable BoxScope.() -> Unit>()
+
+    fun tab(content: @Composable BoxScope.() -> Unit) {
+        tabs.add(content)
+    }
+}
+
 @Composable
 internal fun VsTabGroup(
-    tabs: List<@Composable BoxScope.() -> Unit>,
     index: Int,
+    content: VsTabGroupScope.() -> Unit,
 ) {
+    val scope = VsTabGroupScope().apply(content)
+    val tabs = scope.tabs
 
     val tabWidths = remember {
         mutableStateListOf<Dp>().apply {
@@ -131,26 +141,25 @@ private fun TabUnderLine(
 @Composable
 internal fun TabGroupPreview() {
     VsTabGroup(
-        tabs = listOf<@Composable BoxScope.() -> Unit>(
-            {
-                VsTab(
-                    label = "Tab 1",
-                    onClick = {}
-                )
-            },
-            {
-                VsTab(
-                    label = "Tab 2",
-                    onClick = {}
-                )
-            },
-            {
-                VsTab(
-                    label = "Tab 3",
-                    onClick = {}
-                )
-            }
-        ),
         index = 1
-    )
+    ) {
+        tab {
+            VsTab(
+                label = "Tab 1",
+                onClick = {}
+            )
+        }
+        tab {
+            VsTab(
+                label = "Tab 2",
+                onClick = {}
+            )
+        }
+        tab {
+            VsTab(
+                label = "Tab 3",
+                onClick = {}
+            )
+        }
+    }
 }
