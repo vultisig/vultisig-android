@@ -67,6 +67,14 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
+    fun onClickBond(nodeAddress: String) {
+
+    }
+
+    fun onClickUnBond(nodeAddress: String) {
+
+    }
+
     fun refreshBondedNodes() {
         loadBondedNodes()
     }
