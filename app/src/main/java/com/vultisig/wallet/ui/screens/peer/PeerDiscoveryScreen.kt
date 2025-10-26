@@ -503,7 +503,7 @@ private fun ExpandedQrOverlay(
         ) {
             Icon(
                 painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
-                contentDescription = "Close",
+                contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(28.dp)
             )
