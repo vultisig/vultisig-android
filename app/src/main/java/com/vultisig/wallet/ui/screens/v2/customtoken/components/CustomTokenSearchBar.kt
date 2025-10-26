@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.customtoken.components
 
-import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -30,7 +32,6 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.theme.Theme
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
 internal fun CustomTokenSearchBar(
@@ -82,6 +83,13 @@ internal fun CustomTokenSearchBar(
                         .fillMaxHeight(),
                     textStyle = Theme.brockmann.supplementary.footnote.copy(
                         color = Theme.colors.text.primary,
+                    ),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    onKeyboardAction = {
+                        onSearchClick()
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Search
                     ),
                     decorator = { textField ->
                         Box(
