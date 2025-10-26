@@ -823,8 +823,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         unit = payloadToken.ticker,
                         decimals = payloadToken.decimal,
                     )
-
-                    val gasFee = gasFeeRepository.getGasFee(chain, address)
+                    val isNativeToken = payload.coin.isNativeToken
+                    val gasFee = gasFeeRepository.getGasFee(chain = chain, address = address, isNativeToken = isNativeToken)
                     val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = BigInteger.valueOf(1),
