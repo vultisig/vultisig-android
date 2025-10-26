@@ -39,14 +39,26 @@ import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun BondedTabContent(bondToNodeOnClick: () -> Unit) {
+internal fun BondedTabContent(
+    bondToNodeOnClick: () -> Unit,
+    activeNodes: List<BondedNodeUiModel>,
+    onClickBond: (String) -> Unit,
+    onClickUnbond: (String) -> Unit,
+) {
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
     )
+    activeNodes.forEachIndexed { index, node ->
+        ActiveNodeRow(
+            node = node,
+            onClickBond = { onClickBond(node.address) },
+            onClickUnbond = { onClickUnbond(node.address) }
+        )
+    }
 }
 
 @Composable
-fun TotalBondWidget(
+internal fun TotalBondWidget(
     onClickBondToNode: () -> Unit,
 ) {
     Column(
@@ -103,7 +115,7 @@ fun TotalBondWidget(
 }
 
 @Composable
-internal fun NodeList(
+internal fun ActiveNodeRow(
     node: BondedNodeUiModel,
     onClickBond: () -> Unit,
     onClickUnbond: () -> Unit,
@@ -194,13 +206,13 @@ internal fun NodeList(
             InfoItem(
                 icon = R.drawable.calendar_days,
                 label = stringResource(R.string.next_churn),
-                value = "Oct 15, 25",
+                value = node.nextChurn,
             )
 
             InfoItem(
                 icon = R.drawable.ic_cup,
                 label = stringResource(R.string.next_award),
-                value = "20 RUNE"
+                value = node.nextAward
             )
         }
 
@@ -313,7 +325,10 @@ fun ActionButton(
 @Composable
 private fun BondedTabContentPreview() {
     BondedTabContent(
-        bondToNodeOnClick = { }
+        bondToNodeOnClick = { },
+        activeNodes = emptyList(),
+        onClickBond = {},
+        onClickUnbond = {}
     )
 }
 
@@ -328,7 +343,7 @@ private fun TotalBondWidgetPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun NodeListPreview() {
-    NodeList(
+    ActiveNodeRow(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
             status = "Churned Out",

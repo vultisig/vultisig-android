@@ -52,15 +52,19 @@ internal fun DefiPositionsScreen(
     val state by model.state.collectAsState()
 
     DefiPositionScreenContent(
+        state = state,
         onBackClick = navController::popBackStack,
-        model = state,
+        onClickUnbond = { model.onClickUnBond(it) },
+        onClickBond = { model.onClickBond(it) },
     )
 }
 
 @Composable
 internal fun DefiPositionScreenContent(
+    state: DefiPositionsUiModel = DefiPositionsUiModel(),
     onBackClick: () -> Unit,
-    model: DefiPositionsUiModel = DefiPositionsUiModel(),
+    onClickUnbond: (String) -> Unit,
+    onClickBond: (String) -> Unit,
 ) {
     val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
     var selectedTab by remember { mutableStateOf(tabs.first()) }
@@ -102,6 +106,9 @@ internal fun DefiPositionScreenContent(
                 BONDED_TAB -> {
                     BondedTabContent(
                         bondToNodeOnClick = { },
+                        activeNodes = state.bonded.nodes,
+                        onClickUnbond = {},
+                        onClickBond = {},
                     )
                 }
                 STAKING_TAB -> {
@@ -202,7 +209,9 @@ private fun BalanceBanner(
 private fun DefiPositionsScreenPreview() {
     DefiPositionScreenContent(
         onBackClick = { },
-        model = DefiPositionsUiModel()
+        state = DefiPositionsUiModel(),
+        onClickBond = {},
+        onClickUnbond = {}
     )
 }
 
