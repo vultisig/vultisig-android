@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -26,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -211,7 +208,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
         ) {
             ActionButton(
                 title = "Unbond",
-                icon = Icons.Default.Add,
+                icon = R.drawable.ic_bond,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                 contentColor = Theme.v2.colors.text.primary,
@@ -222,7 +219,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
 
             ActionButton(
                 title = "Bond",
-                icon = Icons.Default.Add,
+                icon =  R.drawable.ic_unbond,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = { },
@@ -268,7 +265,7 @@ fun InfoItem(icon: Int, label: String, value: String?) {
 @Composable
 fun ActionButton(
     title: String,
-    icon: ImageVector,
+    icon: Int,
     background: Color,
     modifier: Modifier = Modifier,
     border: BorderStroke? = null,
@@ -294,7 +291,7 @@ fun ActionButton(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                icon,
+                painter = painterResource(id = icon),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
