@@ -827,11 +827,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
                     val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
-                            gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                            } else {
-                                BigInteger.valueOf(1)
-                            },
+                            gasLimit = BigInteger.valueOf(1),
                             gasFee = gasFee,
                             selectedToken = payload.coin,
                         )
