@@ -165,10 +165,10 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
         UiSpacer(16.dp)
 
         Row {
-            Text(
-                text = "APY",
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+            InfoItem(
+                icon = R.drawable.ic_icon_percentage,
+                label = "APY",
+                value = null,
             )
 
             UiSpacer(1f)
@@ -213,28 +213,28 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
                 title = "Unbond",
                 icon = Icons.Default.Add,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Color(0xFF5A6BFF)),
-                contentColor = Color(0xFFB0B9FF),
-                onClick = {},
+                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                contentColor = Theme.v2.colors.text.primary,
+                onClick = { },
                 modifier = Modifier.weight(1f),
-                iconCircleColor = Color(0x33FFFFFF)
+                iconCircleColor = Theme.v2.colors.text.extraLight
             )
 
             ActionButton(
                 title = "Bond",
                 icon = Icons.Default.Add,
-                background = Color(0xFF3E55FF),
-                contentColor = Color.White,
-                onClick = {},
+                background = Theme.v2.colors.primary.accent3,
+                contentColor = Theme.v2.colors.text.primary,
+                onClick = { },
                 modifier = Modifier.weight(1f),
-                iconCircleColor = Color(0x33FFFFFF)
+                iconCircleColor = Theme.v2.colors.primary.accent4
             )
         }
     }
 }
 
 @Composable
-fun InfoItem(icon: Int, label: String, value: String) {
+fun InfoItem(icon: Int, label: String, value: String?) {
     Column(horizontalAlignment = Alignment.Start) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             UiIcon(
@@ -253,13 +253,15 @@ fun InfoItem(icon: Int, label: String, value: String) {
             )
         }
 
-        UiSpacer(6.dp)
+        if (value != null) {
+            UiSpacer(6.dp)
 
-        Text(
-            text = value,
-            style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.text.light,
-        )
+            Text(
+                text = value,
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.light,
+            )
+        }
     }
 }
 
