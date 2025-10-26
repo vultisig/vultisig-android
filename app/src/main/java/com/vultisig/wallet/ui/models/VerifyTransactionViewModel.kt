@@ -125,7 +125,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
         loadFastSign()
         loadTransaction()
         loadPassword()
-        scanTransaction()
     }
 
     private suspend fun calculateFees(transactionUiModel: SendTxUiModel) {
@@ -324,50 +323,52 @@ internal class VerifyTransactionViewModel @Inject constructor(
             }
 
             calculateFees(transactionUiModel)
+            scanTransaction()
         }
     }
 
-    private fun scanTransaction() {
-        viewModelScope.launch {
-            try {
-                val transaction = transaction
-                val chain = transaction.token.chain
+    private suspend fun scanTransaction() {
+        try {
+            val transaction = transaction
+            val chain = transaction.token.chain
 
-                val isSupported = securityScannerService
-                    .getSupportedChainsByFeature()
-                    .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
+            val isSupported = securityScannerService
+                .getSupportedChainsByFeature()
+                .isChainSupported(chain) && securityScannerService.isSecurityServiceEnabled()
 
-                if (!isSupported) return@launch
+            if (!isSupported) return
 
-                uiState.update {
-                    it.copy(txScanStatus = TransactionScanStatus.Scanning)
-                }
+            uiState.update {
+                it.copy(txScanStatus = TransactionScanStatus.Scanning)
+            }
 
-                val securityScannerTransaction =
-                    securityScannerService.createSecurityScannerTransaction(transaction)
+            val securityScannerTransaction =
+                securityScannerService.createSecurityScannerTransaction(transaction)
 
-                val result = withContext(Dispatchers.IO) {
-                    securityScannerService.scanTransaction(securityScannerTransaction)
-                }
+            val result = withContext(Dispatchers.IO) {
+                securityScannerService.scanTransaction(securityScannerTransaction)
+            }
 
-                uiState.update {
-                    it.copy(
-                        txScanStatus = TransactionScanStatus.Scanned(result)
+            uiState.update {
+                it.copy(
+                    txScanStatus = TransactionScanStatus.Scanned(result)
+                )
+            }
+        } catch (t: Throwable) {
+            val errorMessage = "Security scan failed ${t.message}"
+            Timber.e(
+                t,
+                errorMessage
+            )
+
+            uiState.update {
+                val message = t.message ?: errorMessage
+                it.copy(
+                    txScanStatus = TransactionScanStatus.Error(
+                        message = message,
+                        provider = BLOCKAID_PROVIDER,
                     )
-                }
-            } catch (t: Throwable) {
-                val errorMessage = "Security Scanner Failed"
-                Timber.e(t, errorMessage)
-
-                uiState.update {
-                    val message = t.message ?: errorMessage
-                    it.copy(
-                        txScanStatus = TransactionScanStatus.Error(
-                            message = message,
-                            provider = BLOCKAID_PROVIDER,
-                        )
-                    )
-                }
+                )
             }
         }
     }
