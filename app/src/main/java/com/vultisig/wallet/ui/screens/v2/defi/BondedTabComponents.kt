@@ -103,7 +103,11 @@ fun TotalBondWidget(
 }
 
 @Composable
-internal fun NodeList(nodes: List<BondedNodeUiModel>) {
+internal fun NodeList(
+    node: BondedNodeUiModel,
+    onClickBond: () -> Unit,
+    onClickUnbond: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,7 +122,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
     ) {
         Row {
             Text(
-                text = "Active Nodes",
+                text = stringResource(R.string.active_nodes),
                 style = Theme.brockmann.button.medium,
                 color = Theme.v2.colors.text.light,
             )
@@ -137,7 +141,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
 
         Row {
             Text(
-                text = "Node Address:",
+                text = stringResource(R.string.node_address) + ": ${node.address}",
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.extraLight,
             )
@@ -145,7 +149,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
             UiSpacer(1f)
 
             Text(
-                text = "Churned Out",
+                text = node.status,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.alerts.warning,
             )
@@ -154,7 +158,7 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
         UiSpacer(16.dp)
 
         Text(
-            text = "Bonded 800 RUNE",
+            text = "Bonded " + node.bondedAmount,
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
@@ -164,14 +168,14 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
         Row {
             InfoItem(
                 icon = R.drawable.ic_icon_percentage,
-                label = "APY",
+                label = stringResource(R.string.apy),
                 value = null,
             )
 
             UiSpacer(1f)
 
             Text(
-                text = "0%",
+                text = node.apy,
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.alerts.success,
             )
@@ -189,13 +193,13 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
         ) {
             InfoItem(
                 icon = R.drawable.calendar_days,
-                label = "Next Churn",
+                label = stringResource(R.string.next_churn),
                 value = "Oct 15, 25",
             )
 
             InfoItem(
                 icon = R.drawable.ic_cup,
-                label = "Next award",
+                label = stringResource(R.string.next_award),
                 value = "20 RUNE"
             )
         }
@@ -207,22 +211,22 @@ internal fun NodeList(nodes: List<BondedNodeUiModel>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ActionButton(
-                title = "Unbond",
+                title = stringResource(R.string.unbond),
                 icon = R.drawable.ic_bond,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                 contentColor = Theme.v2.colors.text.primary,
-                onClick = { },
+                onClick = onClickUnbond,
                 modifier = Modifier.weight(1f),
                 iconCircleColor = Theme.v2.colors.text.extraLight
             )
 
             ActionButton(
-                title = "Bond",
-                icon =  R.drawable.ic_unbond,
+                title = stringResource(R.string.bond),
+                icon = R.drawable.ic_unbond,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
-                onClick = { },
+                onClick = onClickBond,
                 modifier = Modifier.weight(1f),
                 iconCircleColor = Theme.v2.colors.primary.accent4
             )
@@ -325,31 +329,15 @@ private fun TotalBondWidgetPreview() {
 @Composable
 private fun NodeListPreview() {
     NodeList(
-        nodes = listOf(
-            BondedNodeUiModel(
-                address = "thor1abcd...xyz",
-                status = "Active",
-                apy = "12.5%",
-                bondedAmount = "1000 RUNE",
-                nextAward = "2 days",
-                nextChurn = "5 days"
-            ),
-            BondedNodeUiModel(
-                address = "thor2efgh...uvw",
-                status = "Standby",
-                apy = "10.2%",
-                bondedAmount = "500 RUNE",
-                nextAward = "1 day",
-                nextChurn = "3 days"
-            ),
-            BondedNodeUiModel(
-                address = "thor3ijkl...rst",
-                status = "Active",
-                apy = "11.8%",
-                bondedAmount = "750 RUNE",
-                nextAward = "3 days",
-                nextChurn = "7 days"
-            )
-        )
+        BondedNodeUiModel(
+            address = "thor1abcd...xyz",
+            status = "Churned Out",
+            apy = "12.5%",
+            bondedAmount = "1000 RUNE",
+            nextAward = "20 RUNE",
+            nextChurn = "Oct 15, 25"
+        ),
+        onClickBond = {},
+        onClickUnbond = {},
     )
 }

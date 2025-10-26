@@ -395,6 +395,13 @@
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Totale Rune Vincolate</string>
     <string name="bond_to_node">Vincola al Nodo</string>
+    <string name="node_address">Indirizzo</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Svincola</string>
+    <string name="bond">Vincola</string>
+    <string name="active_nodes">Nodi Attivi</string>
+    <string name="next_churn">Prossima Rotazione</string>
+    <string name="next_award">Prossimo premio</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
