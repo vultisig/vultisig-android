@@ -458,7 +458,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val (nativeTokenAddress, _) = chainAccountAddressRepository.getAddress(
                     nativeToken, _currentVault
                 )
-                val gasFee = gasFeeRepository.getGasFee(chain, nativeTokenAddress)
+                val gasFee = gasFeeRepository.getGasFee(chain = chain, address = nativeTokenAddress, isSwap = true)
                 val estimatedNetworkGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -823,15 +823,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                         unit = payloadToken.ticker,
                         decimals = payloadToken.decimal,
                     )
-
-                    val gasFee = gasFeeRepository.getGasFee(chain, address)
+                    val isNativeToken = payload.coin.isNativeToken
+                    val gasFee = gasFeeRepository.getGasFee(chain = chain, address = address, isNativeToken = isNativeToken)
                     val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
-                            gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                            } else {
-                                BigInteger.valueOf(1)
-                            },
+                            gasLimit = BigInteger.valueOf(1),
                             gasFee = gasFee,
                             selectedToken = payload.coin,
                         )
