@@ -37,7 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
@@ -62,13 +66,20 @@ internal fun DiscountTiersScreen(
             .fillMaxSize()
             .background(Theme.colors.backgrounds.secondary),
         topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(R.string.vault_settings_discounts),
-                startIcon = R.drawable.ic_caret_left,
-                endIcon = R.drawable.settings_globe,
-                onEndIconClick = {
-                    uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS)
+            V2Topbar(
+                title = stringResource(R.string.vault_settings_discounts),
+                onBackClick = { navController.popBackStack() },
+                actions = {
+                    VsCircleButton(
+                        icon = R.drawable.settings_globe,
+                        onClick = {
+                            uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS)
+                        },
+                        type = VsCircleButtonType.Secondary,
+                        designType = DesignType.Shined,
+                        size = VsCircleButtonSize.Small,
+                        hasBorder = false,
+                    )
                 }
             )
         }
@@ -76,7 +87,7 @@ internal fun DiscountTiersScreen(
         Column(
             modifier = Modifier
                 .padding(it)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
