@@ -97,6 +97,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     toTokenAssociatedAddress = specific.toAddressPubKey,
                     fromTokenAssociatedAddress = specific.fromAddressPubKey,
                     programId = specific.programId,
+                    computeLimit =specific.priorityLimit.toString()
                 )
             } else null,
             polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {

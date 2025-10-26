@@ -270,7 +270,7 @@ internal fun VsTextInputField(
                                 tint = Theme.colors.text.button.light,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .width(16.dp)
+                                    .width(20.dp)
                                     .clickOnce(
                                         onClick = onTrailingIconClick ?: {},
                                         enabled = onTrailingIconClick != null
