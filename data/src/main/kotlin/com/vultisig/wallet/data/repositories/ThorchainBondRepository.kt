@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BondedNodesResponse
 import com.vultisig.wallet.data.api.ChurnEntry
+import com.vultisig.wallet.data.api.MidgardHealth
 import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.api.NodeDetailsResponse
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -11,11 +12,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface ThorchainBondRepository {
-    suspend fun getBondedNodes(address: String): BondedNodesResponse?
-    suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse?
+    suspend fun getBondedNodes(address: String): BondedNodesResponse
+    suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
     suspend fun getChurns(): List<ChurnEntry>
     suspend fun getChurnInterval(): Long
-    suspend fun getMidgardNetworkData(): MidgardNetworkData?
+    suspend fun getMidgardNetworkData(): MidgardNetworkData
+    suspend fun getMidgardHealthData(): MidgardHealth
     suspend fun clearCache()
 }
 
@@ -27,12 +29,14 @@ class ThorchainBondRepositoryImpl @Inject constructor(
     companion object {
         // Cache keys
         private const val MIDGARD_NETWORK_KEY = "midgard_network"
+        private const val MIDGARD_HEALTH = "midgard_health"
         private const val CHURN_INTERVAL_KEY = "churn_interval"
         private const val CHURNS_KEY = "churns"
     }
 
     // Caches for different data types
     private val midgardNetworkCache = SimpleCache<String, MidgardNetworkData>()
+    private val midgardHealthCache = SimpleCache<String, MidgardHealth>()
     private val churnIntervalCache = SimpleCache<String, Long>()
     private val churnsCache = SimpleCache<String, List<ChurnEntry>>()
 
@@ -45,7 +49,7 @@ class ThorchainBondRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse? {
+    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
         return try {
             thorChainApi.getNodeDetails(nodeAddress)
         } catch (e: Exception) {
@@ -78,11 +82,23 @@ class ThorchainBondRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMidgardNetworkData(): MidgardNetworkData? {
+    override suspend fun getMidgardNetworkData(): MidgardNetworkData {
         return try {
             midgardNetworkCache.getOrPut(MIDGARD_NETWORK_KEY) {
                 Timber.d("Fetching Midgard network data from API")
                 thorChainApi.getMidgardNetworkData()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching Midgard network data")
+            throw e
+        }
+    }
+
+    override suspend fun getMidgardHealthData(): MidgardHealth {
+        return try {
+            midgardHealthCache.getOrPut(MIDGARD_HEALTH) {
+                Timber.d("Fetching Midgard network data from API")
+                thorChainApi.getMidgardHealth()
             }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching Midgard network data")
