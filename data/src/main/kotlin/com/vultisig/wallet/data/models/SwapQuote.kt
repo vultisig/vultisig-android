@@ -12,13 +12,13 @@ sealed class SwapQuote {
     abstract val fees: TokenValue
     abstract val expiredAt: Instant
 
-    @Deprecated("Use OneInch")
-    data class Kyber(
-        override val expectedDstValue: TokenValue,
-        override val fees: TokenValue,
-        override val expiredAt: Instant,
-        val data: KyberSwapQuoteJson,
-    ) : SwapQuote()
+//    @Deprecated("Use OneInch")
+//    data class Kyber(
+//        override val expectedDstValue: TokenValue,
+//        override val fees: TokenValue,
+//        override val expiredAt: Instant,
+//        val data: KyberSwapQuoteJson,
+//    ) : SwapQuote()
 
     data class OneInch(
         override val expectedDstValue: TokenValue,

@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.data.chains.helpers
 
-import com.vultisig.wallet.data.api.swapAggregators.KyberSwap
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
 import com.vultisig.wallet.data.common.isHex
 import com.vultisig.wallet.data.common.toHexBytes
@@ -74,10 +73,6 @@ object SigningHelper {
                         )
 
                     messages += message
-                }
-                is SwapPayload.Kyber -> {
-                    messages += KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
                 else -> Unit
             }
@@ -213,15 +208,15 @@ object SigningHelper {
                         )
                 }
 
-                is SwapPayload.Kyber -> {
-                    return KyberSwap(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getSignedTransaction(
-                            swapPayload.data,
-                            keysignPayload,
-                            signatures,
-                            nonceAcc
-                        )
-                }
+//                is SwapPayload.Kyber -> {
+//                    return OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+//                        .getSignedTransaction(
+//                            swapPayload,
+//                            keysignPayload,
+//                            signatures,
+//                            nonceAcc
+//                        )
+//                }
 
                 else -> {}
             }

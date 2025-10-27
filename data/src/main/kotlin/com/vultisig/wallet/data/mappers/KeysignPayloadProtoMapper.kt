@@ -85,35 +85,37 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     )
                 }
                 // TODO: Migrate mapping once all clients use 1inch payload
-                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
-                    SwapPayload.Kyber(
-                        KyberSwapPayloadJson(
-                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
-                            toCoin = requireNotNull(it.toCoin).toCoin(),
-                            fromAmount = BigInteger(it.fromAmount),
-                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
-                            quote = requireNotNull(it.quote).let { it ->
-                                KyberSwapQuoteJson(
-                                    code = 0,
-                                    message = "Success",
-                                    data = KyberSwapQuoteData(
-                                        amountIn = from.toAmount,
-                                        amountInUsd = "0",
-                                        amountOut = it.dstAmount,
-                                        amountOutUsd = "0",
-                                        gas = it.tx?.gas.toString(),
-                                        gasUsd = "0",
-                                        data = it.tx?.data ?: "",
-                                        routerAddress = it.tx?.to ?: "",
-                                        transactionValue = it.tx?.value ?: "",
-                                        gasPrice = it.tx?.gasPrice ?: "",
-                                        fee = it.tx?.fee?.toBigInteger() ?: BigInteger.ZERO,
-                                    ),
-                                    requestId = ""
-                                )
-                            }
-                        ))
-                }
+//                from.kyberswapSwapPayload != null -> from.kyberswapSwapPayload.let { it ->
+//
+//                    SwapPayload.Kyber(
+//                        KyberSwapPayloadJson(
+//                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
+//                            toCoin = requireNotNull(it.toCoin).toCoin(),
+//                            fromAmount = BigInteger(it.fromAmount),
+//                            toAmountDecimal = BigDecimal(it.toAmountDecimal),
+//                            quote = requireNotNull(it.quote).let { it ->
+//                                KyberSwapQuoteJson(
+//                                    code = 0,
+//                                    message = "Success",
+//                                    data = KyberSwapQuoteData(
+//                                        amountIn = from.toAmount,
+//                                        amountInUsd = "0",
+//                                        amountOut = it.dstAmount,
+//                                        amountOutUsd = "0",
+//                                        gas = it.tx?.gas.toString(),
+//                                        gasUsd = "0",
+//                                        data = it.tx?.data ?: "",
+//                                        routerAddress = it.tx?.to ?: "",
+//                                        transactionValue = it.tx?.value ?: "",
+//                                        gasPrice = it.tx?.gasPrice ?: "",
+//                                        fee = it.tx?.fee?.toBigInteger() ?: BigInteger.ZERO,
+//                                    ),
+//                                    requestId = ""
+//                                )
+//                            }
+//                        ))
+//
+//                }
 
                 from.thorchainSwapPayload != null -> from.thorchainSwapPayload.let {
                     SwapPayload.ThorChain(
