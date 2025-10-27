@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.util.dashedBorder
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.theme.Theme
 
 internal data class TokenSelectionGridUiModel(
@@ -73,6 +74,9 @@ internal fun TokenSelectionGridItem(
                 model = uiModel.logo,
                 contentDescription = null,
                 modifier = Modifier.size(28.dp),
+                loading = {
+                    V2Loading()
+                },
                 error = {
                     Box(
                         modifier = Modifier.size(28.dp),

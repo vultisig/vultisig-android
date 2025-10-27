@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.net.toUri
+import timber.log.Timber
 
 internal object SocialUtils {
     fun openTwitter(context: Context, twitterHandle: String) {
@@ -19,7 +20,16 @@ internal object SocialUtils {
         }
 
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(intent)
+
+        try {
+            context.startActivity(intent)
+        } catch (_: SecurityException) {
+            val fallbackIntent = Intent(Intent.ACTION_VIEW, webUrl)
+            fallbackIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(fallbackIntent)
+        } catch (e: Exception) {
+            Timber.e(e)
+        }
     }
 
     private fun isAppInstalled(pm: PackageManager, packageName: String): Boolean {
