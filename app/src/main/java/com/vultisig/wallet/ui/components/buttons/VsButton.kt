@@ -107,7 +107,7 @@ fun VsButton(
                 when (size) {
                     Medium -> Modifier.padding(
                         vertical = 14.dp,
-                        horizontal = 32.dp
+                        horizontal = 24.dp
                     )
 
                     Small -> Modifier.padding(
