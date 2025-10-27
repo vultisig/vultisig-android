@@ -55,7 +55,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -538,7 +537,7 @@ internal class SendFormViewModel @Inject constructor(
             maxAmount = max
             isMaxAmount.value = true
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                max?.toPlainString() ?: ""
+                max.toPlainString()
             )
         }
     }
@@ -546,18 +545,18 @@ internal class SendFormViewModel @Inject constructor(
     fun choosePercentageAmount(percentage: Float) {
         viewModelScope.launch {
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                fetchPercentageOfAvailableBalance(percentage)?.toPlainString() ?: ""
+                fetchPercentageOfAvailableBalance(percentage).toPlainString()
             )
         }
     }
 
-    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal? {
-        val selectedAccount = selectedAccount ?: return null
-        val gasFee = gasFee.value ?: return null
+    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
+        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
+        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
         val availableTokenBalance = getAvailableTokenBalance(
             selectedAccount,
-            gasFee.value
+            currentGasFee.value
         )
 
         return availableTokenBalance?.decimal
@@ -566,7 +565,7 @@ internal class SendFormViewModel @Inject constructor(
                 selectedAccount.token.decimal,
                 RoundingMode.DOWN
             )
-            ?.stripTrailingZeros()
+            ?.stripTrailingZeros() ?: BigDecimal.ZERO
     }
 
     fun dismissError() {
