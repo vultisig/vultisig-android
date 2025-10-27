@@ -14,19 +14,19 @@ import javax.inject.Inject
 import kotlin.math.pow
 
 fun interface ThorchainBondUseCase {
-    suspend operator fun invoke(address: String)
+    suspend operator fun invoke(address: String): List<ActiveBondedNode>
 }
 
 class ThorchainBondUseCaseImpl @Inject constructor(
     private val thorchainBondRepository: ThorchainBondRepository,
 ) : ThorchainBondUseCase {
-    override suspend fun invoke(address: String) = supervisorScope {
-        try {
-            val networkInfoDeferred = async { getNetworkInfo() }.await()
-            val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
+    override suspend fun invoke(address: String): List<ActiveBondedNode> = supervisorScope {
+        val activeNodes = mutableListOf<ActiveBondedNode>()
+        val bondedNodeAddresses = mutableSetOf<String>()
 
-            val activeNodes = mutableListOf<ActiveBondedNode>()
-            val bondedNodeAddresses = mutableSetOf<String>()
+        try {
+            val networkInfoDeferred = async { getNetworkInfo() }
+            val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
 
             for (node in bondedNodes) {
                 bondedNodeAddresses.add(node.address)
@@ -37,33 +37,30 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                         myBondAddress = address
                     )
 
-                    println(myBondMetrics)
-
-                    /*val nodeState = BondNodeState.fromApiStatus(myBondMetrics.nodeStatus)
-                        ?: BondNodeState.Standby
-
-                    val bondNode = BondNode(
+                    val bondNode = ActiveBondedNode.BondedNode(
                         address = node.address,
-                        state = nodeState
+                        state = node.status,
                     )
-
                     val activeNode = ActiveBondedNode(
+                        id = node.address,
                         node = bondNode,
                         amount = myBondMetrics.myBond,
                         apy = myBondMetrics.apy,
                         nextReward = myBondMetrics.myAward,
-                        nextChurn = networkInfo.nextChurnDate
+                        nextChurn = networkInfoDeferred.await().nextChurnDate,
                     )
 
-                    activeNodes.add(activeNode) */
+                    activeNodes.add(activeNode)
                 } catch (e: Exception) {
-                    // If there is a failure withh specific one,
                     Timber.e(e)
                 }
             }
+
         } catch (e: Exception) {
             Timber.e(e)
         }
+
+        return@supervisorScope activeNodes.toList()
     }
 
     private suspend fun getNetworkInfo(): NetworkBondInfo {
@@ -210,13 +207,13 @@ internal data class NetworkBondInfo(
     val nextChurnDate: Date?,
 )
 
-internal data class ActiveBondedNode(
+data class ActiveBondedNode(
     var id: String,
-    val node: String,
-    val amount: String,
+    val node: BondedNode,
+    val amount: BigInteger,
     val apy: Double,
-    val nextReward: String,
-    val nextChurn: String,
+    val nextReward: Double,
+    val nextChurn: Date?,
 ) {
     data class BondedNode(
         val address: String,
