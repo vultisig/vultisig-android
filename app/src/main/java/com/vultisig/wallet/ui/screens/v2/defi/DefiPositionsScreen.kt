@@ -54,6 +54,7 @@ internal fun DefiPositionsScreen(
     DefiPositionScreenContent(
         state = state,
         onBackClick = navController::popBackStack,
+        onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
     )
@@ -63,6 +64,7 @@ internal fun DefiPositionsScreen(
 internal fun DefiPositionScreenContent(
     state: DefiPositionsUiModel = DefiPositionsUiModel(),
     onBackClick: () -> Unit,
+    onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
 ) {
@@ -105,10 +107,10 @@ internal fun DefiPositionScreenContent(
             when (selectedTab) {
                 BONDED_TAB -> {
                     BondedTabContent(
-                        bondToNodeOnClick = { },
+                        bondToNodeOnClick = onClickBondToNode,
                         activeNodes = state.bonded.nodes,
-                        onClickUnbond = {},
-                        onClickBond = {},
+                        onClickUnbond = onClickUnbond,
+                        onClickBond = onClickBond,
                     )
                 }
                 STAKING_TAB -> {
@@ -211,7 +213,8 @@ private fun DefiPositionsScreenPreview() {
         onBackClick = { },
         state = DefiPositionsUiModel(),
         onClickBond = {},
-        onClickUnbond = {}
+        onClickUnbond = {},
+        onClickBondToNode = {}
     )
 }
 

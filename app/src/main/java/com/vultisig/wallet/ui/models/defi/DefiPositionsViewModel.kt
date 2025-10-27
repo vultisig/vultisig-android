@@ -75,6 +75,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     }
 
+    fun bondToNode() {
+
+    }
+
     fun refreshBondedNodes() {
         loadBondedNodes()
     }
