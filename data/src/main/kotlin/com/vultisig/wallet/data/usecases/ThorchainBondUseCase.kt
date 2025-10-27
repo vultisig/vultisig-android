@@ -62,7 +62,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            println("Failed to load bonded nodes: ${e.message}")
+            Timber.e(e)
         }
     }
 
@@ -97,30 +97,36 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     }
 
     fun averageBlockTimeFromChurns(churns: List<ChurnEntry>, pairs: Int = 6): Double? {
-        val sorted = churns.sortedByDescending { it.height.toIntOrNull() ?: 0 }
-        if (sorted.size < 2) return null
+        try {
+            val sorted = churns.sortedByDescending { it.height.toIntOrNull() ?: 0 }
+            if (sorted.size < 2) return null
 
-        var totalSeconds = 0.0
-        var totalBlocks = 0
+            var totalSeconds = 0.0
+            var totalBlocks = 0
 
-        for (i in 0 until minOf(pairs, sorted.size - 1)) {
-            val hNew = sorted[i].height.toIntOrNull() ?: continue
-            val hOld = sorted[i + 1].height.toIntOrNull() ?: continue
-            val tNewNs = sorted[i].date.toLongOrNull() ?: continue
-            val tOldNs = sorted[i + 1].date.toLongOrNull() ?: continue
+            for (i in 0 until minOf(pairs, sorted.size - 1)) {
+                val hNew = sorted[i].height.toIntOrNull() ?: continue
+                val hOld = sorted[i + 1].height.toIntOrNull() ?: continue
+                val tNewNs = sorted[i].date.toLongOrNull() ?: continue
+                val tOldNs = sorted[i + 1].date.toLongOrNull() ?: continue
 
-            val dBlocks = hNew - hOld
-            if (dBlocks <= 0) continue
+                val dBlocks = hNew - hOld
+                if (dBlocks <= 0) continue
 
-            val dSeconds = (tNewNs - tOldNs) / 1_000_000_000.0
-            if (dSeconds <= 0) continue
+                val dSeconds = (tNewNs - tOldNs) / 1_000_000_000.0
+                if (dSeconds <= 0) continue
 
-            totalSeconds += dSeconds
-            totalBlocks += dBlocks
+                totalSeconds += dSeconds
+                totalBlocks += dBlocks
+            }
+
+            if (totalBlocks <= 0) return null
+
+            return totalSeconds / totalBlocks
+        } catch (t: Throwable) {
+            Timber.e(t)
+            return 6.0 // Fallback to default
         }
-
-        if (totalBlocks <= 0) return null
-        return totalSeconds / totalBlocks
     }
 
     private suspend fun calculateBondMetrics(
