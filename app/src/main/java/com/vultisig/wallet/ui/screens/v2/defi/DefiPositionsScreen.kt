@@ -108,7 +108,7 @@ internal fun DefiPositionScreenContent(
                 BONDED_TAB -> {
                     BondedTabContent(
                         bondToNodeOnClick = onClickBondToNode,
-                        activeNodes = state.bonded.nodes,
+                        state = state,
                         onClickUnbond = onClickUnbond,
                         onClickBond = onClickBond,
                     )

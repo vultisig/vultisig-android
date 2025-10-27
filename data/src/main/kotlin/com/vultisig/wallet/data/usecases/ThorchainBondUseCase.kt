@@ -1,23 +1,25 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import javax.inject.Inject
 
 
 fun interface ThorchainBondUseCase {
-    suspend operator fun invoke()
+    suspend operator fun invoke(address: String)
 }
 
 class ThorchainBondUseCaseImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
 ): ThorchainBondUseCase {
-    override suspend fun invoke() {
+    override suspend fun invoke(address: String) = supervisorScope {
         try {
-            val networkInfo = thorChainApi.getNetworkBondInfo()
-            val bondedNodes = thorChainApi.getBondedNodes(runeCoinAddress)
+            //val networkInfo = async { thorChainApi.getNetworkBondInfo() }
+            // val bondedNodes = async { thorChainApi.getBondedNodes(address) }
 
-            val activeNodes = mutableListOf<ActiveBondedNode>()
+            /*val activeNodes = mutableListOf<ActiveBondedNode>()
             val bondedNodeAddresses = mutableSetOf<String>()
 
             for (node in bondedNodes.nodes) {
@@ -59,6 +61,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         } catch (e: Exception) {
                 println("Failed to load bonded nodes: ${e.message}")
             }
+        } */
         }
     }
 }
