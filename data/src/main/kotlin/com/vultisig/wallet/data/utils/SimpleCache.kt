@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.utils
 
+// Simple Cache Implementation
+// Up to the caller to implement mutex or thread safety when required
 class SimpleCache<K, V>(
     private val defaultExpirationMs: Long = 5 * 60 * 1000 // 5 minutes default
 ) {
