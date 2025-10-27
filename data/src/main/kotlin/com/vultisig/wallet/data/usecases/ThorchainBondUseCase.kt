@@ -9,7 +9,6 @@ import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
 
-
 fun interface ThorchainBondUseCase {
     suspend operator fun invoke(address: String)
 }
@@ -19,9 +18,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 ) : ThorchainBondUseCase {
     override suspend fun invoke(address: String) = supervisorScope {
         try {
-            val networkInfoDeferred = async { thorchainBondRepository.getMidgardNetworkData() }
-            val bondedNodes = thorchainBondRepository.getBondedNodes(address)?.nodes
-                ?: error("Can't fetch bonded nodes RPC Error")
+            val networkInfoDeferred = async { getNetworkInfo() }
+            val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
 
             val activeNodes = mutableListOf<ActiveBondedNode>()
             val bondedNodeAddresses = mutableSetOf<String>()
@@ -61,11 +59,34 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         }
     }
 
+    private suspend fun getNetworkInfo(): NetworkBondInfo {
+        val network = thorchainBondRepository.getMidgardNetworkData()
+        val apy = runCatching { network.bondingAPY.toDouble() }.getOrDefault(0.0)
+        val nextChurnDate = estimateNextChurnETA(network)
+
+        return NetworkBondInfo(
+            apy = apy,
+            nextChurnDate = nextChurnDate
+        )
+    }
+
     suspend fun estimateNextChurnETA(network: MidgardNetworkData): Date? = supervisorScope {
         val churnsDeferred = async { thorchainBondRepository.getChurns() }
         val healthDeferred = async { thorchainBondRepository.getMidgardHealthData() }
 
-        error("")
+        val nextChurnHeight = network.nextChurnHeight.toInt()
+        val currentHeight = healthDeferred.await().lastThorNode.height
+        val currentTimeStamp = healthDeferred.await().lastThorNode.timestamp.toDouble()
+
+        if (nextChurnHeight <= currentHeight) null
+
+        // Derive avg block time from churn history; fallback if unavailable
+        val avgBlockTime = averageBlockTimeFromChurns(churnsDeferred.await(), pairs = 8) ?: 6.0 // seconds per block
+
+        val remainingBlocks = nextChurnHeight - currentHeight
+        val etaSeconds = remainingBlocks * avgBlockTime
+
+        Date((currentTimeStamp * 1000).toLong() + (etaSeconds * 1000).toLong())
     }
 
     fun averageBlockTimeFromChurns(churns: List<ChurnEntry>, pairs: Int = 6): Double? {
@@ -94,28 +115,12 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         if (totalBlocks <= 0) return null
         return totalSeconds / totalBlocks
     }
-
-    /*
-    suspend fun estimateNextChurnETA(network: THORChainNetworkInfo): Date? {
-    val health = getHealth()
-    val churns = getChurns()
-
-    val nextChurnHeight = network.nextChurnHeight?.toIntOrNull() ?: return null
-    val currentHeight = health.lastThorNode.height
-    val currentTimestamp = health.lastThorNode.timestamp.toDouble()
-
-    if (nextChurnHeight <= currentHeight) return null
-
-    // Derive avg block time from churn history; fallback if unavailable
-    val avgBlockTime = averageBlockTimeFromChurns(churns, pairs = 8) ?: 6.0 // seconds per block
-
-    val remainingBlocks = nextChurnHeight - currentHeight
-    val etaSeconds = remainingBlocks * avgBlockTime
-
-    return Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
-} */
-
 }
+
+internal data class NetworkBondInfo(
+    val apy: Double,
+    val nextChurnDate: Date?,
+)
 
 internal data class ActiveBondedNode(
     var id: String,
