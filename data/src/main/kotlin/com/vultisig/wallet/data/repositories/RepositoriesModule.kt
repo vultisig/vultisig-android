@@ -200,6 +200,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindThorchainBondRepository(
+        impl: ThorchainBondRepositoryImpl,
+    ): ThorchainBondRepository
+
+    @Binds
+    @Singleton
     fun bindSwapTransactionRepository(
         impl: SwapTransactionRepositoryImpl
     ): SwapTransactionRepository
