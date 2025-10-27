@@ -63,7 +63,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
     suspend fun estimateNextChurnETA(network: MidgardNetworkData): Date? = supervisorScope {
         val churnsDeferred = async { thorchainBondRepository.getChurns() }
-        val healthDeferred = async { thorchainBondRepository.getChurns() }
+        val healthDeferred = async { thorchainBondRepository.getMidgardHealthData() }
 
         error("")
     }
@@ -113,8 +113,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     val etaSeconds = remainingBlocks * avgBlockTime
 
     return Date((currentTimestamp * 1000).toLong() + (etaSeconds * 1000).toLong())
-}
-     */
+} */
+
 }
 
 internal data class ActiveBondedNode(

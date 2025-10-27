@@ -102,6 +102,7 @@ interface ThorChainApi {
     suspend fun getChurns(): List<ChurnEntry>
     suspend fun getChurnInterval(): Long
     suspend fun getMidgardNetworkData(): MidgardNetworkData
+    suspend fun getMidgardHealth(): MidgardHealth
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -537,6 +538,14 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<MidgardNetworkData>()
     }
 
+    override suspend fun getMidgardHealth(): MidgardHealth {
+        val url = "$MIDGARD_URL/health"
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<MidgardHealth>()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val THORNODE_BASE = "https://thornode.ninerealms.com"
@@ -782,3 +791,14 @@ data class MidgardNetworkData(
     @SerialName("nextChurnHeight")
     val nextChurnHeight: String,
 )
+
+@Serializable
+data class MidgardHealth(
+    val lastThorNode: HeightInfo
+) {
+    @Serializable
+    data class HeightInfo(
+        val height: Int,
+        val timestamp: Int // seconds since epoch
+    )
+}
