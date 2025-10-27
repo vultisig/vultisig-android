@@ -55,7 +55,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -553,11 +552,11 @@ internal class SendFormViewModel @Inject constructor(
 
     private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val gasFee = gasFee.value ?: return BigDecimal.ZERO
+        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
         val availableTokenBalance = getAvailableTokenBalance(
             selectedAccount,
-            gasFee.value
+            currentGasFee.value
         )
 
         return availableTokenBalance?.decimal
