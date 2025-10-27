@@ -52,4 +52,6 @@ data class NativeTxFeeRune(
     val registerFeeRune: String?,
     @SerialName("tns_fee_per_block_rune")
     val feePerBlock: String?,
+    @SerialName("rune_price_in_tor")
+    val runePriceInTor: String?
 )

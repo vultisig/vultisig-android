@@ -36,19 +36,22 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
-    activeNodes: List<BondedNodeUiModel>,
+    state: DefiPositionsUiModel,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
 ) {
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
+        totalBonded = state.bonded.totalBondedAmount,
     )
-    activeNodes.forEachIndexed { index, node ->
+
+    state.bonded.nodes.forEachIndexed { index, node ->
         ActiveNodeRow(
             node = node,
             onClickBond = { onClickBond(node.address) },
@@ -60,6 +63,7 @@ internal fun BondedTabContent(
 @Composable
 internal fun TotalBondWidget(
     onClickBondToNode: () -> Unit,
+    totalBonded: String,
 ) {
     Column(
         modifier = Modifier
@@ -92,7 +96,7 @@ internal fun TotalBondWidget(
                 UiSpacer(4.dp)
 
                 Text(
-                    text = "0 RUNE",
+                    text = totalBonded,
                     style = Theme.brockmann.headings.title1,
                     color = Theme.colors.text.primary,
                 )
@@ -325,8 +329,8 @@ fun ActionButton(
 @Composable
 private fun BondedTabContentPreview() {
     BondedTabContent(
+        state = DefiPositionsUiModel(),
         bondToNodeOnClick = { },
-        activeNodes = emptyList(),
         onClickBond = {},
         onClickUnbond = {}
     )
@@ -336,7 +340,8 @@ private fun BondedTabContentPreview() {
 @Composable
 private fun TotalBondWidgetPreview() {
     TotalBondWidget(
-        onClickBondToNode = { }
+        onClickBondToNode = { },
+        totalBonded = "50 RUNE"
     )
 }
 
