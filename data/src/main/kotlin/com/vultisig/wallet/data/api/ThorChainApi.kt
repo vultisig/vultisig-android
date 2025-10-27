@@ -757,7 +757,7 @@ data class NodeDetailsResponse(
     @SerialName("current_award")
     val currentAward: String,
     @SerialName("bond_providers")
-    val bondProviders: BondProviders? = null
+    val bondProviders: BondProviders
 )
 
 @Serializable

@@ -54,6 +54,8 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun loadBondedNodes() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { // thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c
+                println(bondUseCase.invoke("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c"))
+
                 val nodesResponse = thorChainApi.getBondedNodes("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
                 println(nodesResponse)
                 val node = nodesResponse.nodes.first().address

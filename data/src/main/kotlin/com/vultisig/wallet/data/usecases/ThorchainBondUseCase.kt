@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.repositories.ThorchainBondRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigInteger
 import java.util.Date
 import javax.inject.Inject
 
@@ -18,7 +19,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 ) : ThorchainBondUseCase {
     override suspend fun invoke(address: String) = supervisorScope {
         try {
-            val networkInfoDeferred = async { getNetworkInfo() }
+            val networkInfoDeferred = async { getNetworkInfo() }.await()
             val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
 
             val activeNodes = mutableListOf<ActiveBondedNode>()
@@ -28,10 +29,12 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                 bondedNodeAddresses.add(node.address)
 
                 try {
-                    val myBondMetrics = thorChainApi.calculateBondMetrics(
+                    val myBondMetrics = calculateBondMetrics(
                         nodeAddress = node.address,
                         myBondAddress = address
                     )
+
+                    println(myBondMetrics)
 
                     /*val nodeState = BondNodeState.fromApiStatus(myBondMetrics.nodeStatus)
                         ?: BondNodeState.Standby
@@ -51,6 +54,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
                     activeNodes.add(activeNode) */
                 } catch (e: Exception) {
+                    // If there is a failure withh specific one,
                     Timber.e(e)
                 }
             }
@@ -115,6 +119,96 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         if (totalBlocks <= 0) return null
         return totalSeconds / totalBlocks
     }
+
+    private suspend fun calculateBondMetrics(
+        nodeAddress: String,
+        myBondAddress: String,
+    ) {
+        val nodeData = thorchainBondRepository.getNodeDetails(nodeAddress)
+        val bondProviders = nodeData.bondProviders.providers
+
+        // 2. Calculate my bond and total bond
+        var myBond = BigInteger.ZERO
+        var totalBond = BigInteger.ZERO
+
+        for (provider in bondProviders) {
+            val providerBond = provider.bond.toBigIntegerOrNull() ?: BigInteger.ZERO
+            if (provider.bondAddress == myBondAddress) {
+                myBond = providerBond
+            }
+            totalBond += providerBond
+        }
+
+        // Transform to decimal and get proper APR
+        val myBondOwnershipPercentage = if (totalBond > BigInteger.ZERO) {
+            myBond.divide(totalBond)
+        } else {
+            BigInteger.ZERO
+        }
+
+        println(myBondOwnershipPercentage)
+        // 4.Calculate node operator fee (convert from basis points)
+        /*val nodeOperatorFee =
+            (nodeData.bondProviders.nodeOperatorFee.toBigDecimalOrNull() ?: BigDecimal.ZERO)
+                .divide(BigDecimal(10_000), 18, RoundingMode.HALF_UP) */
+
+    }
+
+    /*
+    let nodeData = try await getNodeDetails(nodeAddress: nodeAddress)
+        let bondProviders = nodeData.bondProviders.providers
+
+        // 2. Calculate my bond and total bond
+        var myBond: Decimal = 0
+        var totalBond: Decimal = 0
+
+        for provider in bondProviders {
+            let providerBond = Decimal(string: provider.bond) ?? 0
+            if provider.bondAddress == myBondAddress {
+                myBond = providerBond
+            }
+            totalBond += providerBond
+        }
+
+        // 3. Calculate ownership percentage
+        let myBondOwnershipPercentage = totalBond > 0 ? myBond / totalBond : 0
+
+        // 4. Calculate node operator fee (convert from basis points)
+        let nodeOperatorFee = (Decimal(string: nodeData.bondProviders.nodeOperatorFee) ?? 0) / 10000
+
+        // 5. Calculate current award after node operator fee
+        let currentAward = (Decimal(string: nodeData.currentAward) ?? 0) * (1 - nodeOperatorFee)
+        let myAward = myBondOwnershipPercentage * currentAward
+
+        // 6. Get recent churn timestamp to calculate APY
+        let churns = try await getChurns()
+        guard let mostRecentChurn = churns.first,
+              let recentChurnTimestampNanos = Double(mostRecentChurn.date) else {
+            throw THORChainAPIError.invalidResponse
+        }
+
+        // Convert from nanoseconds to seconds
+        let recentChurnTimestamp = recentChurnTimestampNanos / 1_000_000_000
+
+        // 7. Calculate time since last churn
+        let currentTime = Date().timeIntervalSince1970
+        let timeDiff = currentTime - recentChurnTimestamp
+        let timeDiffInYears = timeDiff / (60 * 60 * 24 * 365.25)
+
+        // 8. Calculate APR and APY per node (matching JavaScript implementation)
+        let apr = myBond > 0 && timeDiffInYears > 0 ? (myAward / myBond) / Decimal(timeDiffInYears) : 0
+
+        // APY = (1 + APR/365)^365 - 1
+        let aprDouble = Double(truncating: apr as NSNumber)
+        let apy = pow(1 + aprDouble / 365, 365) - 1
+
+        return BondMetrics(
+            myBond: myBond,
+            myAward: myAward,
+            apy: apy,
+            nodeStatus: nodeData.status
+        )
+     */
 }
 
 internal data class NetworkBondInfo(
