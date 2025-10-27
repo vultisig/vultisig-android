@@ -538,7 +538,7 @@ internal class SendFormViewModel @Inject constructor(
             maxAmount = max
             isMaxAmount.value = true
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                max?.toPlainString() ?: ""
+                max.toPlainString()
             )
         }
     }
@@ -546,14 +546,14 @@ internal class SendFormViewModel @Inject constructor(
     fun choosePercentageAmount(percentage: Float) {
         viewModelScope.launch {
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                fetchPercentageOfAvailableBalance(percentage)?.toPlainString() ?: ""
+                fetchPercentageOfAvailableBalance(percentage).toPlainString()
             )
         }
     }
 
-    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal? {
-        val selectedAccount = selectedAccount ?: return null
-        val gasFee = gasFee.value ?: return null
+    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
+        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
+        val gasFee = gasFee.value ?: return BigDecimal.ZERO
 
         val availableTokenBalance = getAvailableTokenBalance(
             selectedAccount,
@@ -566,7 +566,7 @@ internal class SendFormViewModel @Inject constructor(
                 selectedAccount.token.decimal,
                 RoundingMode.DOWN
             )
-            ?.stripTrailingZeros()
+            ?.stripTrailingZeros() ?: BigDecimal.ZERO
     }
 
     fun dismissError() {
