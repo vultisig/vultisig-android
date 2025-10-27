@@ -798,7 +798,7 @@ data class MidgardHealth(
 ) {
     @Serializable
     data class HeightInfo(
-        val height: Int,
-        val timestamp: Int // seconds since epoch
+        val height: Long,
+        val timestamp: Long // seconds since epoch
     )
 }
