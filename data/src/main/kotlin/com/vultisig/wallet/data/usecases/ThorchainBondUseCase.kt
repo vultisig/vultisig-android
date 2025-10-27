@@ -6,9 +6,12 @@ import com.vultisig.wallet.data.repositories.ThorchainBondRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.Date
 import javax.inject.Inject
+import kotlin.math.pow
 
 fun interface ThorchainBondUseCase {
     suspend operator fun invoke(address: String)
@@ -124,13 +127,13 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         nodeAddress: String,
         myBondAddress: String,
     ) {
+        // 1. Fetch node details
         val nodeData = thorchainBondRepository.getNodeDetails(nodeAddress)
         val bondProviders = nodeData.bondProviders.providers
 
         // 2. Calculate my bond and total bond
         var myBond = BigInteger.ZERO
         var totalBond = BigInteger.ZERO
-
         for (provider in bondProviders) {
             val providerBond = provider.bond.toBigIntegerOrNull() ?: BigInteger.ZERO
             if (provider.bondAddress == myBondAddress) {
@@ -139,76 +142,56 @@ class ThorchainBondUseCaseImpl @Inject constructor(
             totalBond += providerBond
         }
 
-        // Transform to decimal and get proper APR
-        val myBondOwnershipPercentage = if (totalBond > BigInteger.ZERO) {
-            myBond.divide(totalBond)
-        } else {
-            BigInteger.ZERO
-        }
-
-        println(myBondOwnershipPercentage)
-        // 4.Calculate node operator fee (convert from basis points)
-        /*val nodeOperatorFee =
-            (nodeData.bondProviders.nodeOperatorFee.toBigDecimalOrNull() ?: BigDecimal.ZERO)
-                .divide(BigDecimal(10_000), 18, RoundingMode.HALF_UP) */
-
-    }
-
-    /*
-    let nodeData = try await getNodeDetails(nodeAddress: nodeAddress)
-        let bondProviders = nodeData.bondProviders.providers
-
-        // 2. Calculate my bond and total bond
-        var myBond: Decimal = 0
-        var totalBond: Decimal = 0
-
-        for provider in bondProviders {
-            let providerBond = Decimal(string: provider.bond) ?? 0
-            if provider.bondAddress == myBondAddress {
-                myBond = providerBond
-            }
-            totalBond += providerBond
-        }
-
         // 3. Calculate ownership percentage
-        let myBondOwnershipPercentage = totalBond > 0 ? myBond / totalBond : 0
+        val myBondOwnershipPercentage = if (totalBond > BigInteger.ZERO) {
+            myBond.toBigDecimal().divide(totalBond.toBigDecimal(), 8, RoundingMode.HALF_UP)
+        } else {
+            BigDecimal.ZERO
+        }
 
-        // 4. Calculate node operator fee (convert from basis points)
-        let nodeOperatorFee = (Decimal(string: nodeData.bondProviders.nodeOperatorFee) ?? 0) / 10000
+        // 4. Calculate node operator fee
+        val nodeOperatorFee = (nodeData.bondProviders.nodeOperatorFee.toBigDecimalOrNull()
+            ?: BigDecimal.ZERO).divide(BigDecimal(10_000), 8, RoundingMode.HALF_UP)
 
         // 5. Calculate current award after node operator fee
-        let currentAward = (Decimal(string: nodeData.currentAward) ?? 0) * (1 - nodeOperatorFee)
-        let myAward = myBondOwnershipPercentage * currentAward
+        val currentAward =
+            (nodeData.currentAward.toBigDecimalOrNull() ?: BigDecimal.ZERO) * (BigDecimal.ONE - nodeOperatorFee)
+        val myAward = myBondOwnershipPercentage * currentAward
 
         // 6. Get recent churn timestamp to calculate APY
-        let churns = try await getChurns()
-        guard let mostRecentChurn = churns.first,
-              let recentChurnTimestampNanos = Double(mostRecentChurn.date) else {
-            throw THORChainAPIError.invalidResponse
+        val churns = thorchainBondRepository.getChurns()
+        val mostRecentChurn = churns.firstOrNull() ?: error("Can't get churns")
+        val recentChurnTimestampNanos = mostRecentChurn.date.toDoubleOrNull()
+            ?: error("Can't calculate churn")
+
+        // 7. convert nanoseconds to seconds
+        val recentChurnTimestamp = recentChurnTimestampNanos / 1_000_000_000.0
+
+        // 8. Get current time in seconds since epoch
+        val currentTime = System.currentTimeMillis() / 1000.0
+        val timeDiff = currentTime - recentChurnTimestamp
+        val timeDiffInYears = timeDiff / (60 * 60 * 24 * 365.25)
+
+        // 9. Calculate APR & APY
+        val apr = if (myBond > BigInteger.ZERO && timeDiffInYears > 0) {
+            (myAward.divide(myBond.toBigDecimal(), 18, RoundingMode.HALF_UP))
+                .divide(BigDecimal.valueOf(timeDiffInYears), 18, RoundingMode.HALF_UP)
+        } else {
+            BigDecimal.ZERO
         }
 
-        // Convert from nanoseconds to seconds
-        let recentChurnTimestamp = recentChurnTimestampNanos / 1_000_000_000
+        val aprDouble = apr.toDouble()
+        val apy = (1.0 + aprDouble / 365.0).pow(365.0) - 1.0
 
-        // 7. Calculate time since last churn
-        let currentTime = Date().timeIntervalSince1970
-        let timeDiff = currentTime - recentChurnTimestamp
-        let timeDiffInYears = timeDiff / (60 * 60 * 24 * 365.25)
-
-        // 8. Calculate APR and APY per node (matching JavaScript implementation)
-        let apr = myBond > 0 && timeDiffInYears > 0 ? (myAward / myBond) / Decimal(timeDiffInYears) : 0
-
-        // APY = (1 + APR/365)^365 - 1
-        let aprDouble = Double(truncating: apr as NSNumber)
-        let apy = pow(1 + aprDouble / 365, 365) - 1
-
+        /*
         return BondMetrics(
             myBond: myBond,
             myAward: myAward,
             apy: apy,
             nodeStatus: nodeData.status
         )
-     */
+         */
+    }
 }
 
 internal data class NetworkBondInfo(
