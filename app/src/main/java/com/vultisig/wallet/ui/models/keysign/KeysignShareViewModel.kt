@@ -64,7 +64,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
     fun loadTransaction(transactionId: TransactionId) {
         runBlocking {
-            val transaction = transactionRepository.getTransaction(transactionId).first()
+            val transaction = transactionRepository.getTransaction(transactionId)
 
             val vault = vaultRepository.get(transaction.vaultId)!!
 
