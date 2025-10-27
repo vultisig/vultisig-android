@@ -126,7 +126,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     private suspend fun calculateBondMetrics(
         nodeAddress: String,
         myBondAddress: String,
-    ) {
+    ): BondMetrics {
         // 1. Fetch node details
         val nodeData = thorchainBondRepository.getNodeDetails(nodeAddress)
         val bondProviders = nodeData.bondProviders.providers
@@ -183,16 +183,21 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         val aprDouble = apr.toDouble()
         val apy = (1.0 + aprDouble / 365.0).pow(365.0) - 1.0
 
-        /*
         return BondMetrics(
-            myBond: myBond,
-            myAward: myAward,
-            apy: apy,
-            nodeStatus: nodeData.status
+            myBond = myBond,
+            myAward = myAward.toDouble(),
+            apy = apy,
+            nodeStatus = nodeData.status,
         )
-         */
     }
 }
+
+internal data class BondMetrics(
+    val myBond: BigInteger,
+    val myAward: Double,
+    val apy: Double,
+    val nodeStatus: String,
+)
 
 internal data class NetworkBondInfo(
     val apy: Double,
