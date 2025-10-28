@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -50,6 +51,7 @@ internal fun BondedTabContent(
     TotalBondWidget(
         onClickBondToNode = bondToNodeOnClick,
         totalBonded = state.bonded.totalBondedAmount,
+        isLoading = state.isLoading,
     )
 
     state.bonded.nodes.forEachIndexed { index, node ->
@@ -65,6 +67,7 @@ internal fun BondedTabContent(
 internal fun TotalBondWidget(
     onClickBondToNode: () -> Unit,
     totalBonded: String,
+    isLoading: Boolean = false,
 ) {
     Column(
         modifier = Modifier
@@ -96,11 +99,18 @@ internal fun TotalBondWidget(
 
                 UiSpacer(4.dp)
 
-                Text(
-                    text = totalBonded,
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.colors.text.primary,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .size(width = 120.dp, height = 28.dp)
+                    )
+                } else {
+                    Text(
+                        text = totalBonded,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.colors.text.primary,
+                    )
+                }
             }
         }
 
