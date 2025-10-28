@@ -47,19 +47,28 @@ internal fun HomePageTabMenu(
 
         VsTabGroup(
             index = state,
-            tabs = listOf(
-                {
-                    VsTab(
-                        label = stringResource(R.string.search_bar_portfolio),
-                        onClick = {
-                            onPortfolioClick()
-                            state = 0
-                        },
-                        isEnabled = true
-                    )
-                },
-            ),
-        )
+        ) {
+            tab {
+                VsTab(
+                    label = stringResource(R.string.search_bar_portfolio),
+                    onClick = {
+                        onPortfolioClick()
+                        state = 0
+                    },
+                    isEnabled = true
+                )
+            }
+//                tab {
+//                    HomepageTab(
+//                        onClick = {
+//                            onTNFTsClick()
+//                            state = 1
+//                        },
+//                        label = stringResource(R.string.search_bar_nfts),
+//                        isEnabled = false
+//                    )
+//                }
+        }
 
         UiSpacer(weight = 1f)
 
