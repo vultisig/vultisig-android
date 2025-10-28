@@ -13,6 +13,7 @@
     <string name="active_nodes">活跃节点</string>
     <string name="next_churn">下次轮换</string>
     <string name="next_award">下次奖励</string>
+    <string name="wait_until_node_churned_out">等待节点被淘汰</string>
     <string name="deposit_option_leave">离开</string>
     <string name="deposit_option_stake">质押</string>
     <string name="deposit_option_unstake">取消质押</string>

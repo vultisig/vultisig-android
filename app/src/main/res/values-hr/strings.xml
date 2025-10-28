@@ -403,6 +403,7 @@
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
     <string name="next_award">Sljedeća nagrada</string>
+    <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>

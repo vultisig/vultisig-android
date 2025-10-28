@@ -403,6 +403,7 @@
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>
     <string name="next_award">Próxima recompensa</string>
+    <string name="wait_until_node_churned_out">Aguarde até que o nó seja removido</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>

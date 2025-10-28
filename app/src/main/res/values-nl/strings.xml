@@ -414,6 +414,7 @@
     <string name="active_nodes">Actieve Nodes</string>
     <string name="next_churn">Volgende Wisseling</string>
     <string name="next_award">Volgende beloning</string>
+    <string name="wait_until_node_churned_out">Wacht tot de node is uitgefaseerd</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>

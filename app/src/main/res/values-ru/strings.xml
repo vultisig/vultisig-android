@@ -414,6 +414,7 @@
     <string name="active_nodes">Активные узлы</string>
     <string name="next_churn">Следующая ротация</string>
     <string name="next_award">Следующая награда</string>
+    <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
