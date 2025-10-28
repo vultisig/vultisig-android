@@ -81,25 +81,12 @@ internal class CoinGeckoApiImpl @Inject constructor(
         chainId: String,
         coins: String,
         fiats: String,
-    ): Map<String, CurrencyToPrice>
-        {
-            val body=http
-                .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
-                    parameter(
-                        "contract_addresses",
-                        coins
-                    )
-                    parameter(
-                        "vs_currencies",
-                        fiats
-                    )
-                    header(
-                        "Content-Type",
-                        "application/json"
-                    )
-                }
-            return body.body()
-        }
+    ): Map<String, CurrencyToPrice> = http
+        .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
+            parameter("contract_addresses", coins)
+            parameter("vs_currencies", fiats)
+            header("Content-Type", "application/json")
+        }.body()
 
     private val Chain.coinGeckoAssetId: String
         get() = when (this) {

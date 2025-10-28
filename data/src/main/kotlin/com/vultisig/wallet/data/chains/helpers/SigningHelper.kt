@@ -208,16 +208,6 @@ object SigningHelper {
                         )
                 }
 
-//                is SwapPayload.Kyber -> {
-//                    return OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
-//                        .getSignedTransaction(
-//                            swapPayload,
-//                            keysignPayload,
-//                            signatures,
-//                            nonceAcc
-//                        )
-//                }
-
                 else -> {}
             }
         } else if (swapPayload != null && swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
