@@ -3,13 +3,14 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
+import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState.Companion.fromApiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,7 @@ internal data class BondedTabUiModel(
 
 internal data class BondedNodeUiModel(
     val address: String,
-    val status: String,
+    val status: BondNodeState,
     val apy: String,
     val bondedAmount: String,
     val nextAward: String,
@@ -73,7 +74,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             ?.find { it.chain.id == Chain.ThorChain.id }
                             ?.address
                             ?: error("Vault does not have address")
-                    bondUseCase.invoke(address)
+                    bondUseCase.invoke("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
                 }
 
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
@@ -102,7 +103,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun ActiveBondedNode.toUiModel(): BondedNodeUiModel {
         return BondedNodeUiModel(
             address = formatAddress(node.address),
-            status = node.state,
+            status = node.state.fromApiStatus(),
             apy = formatApy(apy),
             bondedAmount = formatRuneAmount(amount),
             nextAward = formatRuneReward(nextReward),

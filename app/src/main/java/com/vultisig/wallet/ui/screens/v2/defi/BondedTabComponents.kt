@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -164,17 +165,19 @@ internal fun ActiveNodeRow(
 
             UiSpacer(1f)
 
+            val statusStyle = getStyleByNodeStatus(node.status)
+
             Text(
-                text = node.status,
+                text = statusStyle.second,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.alerts.warning,
+                color = statusStyle.first,
             )
         }
 
         UiSpacer(16.dp)
 
         Text(
-            text = stringResource(R.string.bonded_label) + node.bondedAmount,
+            text = stringResource(R.string.bonded_label) + " ${node.bondedAmount}",
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
@@ -234,6 +237,7 @@ internal fun ActiveNodeRow(
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = onClickUnbond,
                 modifier = Modifier.weight(1f),
+                enabled = node.status.canUnbond,
                 iconCircleColor = Theme.v2.colors.text.extraLight
             )
 
@@ -244,6 +248,7 @@ internal fun ActiveNodeRow(
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = onClickBond,
                 modifier = Modifier.weight(1f),
+                enabled = node.status.canBond,
                 iconCircleColor = Theme.v2.colors.primary.accent4
             )
         }
@@ -291,15 +296,31 @@ fun ActionButton(
     border: BorderStroke? = null,
     contentColor: Color,
     iconCircleColor: Color,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = background,
-            contentColor = contentColor
+            contentColor = contentColor,
+            disabledContainerColor = background.copy(alpha = 0.5f),
+            disabledContentColor = contentColor.copy(alpha = 0.5f)
         ),
-        border = border,
+        border = if (enabled) {
+            border
+        } else {
+            border?.let {
+                BorderStroke(
+                    width = it.width,
+                    color = when (val brush = it.brush) {
+                        is SolidColor -> brush.value.copy(alpha = 0.5f)
+                        else -> Color.Gray.copy(alpha = 0.5f) // fallback for gradient brushes
+                    }
+                )
+            }
+        },
         shape = RoundedCornerShape(50),
         contentPadding = PaddingValues(horizontal = 6.dp),
         modifier = modifier.height(42.dp)
@@ -307,13 +328,17 @@ fun ActionButton(
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .background(iconCircleColor, RoundedCornerShape(50)),
+                .background(
+                    if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
+                    RoundedCornerShape(50)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
+                tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
             )
         }
 
@@ -322,6 +347,21 @@ fun ActionButton(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String> {
+    val successColor = Theme.v2.colors.alerts.success
+    val warningColor = Theme.v2.colors.alerts.warning
+
+    return when (nodeStatus) {
+        BondNodeState.WHITELISTED -> Pair(successColor, "Whitelisted")
+        BondNodeState.STANDBY -> Pair(successColor, "StandBy")
+        BondNodeState.READY -> Pair(successColor, "Ready")
+        BondNodeState.ACTIVE -> Pair(successColor, "Active")
+        BondNodeState.DISABLED -> Pair(warningColor, "Disabled")
+        BondNodeState.UNKNOWN -> Pair(warningColor, "Unknown")
     }
 }
 
@@ -351,7 +391,7 @@ private fun NodeListPreview() {
     ActiveNodeRow(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
-            status = "Churned Out",
+            status = BondNodeState.DISABLED,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
             nextAward = "20 RUNE",
