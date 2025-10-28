@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -81,7 +83,7 @@ internal fun DefiPositionScreenContent(
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            BalanceBanner(isLoading = false)
+            BalanceBanner(isLoading = state.isLoading)
 
             VsTabs(
                 tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
@@ -197,11 +199,18 @@ private fun BalanceBanner(
 
             UiSpacer(12.dp)
 
-            Text(
-                text = "\$3,010.77",
-                color = Theme.colors.text.primary,
-                style = Theme.satoshi.price.title1,
-            )
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .size(width = 150.dp, height = 32.dp)
+                )
+            } else {
+                Text(
+                    text = "\$3,010.77",
+                    color = Theme.colors.text.primary,
+                    style = Theme.satoshi.price.title1,
+                )
+            }
         }
     }
 }
