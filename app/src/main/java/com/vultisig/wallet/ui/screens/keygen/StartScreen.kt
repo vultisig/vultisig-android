@@ -32,7 +32,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -40,7 +39,7 @@ import com.vultisig.wallet.ui.utils.startScreenAnimations
 
 @Composable
 internal fun StartScreen(
-    model: StartViewModel = hiltViewModel()
+    model: StartViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
@@ -83,7 +82,6 @@ private fun StartScreen(
                 .fillMaxSize()
                 .background(Theme.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),
@@ -109,8 +107,7 @@ private fun StartScreen(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(
-                    vertical = 24.dp,
-                    horizontal = 25.dp
+                    all = 8.dp
                 )
             ) {
 
