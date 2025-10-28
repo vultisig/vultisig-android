@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
+import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
@@ -39,7 +40,7 @@ internal data class DefiPositionsUiModel(
 )
 
 internal data class BondedTabUiModel(
-    val totalBondedAmount: String = "0 RUNE",
+    val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
     val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
@@ -156,7 +157,6 @@ internal class DefiPositionsViewModel @Inject constructor(
     private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal): String {
         return try {
             val currency = appCurrencyRepository.currency.first()
-            // Token ID format is "${ticker}-${chain.id}" so for RUNE it's "RUNE-THORChain"
             val runePrice = tokenPriceRepository.getCachedPrice(
                 tokenId = "RUNE-THORChain",
                 appCurrency = currency
@@ -177,13 +177,13 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun formatRuneAmount(amount: BigInteger): String {
         val runeAmount = Chain.ThorChain.coinType.toValue(amount)
         val rounded = runeAmount.setScale(2, RoundingMode.HALF_UP)
-        return "${rounded.toPlainString()} RUNE"
+        return "${rounded.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
     }
 
     private fun formatRuneReward(reward: Double): String {
         val rewardBigInt = BigInteger.valueOf(reward.toLong())
         val runeAmount = Chain.ThorChain.coinType.toValue(rewardBigInt)
-        return "%.2f RUNE".format(Locale.US, runeAmount.toDouble())
+        return "%.2f %s".format(Locale.US, runeAmount.toDouble(), Chain.ThorChain.coinType.symbol)
     }
 
     private fun formatApy(apy: Double): String {
