@@ -4,9 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
 import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState
@@ -14,6 +18,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState.Companion.fromApiSta
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,7 +32,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
-    val totalAmountPrice: String = "$3,017.12",
+    val totalAmountPrice: String = "$0.00",
     val selectedTab: String = BONDED_TAB,
     val isLoading: Boolean = false,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
@@ -52,6 +57,8 @@ internal class DefiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val bondUseCase: ThorchainBondUseCase,
+    private val tokenPriceRepository: TokenPriceRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
@@ -67,22 +74,35 @@ internal class DefiPositionsViewModel @Inject constructor(
             state.update { it.copy(isLoading = true) }
 
             try {
+                val vault = vaultRepository.get(vaultId)
+                val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                
+                if (runeCoin == null) {
+                    Timber.e("Vault does not have RUNE coin")
+                    state.update {
+                        it.copy(
+                            isLoading = false,
+                        )
+                    }
+                    return@launch
+                }
+                
                 val activeNodes = withContext(Dispatchers.IO) {
-                    val address =
-                        vaultRepository.get(vaultId)
-                            ?.coins
-                            ?.find { it.chain.id == Chain.ThorChain.id }
-                            ?.address
-                            ?: error("Vault does not have address")
+                    val address = runeCoin.address
+                    // Refresh RUNE price to ensure we have latest
+                    tokenPriceRepository.refresh(listOf(runeCoin))
                     bondUseCase.invoke("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
                 }
 
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
                 val totalBonded = calculateTotalBonded(activeNodes)
+                val totalBondedRaw = calculateTotalBondedRaw(activeNodes)
+                val totalValue = calculateTotalValue(totalBondedRaw)
 
                 state.update {
                     it.copy(
                         isLoading = false,
+                        totalAmountPrice = totalValue,
                         bonded = BondedTabUiModel(
                             totalBondedAmount = totalBonded,
                             nodes = nodeUiModels
@@ -126,15 +146,44 @@ internal class DefiPositionsViewModel @Inject constructor(
         return formatRuneAmount(total)
     }
 
+    private fun calculateTotalBondedRaw(nodes: List<ActiveBondedNode>): BigDecimal {
+        val total = nodes.fold(BigInteger.ZERO) { acc, node ->
+            acc + node.amount
+        }
+        return Chain.ThorChain.coinType.toValue(total)
+    }
+
+    private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal): String {
+        return try {
+            val currency = appCurrencyRepository.currency.first()
+            // Token ID format is "${ticker}-${chain.id}" so for RUNE it's "RUNE-THORChain"
+            val runePrice = tokenPriceRepository.getCachedPrice(
+                tokenId = "RUNE-THORChain",
+                appCurrency = currency
+            ) ?: BigDecimal.ZERO
+            
+            Timber.d("RUNE price: $runePrice, amount: $totalRuneAmount")
+            
+            val totalValue = totalRuneAmount * runePrice
+            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+
+            currencyFormat.format(totalValue.toDouble())
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to calculate total value")
+            "$0.00"
+        }
+    }
+
     private fun formatRuneAmount(amount: BigInteger): String {
-        val runeDecimals = 8
-        val divisor = BigDecimal.TEN.pow(runeDecimals)
-        val runeAmount = amount.toBigDecimal().divide(divisor, 2, RoundingMode.HALF_UP)
-        return "${runeAmount.toPlainString()} RUNE"
+        val runeAmount = Chain.ThorChain.coinType.toValue(amount)
+        val rounded = runeAmount.setScale(2, RoundingMode.HALF_UP)
+        return "${rounded.toPlainString()} RUNE"
     }
 
     private fun formatRuneReward(reward: Double): String {
-        return "%.2f RUNE".format(Locale.US, reward / 100_000_000)
+        val rewardBigInt = BigInteger.valueOf(reward.toLong())
+        val runeAmount = Chain.ThorChain.coinType.toValue(rewardBigInt)
+        return "%.2f RUNE".format(Locale.US, runeAmount.toDouble())
     }
 
     private fun formatApy(apy: Double): String {

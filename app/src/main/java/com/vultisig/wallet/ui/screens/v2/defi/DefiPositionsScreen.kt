@@ -83,7 +83,10 @@ internal fun DefiPositionScreenContent(
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            BalanceBanner(isLoading = state.isLoading)
+            BalanceBanner(
+                isLoading = state.isLoading,
+                totalValue = state.totalAmountPrice
+            )
 
             VsTabs(
                 tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
@@ -160,6 +163,7 @@ private fun NoPositionsContainer(
 @Composable
 private fun BalanceBanner(
     isLoading: Boolean,
+    totalValue: String,
 ) {
     Box(
         modifier = Modifier
@@ -206,7 +210,7 @@ private fun BalanceBanner(
                 )
             } else {
                 Text(
-                    text = "\$3,010.77",
+                    text = totalValue,
                     color = Theme.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
