@@ -174,7 +174,7 @@ internal fun ActiveNodeRow(
         UiSpacer(16.dp)
 
         Text(
-            text = "Bonded " + node.bondedAmount,
+            text = stringResource(R.string.bonded_label) + node.bondedAmount,
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )

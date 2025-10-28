@@ -394,6 +394,7 @@
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Ukupno vezanih Rune</string>
+    <string name="bonded_label">Vezano: </string>
     <string name="bond_to_node">Veži na čvor</string>
     <string name="node_address">Adresa</string>
     <string name="apy">APY</string>
