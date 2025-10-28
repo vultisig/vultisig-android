@@ -198,14 +198,14 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     fun onClickBond(nodeAddress: String) {
-
+        // TODO: Implement new navigation screen
     }
 
     fun onClickUnBond(nodeAddress: String) {
-
+        // TODO: Implement new navigation screen
     }
 
     fun bondToNode() {
-
+        // TODO: Implement new navigation screen
     }
 }
