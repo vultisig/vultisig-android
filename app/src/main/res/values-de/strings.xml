@@ -394,6 +394,7 @@
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Gesamt gebundene Rune</string>
+    <string name="bonded_label">Gebunden: </string>
     <string name="bond_to_node">An Knoten binden</string>
     <string name="node_address">Adresse</string>
     <string name="apy">APY</string>

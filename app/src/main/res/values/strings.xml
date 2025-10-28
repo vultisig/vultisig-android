@@ -2,6 +2,7 @@
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Total Bonded Rune</string>
+    <string name="bonded_label">Bonded: </string>
     <string name="bond_to_node">Bond to Node</string>
     <string name="node_address">Address</string>
     <string name="apy">APY</string>
