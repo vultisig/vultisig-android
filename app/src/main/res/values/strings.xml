@@ -949,5 +949,7 @@
     <string name="custom_token_screen_finding_token" translatable="false">Finding token</string>
     <string name="retry">Retry</string>
     <string name="custom_token_screen_title">Find custom token</string>
+    <string name="banxa_buy_or_transfer">Buy or transfer with Banxa</string>
+    <string name="banxa_continue">Continue to Banxa</string>
 
 </resources>
