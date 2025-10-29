@@ -44,7 +44,6 @@ fun OnRampScreen(
                 .background(Theme.colors.backgrounds.primary)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(id = R.drawable.banxa_logo),
@@ -52,18 +51,17 @@ fun OnRampScreen(
                 modifier = Modifier.size(120.dp)
             )
 
-            UiSpacer(size = 32.dp)
+            UiSpacer(size = 8.dp)
 
             Text(
                 text = stringResource(R.string.banxa_buy_or_transfer),
-                style = Theme.montserrat.heading5,
-                fontWeight = FontWeight.SemiBold,
+                style = Theme.brockmann.headings.title3,
                 color = Theme.colors.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            UiSpacer(size = 48.dp)
+            UiSpacer(size = 16.dp)
 
             VsButton(
                 label = stringResource(R.string.banxa_continue),
