@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -64,11 +65,11 @@ internal fun BondedTabContent(
             isLoading = state.isLoading,
         )
 
-        state.bonded.nodes.forEachIndexed { index, node ->
-            ActiveNodeRow(
-                node = node,
-                onClickBond = { onClickBond(node.address) },
-                onClickUnbond = { onClickUnbond(node.address) }
+        if (state.bonded.nodes.isNotEmpty()) {
+            ActiveNodesWidget(
+                nodes = state.bonded.nodes,
+                onClickBond = onClickBond,
+                onClickUnbond = onClickUnbond
             )
         }
     }
@@ -141,10 +142,10 @@ internal fun TotalBondWidget(
 }
 
 @Composable
-internal fun ActiveNodeRow(
-    node: BondedNodeUiModel,
-    onClickBond: () -> Unit,
-    onClickUnbond: () -> Unit,
+internal fun ActiveNodesWidget(
+    nodes: List<BondedNodeUiModel>,
+    onClickBond: (String) -> Unit,
+    onClickUnbond: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -175,8 +176,33 @@ internal fun ActiveNodeRow(
             )
         }
 
-        UiSpacer(16.dp)
+        nodes.forEachIndexed { index, node ->
+            if (index == 0) {
+                UiSpacer(16.dp)
+            } else {
+                UiSpacer(16.dp)
 
+                UiHorizontalDivider()
+
+                UiSpacer(16.dp)
+            }
+
+            NodeContent(
+                node = node,
+                onClickBond = { onClickBond(node.address) },
+                onClickUnbond = { onClickUnbond(node.address) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun NodeContent(
+    node: BondedNodeUiModel,
+    onClickBond: () -> Unit,
+    onClickUnbond: () -> Unit,
+) {
+    Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -396,8 +422,32 @@ private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String>
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun BondedTabContentPreview() {
+    val mockNodes = listOf(
+        BondedNodeUiModel(
+            address = "thor1abcd...xyz",
+            status = BondNodeState.ACTIVE,
+            apy = "12.5%",
+            bondedAmount = "1000 RUNE",
+            nextAward = "20 RUNE",
+            nextChurn = "Oct 15, 25"
+        ),
+        BondedNodeUiModel(
+            address = "thor1efgh...123",
+            status = BondNodeState.STANDBY,
+            apy = "11.2%",
+            bondedAmount = "500 RUNE",
+            nextAward = "10 RUNE",
+            nextChurn = "Oct 16, 25"
+        )
+    )
+    
     BondedTabContent(
-        state = DefiPositionsUiModel(),
+        state = DefiPositionsUiModel(
+            bonded = BondedTabUiModel(
+                totalBondedAmount = "1500 RUNE",
+                nodes = mockNodes
+            )
+        ),
         bondToNodeOnClick = { },
         onClickBond = {},
         onClickUnbond = {}
@@ -415,17 +465,52 @@ private fun TotalBondWidgetPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-private fun NodeListPreview() {
-    ActiveNodeRow(
+private fun ActiveNodesWidgetPreview() {
+    val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
-            status = BondNodeState.DISABLED,
+            status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
             nextAward = "20 RUNE",
             nextChurn = "Oct 15, 25"
         ),
+        BondedNodeUiModel(
+            address = "thor1efgh...123",
+            status = BondNodeState.DISABLED,
+            apy = "11.2%",
+            bondedAmount = "500 RUNE",
+            nextAward = "10 RUNE",
+            nextChurn = "Oct 16, 25"
+        )
+    )
+    
+    ActiveNodesWidget(
+        nodes = mockNodes,
         onClickBond = {},
         onClickUnbond = {},
     )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun NodeContentPreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        NodeContent(
+            node = BondedNodeUiModel(
+                address = "thor1abcd...xyz",
+                status = BondNodeState.ACTIVE,
+                apy = "12.5%",
+                bondedAmount = "1000 RUNE",
+                nextAward = "20 RUNE",
+                nextChurn = "Oct 15, 25"
+            ),
+            onClickBond = {},
+            onClickUnbond = {}
+        )
+    }
 }
