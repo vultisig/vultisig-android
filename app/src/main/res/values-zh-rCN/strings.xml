@@ -1120,5 +1120,6 @@
     <string name="bond_node_state_active">活跃</string>
     <string name="bond_node_state_disabled">已禁用</string>
     <string name="bond_node_state_unknown">未知</string>
+    <string name="defi_balance">余额</string>
 
 </resources>

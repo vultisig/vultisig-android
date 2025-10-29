@@ -713,4 +713,5 @@
     <string name="bond_node_state_active">Attivo</string>
     <string name="bond_node_state_disabled">Disabilitato</string>
     <string name="bond_node_state_unknown">Sconosciuto</string>
+    <string name="defi_balance">Saldo</string>
 </resources>

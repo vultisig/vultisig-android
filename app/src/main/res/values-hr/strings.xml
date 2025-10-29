@@ -713,4 +713,5 @@
     <string name="bond_node_state_active">Aktivan</string>
     <string name="bond_node_state_disabled">Onemogućen</string>
     <string name="bond_node_state_unknown">Nepoznat</string>
+    <string name="defi_balance">Stanje</string>
 </resources>

@@ -969,5 +969,6 @@
     <string name="bond_node_state_active">Active</string>
     <string name="bond_node_state_disabled">Disabled</string>
     <string name="bond_node_state_unknown">Unknown</string>
+    <string name="defi_balance">Balance</string>
 
 </resources>

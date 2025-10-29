@@ -196,7 +196,7 @@ private fun BalanceBanner(
             UiSpacer(16.dp)
 
             Text(
-                text = "Balance",
+                text = stringResource(R.string.defi_balance),
                 color = Theme.colors.text.primary,
                 style = Theme.brockmann.supplementary.caption,
             )
