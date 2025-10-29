@@ -251,7 +251,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     navigator.navigate(
                         Destination.PositionTokens(
                             vaultId = vaultId,
-                            chainId = chainId,
                         )
                     )
                 }
