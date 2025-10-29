@@ -241,7 +241,7 @@ internal fun ActiveNodeRow(
         ) {
             ActionButton(
                 title = stringResource(R.string.unbond),
-                icon = R.drawable.ic_bond,
+                icon = R.drawable.ic_unbond,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                 contentColor = Theme.v2.colors.text.primary,
@@ -253,7 +253,7 @@ internal fun ActiveNodeRow(
 
             ActionButton(
                 title = stringResource(R.string.bond),
-                icon = R.drawable.ic_unbond,
+                icon = R.drawable.ic_bond,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = onClickBond,

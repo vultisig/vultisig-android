@@ -14,13 +14,13 @@ import javax.inject.Inject
 import kotlin.math.pow
 
 fun interface ThorchainBondUseCase {
-    suspend operator fun invoke(address: String): List<ActiveBondedNode>
+    suspend fun getActiveNodes(address: String): List<ActiveBondedNode>
 }
 
 class ThorchainBondUseCaseImpl @Inject constructor(
     private val thorchainBondRepository: ThorchainBondRepository,
 ) : ThorchainBondUseCase {
-    override suspend fun invoke(address: String): List<ActiveBondedNode> = supervisorScope {
+    override suspend fun getActiveNodes(address: String): List<ActiveBondedNode> = supervisorScope {
         val activeNodes = mutableListOf<ActiveBondedNode>()
         val bondedNodeAddresses = mutableSetOf<String>()
 

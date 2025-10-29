@@ -50,11 +50,11 @@ internal sealed class Destination(
         val vaultId: String,
         val chainId: String,
     ): Destination (
-        route = "position_detail/${vaultId}/account/${chainId}"
+        route = "position_detail/${vaultId}"
     ) {
         companion object {
             const val STATIC_ROUTE =
-                "position_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
+                "position_detail/{$ARG_VAULT_ID}"
         }
     }
 

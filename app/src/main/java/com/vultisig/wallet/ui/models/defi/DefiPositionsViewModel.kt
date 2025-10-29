@@ -87,12 +87,11 @@ internal class DefiPositionsViewModel @Inject constructor(
                     }
                     return@launch
                 }
-                
+
+
                 val activeNodes = withContext(Dispatchers.IO) {
                     val address = runeCoin.address
-                    // Refresh RUNE price to ensure we have latest
-                    tokenPriceRepository.refresh(listOf(runeCoin))
-                    bondUseCase.invoke("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
+                    bondUseCase.getActiveNodes(address)
                 }
 
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
