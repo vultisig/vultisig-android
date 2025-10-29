@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.swap
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -43,11 +44,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -65,7 +69,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
+import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.utils.timerFlow
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -83,13 +94,17 @@ import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
+import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.Locale
 import kotlin.time.Duration
 
@@ -103,7 +118,6 @@ internal fun SwapScreen(
         state = state,
         srcAmountTextFieldState = model.srcAmountState,
         onBackClick = model::back,
-        onAmountLostFocus = model::validateAmount,
         onSwap = model::swap,
         onSelectSrcNetworkClick = model::selectSrcNetwork,
         onSelectSrcToken = model::selectSrcToken,
@@ -121,7 +135,6 @@ internal fun SwapScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
     onBackClick: () -> Unit = {},
-    onAmountLostFocus: () -> Unit = {},
     onSelectSrcNetworkClick: () -> Unit = {},
     onSelectSrcToken: () -> Unit = {},
     onSelectDstNetworkClick: () -> Unit = {},
@@ -169,6 +182,14 @@ internal fun SwapScreen(
                 )
             }
 
+            var topCenter by remember {
+                mutableStateOf(Offset.Zero)
+            }
+            var bottomCenter by remember {
+                mutableStateOf(Offset.Zero)
+            }
+            val space = 8.dp
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -182,42 +203,111 @@ internal fun SwapScreen(
             ) {
                 Box {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(space)
                     ) {
-                        TokenInput(
-                            isLoading = state.isLoading,
-                            title = stringResource(R.string.swap_form_from_title),
-                            selectedToken = state.selectedSrcToken,
-                            fiatValue = state.srcFiatValue,
-                            onSelectNetworkClick = onSelectSrcNetworkClick,
-                            onSelectTokenClick = onSelectSrcToken,
-                            shape = RoundedWithCutoutShape(
-                                cutoutPosition = CutoutPosition.Bottom,
-                                cutoutOffsetY = (-4).dp,
-                                cutoutRadius = 28.dp,
-                            ),
-                            focused = true,
-                            textFieldContent = {
-                                VsBasicTextField(
-                                    textFieldState = srcAmountTextFieldState,
-                                    style = Theme.brockmann.headings.title2,
-                                    color = Theme.colors.text.light,
-                                    textAlign = TextAlign.End,
-                                    hint = "0",
-                                    hintColor = Theme.colors.text.extraLight,
-                                    hintStyle = Theme.brockmann.headings.title2,
-                                    lineLimits = TextFieldLineLimits.SingleLine,
-                                    interactionSource = interactionSource,
-                                    // TODO onAmountLostFocus
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = ImeAction.Done,
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                        Box {
+                            val rotation = remember { Animatable(0f) }
+
+                            // Trigger spin when this is incremented
+                            var spinTrigger by remember { mutableIntStateOf(0) }
+
+                            // Launch the animation every time trigger changes
+                            LaunchedEffect(spinTrigger) {
+                                rotation.snapTo(0f)
+                                rotation.animateTo(
+                                    targetValue = 180f,
+                                    animationSpec = tween(
+                                        durationMillis = 600,
+                                        easing = FastOutSlowInEasing
+                                    )
                                 )
                             }
-                        )
+
+
+
+                            TokenInput(
+                                isLoading = state.isLoading,
+                                title = stringResource(R.string.swap_form_from_title),
+                                selectedToken = state.selectedSrcToken,
+                                fiatValue = state.srcFiatValue,
+                                onSelectNetworkClick = onSelectSrcNetworkClick,
+                                onSelectTokenClick = onSelectSrcToken,
+                                shape = RoundedWithCutoutShape(
+                                    cutoutPosition = CutoutPosition.Bottom,
+                                    cutoutOffsetY = -space/2,
+                                    cutoutRadius = 28.dp,
+                                    onCircleBoundsChanged = {
+                                        topCenter = it
+                                    }
+                                ),
+                                focused = true,
+                                textFieldContent = {
+                                    VsBasicTextField(
+                                        textFieldState = srcAmountTextFieldState,
+                                        style = Theme.brockmann.headings.title2,
+                                        color = Theme.colors.text.light,
+                                        textAlign = TextAlign.End,
+                                        hint = "0",
+                                        hintColor = Theme.colors.text.extraLight,
+                                        hintStyle = Theme.brockmann.headings.title2,
+                                        lineLimits = TextFieldLineLimits.SingleLine,
+                                        interactionSource = interactionSource,
+                                        // TODO onAmountLostFocus
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction = ImeAction.Done,
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    )
+                                }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        this.translationY = -size.height/2 + topCenter.y
+                                        this.translationX = (topCenter.x + bottomCenter.x).div(2) - (size.width)/2
+                                    }
+                                    .size(40.dp)
+                                    .background(
+                                        color = Theme.colors.persianBlue400,
+                                        shape = CircleShape,
+                                    )
+                                    .padding(all = space),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AnimatedContent(
+                                    targetState = state.isLoading || state.isLoadingNextScreen,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(150)) togetherWith
+                                                fadeOut(animationSpec = tween(150))
+                                    },
+                                ) { isLoading ->
+                                    if (isLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Theme.colors.text.primary,
+                                            strokeWidth = 2.dp,
+                                        )
+                                    } else {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_arrow_bottom_top),
+                                            contentDescription = null,
+                                            tint = Theme.colors.text.primary,
+                                            modifier = Modifier
+                                                .clickable {
+                                                    spinTrigger++
+                                                    onFlipSelectedTokens()
+                                                }
+                                                .size(24.dp)
+                                                .graphicsLayer {
+                                                    rotationZ = rotation.value
+                                                },
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
                         TokenInput(
                             title = stringResource(R.string.swap_form_dst_token_title),
@@ -228,8 +318,11 @@ internal fun SwapScreen(
                             onSelectTokenClick = onSelectDstToken,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.Top,
-                                cutoutOffsetY = (-4).dp,
+                                cutoutOffsetY = -space/2,
                                 cutoutRadius = 28.dp,
+                                onCircleBoundsChanged = {
+                                    bottomCenter = it
+                                }
                             ),
                             focused = false,
                             textFieldContent = {
@@ -242,66 +335,6 @@ internal fun SwapScreen(
                                 )
                             }
                         )
-                    }
-
-                    val rotation = remember { Animatable(0f) }
-
-                    // Trigger spin when this is incremented
-                    var spinTrigger by remember { mutableStateOf(0) }
-
-                    // Launch the animation every time trigger changes
-                    LaunchedEffect(spinTrigger) {
-                        rotation.snapTo(0f)
-                        rotation.animateTo(
-                            targetValue = 180f,
-                            animationSpec = tween(
-                                durationMillis = 600,
-                                easing = FastOutSlowInEasing
-                            )
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(40.dp)
-                            .background(
-                                color = Theme.colors.persianBlue400,
-                                shape = CircleShape,
-                            )
-                            .padding(all = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AnimatedContent(
-                            targetState = state.isLoading || state.isLoadingNextScreen,
-                            transitionSpec = {
-                                fadeIn(animationSpec = tween(150)) togetherWith
-                                        fadeOut(animationSpec = tween(150))
-                            },
-                        ) { isLoading ->
-                            if (isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = Theme.colors.text.primary,
-                                    strokeWidth = 2.dp,
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_arrow_bottom_top),
-                                    contentDescription = null,
-                                    tint = Theme.colors.text.primary,
-                                    modifier = Modifier
-                                        .clickable {
-                                            spinTrigger++
-                                            onFlipSelectedTokens()
-                                        }
-                                        .size(24.dp)
-                                        .graphicsLayer {
-                                            rotationZ = rotation.value
-                                        },
-                                )
-                            }
-                        }
                     }
                 }
 
@@ -503,6 +536,7 @@ private fun TokenInput(
                 color = Theme.colors.borders.light,
                 shape = shape,
             )
+            .clip(shape)
             .padding(
                 all = 16.dp,
             )
@@ -699,3 +733,184 @@ internal fun SwapFormScreenPreview() {
         srcAmountTextFieldState = TextFieldState(),
     )
 }
+
+@Preview
+@Composable
+internal fun SwapFormScreenPreview2() {
+    SwapScreen(
+        state = SwapFormUiModel(
+            selectedSrcToken = longTokenInput,
+            selectedDstToken = tokenInput,
+            srcFiatValue = "5.25",
+            estimatedDstTokenValue = "12.80",
+            estimatedDstFiatValue = "5.24",
+            provider = UiText.DynamicString("ThorSwap"),
+            networkFee = "0.02 RUNE",
+            networkFeeFiat = "0.004 USD",
+            totalFee = "0.024 USD",
+            fee = "0.02 RUNE",
+            error = null,
+            formError = null,
+            isSwapDisabled = false,
+            isLoading = false,
+            isLoadingNextScreen = false,
+            expiredAt = Clock.System.now()
+        ),
+        srcAmountTextFieldState = TextFieldState(),
+    )
+}
+
+@Preview
+@Composable
+internal fun SwapFormScreenPreview3() {
+
+    SwapScreen(
+        state = SwapFormUiModel(
+            selectedSrcToken = tokenInput,
+            selectedDstToken = longTokenInput,
+            srcFiatValue = "5.25",
+            estimatedDstTokenValue = "12.80",
+            estimatedDstFiatValue = "5.24",
+            provider = UiText.DynamicString("ThorSwap"),
+            networkFee = "0.02 RUNE",
+            networkFeeFiat = "0.004 USD",
+            totalFee = "0.024 USD",
+            fee = "0.02 RUNE",
+            error = null,
+            formError = null,
+            isSwapDisabled = false,
+            isLoading = false,
+            isLoadingNextScreen = false,
+            expiredAt = Clock.System.now()
+        ),
+        srcAmountTextFieldState = TextFieldState(),
+    )
+}
+@Preview
+@Composable
+internal fun SwapFormScreenPreview4() {
+
+    SwapScreen(
+        state = SwapFormUiModel(
+            selectedSrcToken = longTokenInput,
+            selectedDstToken = longTokenInput,
+            srcFiatValue = "5.25",
+            estimatedDstTokenValue = "12.80",
+            estimatedDstFiatValue = "5.24",
+            provider = UiText.DynamicString("ThorSwap"),
+            networkFee = "0.02 RUNE",
+            networkFeeFiat = "0.004 USD",
+            totalFee = "0.024 USD",
+            fee = "0.02 RUNE",
+            error = null,
+            formError = null,
+            isSwapDisabled = false,
+            isLoading = false,
+            isLoadingNextScreen = false,
+            expiredAt = Clock.System.now()
+        ),
+        srcAmountTextFieldState = TextFieldState(),
+    )
+}
+
+private val longTokenInput = TokenBalanceUiModel(
+    model = SendSrc(
+        address = Address(
+            chain = Chain.ThorChain,
+            address = "thor1xyzabc123",
+            accounts = listOf(
+                Account(
+                    token = Coin(
+                        chain = Chain.ThorChain,
+                        ticker = "RUNE",
+                        logo = "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
+                        address = "thor1xyzabc123",
+                        decimal = 8,
+                        hexPublicKey = "0xabc123def456",
+                        priceProviderID = "thorchain-rune",
+                        contractAddress = "",
+                        isNativeToken = true
+                    ),
+                    tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
+                    fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
+                    price = FiatValue(BigDecimal("2.10"), "USD")
+                )
+            )
+        ),
+        account = Account(
+            token = Coin(
+                chain = Chain.ThorChain,
+                ticker = "RUNE",
+                logo = "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
+                address = "thor1xyzabc123",
+                decimal = 8,
+                hexPublicKey = "0xabc123def456",
+                priceProviderID = "thorchain-rune",
+                contractAddress = "",
+                isNativeToken = true
+            ),
+            tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
+            fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
+            price = FiatValue(BigDecimal("2.10"), "USD")
+        )
+    ),
+    title = "LP-THOR.RUJI/ ETH.USDC-XYK",
+    balance = "0.11412095",
+    fiatValue = "5.25",
+    isNativeToken = true,
+    isLayer2 = false,
+    tokenStandard = "THORCHAIN",
+    tokenLogo = "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
+    chainLogo = Chain.ThorChain.logo
+)
+
+private val tokenInput = TokenBalanceUiModel(
+    model = SendSrc(
+        address = Address(
+            chain = Chain.TerraClassic,
+            address = "maya1def456ghi789",
+            accounts = listOf(
+                Account(
+                    token = Coin(
+                        chain = Chain.TerraClassic,
+                        ticker = "CACAO",
+                        logo = "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
+                        address = "maya1def456ghi789",
+                        decimal = 6,
+                        hexPublicKey = "0xdef789ghi012",
+                        priceProviderID = "mayachain-cacao",
+                        contractAddress = "",
+                        isNativeToken = true
+                    ),
+                    tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
+                    fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
+                    price = FiatValue(BigDecimal("0.41"), "USD")
+                )
+            )
+        ),
+        account = Account(
+            token = Coin(
+                chain = Chain.MayaChain,
+                ticker = "CACAO",
+                logo = "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
+                address = "maya1def456ghi789",
+                decimal = 6,
+                hexPublicKey = "0xdef789ghi012",
+                priceProviderID = "mayachain-cacao",
+                contractAddress = "",
+                isNativeToken = true
+            ),
+            tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
+            fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
+            price = FiatValue(BigDecimal("0.41"), "USD")
+        )
+    ),
+    title = "CACAO",
+    balance = "10.0",
+    fiatValue = "4.10",
+    isNativeToken = true,
+    isLayer2 = false,
+    tokenStandard = "THORCHAIN",
+    tokenLogo = "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
+    chainLogo = Chain.ThorChain.logo
+)
