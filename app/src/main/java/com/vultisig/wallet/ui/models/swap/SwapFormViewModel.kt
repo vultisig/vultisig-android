@@ -427,54 +427,6 @@ internal class SwapFormViewModel @Inject constructor(
                             regularSwapTransaction
                         }
 
-                        is SwapQuote.Kyber -> {
-                            val dstAddress = quote.data.tx.to
-                            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-
-                            val allowance = allowanceRepository.getAllowance(
-                                chain = srcToken.chain,
-                                contractAddress = srcToken.contractAddress,
-                                srcAddress = srcAddress,
-                                dstAddress = dstAddress,
-                            )
-                            val isApprovalRequired =
-                                allowance != null && allowance < srcTokenValue.value
-
-                            val specific = specificAndUtxo.blockChainSpecific
-                            val quoteData = if (specific is BlockChainSpecific.Ethereum) {
-                                quote.data.copy(
-                                    data = quote.data.data.copy(gasPrice = specific.maxFeePerGasWei.toString())
-                                )
-                            } else {
-                                quote.data
-                            }
-
-                            RegularSwapTransaction(
-                                id = UUID.randomUUID().toString(),
-                                vaultId = vaultId,
-                                srcToken = srcToken,
-                                srcTokenValue = srcTokenValue,
-                                dstToken = dstToken,
-                                dstAddress = dstAddress,
-                                expectedDstTokenValue = dstTokenValue,
-                                blockChainSpecific = specificAndUtxo,
-                                estimatedFees = quote.fees,
-                                gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                                memo = null,
-                                isApprovalRequired = isApprovalRequired,
-                                gasFeeFiatValue = gasFeeFiatValue,
-                                payload = SwapPayload.Kyber(
-                                    KyberSwapPayloadJson(
-                                        fromCoin = srcToken,
-                                        toCoin = dstToken,
-                                        fromAmount = srcTokenValue.value,
-                                        toAmountDecimal = dstTokenValue.decimal,
-                                        quote = quoteData,
-                                    )
-                                )
-                            )
-                        }
-
                         is SwapQuote.OneInch -> {
                             val dstAddress = quote.data.tx.to
                             val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
