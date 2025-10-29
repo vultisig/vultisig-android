@@ -125,7 +125,6 @@ internal class TokenDetailViewModel @Inject constructor(
                 vaultId = vaultId,
                 chain = chain,
             ).catch {
-                // TODO handle error
                 updateRefreshing(false)
                 Timber.e(it)
             }.onEach { address ->

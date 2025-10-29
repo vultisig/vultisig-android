@@ -276,8 +276,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     }
                     .catch {
                         updateRefreshing(false)
-
-                        // TODO handle error
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
