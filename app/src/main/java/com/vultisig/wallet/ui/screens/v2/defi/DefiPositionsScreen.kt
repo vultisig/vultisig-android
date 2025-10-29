@@ -142,7 +142,7 @@ private fun NoPositionsContainer(
         content = stringResource(R.string.defi_no_positions_selected_desc),
         action = {
             Text(
-                text = "Manage Positions",
+                text = stringResource(R.string.manage_positions),
                 style = Theme.brockmann.button.medium,
                 color = Theme.colors.text.primary,
                 modifier = Modifier

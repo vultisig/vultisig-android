@@ -706,4 +706,5 @@
     <string name="rename_vault_screen_rename_vault">Preimenuj trezor</string>
     <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
     <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
+    <string name="manage_positions">Upravljanje Pozicijama</string>
 </resources>

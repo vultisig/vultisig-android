@@ -48,7 +48,6 @@ internal sealed class Destination(
 
     data class PositionTokens(
         val vaultId: String,
-        val chainId: String,
     ): Destination (
         route = "position_detail/${vaultId}"
     ) {

@@ -715,4 +715,5 @@
     <string name="custom_token_not_found_desc">Mogelijke redenen: verkeerd contract, niet-ondersteunde keten of token verwijderd uit registers</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
     <string name="defi_no_positions_selected_desc">Je hebt alle posities voor deze keten uitgeschakeld. Schakel ten minste één positie in om saldi te bekijken en acties te beheren.</string>
+    <string name="manage_positions">Posities Beheren</string>
 </resources>

@@ -708,4 +708,5 @@
     <string name="custom_token_not_found_desc">Mögliche Gründe: falscher Vertrag, nicht unterstützte Chain oder Token wurde aus Registern entfernt</string>
     <string name="defi_no_positions_selected">Keine Positionen ausgewählt</string>
     <string name="defi_no_positions_selected_desc">Sie haben alle Positionen für diese Chain deaktiviert. Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Aktionen zu verwalten.</string>
+    <string name="manage_positions">Positionen verwalten</string>
 </resources>
