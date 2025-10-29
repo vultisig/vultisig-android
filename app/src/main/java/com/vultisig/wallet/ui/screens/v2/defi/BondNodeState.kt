@@ -20,11 +20,7 @@ enum class BondNodeState(val state: String) {
             DISABLED, UNKNOWN -> false
         }
 
-    val isEarningRewards: Boolean
-        get() = this == ACTIVE
-
     companion object {
-        /** Initialize from API response status string */
         fun String?.fromApiStatus(): BondNodeState {
             return when (this?.lowercase()) {
                 "whitelisted" -> WHITELISTED
