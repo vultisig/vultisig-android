@@ -707,4 +707,10 @@
     <string name="defi_no_positions_selected">Nessuna posizione selezionata</string>
     <string name="defi_no_positions_selected_desc">Hai disabilitato tutte le posizioni per questa catena. Abilita almeno una posizione per visualizzare i saldi e gestire le azioni.</string>
     <string name="manage_positions">Gestisci Posizioni</string>
+    <string name="bond_node_state_whitelisted">In Lista Bianca</string>
+    <string name="bond_node_state_standby">In Attesa</string>
+    <string name="bond_node_state_ready">Pronto</string>
+    <string name="bond_node_state_active">Attivo</string>
+    <string name="bond_node_state_disabled">Disabilitato</string>
+    <string name="bond_node_state_unknown">Sconosciuto</string>
 </resources>

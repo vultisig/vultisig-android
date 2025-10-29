@@ -366,12 +366,12 @@ private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String>
     val warningColor = Theme.v2.colors.alerts.warning
 
     return when (nodeStatus) {
-        BondNodeState.WHITELISTED -> Pair(successColor, "Whitelisted")
-        BondNodeState.STANDBY -> Pair(successColor, "StandBy")
-        BondNodeState.READY -> Pair(successColor, "Ready")
-        BondNodeState.ACTIVE -> Pair(successColor, "Active")
-        BondNodeState.DISABLED -> Pair(warningColor, "Disabled")
-        BondNodeState.UNKNOWN -> Pair(warningColor, "Unknown")
+        BondNodeState.WHITELISTED -> Pair(successColor, stringResource(R.string.bond_node_state_whitelisted))
+        BondNodeState.STANDBY -> Pair(successColor, stringResource(R.string.bond_node_state_standby))
+        BondNodeState.READY -> Pair(successColor, stringResource(R.string.bond_node_state_ready))
+        BondNodeState.ACTIVE -> Pair(successColor, stringResource(R.string.bond_node_state_active))
+        BondNodeState.DISABLED -> Pair(warningColor, stringResource(R.string.bond_node_state_disabled))
+        BondNodeState.UNKNOWN -> Pair(warningColor, stringResource(R.string.bond_node_state_unknown))
     }
 }
 

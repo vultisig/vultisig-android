@@ -707,4 +707,10 @@
     <string name="defi_no_positions_selected">No hay posiciones seleccionadas</string>
     <string name="defi_no_positions_selected_desc">Has deshabilitado todas las posiciones para esta cadena. Habilita al menos una posición para ver saldos y gestionar acciones.</string>
     <string name="manage_positions">Gestionar Posiciones</string>
+    <string name="bond_node_state_whitelisted">En Lista Blanca</string>
+    <string name="bond_node_state_standby">En Espera</string>
+    <string name="bond_node_state_ready">Listo</string>
+    <string name="bond_node_state_active">Activo</string>
+    <string name="bond_node_state_disabled">Deshabilitado</string>
+    <string name="bond_node_state_unknown">Desconocido</string>
 </resources>

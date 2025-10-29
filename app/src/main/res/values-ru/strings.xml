@@ -719,4 +719,10 @@
     <string name="defi_no_positions_selected">Позиции не выбраны</string>
     <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой цепочки. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
     <string name="manage_positions">Управление Позициями</string>
+    <string name="bond_node_state_whitelisted">В Белом Списке</string>
+    <string name="bond_node_state_standby">В Ожидании</string>
+    <string name="bond_node_state_ready">Готов</string>
+    <string name="bond_node_state_active">Активен</string>
+    <string name="bond_node_state_disabled">Отключен</string>
+    <string name="bond_node_state_unknown">Неизвестно</string>
 </resources>
