@@ -180,9 +180,9 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private fun formatRuneReward(reward: Double): String {
-        val rewardBigInt = BigInteger.valueOf(reward.toLong())
-        val runeAmount = Chain.ThorChain.coinType.toValue(rewardBigInt)
-        return "%.2f %s".format(Locale.US, runeAmount.toDouble(), Chain.ThorChain.coinType.symbol)
+        val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.HALF_UP).toBigInteger()
+        val runeAmount = Chain.ThorChain.coinType.toValue(rewardBase).setScale(2, RoundingMode.HALF_UP)
+        return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
     }
 
     private fun formatApy(apy: Double): String {
