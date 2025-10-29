@@ -5,8 +5,10 @@
     <string name="deposit_option_unbond">解绑</string>
     <string name="total_bonded_rune">总绑定 Rune</string>
     <string name="bonded_label">已绑定: </string>
+    <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
     <string name="node_address">地址</string>
+    <string name="node_address_formatted">地址: %s</string>
     <string name="apy">年化收益率</string>
     <string name="unbond">解绑</string>
     <string name="bond">绑定</string>

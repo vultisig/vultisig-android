@@ -406,8 +406,10 @@
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Общая связанная Rune</string>
     <string name="bonded_label">Связано: </string>
+    <string name="bonded_amount">Связано: %s</string>
     <string name="bond_to_node">Привязать к узлу</string>
     <string name="node_address">Адрес</string>
+    <string name="node_address_formatted">Адрес: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Отвязать</string>
     <string name="bond">Привязать</string>

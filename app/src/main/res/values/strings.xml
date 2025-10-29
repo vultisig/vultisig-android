@@ -3,8 +3,10 @@
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Total Bonded Rune</string>
     <string name="bonded_label">Bonded: </string>
+    <string name="bonded_amount">Bonded: %s</string>
     <string name="bond_to_node">Bond to Node</string>
     <string name="node_address">Address</string>
+    <string name="node_address_formatted">Address: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Unbond</string>
     <string name="bond">Bond</string>

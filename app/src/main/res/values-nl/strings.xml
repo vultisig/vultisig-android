@@ -406,8 +406,10 @@
     <string name="deposit_option_unbond">Unbond</string>
     <string name="total_bonded_rune">Totaal Gebonden Rune</string>
     <string name="bonded_label">Gebonden: </string>
+    <string name="bonded_amount">Gebonden: %s</string>
     <string name="bond_to_node">Binden aan Node</string>
     <string name="node_address">Adres</string>
+    <string name="node_address_formatted">Adres: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Ontbinden</string>
     <string name="bond">Binden</string>

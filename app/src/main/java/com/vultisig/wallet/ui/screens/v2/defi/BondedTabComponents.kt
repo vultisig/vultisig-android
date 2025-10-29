@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -50,18 +52,25 @@ internal fun BondedTabContent(
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
 ) {
-    TotalBondWidget(
-        onClickBondToNode = bondToNodeOnClick,
-        totalBonded = state.bonded.totalBondedAmount,
-        isLoading = state.isLoading,
-    )
-
-    state.bonded.nodes.forEachIndexed { index, node ->
-        ActiveNodeRow(
-            node = node,
-            onClickBond = { onClickBond(node.address) },
-            onClickUnbond = { onClickUnbond(node.address) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        TotalBondWidget(
+            onClickBondToNode = bondToNodeOnClick,
+            totalBonded = state.bonded.totalBondedAmount,
+            isLoading = state.isLoading,
         )
+
+        state.bonded.nodes.forEachIndexed { index, node ->
+            ActiveNodeRow(
+                node = node,
+                onClickBond = { onClickBond(node.address) },
+                onClickUnbond = { onClickUnbond(node.address) }
+            )
+        }
     }
 }
 
@@ -173,7 +182,7 @@ internal fun ActiveNodeRow(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = stringResource(R.string.node_address) + ": ${node.address}",
+                text = stringResource(R.string.node_address_formatted, node.address),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.extraLight,
                 modifier = Modifier.weight(1f, fill = false),
@@ -196,7 +205,7 @@ internal fun ActiveNodeRow(
         UiSpacer(16.dp)
 
         Text(
-            text = stringResource(R.string.bonded_label) + " ${node.bondedAmount}",
+            text = stringResource(R.string.bonded_amount, node.bondedAmount),
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
