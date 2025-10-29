@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -166,14 +168,20 @@ internal fun ActiveNodeRow(
 
         UiSpacer(16.dp)
 
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
                 text = stringResource(R.string.node_address) + ": ${node.address}",
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.extraLight,
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            UiSpacer(1f)
+            UiSpacer(8.dp)
 
             val statusStyle = getStyleByNodeStatus(node.status)
 
@@ -181,6 +189,7 @@ internal fun ActiveNodeRow(
                 text = statusStyle.second,
                 style = Theme.brockmann.body.s.medium,
                 color = statusStyle.first,
+                modifier = Modifier.wrapContentWidth()
             )
         }
 
