@@ -262,19 +262,27 @@ private fun NodeContent(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            InfoItem(
-                icon = R.drawable.calendar_days,
-                label = stringResource(R.string.next_churn),
-                value = node.nextChurn,
-            )
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                InfoItem(
+                    icon = R.drawable.calendar_days,
+                    label = stringResource(R.string.next_churn),
+                    value = node.nextChurn,
+                )
+            }
 
-            InfoItem(
-                icon = R.drawable.ic_cup,
-                label = stringResource(R.string.next_award),
-                value = node.nextAward
-            )
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                InfoItem(
+                    icon = R.drawable.ic_cup,
+                    label = stringResource(R.string.next_award),
+                    value = node.nextAward
+                )
+            }
         }
 
         UiSpacer(16.dp)
