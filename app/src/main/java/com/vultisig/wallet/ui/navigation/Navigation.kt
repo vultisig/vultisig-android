@@ -280,9 +280,9 @@ internal sealed class Destination(
     data object OnChainSecurity : Destination(route = "onchain_security")
 
     data class OnRamp(val vaultId: String, val chainId: String) :
-        Destination(route = "onramp/$chainId") {
+        Destination(route = "onramp/$vaultId/$chainId") {
         companion object {
-            const val STATIC_ROUTE = "biometrics/{$ARG_VAULT_ID}/{$ARG_CHAIN_ID}"
+            const val STATIC_ROUTE = "onramp/{$ARG_VAULT_ID}/{$ARG_CHAIN_ID}"
         }
     }
 }
