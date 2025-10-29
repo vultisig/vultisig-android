@@ -179,9 +179,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
 
         if (currentVault == null) {
-            snackbarFlow.showMessage(
-                context.getString(R.string.vault_settings_error_backup_file)
-            )
+            showError()
             return
         }
         val fileName = createVaultBackupFileName(currentVault)
@@ -307,7 +305,12 @@ internal class BackupPasswordViewModel @Inject constructor(
                 when (backupType) {
                     BackupType.AllVaults -> {
                         vaults.forEach { vault ->
-                            vaultDataStoreRepository.setBackupStatus(vault.id, true)
+                            launch {
+                                vaultDataStoreRepository.setBackupStatus(
+                                    vault.id,
+                                    true
+                                )
+                            }
                         }
                     }
 
@@ -334,7 +337,10 @@ internal class BackupPasswordViewModel @Inject constructor(
                 if (backupType is BackupType.CurrentVault && backupType.vaultType != null) {
                     navigator.route(
                         Route.VaultConfirmation(
-                            vaultId = vaultId ?: error("Vault id cannot be null"),
+                            vaultId = vaultId ?: run {
+                                showError()
+                                return@launch
+                            },
                             vaultType = backupType.vaultType,
                             action = backupType.action,
                         )
