@@ -230,8 +230,12 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun buy() {
+        val vaultId = vaultId ?: return
         viewModelScope.launch {
-
+            navigator.navigate(Destination.OnRamp(
+                vaultId = vaultId,
+                chainId = Chain.ThorChain.raw,
+            ))
         }
     }
 

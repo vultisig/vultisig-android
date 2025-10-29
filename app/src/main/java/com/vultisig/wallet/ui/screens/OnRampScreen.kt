@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.models.OnRampViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun BanxaScreen(
+fun OnRampScreen(
     navController: NavController,
     viewModel: OnRampViewModel = hiltViewModel(),
 ) {
@@ -78,7 +78,7 @@ fun BanxaScreen(
 @Preview(showBackground = true)
 @Composable
 private fun BanxaScreenPreview() {
-    BanxaScreen(
+    OnRampScreen(
         navController = rememberNavController()
     )
 }

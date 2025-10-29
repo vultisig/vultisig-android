@@ -110,7 +110,7 @@ internal class TokenDetailViewModel @Inject constructor(
         }
     }
 
-    fun back(){
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
@@ -118,7 +118,12 @@ internal class TokenDetailViewModel @Inject constructor(
 
     fun buy() {
         viewModelScope.launch {
-
+            navigator.navigate(
+                Destination.OnRamp(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
         }
     }
 
@@ -165,13 +170,14 @@ internal class TokenDetailViewModel @Inject constructor(
                             )
                         }
                     } ?: run {
-                        updateRefreshing(false)
-                    }
+                    updateRefreshing(false)
+                }
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
         }
     }
+
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }

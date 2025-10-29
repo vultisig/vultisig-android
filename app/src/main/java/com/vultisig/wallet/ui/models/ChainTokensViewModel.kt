@@ -178,8 +178,12 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun buy() {
+        val chain =
         viewModelScope.launch {
-
+            navigator.navigate(Destination.OnRamp(
+                vaultId = vaultId,
+                chainId = chainRaw,
+            ))
         }
     }
 
