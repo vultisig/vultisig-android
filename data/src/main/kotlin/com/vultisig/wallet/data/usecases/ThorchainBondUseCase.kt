@@ -208,7 +208,7 @@ internal data class NetworkBondInfo(
 )
 
 data class ActiveBondedNode(
-    var id: String,
+    val id: String,
     val node: BondedNode,
     val amount: BigInteger,
     val apy: Double,
