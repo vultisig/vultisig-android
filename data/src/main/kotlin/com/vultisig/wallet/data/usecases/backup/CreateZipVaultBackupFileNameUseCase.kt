@@ -14,7 +14,21 @@ internal class CreateZipVaultBackupFileNameUseCaseImpl @Inject constructor() :
     CreateZipVaultBackupFileNameUseCase {
     override fun invoke(vaults: List<Vault>): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        // Sample Result: vaults_backup_2025-10-21_143022.zip
-        return "vaults_backup_${now.date}_${now.hour}${now.minute}${now.second}.zip"
+        return "vaults_backup_${now.date}_${
+            now.hour.toString().padStart(
+                2,
+                '0'
+            )
+        }${
+            now.minute.toString().padStart(
+                2,
+                '0'
+            )
+        }${
+            now.second.toString().padStart(
+                2,
+                '0'
+            )
+        }.zip"
     }
 }
