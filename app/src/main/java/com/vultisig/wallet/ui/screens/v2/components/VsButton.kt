@@ -34,7 +34,7 @@ fun VsButton(
         if (label != null) {
             Text(
                 text = label,
-                style = Theme.brockmann.button.semibold,
+                style = Theme.brockmann.button.semibold.semibold,
                 color = Theme.v2.colors.text.extraLight,
             )
         }
@@ -81,7 +81,7 @@ fun VsButton(
 fun VsButton(
     modifier: Modifier = Modifier,
     label: String,
-    textStyle: TextStyle = Theme.brockmann.button.semibold,
+    textStyle: TextStyle = Theme.brockmann.button.semibold.semibold,
     textColor: Color = Theme.v2.colors.text.primary,
     backgroundColor: Color = Theme.v2.colors.buttons.secondary,
     borderColor: Color = Theme.v2.colors.border.primaryAccent4,
