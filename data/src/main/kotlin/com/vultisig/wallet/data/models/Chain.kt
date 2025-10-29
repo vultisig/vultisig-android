@@ -146,7 +146,7 @@ val Chain.canSelectTokens: Boolean
         }
     }
 
-val Chain.IsSwapSupported: Boolean
+val Chain.isSwapSupported: Boolean
     get() = this in arrayOf(
         Chain.ThorChain, Chain.MayaChain, Chain.GaiaChain, Chain.Kujira,
 
@@ -164,6 +164,68 @@ val Chain.isDepositSupported: Boolean
         Chain.ThorChain, Chain.MayaChain, Chain.Ton,
         Chain.Kujira, Chain.GaiaChain, Chain.Osmosis -> true
         else -> false
+    }
+
+val Chain.isBuySupported: Boolean
+    get() = when (this) {
+        Chain.ThorChain,
+        Chain.Solana,
+        Chain.Ethereum,
+        Chain.Avalanche,
+        Chain.Base,
+        Chain.Arbitrum,
+        Chain.Polygon,
+        Chain.Optimism,
+        Chain.BscChain,
+        Chain.Bitcoin,
+        Chain.BitcoinCash,
+        Chain.Litecoin,
+        Chain.Dogecoin,
+        Chain.Dash,
+        Chain.Cardano,
+        Chain.GaiaChain,
+        Chain.CronosChain,
+        Chain.Sui,
+        Chain.ZkSync,
+        Chain.Ton,
+        Chain.Tron,
+        Chain.Zcash,
+        Chain.Mantle,
+        Chain.Ripple,
+        Chain.Dydx,
+        Chain.Polkadot -> true
+        else -> false
+    }
+
+val Chain.BanxaAssetName: String
+    get() = when (this) {
+        Chain.ThorChain -> "THORCHAIN"
+        Chain.Solana -> "SOL"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX-C"
+        Chain.Base -> "BASE"
+        Chain.Arbitrum -> "ARB"
+        Chain.Polygon -> "MATIC"
+        Chain.Optimism -> "OPTIMISM"
+        Chain.BscChain -> "BSC"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.Dash -> "DASH"
+        Chain.Cardano -> "ADA"
+        Chain.GaiaChain -> "ATOM"
+        Chain.CronosChain -> "CRO"
+        Chain.Sui -> "SUI"
+        Chain.ZkSync -> "ZKSYNC"
+        Chain.Ton -> "TON"
+        Chain.Tron -> "TRON"
+        Chain.Zcash -> "ZEC"
+        Chain.Mantle -> "MNT"
+        Chain.Ripple -> "XRP"
+        Chain.Dydx -> "DYDX"
+        Chain.Polkadot -> "DOT"
+        else -> error("Not supported")
     }
 
 val Chain.isLayer2: Boolean

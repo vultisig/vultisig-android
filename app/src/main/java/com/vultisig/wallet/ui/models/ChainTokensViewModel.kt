@@ -20,11 +20,12 @@ import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
@@ -76,6 +77,7 @@ internal data class ChainTokensUiModel(
     val tokens: List<ChainTokenUiModel> = emptyList(),
     val canDeposit: Boolean = true,
     val canSwap: Boolean = true,
+    val canBuy: Boolean = false,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val searchTextFieldState: TextFieldState = TextFieldState(),
@@ -172,6 +174,12 @@ internal class ChainTokensViewModel @Inject constructor(
                     chainId = chainRaw,
                 )
             )
+        }
+    }
+
+    fun buy() {
+        viewModelScope.launch {
+
         }
     }
 
@@ -309,7 +317,8 @@ internal class ChainTokensViewModel @Inject constructor(
                         explorerURL = explorerUrl,
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
-                        canSwap = chain.IsSwapSupported,
+                        canSwap = chain.isSwapSupported,
+                        canBuy = chain.isBuySupported,
                         canSelectTokens = chain.canSelectTokens,
                         qrCode = qr
                     )

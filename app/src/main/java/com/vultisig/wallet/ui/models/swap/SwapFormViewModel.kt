@@ -19,7 +19,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
@@ -769,7 +769,7 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId).map { addresses ->
-                    addresses.filter { it.chain.IsSwapSupported }
+                    addresses.filter { it.chain.isSwapSupported }
                 }.catch {
                     Timber.e(it)
                     emit(emptyList())
