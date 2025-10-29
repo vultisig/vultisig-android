@@ -82,7 +82,9 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         val currentHeight = healthDeferred.await().lastThorNode.height
         val currentTimeStamp = healthDeferred.await().lastThorNode.timestamp.toDouble()
 
-        if (nextChurnHeight <= currentHeight) null
+        if (nextChurnHeight <= currentHeight){
+            return@supervisorScope null
+        }
 
         // Derive avg block time from churn history; fallback if unavailable
         val avgBlockTime = averageBlockTimeFromChurns(churnsDeferred.await(), pairs = 8) ?: 6.0 // seconds per block
