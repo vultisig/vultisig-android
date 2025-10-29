@@ -55,7 +55,7 @@ internal fun DefiPositionsScreen(
 
     DefiPositionScreenContent(
         state = state,
-        onBackClick = navController::popBackStack,
+        onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },

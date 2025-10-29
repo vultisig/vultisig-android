@@ -12,7 +12,9 @@ import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
 import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState.Companion.fromApiStatus
@@ -56,6 +58,7 @@ internal data class BondedNodeUiModel(
 @HiltViewModel
 internal class DefiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val bondUseCase: ThorchainBondUseCase,
     private val tokenPriceRepository: TokenPriceRepository,
@@ -206,5 +209,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun bondToNode() {
         // TODO: Implement new navigation screen
+    }
+
+    fun onBackClick() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 }
