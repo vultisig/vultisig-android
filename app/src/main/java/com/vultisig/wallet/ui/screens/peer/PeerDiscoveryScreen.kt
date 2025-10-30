@@ -268,7 +268,8 @@ internal fun PeerDiscoveryScreen(
                                 UiIcon(
                                     drawableResId = R.drawable.enlarge,
                                     size = 20.dp,
-                                    tint = Theme.colors.text.primary
+                                    tint = Theme.colors.text.primary,
+                                    contentDescription = "Enlarge QR code"
                                 )
                             }
                         }
