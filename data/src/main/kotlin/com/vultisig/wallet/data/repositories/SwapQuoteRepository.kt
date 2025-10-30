@@ -435,8 +435,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         if (chain == Chain.GaiaChain) {
             "${chain.swapAssetName()}.ATOM"
         } else {
-            // todo it should be chain.ticker (and it seems that they somehow different with Coin::ticker)
-            //  maybe it's also the reason why .ATOM hardcoded above there
             "${chain.swapAssetName()}.${ticker}"
         }
     } else {

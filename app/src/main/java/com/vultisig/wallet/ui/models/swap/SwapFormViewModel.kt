@@ -224,7 +224,6 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun swap() {
         try {
-            // TODO verify swap info
             isLoadingNextScreen = true
             val vaultId = vaultId ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.swap_screen_invalid_no_vault)
@@ -768,7 +767,6 @@ internal class SwapFormViewModel @Inject constructor(
             selectedSrc.filterNotNull().map {
                     it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
                 }.catch {
-                    // TODO handle error when querying gas fee
                     Timber.e(it)
                 }.collect { (selectedSrc, gasFee) ->
                     this@SwapFormViewModel.gasFee.value = gasFee
@@ -1202,7 +1200,6 @@ internal class SwapFormViewModel @Inject constructor(
                         Timber.e("swapError $e")
                     } catch (e: Exception) {
                         this@SwapFormViewModel.quote = null
-                        // TODO handle error
                         isLoading = false
                         Timber.e(e)
                     }

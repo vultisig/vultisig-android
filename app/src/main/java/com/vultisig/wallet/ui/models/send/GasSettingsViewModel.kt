@@ -85,7 +85,6 @@ internal class GasSettingsViewModel @Inject constructor(
                 baseFeeState.setTextAndPlaceCursorAtEnd(baseFeeGwei.toPlainString())
                 priorityFeeState.setTextAndPlaceCursorAtEnd(spec.priorityFeeWei.toString())
             } catch (e: Exception) {
-                // todo handle
                 Timber.e(e)
             }
         }

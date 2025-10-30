@@ -531,7 +531,7 @@ internal class KeygenViewModel @Inject constructor(
                     is KeygenState.ReshareEdDSA -> 0.75f
                     is KeygenState.Success -> 1f
 
-                    else -> 0.75f // TODO remove VerifyBackup state when it's unusable
+                    else -> 0.75f
                 },
                 steps = it.steps.map { it.copy(isLoading = false) } + listOfNotNull(
                     when (step) {
