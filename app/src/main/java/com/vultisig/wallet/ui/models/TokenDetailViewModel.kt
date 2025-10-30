@@ -6,8 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -35,6 +36,7 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
+    val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
 )
 
@@ -108,9 +110,20 @@ internal class TokenDetailViewModel @Inject constructor(
         }
     }
 
-    fun back(){
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun buy() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.OnRamp(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
         }
     }
 
@@ -151,17 +164,19 @@ internal class TokenDetailViewModel @Inject constructor(
                             it.copy(
                                 token = tokenUiModel,
                                 canDeposit = chain.isDepositSupported,
-                                canSwap = chain.IsSwapSupported,
+                                canSwap = chain.isSwapSupported,
+                                canBuy = chain.isBuySupported,
                             )
                         }
                     } ?: run {
-                        updateRefreshing(false)
-                    }
+                    updateRefreshing(false)
+                }
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
         }
     }
+
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }

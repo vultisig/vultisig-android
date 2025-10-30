@@ -14,6 +14,7 @@ internal fun TxButtons(
     isSwapEnabled: Boolean,
     onSend: () -> Unit,
     onSwap: () -> Unit,
+    onBuy: () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -24,16 +25,21 @@ internal fun TxButtons(
             Alignment.CenterHorizontally
         )
     ) {
-        TransactionTypeButton(
-            txType = TransactionType.SEND,
-            onClick = onSend
-        )
-
         if (isSwapEnabled) {
             TransactionTypeButton(
                 txType = TransactionType.SWAP,
                 onClick = onSwap
             )
         }
+
+        TransactionTypeButton(
+            txType = TransactionType.SEND,
+            onClick = onSend
+        )
+
+        TransactionTypeButton(
+            txType = TransactionType.BUY,
+            onClick = onBuy
+        )
     }
 }

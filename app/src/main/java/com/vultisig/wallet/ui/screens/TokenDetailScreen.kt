@@ -47,7 +47,8 @@ internal fun TokenDetailScreen(
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
-        onDismiss = viewModel::back
+        onDismiss = viewModel::back,
+        onBuy = viewModel::buy,
     )
 }
 
@@ -58,6 +59,7 @@ private fun TokenDetailScreen(
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
     onDismiss: () -> Unit = {},
+    onBuy: () -> Unit = {},
 ) {
     DottyBottomSheet(
         onDismiss = onDismiss
@@ -66,7 +68,8 @@ private fun TokenDetailScreen(
             uiModel = uiModel,
             onSend = onSend,
             onSwap = onSwap,
-            onDeposit = onDeposit
+            onDeposit = onDeposit,
+            onBuy = onBuy,
         )
     }
 }
@@ -77,6 +80,7 @@ private fun TokenDetailsContent(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
+    onBuy: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -139,12 +143,6 @@ private fun TokenDetailsContent(
             ),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            TransactionTypeButton(
-                txType = TransactionType.SEND,
-                isSelected = false,
-                onClick = onSend
-            )
-
             if (uiModel.canSwap) {
                 TransactionTypeButton(
                     txType = TransactionType.SWAP,
@@ -152,6 +150,21 @@ private fun TokenDetailsContent(
                     onClick = onSwap
                 )
             }
+            
+            TransactionTypeButton(
+                txType = TransactionType.SEND,
+                isSelected = false,
+                onClick = onSend
+            )
+
+            if (uiModel.canBuy) {
+                TransactionTypeButton(
+                    txType = TransactionType.BUY,
+                    isSelected = false,
+                    onClick = onBuy
+                )
+            }
+
             if (uiModel.canDeposit) {
                 TransactionTypeButton(
                     txType = TransactionType.FUNCTIONS,
