@@ -110,7 +110,6 @@ internal fun SwapTransactionOverviewScreen(
             Column {
                 val coroutineScope = rememberCoroutineScope()
                 val context = LocalContext.current
-                // TODO make check more sane
                 if (approveTransactionHash.isNotEmpty()) {
                     TxDetails(
                         title = stringResource(R.string.swap_transaction_overview_approval_tx_hash),

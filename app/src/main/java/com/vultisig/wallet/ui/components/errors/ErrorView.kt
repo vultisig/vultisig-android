@@ -26,8 +26,6 @@ fun ErrorView(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
     ) {
-        // TODO icon
-        // UiSpacer(60.dp)
 
         Text(
             text = title,
