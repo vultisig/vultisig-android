@@ -702,4 +702,6 @@
     <string name="custom_token_screen_title">Aangepaste token zoeken</string>
     <string name="rename_vault_screen_rename_vault">Kluis hernoemen</string>
     <string name="custom_token_not_found_desc">Mogući razlozi: pogrešan ugovor, nepodržani lanac ili token uklonjen iz registara</string>
+    <string name="banxa_buy_or_transfer">Kopen of overmaken met Banxa</string>
+    <string name="banxa_continue">Doorgaan naar Banxa</string>
 </resources>
