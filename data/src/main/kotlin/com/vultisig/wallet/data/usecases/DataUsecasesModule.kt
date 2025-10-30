@@ -148,6 +148,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindThorchainBondUseCase(
+        impl: ThorchainBondUseCaseImpl
+    ): ThorchainBondUseCase
+
+    @Binds
+    @Singleton
     fun bindGetGlobalBackupReminderStatus(
         impl: IsGlobalBackupReminderRequiredUseCaseImpl
     ): IsGlobalBackupReminderRequiredUseCase

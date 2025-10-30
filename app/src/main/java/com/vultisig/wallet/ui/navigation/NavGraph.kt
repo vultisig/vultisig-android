@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
+import com.vultisig.wallet.ui.screens.v2.defi.DefiPositionsScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
@@ -198,6 +199,18 @@ internal fun SetupNavGraph(
         ) {
             ChainTokensScreen(navController)
         }
+
+        composable(
+            route = Destination.PositionTokens.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) {
+            DefiPositionsScreen(
+                navController = navController,
+            )
+        }
+
         dialog<TokenDetail> {
             TokenDetailScreen()
         }

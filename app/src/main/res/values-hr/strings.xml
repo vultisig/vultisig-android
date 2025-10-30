@@ -393,6 +393,19 @@
     <string name="edit_address_title">Uredi adresu</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Ukupno vezanih Rune</string>
+    <string name="bonded_label">Vezano: </string>
+    <string name="bonded_amount">Vezano: %s</string>
+    <string name="bond_to_node">Veži na čvor</string>
+    <string name="node_address">Adresa</string>
+    <string name="node_address_formatted">Adresa: %s</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Odveži</string>
+    <string name="bond">Veži</string>
+    <string name="active_nodes">Aktivni čvorovi</string>
+    <string name="next_churn">Sljedeća rotacija</string>
+    <string name="next_award">Sljedeća nagrada</string>
+    <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -695,4 +708,14 @@
     <string name="rename_vault_screen_rename_vault">Preimenuj trezor</string>
     <string name="banxa_buy_or_transfer">Kupite ili prenesite s Banxom</string>
     <string name="banxa_continue">Nastavi na Banxu</string>
+    <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
+    <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
+    <string name="manage_positions">Upravljanje Pozicijama</string>
+    <string name="bond_node_state_whitelisted">Na Bijeloj Listi</string>
+    <string name="bond_node_state_standby">U Pripravnosti</string>
+    <string name="bond_node_state_ready">Spreman</string>
+    <string name="bond_node_state_active">Aktivan</string>
+    <string name="bond_node_state_disabled">Onemogućen</string>
+    <string name="bond_node_state_unknown">Nepoznat</string>
+    <string name="defi_balance">Stanje</string>
 </resources>
