@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,11 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,12 +29,24 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.OnRampViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 fun OnRampScreen(
     navController: NavController,
     viewModel: OnRampViewModel = hiltViewModel(),
 ) {
+    val uriHandler = VsUriHandler()
+    val banxaUrl by viewModel.banxaUrl.collectAsState()
+    
+    LaunchedEffect(banxaUrl) {
+        banxaUrl?.let { url ->
+            uriHandler.openUri(url)
+            viewModel.onUrlOpened()
+            navController.popBackStack()
+        }
+    }
+    
     V2Scaffold(
         title = stringResource(R.string.transaction_buy),
         onBackClick = { navController.popBackStack() },
@@ -51,12 +64,12 @@ fun OnRampScreen(
                 modifier = Modifier.size(120.dp)
             )
 
-            UiSpacer(size = 8.dp)
+            UiSpacer(size = 16.dp)
 
             Text(
                 text = stringResource(R.string.banxa_buy_or_transfer),
-                style = Theme.brockmann.headings.title3,
                 color = Theme.colors.text.primary,
+                style = Theme.brockmann.headings.title3,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
