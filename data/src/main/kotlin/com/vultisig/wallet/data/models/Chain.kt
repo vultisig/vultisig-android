@@ -220,7 +220,6 @@ val Chain.BanxaAssetName: String
         Chain.ZkSync -> "ZKSYNC"
         Chain.Ton -> "TON"
         Chain.Tron -> "TRON"
-        Chain.Zcash -> "ZEC"
         Chain.Mantle -> "MNT"
         Chain.Ripple -> "XRP"
         Chain.Dydx -> "DYDX"

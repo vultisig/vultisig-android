@@ -41,8 +41,8 @@ fun OnRampScreen(
     
     LaunchedEffect(banxaUrl) {
         banxaUrl?.let { url ->
-            uriHandler.openUri(url)
             viewModel.onUrlOpened()
+            uriHandler.openUri(url)
             navController.popBackStack()
         }
     }
