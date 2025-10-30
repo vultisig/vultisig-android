@@ -556,7 +556,6 @@ private fun TokenInput(
                 )
             }
 
-            // TODO loader if empty
             Text(
                 text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
                 style = Theme.brockmann.supplementary.caption,
@@ -639,7 +638,6 @@ internal fun TokenChip(
 
         Column {
             Text(
-                // TODO loader
                 text = selectedToken?.title ?: "",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.colors.text.primary,

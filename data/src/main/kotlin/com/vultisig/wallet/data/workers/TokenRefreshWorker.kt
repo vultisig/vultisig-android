@@ -68,7 +68,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                 }
 
                 if (chains.size > 1 && vaults.size > 1)
-                    delay(1000) //TODO remove when we will use api without rate limit
+                    delay(1000) //should be removed when we use api without rate limit
             }
         }
         return Result.success()
