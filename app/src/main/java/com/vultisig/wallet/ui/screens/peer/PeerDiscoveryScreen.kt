@@ -207,9 +207,6 @@ internal fun PeerDiscoveryScreen(
                             )
                             .fillMaxWidth(0.80f),
                         devicesSize = devicesSize,
-                        onEnlargeImageClick = {
-                            isExpanded = true
-                        }
                     )
 
                     AnimatedVisibility(
@@ -235,16 +232,48 @@ internal fun PeerDiscoveryScreen(
                         }
                     }
 
-                    Text(
-                        text = stringResource(
-                            R.string.peer_discovery_devices_n_of_n,
-                            selectedDevicesSize,
-                            state.minimumDevicesDisplayed,
-                        ),
-                        textAlign = TextAlign.Start,
-                        style = Theme.brockmann.headings.title2,
-                        color = Theme.colors.text.primary,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.peer_discovery_devices_n_of_n,
+                                selectedDevicesSize,
+                                state.minimumDevicesDisplayed,
+                            ),
+                            textAlign = TextAlign.Center,
+                            style = Theme.brockmann.headings.title2,
+                            color = Theme.colors.text.primary,
+                        )
+                        
+                        UiSpacer(size = 12.dp)
+                        
+                        if (state.qr != null) {
+                            Box(
+                                modifier = Modifier
+                                    .clickable { isExpanded = true }
+                                    .background(
+                                        Theme.colors.backgrounds.secondary,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = Theme.colors.borders.normal,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                UiIcon(
+                                    drawableResId = R.drawable.enlarge,
+                                    size = 20.dp,
+                                    tint = Theme.colors.text.primary,
+                                    contentDescription = "Enlarge QR code"
+                                )
+                            }
+                        }
+                    }
 
                     UiSpacer(24.dp)
 
@@ -404,7 +433,6 @@ private fun QrCodeContainer(
     modifier: Modifier = Modifier,
     devicesSize: Int = 0,
     qrCode: BitmapPainter? = null,
-    onEnlargeImageClick : () -> Unit
 ) {
     Box(
         modifier = modifier
@@ -426,30 +454,13 @@ private fun QrCodeContainer(
             enter = fadeIn(),
         ) {
             if (qrCode != null) {
-                Box {
-                    Image(
-                        painter = qrCode,
-                        contentDescription = "QR",
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                    )
-                    UiIcon(
-                        drawableResId = R.drawable.enlarge,
-                        size = 24.dp,
-                        onClick = onEnlargeImageClick,
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .background(
-                                Theme.colors.backgrounds.primary.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(
-                                    size = 2.dp
-                                )
-                            )
-                            .padding(8.dp)
-                            .align(Alignment.BottomEnd)
-                    )
-                }
+                Image(
+                    painter = qrCode,
+                    contentDescription = "QR",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
             }
         }
     }
