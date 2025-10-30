@@ -33,6 +33,7 @@ internal fun VaultAccountsScreen(
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
+        onBuy = viewModel::buy,
         openCamera = viewModel::openCamera,
         onAccountClick = viewModel::openAccount,
         onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,

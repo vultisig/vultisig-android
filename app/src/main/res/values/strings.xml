@@ -962,6 +962,8 @@
     <string name="custom_token_screen_finding_token" translatable="false">Finding token</string>
     <string name="retry">Retry</string>
     <string name="custom_token_screen_title">Find custom token</string>
+    <string name="banxa_buy_or_transfer">Buy or transfer with Banxa</string>
+    <string name="banxa_continue">Continue to Banxa</string>
     <string name="defi_no_positions_selected">No positions selected</string>
     <string name="defi_no_positions_selected_desc">You\'ve disabled all positions for this chain. Enable at least one position to view balances and manage actions.</string>
     <string name="manage_positions">Manage Positions</string>

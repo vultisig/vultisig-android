@@ -1113,6 +1113,8 @@
     <string name="retry">重试</string>
     <string name="custom_token_screen_title">查找自定义令牌</string>
     <string name="custom_token_not_found_desc">可能的原因：合约错误、不受支持的链，或代币已从注册表中移除。</string>
+    <string name="banxa_buy_or_transfer">通过 Banxa 购买或转账</string>
+    <string name="banxa_continue">继续到 Banxa</string>
     <string name="defi_no_positions_selected">未选择任何仓位</string>
     <string name="defi_no_positions_selected_desc">您已禁用此链的所有仓位。请至少启用一个仓位以查看余额和管理操作。</string>
     <string name="manage_positions">管理仓位</string>

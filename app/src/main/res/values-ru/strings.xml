@@ -718,6 +718,8 @@
     <string name="custom_token_screen_title">Найти пользовательский токен</string>
     <string name="rename_vault_screen_rename_vault">Переименовать хранилище</string>
     <string name="custom_token_not_found_desc">Возможные причины: неправильный контракт, неподдерживаемая цепочка или токен удалён из реестров</string>
+    <string name="banxa_buy_or_transfer">Купить или перевести через Banxa</string>
+    <string name="banxa_continue">Продолжить в Banxa</string>
     <string name="defi_no_positions_selected">Позиции не выбраны</string>
     <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой цепочки. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
     <string name="manage_positions">Управление Позициями</string>

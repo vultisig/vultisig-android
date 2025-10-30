@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.navigation.Route.VerifyDeposit
 import com.vultisig.wallet.ui.navigation.Route.VerifySend
 import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
+import com.vultisig.wallet.ui.screens.OnRampScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
@@ -693,6 +694,22 @@ internal fun SetupNavGraph(
             route = Destination.CheckForUpdateSetting.route,
         ) {
             CheckForUpdateScreen()
+        }
+
+        composable(
+            route = Destination.OnRamp.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                },
+            )
+        ) {
+            OnRampScreen(
+                navController = navController
+            )
         }
 
 

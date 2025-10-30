@@ -705,6 +705,8 @@
     <string name="custom_token_screen_title">Encontrar token personalizado</string>
     <string name="rename_vault_screen_rename_vault">Renomear cofre</string>
     <string name="custom_token_not_found_desc">Possíveis causas: contrato incorreto, cadeia não suportada ou token removido dos registros</string>
+    <string name="banxa_buy_or_transfer">Comprar ou transferir com Banxa</string>
+    <string name="banxa_continue">Continuar para Banxa</string>
     <string name="defi_no_positions_selected">Nenhuma posição selecionada</string>
     <string name="defi_no_positions_selected_desc">Você desativou todas as posições para esta cadeia. Ative pelo menos uma posição para visualizar saldos e gerenciar ações.</string>
     <string name="manage_positions">Gerenciar Posições</string>

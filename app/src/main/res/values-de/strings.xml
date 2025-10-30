@@ -405,7 +405,7 @@
     <string name="active_nodes">Aktive Knoten</string>
     <string name="next_churn">Nächster Wechsel</string>
     <string name="next_award">Nächste Belohnung</string>
-    <string name="wait_until_node_churned_out">Warten Sie, bis der Knoten ausgeschieden ist</string>    
+    <string name="wait_until_node_churned_out">Warten Sie, bis der Knoten ausgeschieden ist</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -708,6 +708,8 @@
     <string name="custom_token_screen_title">Benutzerdefinierten Token suchen</string>
     <string name="rename_vault_screen_rename_vault">Tresor umbenennen</string>
     <string name="custom_token_not_found_desc">Mögliche Gründe: falscher Vertrag, nicht unterstützte Chain oder Token wurde aus Registern entfernt</string>
+    <string name="banxa_buy_or_transfer">Kaufen oder übertragen mit Banxa</string>
+    <string name="banxa_continue">Weiter zu Banxa</string>
     <string name="defi_no_positions_selected">Keine Positionen ausgewählt</string>
     <string name="defi_no_positions_selected_desc">Sie haben alle Positionen für diese Chain deaktiviert. Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Aktionen zu verwalten.</string>
     <string name="manage_positions">Positionen verwalten</string>

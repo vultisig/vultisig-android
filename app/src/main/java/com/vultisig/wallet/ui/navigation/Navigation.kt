@@ -175,6 +175,7 @@ internal sealed class Destination(
             const val STATIC_ROUTE = "settings/discount_tiers/{$ARG_VAULT_ID}"
         }
     }
+
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
 
@@ -182,7 +183,7 @@ internal sealed class Destination(
 
     data class ReferralListVault(
         val vaultId: String,
-    ): Destination(route = "referral/vaultlist/$vaultId") {
+    ) : Destination(route = "referral/vaultlist/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/vaultlist/{$ARG_VAULT_ID}"
         }
@@ -190,7 +191,7 @@ internal sealed class Destination(
 
     data class ReferralOnboarding(
         val vaultId: String,
-    ): Destination(route = "referral/onboarding/$vaultId") {
+    ) : Destination(route = "referral/onboarding/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/onboarding/{$ARG_VAULT_ID}"
         }
@@ -198,7 +199,7 @@ internal sealed class Destination(
 
     data class ReferralCode(
         val vaultId: String
-    ): Destination(route = "referral/referral_screen/$vaultId") {
+    ) : Destination(route = "referral/referral_screen/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
         }
@@ -206,7 +207,7 @@ internal sealed class Destination(
 
     data class ReferralCreation(
         val vaultId: String,
-    ): Destination(route = "referral/referral_creation/$vaultId") {
+    ) : Destination(route = "referral/referral_creation/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_creation/{$ARG_VAULT_ID}"
         }
@@ -215,7 +216,7 @@ internal sealed class Destination(
     data class ReferralView(
         val vaultId: String,
         val code: String,
-    ): Destination(route = "referral/referral_view/$vaultId/$code") {
+    ) : Destination(route = "referral/referral_view/$vaultId/$code") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_view/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}"
         }
@@ -225,15 +226,16 @@ internal sealed class Destination(
         val vaultId: String,
         val code: String,
         val expiration: String,
-    ): Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
+    ) : Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
         companion object {
-            const val STATIC_ROUTE = "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
+            const val STATIC_ROUTE =
+                "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
         }
     }
 
     data class ReferralExternalEdition(
         val vaultId: String,
-    ): Destination(route = "referral/referral_external_edition/$vaultId") {
+    ) : Destination(route = "referral/referral_external_edition/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_external_edition/{$ARG_VAULT_ID}"
         }
@@ -286,7 +288,14 @@ internal sealed class Destination(
         }
     }
 
-    data object OnChainSecurity: Destination(route = "onchain_security")
+    data object OnChainSecurity : Destination(route = "onchain_security")
+
+    data class OnRamp(val vaultId: String, val chainId: String) :
+        Destination(route = "onramp/$vaultId/$chainId") {
+        companion object {
+            const val STATIC_ROUTE = "onramp/{$ARG_VAULT_ID}/{$ARG_CHAIN_ID}"
+        }
+    }
 }
 
 internal sealed class Route {
@@ -642,5 +651,4 @@ internal sealed class Route {
     data class Rename(
         val vaultId: String
     )
-
 }
