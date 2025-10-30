@@ -406,27 +406,31 @@ private fun QrCodeContainer(
     qrCode: BitmapPainter? = null,
     onEnlargeImageClick : () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1f)
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RiveAnimation(
-            animation = R.raw.riv_qr_scanned,
-            onInit = { riveAnimationView ->
-                if (devicesSize > 1)
-                    riveAnimationView.fireState(
-                        stateMachineName = "State Machine 1",
-                        inputName = "isSucces"
-                    )
-            }
-        )
-        AnimatedVisibility(
-            modifier = Modifier.padding(28.dp),
-            visible = qrCode != null,
-            enter = fadeIn(),
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
         ) {
-            if (qrCode != null) {
-                Box {
+            RiveAnimation(
+                animation = R.raw.riv_qr_scanned,
+                onInit = { riveAnimationView ->
+                    if (devicesSize > 1)
+                        riveAnimationView.fireState(
+                            stateMachineName = "State Machine 1",
+                            inputName = "isSucces"
+                        )
+                }
+            )
+            androidx.compose.animation.AnimatedVisibility(
+                modifier = Modifier.padding(28.dp),
+                visible = qrCode != null,
+                enter = fadeIn(),
+            ) {
+                if (qrCode != null) {
                     Image(
                         painter = qrCode,
                         contentDescription = "QR",
@@ -434,22 +438,31 @@ private fun QrCodeContainer(
                         modifier = Modifier
                             .fillMaxWidth(),
                     )
-                    UiIcon(
-                        drawableResId = R.drawable.enlarge,
-                        size = 24.dp,
-                        onClick = onEnlargeImageClick,
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .background(
-                                Theme.colors.backgrounds.primary.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(
-                                    size = 2.dp
-                                )
-                            )
-                            .padding(8.dp)
-                            .align(Alignment.BottomEnd)
-                    )
                 }
+            }
+        }
+
+        if (qrCode != null) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .background(
+                        Theme.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Theme.colors.borders.normal,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clickable { onEnlargeImageClick() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.enlarge,
+                    size = 24.dp,
+                    tint = Theme.colors.text.primary
+                )
             }
         }
     }
