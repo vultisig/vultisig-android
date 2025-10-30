@@ -207,9 +207,6 @@ internal fun PeerDiscoveryScreen(
                             )
                             .fillMaxWidth(0.80f),
                         devicesSize = devicesSize,
-                        onEnlargeImageClick = {
-                            isExpanded = true
-                        }
                     )
 
                     AnimatedVisibility(
@@ -235,16 +232,47 @@ internal fun PeerDiscoveryScreen(
                         }
                     }
 
-                    Text(
-                        text = stringResource(
-                            R.string.peer_discovery_devices_n_of_n,
-                            selectedDevicesSize,
-                            state.minimumDevicesDisplayed,
-                        ),
-                        textAlign = TextAlign.Start,
-                        style = Theme.brockmann.headings.title2,
-                        color = Theme.colors.text.primary,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.peer_discovery_devices_n_of_n,
+                                selectedDevicesSize,
+                                state.minimumDevicesDisplayed,
+                            ),
+                            textAlign = TextAlign.Center,
+                            style = Theme.brockmann.headings.title2,
+                            color = Theme.colors.text.primary,
+                        )
+                        
+                        UiSpacer(size = 12.dp)
+                        
+                        if (state.qr != null) {
+                            Box(
+                                modifier = Modifier
+                                    .clickable { isExpanded = true }
+                                    .background(
+                                        Theme.colors.backgrounds.secondary,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = Theme.colors.borders.normal,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                UiIcon(
+                                    drawableResId = R.drawable.enlarge,
+                                    size = 20.dp,
+                                    tint = Theme.colors.text.primary
+                                )
+                            }
+                        }
+                    }
 
                     UiSpacer(24.dp)
 
@@ -404,64 +432,33 @@ private fun QrCodeContainer(
     modifier: Modifier = Modifier,
     devicesSize: Int = 0,
     qrCode: BitmapPainter? = null,
-    onEnlargeImageClick : () -> Unit
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-        ) {
-            RiveAnimation(
-                animation = R.raw.riv_qr_scanned,
-                onInit = { riveAnimationView ->
-                    if (devicesSize > 1)
-                        riveAnimationView.fireState(
-                            stateMachineName = "State Machine 1",
-                            inputName = "isSucces"
-                        )
-                }
-            )
-            androidx.compose.animation.AnimatedVisibility(
-                modifier = Modifier.padding(28.dp),
-                visible = qrCode != null,
-                enter = fadeIn(),
-            ) {
-                if (qrCode != null) {
-                    Image(
-                        painter = qrCode,
-                        contentDescription = "QR",
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+        RiveAnimation(
+            animation = R.raw.riv_qr_scanned,
+            onInit = { riveAnimationView ->
+                if (devicesSize > 1)
+                    riveAnimationView.fireState(
+                        stateMachineName = "State Machine 1",
+                        inputName = "isSucces"
                     )
-                }
             }
-        }
-
-        if (qrCode != null) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 12.dp)
-                    .background(
-                        Theme.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Theme.colors.borders.normal,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable { onEnlargeImageClick() }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                UiIcon(
-                    drawableResId = R.drawable.enlarge,
-                    size = 24.dp,
-                    tint = Theme.colors.text.primary
+        )
+        AnimatedVisibility(
+            modifier = Modifier.padding(28.dp),
+            visible = qrCode != null,
+            enter = fadeIn(),
+        ) {
+            if (qrCode != null) {
+                Image(
+                    painter = qrCode,
+                    contentDescription = "QR",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth(),
                 )
             }
         }
