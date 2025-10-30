@@ -62,6 +62,7 @@ internal fun HomePage(
     state: VaultAccountsUiModel,
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
+    onBuy: () -> Unit = {},
     onRefresh: () -> Unit = {},
     openCamera: () -> Unit = {},
     onToggleVaultListClick: () -> Unit = {},
@@ -168,6 +169,7 @@ internal fun HomePage(
                                 onToggleBalanceVisibility = onToggleBalanceVisibility,
                                 onSend = onSend,
                                 onSwap = onSwap,
+                                onBuy = onBuy,
                             )
                         } else {
                             DefiExpandedTopbarContent(

@@ -693,4 +693,6 @@
     <string name="custom_token_screen_title">Trova token personalizzato</string>
     <string name="rename_vault_screen_rename_vault">Rinomina Vault</string>
     <string name="custom_token_not_found_desc">Possibili cause: contratto errato, catena non supportata o token rimosso dai registri</string>
+    <string name="banxa_buy_or_transfer">Acquista o trasferisci con Banxa</string>
+    <string name="banxa_continue">Continua su Banxa</string>
 </resources>

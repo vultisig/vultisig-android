@@ -8,7 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.logo
@@ -31,10 +31,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -106,7 +104,7 @@ internal class SelectNetworkViewModel @Inject constructor(
                     val matchesQuery = chain.raw.contains(query, ignoreCase = true) ||
                             chain.coinType.symbol.contains(query, ignoreCase = true)
                     val matchesFilter = when (args.filters) {
-                        Filters.SwapAvailable -> chain.IsSwapSupported
+                        Filters.SwapAvailable -> chain.isSwapSupported
                         Filters.DisableNetworkSelection -> chain.id == selectedNetwork.id
                         Filters.None -> true
                     }

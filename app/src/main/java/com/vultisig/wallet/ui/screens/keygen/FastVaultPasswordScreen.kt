@@ -227,7 +227,6 @@ private fun WarningCard(
 ) {
     val warningColor = Theme.colors.alerts.warning
     val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
-    // TODO replace with Banner
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

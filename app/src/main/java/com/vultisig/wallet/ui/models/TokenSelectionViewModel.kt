@@ -147,7 +147,6 @@ internal class TokenSelectionViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                // todo handle error
                 Timber.e(e)
             }
         }

@@ -448,7 +448,7 @@ private fun SendFormScreen(
                                         .weight(1f),
                                 ) {
                                     UiIcon(
-                                        drawableResId = R.drawable.advance_gas_settings, // TODO different icon
+                                        drawableResId = R.drawable.advance_gas_settings,
                                         size = 16.dp,
                                         tint = Theme.colors.text.primary,
                                         onClick = onGasSettingsClick,
@@ -568,7 +568,6 @@ private fun SendFormScreen(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                // TODO indicate selection
                                 PercentageChip(
                                     title = "25%",
                                     isSelected = false,
@@ -712,7 +711,6 @@ private fun SendFormScreen(
 
                     UiSpacer(24.dp)
 
-                    // TODO handle this (in a dialog maybe?)
                     AnimatedContent(
                         targetState = state.reapingError,
                         label = "error message"
@@ -975,7 +973,7 @@ private fun FoldableSection(
                     completeTitleContent?.invoke(this)
 
                     UiIcon(
-                        drawableResId = R.drawable.ic_check, // TODO different icon
+                        drawableResId = R.drawable.ic_check,
                         size = 16.dp,
                         tint = Theme.colors.alerts.success,
                     )
@@ -983,7 +981,7 @@ private fun FoldableSection(
                     UiSpacer(1.dp)
 
                     UiIcon(
-                        drawableResId = R.drawable.pencil, // TODO different icon
+                        drawableResId = R.drawable.pencil,
                         size = 16.dp,
                         tint = Theme.colors.text.primary,
                     )
