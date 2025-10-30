@@ -4,11 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.BanxaAssetName
+import com.vultisig.wallet.data.models.banxaAssetName
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +47,7 @@ class OnRampViewModel @Inject constructor(
                 
                 val url = getBuyURL(
                     address = coin.address,
-                    blockChainCode = chain.BanxaAssetName,
+                    blockChainCode = chain.banxaAssetName ?: error("Can't find blockchain code"),
                     coinType = coin.ticker,
                 )
                 
@@ -57,7 +55,9 @@ class OnRampViewModel @Inject constructor(
                 _banxaUrl.value = url
                 
             } catch (e: Exception) {
+                // Default navigation for error
                 Timber.e(e, "Error opening Banxa website")
+                _banxaUrl.value = BANXA_URL
             }
         }
     }

@@ -189,7 +189,6 @@ val Chain.isBuySupported: Boolean
         Chain.ZkSync,
         Chain.Ton,
         Chain.Tron,
-        Chain.Zcash,
         Chain.Mantle,
         Chain.Ripple,
         Chain.Dydx,
@@ -197,7 +196,7 @@ val Chain.isBuySupported: Boolean
         else -> false
     }
 
-val Chain.BanxaAssetName: String
+val Chain.banxaAssetName: String?
     get() = when (this) {
         Chain.ThorChain -> "THORCHAIN"
         Chain.Solana -> "SOL"
@@ -224,7 +223,7 @@ val Chain.BanxaAssetName: String
         Chain.Ripple -> "XRP"
         Chain.Dydx -> "DYDX"
         Chain.Polkadot -> "DOT"
-        else -> error("Not supported")
+        else -> null
     }
 
 val Chain.isLayer2: Boolean
