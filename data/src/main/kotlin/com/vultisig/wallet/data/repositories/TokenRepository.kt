@@ -186,7 +186,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
                 if (contractsWithBalance.isEmpty()) return emptyList()
 
-                delay(1000) //TODO remove when we will use api without rate limit
+                delay(1000) //should be removed when we use api without rate limit
 
                 val oneInchTokensWithBalance =
                     oneInchApi.getTokensByContracts(chain, contractsWithBalance)

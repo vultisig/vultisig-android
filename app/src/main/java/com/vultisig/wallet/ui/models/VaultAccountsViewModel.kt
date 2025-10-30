@@ -7,7 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -66,7 +66,7 @@ internal data class VaultAccountsUiModel(
     val isBannerVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
 ) {
-    val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
+    val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
         get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
 }
@@ -229,6 +229,16 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun buy() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.navigate(Destination.OnRamp(
+                vaultId = vaultId,
+                chainId = Chain.ThorChain.raw,
+            ))
+        }
+    }
+
     fun openCamera() {
         uiState.update { it.copy(showCameraBottomSheet = true) }
     }
@@ -276,8 +286,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     }
                     .catch {
                         updateRefreshing(false)
-
-                        // TODO handle error
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),

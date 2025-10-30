@@ -123,7 +123,7 @@ private fun getPages(
         )
     } else null,
     MigrationOnboardingPage(
-        animation = R.raw.riv_choose_vault, // TODO different animation here
+        animation = R.raw.riv_choose_vault,
         text = listOf(
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_2_text_start,

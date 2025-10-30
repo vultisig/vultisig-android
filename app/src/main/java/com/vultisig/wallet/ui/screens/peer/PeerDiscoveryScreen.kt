@@ -664,7 +664,6 @@ private fun PeerDeviceItem(
         when (state) {
             PeerDeviceState.Selected -> {
                 Icon(
-                    // TODO update checkmark icon
                     painter = painterResource(R.drawable.check),
                     contentDescription = null,
                     modifier = Modifier

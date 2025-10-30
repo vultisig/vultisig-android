@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
+import com.vultisig.wallet.ui.models.OnRampViewModel.Companion.BANXA_URL
 
 @SuppressLint("ComposableNaming")
 @Composable
@@ -36,7 +37,7 @@ private class VsUriHandler(
             VsAuxiliaryLinks.VULT_TOKEN,
             VsAuxiliaryLinks.VULT_TOKEN_DOCS,
             VsAuxiliaryLinks.VULT_WEBSITE,
-        ).contains(this)
+        ).contains(this) || this.startsWith(BANXA_URL)
 
 }
 

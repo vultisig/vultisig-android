@@ -693,4 +693,6 @@
     <string name="retry">Pokušajte ponovno</string>
     <string name="custom_token_screen_title">Pronađite prilagođeni token</string>
     <string name="rename_vault_screen_rename_vault">Preimenuj trezor</string>
+    <string name="banxa_buy_or_transfer">Kupite ili prenesite s Banxom</string>
+    <string name="banxa_continue">Nastavi na Banxu</string>
 </resources>

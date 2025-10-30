@@ -11,7 +11,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -208,7 +208,7 @@ internal class SelectAssetViewModel @Inject constructor(
                 )
             }.filter {
                 when (filter) {
-                    Route.SelectNetwork.Filters.SwapAvailable -> it.chain.IsSwapSupported
+                    Route.SelectNetwork.Filters.SwapAvailable -> it.chain.isSwapSupported
                     else -> true
                 }
             }.sortedByDescending { it.chain.id == state.value.selectedChain.id }

@@ -11,6 +11,7 @@ internal fun WalletExpandedTopbarContent(
     onToggleBalanceVisibility: () -> Unit,
     onSend: () -> Unit,
     onSwap: () -> Unit,
+    onBuy: () -> Unit,
 ) {
     UiSpacer(
         40.dp
@@ -26,6 +27,7 @@ internal fun WalletExpandedTopbarContent(
     TxButtons(
         isSwapEnabled = state.isSwapEnabled,
         onSend = onSend,
-        onSwap = onSwap
+        onSwap = onSwap,
+        onBuy = onBuy
     )
 }

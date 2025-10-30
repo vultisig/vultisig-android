@@ -61,6 +61,7 @@ internal fun ChainTokensScreen(
     onRefresh: () -> Unit = {},
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
+    onBuy: () -> Unit = {},
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
@@ -184,12 +185,6 @@ internal fun ChainTokensScreen(
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    TransactionTypeButton(
-                        txType = TransactionType.SEND,
-                        isSelected = false,
-                        onClick = onSend
-                    )
-
                     if (uiModel.canSwap) {
                         TransactionTypeButton(
                             txType = TransactionType.SWAP,
@@ -197,6 +192,21 @@ internal fun ChainTokensScreen(
                             onClick = onSwap
                         )
                     }
+
+                    TransactionTypeButton(
+                        txType = TransactionType.SEND,
+                        isSelected = false,
+                        onClick = onSend
+                    )
+
+                    if (uiModel.canBuy) {
+                        TransactionTypeButton(
+                            txType = TransactionType.BUY,
+                            isSelected = false,
+                            onClick = onBuy,
+                        )
+                    }
+
                     if (uiModel.canDeposit) {
                         TransactionTypeButton(
                             txType = TransactionType.FUNCTIONS,
