@@ -50,7 +50,7 @@ class OnRampViewModel @Inject constructor(
                 val url = getBuyURL(
                     address = coin.address,
                     blockChainCode = chain.BanxaAssetName,
-                    coinType = chain.coinType.symbol,
+                    coinType = coin.ticker,
                 )
                 
                 // Set the URL to trigger the UI to open it
