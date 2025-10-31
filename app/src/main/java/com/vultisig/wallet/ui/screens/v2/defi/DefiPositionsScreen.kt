@@ -217,11 +217,74 @@ private fun BalanceBanner(
 }
 
 @Composable
-@Preview(showBackground = true)
-private fun DefiPositionsScreenPreview() {
+@Preview(showBackground = true, name = "DeFi Positions - Empty")
+private fun DefiPositionsScreenPreviewEmpty() {
     DefiPositionScreenContent(
         onBackClick = { },
         state = DefiPositionsUiModel(),
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickBondToNode = {}
+    )
+}
+
+@Composable
+@Preview(showBackground = true, name = "DeFi Positions - With Data")
+private fun DefiPositionsScreenPreviewWithData() {
+    val mockNodes = listOf(
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1abcd...xyz",
+            status = BondNodeState.ACTIVE,
+            apy = "12.5%",
+            bondedAmount = "1000 RUNE",
+            nextAward = "20 RUNE",
+            nextChurn = "Oct 15, 25"
+        ),
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1efgh...123",
+            status = BondNodeState.STANDBY,
+            apy = "11.2%",
+            bondedAmount = "500 RUNE",
+            nextAward = "10 RUNE",
+            nextChurn = "Oct 16, 25"
+        ),
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1ijkl...456",
+            status = BondNodeState.READY,
+            apy = "10.8%",
+            bondedAmount = "750 RUNE",
+            nextAward = "15 RUNE",
+            nextChurn = "Oct 17, 25"
+        )
+    )
+    
+    DefiPositionScreenContent(
+        onBackClick = { },
+        state = DefiPositionsUiModel(
+            totalAmountPrice = "$3,250.00",
+            selectedTab = BONDED_TAB,
+            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+                isLoading = false,
+                totalBondedAmount = "2250 RUNE",
+                nodes = mockNodes
+            )
+        ),
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickBondToNode = {}
+    )
+}
+
+@Composable
+@Preview(showBackground = true, name = "DeFi Positions - Loading")
+private fun DefiPositionsScreenPreviewLoading() {
+    DefiPositionScreenContent(
+        onBackClick = { },
+        state = DefiPositionsUiModel(
+            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+                isLoading = true
+            )
+        ),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {}
