@@ -393,6 +393,19 @@
     <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 1 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Total de Rune Vinculado</string>
+    <string name="bonded_label">Vinculado: </string>
+    <string name="bonded_amount">Vinculado: %s</string>
+    <string name="bond_to_node">Vincular ao Nó</string>
+    <string name="node_address">Endereço</string>
+    <string name="node_address_formatted">Endereço: %s</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Desvincular</string>
+    <string name="bond">Vincular</string>
+    <string name="active_nodes">Nós Ativos</string>
+    <string name="next_churn">Próxima Rotação</string>
+    <string name="next_award">Próxima recompensa</string>
+    <string name="wait_until_node_churned_out">Aguarde até que o nó seja removido</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -694,4 +707,14 @@
     <string name="custom_token_not_found_desc">Possíveis causas: contrato incorreto, cadeia não suportada ou token removido dos registros</string>
     <string name="banxa_buy_or_transfer">Comprar ou transferir com Banxa</string>
     <string name="banxa_continue">Continuar para Banxa</string>
+    <string name="defi_no_positions_selected">Nenhuma posição selecionada</string>
+    <string name="defi_no_positions_selected_desc">Você desativou todas as posições para esta cadeia. Ative pelo menos uma posição para visualizar saldos e gerenciar ações.</string>
+    <string name="manage_positions">Gerenciar Posições</string>
+    <string name="bond_node_state_whitelisted">Na Lista Branca</string>
+    <string name="bond_node_state_standby">Em Espera</string>
+    <string name="bond_node_state_ready">Pronto</string>
+    <string name="bond_node_state_active">Ativo</string>
+    <string name="bond_node_state_disabled">Desabilitado</string>
+    <string name="bond_node_state_unknown">Desconhecido</string>
+    <string name="defi_balance">Saldo</string>
 </resources>

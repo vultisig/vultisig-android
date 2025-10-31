@@ -51,7 +51,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
-import com.vultisig.wallet.ui.screens.v2.home.components.NoChainEnabled
+import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -263,8 +263,11 @@ internal fun HomePage(
                                     onChooseChains = onChooseChains
                                 )
                             } else {
-                                if(state.accounts.isEmpty()){
-                                    NoChainEnabled()
+                                if (state.accounts.isEmpty()){
+                                    NotEnabledContainer(
+                                        title = stringResource(R.string.home_page_no_chains_enabled),
+                                        content = stringResource(R.string.home_page_no_chain_enabled_desc),
+                                    )
                                 }
                                  else {
                                     AccountList(

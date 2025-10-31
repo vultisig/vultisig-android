@@ -32,7 +32,6 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun HomePageTabMenu(
     modifier: Modifier = Modifier,
-//    onTNFTsClick: () -> Unit = {},
     onPortfolioClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
