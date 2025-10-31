@@ -95,6 +95,14 @@ interface ThorChainApi {
     suspend fun getLastBlock(): Long
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
     suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
+
+    // Bonded nodes API
+    suspend fun getBondedNodes(address: String): BondedNodesResponse
+    suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
+    suspend fun getChurns(): List<ChurnEntry>
+    suspend fun getChurnInterval(): Long
+    suspend fun getMidgardNetworkData(): MidgardNetworkData
+    suspend fun getMidgardHealth(): MidgardHealth
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -492,10 +500,56 @@ internal class ThorChainApiImpl @Inject constructor(
         getThorchainDenomMetadata(denom)
             ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
 
+    override suspend fun getBondedNodes(address: String): BondedNodesResponse {
+        val url = "$MIDGARD_URL/bonds/$address"
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<BondedNodesResponse>()
+    }
+
+    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
+        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<NodeDetailsResponse>()
+    }
+
+    override suspend fun getChurns(): List<ChurnEntry> {
+        val url = "$MIDGARD_URL/churns"
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<List<ChurnEntry>>()
+    }
+
+    override suspend fun getChurnInterval(): Long {
+        val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<Long>()
+    }
+
+    override suspend fun getMidgardNetworkData(): MidgardNetworkData {
+        val url = "$MIDGARD_URL/network"
+        
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<MidgardNetworkData>()
+    }
+
+    override suspend fun getMidgardHealth(): MidgardHealth {
+        val url = "$MIDGARD_URL/health"
+
+        return httpClient.get(url) {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<MidgardHealth>()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val THORNODE_BASE = "https://thornode.ninerealms.com"
-        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2/"
+        private const val MIDGARD_URL = "https://midgard.ninerealms.com/v2"
     }
 }
 
@@ -673,3 +727,78 @@ data class VaultRedemptionDataJson(
     @SerialName("liquid_bond_size")
     val liquidBondSize: String = ""
 )
+
+@Serializable
+data class BondedNodesResponse(
+    @SerialName("address")
+    val address: String,
+    @SerialName("nodes")
+    val nodes: List<BondedNode>,
+    @SerialName("totalBonded")
+    val totalBonded: String
+)
+
+@Serializable
+data class BondedNode(
+    @SerialName("address")
+    val address: String,
+    @SerialName("bond")
+    val bond: String,
+    @SerialName("status")
+    val status: String
+)
+
+@Serializable
+data class NodeDetailsResponse(
+    @SerialName("node_address")
+    val nodeAddress: String,
+    @SerialName("status")
+    val status: String,
+    @SerialName("current_award")
+    val currentAward: String,
+    @SerialName("bond_providers")
+    val bondProviders: BondProviders
+)
+
+@Serializable
+data class BondProviders(
+    @SerialName("node_operator_fee")
+    val nodeOperatorFee: String,
+    @SerialName("providers")
+    val providers: List<BondProvider>
+)
+
+@Serializable
+data class BondProvider(
+    @SerialName("bond_address")
+    val bondAddress: String,
+    @SerialName("bond")
+    val bond: String
+)
+
+@Serializable
+data class ChurnEntry(
+    @SerialName("date")
+    val date: String,
+    @SerialName("height")
+    val height: String
+)
+
+@Serializable
+data class MidgardNetworkData(
+    @SerialName("bondingAPY")
+    val bondingAPY: String,
+    @SerialName("nextChurnHeight")
+    val nextChurnHeight: String,
+)
+
+@Serializable
+data class MidgardHealth(
+    val lastThorNode: HeightInfo
+) {
+    @Serializable
+    data class HeightInfo(
+        val height: Long,
+        val timestamp: Long // seconds since epoch
+    )
+}

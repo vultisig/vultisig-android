@@ -393,6 +393,19 @@
     <string name="edit_address_title">Editar dirección</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Total de Rune Vinculado</string>
+    <string name="bonded_label">Vinculado: </string>
+    <string name="bonded_amount">Vinculado: %s</string>
+    <string name="bond_to_node">Vincular al Nodo</string>
+    <string name="node_address">Dirección</string>
+    <string name="node_address_formatted">Dirección: %s</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Desvincular</string>
+    <string name="bond">Vincular</string>
+    <string name="active_nodes">Nodos Activos</string>
+    <string name="next_churn">Próxima Rotación</string>
+    <string name="next_award">Próxima recompensa</string>
+    <string name="wait_until_node_churned_out">Espere hasta que el nodo sea expulsado</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -695,4 +708,14 @@
     <string name="custom_token_not_found_desc">Posibles razones: contrato incorrecto, cadena no compatible o token eliminado de los registros</string>
     <string name="banxa_buy_or_transfer">Comprar o transferir con Banxa</string>
     <string name="banxa_continue">Continuar a Banxa</string>
+    <string name="defi_no_positions_selected">No hay posiciones seleccionadas</string>
+    <string name="defi_no_positions_selected_desc">Has deshabilitado todas las posiciones para esta cadena. Habilita al menos una posición para ver saldos y gestionar acciones.</string>
+    <string name="manage_positions">Gestionar Posiciones</string>
+    <string name="bond_node_state_whitelisted">En Lista Blanca</string>
+    <string name="bond_node_state_standby">En Espera</string>
+    <string name="bond_node_state_ready">Listo</string>
+    <string name="bond_node_state_active">Activo</string>
+    <string name="bond_node_state_disabled">Deshabilitado</string>
+    <string name="bond_node_state_unknown">Desconocido</string>
+    <string name="defi_balance">Saldo</string>
 </resources>

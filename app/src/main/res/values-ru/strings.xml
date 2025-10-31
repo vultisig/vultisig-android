@@ -404,6 +404,19 @@
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Общая связанная Rune</string>
+    <string name="bonded_label">Связано: </string>
+    <string name="bonded_amount">Связано: %s</string>
+    <string name="bond_to_node">Привязать к узлу</string>
+    <string name="node_address">Адрес</string>
+    <string name="node_address_formatted">Адрес: %s</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Отвязать</string>
+    <string name="bond">Привязать</string>
+    <string name="active_nodes">Активные узлы</string>
+    <string name="next_churn">Следующая ротация</string>
+    <string name="next_award">Следующая награда</string>
+    <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -707,4 +720,14 @@
     <string name="custom_token_not_found_desc">Возможные причины: неправильный контракт, неподдерживаемая цепочка или токен удалён из реестров</string>
     <string name="banxa_buy_or_transfer">Купить или перевести через Banxa</string>
     <string name="banxa_continue">Продолжить в Banxa</string>
+    <string name="defi_no_positions_selected">Позиции не выбраны</string>
+    <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой цепочки. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
+    <string name="manage_positions">Управление Позициями</string>
+    <string name="bond_node_state_whitelisted">В Белом Списке</string>
+    <string name="bond_node_state_standby">В Ожидании</string>
+    <string name="bond_node_state_ready">Готов</string>
+    <string name="bond_node_state_active">Активен</string>
+    <string name="bond_node_state_disabled">Отключен</string>
+    <string name="bond_node_state_unknown">Неизвестно</string>
+    <string name="defi_balance">Баланс</string>
 </resources>
