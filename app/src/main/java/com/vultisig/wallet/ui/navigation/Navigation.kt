@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.navigation
 
+import android.os.Bundle
+import androidx.navigation.NavType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.SigningLibType
@@ -7,8 +9,9 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 internal open class Dst(
     val route: String,
@@ -43,6 +46,17 @@ internal sealed class Destination(
         companion object {
             const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
+        }
+    }
+
+    data class PositionTokens(
+        val vaultId: String,
+    ): Destination (
+        route = "position_detail/${vaultId}"
+    ) {
+        companion object {
+            const val STATIC_ROUTE =
+                "position_detail/{$ARG_VAULT_ID}"
         }
     }
 
@@ -540,17 +554,18 @@ internal sealed class Route {
     @Serializable
     data class BackupPasswordRequest(
         val vaultId: VaultId,
-        // vault type only provided if vault confirmation screen is required
-        val vaultType: VaultInfo.VaultType? = null,
-        val action: TssAction? = null,
+        val backupType: BackupType = BackupType.CurrentVault(),
+    )
+
+    @Serializable
+    data class VaultsToBackup(
+        val vaultId: VaultId,
     )
 
     @Serializable
     data class BackupPassword(
         val vaultId: VaultId,
-        // vault type only provided if vault confirmation screen is required
-        val vaultType: VaultInfo.VaultType? = null,
-        val action: TssAction? = null,
+        val backupType: BackupType = BackupType.CurrentVault(),
     )
 
     @Serializable
@@ -640,4 +655,38 @@ internal sealed class Route {
     data class Rename(
         val vaultId: String
     )
+}
+
+@Serializable
+internal sealed interface BackupType {
+    @Serializable
+    data class CurrentVault(
+        val vaultType: VaultInfo.VaultType? = null,
+        val action: TssAction? = null,
+    ) : BackupType
+
+    @Serializable
+    data object AllVaults : BackupType
+}
+
+
+
+internal val BackupTypeNavType = object : NavType<BackupType>(
+    isNullableAllowed = false
+) {
+    override fun put(bundle: Bundle, key: String, value: BackupType) {
+        bundle.putString(key, Json.encodeToString(value))
+    }
+
+    override fun get(bundle: Bundle, key: String): BackupType {
+        return Json.decodeFromString(bundle.getString(key)!!)
+    }
+
+    override fun parseValue(value: String): BackupType {
+        return Json.decodeFromString(value)
+    }
+
+    override fun serializeAsValue(value: BackupType): String {
+        return Json.encodeToString(value)
+    }
 }
