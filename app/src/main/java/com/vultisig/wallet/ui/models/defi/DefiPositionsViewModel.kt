@@ -39,11 +39,27 @@ internal data class DefiPositionsUiModel(
     val selectedTab: String = BONDED_TAB,
     val isLoading: Boolean = false,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
+    val staking: StakingTabUiModel = StakingTabUiModel()
 )
 
 internal data class BondedTabUiModel(
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
     val nodes: List<BondedNodeUiModel> = emptyList(),
+)
+
+internal data class StakingTabUiModel(
+    val positions: List<StakePositionUiModel> = emptyList()
+)
+
+internal data class StakePositionUiModel(
+    val stakeAmount: String,
+    val apr: String,
+    val canWithdraw: Boolean,
+    val canStake: Boolean,
+    val canUnstake: Boolean,
+    val rewards: String? = null,
+    val nextReward: String? = null,
+    val nextPayout: String? = null,
 )
 
 internal data class BondedNodeUiModel(

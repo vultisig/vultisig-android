@@ -119,8 +119,8 @@ internal fun DefiPositionScreenContent(
                     )
                 }
                 STAKING_TAB -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = { }
+                    StakingTabContent(
+
                     )
                 }
                 LPs_TAB -> {
