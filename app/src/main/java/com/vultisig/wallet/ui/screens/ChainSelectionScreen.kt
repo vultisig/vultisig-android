@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 import com.vultisig.wallet.ui.models.ChainUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -59,8 +60,10 @@ private fun ChainSelectionScreen(
         items = state.chains,
         mapper = {
             TokenSelectionGridUiModel(
-                name = it.coin.chain.name,
-                logo = it.coin.chain.logo,
+                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+                    name = it.coin.chain.name,
+                    logo = it.coin.chain.logo,
+                ),
                 isChecked = it.isEnabled
             )
         },
