@@ -37,17 +37,18 @@ import javax.inject.Inject
 internal data class DefiPositionsUiModel(
     val totalAmountPrice: String = "$0.00",
     val selectedTab: String = BONDED_TAB,
-    val isLoading: Boolean = false,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel()
 )
 
 internal data class BondedTabUiModel(
+    val isLoading: Boolean = false,
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
     val nodes: List<BondedNodeUiModel> = emptyList(),
 )
 
 internal data class StakingTabUiModel(
+    val isLoading: Boolean = false,
     val positions: List<StakePositionUiModel> = emptyList()
 )
 
@@ -91,7 +92,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private fun loadBondedNodes() {
         viewModelScope.launch {
-            state.update { it.copy(isLoading = true) }
+            state.update {
+                it.copy(
+                    bonded = it.bonded.copy(isLoading = true)
+                )
+            }
 
             try {
                 val vault = vaultRepository.get(vaultId)
@@ -101,7 +106,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                     Timber.e("Vault does not have RUNE coin")
                     state.update {
                         it.copy(
-                            isLoading = false,
+                            bonded = it.bonded.copy(isLoading = false)
                         )
                     }
                     return@launch
@@ -120,9 +125,9 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        isLoading = false,
                         totalAmountPrice = totalValue,
                         bonded = BondedTabUiModel(
+                            isLoading = false,
                             totalBondedAmount = totalBonded,
                             nodes = nodeUiModels
                         )
@@ -132,7 +137,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 Timber.e(t)
                 state.update {
                     it.copy(
-                        isLoading = false,
+                        bonded = it.bonded.copy(isLoading = false)
                     )
                 }
             }

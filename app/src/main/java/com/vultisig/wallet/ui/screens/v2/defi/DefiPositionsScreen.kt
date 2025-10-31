@@ -48,7 +48,6 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun DefiPositionsScreen(
-    navController: NavHostController,
     model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
@@ -84,7 +83,7 @@ internal fun DefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
-                isLoading = state.isLoading,
+                isLoading = state.bonded.isLoading,
                 totalValue = state.totalAmountPrice
             )
 
@@ -119,9 +118,7 @@ internal fun DefiPositionScreenContent(
                     )
                 }
                 STAKING_TAB -> {
-                    StakingTabContent(
 
-                    )
                 }
                 LPs_TAB -> {
                     NoPositionsContainer(

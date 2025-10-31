@@ -62,7 +62,7 @@ internal fun BondedTabContent(
         TotalBondWidget(
             onClickBondToNode = bondToNodeOnClick,
             totalBonded = state.bonded.totalBondedAmount,
-            isLoading = state.isLoading,
+            isLoading = state.bonded.isLoading,
         )
 
         if (state.bonded.nodes.isNotEmpty()) {
