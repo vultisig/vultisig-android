@@ -16,8 +16,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
-import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState
-import com.vultisig.wallet.ui.screens.v2.defi.BondNodeState.Companion.fromApiStatus
+import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

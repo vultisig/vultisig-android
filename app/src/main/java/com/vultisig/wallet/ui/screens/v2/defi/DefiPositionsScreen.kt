@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
@@ -42,6 +41,7 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
