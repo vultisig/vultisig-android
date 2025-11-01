@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,6 +77,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -1017,6 +1019,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun calculateGasFees() {
         viewModelScope.launch {
             combine(
@@ -1026,7 +1029,9 @@ internal class SendFormViewModel @Inject constructor(
                     .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
                         Triple(token, dst, memo.toString())
                     }
+                    .map { triple -> triple }
                     .debounce(350)
+                    .distinctUntilChanged()
                     .map { (token, dst, memo) ->
                         gasFeeRepository.getGasFee(
                             chain = token.chain,

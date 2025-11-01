@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -51,41 +52,49 @@ fun VsHoldableButton(
     Box(
         modifier = modifier
             .pointerInput(Unit) {
-                forEachGesture {
-                    awaitPointerEventScope {
-                        val down = awaitFirstDown()
-                        val longClickJob = scope.launch {
-                            try {
-                                progress.animateTo(
-                                    1f,
-                                    tween(holdDuration.toInt(), easing = LinearEasing)
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    val longClickJob = scope.launch {
+                        try {
+                            progress.animateTo(
+                                1f,
+                                tween(
+                                    holdDuration.toInt(),
+                                    easing = LinearEasing
                                 )
-                                if (progress.value >= 1f) {
-                                    isLongPressed = true
-                                    onLongClick()
-                                }
-                            } catch (e: Exception) {
-                                Timber.w("Animation cancelled", e)
+                            )
+                            if (progress.value >= 1f) {
+                                isLongPressed = true
+                                onLongClick()
                             }
-                        }
+                        } catch (e: Exception) {
+                            Timber.w(
+                                e,
+                                "Animation cancelled",
 
-                        val up = waitForUpOrCancellation()
-
-                        if (up != null && !isLongPressed) {
-                            if (progress.value < 0.25f) {
-                                onClick()
-                            }
+                                )
                         }
+                    }
 
-                        scope.launch {
-                            progress.snapTo(0f)
-                            longClickJob.cancelAndJoin()
-                            isLongPressed = false
+                    val up = waitForUpOrCancellation()
+
+                    if (up != null && !isLongPressed) {
+                        if (progress.value < 0.25f) {
+                            onClick()
                         }
+                    }
+
+                    scope.launch {
+                        progress.snapTo(0f)
+                        longClickJob.cancelAndJoin()
+                        isLongPressed = false
                     }
                 }
             }
-            .background(backgroundColor, RoundedCornerShape(percent = 100)),
+            .background(
+                backgroundColor,
+                RoundedCornerShape(percent = 100)
+            ),
     ) {
         Box(
             modifier = Modifier
@@ -102,10 +111,16 @@ fun VsHoldableButton(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(
+                8.dp,
+                Alignment.CenterHorizontally
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 32.dp)
+                .padding(
+                    vertical = 14.dp,
+                    horizontal = 32.dp
+                )
         ) {
             val contentColor = Theme.colors.text.primary
             if (label != null) {
