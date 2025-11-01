@@ -53,8 +53,9 @@ internal data class StakingTabUiModel(
 )
 
 internal data class StakePositionUiModel(
+    val stakeAssetHeader: String,
     val stakeAmount: String,
-    val apr: String,
+    val apy: String,
     val canWithdraw: Boolean,
     val canStake: Boolean,
     val canUnstake: Boolean,

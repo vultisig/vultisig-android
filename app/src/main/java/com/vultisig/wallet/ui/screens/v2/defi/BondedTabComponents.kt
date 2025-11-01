@@ -232,21 +232,9 @@ private fun NodeContent(
 
         UiSpacer(16.dp)
 
-        Row {
-            InfoItem(
-                icon = R.drawable.ic_icon_percentage,
-                label = stringResource(R.string.apy),
-                value = null,
-            )
-
-            UiSpacer(1f)
-
-            Text(
-                text = node.apy,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.alerts.success,
-            )
-        }
+        ApyInfoItem(
+            apy = node.apy
+        )
 
         UiSpacer(16.dp)
 

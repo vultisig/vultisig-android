@@ -19,17 +19,35 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.StakePositionUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun StakingTabContent(
-    state: DefiPositionsUiModel,
-    onClickBond: (String) -> Unit,
-    onClickUnbond: (String) -> Unit,
+    state: StakingTabUiModel,
+    onClickStake: () -> Unit,
+    onClickUnstake: () -> Unit,
+    onClickWithdraw: () -> Unit,
+) {
+    state.positions.forEach { stakingPosition ->
+        StakingWidget(
+            state = stakingPosition,
+            onClickStake = {},
+            onClickUnstake = {},
+            onClickWithdraw = {}
+        )
+    }
+}
+
+@Composable
+internal fun StakingWidget(
+    state: StakePositionUiModel,
+    onClickStake: () -> Unit,
+    onClickUnstake: () -> Unit,
+    onClickWithdraw: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -43,7 +61,21 @@ internal fun StakingTabContent(
             )
             .padding(16.dp)
     ) {
+        StakingHeader(
+            title = state.stakeAssetHeader,
+            amount = state.stakeAmount,
+            icon = getHeaderIcon(state.stakeAmount),
+        )
 
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        ApyInfoItem(
+            apy = state.apy
+        )
     }
 }
 
@@ -51,19 +83,20 @@ internal fun StakingTabContent(
 internal fun StakingHeader(
     title: String,
     amount: String,
+    icon: Int,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Image(
-            painter = painterResource(id = R.drawable.rune),
+            painter = painterResource(id = icon),
             contentDescription = null,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(46.dp)
         )
 
         UiSpacer(12.dp)
 
         Column {
             Text(
-                text = "Staked",
+                text = title,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.extraLight,
             )
@@ -71,7 +104,7 @@ internal fun StakingHeader(
             UiSpacer(4.dp)
 
             Text(
-                text = "2000",
+                text = amount,
                 style = Theme.brockmann.headings.title1,
                 color = Theme.colors.text.primary,
             )
@@ -79,98 +112,11 @@ internal fun StakingHeader(
     }
 }
 
-// Preview Functions
-@Preview(showBackground = true, name = "Staking Tab - Empty State")
-@Composable
-private fun StakingTabContentEmptyPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        StakingTabContent(
-            state = DefiPositionsUiModel(
-                staking = StakingTabUiModel(
-                    isLoading = false,
-                    positions = emptyList()
-                )
-            ),
-            onClickBond = {},
-            onClickUnbond = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Staking Tab - Loading State")
-@Composable
-private fun StakingTabContentLoadingPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        StakingTabContent(
-            state = DefiPositionsUiModel(
-                staking = StakingTabUiModel(
-                    isLoading = true,
-                    positions = emptyList()
-                )
-            ),
-            onClickBond = {},
-            onClickUnbond = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Staking Tab - With Multiple Positions")
-@Composable
-private fun StakingTabContentWithPositionsPreview() {
-    Box(
-        modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
-            .padding(16.dp)
-    ) {
-        StakingTabContent(
-            state = DefiPositionsUiModel(
-                staking = StakingTabUiModel(
-                    isLoading = false,
-                    positions = listOf(
-                        StakePositionUiModel(
-                            stakeAmount = "1000 ATOM",
-                            apr = "18.5%",
-                            canWithdraw = false,
-                            canStake = true,
-                            canUnstake = true,
-                            rewards = "50 ATOM",
-                            nextReward = "5 ATOM",
-                            nextPayout = "Jan 15, 2025"
-                        ),
-                        StakePositionUiModel(
-                            stakeAmount = "500 OSMO",
-                            apr = "22.3%",
-                            canWithdraw = true,
-                            canStake = false,
-                            canUnstake = false,
-                            rewards = "25 OSMO",
-                            nextReward = null,
-                            nextPayout = "Available Now"
-                        ),
-                        StakePositionUiModel(
-                            stakeAmount = "2500 KUJI",
-                            apr = "15.7%",
-                            canWithdraw = false,
-                            canStake = true,
-                            canUnstake = false,
-                            rewards = "100 KUJI",
-                            nextReward = "10 KUJI",
-                            nextPayout = "Feb 1, 2025"
-                        )
-                    )
-                )
-            ),
-            onClickBond = {},
-            onClickUnbond = {}
-        )
+private fun getHeaderIcon(assetStake: String): Int {
+    return when {
+        assetStake.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
+        assetStake.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
+        else -> R.drawable.wewe
     }
 }
 
@@ -183,8 +129,9 @@ private fun StakingHeaderAtomPreview() {
             .padding(16.dp)
     ) {
         StakingHeader(
-            title = "Total Staked ATOM",
-            amount = "5000 ATOM"
+            title = "Total Staked TCY",
+            amount = "5000 ATOM",
+            icon = R.drawable.tcy_staking,
         )
     }
 }
@@ -199,22 +146,35 @@ private fun StakingHeaderLargeAmountPreview() {
     ) {
         StakingHeader(
             title = "Total Staked Value",
-            amount = "1,234,567.89 USD"
+            amount = "1,234,567.89 RUJI",
+            icon = R.drawable.ruji_staking,
         )
     }
 }
 
-@Preview(showBackground = true, name = "Staking Header - Zero Amount")
+@Preview(showBackground = true, name = "Staking Widget - Can Stake & Unstake")
 @Composable
-private fun StakingHeaderZeroAmountPreview() {
+private fun StakingWidgetFullActionsPreview() {
     Box(
         modifier = Modifier
             .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
-        StakingHeader(
-            title = "Total Staked",
-            amount = "0 RUNE"
+        StakingWidget(
+            state = StakePositionUiModel(
+                stakeAssetHeader = "Staked RUJI",
+                stakeAmount = "1000 RUJI",
+                apy = "18.5%",
+                canWithdraw = false,
+                canStake = true,
+                canUnstake = true,
+                rewards = "50 RUJI",
+                nextReward = "5 RUJI",
+                nextPayout = "Jan 15, 2025"
+            ),
+            onClickStake = {},
+            onClickUnstake = {},
+            onClickWithdraw = {}
         )
     }
 }

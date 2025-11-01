@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -122,6 +123,31 @@ fun ActionButton(
             text = title,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun ApyInfoItem(
+    apy: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        InfoItem(
+            icon = R.drawable.ic_icon_percentage,
+            label = stringResource(R.string.apy),
+            value = null,
+        )
+
+        UiSpacer(1f)
+
+        Text(
+            text = apy,
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.alerts.success,
         )
     }
 }
@@ -359,5 +385,47 @@ private fun CompleteNodeCardMockPreview() {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "APY Info Item")
+@Composable
+private fun ApyInfoItemPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        ApyInfoItem(
+            apy = "12.5%"
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "APY Info Item - High APY")
+@Composable
+private fun ApyInfoItemHighPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        ApyInfoItem(
+            apy = "125.8%"
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "APY Info Item - Low APY")
+@Composable
+private fun ApyInfoItemLowPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        ApyInfoItem(
+            apy = "0.5%"
+        )
     }
 }
