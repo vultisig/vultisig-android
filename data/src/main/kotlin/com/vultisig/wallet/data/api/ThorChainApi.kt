@@ -382,6 +382,13 @@ internal class ThorChainApiImpl @Inject constructor(
                     }
                   }
                 }
+                pool {
+                  summary {
+                    apr {
+                      value
+                    }
+                  }
+                }
               }
             }
           }
