@@ -97,7 +97,7 @@ internal fun StakingWidget(
                 ) {
                     InfoItem(
                         icon = R.drawable.calendar_days,
-                        label = "Next Payout",
+                        label = stringResource(R.string.next_payout),
                         value = state.nextPayout,
                     )
                 }
@@ -124,7 +124,7 @@ internal fun StakingWidget(
 
         if (state.canWithdraw) {
             VsButton(
-                label = "Withdraw 300.45 USDC",
+                label = stringResource(R.string.withdraw_amount, "300.45 USDC"),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClickWithdraw,
                 state = VsButtonState.Enabled,
