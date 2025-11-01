@@ -232,7 +232,7 @@ internal fun SettingItem(
                     )
                     Text(
                         text = if (isChecked) "ON" else "OFF",
-                        style = Theme.brockmann.button.medium,
+                        style = Theme.brockmann.button.medium.medium,
                         color = tint ?: Theme.colors.text.primary
                     )
                 }

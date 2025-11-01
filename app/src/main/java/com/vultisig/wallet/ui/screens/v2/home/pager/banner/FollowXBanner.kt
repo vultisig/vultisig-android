@@ -63,7 +63,7 @@ internal fun FollowXBanner(
 
             Text(
                 text = stringResource(R.string.invite_to_x_banner_button, TWITTER_ID),
-                style = Theme.brockmann.button.medium,
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.colors.text.button.dark,
                 modifier = Modifier
                     .clip(shape = CircleShape)

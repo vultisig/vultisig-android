@@ -143,7 +143,7 @@ private fun NoPositionsContainer(
         action = {
             Text(
                 text = stringResource(R.string.manage_positions),
-                style = Theme.brockmann.button.medium,
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.colors.text.primary,
                 modifier = Modifier
                     .clip(shape = CircleShape)
