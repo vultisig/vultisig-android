@@ -76,6 +76,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -1026,7 +1027,9 @@ internal class SendFormViewModel @Inject constructor(
                     .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
                         Triple(token, dst, memo.toString())
                     }
-                    .debounce(350)
+                    .map { triple -> triple }
+                    .onEach { _ -> delay(350) }
+                    .distinctUntilChanged()
                     .map { (token, dst, memo) ->
                         gasFeeRepository.getGasFee(
                             chain = token.chain,
