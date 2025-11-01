@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,12 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.models.defi.StakePositionUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -76,6 +82,84 @@ internal fun StakingWidget(
         ApyInfoItem(
             apy = state.apy
         )
+
+        if (state.nextPayout != null || state.nextReward != null) {
+            UiSpacer(16.dp)
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (state.nextPayout != null) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    InfoItem(
+                        icon = R.drawable.calendar_days,
+                        label = "Next Payout",
+                        value = state.nextPayout,
+                    )
+                }
+            }
+
+            if (state.nextReward != null) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    InfoItem(
+                        icon = R.drawable.ic_cup,
+                        label = stringResource(R.string.next_award),
+                        value = state.nextReward,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        if (state.canWithdraw) {
+            VsButton(
+                label = "Withdraw 300.45 USDC",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onClickWithdraw,
+                state = VsButtonState.Enabled,
+            )
+
+            UiSpacer(16.dp)
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActionButton(
+                title = "Unstake",
+                icon = R.drawable.ic_circle_minus,
+                background = Color.Transparent,
+                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                contentColor = Theme.v2.colors.text.primary,
+                onClick = onClickUnstake,
+                modifier = Modifier.weight(1f),
+                enabled = state.canUnstake,
+                iconCircleColor = Theme.v2.colors.text.extraLight
+            )
+
+            ActionButton(
+                title = "Stake",
+                icon = R.drawable.ic_circle_plus,
+                background = Theme.v2.colors.primary.accent3,
+                contentColor = Theme.v2.colors.text.primary,
+                onClick = onClickStake,
+                modifier = Modifier.weight(1f),
+                enabled = true,
+                iconCircleColor = Theme.v2.colors.primary.accent4
+            )
+        }
     }
 }
 
@@ -165,7 +249,7 @@ private fun StakingWidgetFullActionsPreview() {
                 stakeAssetHeader = "Staked RUJI",
                 stakeAmount = "1000 RUJI",
                 apy = "18.5%",
-                canWithdraw = false,
+                canWithdraw = true,
                 canStake = true,
                 canUnstake = true,
                 rewards = "50 RUJI",
