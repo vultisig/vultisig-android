@@ -19,6 +19,7 @@ internal fun LoadableValue(
     style: TextStyle,
     color: Color,
     modifier: Modifier = Modifier,
+    maxLines: Int = Int.MAX_VALUE,
 ) {
     AnimatedContent(
         modifier = modifier,
@@ -30,6 +31,7 @@ internal fun LoadableValue(
                 isVisible = isVisible,
                 style = style,
                 color = color,
+                maxLines = maxLines
             )
         } else {
             val fontHeight = with(LocalDensity.current) {

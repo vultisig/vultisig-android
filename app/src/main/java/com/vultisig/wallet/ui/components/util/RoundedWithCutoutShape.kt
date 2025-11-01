@@ -38,6 +38,7 @@ class RoundedWithCutoutShape(
     private val cutoutRadius: Dp = 32.dp, // 64.dp diameter
     private val cutoutOffsetY: Dp = 0.dp,
     private val cutoutOffsetX: Dp = 0.dp,
+    private val onCircleBoundsChanged: ((Offset) -> Unit) = {}
 ) : Shape {
     override fun createOutline(
         size: Size,
@@ -78,6 +79,8 @@ class RoundedWithCutoutShape(
         val cutoutPath = Path().apply {
             addOval(Rect(center = circleCenter, radius = r))
         }
+
+        onCircleBoundsChanged(cutoutPath.getBounds().center)
 
         path.op(path, cutoutPath, PathOperation.Difference)
 
