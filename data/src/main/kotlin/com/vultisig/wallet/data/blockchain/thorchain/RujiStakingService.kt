@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails
 class RujiStakingService(
     val thorChainApi: ThorChainApi,
 ){
-    fun getStakingDetails(): StakingDetails {
-
+    suspend fun getStakingDetails(address: String): StakingDetails {
+        val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
     }
 }

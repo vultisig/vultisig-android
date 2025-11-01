@@ -413,12 +413,14 @@ internal class ThorChainApiImpl @Inject constructor(
         val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: ""
+        val apr = stake.pool?.summary?.apr?.value ?: 0.0
 
         return RujiStakeBalances(
             stakeAmount = stakeAmount,
             stakeTicker = stakeTicker,
             rewardsAmount = rewardsAmount,
             rewardsTicker = rewardsTicker,
+            apr = apr,
         )
     }
 
@@ -661,7 +663,8 @@ data class MergeAccount(
 
 @Serializable
 data class Pool(
-    val mergeAsset: MergeAsset?
+    val mergeAsset: MergeAsset?,
+    val summary: Summary? = null,
 )
 
 @Serializable
@@ -683,7 +686,8 @@ data class Size(
 data class StakingV2(
     val account: String,
     val bonded: Bonded,
-    val pendingRevenue: PendingRevenue?
+    val pendingRevenue: PendingRevenue?,
+    val pool: Pool?,
 )
 
 @Serializable
@@ -704,6 +708,16 @@ data class Asset(
 )
 
 @Serializable
+data class Summary(
+    val apr: Apr? = null,
+)
+
+@Serializable
+data class Apr(
+    val value: Double? = null,
+)
+
+@Serializable
 data class BlockNumber(
     val thorchain: Long,
 )
@@ -713,6 +727,7 @@ data class RujiStakeBalances(
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
+    val apr: Double = 0.0,
 )
 
 @Serializable
