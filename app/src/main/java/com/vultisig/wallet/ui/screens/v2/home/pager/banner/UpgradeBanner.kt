@@ -61,7 +61,7 @@ internal fun UpgradeBanner(
 
             Text(
                 text = stringResource(R.string.upgrade_banner_upgrade_now),
-                style = Theme.brockmann.button.medium,
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.colors.text.button.dark,
                 modifier = Modifier
                     .clip(shape = CircleShape)

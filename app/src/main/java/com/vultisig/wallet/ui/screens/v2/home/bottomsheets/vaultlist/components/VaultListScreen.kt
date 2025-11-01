@@ -201,7 +201,7 @@ private fun VaultListScreen(
                 )
                 Text(
                     text = stringResource(R.string.vault_list_add_folder),
-                    style = Theme.brockmann.button.semibold,
+                    style = Theme.brockmann.button.semibold.semibold,
                     color = Theme.colors.neutrals.n100
                 )
             }
