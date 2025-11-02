@@ -89,7 +89,7 @@ internal fun ToggleBalanceVisibilityButton(
             Text(
                 text = if (isVisible) stringResource(R.string.hide_balance) else  stringResource(R.string.show_balance),
                 color = Theme.v2.colors.text.button.dim,
-                style = Theme.brockmann.button.medium
+                style = Theme.brockmann.button.medium.medium
             )
         }
 

@@ -12,6 +12,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoChainFound
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
@@ -57,15 +58,24 @@ private fun ChainSelectionScreen(
                 color = Theme.colors.neutrals.n100,
             )
         },
-        items = state.chains,
-        mapper = {
-            TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
-                    name = it.coin.chain.name,
-                    logo = it.coin.chain.logo,
-                ),
-                isChecked = it.isEnabled
+        items = state.chains.map {
+            GridTokenUiModel.SingleToken(
+                data = it
             )
+        },
+        mapper = {
+            when (it) {
+                is GridTokenUiModel.PairToken<ChainUiModel> -> error("can not occurs")
+                is GridTokenUiModel.SingleToken<ChainUiModel> -> {
+                    TokenSelectionGridUiModel(
+                        tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+                            name = it.data.coin.chain.name,
+                            logo = it.data.coin.chain.logo,
+                        ),
+                        isChecked = it.data.isEnabled
+                    )
+                }
+            }
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,

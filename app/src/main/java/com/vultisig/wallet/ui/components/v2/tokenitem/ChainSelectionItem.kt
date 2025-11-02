@@ -29,11 +29,13 @@ import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.loading.V2Loading
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.*
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -95,8 +97,8 @@ internal fun GridItem(
             }
 
             when (uiModel.tokenSelectionUiModel) {
-                is TokenSelectionUiModel.TokenUiPair -> TokenUiGridLogo(tokens = uiModel.tokenSelectionUiModel)
-                is TokenSelectionUiModel.TokenUiSingle -> TokenUiGridLogo(token = uiModel.tokenSelectionUiModel)
+                is TokenUiPair -> TokenUiGridLogo(tokens = uiModel.tokenSelectionUiModel)
+                is TokenUiSingle -> TokenUiGridLogo(token = uiModel.tokenSelectionUiModel)
             }
         }
 
@@ -105,8 +107,8 @@ internal fun GridItem(
         )
 
         when (uiModel.tokenSelectionUiModel) {
-            is TokenSelectionUiModel.TokenUiPair -> TokenUiGridName(tokens = uiModel.tokenSelectionUiModel)
-            is TokenSelectionUiModel.TokenUiSingle -> TokenUiGridName(token = uiModel.tokenSelectionUiModel)
+            is TokenUiPair -> TokenUiGridName(tokens = uiModel.tokenSelectionUiModel)
+            is TokenUiSingle -> TokenUiGridName(token = uiModel.tokenSelectionUiModel)
         }
     }
 }
@@ -169,7 +171,7 @@ internal fun GridPlus(
 fun PreviewRChainSelectionItem() {
     GridItem(
         uiModel = TokenSelectionGridUiModel(
-            tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+            tokenSelectionUiModel = TokenUiSingle(
                 name = Coins.Bitcoin.BTC.ticker,
                 logo = Coins.Bitcoin.BTC.chain.logo,
             ),
@@ -184,7 +186,7 @@ fun PreviewRChainSelectionItem() {
 fun PreviewRChainSelectionItem2() {
     GridItem(
         uiModel = TokenSelectionGridUiModel(
-            tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+            tokenSelectionUiModel = TokenUiSingle(
                 name = Coins.Bitcoin.BTC.ticker,
                 logo = Coins.Bitcoin.BTC.chain.logo,
             ),
@@ -198,12 +200,12 @@ fun PreviewRChainSelectionItem2() {
 fun PreviewRChainSelectionItem3() {
     GridItem(
         uiModel = TokenSelectionGridUiModel(
-            tokenSelectionUiModel = TokenSelectionUiModel.TokenUiPair(
-                left = TokenSelectionUiModel.TokenUiSingle(
+            tokenSelectionUiModel = TokenUiPair(
+                left = TokenUiSingle(
                     name = Coins.ThorChain.RUNE.ticker,
                     logo = Coins.ThorChain.RUNE.chain.logo,
                 ),
-                right = TokenSelectionUiModel.TokenUiSingle(
+                right = TokenUiSingle(
                     name = Coins.Bitcoin.BTC.ticker,
                     logo = Coins.Bitcoin.BTC.chain.logo,
                 )
@@ -216,7 +218,7 @@ fun PreviewRChainSelectionItem3() {
 
 @Composable
 private fun TokenUiGridLogo(
-    tokens: TokenSelectionUiModel.TokenUiPair,
+    tokens: TokenUiPair,
     space: Float = 4f,
 ) {
 
@@ -255,7 +257,7 @@ private fun TokenUiGridLogo(
 private fun TokenUiGridLogo(
     modifier: Modifier = Modifier,
     size: Dp = 28.dp,
-    token: TokenSelectionUiModel.TokenUiSingle,
+    token: TokenUiSingle,
 ) {
 
     Box(
@@ -286,9 +288,37 @@ private fun TokenUiGridLogo(
 
 }
 
+@Preview
+@Composable
+private fun TokenUiGridLogoPreview1(){
+    TokenUiGridLogo(
+       token = TokenUiSingle(
+            name = Coins.Bitcoin.BTC.ticker,
+            logo = getCoinLogo(Coins.Bitcoin.BTC.logo)
+        )
+    )
+}
+
+@Preview
+@Composable
+private fun TokenUiGridLogoPreview2(){
+    TokenUiGridLogo(
+        tokens = TokenUiPair(
+            left = TokenUiSingle(
+                name = Coins.Bitcoin.BTC.ticker,
+                logo = getCoinLogo(Coins.Bitcoin.BTC.logo)
+            ),
+            right = TokenUiSingle(
+                name = Coins.Ethereum.BAT.ticker,
+                logo = getCoinLogo(Coins.Ethereum.BAT.logo)
+            )
+        )
+    )
+}
+
 @Composable
 private fun TokenUiGridName(
-    token: TokenSelectionUiModel.TokenUiSingle,
+    token: TokenUiSingle,
 ) {
     Text(
         text = token.name,
@@ -303,8 +333,8 @@ private fun TokenUiGridName(
 
 @Composable
 private fun TokenUiGridName(
-    tokens: TokenSelectionUiModel.TokenUiPair,
-    mapper: (TokenSelectionUiModel.TokenUiPair) -> String = { "${it.left.name}/${it.right.name}" },
+    tokens: TokenUiPair,
+    mapper: (TokenUiPair) -> String = { "${it.left.name}/${it.right.name}" },
 ) {
     Text(
         text = mapper(tokens),
@@ -314,6 +344,35 @@ private fun TokenUiGridName(
             .widthIn(max = 74.dp),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
+    )
+}
+
+
+@Preview
+@Composable
+private fun TokenGridNamePreview1(){
+    TokenUiGridName(
+        token = TokenUiSingle(
+            name = Coins.Bitcoin.BTC.ticker,
+            logo = getCoinLogo(Coins.Bitcoin.BTC.logo)
+        )
+    )
+}
+
+@Preview
+@Composable
+private fun TokenGridNamePreview2(){
+    TokenUiGridName(
+        tokens = TokenUiPair(
+            left = TokenUiSingle(
+                name = Coins.Bitcoin.BTC.ticker,
+                logo = getCoinLogo(Coins.Bitcoin.BTC.logo)
+            ),
+            right = TokenUiSingle(
+                name = Coins.Ethereum.BAT.ticker,
+                logo = getCoinLogo(Coins.Ethereum.BAT.logo)
+            )
+        )
     )
 }
 

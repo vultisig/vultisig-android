@@ -17,9 +17,10 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridPlusUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.*
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.models.TokenUiModel
@@ -61,7 +62,11 @@ internal fun TokenSelectionScreen(
 ) {
 
     TokenSelectionList(
-        items = state.tokens,
+        items = state.tokens.map {
+            GridTokenUiModel.SingleToken(
+                data = it
+            )
+        },
         titleContent = {
             Column {
                 Text(
@@ -79,13 +84,18 @@ internal fun TokenSelectionScreen(
             }
         },
         mapper = {
-            TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenUiSingle(
-                    name = it.coin.ticker,
-                    logo = getCoinLogo(logoName = it.coin.logo),
-                ),
-                isChecked = it.isEnabled
-            )
+            when(it){
+                is GridTokenUiModel.PairToken<TokenUiModel> -> error("error cannot occurs")
+                is GridTokenUiModel.SingleToken<TokenUiModel> -> {
+                    TokenSelectionGridUiModel(
+                        tokenSelectionUiModel = TokenUiSingle(
+                            name = it.data.coin.ticker,
+                            logo = getCoinLogo(logoName = it.data.coin.logo),
+                        ),
+                        isChecked = it.data.isEnabled
+                    )
+                }
+            }
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,

@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCaseImpl
+import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCase
+import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCaseImpl
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCase
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCaseImpl
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
@@ -200,5 +202,11 @@ internal interface DataUsecasesModule {
     fun bindGetChainTokenUseCase(
         impl: GetChainTokensUseCaseImpl
     ): GetChainTokensUseCase
+
+    @Binds
+    @Singleton
+    fun bindCreateZipVaultBackupFileNameUseCase(
+        impl: CreateZipVaultBackupFileNameUseCaseImpl,
+    ): CreateZipVaultBackupFileNameUseCase
 
 }
