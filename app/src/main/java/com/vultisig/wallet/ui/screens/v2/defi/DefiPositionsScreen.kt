@@ -40,6 +40,8 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
@@ -220,7 +222,21 @@ private fun BalanceBanner(
 private fun DefiPositionsScreenPreview() {
     DefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(),
+        state = DefiPositionsUiModel(
+            bonded = BondedTabUiModel(
+                totalBondedAmount = "1000 RUNE",
+                nodes = listOf<BondedNodeUiModel>(
+                    BondedNodeUiModel(
+                        address = "thor1xxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+                        bondedAmount = "500 RUNE",
+                        status = BondNodeState.WHITELISTED,
+                        apy = "12.5%",
+                        nextAward = "25 RUNE",
+                        nextChurn = "in 2 days",
+                    )
+                ),
+            )
+        ),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {}
