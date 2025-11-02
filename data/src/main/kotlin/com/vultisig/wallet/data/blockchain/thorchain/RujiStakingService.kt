@@ -4,10 +4,10 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
+import javax.inject.Inject
 
-class RujiStakingService(
-    val thorChainApi: ThorChainApi,
+class RujiStakingService @Inject constructor(
+    private val thorChainApi: ThorChainApi,
 ){
     suspend fun getStakingDetails(address: String): StakingDetails {
         val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
