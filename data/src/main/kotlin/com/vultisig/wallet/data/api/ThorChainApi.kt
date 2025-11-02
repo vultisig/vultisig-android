@@ -81,10 +81,6 @@ interface ThorChainApi {
     suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
     suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
 
-    suspend fun getUnstakableTcyAmount(address: String): String?
-
-    suspend fun getTcyAutoCompoundAmount(address: String): String?
-
     suspend fun getPools(): List<ThorChainPoolJson>
 
     suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
@@ -103,6 +99,13 @@ interface ThorChainApi {
     suspend fun getChurnInterval(): Long
     suspend fun getMidgardNetworkData(): MidgardNetworkData
     suspend fun getMidgardHealth(): MidgardHealth
+
+    // TCY Staking API
+    suspend fun getUnstakableTcyAmount(address: String): String?
+    suspend fun getTcyAutoCompoundAmount(address: String): String?
+    suspend fun fetchTcyStakedAmount(address: String): TcyStakerResponse
+    suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution>
+    suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -555,6 +558,25 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<MidgardHealth>()
     }
 
+    override suspend fun fetchTcyStakedAmount(address: String): TcyStakerResponse {
+        return httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<TcyStakerResponse>()
+    }
+
+    override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {
+        return httpClient.get("$THORNODE_BASE/thorchain/tcy_distributions") {
+            parameter("limit", limit)
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<List<TcyDistribution>>()
+    }
+
+    override suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse {
+        return httpClient.get("$THORNODE_BASE/thorchain/tcy_user_distributions/$address") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<TcyUserDistributionsResponse>()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val THORNODE_BASE = "https://thornode.ninerealms.com"
@@ -822,5 +844,53 @@ data class MidgardHealth(
     data class HeightInfo(
         val height: Long,
         val timestamp: Long // seconds since epoch
+    )
+}
+
+// TCY Staking
+@Serializable
+data class TcyStakerResponse(
+    val amount: String?= null,
+    val unstakable: String? = null
+)
+
+@Serializable
+data class TcyDistribution(
+    val block: String,
+    val amount: String,
+    val timestamp: String? = null
+)
+
+@Serializable
+data class TcyUserDistributionsResponse(
+    val distributions: List<TcyUserDistribution>,
+    val total: String? = null
+) {
+    @Serializable
+    data class TcyUserDistribution(
+        val date: String,   // Timestamp
+        val amount: String  // RUNE amount in satoshis
+    )
+}
+
+@Serializable
+data class TcyModuleBalanceResponse(
+    val coins: List<ModuleCoin>
+) {
+    @Serializable
+    data class ModuleCoin(
+        val denom: String,
+        val amount: String
+    )
+}
+
+@Serializable
+data class TcyStakersResponse(
+    val tcy_stakers: List<TcyStaker>
+) {
+    @Serializable
+    data class TcyStaker(
+        val address: String,
+        val amount: String
     )
 }
