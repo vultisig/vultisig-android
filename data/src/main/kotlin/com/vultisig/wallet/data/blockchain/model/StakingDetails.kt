@@ -8,7 +8,7 @@ import java.util.Date
 data class StakingDetails(
     val stakeAmount: BigInteger,
     val apr: Double?,
-    val estimatedRewards: BigDecimal,
+    val estimatedRewards: BigDecimal?,
     val nextPayoutDate: Date?,
     val rewards: BigDecimal?,
     val rewardsCoin: Coin?,
