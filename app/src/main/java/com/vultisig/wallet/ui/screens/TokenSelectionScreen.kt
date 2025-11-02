@@ -85,7 +85,7 @@ internal fun TokenSelectionScreen(
         },
         mapper = {
             when(it){
-                is GridTokenUiModel.PairToken<TokenUiModel> -> error("error cannot occurs")
+                is GridTokenUiModel.PairToken<TokenUiModel> -> error("PairToken cannot occur in single-token selection")
                 is GridTokenUiModel.SingleToken<TokenUiModel> -> {
                     TokenSelectionGridUiModel(
                         tokenSelectionUiModel = TokenUiSingle(

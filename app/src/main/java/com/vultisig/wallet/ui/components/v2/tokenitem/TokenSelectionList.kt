@@ -69,7 +69,7 @@ internal fun <T> TokenSelectionList(
         notFoundContent = notFoundContent,
         onCheckChange = { isSelected, uiModel ->
             when (uiModel) {
-                is PairToken<T> -> error("can not occurs")
+                is PairToken<T> -> error("PairToken cannot occur in single-item list")
                 is SingleToken<T> -> {
                     onCheckChange(
                         isSelected,
