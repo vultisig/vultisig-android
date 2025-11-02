@@ -156,7 +156,7 @@ internal fun ActiveNodesWidget(
         Row {
             Text(
                 text = stringResource(R.string.active_nodes),
-                style = Theme.brockmann.button.medium,
+                style = Theme.brockmann.button.medium.medium,
                 color = Theme.v2.colors.text.light,
             )
 

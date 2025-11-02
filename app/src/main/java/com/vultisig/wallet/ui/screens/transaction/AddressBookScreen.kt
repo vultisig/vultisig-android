@@ -106,7 +106,7 @@ internal fun AddressBookScreen(
                         if (isEditModeEnabled) {
                             Text(
                                 text = stringResource(R.string.address_book_edit_mode_done),
-                                style = Theme.brockmann.button.medium,
+                                style = Theme.brockmann.button.medium.medium,
                                 color = Theme.colors.primary.accent4,
                                 modifier = Modifier
                                     .background(
@@ -186,7 +186,7 @@ private fun NoAddressView(
 
         Text(
             text = stringResource(R.string.address_book_empty_title),
-            style = Theme.brockmann.button.large,
+            style = Theme.brockmann.button.semibold.large,
             color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
         )
@@ -197,7 +197,7 @@ private fun NoAddressView(
 
         Text(
             text = stringResource(R.string.address_book_empty_description),
-            style = Theme.brockmann.button.medium,
+            style = Theme.brockmann.button.medium.medium,
             color = Theme.colors.neutral300,
             textAlign = TextAlign.Center
         )

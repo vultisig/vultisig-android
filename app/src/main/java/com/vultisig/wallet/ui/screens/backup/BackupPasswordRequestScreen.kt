@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.usecases.MIME_TYPE_VAULT
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -53,7 +52,7 @@ internal fun BackupPasswordRequestScreen(
     )
 
     RequestCreateDocument(
-        mimeType = MIME_TYPE_VAULT,
+        mimeType = state.mimeType.value,
         onDocumentCreated = model::saveVaultIntoUri,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
     )

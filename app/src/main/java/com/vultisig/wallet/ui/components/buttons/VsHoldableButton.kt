@@ -111,7 +111,7 @@ fun VsHoldableButton(
             if (label != null) {
                 Text(
                     text = label,
-                    style = Theme.brockmann.button.semibold,
+                    style = Theme.brockmann.button.semibold.semibold,
                     color = contentColor,
                     textAlign = TextAlign.Center,
                 )
