@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -76,7 +77,7 @@ internal fun TokenAddressQrBottomSheet(
                 )
                 VsButton(
                     variant = VsButtonVariant.Primary,
-                    size = VsButtonSize.Small,
+                    size = VsButtonSize.Medium,
                     label = stringResource(R.string.copy_address),
                     onClick = onCopyAddressClick,
                     modifier = Modifier
@@ -91,4 +92,31 @@ internal fun TokenAddressQrBottomSheet(
         }
     }
 
+}
+
+@Preview
+@Composable
+private fun TokenAddressQrBottomSheetPreview() {
+    Row {
+        VsButton(
+            variant = VsButtonVariant.Tertiary,
+            size = VsButtonSize.Small,
+            label = stringResource(R.string.share_vault_qr_share),
+            onClick = {},
+            modifier = Modifier
+                .weight(1f)
+        )
+        UiSpacer(
+            size = 8.dp
+        )
+        VsButton(
+            variant = VsButtonVariant.Primary,
+            size = VsButtonSize.Medium,
+            label = stringResource(R.string.copy_address),
+            onClick = {  },
+            modifier = Modifier
+                .weight(1f)
+        )
+
+    }
 }

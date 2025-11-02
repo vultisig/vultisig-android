@@ -19,7 +19,7 @@ internal fun AppVersionText(
             BuildConfig.VERSION_NAME,
             BuildConfig.VERSION_CODE
         ),
-        style = Theme.brockmann.button.medium,
+        style = Theme.brockmann.button.medium.medium,
         color = Theme.colors.text.extraLight,
         textAlign = TextAlign.Center,
         modifier = modifier,
