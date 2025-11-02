@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -396,12 +397,7 @@ private fun ReferralRewardsBanner(
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.referral_data_banner),
-            contentDescription = "Provider Logo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        SetBackgoundBanner(backgroundImageResId = R.drawable.referral_data_banner)
 
         Column(
             modifier = Modifier
@@ -439,6 +435,20 @@ private fun ReferralRewardsBanner(
             }
         }
     }
+}
+
+
+@Composable
+fun BoxScope.SetBackgoundBanner(
+    backgroundImageResId: Int,
+) {
+    Image(
+        painter = painterResource(backgroundImageResId),
+        contentDescription = "Referral Banner",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.matchParentSize()
+    )
+
 }
 
 @Composable

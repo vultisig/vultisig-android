@@ -2,14 +2,17 @@ package com.vultisig.wallet.ui.screens.v2.home.pager.banner
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks.TWITTER_ID
 
@@ -32,11 +36,19 @@ internal fun FollowXBanner(
     modifier: Modifier = Modifier,
     onFollowXClick: () -> Unit,
 ) {
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
+
+        SetBackgoundBanner(backgroundImageResId = R.drawable.follow_banner)
+
         Column(
             modifier = Modifier
                 .padding(
@@ -78,27 +90,6 @@ internal fun FollowXBanner(
             )
         }
 
-        UiSpacer(
-            weight = 1f
-        )
-
-        Box(
-            modifier = Modifier
-                .wrapContentSize(
-                    align = Alignment.BottomEnd
-                )
-        ) {
-            Image(
-                painter = painterResource(
-                    id = R.drawable.invite_x_banner
-                ),
-                contentDescription = null,
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier
-                    .size(140.dp)
-                    .align(alignment = Alignment.BottomEnd)
-            )
-        }
     }
 }
 
