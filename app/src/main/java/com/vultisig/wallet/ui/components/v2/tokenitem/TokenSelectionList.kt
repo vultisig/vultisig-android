@@ -44,8 +44,8 @@ internal sealed interface GridTokenUiModel<T> {
 
 @Composable
 internal fun <T> TokenSelectionList(
-    items: List<GridTokenUiModel<T>>,
-    mapper: (GridTokenUiModel<T>) -> TokenSelectionGridUiModel,
+    items: List<SingleToken<T>>,
+    mapper: (SingleToken<T>) -> TokenSelectionGridUiModel,
     searchTextFieldState: TextFieldState,
     titleContent: @Composable () -> Unit,
     notFoundContent: @Composable () -> Unit,
@@ -59,7 +59,12 @@ internal fun <T> TokenSelectionList(
         groups = listOf(
             TokenSelectionGroupUiModel(
                 items = items,
-                mapper = mapper,
+                mapper = { gridTokenUiModel ->
+                    when (gridTokenUiModel) {
+                        is SingleToken -> mapper(gridTokenUiModel)
+                        is PairToken -> error("PairToken cannot occur in single-item list")
+                    }
+                },
                 plusUiModel = plusUiModel,
                 title = null,
             )
@@ -280,7 +285,6 @@ private fun TokenSelectionListPreview2() {
         ),
         mapper = {
             when (it) {
-                is PairToken<Coin> -> error("can not occurs")
                 is SingleToken<Coin> -> TokenSelectionGridUiModel(
                     isChecked = true,
                     tokenSelectionUiModel = TokenUiSingle(
