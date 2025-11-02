@@ -103,7 +103,7 @@ interface ThorChainApi {
     // TCY Staking API
     suspend fun getUnstakableTcyAmount(address: String): String?
     suspend fun getTcyAutoCompoundAmount(address: String): String?
-    suspend fun fetchTcyStakedAmount(address: String): TcyStakerResponse
+    suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse
     suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution>
     suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse
 }
@@ -558,10 +558,10 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<MidgardHealth>()
     }
 
-    override suspend fun fetchTcyStakedAmount(address: String): TcyStakerResponse {
+    override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
         return httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
             header(xClientID, xClientIDValue)
-        }.bodyOrThrow<TcyStakerResponse>()
+        }.bodyOrThrow<TcyStakeResponse>()
     }
 
     override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {
@@ -849,9 +849,9 @@ data class MidgardHealth(
 
 // TCY Staking
 @Serializable
-data class TcyStakerResponse(
-    val amount: String?= null,
-    val unstakable: String? = null
+data class TcyStakeResponse(
+    val amount: String? = null,
+    val address: String = "",
 )
 
 @Serializable
@@ -875,7 +875,7 @@ data class TcyUserDistributionsResponse(
 
 @Serializable
 data class TcyModuleBalanceResponse(
-    val coins: List<ModuleCoin>
+    val coins: List<ModuleCoin> = emptyList(),
 ) {
     @Serializable
     data class ModuleCoin(
