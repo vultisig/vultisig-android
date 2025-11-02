@@ -159,7 +159,7 @@ internal fun SetupNavGraph(
         }
 
         composable<ImportVault> {
-            ImportFileScreen(navController)
+            ImportFileScreen()
         }
 
         dialog<AddChainAccount> {

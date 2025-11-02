@@ -9,8 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
+import com.vultisig.wallet.data.common.processZip
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -23,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,6 +35,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 internal data class ImportFileState(
@@ -44,6 +48,10 @@ internal data class ImportFileState(
     val password: String? = null,
     val isPasswordObfuscated: Boolean = true,
     val passwordErrorHint: UiText? = null,
+    val isZip: Boolean? = null,
+    val zipOutputs: List<AppZipEntry> = emptyList(),
+    val canNavigateToHome: Boolean = false,
+    val activeVault: Vault? = null,
 )
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/plain")
@@ -52,7 +60,7 @@ internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/plain")
 internal class ImportFileViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
@@ -97,9 +105,8 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
 
-    private fun parseFileContent(fileContent: String?, fileName: String?) {
-        if (fileContent == null)
-            return
+    private fun parseFileContent() {
+        val fileContent = uiModel.value.fileContent ?: return
         viewModelScope.launch {
             try {
                 saveToDb(fileContent, null)
@@ -135,6 +142,29 @@ internal class ImportFileViewModel @Inject constructor(
         saveVault(vault, false)
         vaultDataStoreRepository.setBackupStatus(vault.id, true)
         discoverToken(vault.id, null)
+        if (uiModel.value.isZip == true) {
+            val updatedZipOutput = uiModel.value.zipOutputs.filter {
+                it.content != uiModel.value.fileContent
+            }
+            if (updatedZipOutput.isEmpty()) {
+                navigateToHome(vault = vault)
+
+            } else {
+                uiModel.update {
+                    it.copy(
+                        zipOutputs = updatedZipOutput,
+                        canNavigateToHome = true,
+                        activeVault = vault
+                    )
+                }
+            }
+            return
+        }
+
+        navigateToHome(vault)
+    }
+
+    private suspend fun navigateToHome(vault: Vault) {
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,
@@ -146,11 +176,10 @@ internal class ImportFileViewModel @Inject constructor(
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
         val fileContent = uri.fileContent(context)
-        val fileName = uri.fileName(context)
         uiModel.update {
             it.copy(fileContent = fileContent)
         }
-        parseFileContent(fileContent, fileName)
+        parseFileContent()
     }
 
     fun fetchFileName(uri: Uri?) {
@@ -158,14 +187,26 @@ internal class ImportFileViewModel @Inject constructor(
             if (uri == null)
                 return@launch
             val fileName = uri.fileName(context)
-            val ext = fileName.substringAfterLast(".").lowercase()
-            if (!FILE_ALLOWED_EXTENSIONS.contains(ext)) {
+            val ext = File(fileName).extension
+            if (!FILE_ALLOWED_EXTENSIONS.contains(ext) && !ext.equals("zip", ignoreCase = true)) {
                 uiModel.update {
                     it.copy(
                         fileUri = null,
                         fileName = null,
                         fileContent = null,
+                        isZip = null,
                         error = UiText.StringResource(R.string.import_file_not_supported)
+                    )
+                }
+            } else if (ext.equals("zip", ignoreCase = true)) {
+                val zipOutput = uri.processZip(context = context)
+                uiModel.update {
+                    it.copy(
+                        fileUri = uri,
+                        fileName = fileName,
+                        isZip = true,
+                        zipOutputs = zipOutput,
+                        error = null,
                     )
                 }
             } else {
@@ -174,6 +215,7 @@ internal class ImportFileViewModel @Inject constructor(
                         fileUri = uri,
                         fileName = fileName,
                         error = null,
+                        isZip = false,
                     )
                 }
             }
@@ -190,6 +232,26 @@ internal class ImportFileViewModel @Inject constructor(
         val passwordVisibility = uiModel.value.isPasswordObfuscated
         uiModel.update {
             it.copy(isPasswordObfuscated = !passwordVisibility)
+        }
+    }
+
+    fun importVult(zipOutput: AppZipEntry) {
+        uiModel.update {
+            it.copy(fileContent = zipOutput.content)
+        }
+        parseFileContent()
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            val state = uiModel.value
+            if (state.canNavigateToHome) {
+                val activeVault = state.activeVault
+                activeVault?.run {
+                    navigateToHome(this)
+                } ?: navigator.back()
+            } else
+                navigator.back()
         }
     }
 }
