@@ -91,7 +91,7 @@ internal fun CheckForUpdateScreen(
                         stringResource(R.string.update_available)
                     else
                         stringResource(R.string.app_up_to_date),
-                style = Theme.brockmann.button.large,
+                style = Theme.brockmann.button.medium.large,
                 color = Theme.colors.neutral0
             )
 

@@ -367,7 +367,7 @@ internal fun SettingInfoItemVertical(
 
         Text(
             text = value,
-            style = Theme.brockmann.button.medium,
+            style = Theme.brockmann.button.medium.medium,
             color = Theme.colors.neutral0
         )
 
