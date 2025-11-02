@@ -444,11 +444,10 @@ fun BoxScope.SetBackgoundBanner(
 ) {
     Image(
         painter = painterResource(backgroundImageResId),
-        contentDescription = "Referral Banner",
+        contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = Modifier.matchParentSize()
     )
-
 }
 
 @Composable

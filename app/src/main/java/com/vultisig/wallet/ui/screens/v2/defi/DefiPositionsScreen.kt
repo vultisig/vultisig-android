@@ -179,13 +179,6 @@ private fun BalanceBanner(
     ) {
         SetBackgoundBanner(R.drawable.referral_data_banner)
 
-        Image(
-            painter = painterResource(id = R.drawable.referral_data_banner),
-            contentDescription = "Provider Logo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
-
         Column(
             modifier = Modifier
                 .padding(start = 16.dp, top = 16.dp)

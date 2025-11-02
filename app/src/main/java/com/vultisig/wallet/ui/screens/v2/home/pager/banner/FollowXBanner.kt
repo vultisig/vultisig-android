@@ -33,7 +33,6 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks.TWITTER_ID
 
 @Composable
 internal fun FollowXBanner(
-    modifier: Modifier = Modifier,
     onFollowXClick: () -> Unit,
 ) {
     Box(
