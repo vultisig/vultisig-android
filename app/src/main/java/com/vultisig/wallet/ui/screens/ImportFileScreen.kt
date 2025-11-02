@@ -300,7 +300,7 @@ private fun ZipOutput(
                         weight = 1f
                     )
                     VsButton(
-                        label = stringResource(R.string.import_file_screen_import_zip_output),
+                        label = stringResource(R.string.import_file_screen_title),
                         size = VsButtonSize.Mini,
                         onClick = {
                             onImportVult(zipOutput)
