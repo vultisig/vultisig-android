@@ -285,7 +285,7 @@ private fun TokenSelectionListPreview2() {
         ),
         mapper = {
             when (it) {
-                is SingleToken<Coin> -> TokenSelectionGridUiModel(
+                else -> TokenSelectionGridUiModel(
                     isChecked = true,
                     tokenSelectionUiModel = TokenUiSingle(
                         name = it.data.ticker,
