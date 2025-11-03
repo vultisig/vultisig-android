@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.blockchain
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -25,5 +27,12 @@ internal interface BlockchainServicesModule {
         fun provideRujiStakingService(
             thorChainApi: ThorChainApi
         ): RujiStakingService = RujiStakingService(thorChainApi)
+        
+        @Provides
+        @Singleton
+        fun provideTCYStakingService(
+            thorChainApi: ThorChainApi,
+            tokenPriceRepository: TokenPriceRepository
+        ): TCYStakingService = TCYStakingService(thorChainApi, tokenPriceRepository)
     }
 }

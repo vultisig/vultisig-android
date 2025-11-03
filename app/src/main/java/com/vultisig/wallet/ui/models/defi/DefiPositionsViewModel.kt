@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -17,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TAB
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -83,17 +85,22 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val rujiStakingService: RujiStakingService,
+    private val tcyStakingService: TCYStakingService,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     val state = MutableStateFlow(DefiPositionsUiModel())
+    
+    private val loadedTabs = mutableSetOf<String>()
 
     init {
         loadBondedNodes()
     }
 
     private fun loadBondedNodes() {
+        loadedTabs.add(BONDED_TAB)
+
         viewModelScope.launch {
             state.update {
                 it.copy(
@@ -128,7 +135,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        totalAmountPrice = totalValue,
+                        totalAmountPrice = if (it.selectedTab == BONDED_TAB) totalValue else it.totalAmountPrice,
                         bonded = BondedTabUiModel(
                             isLoading = false,
                             totalBondedAmount = totalBonded,
@@ -223,6 +230,125 @@ internal class DefiPositionsViewModel @Inject constructor(
         } ?: "N/A"
     }
 
+    private fun loadStakingPositions() {
+        viewModelScope.launch {
+            state.update {
+                it.copy(
+                    staking = it.staking.copy(isLoading = true)
+                )
+            }
+
+            try {
+                val vault = vaultRepository.get(vaultId)
+                val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+                
+                if (runeCoin == null) {
+                    Timber.e("Vault does not have RUNE coin")
+                    state.update {
+                        it.copy(
+                            staking = it.staking.copy(isLoading = false)
+                        )
+                    }
+                    return@launch
+                }
+
+                val positions = mutableListOf<StakePositionUiModel>()
+                val address = runeCoin.address
+                
+                // Load RUJI staking details
+                try {
+                    val rujiDetails = withContext(Dispatchers.IO) {
+                        rujiStakingService.getStakingDetails(address)
+                    }
+                    
+                    if (rujiDetails.stakeAmount > BigInteger.ZERO) {
+                        val rujiPosition = createRujiStakePosition(rujiDetails)
+                        positions.add(rujiPosition)
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to load RUJI staking details")
+                }
+                
+                val totalStakingValue = calculateTotalStakingValue(positions)
+                
+                state.update {
+                    it.copy(
+                        staking = StakingTabUiModel(
+                            isLoading = false,
+                            positions = positions
+                        ),
+                        totalAmountPrice = if (it.selectedTab == STAKING_TAB) {
+                            totalStakingValue
+                        } else {
+                            it.totalAmountPrice
+                        }
+                    )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t, "Failed to load staking positions")
+                state.update {
+                    it.copy(
+                        staking = it.staking.copy(isLoading = false)
+                    )
+                }
+            }
+        }
+    }
+    
+    private fun createRujiStakePosition(
+        details: com.vultisig.wallet.data.blockchain.model.StakingDetails
+    ): StakePositionUiModel {
+        val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
+        val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} RUJI"
+        
+        val rewards = details.rewards?.let { rewardAmount ->
+            val rewardValue = rewardAmount.setScale(2, RoundingMode.HALF_UP)
+            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: "USDC"}"
+        }
+        
+        return StakePositionUiModel(
+            stakeAssetHeader = "Staked RUJI",
+            stakeAmount = formattedAmount,
+            apy = formatApr(details.apr ?: 0.0),
+            canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
+            canStake = true,
+            canUnstake = true,
+            rewards = rewards,
+            nextReward = null,
+            nextPayout = null
+        )
+    }
+    
+    private fun formatApr(apr: Double): String {
+        return "%.2f%%".format(Locale.US, apr * 100)
+    }
+    
+    private suspend fun calculateTotalStakingValue(positions: List<StakePositionUiModel>): String {
+        // TODO: Calculate total value based on token prices
+        // For now, return a placeholder
+        return "$0.00"
+    }
+
+    fun onTabSelected(tab: String) {
+        state.update { currentState ->
+            currentState.copy(selectedTab = tab)
+        }
+
+        // Only load data if it hasn't been loaded yet
+        if (!loadedTabs.contains(tab)) {
+            when (tab) {
+                STAKING_TAB -> {
+                    loadStakingPositions()
+                    loadedTabs.add(STAKING_TAB)
+                }
+                BONDED_TAB -> {
+                    loadBondedNodes()
+                    loadedTabs.add(BONDED_TAB)
+                }
+            }
+        }
+    }
+
     fun onClickBond(nodeAddress: String) {
         // TODO: Implement new navigation screen
     }
@@ -233,12 +359,6 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun bondToNode() {
         // TODO: Implement new navigation screen
-    }
-
-    fun onTabSelected(tab: String) {
-        state.update { currentState ->
-            currentState.copy(selectedTab = tab)
-        }
     }
 
     fun onBackClick() {

@@ -94,7 +94,7 @@ internal fun DefiPositionScreenContent(
                         type = ContainerType.SECONDARY,
                         cornerType = CornerType.Circular,
                         modifier = Modifier
-                            .clickOnce(onClick = {} )
+                            .clickOnce(onClick = {})
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.edit_chain,
@@ -115,9 +115,16 @@ internal fun DefiPositionScreenContent(
                         onClickBond = onClickBond,
                     )
                 }
-                STAKING_TAB -> {
 
+                STAKING_TAB -> {
+                    StakingTabContent(
+                        state = state.staking,
+                        onClickStake = { /* TODO: Implement stake action */ },
+                        onClickUnstake = { /* TODO: Implement unstake action */ },
+                        onClickWithdraw = { /* TODO: Implement withdraw action */ }
+                    )
                 }
+
                 LPs_TAB -> {
                     NoPositionsContainer(
                         onManagePositionsClick = { }
@@ -256,7 +263,7 @@ private fun DefiPositionsScreenPreviewWithData() {
             nextChurn = "Oct 17, 25"
         )
     )
-    
+
     DefiPositionScreenContent(
         onBackClick = { },
         state = DefiPositionsUiModel(
