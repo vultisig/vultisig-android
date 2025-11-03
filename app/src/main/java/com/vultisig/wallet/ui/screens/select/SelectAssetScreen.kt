@@ -171,6 +171,7 @@ private fun AssetItem(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
+            modifier = Modifier.weight(2f)
         )
 
         Text(
@@ -231,6 +232,14 @@ private fun SelectAssetScreenPreview() {
                     logo = "eth",
                     title = "ETH",
                     subtitle = "Ethereum",
+                    amount = "0.00",
+                    value = "$0.00",
+                ),
+                AssetUiModel(
+                    token = Coins.Base.WEWE,
+                    logo = "thor",
+                    title = "LP-GAIA.ATOM/ETH.USDC-XYK",
+                    subtitle = "Thorchain",
                     amount = "0.00",
                     value = "$0.00",
                 ),
