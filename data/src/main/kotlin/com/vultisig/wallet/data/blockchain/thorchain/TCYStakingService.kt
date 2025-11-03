@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.toValue
@@ -24,20 +25,20 @@ class TCYStakingService @Inject constructor(
         private const val BLOCKS_PER_DAY = 14_400L
         private const val SECONDS_PER_BLOCK = 6.0
         private const val DAYS_IN_YEAR = 365
-        
+
         // Cache duration for constants (1 hour)
         private const val CONSTANTS_CACHE_DURATION_MS = 3600_000L
     }
-    
+
     private data class TcyConstants(
         val minRuneForDistribution: BigDecimal,
         val minTcyForDistribution: BigDecimal,
         val systemIncomeBps: Int
     )
-    
+
     private var cachedConstants: SimpleCache<String, TcyConstants> = SimpleCache()
     private var constantsCacheTimestamp: Long = 0
-    
+
     suspend fun getStakingDetails(
         address: String,
         tcyCoin: Coin,
@@ -51,6 +52,7 @@ class TCYStakingService @Inject constructor(
         // 2. Calculate APR
         val apyDeferred = calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount)
         val apr = convertAPYtoAPR(apyDeferred)
+        println(apr)
 
         error("")
 
@@ -64,12 +66,12 @@ class TCYStakingService @Inject constructor(
                 rewardsCoin = null
             )
         } */
-        
-       // 2. Fetch data in parallel
-       // val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount) }
-       // val nextPayoutDeferred = async { calculateNextPayout() }
-       // val estimatedRewardDeferred = async { calculateEstimatedReward(stakedAmount) }
-        
+
+        // 2. Fetch data in parallel
+        // val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount) }
+        // val nextPayoutDeferred = async { calculateNextPayout() }
+        // val estimatedRewardDeferred = async { calculateEstimatedReward(stakedAmount) }
+
         /*val apy = apyDeferred.await()
         val apr = convertAPYtoAPR(apy)
         val nextPayout = nextPayoutDeferred.await()
@@ -105,10 +107,16 @@ class TCYStakingService @Inject constructor(
         stakedAmount: BigInteger
     ): Double {
         // Get prices
-        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.priceProviderID)?.price ?: 0.0
-        val runePrice = tokenPriceRepository.getTokenPrice(runeCoin.priceProviderID)?.price ?: 0.0
+        val currency = AppCurrency.USD
+        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.priceProviderID, currency)
+            ?: BigDecimal.ZERO
+        val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.priceProviderID, currency)
+            ?: BigDecimal.ZERO
 
-        if (tcyPrice <= 0 || runePrice <= 0 || stakedAmount == BigInteger.ZERO) {
+        if (tcyPrice <= BigDecimal.ZERO ||
+            runePrice <= BigDecimal.ZERO ||
+            stakedAmount == BigInteger.ZERO
+        ) {
             return 0.0
         }
 
@@ -132,11 +140,11 @@ class TCYStakingService @Inject constructor(
 
         // Annualize
         val annualRune = avgDailyRune.multiply(BigDecimal(DAYS_IN_YEAR))
-        val annualUSD = annualRune.multiply(BigDecimal(runePrice))
+        val annualUSD = annualRune.multiply(runePrice)
 
         // Calculate staked value in Currency
         val stakedDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
-        val stakedValueUSD = stakedDecimal.multiply(tcyPrice.toBigDecimal())
+        val stakedValueUSD = stakedDecimal.multiply(tcyPrice)
 
         // Calculate APY
         return if (stakedValueUSD > BigDecimal.ZERO) {
@@ -145,39 +153,37 @@ class TCYStakingService @Inject constructor(
             0.0
         }
     }
-    
+
     private fun convertAPYtoAPR(apy: Double): Double {
         if (apy <= 0) return 0.0
-        
+
         // Convert percentage to decimal
         val apyDecimal = apy / 100.0
-        
+
         // Calculate daily rate from APY
         // APY = (1 + daily_rate)^365 - 1
         // daily_rate = (1 + APY)^(1/365) - 1
         val dailyRate = (1 + apyDecimal).pow(1.0 / DAYS_IN_YEAR) - 1
-        
+
         // APR = daily_rate * 365
         return dailyRate * DAYS_IN_YEAR
     }
-    
+
     private suspend fun calculateNextPayout(): Date {
-        // Get current block height
         val currentBlock = thorChainApi.getLastBlock()
-        
+
         // Calculate next distribution block
         val nextDistributionBlock = ((currentBlock / BLOCKS_PER_DAY) + 1) * BLOCKS_PER_DAY
-        
+
         // Calculate blocks remaining
         val blocksRemaining = nextDistributionBlock - currentBlock
-        
+
         // Calculate seconds remaining
         val secondsRemaining = (blocksRemaining * SECONDS_PER_BLOCK).toLong()
-        
-        // Return date
+
         return Date(System.currentTimeMillis() + (secondsRemaining * 1000))
     }
-    
+
     /*private suspend fun calculateEstimatedReward(stakedAmount: BigInteger): BigDecimal = coroutineScope {
         // Get current block height
         val currentBlock = thorChainApi.getLastBlock()
@@ -217,7 +223,7 @@ class TCYStakingService @Inject constructor(
         // Calculate user's share
         calculateUserShare(stakedAmount, totalEstimatedRune)
     } */
-    
+
     /*private suspend fun calculateUserShare(
         stakedAmount: BigInteger,
         totalEstimatedRune: BigDecimal
@@ -252,12 +258,12 @@ class TCYStakingService @Inject constructor(
         // Calculate user's estimated reward
         return actualDistributionAmount.multiply(userShare)
     } */
-    
+
     private suspend fun fetchTcyModuleBalance(): BigInteger {
         // TODO: Use endpoint
         return BigInteger.ZERO
     }
-    
+
     private suspend fun fetchTotalStakedTcy(): BigDecimal {
         // TODO: Use endpoint
         return BigDecimal.ONE
