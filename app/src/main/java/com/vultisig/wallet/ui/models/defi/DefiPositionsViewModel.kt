@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
@@ -19,6 +20,10 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TAB
+import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
+import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
+import com.vultisig.wallet.ui.screens.v2.defi.formatApy
+import com.vultisig.wallet.ui.screens.v2.defi.formatChurnDate
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -156,28 +162,20 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private fun ActiveBondedNode.toUiModel(): BondedNodeUiModel {
         return BondedNodeUiModel(
-            address = formatAddress(node.address),
+            address = node.address.formatAddress(),
             status = node.state.fromApiStatus(),
-            apy = formatApy(apy),
-            bondedAmount = formatRuneAmount(amount),
+            apy = apy.formatApy(),
+            bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
             nextAward = formatRuneReward(nextReward),
-            nextChurn = formatChurnDate(nextChurn)
+            nextChurn = nextChurn.formatChurnDate(),
         )
-    }
-
-    private fun formatAddress(address: String): String {
-        return if (address.length > 13) {
-            "${address.take(9)}...${address.takeLast(3)}"
-        } else {
-            address
-        }
     }
 
     private fun calculateTotalBonded(nodes: List<ActiveBondedNode>): String {
         val total = nodes.fold(BigInteger.ZERO) { acc, node ->
             acc + node.amount
         }
-        return formatRuneAmount(total)
+        return total.formatAmount(CoinType.THORCHAIN)
     }
 
     private fun calculateTotalBondedRaw(nodes: List<ActiveBondedNode>): BigDecimal {
@@ -207,27 +205,10 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    private fun formatRuneAmount(amount: BigInteger): String {
-        val runeAmount = Chain.ThorChain.coinType.toValue(amount)
-        val rounded = runeAmount.setScale(2, RoundingMode.HALF_UP)
-        return "${rounded.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
-    }
-
     private fun formatRuneReward(reward: Double): String {
         val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.HALF_UP).toBigInteger()
         val runeAmount = Chain.ThorChain.coinType.toValue(rewardBase).setScale(2, RoundingMode.HALF_UP)
         return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
-    }
-
-    private fun formatApy(apy: Double): String {
-        return "%.2f%%".format(Locale.US, apy * 100)
-    }
-
-    private fun formatChurnDate(date: Date?): String {
-        return date?.let {
-            val formatter = SimpleDateFormat("MMM dd, yy", Locale.US)
-            formatter.format(it)
-        } ?: "N/A"
     }
 
     private fun loadStakingPositions() {
@@ -260,11 +241,10 @@ internal class DefiPositionsViewModel @Inject constructor(
                     val rujiDetails = withContext(Dispatchers.IO) {
                         rujiStakingService.getStakingDetails(address)
                     }
-                    
-                    if (rujiDetails.stakeAmount > BigInteger.ZERO) {
-                        val rujiPosition = createRujiStakePosition(rujiDetails)
-                        positions.add(rujiPosition)
-                    }
+
+                    val rujiPosition = createRujiStakePosition(rujiDetails)
+                    positions.add(rujiPosition)
+
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load RUJI staking details")
                 }
@@ -296,7 +276,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
     
     private fun createRujiStakePosition(
-        details: com.vultisig.wallet.data.blockchain.model.StakingDetails
+        details: StakingDetails
     ): StakePositionUiModel {
         val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
         val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} RUJI"
@@ -312,7 +292,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             apy = formatApr(details.apr ?: 0.0),
             canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
             canStake = true,
-            canUnstake = true,
+            canUnstake = details.stakeAmount > BigInteger.ZERO,
             rewards = rewards,
             nextReward = null,
             nextPayout = null
