@@ -156,7 +156,7 @@ internal fun StakingWidget(
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = onClickStake,
                 modifier = Modifier.weight(1f),
-                enabled = true,
+                enabled = state.canStake,
                 iconCircleColor = Theme.v2.colors.primary.accent4
             )
         }

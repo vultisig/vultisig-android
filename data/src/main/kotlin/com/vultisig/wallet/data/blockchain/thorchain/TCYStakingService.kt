@@ -1,13 +1,11 @@
 package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.TcyStakerResponse
-import com.vultisig.wallet.data.api.models.TcyDistribution
-import com.vultisig.wallet.data.api.models.TcyUserDistributionsResponse
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.utils.SimpleCache
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
@@ -34,14 +32,13 @@ class TCYStakingService @Inject constructor(
         private const val CONSTANTS_CACHE_DURATION_MS = 3600_000L
     }
     
-    // Cache for TCY constants
     private data class TcyConstants(
         val minRuneForDistribution: BigDecimal,
         val minTcyForDistribution: BigDecimal,
         val systemIncomeBps: Int
     )
     
-    private var cachedConstants: TcyConstants? = null
+    private var cachedConstants: SimpleCache<String, TcyConstants> = SimpleCache()
     private var constantsCacheTimestamp: Long = 0
     
     suspend fun getStakingDetails(
@@ -51,10 +48,10 @@ class TCYStakingService @Inject constructor(
     ): StakingDetails = coroutineScope {
         // 1. Fetch staked amount
         val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
-        val stakeAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val stakedAmount = parseAmount(stakeAmount, TCY_DECIMALS)
-        
-        if (stakedAmount == BigInteger.ZERO) {
+        val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        error("")
+
+        /*if (stakedAmount == BigInteger.ZERO) {
             return@coroutineScope StakingDetails(
                 stakeAmount = BigInteger.ZERO,
                 apr = 0.0,
@@ -63,14 +60,14 @@ class TCYStakingService @Inject constructor(
                 rewards = null,
                 rewardsCoin = null
             )
-        }
+        } */
         
         // 2. Fetch data in parallel
-        val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount) }
-        val nextPayoutDeferred = async { calculateNextPayout() }
-        val estimatedRewardDeferred = async { calculateEstimatedReward(stakedAmount) }
+       // val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount) }
+       // val nextPayoutDeferred = async { calculateNextPayout() }
+       // val estimatedRewardDeferred = async { calculateEstimatedReward(stakedAmount) }
         
-        val apy = apyDeferred.await()
+        /*val apy = apyDeferred.await()
         val apr = convertAPYtoAPR(apy)
         val nextPayout = nextPayoutDeferred.await()
         val estimatedReward = estimatedRewardDeferred.await()
@@ -95,15 +92,7 @@ class TCYStakingService @Inject constructor(
             nextPayoutDate = nextPayout,
             rewards = null, // TCY auto-distributes, no pending rewards
             rewardsCoin = rewardsCoin
-        )
-    }
-
-    private fun parseAmount(amount: String, decimals: Int): BigInteger {
-        return try {
-            BigInteger(amount)
-        } catch (e: Exception) {
-            BigInteger.ZERO
-        }
+        ) */
     }
     
     private fun amountToDecimal(amount: BigInteger, decimals: Int): BigDecimal {
@@ -114,7 +103,7 @@ class TCYStakingService @Inject constructor(
         )
     }
     
-    private suspend fun calculateTcyAPY(
+    /*private suspend fun calculateTcyAPY(
         tcyCoin: Coin,
         runeCoin: Coin,
         address: String,
@@ -165,7 +154,7 @@ class TCYStakingService @Inject constructor(
         } else {
             0.0
         }
-    }
+    } */
     
     private fun convertAPYtoAPR(apy: Double): Double {
         if (apy <= 0) return 0.0
@@ -199,7 +188,7 @@ class TCYStakingService @Inject constructor(
         return Date(System.currentTimeMillis() + (secondsRemaining * 1000))
     }
     
-    private suspend fun calculateEstimatedReward(stakedAmount: BigInteger): BigDecimal = coroutineScope {
+    /*private suspend fun calculateEstimatedReward(stakedAmount: BigInteger): BigDecimal = coroutineScope {
         // Get current block height
         val currentBlock = thorChainApi.getLastBlock()
         
@@ -237,9 +226,9 @@ class TCYStakingService @Inject constructor(
         
         // Calculate user's share
         calculateUserShare(stakedAmount, totalEstimatedRune)
-    }
+    } */
     
-    private suspend fun calculateUserShare(
+    /*private suspend fun calculateUserShare(
         stakedAmount: BigInteger,
         totalEstimatedRune: BigDecimal
     ): BigDecimal {
@@ -272,7 +261,7 @@ class TCYStakingService @Inject constructor(
         
         // Calculate user's estimated reward
         return actualDistributionAmount.multiply(userShare)
-    }
+    } */
     
     private suspend fun fetchTcyModuleBalance(): BigInteger {
         // TODO: Use endpoint
@@ -282,29 +271,5 @@ class TCYStakingService @Inject constructor(
     private suspend fun fetchTotalStakedTcy(): BigDecimal {
         // TODO: Use endpoint
         return BigDecimal.ONE
-    }
-    
-    private suspend fun fetchThorchainConstants(): TcyConstants {
-        // Check cache
-        val now = System.currentTimeMillis()
-        cachedConstants?.let { cached ->
-            if (now - constantsCacheTimestamp < CONSTANTS_CACHE_DURATION_MS) {
-                return cached
-            }
-        }
-        
-        // For now, using default values
-        // TODO: Implement when constants API endpoint is available
-        val constants = TcyConstants(
-            minRuneForDistribution = BigDecimal("100"), // 100 RUNE
-            minTcyForDistribution = BigDecimal("1000"), // 1000 TCY
-            systemIncomeBps = 1000 // 10%
-        )
-        
-        // Cache the result
-        cachedConstants = constants
-        constantsCacheTimestamp = now
-        
-        return constants
     }
 }
