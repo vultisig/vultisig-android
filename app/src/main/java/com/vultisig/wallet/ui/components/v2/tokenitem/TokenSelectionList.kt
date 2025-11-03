@@ -3,33 +3,101 @@ package com.vultisig.wallet.ui.components.v2.tokenitem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel.*
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.*
+import com.vultisig.wallet.ui.theme.Theme
+
+internal data class TokenSelectionGroupUiModel<T>(
+    val title: String? = null,
+    val items: List<GridTokenUiModel<T>>,
+    val mapper: (GridTokenUiModel<T>) -> TokenSelectionGridUiModel,
+    val plusUiModel: GridPlusUiModel? = null,
+)
+
+internal sealed interface GridTokenUiModel<T> {
+    data class SingleToken<T>(val data: T) : GridTokenUiModel<T>
+    data class PairToken<T>(val data: Pair<T, T>) : GridTokenUiModel<T>
+}
+
 
 @Composable
 internal fun <T> TokenSelectionList(
-    items: List<T>,
-    mapper: (T) -> TokenSelectionGridUiModel,
+    items: List<SingleToken<T>>,
+    mapper: (SingleToken<T>) -> TokenSelectionGridUiModel,
     searchTextFieldState: TextFieldState,
     titleContent: @Composable () -> Unit,
     notFoundContent: @Composable () -> Unit,
     onCheckChange: (Boolean, T) -> Unit,
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
-    onPlusClick: (() -> Unit)? = null,
+    plusUiModel: GridPlusUiModel? = null,
+    onSetSearchText: (String) -> Unit = {},
+) {
+    TokenSelectionList(
+        groups = listOf(
+            TokenSelectionGroupUiModel(
+                items = items,
+                mapper = { gridTokenUiModel ->
+                    when (gridTokenUiModel) {
+                        is SingleToken -> mapper(gridTokenUiModel)
+                        is PairToken -> error("PairToken cannot occur in single-item list")
+                    }
+                },
+                plusUiModel = plusUiModel,
+                title = null,
+            )
+        ),
+        searchTextFieldState = searchTextFieldState,
+        titleContent = titleContent,
+        notFoundContent = notFoundContent,
+        onCheckChange = { isSelected, uiModel ->
+            when (uiModel) {
+                is PairToken<T> -> error("PairToken cannot occur in single-item list")
+                is SingleToken<T> -> {
+                    onCheckChange(
+                        isSelected,
+                        uiModel.data
+                    )
+                }
+            }
+        },
+        onDoneClick = onDoneClick,
+        onCancelClick = onCancelClick,
+        onSetSearchText = onSetSearchText
+    )
+}
+
+@Composable
+internal fun <T> TokenSelectionList(
+    groups: List<TokenSelectionGroupUiModel<T>>,
+    searchTextFieldState: TextFieldState,
+    titleContent: @Composable () -> Unit,
+    notFoundContent: @Composable () -> Unit,
+    onCheckChange: (Boolean, GridTokenUiModel<T>) -> Unit,
+    onDoneClick: () -> Unit,
+    onCancelClick: () -> Unit,
     onSetSearchText: (String) -> Unit = {},
 ) {
     V2BottomSheet(
@@ -52,7 +120,7 @@ internal fun <T> TokenSelectionList(
         }
     ) {
         Column(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize(),
         ) {
             UiSpacer(
@@ -76,7 +144,7 @@ internal fun <T> TokenSelectionList(
                 size = 24.dp
             )
 
-            if (items.isEmpty()) {
+            if (groups.isEmpty()) {
                 notFoundContent()
             } else
                 LazyVerticalGrid(
@@ -84,24 +152,200 @@ internal fun <T> TokenSelectionList(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    onPlusClick?.let {
-                        item {
-                            GridPlus(
-                                title = stringResource(R.string.deposit_option_custom),
-                                onClick = it
+                    groups.forEach { (title, items, mapper, plusUiModel) ->
+                        title?.let {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                GridTitle(it)
+                            }
+                        }
+
+                        plusUiModel?.let {
+                            item {
+                                GridPlus(
+                                    model = it
+                                )
+                            }
+                        }
+
+                        items(items) { item ->
+                            GridItem(
+                                uiModel = mapper(item),
+                                onCheckedChange = {
+                                    onCheckChange(it, item)
+                                }
                             )
                         }
-                    }
-                    items(items) { item ->
-                        TokenSelectionGridItem(
-                            uiModel = mapper(item),
-                            onCheckedChange = {
-                                onCheckChange(it, item)
-                            }
-                        )
+
                     }
                 }
         }
     }
 
+}
+
+@Composable
+private fun GridTitle(title: String) {
+    Text(
+        text = title,
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.colors.text.primary,
+        modifier = Modifier
+            .widthIn(max = 74.dp),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Preview
+@Composable
+private fun TokenSelectionListPreview() {
+    TokenSelectionList(
+        groups = listOf(
+            TokenSelectionGroupUiModel(
+                title = "Group 1",
+                items = listOf(
+                    SingleToken(data = Coins.Ethereum.ETH),
+                    SingleToken(data = Coins.Bitcoin.BTC),
+                    SingleToken(data = Coins.Solana.SOL),
+                    PairToken(data = Coins.Ethereum.USDC to Coins.Arbitrum.USDC),
+                    SingleToken(data = Coins.Base.DAI),
+                ),
+                mapper = {
+                    val tokenSelectionUiModel = when (it) {
+                        is PairToken<Coin> -> {
+                            TokenUiPair(
+                                left = TokenUiSingle(
+                                    name = it.data.first.ticker,
+                                    logo = getCoinLogo(it.data.first.logo)
+                                ),
+                                right = TokenUiSingle(
+                                    name = it.data.second.ticker,
+                                    logo = getCoinLogo(it.data.second.logo)
+                                ),
+                            )
+                        }
+
+                        is SingleToken<Coin> -> {
+                            TokenUiSingle(
+                                name = it.data.ticker,
+                                logo = getCoinLogo(it.data.logo)
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = true,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            ),
+            TokenSelectionGroupUiModel(
+                title = "Group 2",
+                items = listOf(
+                    SingleToken(data = Coins.Ethereum.USDT),
+                    SingleToken(data = Coins.Polygon.USDC),
+                    SingleToken(data = Coins.Optimism.USDC_e),
+                    PairToken(data = Coins.BscChain.USDT to Coins.Solana.USDT),
+                ),
+                mapper = {
+                    val tokenSelectionUiModel = when (it) {
+                        is PairToken<Coin> -> {
+                            TokenUiPair(
+                                left = TokenUiSingle(
+                                    name = it.data.first.ticker,
+                                    logo = getCoinLogo(it.data.first.logo)
+                                ),
+                                right = TokenUiSingle(
+                                    name = it.data.second.ticker,
+                                    logo = getCoinLogo(it.data.second.logo)
+                                ),
+                            )
+                        }
+
+                        is SingleToken<Coin> -> {
+                            TokenUiSingle(
+                                name = it.data.ticker,
+                                logo = getCoinLogo(it.data.logo)
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = false,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            ),
+            TokenSelectionGroupUiModel(
+                title = "Group 3",
+                items = listOf(
+                    SingleToken(data = Coins.Ethereum.AAVE),
+                    SingleToken(data = Coins.Ethereum.UNI),
+                    PairToken(data = Coins.Arbitrum.LINK to Coins.Optimism.LINK),
+                    SingleToken(data = Coins.ThorChain.RUNE),
+                    SingleToken(data = Coins.Kujira.KUJI),
+                    SingleToken(data = Coins.Base.AERO),
+                ),
+                mapper = {
+                    val tokenSelectionUiModel = when (it) {
+                        is PairToken<Coin> -> {
+                            TokenUiPair(
+                                left = TokenUiSingle(
+                                    name = it.data.first.ticker,
+                                    logo = getCoinLogo(it.data.first.logo)
+                                ),
+                                right = TokenUiSingle(
+                                    name = it.data.second.ticker,
+                                    logo = getCoinLogo(it.data.second.logo)
+                                ),
+                            )
+                        }
+
+                        is SingleToken<Coin> -> {
+                            TokenUiSingle(
+                                name = it.data.ticker,
+                                logo = getCoinLogo(it.data.logo)
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = false,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = GridPlusUiModel(
+                    title = "Add More",
+                    onClick = {},
+                ),
+            ),
+        ),
+        searchTextFieldState = TextFieldState(),
+        titleContent = {
+            Column {
+                Text(
+                    "Select tokens to manage",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight
+                )
+            }
+        },
+        notFoundContent = {},
+        onCheckChange = { isSelected, uiModel ->
+            when (uiModel) {
+                is PairToken<Coin> -> {
+                    val (firstToken, secondToken) = uiModel.data
+                    println("$firstToken $secondToken $isSelected")
+                }
+
+                is SingleToken<Coin> -> {
+                    val token = uiModel.data
+                    println(token)
+                }
+            }
+
+        },
+        onDoneClick = {},
+        onCancelClick = {},
+        onSetSearchText = {}
+    )
 }

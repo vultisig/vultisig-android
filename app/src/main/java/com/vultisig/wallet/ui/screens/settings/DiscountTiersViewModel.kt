@@ -202,9 +202,9 @@ internal class DiscountTiersViewModel @Inject constructor(
         _state.update { current ->
             current.copy(
                 expandedTiers = if (current.expandedTiers.contains(tier)) {
-                    current.expandedTiers - tier  // Collapse
+                    emptySet()  // Collapse
                 } else {
-                    current.expandedTiers + tier  // Expand
+                    setOf(tier)  // Expand
                 }
             )
         }
