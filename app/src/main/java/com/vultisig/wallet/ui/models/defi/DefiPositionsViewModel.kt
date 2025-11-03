@@ -18,8 +18,7 @@ import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.screens.v2.defi.BONDED_TAB
-import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TAB
+import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatApy
@@ -38,14 +37,12 @@ import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
     val totalAmountPrice: String = "$0.00",
-    val selectedTab: String = BONDED_TAB,
+    val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel()
 )
@@ -105,7 +102,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private fun loadBondedNodes() {
-        loadedTabs.add(BONDED_TAB)
+        loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
             state.update {
@@ -141,7 +138,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        totalAmountPrice = if (it.selectedTab == BONDED_TAB) totalValue else it.totalAmountPrice,
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) totalValue else it.totalAmountPrice,
                         bonded = BondedTabUiModel(
                             isLoading = false,
                             totalBondedAmount = totalBonded,
@@ -257,7 +254,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             isLoading = false,
                             positions = positions
                         ),
-                        totalAmountPrice = if (it.selectedTab == STAKING_TAB) {
+                        totalAmountPrice = if (it.selectedTab == DefiTab.STAKING.displayName) {
                             totalStakingValue
                         } else {
                             it.totalAmountPrice
@@ -317,13 +314,13 @@ internal class DefiPositionsViewModel @Inject constructor(
         // Only load data if it hasn't been loaded yet
         if (!loadedTabs.contains(tab)) {
             when (tab) {
-                STAKING_TAB -> {
+                DefiTab.STAKING.displayName -> {
                     loadStakingPositions()
-                    loadedTabs.add(STAKING_TAB)
+                    loadedTabs.add(DefiTab.STAKING.displayName)
                 }
-                BONDED_TAB -> {
+                DefiTab.BONDED.displayName -> {
                     loadBondedNodes()
-                    loadedTabs.add(BONDED_TAB)
+                    loadedTabs.add(DefiTab.BONDED.displayName)
                 }
             }
         }

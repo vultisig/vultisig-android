@@ -68,7 +68,7 @@ internal fun DefiPositionScreenContent(
     onClickBond: (String) -> Unit,
     onTabSelected: (String) -> Unit = {},
 ) {
-    val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
+    val tabs = listOf(DefiTab.BONDED.displayName, DefiTab.STAKING.displayName, DefiTab.LPS.displayName)
 
     V2Scaffold(
         onBackClick = onBackClick,
@@ -107,7 +107,7 @@ internal fun DefiPositionScreenContent(
             )
 
             when (state.selectedTab) {
-                BONDED_TAB -> {
+                DefiTab.BONDED.displayName -> {
                     BondedTabContent(
                         bondToNodeOnClick = onClickBondToNode,
                         state = state,
@@ -116,7 +116,7 @@ internal fun DefiPositionScreenContent(
                     )
                 }
 
-                STAKING_TAB -> {
+                DefiTab.STAKING.displayName -> {
                     StakingTabContent(
                         state = state.staking,
                         onClickStake = { /* TODO: Implement stake action */ },
@@ -125,7 +125,7 @@ internal fun DefiPositionScreenContent(
                     )
                 }
 
-                LPs_TAB -> {
+                DefiTab.LPS.displayName -> {
                     NoPositionsContainer(
                         onManagePositionsClick = { }
                     )
@@ -268,7 +268,7 @@ private fun DefiPositionsScreenPreviewWithData() {
         onBackClick = { },
         state = DefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
-            selectedTab = BONDED_TAB,
+            selectedTab = DefiTab.BONDED.displayName,
             bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "2250 RUNE",
@@ -299,6 +299,8 @@ private fun DefiPositionsScreenPreviewLoading() {
     )
 }
 
-internal const val BONDED_TAB = "Bonded"
-internal const val STAKING_TAB = "Staked"
-internal const val LPs_TAB = "LPs"
+internal enum class DefiTab(val displayName: String) {
+    BONDED("Bonded"),
+    STAKING("Staked"),
+    LPS("LPs");
+}
