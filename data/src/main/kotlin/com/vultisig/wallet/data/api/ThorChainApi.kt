@@ -112,6 +112,7 @@ interface ThorChainApi {
     suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution>
     suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse
     suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse
+    suspend fun fetchTcyStakers(): TcyStakersResponse
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -596,6 +597,12 @@ internal class ThorChainApiImpl @Inject constructor(
         }.bodyOrThrow<TcyModuleBalanceResponse>()
     }
 
+    override suspend fun fetchTcyStakers(): TcyStakersResponse {
+        return httpClient.get("$THORNODE_BASE/thorchain/tcy_stakers") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<TcyStakersResponse>()
+    }
+
     companion object {
         private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
         private const val THORNODE_BASE = "https://thornode.ninerealms.com"
@@ -905,7 +912,8 @@ data class TcyModuleBalanceResponse(
 
 @Serializable
 data class TcyStakersResponse(
-    val tcy_stakers: List<TcyStaker>
+    @SerialName("tcy_stakers")
+    val tcyStakers: List<TcyStaker>
 ) {
     @Serializable
     data class TcyStaker(

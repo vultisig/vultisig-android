@@ -55,15 +55,6 @@ class TCYStakingService @Inject constructor(
         val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
         val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
-
-        // 2. Calculate APR
-        val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakeDecimal) }
-        val nextPayoutDeferred = async { calculateNextPayout() }
-        val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
-
-        error("")
-
-        // 3. Create RUNE coin for rewards
         val rewardsCoin = Coin(
             chain = Chain.ThorChain,
             ticker = "RUNE",
@@ -75,6 +66,22 @@ class TCYStakingService @Inject constructor(
             contractAddress = "",
             isNativeToken = true
         )
+
+        if (stakedAmount == BigInteger.ZERO) {
+            StakingDetails(
+                stakeAmount = stakedAmount,
+                apr = null,
+                estimatedRewards = null,
+                nextPayoutDate = null,
+                rewards = null,
+                rewardsCoin = rewardsCoin
+            )
+        }
+
+        // 2. Calculate APR
+        val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakeDecimal) }
+        val nextPayoutDeferred = async { calculateNextPayout() }
+        val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
 
         StakingDetails(
             stakeAmount = stakedAmount,
@@ -287,6 +294,23 @@ class TCYStakingService @Inject constructor(
     }
 
     private suspend fun fetchTotalStakedTcy(): BigDecimal {
-        return BigDecimal.ONE
+        val response = thorChainApi.fetchTcyStakers()
+        
+        // Sum all staked amounts (they are in satoshis as strings)
+        val totalSatoshis = response.tcyStakers.fold(BigDecimal.ZERO) { sum, staker ->
+            val amount = try {
+                BigDecimal(staker.amount)
+            } catch (e: Exception) {
+                Timber.e(e)
+                BigDecimal.ZERO
+            }
+            sum + amount
+        }
+
+        return totalSatoshis.divide(
+            BigDecimal.TEN.pow(TCY_DECIMALS),
+            TCY_DECIMALS,
+            RoundingMode.HALF_UP
+        )
     }
 }
