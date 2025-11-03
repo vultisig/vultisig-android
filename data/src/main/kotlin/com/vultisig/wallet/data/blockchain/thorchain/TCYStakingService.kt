@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins.ThorChain.RUNE
+import com.vultisig.wallet.data.models.Coins.ThorChain.TCY
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
@@ -48,8 +50,6 @@ class TCYStakingService @Inject constructor(
 
     suspend fun getStakingDetails(
         address: String,
-        tcyCoin: Coin,
-        runeCoin: Coin
     ): StakingDetails = supervisorScope {
         // 1. Fetch staked amount
         val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
@@ -79,7 +79,7 @@ class TCYStakingService @Inject constructor(
         }
 
         // 2. Calculate APR
-        val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakeDecimal) }
+        val apyDeferred = async { calculateTcyAPY(address, stakeDecimal) }
         val nextPayoutDeferred = async { calculateNextPayout() }
         val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
 
@@ -94,16 +94,14 @@ class TCYStakingService @Inject constructor(
     }
 
     private suspend fun calculateTcyAPY(
-        tcyCoin: Coin,
-        runeCoin: Coin,
         address: String,
         stakedAmount: BigDecimal
     ): Double {
         // Get prices
         val currency = AppCurrency.USD
-        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.priceProviderID, currency)
+        val tcyPrice = tokenPriceRepository.getCachedPrice(TCY.id, currency)
             ?: BigDecimal.ZERO
-        val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.priceProviderID, currency)
+        val runePrice = tokenPriceRepository.getCachedPrice(RUNE.id, currency)
             ?: BigDecimal.ZERO
 
         if (tcyPrice <= BigDecimal.ZERO ||
