@@ -12,6 +12,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
+import com.vultisig.wallet.data.common.isValidZipFile
 import com.vultisig.wallet.data.common.processZip
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -110,6 +112,8 @@ internal class ImportFileViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 saveToDb(fileContent, null)
+            } catch (_: SerializationException) {
+                snackBarChannel.send(UiText.StringResource(R.string.import_file_not_supported))
             } catch (e: Exception) {
                 Timber.e(e)
                 uiModel.update {
@@ -186,9 +190,11 @@ internal class ImportFileViewModel @Inject constructor(
         viewModelScope.launch {
             if (uri == null)
                 return@launch
-            val fileName = uri.fileName(context)
-            val ext = File(fileName).extension
-            if (!FILE_ALLOWED_EXTENSIONS.contains(ext) && !ext.equals("zip", ignoreCase = true)) {
+            val fileName = uri.fileName(context = context)
+            val file = File(fileName)
+            val ext = file.extension
+            val isZipFile = uri.isValidZipFile(context = context)
+            if (!FILE_ALLOWED_EXTENSIONS.contains(ext) && !isZipFile) {
                 uiModel.update {
                     it.copy(
                         fileUri = null,
@@ -198,7 +204,7 @@ internal class ImportFileViewModel @Inject constructor(
                         error = UiText.StringResource(R.string.import_file_not_supported)
                     )
                 }
-            } else if (ext.equals("zip", ignoreCase = true)) {
+            } else if (isZipFile) {
                 val zipOutput = uri.processZip(context = context)
                 uiModel.update {
                     it.copy(

@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
@@ -229,7 +230,13 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = withContext(Di
                     val ext = File(entryName).extension.lowercase()
                     if (FILE_ALLOWED_EXTENSIONS.contains(ext)) {
                         try {
-                            val fileContent = zipInputStream.readBytes().toString(Charsets.UTF_8)
+                            val buffer = ByteArrayOutputStream()
+                            val data = ByteArray(8192)
+                            var count: Int
+                            while (zipInputStream.read(data).also { count = it } != -1) {
+                                buffer.write(data, 0, count)
+                            }
+                            val fileContent = buffer.toString(Charsets.UTF_8.name())
                             coroutineContext.ensureActive()
                             entries.add(AppZipEntry(entryName, fileContent))
                         } catch (e: Exception) {
@@ -242,6 +249,20 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = withContext(Di
                 zipEntry = zipInputStream.nextEntry
             }
         }
+    } ?: run {
+        Timber.w("Failed to open input stream for URI: $this")
     }
     return@withContext entries
 }
+
+
+fun Uri.isValidZipFile(context: Context) = try {
+    context.contentResolver.openInputStream(this)?.use { inputStream ->
+        ZipInputStream(inputStream).use { zipStream ->
+            zipStream.nextEntry != null
+        }
+    } ?: false
+} catch (_: Exception) {
+    false
+}
+
