@@ -84,6 +84,8 @@ interface ThorChainApi {
 
     suspend fun getPools(): List<ThorChainPoolJson>
 
+    suspend fun getConstants(): ThorchainConstantsResponse
+
     // Referral feature
     suspend fun existsReferralCode(code: String): Boolean
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
@@ -320,6 +322,13 @@ internal class ThorChainApiImpl @Inject constructor(
                 header(xClientID, xClientIDValue)
             }.throwIfUnsuccessful()
             .body()
+
+    override suspend fun getConstants(): ThorchainConstantsResponse {
+        val response = httpClient.get("$THORNODE_BASE/thorchain/constants") {
+            header(xClientID, xClientIDValue)
+        }
+        return response.bodyOrThrow<ThorchainConstantsResponse>()
+    }
 
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
@@ -902,5 +911,22 @@ data class TcyStakersResponse(
     data class TcyStaker(
         val address: String,
         val amount: String
+    )
+}
+
+
+data class ThorchainConstantsResponse(
+    @SerialName("int_64_values")
+    val int64Values: Int64Values
+) {
+    data class Int64Values(
+        @SerialName("MinRuneForTCYStakeDistribution")
+        val minRuneForTCYStakeDistribution: Long? = null,
+
+        @SerialName("MinTCYForTCYStakeDistribution")
+        val minTcyForTCYStakeDistribution: Long? = null,
+
+        @SerialName("TCYStakeSystemIncomeBps")
+        val tcyStakeSystemIncomeBps: Long? = null
     )
 }
