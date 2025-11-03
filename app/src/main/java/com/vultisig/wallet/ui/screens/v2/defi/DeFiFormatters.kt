@@ -30,6 +30,6 @@ internal fun BigInteger.formatAmount(coinType: CoinType): String {
     return "${rounded.toPlainString()} ${coinType.symbol}"
 }
 
-internal fun Double.formatApy(): String {
+internal fun Double.formatPercetange(): String {
     return "%.2f%%".format(Locale.US, this * 100)
 }

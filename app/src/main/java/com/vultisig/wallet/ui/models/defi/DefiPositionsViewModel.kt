@@ -21,7 +21,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
-import com.vultisig.wallet.ui.screens.v2.defi.formatApy
+import com.vultisig.wallet.ui.screens.v2.defi.formatPercetange
 import com.vultisig.wallet.ui.screens.v2.defi.formatChurnDate
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
@@ -37,7 +37,6 @@ import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.Locale
 import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
@@ -125,7 +124,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                     return@launch
                 }
 
-
                 val activeNodes = withContext(Dispatchers.IO) {
                     val address = runeCoin.address
                     bondUseCase.getActiveNodes(address)
@@ -161,7 +159,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         return BondedNodeUiModel(
             address = node.address.formatAddress(),
             status = node.state.fromApiStatus(),
-            apy = apy.formatApy(),
+            apy = apy.formatPercetange(),
             bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
             nextAward = formatRuneReward(nextReward),
             nextChurn = nextChurn.formatChurnDate(),
@@ -210,7 +208,6 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private fun loadStakingPositions() {
         viewModelScope.launch {
-            // Show dummy RUJI position immediately while loading
             state.update {
                 it.copy(
                     staking = StakingTabUiModel(
@@ -234,21 +231,19 @@ internal class DefiPositionsViewModel @Inject constructor(
                     return@launch
                 }
 
-                val positions = mutableListOf<StakePositionUiModel>()
                 val address = runeCoin.address
                 
-                try {
+                val positions = try {
                     val rujiDetails = withContext(Dispatchers.IO) {
                         rujiStakingService.getStakingDetails(address)
                     }
-
-                    val rujiPosition = createRujiStakePosition(rujiDetails)
-                    positions.add(rujiPosition)
-
+                    listOf(createRujiStakePosition(rujiDetails))
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load RUJI staking details")
+                    emptyList<StakePositionUiModel>()
                 }
-                
+
+                // TODO: Review total price
                 val totalStakingValue = calculateTotalStakingValue(positions)
                 
                 state.update {
@@ -257,11 +252,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                             isLoading = false,
                             positions = positions
                         ),
-                        totalAmountPrice = if (it.selectedTab == DefiTab.STAKING.displayName) {
-                            totalStakingValue
-                        } else {
-                            it.totalAmountPrice
-                        }
                     )
                 }
             } catch (t: Throwable) {
@@ -279,17 +269,17 @@ internal class DefiPositionsViewModel @Inject constructor(
         details: StakingDetails
     ): StakePositionUiModel {
         val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-        val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} RUJI"
+        val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} $RUJI_SYMBOL"
         
         val rewards = details.rewards?.let { rewardAmount ->
             val rewardValue = rewardAmount.setScale(2, RoundingMode.HALF_UP)
-            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: "USDC"}"
+            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
         }
         
         return StakePositionUiModel(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = formattedAmount,
-            apy = formatApr(details.apr ?: 0.0),
+            apy = (details.apr ?: 0.0).formatPercetange(),
             canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
             canStake = true,
             canUnstake = details.stakeAmount > BigInteger.ZERO,
@@ -297,10 +287,6 @@ internal class DefiPositionsViewModel @Inject constructor(
             nextReward = null,
             nextPayout = null
         )
-    }
-    
-    private fun formatApr(apr: Double): String {
-        return "%.2f%%".format(Locale.US, apr * 100)
     }
     
     private suspend fun calculateTotalStakingValue(positions: List<StakePositionUiModel>): String {
@@ -314,7 +300,6 @@ internal class DefiPositionsViewModel @Inject constructor(
             currentState.copy(selectedTab = tab)
         }
 
-        // Only load data if it hasn't been loaded yet
         if (!loadedTabs.contains(tab)) {
             when (tab) {
                 DefiTab.STAKING.displayName -> {
@@ -348,6 +333,11 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
     
     companion object {
+
+        // Ruji Constants
+        private const val RUJI_SYMBOL = "RUJI"
+        private const val RUJI_REWARDS_SYMBOL = "USDC"
+
         private fun createLoadingRujiPosition() = StakePositionUiModel(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = "0 RUJI",
