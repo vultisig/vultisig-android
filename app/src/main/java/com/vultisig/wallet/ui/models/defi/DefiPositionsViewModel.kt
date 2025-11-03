@@ -210,9 +210,13 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private fun loadStakingPositions() {
         viewModelScope.launch {
+            // Show dummy RUJI position immediately while loading
             state.update {
                 it.copy(
-                    staking = it.staking.copy(isLoading = true)
+                    staking = StakingTabUiModel(
+                        isLoading = true,
+                        positions = listOf(createLoadingRujiPosition())
+                    )
                 )
             }
 
@@ -233,7 +237,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                 val positions = mutableListOf<StakePositionUiModel>()
                 val address = runeCoin.address
                 
-                // Load RUJI staking details
                 try {
                     val rujiDetails = withContext(Dispatchers.IO) {
                         rujiStakingService.getStakingDetails(address)
@@ -342,5 +345,19 @@ internal class DefiPositionsViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
+    }
+    
+    companion object {
+        private fun createLoadingRujiPosition() = StakePositionUiModel(
+            stakeAssetHeader = "Staked RUJI",
+            stakeAmount = "0 RUJI",
+            apy = "0%",
+            canWithdraw = false,
+            canStake = true,
+            canUnstake = false,
+            rewards = null,
+            nextReward = null,
+            nextPayout = null
+        )
     }
 }

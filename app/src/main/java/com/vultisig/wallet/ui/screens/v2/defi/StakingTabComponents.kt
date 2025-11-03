@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +29,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.StakePositionUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -41,6 +44,7 @@ internal fun StakingTabContent(
     state.positions.forEach { stakingPosition ->
         StakingWidget(
             state = stakingPosition,
+            isLoading = state.isLoading,
             onClickStake = {},
             onClickUnstake = {},
             onClickWithdraw = {}
@@ -51,6 +55,7 @@ internal fun StakingTabContent(
 @Composable
 internal fun StakingWidget(
     state: StakePositionUiModel,
+    isLoading: Boolean = false,
     onClickStake: () -> Unit,
     onClickUnstake: () -> Unit,
     onClickWithdraw: () -> Unit,
@@ -67,11 +72,39 @@ internal fun StakingWidget(
             )
             .padding(16.dp)
     ) {
-        StakingHeader(
-            title = state.stakeAssetHeader,
-            amount = state.stakeAmount,
-            icon = getHeaderIcon(state.stakeAmount),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = getHeaderIcon(state.stakeAmount)),
+                contentDescription = null,
+                modifier = Modifier.size(46.dp)
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = state.stakeAssetHeader,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(28.dp)
+                    )
+                } else {
+                    Text(
+                        text = state.stakeAmount,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.colors.text.primary,
+                    )
+                }
+            }
+        }
 
         UiSpacer(16.dp)
 
@@ -79,9 +112,31 @@ internal fun StakingWidget(
 
         UiSpacer(16.dp)
 
-        ApyInfoItem(
-            apy = state.apy
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            InfoItem(
+                icon = R.drawable.ic_icon_percentage,
+                label = stringResource(R.string.apy),
+                value = null,
+            )
+
+            UiSpacer(1f)
+
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(20.dp)
+                )
+            } else {
+                Text(
+                    text = state.apy,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.alerts.success,
+                )
+            }
+        }
 
         if (state.nextPayout != null || state.nextReward != null) {
             UiSpacer(16.dp)
@@ -256,6 +311,33 @@ private fun StakingWidgetFullActionsPreview() {
                 nextReward = "5 RUJI",
                 nextPayout = "Jan 15, 2025"
             ),
+            onClickStake = {},
+            onClickUnstake = {},
+            onClickWithdraw = {}
+        )
+    }
+}
+@Preview(showBackground = true, name = "Staking Widget - Loading State")
+@Composable
+private fun StakingWidgetLoadingPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        StakingWidget(
+            state = StakePositionUiModel(
+                stakeAssetHeader = "Staked RUJI",
+                stakeAmount = "0 RUJI",
+                apy = "0%",
+                canWithdraw = false,
+                canStake = false,
+                canUnstake = false,
+                rewards = null,
+                nextReward = null,
+                nextPayout = null
+            ),
+            isLoading = true,
             onClickStake = {},
             onClickUnstake = {},
             onClickWithdraw = {}
