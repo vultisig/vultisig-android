@@ -586,7 +586,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse {
-        return httpClient.get("$THORNODE_BASE/thorchain/tcy_user_distributions/$address") {
+        return httpClient.get("$MIDGARD_URL/tcy/distribution/$address") {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<TcyUserDistributionsResponse>()
     }
