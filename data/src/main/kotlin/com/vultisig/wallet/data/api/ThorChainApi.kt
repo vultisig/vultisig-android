@@ -80,17 +80,20 @@ interface ThorChainApi {
 
     suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
     suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
+    suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
 
     suspend fun getPools(): List<ThorChainPoolJson>
 
-    suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
-    suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
+    // Referral feature
     suspend fun existsReferralCode(code: String): Boolean
     suspend fun getReferralCodeInfo(code: String): ThorOwnerData
     suspend fun getReferralCodesByAddress(address: String): List<String>
     suspend fun getLastBlock(): Long
-    suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
     suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson
+
+    // Ruji Merge & Stake
+    suspend fun getRujiMergeBalances(address: String): List<MergeAccount>
+    suspend fun getRujiStakeBalance(address: String): RujiStakeBalances
 
     // Bonded nodes API
     suspend fun getBondedNodes(address: String): BondedNodesResponse
@@ -106,6 +109,7 @@ interface ThorChainApi {
     suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse
     suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution>
     suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse
+    suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -575,6 +579,12 @@ internal class ThorChainApiImpl @Inject constructor(
         return httpClient.get("$THORNODE_BASE/thorchain/tcy_user_distributions/$address") {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<TcyUserDistributionsResponse>()
+    }
+
+    override suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse {
+        return httpClient.get("$THORNODE_BASE/thorchain/balance/module/tcy_stake") {
+            header(xClientID, xClientIDValue)
+        }.bodyOrThrow<TcyModuleBalanceResponse>()
     }
 
     companion object {
