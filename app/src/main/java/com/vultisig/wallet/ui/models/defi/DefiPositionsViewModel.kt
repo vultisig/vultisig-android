@@ -235,6 +235,12 @@ internal class DefiPositionsViewModel @Inject constructor(
         // TODO: Implement new navigation screen
     }
 
+    fun onTabSelected(tab: String) {
+        state.update { currentState ->
+            currentState.copy(selectedTab = tab)
+        }
+    }
+
     fun onBackClick() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)

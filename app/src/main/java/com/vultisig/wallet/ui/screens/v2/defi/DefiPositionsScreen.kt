@@ -17,9 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +55,7 @@ internal fun DefiPositionsScreen(
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
+        onTabSelected = model::onTabSelected,
     )
 }
 
@@ -68,9 +66,9 @@ internal fun DefiPositionScreenContent(
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
+    onTabSelected: (String) -> Unit = {},
 ) {
     val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
-    var selectedTab by remember { mutableStateOf(tabs.first()) }
 
     V2Scaffold(
         onBackClick = onBackClick,
@@ -88,9 +86,9 @@ internal fun DefiPositionScreenContent(
             )
 
             VsTabs(
-                tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
-                onTabSelected = { selectedTab = it },
-                selectedTab = selectedTab,
+                tabs = tabs,
+                onTabSelected = onTabSelected,
+                selectedTab = state.selectedTab,
                 content = {
                     V2Container(
                         type = ContainerType.SECONDARY,
@@ -108,7 +106,7 @@ internal fun DefiPositionScreenContent(
                 }
             )
 
-            when (selectedTab) {
+            when (state.selectedTab) {
                 BONDED_TAB -> {
                     BondedTabContent(
                         bondToNodeOnClick = onClickBondToNode,
@@ -224,7 +222,8 @@ private fun DefiPositionsScreenPreviewEmpty() {
         state = DefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
-        onClickBondToNode = {}
+        onClickBondToNode = {},
+        onTabSelected = {}
     )
 }
 
@@ -271,7 +270,8 @@ private fun DefiPositionsScreenPreviewWithData() {
         ),
         onClickBond = {},
         onClickUnbond = {},
-        onClickBondToNode = {}
+        onClickBondToNode = {},
+        onTabSelected = {}
     )
 }
 
@@ -287,7 +287,8 @@ private fun DefiPositionsScreenPreviewLoading() {
         ),
         onClickBond = {},
         onClickUnbond = {},
-        onClickBondToNode = {}
+        onClickBondToNode = {},
+        onTabSelected = {}
     )
 }
 
