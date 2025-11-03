@@ -33,12 +33,13 @@ class TCYStakingService @Inject constructor(
 
         // Cache duration for constants (1 hour)
         private const val CONSTANTS_CACHE_DURATION_MS = 3600_000L
+        private const val CONSTANT_CACHE_KEY = "constants-key"
     }
 
     private data class TcyConstants(
         val minRuneForDistribution: BigDecimal,
         val minTcyForDistribution: BigDecimal,
-        val systemIncomeBps: Int
+        val systemIncomeBps: Long,
     )
 
     private val constantsCache = SimpleCache<String, TcyConstants>(
@@ -229,60 +230,63 @@ class TCYStakingService @Inject constructor(
     ): BigDecimal {
         val constants = fetchThorchainConstants()
 
-        // Calculate actual distribution amount based on MinRuneForTCYStakeDistribution
         val rawMultiplier = totalEstimatedRune.divide(
             constants.minRuneForDistribution,
             2,
             RoundingMode.DOWN
         )
 
+        // Calculate distribution amount
         val distributionMultiplier = BigDecimal(floor(rawMultiplier.toDouble()))
         val actualDistributionAmount =
             distributionMultiplier.multiply(constants.minRuneForDistribution)
-
         if (actualDistributionAmount <= BigDecimal.ZERO) {
             return BigDecimal.ZERO
         }
 
         // Get total staked TCY
         val totalStakedTcy = fetchTotalStakedTcy()
-
         if (totalStakedTcy == BigDecimal.ZERO) {
             return BigDecimal.ZERO
         }
 
-        // Calculate user's share
-        val stakedDecimal = amountToDecimal(stakedAmount, TCY_DECIMALS)
-        val userShare = stakedDecimal.divide(totalStakedTcy, 8, RoundingMode.HALF_UP)
+        val userShare = stakedAmount.divide(totalStakedTcy, 8, RoundingMode.HALF_UP)
 
-        // Calculate user's estimated reward
         return actualDistributionAmount.multiply(userShare)
     }
 
-    private suspend fun fetchThorchainConstants() {
+    private suspend fun fetchThorchainConstants(): TcyConstants {
         val data = thorChainApi.getConstants()
 
-        val minRune = data.int64Values.MinRuneForTCYStakeDistribution.toBigDecimal()
-        val minRuneDecimal = minRune.divide(10.0.toBigDecimal().pow(8))
+        val cacheConstats = constantsCache.get(CONSTANT_CACHE_KEY)
 
-        val minTcy = (data.int64Values.MinTCYForTCYStakeDistribution ?: 0L).toBigDecimal()
+        if (cacheConstats != null) {
+            return cacheConstats
+        }
+
+        val minRune =
+            data.int64Values.minRuneForTCYStakeDistribution?.toBigDecimal() ?: BigDecimal.ZERO
+        val minRuneDecimal =
+            minRune.divide(10.0.toBigDecimal().pow(8))
+
+        val minTcy =
+            data.int64Values.minTcyForTCYStakeDistribution?.toBigDecimal() ?: BigDecimal.ZERO
         val minTcyDecimal = minTcy.divide(10.0.toBigDecimal().pow(8))
 
-        val bps = data.int64Values.TCYStakeSystemIncomeBps?.toInt() ?: 0
+        val bps = data.int64Values.tcyStakeSystemIncomeBps ?: 0L
 
-        val constants = TcyConstants(
+        val constants =  TcyConstants(
             minRuneForDistribution = minRuneDecimal,
             minTcyForDistribution = minTcyDecimal,
             systemIncomeBps = bps
         )
 
-        return constants
+        constantsCache.put(CONSTANT_CACHE_KEY, constants)
 
+        return constants
     }
 
     private suspend fun fetchTotalStakedTcy(): BigDecimal {
         return BigDecimal.ONE
     }
-
-
 }
