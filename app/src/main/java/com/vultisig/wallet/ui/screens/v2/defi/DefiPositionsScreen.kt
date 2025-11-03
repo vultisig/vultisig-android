@@ -40,8 +40,11 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
@@ -176,12 +179,7 @@ private fun BalanceBanner(
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.referral_data_banner),
-            contentDescription = "Provider Logo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        SetBackgoundBanner(R.drawable.referral_data_banner)
 
         Column(
             modifier = Modifier
@@ -224,7 +222,21 @@ private fun BalanceBanner(
 private fun DefiPositionsScreenPreview() {
     DefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(),
+        state = DefiPositionsUiModel(
+            bonded = BondedTabUiModel(
+                totalBondedAmount = "1000 RUNE",
+                nodes = listOf<BondedNodeUiModel>(
+                    BondedNodeUiModel(
+                        address = "thor1xxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+                        bondedAmount = "500 RUNE",
+                        status = BondNodeState.WHITELISTED,
+                        apy = "12.5%",
+                        nextAward = "25 RUNE",
+                        nextChurn = "in 2 days",
+                    )
+                ),
+            )
+        ),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {}
