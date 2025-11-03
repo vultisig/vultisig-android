@@ -340,10 +340,37 @@ class MediatorServiceDiscoveryListener(
         Timber.d("Service found: %s", service.serviceName)
         if (service.serviceName == serviceName) {
             Timber.d("Service found: %s", service.serviceName)
-            nsdManager.resolveService(
-                service,
-                MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
-            )
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                nsdManager.registerServiceInfoCallback(
+                    service,
+                    { it.run() },
+                    object : NsdManager.ServiceInfoCallback {
+                        override fun onServiceInfoCallbackRegistrationFailed(errorCode: Int) {
+                            Timber.d("Failed to resolve service: ${service.serviceName}, error: $errorCode")
+                        }
+
+                        override fun onServiceUpdated(serviceInfo: NsdServiceInfo) {
+                            onServiceResolved(serviceInfo)
+                            nsdManager.unregisterServiceInfoCallback(this)
+                        }
+
+                        override fun onServiceLost() {
+                            Timber.d("Service lost during resolution: ${service.serviceName}")
+                        }
+
+                        override fun onServiceInfoCallbackUnregistered() {
+                            // Cleanup if needed
+                        }
+                    }
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                nsdManager.resolveService(
+                    service,
+                    MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
+                )
+            }
         }
     }
 
@@ -370,15 +397,21 @@ class MediatorServiceDiscoveryListener(
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
         Timber.d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
 
-        serviceInfo?.let { it ->
-            val address = it.host
-            if (address !is Inet4Address) {
-                return
-            }
-            if (address.isLoopbackAddress) {
-                return
-            }
-            address.hostAddress?.let {
+        serviceInfo?.let { info ->
+            val address =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    val addresses = info.hostAddresses
+                    addresses.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val address = info.host
+                    if (address !is Inet4Address || address.isLoopbackAddress) {
+                        null
+                    } else {
+                        address
+                    }
+                }
+            address?.hostAddress?.let {
                 onServerAddressDiscovered("http://${it}:${serviceInfo.port}")
             }
         }
