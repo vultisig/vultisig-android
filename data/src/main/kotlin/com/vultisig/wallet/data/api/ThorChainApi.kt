@@ -868,8 +868,8 @@ data class TcyUserDistributionsResponse(
 ) {
     @Serializable
     data class TcyUserDistribution(
-        val date: String,   // Timestamp
-        val amount: String  // RUNE amount in satoshis
+        val date: String,
+        val amount: String
     )
 }
 

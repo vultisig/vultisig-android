@@ -2,19 +2,17 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import com.vultisig.wallet.data.utils.toValue
+import kotlinx.coroutines.supervisorScope
+import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.Date
 import javax.inject.Inject
-import kotlin.math.ceil
-import kotlin.math.floor
 import kotlin.math.pow
 
 class TCYStakingService @Inject constructor(
@@ -23,7 +21,6 @@ class TCYStakingService @Inject constructor(
 ) {
     companion object {
         private const val TCY_DECIMALS = 8
-        private const val RUNE_DECIMALS = 8
         private const val BLOCKS_PER_DAY = 14_400L
         private const val SECONDS_PER_BLOCK = 6.0
         private const val DAYS_IN_YEAR = 365
@@ -45,10 +42,16 @@ class TCYStakingService @Inject constructor(
         address: String,
         tcyCoin: Coin,
         runeCoin: Coin
-    ): StakingDetails = coroutineScope {
+    ): StakingDetails = supervisorScope {
         // 1. Fetch staked amount
         val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
         val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
+
+        // 2. Calculate APR
+        val apyDeferred = calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount)
+        val apr = convertAPYtoAPR(apyDeferred)
+
         error("")
 
         /*if (stakedAmount == BigInteger.ZERO) {
@@ -62,7 +65,7 @@ class TCYStakingService @Inject constructor(
             )
         } */
         
-        // 2. Fetch data in parallel
+       // 2. Fetch data in parallel
        // val apyDeferred = async { calculateTcyAPY(tcyCoin, runeCoin, address, stakedAmount) }
        // val nextPayoutDeferred = async { calculateNextPayout() }
        // val estimatedRewardDeferred = async { calculateEstimatedReward(stakedAmount) }
@@ -94,67 +97,54 @@ class TCYStakingService @Inject constructor(
             rewardsCoin = rewardsCoin
         ) */
     }
-    
-    private fun amountToDecimal(amount: BigInteger, decimals: Int): BigDecimal {
-        return amount.toBigDecimal().divide(
-            BigDecimal.TEN.pow(decimals),
-            decimals,
-            RoundingMode.HALF_UP
-        )
-    }
-    
-    /*private suspend fun calculateTcyAPY(
+
+    private suspend fun calculateTcyAPY(
         tcyCoin: Coin,
         runeCoin: Coin,
         address: String,
         stakedAmount: BigInteger
     ): Double {
         // Get prices
-        val tcyPrice = tokenPriceRepository.getTokenPrice(tcyCoin.priceProviderID)?.price ?: 0.0
+        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.priceProviderID)?.price ?: 0.0
         val runePrice = tokenPriceRepository.getTokenPrice(runeCoin.priceProviderID)?.price ?: 0.0
-        
+
         if (tcyPrice <= 0 || runePrice <= 0 || stakedAmount == BigInteger.ZERO) {
             return 0.0
         }
-        
+
         // Get user distributions
         val distributionData = thorChainApi.fetchTcyUserDistributions(address)
         val distributions = distributionData.distributions
-        
+
         if (distributions.isEmpty()) {
             return 0.0
         }
-        
+
         // Calculate total RUNE received
         val totalRuneSatoshis = distributions.sumOf { dist ->
-            try {
-                BigInteger(dist.amount)
-            } catch (e: Exception) {
-                BigInteger.ZERO
-            }
+            dist.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
         }
-        
-        val totalRune = amountToDecimal(totalRuneSatoshis, RUNE_DECIMALS)
-        
+        val totalRune = CoinType.THORCHAIN.toValue(totalRuneSatoshis)
+
         // Calculate average daily RUNE
-        val days = distributions.size
-        val avgDailyRune = totalRune.divide(BigDecimal(days), 8, RoundingMode.HALF_UP)
-        
+        val days = distributions.size.toBigDecimal()
+        val avgDailyRune = totalRune.divide(days, 8, RoundingMode.HALF_UP)
+
         // Annualize
         val annualRune = avgDailyRune.multiply(BigDecimal(DAYS_IN_YEAR))
         val annualUSD = annualRune.multiply(BigDecimal(runePrice))
-        
-        // Calculate staked value in USD
-        val stakedDecimal = amountToDecimal(stakedAmount, TCY_DECIMALS)
-        val stakedValueUSD = stakedDecimal.multiply(BigDecimal(tcyPrice))
-        
+
+        // Calculate staked value in Currency
+        val stakedDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
+        val stakedValueUSD = stakedDecimal.multiply(tcyPrice.toBigDecimal())
+
         // Calculate APY
         return if (stakedValueUSD > BigDecimal.ZERO) {
             (annualUSD.divide(stakedValueUSD, 4, RoundingMode.HALF_UP).toDouble() * 100)
         } else {
             0.0
         }
-    } */
+    }
     
     private fun convertAPYtoAPR(apy: Double): Double {
         if (apy <= 0) return 0.0
