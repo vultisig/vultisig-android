@@ -825,7 +825,7 @@
     <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
     <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, this  will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
-    <string name="backup_password_request_caution_cannot_reset_desc">Remember: if you forget your vault password, it cannot be reset or recovered.</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Remember: If you forget your vault password, it cannot be reset or recovered.</string>
     <string name="backup_password_request_highlight_cannot">cannot</string>
     <string name="backup_password_request_caution_secure_without_desc">By default, your backup is secure without an extra password, since you store Vault shares in different locations.</string>
     <string name="backup_password_request_highlight_secure_without">secure without</string>
