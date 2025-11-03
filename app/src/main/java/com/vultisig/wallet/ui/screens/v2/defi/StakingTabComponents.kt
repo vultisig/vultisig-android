@@ -45,9 +45,9 @@ internal fun StakingTabContent(
         StakingWidget(
             state = stakingPosition,
             isLoading = state.isLoading,
-            onClickStake = {},
-            onClickUnstake = {},
-            onClickWithdraw = {}
+            onClickStake = onClickStake,
+            onClickUnstake = onClickUnstake,
+            onClickWithdraw = onClickWithdraw,
         )
     }
 }
