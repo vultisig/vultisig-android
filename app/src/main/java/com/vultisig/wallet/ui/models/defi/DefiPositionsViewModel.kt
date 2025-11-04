@@ -22,7 +22,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercetange
-import com.vultisig.wallet.ui.screens.v2.defi.formatRuneReward
+import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.supportDeFiCoins
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
@@ -129,7 +129,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 val activeNodes = withContext(Dispatchers.IO) {
                     val address = runeCoin.address
-                    bondUseCase.getActiveNodes(address)
+                    bondUseCase.getActiveNodes("thor1fkwmkl96zpl93a547arcc8e00n5zh7eegdq5tv")
                 }
 
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
@@ -298,7 +298,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 canStake = true,
                 canUnstake = true,
                 rewards = null,
-                nextReward = result.estimatedRewards?.toDouble()?.formatRuneReward(),
+                nextReward = result.estimatedRewards?.toDouble()?.formatToString(),
                 nextPayout = result.nextPayoutDate?.formatDate()
             )
         } catch (e: Exception) {

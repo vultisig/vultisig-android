@@ -43,3 +43,8 @@ internal fun Double.formatRuneReward(): String {
         Chain.ThorChain.coinType.toValue(rewardBase).setScale(2, RoundingMode.HALF_UP)
     return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
 }
+
+internal fun Double.formatToString(): String {
+    val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.HALF_UP)
+    return "${value.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
+}
