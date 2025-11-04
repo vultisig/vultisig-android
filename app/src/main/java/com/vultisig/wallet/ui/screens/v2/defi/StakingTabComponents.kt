@@ -106,30 +106,26 @@ internal fun StakingWidget(
             }
         }
 
-        UiSpacer(16.dp)
+        if (state.apy != null || (state.nextReward != null || state.nextPayout != null)) {
+            UiSpacer(16.dp)
 
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+            UiHorizontalDivider(color = Theme.v2.colors.border.light)
 
-        UiSpacer(16.dp)
+            UiSpacer(16.dp)
+        }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            InfoItem(
-                icon = R.drawable.ic_icon_percentage,
-                label = stringResource(R.string.apy),
-                value = null,
-            )
-
-            UiSpacer(1f)
-
-            if (isLoading) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(20.dp)
+        if (state.apy != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                InfoItem(
+                    icon = R.drawable.ic_icon_percentage,
+                    label = stringResource(R.string.apy),
+                    value = null,
                 )
-            } else {
+
+                UiSpacer(1f)
+
                 Text(
                     text = state.apy,
                     style = Theme.brockmann.body.m.medium,

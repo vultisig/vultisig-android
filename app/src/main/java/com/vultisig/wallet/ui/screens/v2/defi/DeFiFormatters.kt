@@ -1,8 +1,11 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import wallet.core.jni.CoinType
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
@@ -32,4 +35,11 @@ internal fun BigInteger.formatAmount(coinType: CoinType): String {
 
 internal fun Double.formatPercetange(): String {
     return "%.2f%%".format(Locale.US, this * 100)
+}
+
+internal fun Double.formatRuneReward(): String {
+    val rewardBase = BigDecimal.valueOf(this).setScale(0, RoundingMode.HALF_UP).toBigInteger()
+    val runeAmount =
+        Chain.ThorChain.coinType.toValue(rewardBase).setScale(2, RoundingMode.HALF_UP)
+    return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
 }

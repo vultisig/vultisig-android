@@ -19,13 +19,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
-import com.vultisig.wallet.ui.screens.v2.defi.formatAddress
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercetange
-import com.vultisig.wallet.ui.screens.v2.defi.formatChurnDate
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
-import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import com.vultisig.wallet.ui.screens.v2.defi.supportDeFiCoins
+import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -63,7 +61,7 @@ internal data class StakingTabUiModel(
 internal data class StakePositionUiModel(
     val stakeAssetHeader: String,
     val stakeAmount: String,
-    val apy: String,
+    val apy: String?,
     val canWithdraw: Boolean = false,
     val canStake: Boolean = true,
     val canUnstake: Boolean = false,
@@ -158,17 +156,6 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    private fun ActiveBondedNode.toUiModel(): BondedNodeUiModel {
-        return BondedNodeUiModel(
-            address = node.address.formatAddress(),
-            status = node.state.fromApiStatus(),
-            apy = apy.formatPercetange(),
-            bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
-            nextAward = formatRuneReward(nextReward),
-            nextChurn = nextChurn.formatChurnDate(),
-        )
-    }
-
     private fun calculateTotalBonded(nodes: List<ActiveBondedNode>): String {
         val total = nodes.fold(BigInteger.ZERO) { acc, node ->
             acc + node.amount
@@ -203,20 +190,13 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    private fun formatRuneReward(reward: Double): String {
-        val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.HALF_UP).toBigInteger()
-        val runeAmount =
-            Chain.ThorChain.coinType.toValue(rewardBase).setScale(2, RoundingMode.HALF_UP)
-        return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
-    }
-
     private fun loadStakingPositions() {
         viewModelScope.launch {
             state.update {
                 it.copy(
                     staking = StakingTabUiModel(
                         isLoading = true,
-                        positions = listOf(createLoadingRujiPosition())
+                        positions = listOf(createLoadingRujiPosition(), createTCYLoadingPosition())
                     )
                 )
             }
@@ -286,7 +266,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         return StakePositionUiModel(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = formattedAmount,
-            apy = (details.apr ?: 0.0).formatPercetange(),
+            apy = details.apr?.formatPercetange(),
             canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
             canStake = true,
             canUnstake = details.stakeAmount > BigInteger.ZERO,
@@ -303,7 +283,6 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun createGenericStakePosition(coin: Coin, address: String): StakePositionUiModel? {
-
         return null
     }
 
@@ -353,7 +332,19 @@ internal class DefiPositionsViewModel @Inject constructor(
         private fun createLoadingRujiPosition() = StakePositionUiModel(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = "0 RUJI",
-            apy = "0%",
+            apy = null, // Does not support APY for now
+            canWithdraw = false,
+            canStake = true,
+            canUnstake = false,
+            rewards = null,
+            nextReward = null,
+            nextPayout = null
+        )
+
+        private fun createTCYLoadingPosition() = StakePositionUiModel(
+            stakeAssetHeader = "Staked TCY",
+            stakeAmount = "0 TCY",
+            apy = null,
             canWithdraw = false,
             canStake = true,
             canUnstake = false,

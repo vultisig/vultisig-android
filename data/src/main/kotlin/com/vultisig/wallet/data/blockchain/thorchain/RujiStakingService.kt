@@ -24,9 +24,17 @@ class RujiStakingService @Inject constructor(
             isNativeToken = false
         )
 
+        // Distribution did not happened yet, API returns 0%
+        // Hence we'll hide APR while it is 0
+        val apr = if (rujiStakeInfo.apr == 0.0) {
+            null
+        } else {
+            rujiStakeInfo.apr
+        }
+
         return StakingDetails(
             stakeAmount = rujiStakeInfo.stakeAmount,
-            apr = rujiStakeInfo.apr,
+            apr = apr,
             estimatedRewards = null, // Not available for Ruji
             nextPayoutDate = null, // Not available for Ruji
             rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
