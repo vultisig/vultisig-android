@@ -22,7 +22,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
-import com.vultisig.wallet.ui.screens.v2.defi.formatPercetange
+import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.supportDeFiCoins
@@ -273,7 +273,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         return StakePositionUiModel(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = formattedAmount,
-            apy = details.apr?.formatPercetange(),
+            apy = details.apr?.formatPercentage(),
             canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
             canStake = true,
             canUnstake = details.stakeAmount > BigInteger.ZERO,
@@ -298,7 +298,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             StakePositionUiModel(
                 stakeAssetHeader = "Staked TCY",
                 stakeAmount = formattedAmount,
-                apy = result.apr?.formatPercetange(),
+                apy = result.apr?.formatPercentage(),
                 canWithdraw = false, // TCY auto-distributes rewards
                 canStake = true,
                 canUnstake = true,

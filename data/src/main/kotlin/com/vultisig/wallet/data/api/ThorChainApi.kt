@@ -573,9 +573,18 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
-        return httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
-            header(xClientID, xClientIDValue)
-        }.bodyOrThrow<TcyStakeResponse>()
+        return try {
+            val response = httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
+                header(xClientID, xClientIDValue)
+            }
+            if (response.status.isSuccess()) {
+                response.body<TcyStakeResponse>()
+            } else {
+                TcyStakeResponse(amount = "0", address = address)
+            }
+        } catch (_: Exception) {
+            TcyStakeResponse(amount = "0", address = address)
+        }
     }
 
     override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {

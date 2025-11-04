@@ -351,7 +351,7 @@
     <string name="eth_gas_settings_priority_title">Prioritet</string>
     <string name="eth_gas_setting_total_fee_title">Ukupna naknada (Gwei)</string>
     <string name="vault_details_screen_vault_part">Trezorski dio</string>
-    <string name="vault_details_screen_vault_type">Vrsta trezoraا</string>
+    <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
@@ -414,7 +414,7 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_withdraw_ruji">Verzamel RUJI-stakingbeloning</string>
+    <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
     <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>

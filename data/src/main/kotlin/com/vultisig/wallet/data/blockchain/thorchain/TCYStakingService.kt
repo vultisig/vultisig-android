@@ -68,7 +68,7 @@ class TCYStakingService @Inject constructor(
         )
 
         if (stakedAmount == BigInteger.ZERO) {
-            StakingDetails(
+            return@supervisorScope StakingDetails(
                 stakeAmount = stakedAmount,
                 apr = null,
                 estimatedRewards = null,

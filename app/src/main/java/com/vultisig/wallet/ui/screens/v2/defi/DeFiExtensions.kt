@@ -22,7 +22,7 @@ internal fun ActiveBondedNode.toUiModel(): BondedNodeUiModel {
     return BondedNodeUiModel(
         address = node.address.formatAddress(),
         status = node.state.fromApiStatus(),
-        apy = apy.formatPercetange(),
+        apy = apy.formatPercentage(),
         bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
         nextAward = nextReward.formatRuneReward(),
         nextChurn = nextChurn.formatDate(),

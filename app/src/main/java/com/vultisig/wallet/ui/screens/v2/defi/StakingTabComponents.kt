@@ -184,7 +184,7 @@ internal fun StakingWidget(
 
         if (state.canWithdraw) {
             VsButton(
-                label = stringResource(R.string.withdraw_amount, "300.45 USDC"),
+                label = stringResource(R.string.withdraw_amount, state.rewards.orEmpty()),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClickWithdraw,
                 state = VsButtonState.Enabled,

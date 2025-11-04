@@ -33,7 +33,7 @@ internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null)
     return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
 }
 
-internal fun Double.formatPercetange(): String {
+internal fun Double.formatPercentage(): String {
     return "%.2f%%".format(Locale.US, this * 100)
 }
 
