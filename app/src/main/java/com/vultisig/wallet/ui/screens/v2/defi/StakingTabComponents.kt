@@ -198,7 +198,9 @@ internal fun StakingWidget(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ActionButton(
-                title = "Unstake",
+                title = stringResource(
+                    if (!state.supportsMint) R.string.defi_action_unstake else R.string.defi_action_redeem
+                ),
                 icon = R.drawable.ic_circle_minus,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
@@ -210,7 +212,9 @@ internal fun StakingWidget(
             )
 
             ActionButton(
-                title = "Stake",
+                title = stringResource(
+                    if (!state.supportsMint) R.string.defi_action_stake else R.string.defi_action_mint
+                ),
                 icon = R.drawable.ic_circle_plus,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,

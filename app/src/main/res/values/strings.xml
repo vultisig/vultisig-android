@@ -802,6 +802,12 @@
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
+    
+    <string name="defi_action_stake" translatable="false">Stake</string>
+    <string name="defi_action_unstake" translatable="false">Unstake</string>
+    <string name="defi_action_mint" translatable="false">Mint</string>
+    <string name="defi_action_redeem" translatable="false">Redeem</string>
+    
     <plurals name="seconds_format">
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>

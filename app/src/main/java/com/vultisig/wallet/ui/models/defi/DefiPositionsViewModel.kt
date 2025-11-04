@@ -65,6 +65,7 @@ internal data class StakePositionUiModel(
     val stakeAssetHeader: String,
     val stakeAmount: String,
     val apy: String?,
+    val supportsMint: Boolean = false,
     val canWithdraw: Boolean = false,
     val canStake: Boolean = true,
     val canUnstake: Boolean = false,
@@ -322,10 +323,14 @@ internal class DefiPositionsViewModel @Inject constructor(
                 ?.value
                 ?: BigInteger.ZERO
 
+        val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
+                coin.ticker.contains("ytcy", ignoreCase = true)
+
         return StakePositionUiModel(
             stakeAssetHeader = "Staked ${coin.ticker}",
             stakeAmount = balance.formatAmount(CoinType.THORCHAIN, coin.ticker),
             apy = null,
+            supportsMint = supportsMint,
             canWithdraw = false, // TCY auto-distributes rewards
             canStake = true,
             canUnstake = true,
