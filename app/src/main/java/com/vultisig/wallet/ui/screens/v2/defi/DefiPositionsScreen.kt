@@ -40,6 +40,7 @@ import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
