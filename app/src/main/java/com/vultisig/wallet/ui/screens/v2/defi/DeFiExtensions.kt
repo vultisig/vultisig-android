@@ -25,6 +25,6 @@ internal fun ActiveBondedNode.toUiModel(): BondedNodeUiModel {
         apy = apy.formatPercetange(),
         bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
         nextAward = nextReward.formatRuneReward(),
-        nextChurn = nextChurn.formatChurnDate(),
+        nextChurn = nextChurn.formatDate(),
     )
 }

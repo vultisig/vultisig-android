@@ -20,7 +20,9 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
+import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercetange
+import com.vultisig.wallet.ui.screens.v2.defi.formatRuneReward
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.supportDeFiCoins
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
@@ -277,9 +279,32 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun createTCYStakePosition(address: String): StakePositionUiModel? {
-        val result = tcyStakingService.getStakingDetails(address)
-        println(result)
-        return null
+        return try {
+            // Get staking details from service
+            val result = tcyStakingService.getStakingDetails(
+                address = address,
+            )
+            
+            // Convert stake amount to readable format
+            val stakedAmount = Chain.ThorChain.coinType.toValue(result.stakeAmount)
+            val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} TCY"
+            
+            // Create and return the UI model
+            StakePositionUiModel(
+                stakeAssetHeader = "Staked TCY",
+                stakeAmount = formattedAmount,
+                apy = result.apr?.formatPercetange(),
+                canWithdraw = false, // TCY auto-distributes rewards
+                canStake = true,
+                canUnstake = true,
+                rewards = null,
+                nextReward = result.estimatedRewards?.toDouble()?.formatRuneReward(),
+                nextPayout = result.nextPayoutDate?.formatDate()
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create TCY stake position")
+            null
+        }
     }
 
     private suspend fun createGenericStakePosition(coin: Coin, address: String): StakePositionUiModel? {

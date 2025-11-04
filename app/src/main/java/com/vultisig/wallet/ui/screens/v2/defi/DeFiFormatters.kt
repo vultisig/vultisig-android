@@ -20,7 +20,7 @@ internal fun String.formatAddress(): String {
     }
 }
 
-internal fun Date?.formatChurnDate(): String {
+internal fun Date?.formatDate(): String {
     return this?.let {
         val formatter = SimpleDateFormat("MMM dd, yy", Locale.US)
         formatter.format(it)
