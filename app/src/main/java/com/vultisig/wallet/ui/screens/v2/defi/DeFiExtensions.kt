@@ -12,7 +12,7 @@ import wallet.core.jni.CoinType
 internal val supportDeFiCoins: List<Coin>
     get() = listOf(
         Coins.getCoinBy(Chain.ThorChain, "ruji")!!,
-        Coins.getCoinBy(Chain.ThorChain, "rune")!!,
+        Coins.getCoinBy(Chain.ThorChain, "yrune")!!,
         Coins.getCoinBy(Chain.ThorChain, "tcy")!!,
         Coins.getCoinBy(Chain.ThorChain, "ytcy")!!,
         Coins.getCoinBy(Chain.ThorChain, "stcy")!!

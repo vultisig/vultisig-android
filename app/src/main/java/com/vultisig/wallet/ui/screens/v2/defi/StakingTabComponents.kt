@@ -263,7 +263,6 @@ private fun getHeaderIcon(assetStake: String): Int {
         assetStake.contains("stcy", ignoreCase = true) -> R.drawable.stcy
         assetStake.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
         assetStake.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
-
         else -> R.drawable.wewe
     }
 }
