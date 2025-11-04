@@ -132,7 +132,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 val activeNodes = withContext(Dispatchers.IO) {
                     val address = runeCoin.address
-                    bondUseCase.getActiveNodes("thor1fkwmkl96zpl93a547arcc8e00n5zh7eegdq5tv")
+                    bondUseCase.getActiveNodes(address)
                 }
 
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
@@ -230,7 +230,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             coin.ticker.equals("ruji", ignoreCase = true) ->
                                 createRujiStakePosition(address)
                             coin.ticker.equals("tcy", ignoreCase = true) ->
-                                createTCYStakePosition("thor1pe0pspu4ep85gxr5h9l6k49g024vemtr80hg4c")
+                                createTCYStakePosition(address)
                             else ->
                                 createGenericStakePosition(coin, address)
                         }
