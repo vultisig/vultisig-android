@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ActiveBondedNode
@@ -91,6 +92,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val rujiStakingService: RujiStakingService,
     private val tcyStakingService: TCYStakingService,
+    private val balanceRepository: BalanceRepository,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
@@ -219,6 +221,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 val address = runeCoin.address
+
+                // Decouple loading upcoming PR
                 val positions = supportDeFiCoins.map { coin ->
                     async(Dispatchers.IO) {
                         when {
@@ -308,7 +312,27 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun createGenericStakePosition(coin: Coin, address: String): StakePositionUiModel? {
-        return null
+        val addresses = listOf(address)
+        val coins = listOf(coin)
+
+        val balance =
+            balanceRepository.getCachedTokenBalances(addresses, coins).firstOrNull()
+                ?.tokenBalance
+                ?.tokenValue
+                ?.value
+                ?: BigInteger.ZERO
+
+        return StakePositionUiModel(
+            stakeAssetHeader = "Staked ${coin.ticker}",
+            stakeAmount = balance.formatAmount(CoinType.THORCHAIN, coin.ticker),
+            apy = null,
+            canWithdraw = false, // TCY auto-distributes rewards
+            canStake = true,
+            canUnstake = true,
+            rewards = null,
+            nextReward = null,
+            nextPayout = null,
+        )
     }
 
     fun onTabSelected(tab: String) {

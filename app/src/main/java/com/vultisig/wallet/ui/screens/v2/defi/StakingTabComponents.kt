@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,14 +43,21 @@ internal fun StakingTabContent(
     onClickUnstake: () -> Unit,
     onClickWithdraw: () -> Unit,
 ) {
-    state.positions.forEach { stakingPosition ->
-        StakingWidget(
-            state = stakingPosition,
-            isLoading = state.isLoading,
-            onClickStake = onClickStake,
-            onClickUnstake = onClickUnstake,
-            onClickWithdraw = onClickWithdraw,
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        state.positions.forEach { stakingPosition ->
+            StakingWidget(
+                state = stakingPosition,
+                isLoading = state.isLoading,
+                onClickStake = onClickStake,
+                onClickUnstake = onClickUnstake,
+                onClickWithdraw = onClickWithdraw,
+            )
+        }
     }
 }
 
@@ -249,8 +258,12 @@ internal fun StakingHeader(
 
 private fun getHeaderIcon(assetStake: String): Int {
     return when {
+        assetStake.contains("yrune", ignoreCase = true) -> R.drawable.yrune
+        assetStake.contains("ytcy", ignoreCase = true) -> R.drawable.ytcy
+        assetStake.contains("stcy", ignoreCase = true) -> R.drawable.stcy
         assetStake.contains("ruji", ignoreCase = true) -> R.drawable.ruji_staking
         assetStake.contains("tcy", ignoreCase = true) -> R.drawable.tcy_staking
+
         else -> R.drawable.wewe
     }
 }
@@ -313,6 +326,7 @@ private fun StakingWidgetFullActionsPreview() {
         )
     }
 }
+
 @Preview(showBackground = true, name = "Staking Widget - Loading State")
 @Composable
 private fun StakingWidgetLoadingPreview() {

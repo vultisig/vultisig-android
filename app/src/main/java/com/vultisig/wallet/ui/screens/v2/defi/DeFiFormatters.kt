@@ -27,10 +27,10 @@ internal fun Date?.formatDate(): String {
     } ?: "N/A"
 }
 
-internal fun BigInteger.formatAmount(coinType: CoinType): String {
+internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null): String {
     val chainAmount = coinType.toValue(this)
     val rounded = chainAmount.setScale(2, RoundingMode.HALF_UP)
-    return "${rounded.toPlainString()} ${coinType.symbol}"
+    return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
 }
 
 internal fun Double.formatPercetange(): String {
