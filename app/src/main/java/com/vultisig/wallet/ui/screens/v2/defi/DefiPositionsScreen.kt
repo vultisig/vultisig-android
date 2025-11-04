@@ -36,6 +36,8 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
@@ -178,12 +180,7 @@ private fun BalanceBanner(
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.referral_data_banner),
-            contentDescription = "Provider Logo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
+        SetBackgoundBanner(R.drawable.referral_data_banner)
 
         Column(
             modifier = Modifier

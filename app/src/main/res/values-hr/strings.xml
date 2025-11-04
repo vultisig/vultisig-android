@@ -569,7 +569,7 @@
     <string name="backup_password_request_title">Želite li šifrirati sigurnosnu kopiju lozinkom?</string>
     <string name="backup_password_request_caution_encrypt_desc">Ako odaberete dodati lozinku, ona će se koristiti za šifriranje sigurnosne kopije datoteke.</string>
     <string name="backup_password_request_highlight_encrypt">ifriraj</string>
-    <string name="backup_password_request_caution_cannot_reset_desc">Zapamtite: ako zaboravite lozinku trezora, ne možete je resetirati ili oporaviti.</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Zapamtite: Ako zaboravite lozinku trezora, ne možete je resetirati ili oporaviti.</string>
     <string name="backup_password_request_highlight_cannot">ne može</string>
     <string name="backup_password_request_caution_secure_without_desc">Prema zadanim postavkama, vaša je sigurnosna kopija sigurna bez dodatne lozinke jer dijeljene datoteke trezora pohranjujete na različitim lokacijama.</string>
     <string name="backup_password_request_highlight_secure_without">sigurno bez</string>
