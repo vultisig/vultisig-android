@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
@@ -31,6 +32,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -390,6 +392,75 @@ internal class DefiPositionsViewModel @Inject constructor(
                     loadBondedNodes()
                     loadedTabs.add(DefiTab.BONDED.displayName)
                 }
+
+                DefiTab.LPS.displayName -> {
+                    loadLpPositions()
+                    loadedTabs.add(DefiTab.LPS.displayName)
+                }
+            }
+        }
+    }
+
+    // Dummy Loading, remove after real LP logic
+    private fun loadLpPositions() {
+        viewModelScope.launch {
+            // Create two dummy loading positions immediately
+            val loadingPositions = listOf(
+                LpPositionUiModel(
+                    titleLp = "Loading...",
+                    totalPriceLp = "$0.00",
+                    icon = R.drawable.ethereum,
+                    apr = null,
+                    position = "Loading position..."
+                ),
+                LpPositionUiModel(
+                    titleLp = "Loading...",
+                    totalPriceLp = "$0.00",
+                    apr = null,
+                    icon = R.drawable.bitcoin,
+                    position = "Loading position..."
+                )
+            )
+            
+            // Set loading state with dummy positions showing
+            state.update {
+                it.copy(
+                    lp = LpTabUiModel(
+                        isLoading = true,
+                        positions = loadingPositions
+                    )
+                )
+            }
+            
+            // Simulate loading delay
+            delay(2000)
+            
+            // Create actual LP positions
+            val actualPositions = listOf(
+                LpPositionUiModel(
+                    titleLp = "ETH/USDC",
+                    totalPriceLp = "$12,450.00",
+                    icon = R.drawable.ethereum,
+                    apr = "8.5%",
+                    position = "0.5 ETH / 1,500 USDC"
+                ),
+                LpPositionUiModel(
+                    titleLp = "BTC/USDT",
+                    totalPriceLp = "$45,200.00",
+                    icon = R.drawable.bitcoin,
+                    apr = "12.3%",
+                    position = "0.8 BTC / 35,000 USDT"
+                ),
+            )
+            
+            // Update state with actual positions and remove loading state
+            state.update {
+                it.copy(
+                    lp = LpTabUiModel(
+                        isLoading = false,
+                        positions = actualPositions
+                    )
+                )
             }
         }
     }

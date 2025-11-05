@@ -135,7 +135,7 @@ internal fun LpWidget(
                 )
             }
 
-            UiSpacer(32.dp)
+            UiSpacer(16.dp)
         }
 
         Column {
@@ -144,6 +144,8 @@ internal fun LpWidget(
                 color = Theme.v2.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
+
+            UiSpacer(6.dp)
 
             if (isLoading) {
                 UiPlaceholderLoader(
