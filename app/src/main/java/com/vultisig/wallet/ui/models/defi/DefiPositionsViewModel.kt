@@ -142,7 +142,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) totalValue else it.totalAmountPrice,
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName){
+                            totalValue
+                        } else {
+                            it.totalAmountPrice
+                        },
                         bonded = BondedTabUiModel(
                             isLoading = false,
                             totalBondedAmount = totalBonded,
