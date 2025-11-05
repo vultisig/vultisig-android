@@ -5,12 +5,11 @@ import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELE
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
-import com.vultisig.wallet.data.blockchain.BasicFee
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.Transfer
-import com.vultisig.wallet.data.blockchain.TronFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope

@@ -7,19 +7,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,10 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +37,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -62,7 +56,7 @@ internal fun BondedTabContent(
         TotalBondWidget(
             onClickBondToNode = bondToNodeOnClick,
             totalBonded = state.bonded.totalBondedAmount,
-            isLoading = state.isLoading,
+            isLoading = state.bonded.isLoading,
         )
 
         if (state.bonded.nodes.isNotEmpty()) {
@@ -238,21 +232,9 @@ private fun NodeContent(
 
         UiSpacer(16.dp)
 
-        Row {
-            InfoItem(
-                icon = R.drawable.ic_icon_percentage,
-                label = stringResource(R.string.apy),
-                value = null,
-            )
-
-            UiSpacer(1f)
-
-            Text(
-                text = node.apy,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.alerts.success,
-            )
-        }
+        ApyInfoItem(
+            apy = node.apy
+        )
 
         UiSpacer(16.dp)
 
@@ -318,101 +300,6 @@ private fun NodeContent(
 }
 
 @Composable
-fun InfoItem(icon: Int, label: String, value: String?) {
-    Column(horizontalAlignment = Alignment.Start) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            UiIcon(
-                size = 16.dp,
-                drawableResId = icon,
-                contentDescription = null,
-                tint = Theme.v2.colors.text.extraLight,
-            )
-
-            UiSpacer(4.dp)
-
-            Text(
-                text = label,
-                color = Theme.v2.colors.text.extraLight,
-                style = Theme.brockmann.body.s.medium,
-            )
-        }
-
-        if (value != null) {
-            UiSpacer(6.dp)
-
-            Text(
-                text = value,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.light,
-            )
-        }
-    }
-}
-
-@Composable
-fun ActionButton(
-    title: String,
-    icon: Int,
-    background: Color,
-    modifier: Modifier = Modifier,
-    border: BorderStroke? = null,
-    contentColor: Color,
-    iconCircleColor: Color,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = background,
-            contentColor = contentColor,
-            disabledContainerColor = background.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
-        ),
-        border = if (enabled) {
-            border
-        } else {
-            border?.let {
-                BorderStroke(
-                    width = it.width,
-                    color = when (val brush = it.brush) {
-                        is SolidColor -> brush.value.copy(alpha = 0.5f)
-                        else -> Color.Gray.copy(alpha = 0.5f) // fallback for gradient brushes
-                    }
-                )
-            }
-        },
-        shape = RoundedCornerShape(50),
-        contentPadding = PaddingValues(horizontal = 6.dp),
-        modifier = modifier.height(42.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                    RoundedCornerShape(50)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
-            )
-        }
-
-        Text(
-            text = title,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
 private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String> {
     val successColor = Theme.v2.colors.alerts.success
     val warningColor = Theme.v2.colors.alerts.warning
@@ -427,7 +314,7 @@ private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String>
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Bonded Tab - With Nodes")
 @Composable
 private fun BondedTabContentPreview() {
     val mockNodes = listOf(
@@ -446,13 +333,37 @@ private fun BondedTabContentPreview() {
             bondedAmount = "500 RUNE",
             nextAward = "10 RUNE",
             nextChurn = "Oct 16, 25"
+        ),
+        BondedNodeUiModel(
+            address = "thor1whit...789",
+            status = BondNodeState.WHITELISTED,
+            apy = "0%",
+            bondedAmount = "100 RUNE",
+            nextAward = "0 RUNE",
+            nextChurn = "N/A"
+        ),
+        BondedNodeUiModel(
+            address = "thor1ready...abc",
+            status = BondNodeState.READY,
+            apy = "10.8%",
+            bondedAmount = "750 RUNE",
+            nextAward = "15 RUNE",
+            nextChurn = "Oct 17, 25"
+        ),
+        BondedNodeUiModel(
+            address = "thor1dis...def",
+            status = BondNodeState.DISABLED,
+            apy = "0%",
+            bondedAmount = "250 RUNE",
+            nextAward = "0 RUNE",
+            nextChurn = "N/A"
         )
     )
     
     BondedTabContent(
         state = DefiPositionsUiModel(
             bonded = BondedTabUiModel(
-                totalBondedAmount = "1500 RUNE",
+                totalBondedAmount = "2600 RUNE",
                 nodes = mockNodes
             )
         ),
@@ -462,16 +373,50 @@ private fun BondedTabContentPreview() {
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Bonded Tab - Loading")
+@Composable
+private fun BondedTabContentLoadingPreview() {
+    BondedTabContent(
+        state = DefiPositionsUiModel(
+            bonded = BondedTabUiModel(
+                isLoading = true,
+                totalBondedAmount = "0 RUNE",
+                nodes = emptyList()
+            )
+        ),
+        bondToNodeOnClick = { },
+        onClickBond = {},
+        onClickUnbond = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Bonded Tab - Empty")
+@Composable
+private fun BondedTabContentEmptyPreview() {
+    BondedTabContent(
+        state = DefiPositionsUiModel(
+            bonded = BondedTabUiModel(
+                isLoading = false,
+                totalBondedAmount = "0 RUNE",
+                nodes = emptyList()
+            )
+        ),
+        bondToNodeOnClick = { },
+        onClickBond = {},
+        onClickUnbond = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Total Bond Widget")
 @Composable
 private fun TotalBondWidgetPreview() {
     TotalBondWidget(
         onClickBondToNode = { },
-        totalBonded = "50 RUNE"
+        totalBonded = "2600 RUNE"
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Active Nodes - Multiple States")
 @Composable
 private fun ActiveNodesWidgetPreview() {
     val mockNodes = listOf(
@@ -490,6 +435,14 @@ private fun ActiveNodesWidgetPreview() {
             bondedAmount = "500 RUNE",
             nextAward = "10 RUNE",
             nextChurn = "Oct 16, 25"
+        ),
+        BondedNodeUiModel(
+            address = "thor1stand...456",
+            status = BondNodeState.STANDBY,
+            apy = "10.8%",
+            bondedAmount = "750 RUNE",
+            nextAward = "15 RUNE",
+            nextChurn = "Oct 17, 25"
         )
     )
     
@@ -500,9 +453,9 @@ private fun ActiveNodesWidgetPreview() {
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Node Content - Active")
 @Composable
-private fun NodeContentPreview() {
+private fun NodeContentActivePreview() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -516,6 +469,29 @@ private fun NodeContentPreview() {
                 bondedAmount = "1000 RUNE",
                 nextAward = "20 RUNE",
                 nextChurn = "Oct 15, 25"
+            ),
+            onClickBond = {},
+            onClickUnbond = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Node Content - Disabled")
+@Composable
+private fun NodeContentDisabledPreview() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        NodeContent(
+            node = BondedNodeUiModel(
+                address = "thor1dis...def",
+                status = BondNodeState.DISABLED,
+                apy = "0%",
+                bondedAmount = "250 RUNE",
+                nextAward = "0 RUNE",
+                nextChurn = "N/A"
             ),
             onClickBond = {},
             onClickUnbond = {}
