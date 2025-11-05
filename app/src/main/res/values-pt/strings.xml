@@ -70,7 +70,7 @@
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
     <string name="send_to_address_hint">Inserir Quantidade</string>
-    <string name="send_amount">Quantidade</string>
+    <string name="send_amount">Montante</string>
     <string name="send_amount_hint">Inserir Quantidade</string>
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
@@ -95,7 +95,7 @@
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">Para</string>
-    <string name="verify_transaction_amount_title">Quantidade</string>
+    <string name="verify_transaction_amount_title">Montante</string>
     <string name="verify_transaction_join_keysign">Juntar-se à assinatura de chave</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
@@ -182,7 +182,7 @@
     <string name="verify_transaction_consent_correct_dst">Não estou enviando para um golpe ou hacker</string>
     <string name="naming_vault_screen_invalid_name">Nome inválido</string>
     <string name="rename_vault_invalid_name">Nome inválido</string>
-    <string name="vault_name_too_long_error">O nome do cofre é demasiado longo</string>
+    <string name="vault_name_too_long_error">De kluisnaam is te lang</string>
     <string name="swap_form_invalid_amount">Montante inválido</string>
     <string name="send_from_invalid_amount">Montante inválido</string>
     <string name="insufficient_utxos_error">UTXOs disponíveis insuficientes para cobrir o valor selecionado. Por favor, adicione mais fundos ou reduza o valor que está enviando</string>
@@ -491,9 +491,9 @@
     <string name="referral_external_not_failed">Falha ao verificar o código de referência</string>
     <string name="referral_invite_next">Próximo</string>
     <string name="referral_code_settings_title">Código de referência</string>
-    <string name="referral_screen_title">Vultisig - Indicação</string>
+    <string name="referral_screen_title">Vultisig - Indicações</string>
     <string name="referral_screen_code_hint">Insira até 4 caracteres</string>
-    <string name="referral_onboarding_title">Referência</string>
+    <string name="referral_onboarding_title">Indicações</string>
     <string name="referral_onboarding_get_started">Começar</string>
     <string name="offline">Você está offline</string>
     <string name="deposit_error_destination_address">O endereço de destino não deve estar vazio</string>
@@ -557,7 +557,7 @@
     <string name="sign_message_form_method_field_title">Método</string>
     <string name="hint_signing_method">Método de assinatura</string>
     <string name="verify_sign_message_signing_method" >Método de assinatura</string>
-    <string name="signing_error_blockhash_not_found">Método de assinatura</string>
+    <string name="signing_error_blockhash_not_found">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
     <string name="hint_message_to_sign">Mensagem para assinar</string>
     <string name="verify_sign_message_message_sign">Mensagem para assinar</string>
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados num só lugar.</string>
@@ -679,7 +679,7 @@
     <string name="vault_confirmation_vault_upgraded">Cofre atualizado</string>
     <string name="vault_confirmation_well_done">Muito bem.</string>
     <string name="this_amount_would_leave_too_little_change">Este valor deixaria muito pouco troco. 💡 Experimente \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
-    <string name="swap_form_native">Nativo</string>
+    <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash de Transação de Aprovação</string>
     <string name="swap_transaction_overview_track">Rastrear</string>
     <string name="token_selection_screen_select_tokens">Selecionar Tokens</string>
@@ -759,7 +759,7 @@
     <string name="keygen_benefit_4_template">em Android, iOS, macOS e Windows</string>
     <string name="keygen_benefit_4_emphasized">Disponível</string>
     <string name="onboarding_intro_preview_part_2">Frases-semente</string>
-    <string name="onboarding_intro_back">Costas</string>
+    <string name="onboarding_intro_back">Voltar</string>
     <string name="onboarding_security_backup_desc_page_1_part_1">O seu cofre contém %s ações,</string>
     <string name="onboarding_security_backup_desc_page_1_part_2">Cada dispositivo precisa do seu próprio backup.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1">Backup</string>
@@ -781,7 +781,7 @@
     <string name="backup_password_request_no_password_action">Fazer backup sem palavra-passe</string>
     <string name="address_bookmark_error_invalid_address">Este endereço não é válido para %s</string>
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
-    <string name="error_invalid_chain">A cadeia de chaves é inválida.</string>
+    <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
     <string name="vault_backup_screen_change_email">Altere o e-mail e reinicie o gerador de chaves.</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">É enviado para si para total autogestão!</string>
@@ -824,7 +824,7 @@
     <string name="enter_email_screen_hint">E-mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Falha no cálculo específico</string>
     <string name="verify_sign_message_message_field_signature">Assinatura</string>
-    <string name="secret_enable_dkls">Active o DKLS</string>
+    <string name="secret_enable_dkls">Ativar DKLS</string>
     <string name="fast_vault_password_hint_screen_desc">Isto será exibido caso se esqueça da sua senha.</string>
     <string name="fast_vault_password_hint_skip">Pular</string>
     <string name="fast_vault_password_hint_next">Próximo</string>
@@ -911,6 +911,6 @@
     <string name="migration_onboarding_step_1_text_start">Atualize este cofre para</string>
     <string name="onboarding_security_backup_title">Visão geral do cofre</string>
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
-    <string name="verify_swap_youre_swapping_title">Está a trocar de servidor</string>
+    <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
 </resources>

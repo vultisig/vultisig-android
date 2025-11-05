@@ -2,7 +2,7 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Логотип токена</string>
     <string name="tokens">Токены</string>
-    <string name="chains">Цепочки</string>
+    <string name="chains">Сети</string>
     <string name="keysign">Ключевая подпись</string>
     <string name="danger_icon">Иконка опасности</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
@@ -42,7 +42,7 @@
     <string name="vault_tier_silver_discount">Скидка: 20bps</string>
     <string name="vault_tier_gold_discount">Скидка: 30bps</string>
     <string name="vault_tier_platinum_discount">Скидка: 35bps</string>
-    <string name="vault_tier_hold">Удержание</string>
+    <string name="vault_tier_hold">Удерживать</string>
     <string name="vault_tier_unlock">Разблокировать уровень</string>
     <string name="vault_tier_active">Активен</string>
     <string name="vault_tier_unlock_bronze_part1">Разблокировать </string>
@@ -83,7 +83,7 @@
     <string name="send_from_address">От</string>
     <string name="send_to_address">Кому</string>
     <string name="send_to_address_hint">Введите адрес</string>
-    <string name="send_amount">Сумма</string>
+    <string name="send_amount">Количество</string>
     <string name="send_amount_hint">Введите сумму</string>
     <string name="send_amount_currency">Сумма (в %s)</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
@@ -105,7 +105,7 @@
     <string name="send_error_insufficient_balance">Недостаточно средств</string>
     <string name="settings_screen_language">Язык</string>
     <string name="settings_screen_currency">Валюта</string>
-    <string name="settings_screen_default_chains">Цепочки по умолчанию</string>
+    <string name="settings_screen_default_chains">Сети по умолчанию</string>
     <string name="settings_screen_faq">ЧАВО</string>
     <string name="settings_screen_vtx_token">Токен $VULT</string>
     <string name="settings_screen_share_the_app">Поделиться приложением</string>
@@ -114,13 +114,13 @@
     <string name="settings_screen_others">Другие</string>
     <string name="language_setting_screen_title">Язык</string>
     <string name="currency_unit_setting_screen_title">Валюта\n</string>
-    <string name="default_chain_screen_title">Цепочки по умолчанию</string>
+    <string name="default_chain_screen_title">Сети по умолчанию</string>
     <string name="faq_setting_screen_title">ЧАВО</string>
     <string name="vultisig_token_setting_screen_title">Токен VULTISIG</string>
     <string name="verify_transaction_screen_title">Проверить</string>
     <string name="verify_transaction_from_title">От</string>
     <string name="verify_transaction_to_title">Кому</string>
-    <string name="verify_transaction_amount_title">Сумма</string>
+    <string name="verify_transaction_amount_title">Количество</string>
     <string name="verify_transaction_value">Ценить</string>
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
@@ -269,7 +269,7 @@
     <string name="custom_token_token_not_found">Токен не найден</string>
     <string name="custom_token_add_token">Добавить %1$s токен</string>
     <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Количество</string>
+    <string name="deposit_form_amount_title_without_balance">Сумма</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
     <string name="vault_settings_enable_biometrics_save" >Сохранить</string>
@@ -277,7 +277,7 @@
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>
-    <string name="deposit_form_operator_fee_title">Возникли проблемы с подключением по WiFi? Используйте вместо этого персональную точку доступа. Или попробуйте другую сеть.</string>
+    <string name="deposit_form_operator_fee_title">Комиссия оператора (необязательно)</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
     <string name="transaction_swap_tracking_link">Обмен ссылкой отслеживания</string>
@@ -350,7 +350,7 @@
     <string name="qr_title_join_keysign_description">Хранилище: %1$s\nСумма: %2$s\n Кому: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Хранилище: %1$s\nОт: %2$s\nКуда: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>
-    <string name="naming_vault_placeholder_fast_vault">Быстрый прыжок</string>
+    <string name="naming_vault_placeholder_fast_vault">Быстрое хранилище</string>
     <string name="naming_vault_placeholder_secure_vault">Безопасное хранилище</string>
     <string name="import_file_password_hint_text">Подсказка: %s</string>
     <string name="scan_qr_upload_from_gallery">Загрузить из\n галереи</string>
@@ -571,7 +571,7 @@
     <string name="sign_message_form_method_field_title">Способ</string>
     <string name="hint_signing_method">Метод подписания</string>
     <string name="verify_sign_message_signing_method" >Метод подписания</string>
-    <string name="signing_error_blockhash_not_found">Метод подписания</string>
+    <string name="signing_error_blockhash_not_found">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
     <string name="hint_message_to_sign">Сообщение для подписи</string>
     <string name="verify_sign_message_message_sign">Сообщение для подписи</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
@@ -659,7 +659,7 @@
     <string name="earn">Заработок</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
-    <string name="no_chains_found">Цепочки не найдены.</string>
+    <string name="no_chains_found">Сети не найдены.</string>
     <string name="no_chain_make_sure_that">Убедитесь, что искомая цепочка включена.</string>
     <string name="no_chain_customize_chains">Настроить цепочки</string>
     <string name="search_bar_search">Поиск</string>
@@ -682,7 +682,7 @@
     <string name="invite_to_x_banner_button">Подписаться на %s</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
-    <string name="vault_details_keys">ключи</string>
+    <string name="vault_details_keys">Ключи</string>
     <string name="vault_password_biometeric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
     <string name="verify_send_send_overview">Отправить обзор</string>
     <string name="verify_swap_swap_overview">Обзор обмена</string>
@@ -843,7 +843,7 @@
     <string name="fast_vault_password_hint_next">Далее</string>
     <string name="fast_vault_password_hint_screen_hint">Введите подсказку</string>
     <string name="fast_vault_password_screen_password_hint">Введите пароль</string>
-    <string name="send_error_same_address">Адрес получателя должен отличаться от адреса получателя.</string>
+    <string name="send_error_same_address">Адрес получателя должен отличаться от адреса отправителя.</string>
     <string name="select_vault_type_secure">Безопасно</string>
     <string name="select_vault_type_fast">Быстрый</string>
     <string name="vault_backup_screen_paste">Вставить</string>
@@ -881,7 +881,7 @@
     <string name="enter_email_screen_next">Далее</string>
     <string name="scan_qr_code_modal_next">Далее</string>
     <string name="peer_discovery_action_next_title">Далее</string>
-    <string name="home_page_no_chains_enabled">Цепочки не включены</string>
+    <string name="home_page_no_chains_enabled">Сети не включены</string>
     <string name="onboarding_desc_page_3_part_3">один общий ресурс хранилища</string>
     <string name="onboarding_security_backup_desc_page_2_part_3">для обеспечения доступа, предпочтительно</string>
     <string name="onboarding_security_backup_desc_page_2_part_4">в сети.</string>
@@ -924,6 +924,6 @@
     <string name="migration_onboarding_step_1_text_start">Обновите это хранилище до</string>
     <string name="onboarding_security_backup_title">Обзор хранилища</string>
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
-    <string name="verify_swap_youre_swapping_title">Вы меняете имя</string>
+    <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
     <string name="keysign_app_version_text">Версия %1$s (%2$s)</string>
 </resources>

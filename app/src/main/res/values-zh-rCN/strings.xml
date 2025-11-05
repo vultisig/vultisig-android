@@ -724,13 +724,13 @@
     <string name="sign_message_form_method_field_title">方法</string>
     <string name="hint_signing_method">签名方法</string>
     <string name="verify_sign_message_signing_method">签名方法</string>
-    <string name="signing_error_blockhash_not_found">签名方法</string>
+    <string name="signing_error_blockhash_not_found">由于签名速度缓慢，交易超时。请重试。</string>
     <string name="hint_message_to_sign">要签名的消息</string>
     <string name="verify_sign_message_message_sign">要签名的消息</string>
 
 
     <!-- Keygen -->
-    <string name="keygen_step_preparing_vault">准备保险库</string>
+    <string name="keygen_step_preparing_vault">准备金库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
@@ -738,7 +738,7 @@
     <string name="keygen_connecting_with_server">连接服务器中...</string>
 
     <!-- Vault Settings Migration -->
-    <string name="vault_backup_summary_start_using_vault">开始使用您的保险库</string>
+    <string name="vault_backup_summary_start_using_vault">开始使用您的保险库。</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
@@ -1187,7 +1187,7 @@
     <string name="onboarding_fast_backup_desc_page_1_part_2">立即备份</string>
     <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
     <string name="keygen_benefit_5_emphasized">无种子钱包</string>
-    <string name="address_bookmark_error_invalid_address">此代码将确认您已通过电子邮件收到您的 Vault 共享文件 1</string>
+    <string name="address_bookmark_error_invalid_address">此地址对 %s 无效</string>
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
@@ -1242,7 +1242,7 @@
     <string name="select_vault_type_fast">快速</string>
     <string name="vault_backup_screen_paste">粘贴</string>
     <string name="enter_backup_screen_title">请输入我们通过电子邮件发送给您的 4 位验证码</string>
-    <string name="enter_backup_screen_desc">此地址对 %s 无效</string>
+    +<string name="enter_backup_screen_desc">此代码将确认您已通过电子邮件收到您的金库份额 1</string>
     <string name="vault_backup_error_pin">验证码出错，请重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>
@@ -1274,7 +1274,7 @@
     <string name="enter_email_screen_next">下一步</string>
     <string name="scan_qr_code_modal_next">下一步</string>
     <string name="peer_discovery_action_next_title">下一步</string>
-    <string name="home_page_no_chains_enabled">未启用任何链式存储</string>
+    <string name="home_page_no_chains_enabled">未启用任何链</string>
     <string name="onboarding_desc_page_3_part_3">共享一个金库</string>
     <string name="onboarding_security_backup_desc_page_2_part_3">为确保访问，最好</string>
     <string name="onboarding_security_backup_desc_page_2_part_4">在线共享</string>
@@ -1312,7 +1312,7 @@
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
     <string name="tx_overview_screen_tx_successful">交易成功</string>
-    <string name="migration_onboarding_step_3_text_end">Je kunt je kluis later altijd hernoemen in de instellingen</string>
+    <string name="migration_onboarding_step_3_text_end">升级时</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的金库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
     <string name="migration_onboarding_step_1_text_start">将此金库升级至</string>

@@ -559,7 +559,7 @@
     <string name="sign_message_form_method_field_title">Metodo</string>
     <string name="hint_signing_method">Metodo di firma</string>
     <string name="verify_sign_message_signing_method" >Metodo di firma</string>
-    <string name="signing_error_blockhash_not_found">Metodo di firma</string>
+    <string name="signing_error_blockhash_not_found">Timeout della transazione dovuto alla firma lenta. Riprova.</string>
     <string name="hint_message_to_sign">Messaggio da firmare</string>
     <string name="verify_sign_message_message_sign">Messaggio da firmare</string>
     <string name="address_book_empty_description">Tieni tutti i tuoi indirizzi importanti organizzati in un unico posto.</string>
@@ -783,7 +783,7 @@
     <string name="address_bookmark_error_invalid_address">Questo indirizzo non è valido per %s</string>
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
-    <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
+    <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>
     <string name="vault_backup_screen_change_email">Cambia email e riavvia il keygen</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">Ti viene inviato per la completa custodia!</string>
     <string name="onboarding_fast_backup_desc_page_3_part_2">Controlla la tua email per verificare</string>

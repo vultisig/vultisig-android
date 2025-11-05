@@ -162,7 +162,7 @@
     <string name="vault_edit_this_name_already_exist">dieser Name existiert bereits</string>
     <string name="import_file_screen_duplicate_vault">Der Tresor ist ein Duplikat</string>
     <string name="verify_swap_consent_amount">Der Swapbetrag ist korrekt</string>
-    <string name="settings_screen_vtx_token">Der $VAULT-Token</string>
+    <string name="settings_screen_vtx_token">Der $VULT‑Token</string>
     <string name="token_settings_supply">Angebot: %1$s</string>
     <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="scan_qr_screen_return_vault">Zurück zum Tresor</string>
@@ -227,7 +227,7 @@
     <string name="vault_detail_this_device">%1$s (Dieses Gerät)</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
-    <string name="swap_screen_provider_title">Anbieterin</string>
+    <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="verify_approve_amount_title">Zu genehmigender Betrag</string>
     <string name="backup_password_screen_title">Sicherung</string>
@@ -250,7 +250,7 @@
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="deposit_screen_title">Funktionssignatur</string>
-    <string name="deposit_screen_amount_title">Sichern Sie jetzt Ihren Tresor!</string>
+    <string name="deposit_screen_amount_title">Menge</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
     <string name="verify_deposit_gas_title">Gas</string>
@@ -260,14 +260,14 @@
     <string name="custom_token_token_not_found">Token nicht gefunden</string>
     <string name="custom_token_add_token">%1$s Token hinzufügen</string>
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Sichern Sie jetzt Ihren Tresor!</string>
+    <string name="deposit_form_amount_title_without_balance">Menge</string>
     <string name="share_vault_qr_title">Vault-QR teilen</string>
     <string name="share_vault_qr_save" >Speichern</string>
     <string name="vault_settings_enable_biometrics_save" >Speichern</string>
     <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
-    <string name="deposit_form_provider_hint">Anbieterin</string>
+    <string name="deposit_form_provider_hint">Anbieter</string>
     <string name="deposit_form_operator_fee_title">Betreibergebühr (optional)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
@@ -361,7 +361,7 @@
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teilen %1$s von %2$s</string>
-    <string name="vault_details_screen_signer">Sänger %1$s: %2$s</string>
+    <string name="vault_details_screen_signer">Unterzeichner %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore!</string>
     <string name="register_vault_screen_title">Tresor registrieren</string>
     <string name="register_vault_screen_step_3">Laden Sie Ihren Tresor‑QR‑Code hoch</string>
@@ -446,10 +446,10 @@
     <string name="security_scanner_transaction_scanned_by">Transaktion gescannt von</string>
     <string name="security_scanner_transaction_scanning">Wird gescannt…</string>
     <string name="security_scanner_transaction_not_scanned">Transaktion nicht gescannt von</string>
-    <string name="keygen_step_preparing_vault">Tresor  vorbereiteten</string>
+    <string name="keygen_step_preparing_vault">Tresor wird vorbereitet</string>
     <string name="keygen_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
-    <string name="keygen_connecting_with_server">Generieren des ECDSA-Schlüssels</string>
+    <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="merge_account_doesnt_exist">Der ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
@@ -559,7 +559,7 @@
     <string name="sign_message_form_method_field_title">Methode</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="verify_sign_message_signing_method" >Signaturmethode</string>
-    <string name="signing_error_blockhash_not_found">Signaturmethode</string>
+    <string name="signing_error_blockhash_not_found">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
     <string name="verify_sign_message_message_sign">Zu unterschreibende Nachricht</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
@@ -767,7 +767,7 @@
     <string name="onboarding_security_backup_desc_page_1_part_2">benötigt ein eigenes Backup.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1">Sicherung</string>
     <string name="error_view_try_again_button">Erneut versuchen</string>
-    <string name="error_view_default_title">Es ist ein Fehler aufgetreten.</string>
+    <string name="error_view_default_title">Genehmigen</string>
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
     <string name="migration_onboarding_step_1_text_emphasized">das weltweit schnellste MPC-Protokoll</string>
     <string name="migration_onboarding_step_1_text_end">und schneller als je zuvor signieren</string>

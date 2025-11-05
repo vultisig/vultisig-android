@@ -97,7 +97,7 @@
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
     <string name="qr_address_screen_title">Adresa</string>
     <string name="transaction_done_title">Gotovo</string>
-    <string name="transaction_done_complete">Complete</string>
+    <string name="transaction_done_complete">Dovršeno</string>
     <string name="transaction_done_form_title">Transakcija</string>
     <string name="home_screen_add_new_vault">+ Dodaj novi sef</string>
     <string name="import_file_screen_title">Uvoz</string>
@@ -235,7 +235,7 @@
     <string name="backup_password_screen_confirm_password_error_message">Provjerite podudaraju li se vaše lozinke</string>
     <string name="import_file_screen_password_error">Lozinka nije ispravna.</string>
     <string name="backup_password_optional_password_protection">Dodatna zaštita lozinkom vašeg trezora</string>
-    <string name="add_vault_save">Uštedjeti</string>
+    <string name="add_vault_save">Spremi</string>
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
     <string name="import_file_screen_enter_password">Unesite lozinku</string>
     <string name="backup_password_screen_verify_password">Potvrdi lozinku</string>
@@ -250,7 +250,7 @@
     <string name="verify_swap_agree_allowance">Slažem se s pružanjem neograničenog ERC20 dodatka</string>
     <string name="backup_now">Sigurnosno kopirajte svoj trezor sada!</string>
     <string name="deposit_screen_title">Potpis funkcije</string>
-    <string name="deposit_screen_amount_title">Iznositi</string>
+    <string name="deposit_screen_amount_title">Iznos</string>
     <string name="verify_deposit_memo_title">dopis</string>
     <string name="verify_deposit_node_address_title">Adresa čvora</string>
     <string name="verify_deposit_gas_title">Plin</string>
@@ -260,7 +260,7 @@
     <string name="custom_token_token_not_found">Token nije pronađen</string>
     <string name="custom_token_add_token">Dodaj %1$s token</string>
     <string name="deposit_form_amount_title">Iznos (Stanje: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Iznositi</string>
+    <string name="deposit_form_amount_title_without_balance">Iznos</string>
     <string name="share_vault_qr_title">Podijelite Vault QR</string>
     <string name="share_vault_qr_save" >Spremi</string>
     <string name="vault_settings_enable_biometrics_save" >Spremi</string>
@@ -361,7 +361,7 @@
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
-    <string name="vault_details_screen_signer">Pjevačica %1$s: %2$s</string>
+    <string name="vault_details_screen_signer">Potpisnik %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore!</string>
     <string name="register_vault_screen_title">Registrirajte sef</string>
     <string name="register_vault_screen_step_3">Učitajte svoj Vault QR kod</string>
@@ -559,7 +559,7 @@
     <string name="sign_message_form_method_field_title">Metoda</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
     <string name="verify_sign_message_signing_method" >Metoda potpisivanja</string>
-    <string name="signing_error_blockhash_not_found">Metoda potpisivanja</string>
+    <string name="signing_error_blockhash_not_found">Vrijeme transakcije je isteklo zbog sporog potpisivanja. Pokušajte ponovno.</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
     <string name="verify_sign_message_message_sign">Poruka za potpis</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
@@ -727,7 +727,7 @@
     <string name="backup_vault_online_storage_is_recommended">Preporučuje se i sigurna je online pohrana - dijeljeni trezori su namijenjeni za to.</string>
     <string name="deposit_form_enter_asset_hint">Unesite resurse</string>
     <string name="share_balance_loading">Učitavanje...</string>
-    <string name="custom_token_not_found_desc">Possible reasons: wrong contract, unsupported chain, or token removed from registries.</string>
+    <string name="custom_token_not_found_desc">Mogući razlozi: pogrešan ugovor, nepodržani lanac ili je token uklonjen iz registara.</string>
     <string name="custom_token_screen_finding_token">Pronalaženje tokena</string>
     <string name="retry">Pokušajte ponovno</string>
     <string name="custom_token_screen_title">Pronađite prilagođeni token</string>
@@ -783,7 +783,7 @@
     <string name="backup_password_request_no_password_action">Sigurnosna kopija bez lozinke</string>
     <string name="address_bookmark_error_invalid_address">Ova adresa nije važeća za %s</string>
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
-    <string name="error_invalid_chain">Maak een nieuwe kluis aan</string>
+    <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
     <string name="vault_backup_screen_change_email">Promijenite e-poštu i ponovno pokrenite generator ključeva</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">Poslano vam je na potpuno samostalno čuvanje!</string>

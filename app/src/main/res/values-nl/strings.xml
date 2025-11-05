@@ -17,9 +17,9 @@
     <string name="vault_settings_backup_subtitle">Back-up van uw kluis delen</string>
     <string name="vault_settings_rename_title">Hernoemen</string>
     <string name="swap_form_on_chain">op</string>
-    <string name="select_asset_title">Activum selecteren</string>
-    <string name="select_asset_chain_title">Keten</string>
-    <string name="select_chain_chain_title">Keten</string>
+    <string name="select_asset_title">Actief selecteren</string>
+    <string name="select_asset_chain_title">Ketting</string>
+    <string name="select_chain_chain_title">Ketting</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
     <string name="vault_settings_reshare_title">Opnieuw delen</string>
@@ -225,7 +225,7 @@
     <string name="swap_form_min_pay">min. uitbetaling</string>
     <string name="rename_vault_invalid_name">Ongeldige naam</string>
     <string name="swap_form_invalid_amount">Ongeldig bedrag</string>
-    <string name="vault_name_too_long_error">O nome do cofre é demasiado longo</string>
+    <string name="vault_name_too_long_error">Kluisnaam is te lang</string>
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
     <string name="insufficient_utxos_error">Onvoldoende beschikbare UTXO\'s om het geselecteerde bedrag te dekken. Voeg meer fondsen toe of verlaag het bedrag dat u verzendt</string>
     <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken…</string>
@@ -261,17 +261,17 @@
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
     <string name="backup_now">Maak nu een back-up van uw kluis!</string>
     <string name="deposit_screen_title">Functiehandtekening</string>
-    <string name="deposit_screen_amount_title">Hoeveelheid</string>
+    <string name="deposit_screen_amount_title">Bedrag</string>
     <string name="verify_deposit_memo_title">Notitie</string>
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
-    <string name="verify_deposit_gas_title">Gas</string>
+    <string name="verify_deposit_gas_title">Netwerkkosten</string>
     <string name="token_selection_screen_custom_token">Aangepaste token</string>
     <string name="custom_token_find_your_custom_token">Vind uw aangepaste token</string>
     <string name="custom_token_enter_contract_address">Voer contractadres in</string>
     <string name="custom_token_token_not_found">Token niet gevonden</string>
     <string name="custom_token_add_token">%1$s-token toevoegen</string>
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Hoeveelheid</string>
+    <string name="deposit_form_amount_title_without_balance">Bedrag</string>
     <string name="share_vault_qr_title">Deel Vault QR</string>
     <string name="share_vault_qr_save" >Opslaan</string>
     <string name="vault_settings_enable_biometrics_save" >Opslaan</string>
@@ -568,7 +568,7 @@
     <string name="sign_message_form_method_field_title">Methode</string>
     <string name="hint_signing_method">Ondertekeningsmethode</string>
     <string name="verify_sign_message_signing_method" >Ondertekeningsmethode</string>
-    <string name="signing_error_blockhash_not_found">Ondertekeningsmethode</string>
+    <string name="signing_error_blockhash_not_found">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
     <string name="hint_message_to_sign">Bericht om te ondertekenen</string>
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
@@ -645,7 +645,7 @@
     <string name="search_bar_portfolio">Portfolio</string>
     <string name="search_bar_nfts">NFT\'s</string>
     <string name="search_bar_soon">Binnenkort</string>
-    <string name="upgrade_banner_sign_faster">Teken sneller dan ooit tevoren</string>
+    <string name="upgrade_banner_sign_faster">Teken sneller dan ooit tevoren</string>f
     <string name="upgrade_banner_upgrade_your">Upgrade nu uw kluis</string>
     <string name="upgrade_banner_upgrade_now">Upgrade nu</string>
     <string name="home_portfolio_balance">Portefeuillesaldo</string>
@@ -689,7 +689,7 @@
     <string name="vault_confirmation_vault_upgraded">Vault geüpgraded</string>
     <string name="vault_confirmation_well_done">Goed gedaan.</string>
     <string name="this_amount_would_leave_too_little_change">Dit bedrag zou te weinig wisselgeld opleveren. 💡 Probeer \'Send Max\' (%1$s ADA) om dit probleem te voorkomen.</string>
-    <string name="swap_form_native">Nativo</string>
+    <string name="swap_form_native">Oorspronkelijk</string>
     <string name="swap_transaction_overview_approval_tx_hash">Goedkeuring Tx Hash</string>
     <string name="swap_transaction_overview_track">Spoor</string>
     <string name="token_selection_screen_select_tokens">Selecteer tokens</string>
@@ -739,7 +739,7 @@
     <string name="retry">Opnieuw proberen</string>
     <string name="custom_token_screen_title">Aangepaste token zoeken</string>
     <string name="rename_vault_screen_rename_vault">Kluis hernoemen</string>
-    <string name="custom_token_not_found_desc">Mogući razlozi: pogrešan ugovor, nepodržani lanac ili token uklonjen iz registara</string>
+    <string name="custom_token_not_found_desc">Mogelijke redenen: verkeerd contract, niet-ondersteunde keten of token verwijderd uit registers.</string>
     <string name="banxa_buy_or_transfer">Kopen of overmaken met Banxa</string>
     <string name="banxa_continue">Doorgaan naar Banxa</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
@@ -791,8 +791,8 @@
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
     <string name="address_bookmark_error_invalid_address">Dit adres is niet geldig voor %s</string>
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
-    <string name="error_invalid_chain">Keten is ongeldig</string>
-    <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
+    <string name="error_invalid_chain">Ketting is ongeldig</string>
+    <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>
     <string name="vault_backup_screen_change_email">Wijzig e-mailadres en start de keygen opnieuw</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">Het wordt naar je verzonden zodat je het zelf kunt beheren!</string>
     <string name="onboarding_fast_backup_desc_page_3_part_2">Controleer je e-mailadres om te verifiëren</string>
@@ -840,7 +840,7 @@
     <string name="fast_vault_password_hint_next">Volgende</string>
     <string name="fast_vault_password_hint_screen_hint">Voer hint in</string>
     <string name="fast_vault_password_screen_password_hint">Voer wachtwoord in</string>
-    <string name="send_error_same_address">Het afzenderadres moet verschillen van het afzenderadres</string>
+    <string name="send_error_same_address">Het ontvangeradres moet verschillen van het afzenderadres</string>
     <string name="select_vault_type_secure">Beveiligen</string>
     <string name="select_vault_type_fast">Snel</string>
     <string name="vault_backup_screen_paste">Plakken</string>
@@ -897,7 +897,7 @@
     <string name="onboarding_desc_page_1_part_1">Zeg hallo tegen</string>
     <string name="peer_discovery_this_device">Dit apparaat</string>
     <string name="peer_discovery_scan_with_n_device">Scan met %1$s apparaat</string>
-    <string name="select_chain_title">Keten selecteren</string>
+    <string name="select_chain_title">Selecteer ketting</string>
     <string name="keygen_benefit_2_emphasized">Zelfbeheer,</string>
     <string name="sign_message_sign_screen_title">Bericht ondertekenen</string>
     <string name="vault_settings_sign_message_title">Ondertekenen</string>
