@@ -259,30 +259,35 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun createRujiStakePosition(address: String): StakePositionUiModel? {
-        val details = withContext(Dispatchers.IO) {
-            rujiStakingService.getStakingDetails(address)
+        return try {
+            val details = withContext(Dispatchers.IO) {
+                rujiStakingService.getStakingDetails(address)
+            }
+
+            val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
+            val formattedAmount =
+                "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} $RUJI_SYMBOL"
+
+            val rewards = details.rewards?.let { rewardAmount ->
+                val rewardValue = rewardAmount.setScale(2, RoundingMode.HALF_UP)
+                "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
+            }
+
+            StakePositionUiModel(
+                stakeAssetHeader = "Staked RUJI",
+                stakeAmount = formattedAmount,
+                apy = details.apr?.formatPercentage(),
+                canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
+                canStake = true,
+                canUnstake = details.stakeAmount > BigInteger.ZERO,
+                rewards = rewards,
+                nextReward = null,
+                nextPayout = null
+            )
+        } catch (t: Throwable) {
+            Timber.e(t, "Failed to create RUJI stake position")
+            null
         }
-
-        val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-        val formattedAmount =
-            "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} $RUJI_SYMBOL"
-
-        val rewards = details.rewards?.let { rewardAmount ->
-            val rewardValue = rewardAmount.setScale(2, RoundingMode.HALF_UP)
-            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
-        }
-
-        return StakePositionUiModel(
-            stakeAssetHeader = "Staked RUJI",
-            stakeAmount = formattedAmount,
-            apy = details.apr?.formatPercentage(),
-            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
-            canStake = true,
-            canUnstake = details.stakeAmount > BigInteger.ZERO,
-            rewards = rewards,
-            nextReward = null,
-            nextPayout = null
-        )
     }
 
     private suspend fun createTCYStakePosition(address: String): StakePositionUiModel? {
