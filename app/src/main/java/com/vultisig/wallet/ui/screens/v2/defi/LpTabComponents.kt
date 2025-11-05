@@ -140,7 +140,7 @@ internal fun LpWidget(
 
         Column {
             Text(
-                text = "Position",
+                text = stringResource(R.string.lp_position),
                 color = Theme.v2.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
@@ -167,7 +167,7 @@ internal fun LpWidget(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ActionButton(
-                title = "Remove",
+                title = stringResource(R.string.remove),
                 icon = R.drawable.ic_circle_minus,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
@@ -179,7 +179,7 @@ internal fun LpWidget(
             )
 
             ActionButton(
-                title = "Add",
+                title = stringResource(R.string.add),
                 icon = R.drawable.ic_circle_plus,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
