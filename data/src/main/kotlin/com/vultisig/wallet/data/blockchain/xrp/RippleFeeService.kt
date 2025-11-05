@@ -3,11 +3,11 @@ package com.vultisig.wallet.data.blockchain.xrp
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RippleServerStateResponseJson
 import com.vultisig.wallet.data.api.getBaseReserve
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.RippleFees
-import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.RippleFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope

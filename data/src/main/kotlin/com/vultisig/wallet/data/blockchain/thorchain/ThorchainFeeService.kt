@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.GasFees
+import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
 
