@@ -47,7 +47,8 @@ internal data class DefiPositionsUiModel(
     val totalAmountPrice: String = "$0.00",
     val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
-    val staking: StakingTabUiModel = StakingTabUiModel()
+    val staking: StakingTabUiModel = StakingTabUiModel(),
+    val lp: LpTabUiModel = LpTabUiModel(),
 )
 
 internal data class BondedTabUiModel(
@@ -59,6 +60,19 @@ internal data class BondedTabUiModel(
 internal data class StakingTabUiModel(
     val isLoading: Boolean = false,
     val positions: List<StakePositionUiModel> = emptyList()
+)
+
+internal data class LpTabUiModel(
+    val isLoading: Boolean = false,
+    val positions: List<LpPositionUiModel> = emptyList(),
+)
+
+internal data class LpPositionUiModel(
+    val titleLp: String,
+    val totalPriceLp: String,
+    val icon: Int,
+    val apr: String?,
+    val position: String,
 )
 
 internal data class StakePositionUiModel(
