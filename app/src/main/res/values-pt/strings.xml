@@ -719,4 +719,7 @@
     <string name="bond_node_state_disabled">Desabilitado</string>
     <string name="bond_node_state_unknown">Desconhecido</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Posição</string>
+    <string name="add">Adicionar</string>
+    <string name="remove">Remover</string>
 </resources>

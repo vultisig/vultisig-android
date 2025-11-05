@@ -722,4 +722,7 @@
     <string name="bond_node_state_disabled">Deaktiviert</string>
     <string name="bond_node_state_unknown">Unbekannt</string>
     <string name="defi_balance">Guthaben</string>
+    <string name="lp_position">Position</string>
+    <string name="add">Hinzufügen</string>
+    <string name="remove">Entfernen</string>
 </resources>

@@ -124,8 +124,10 @@ internal fun DefiPositionScreenContent(
                 }
 
                 DefiTab.LPS.displayName -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = { }
+                    LpTabContent(
+                        state = state.lp,
+                        onClickAdd = { /* TODO: Implement add action */ },
+                        onClickRemove = {/* TODO: Implement remove action */  },
                     )
                 }
             }
