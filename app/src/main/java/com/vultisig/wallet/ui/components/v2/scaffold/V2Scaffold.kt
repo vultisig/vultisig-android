@@ -20,12 +20,14 @@ internal fun V2Scaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
     onBackClick: (() -> Unit)? = null,
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit
 ) {
 
     V2Scaffold(
         modifier = modifier,
         content = content,
+        bottomBar = bottomBar,
         topBar = {
             V2Topbar(
                 title = title,
@@ -41,11 +43,13 @@ internal fun V2Scaffold(
     title: String? = null,
     onBackClick: () -> Unit,
     actions: @Composable RowScope.() -> Unit,
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     V2Scaffold(
         modifier = modifier,
         content = content,
+        bottomBar = bottomBar,
         topBar = {
             V2Topbar(
                 title = title,
@@ -63,11 +67,13 @@ internal fun V2Scaffold(
     onBackClick: () -> Unit,
     @DrawableRes rightIcon: Int,
     onRightIconClick: () -> Unit,
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     V2Scaffold(
         modifier = modifier,
         content = content,
+        bottomBar = bottomBar,
         topBar = {
             V2Topbar(
                 title = title,
@@ -91,10 +97,12 @@ internal fun V2Scaffold(
 private fun V2Scaffold(
     modifier: Modifier = Modifier,
     topBar: @Composable () -> Unit,
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     Scaffold(
         topBar = topBar,
+        bottomBar = bottomBar,
         modifier = modifier,
         containerColor = Theme.colors.backgrounds.primary,
     ) {
