@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,8 +28,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -150,6 +160,124 @@ fun ApyInfoItem(
             color = Theme.v2.colors.alerts.success,
         )
     }
+}
+
+@Composable
+internal fun PositionsSelectionDialog() {
+    TokenSelectionList(
+        groups = listOf(
+            TokenSelectionGroupUiModel(
+                title = "Bond",
+                items = listOf(
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.RUNE),
+                ),
+                mapper = {
+                    val tokenSelectionUiModel = when (it) {
+                        is GridTokenUiModel.PairToken<Coin> -> {
+                            TokenSelectionUiModel.TokenUiPair(
+                                left = TokenSelectionUiModel.TokenUiSingle(
+                                    name = it.data.first.ticker,
+                                    logo = getCoinLogo(it.data.first.logo)
+                                ),
+                                right = TokenSelectionUiModel.TokenUiSingle(
+                                    name = it.data.second.ticker,
+                                    logo = getCoinLogo(it.data.second.logo)
+                                ),
+                            )
+                        }
+
+                        is GridTokenUiModel.SingleToken<Coin> -> {
+                            TokenSelectionUiModel.TokenUiSingle(
+                                name = it.data.ticker,
+                                logo = getCoinLogo(it.data.logo)
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = true,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            ),
+            TokenSelectionGroupUiModel(
+                title = "Group 2",
+                items = listOf(
+                    GridTokenUiModel.SingleToken(data = Coins.Ethereum.USDT),
+                    GridTokenUiModel.SingleToken(data = Coins.Polygon.USDC),
+                    GridTokenUiModel.SingleToken(data = Coins.Optimism.USDC_e),
+                    GridTokenUiModel.PairToken(data = Coins.BscChain.USDT to Coins.Solana.USDT),
+                ),
+                mapper = {
+                    val tokenSelectionUiModel = when (it) {
+                        is GridTokenUiModel.PairToken<Coin> -> {
+                            TokenSelectionUiModel.TokenUiPair(
+                                left = TokenSelectionUiModel.TokenUiSingle(
+                                    name = it.data.first.ticker,
+                                    logo = getCoinLogo(it.data.first.logo)
+                                ),
+                                right = TokenSelectionUiModel.TokenUiSingle(
+                                    name = it.data.second.ticker,
+                                    logo = getCoinLogo(it.data.second.logo)
+                                ),
+                            )
+                        }
+
+                        is GridTokenUiModel.SingleToken<Coin> -> {
+                            TokenSelectionUiModel.TokenUiSingle(
+                                name = it.data.ticker,
+                                logo = getCoinLogo(it.data.logo)
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = false,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            ),
+        ),
+        searchTextFieldState = TextFieldState(),
+
+        titleContent = {
+            Column {
+                Text(
+                    "Select tokens to manage",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight
+                )
+            }
+        },
+        notFoundContent = {
+            NoFoundContent(
+                message = "No positions found"
+            )
+        },
+        onCheckChange = { isSelected, uiModel ->
+            when (uiModel) {
+                is GridTokenUiModel.PairToken<Coin> -> {
+                    val (firstToken, secondToken) = uiModel.data
+                    println("$firstToken $secondToken $isSelected")
+                }
+
+                is GridTokenUiModel.SingleToken<Coin> -> {
+                    val token = uiModel.data
+                    println(token)
+                }
+            }
+
+        },
+        onDoneClick = {},
+        onCancelClick = {},
+        onSetSearchText = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Positions Selection Dialog")
+@Composable
+private fun PositionsSelectionDialogPreview() {
+    PositionsSelectionDialog()
 }
 
 @Preview(showBackground = true, name = "Info Item - With Value")

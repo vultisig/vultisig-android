@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -34,11 +34,6 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.NoChainFound
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
@@ -60,6 +55,7 @@ internal fun DefiPositionsScreen(
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
         onTabSelected = model::onTabSelected,
+        onEditPositionClick = model::onEditPositionClick
     )
 }
 
@@ -70,9 +66,14 @@ internal fun DefiPositionScreenContent(
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
+    onEditPositionClick: () -> Unit = {},
     onTabSelected: (String) -> Unit = {},
 ) {
-    val tabs = listOf(DefiTab.BONDED.displayName, DefiTab.STAKING.displayName, DefiTab.LPS.displayName)
+    val tabs = listOf(
+        DefiTab.BONDED.displayName,
+        DefiTab.STAKING.displayName,
+        DefiTab.LPS.displayName
+    )
 
     V2Scaffold(
         onBackClick = onBackClick,
@@ -105,10 +106,15 @@ internal fun DefiPositionScreenContent(
                             size = 16.dp,
                             modifier = Modifier.padding(all = 12.dp),
                             tint = Theme.colors.primary.accent4,
+                            onClick = onEditPositionClick,
                         )
                     }
                 }
             )
+
+            if (state.showPositionSelectionDialog) {
+                PositionsSelectionDialog()
+            }
 
             when (state.selectedTab) {
                 DefiTab.BONDED.displayName -> {
@@ -220,47 +226,6 @@ private fun BalanceBanner(
             }
         }
     }
-}
-
-@Composable
-internal fun PositionsSelectionDialog() {
-    /*TokenSelectionList(
-        titleContent = {
-            Text(
-                text = stringResource(R.string.chain_selection_select_chains),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.colors.neutrals.n100,
-            )
-        },
-        items = state.chains.map {
-            GridTokenUiModel.SingleToken(
-                data = it
-            )
-        },
-        mapper = {
-            TokenSelectionGridUiModel(
-                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
-                    name = it.data.coin.chain.name,
-                    logo = it.data.coin.chain.logo,
-                ),
-                isChecked = it.data.isEnabled
-            )
-        },
-        searchTextFieldState = searchTextFieldState,
-        onDoneClick = onDoneClick,
-        onCancelClick = onCancelClick,
-        notFoundContent = {
-            NoChainFound()
-        },
-        onCheckChange = { checked, chain ->
-            if (checked) {
-                onEnableAccount(chain.coin)
-            } else {
-                onDisableAccount(chain.coin)
-            }
-        },
-        onSetSearchText = onSetSearchText,
-    ) */
 }
 
 @Composable

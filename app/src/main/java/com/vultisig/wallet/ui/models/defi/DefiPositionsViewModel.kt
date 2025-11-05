@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.defi
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,7 +49,9 @@ internal data class DefiPositionsUiModel(
     val totalAmountPrice: String = "$0.00",
     val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
-    val staking: StakingTabUiModel = StakingTabUiModel()
+    val staking: StakingTabUiModel = StakingTabUiModel(),
+    val showPositionSelectionDialog: Boolean = false,
+    //val availablePositions: List<GridTokenUiModel.SingleToken> = emptyList(),
 )
 
 internal data class BondedTabUiModel(
@@ -101,6 +105,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     val state = MutableStateFlow(DefiPositionsUiModel())
 
     private val loadedTabs = mutableSetOf<String>()
+    val searchTextFieldState = TextFieldState()
 
     init {
         loadBondedNodes()
@@ -376,6 +381,14 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
+    fun onEditPositionClick() {
+        viewModelScope.launch {
+            state.update {
+                it.copy(showPositionSelectionDialog = true)
+            }
+        }
+    }
+
     fun onClickBond(nodeAddress: String) {
         // TODO: Implement new navigation screen
     }
@@ -392,6 +405,10 @@ internal class DefiPositionsViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
+    }
+
+    fun setSearchText(searchText: String) {
+        searchTextFieldState.setTextAndPlaceCursorAtEnd(text = searchText)
     }
 
     companion object {
