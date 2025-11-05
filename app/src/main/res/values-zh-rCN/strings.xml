@@ -73,6 +73,7 @@
     <string name="vault_tier_silver_discount">折扣：20基点</string>
     <string name="vault_tier_gold_discount">折扣：30基点</string>
     <string name="vault_tier_platinum_discount">折扣：35基点</string>
+    <string name="vault_tier_hold">保留</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
     <string name="vault_tier_unlock_bronze_part1">解锁</string>
@@ -294,6 +295,7 @@
     <string name="transaction_type_button_swap">交换</string>
     <string name="swap_form_gas_title">网络费用</string>
     <string name="swap_form_total_fees_title">总费用</string>
+    <string name="swap_form_vault">金库</string>
     <string name="swap_form_min_pay">最小支付</string>
     <string name="swap_form_on_chain">在</string>
     
@@ -339,6 +341,7 @@
     <string name="vault_name_too_long_error">金库名称太长</string>
     
     <!-- Swap Form -->
+    <string name="vault_name_too_long_error">保险库名称过长</string>
     <string name="swap_form_invalid_amount">无效金额</string>
     <string name="send_from_invalid_amount">无效金额</string>
     
@@ -404,6 +407,7 @@
     <string name="verify_deposit_node_address_title">节点地址</string>
 
     <!-- Token Selection -->
+    <string name="verify_deposit_gas_title">Gas费</string>
     <string name="token_selection_screen_custom_token">自定义代币</string>
     
     <!-- Custom Token -->
@@ -418,6 +422,7 @@
     <string name="deposit_form_rewards_title">待处理奖励（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
+    <string name="deposit_form_amount_title_without_balance">金额</string>
     <string name="share_vault_qr_title">分享金库二维码</string>
     <string name="share_vault_qr_save">保存</string>
     <string name="vault_settings_enable_biometrics_save">保存</string>
@@ -586,7 +591,7 @@
     <string name="qr_title_join_keysign">加入密钥签名</string>
     <string name="qr_title_join_swap_keysign">加入交换</string>
     <string name="qr_title_join_keygen_description">扫描设备以加入\n金库生成</string>
-    <string name="qr_title_join_keysign_description">金库：%1$s\n金额：%2$s\n至：%3$s</string>
+    <string name="qr_title_join_keysign_description">金库：%1$s 金额：%2$s 至：%3$s</string>
     <string name="qr_title_join_keysign_swap_description">金库：%1$s\n从：%2$s\n至：%3$s</string>
     
     <!-- Error Folder -->
@@ -643,6 +648,7 @@
     <string name="register_vault_screen_step_3">上传您的金库二维码</string>
     <string name="register_vault_screen_step_4">跟踪您的 VULTIES（金库积分）！</string>
     <string name="register_vault_screen_step_2_go_to">前往</string>
+    <string name="register_vault_screen_step_2_vultisig_web">Vultisig 网站</string>
     <string name="register_vault_screen_step_1">保存您的金库二维码</string>
     
     <!-- Do Not Remind -->
@@ -714,13 +720,16 @@
     <string name="send_form_polka_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 1 DOT（存在性存款），账户将被停用（收割），任何剩余资金将丢失。您可以随时用大于存在性存款的新存款重新激活地址。但是，这不会恢复丢失的资金。</string>
     
     <!-- Sign Message -->
-      <string name="hint_signing_method">签名方法</string>
+    <string name="sign_message_form_method_field_title">方法</string>
+    <string name="hint_signing_method">签名方法</string>
     <string name="verify_sign_message_signing_method">签名方法</string>
+    <string name="signing_error_blockhash_not_found">签名方法</string>
     <string name="hint_message_to_sign">要签名的消息</string>
     <string name="verify_sign_message_message_sign">要签名的消息</string>
 
 
     <!-- Keygen -->
+    <string name="keygen_step_preparing_vault">准备保险库</string>
     <string name="keygen_step_generating_ecdsa">生成 ECDSA 密钥</string>
     <string name="keygen_step_generating_eddsa">生成 EdDSA 密钥</string>
     <string name="reshare_step_generating_ecdsa">生成 ECDSA 密钥</string>
@@ -728,13 +737,18 @@
     <string name="keygen_connecting_with_server">连接服务器中...</string>
 
     <!-- Vault Settings Migration -->
+    <string name="vault_backup_summary_start_using_vault">开始使用您的保险库</string>
+    <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
     <!-- Select Asset/Chain -->
+    <string name="select_asset_title">选择资产</string>
+    <string name="select_asset_chain_title">链</string>
     <string name="select_chain_chain_title">链</string>
     <string name="select_chain_balance_title">余额</string>
 
     <!-- Keygen Email Error -->
+    <string name="merge_account_doesnt_exist">此地址未找到所选代币</string>
     <string name="keygen_email_error">电子邮件不正确，请检查</string>
     
     <!-- Scan QR Screen -->
@@ -762,6 +776,8 @@
     
 
     <!-- Swap Error -->
+    <string name="tx_overview_screen_tx_send">发送</string>
+    <string name="tx_overview_screen_tx_deposit">存款</string>
     <string name="swap_error_small_insufficient_funds">资金不足</string>
     
     <!-- Deposit Error -->
@@ -777,9 +793,11 @@
     <!-- Referral -->
     <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的金库</string>
     <string name="referral_invite_next">下一步</string>
+    <string name="referral_screen_title">Vultisig - 推荐链接</string>
     <string name="referral_screen_code_hint">输入最多 4 个字符</string>
     <string name="referral_create_referral">创建推荐</string>
     <string name="referral_save_referral_code">保存推荐代码</string>
+    <string name="referral_invite_onboarding_3">节省费用。</string>
     <string name="referral_or">或</string>
     <string name="referral_create_code_and_earn">创建您自己的代码并赚取</string>
     <string name="referral_on_referred_swaps">在推荐交换上</string>
@@ -803,6 +821,7 @@
     <string name="referral_create_unknown_error">未知错误</string>
     <string name="referral_create_create_referral">创建推荐</string>
     <string name="referral_create_pick_referral_code">选择推荐代码</string>
+    <string name="referral_create_search">搜索</string>
     <string name="referral_create_expiration_date">到期日期</string>
     <string name="referral_create_set_expiration_years">设置到期（年）</string>
     <string name="referral_create_registration_fees">注册费</string>
@@ -837,6 +856,7 @@
     <string name="referral_view_on_swaps">现在在交换上</string>
     
     <!-- TCY Auto Compound -->
+    <string name="referral_top_bar_list_vaults">金库</string>
     <string name="tcy_auto_compound_enable_title">启用自动复利</string>
     <string name="tcy_auto_compound_enable_subtitle">自动复利您的 TCY 奖励</string>
     <string name="tcy_auto_compound_unstake_title">取消质押自动复利 TCY</string>
@@ -862,6 +882,7 @@
     <!-- Address Book -->
     <string name="address_book_empty_description">将所有重要地址整理在一个地方。</string>
     <string name="address_book_empty_title">您的地址簿为空</string>
+    <string name="home_page_no_chain_enabled_desc">您已禁用所有链。请确保至少启用一条链。</string>
     <string name="address_book_saved_addresses">已保存的地址</string>
     <string name="address_book_my_vaults">我的金库</string>
     <string name="address_entry_select">选择</string>
@@ -956,6 +977,7 @@
     <string name="education_settings_title">Vultisig 教育</string>
     <string name="check_updates_settings_title">检查更新</string>
     <string name="vult_website_settings_title">Vultisig 网站</string>
+    <string name="vault">金库</string>
     <string name="general">通用</string>
     <string name="support">支持</string>
     <string name="vultisig_community">Vultisig 社区</string>
@@ -1106,10 +1128,12 @@
     
 
     <!-- Invite to X Banner -->
+    <string name="send_tx_overview_add_to_address_book">添加到通讯录</string>
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
     <string name="invite_to_x_banner_button">关注 %s</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
+    <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>
     <string name="custom_token_screen_title">查找自定义令牌</string>
     <string name="custom_token_not_found_desc">可能的原因：合约错误、不受支持的链，或代币已从注册表中移除。</string>
@@ -1125,5 +1149,176 @@
     <string name="bond_node_state_disabled">已禁用</string>
     <string name="bond_node_state_unknown">未知</string>
     <string name="defi_balance">余额</string>
+    <string name="vault_ceil_active">已激活</string>
+    <string name="fast_vault_password_screen_error">密码不匹配</string>
+    <string name="fast_vault_password_screen_next">下一步</string>
+    <string name="fast_vault_password_hint_screen_title">添加可选提示</string>
+    <string name="migration_onboarding_step_2_text_start">您将创建新的金库份额备份，</string>
+    <string name="migration_onboarding_step_2_text_end">像以前一样存放</string>
+    <string name="migration_onboarding_step_3_text_start">确保</string>
+    <string name="migration_onboarding_step_3_text_emphasize">所有初始设备均已到位</string>
+    <string name="select_vault_type_secure_title">终极安全保障</string>
+    <string name="select_vault_type_secure_desc_1">多设备安全防护</string>
+    <string name="select_vault_type_secure_desc_2">随时可通过设备备份访问</string>
+    <string name="onboarding_desc_page_4_part_1">即使密码丢失也能恢复您的保险库</string>
+    <string name="onboarding_desc_page_4_part_2">如果设备丢失或损坏</string>
+    <string name="onboarding_desc_page_5_part_1">务必备份每个保险库共享文件夹。</string>
+    <string name="keygen_benefit_4_template">支持 Android、iOS、macOS 和 Windows 系统</string>
+    <string name="keygen_benefit_4_emphasized">可用</string>
+    <string name="onboarding_intro_preview_part_2">助记词</string>
+    <string name="onboarding_intro_back">返回</string>
+    <string name="onboarding_security_backup_desc_page_1_part_1">您的金库持有 %s 份份额，</string>
+    <string name="onboarding_security_backup_desc_page_1_part_2">每台设备都需要单独备份。</string>
+    <string name="onboarding_security_backup_desc_page_2_part_1">备份</string>
+    <string name="migration_onboarding_step_1_text_emphasized">世界上速度最快的 MPC 协议</string>
+    <string name="migration_onboarding_step_1_text_end">签名速度前所未有</string>
+    <string name="error_view_try_again_button">重试</string>
+    <string name="error_view_default_title">出错了</string>
+    <string name="error_view_default_description">发生错误</string>
+    <string name="keygen_vault_created_success_part_1">保险库已创建</string>
+    <string name="vault_created_success_part_2">成功</string>
+    <string name="backup_vault_backup_now_button">立即备份</string>
+    <string name="backup_vault_backup_vault_share_title">在线备份您的金库共享</string>
+    <string name="backup_password_request_description">我们建议您不要为设备库共享设置备份密码——如果备份数据妥善存储在不同位置，您的数据就很安全，这本身就是一项重要的保护措施。请记住，如果您忘记了备份密码，则无法恢复。一切由您决定！</string>
+    <string name="backup_password_request_no_password_action">无需密码备份</string>
+    <string name="backup_vault_topbar_title">备份金库</string>
+    <string name="onboarding_fast_backup_desc_page_1_part_1">您的金库持有 2 份份额，</string>
+    <string name="onboarding_fast_backup_desc_page_1_part_2">立即备份</string>
+    <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
+    <string name="keygen_benefit_5_emphasized">无种子钱包</string>
+    <string name="address_bookmark_error_invalid_address">此代码将确认您已通过电子邮件收到您的 Vault 共享文件 1</string>
+    <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
+    <string name="error_invalid_chain">链无效</string>
+    <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
+    <string name="vault_backup_screen_change_email">更改邮箱并重启密钥生成器</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_1">已发送给您，供您完全自行保管！</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">检查您的邮箱以进行验证</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">我们已向您发送新的服务器共享！</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">检查您的邮箱以进行验证</string>
+    <string name="select_vault_type_next">下一步</string>
+    <string name="select_vault_type_choose_setup">选择“设置”</string>
+    <string name="home_screen_scan_qr_code">扫描二维码</string>
+    <string name="create_new_vault_screen_create_new_vault">创建新密钥库</string>
+    <string name="onboarding_desc_page_6_part_2">解锁您的金库</string>
+    <string name="onboarding_summary_button">创建您的金库</string>
+    <string name="keygen_while_you_wait_title">等待期间，Vultisig 正在……</string>
+    <string name="keygen_top_bar_title">创建金库</string>
+    <string name="keygen_benefit_3_template">在一个保险库中兑换您喜爱的所有代币</string>
+    <string name="keygen_benefit_3_emphasized">跨链</string>
+    <string name="upgrade_banner_title">立即升级您的金库</string>
+    <string name="deposit_form_custom_memo_optional_title">自定义备注（可选）</string>
+    <string name="home_defi_portfolio">DeFi 投资组合</string>
+    <string name="backup_password_request_with_password_action">使用密码</string>
+    <string name="backup_password_topbar_title">密码</string>
+    <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
+    <string name="vault_backup_screen_email_sent_to">已发送至 %s。</string>
+    <string name="vault_backup_screen_donot_recieve_email">未收到邮件？</string>
+    <string name="select_vault_type_secure_desc_3">保护任意金额的资产</string>
+    <string name="select_vault_type_fast_desc_3">Vultiserver 立即联合签名</string>
+    <string name="peer_discovery_topbar_title">扫描二维码</string>
+    <string name="peer_discovery_waiting_for_devices_action">正在等待设备……</string>
+    <string name="peer_discovery_devices_n_of_n">设备（%1$s/%2$s）</string>
+    <string name="onboarding_desc_page_5_part_2">单独发送</string>
+    <string name="onboarding_desc_page_5_part_3">其他位置</string>
+    <string name="scan_qr_code_modal_annotation">在您的其他设备上下载 Vultisig 并选择“扫描二维码”</string>
+    <string name="onboarding_desc_page_2_part_3">提高安全性并</string>
+    <string name="onboarding_desc_page_2_part_4">消除单点故障</string>
+    <string name="onboarding_desc_page_3_part_1">每台设备</string>
+    <string name="referral_invite_onboarding_1">邀请好友。</string>
+    <string name="referral_invite_onboarding_2">赚取奖励。</string>
+    <string name="fast_vault_name_screen_desc">您随时可以在设置中重命名您的库</string>
+    <string name="enter_email_screen_title">请输入您的电子邮件地址</string>
+    <string name="enter_email_screen_hint">邮箱</string>
+    <string name="swap_screen_invalid_specific_and_utxo">特定计算失败</string>
+    <string name="verify_sign_message_message_field_signature">签名</string>
+    <string name="secret_enable_dkls">启用 DKLS</string>
+    <string name="fast_vault_password_hint_screen_desc">如果您忘记密码，将显示此信息。</string>
+    <string name="fast_vault_password_hint_skip">跳过</string>
+    <string name="fast_vault_password_hint_next">下一步</string>
+    <string name="fast_vault_password_hint_screen_hint">输入提示</string>
+    <string name="fast_vault_password_screen_password_hint">输入密码</string>
+    <string name="send_error_same_address">收件人地址必须与发件人地址不同</string>
+    <string name="select_vault_type_secure">安全</string>
+    <string name="select_vault_type_fast">快速</string>
+    <string name="vault_backup_screen_paste">粘贴</string>
+    <string name="enter_backup_screen_title">请输入我们通过电子邮件发送给您的 4 位验证码</string>
+    <string name="enter_backup_screen_desc">此地址对 %s 无效</string>
+    <string name="vault_backup_error_pin">验证码出错，请重试</string>
+    <string name="tx_overview_screen_tx_hash">交易哈希</string>
+    <string name="tx_overview_screen_tx_from">从</string>
+    <string name="swap_swap_button">交换</string>
+    <string name="swap_swap_button_fill_in_amount">填写金额</string>
+    <string name="keygen_benefit_1_template">消除单点故障</string>
+    <string name="keygen_benefit_1_emphasized">多重身份验证</string>
+    <string name="keygen_benefit_2_template">完全掌控您的资产</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_1">保险库共享的第一部分内容如下：</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_2">由服务器持有。</string>
+    <string name="onboarding_summary_check">我已阅读并理解该如何操作。</string>
+    <string name="send_error_invalid_plan_fee">无效计划费用</string>
+    <string name="onboarding_desc_page_3_part_2">存放在您的保险库中</string>
+    <string name="transfer_ibc_function_memo_title">备注</string>
+    <string name="tx_overview_screen_tx_to">至</string>
+    <string name="tx_overview_screen_tx_memo">备注</string>
+    <string name="verify_sign_message_message_field_title">消息</string>
+    <string name="verify_sign_message_method_field_title">方法</string>
+    <string name="vault_settings_migration_subtitle">将 GG20 保险库迁移到 DKLS</string>
+    <string name="fast_vault_password_screen_title">Vultiserver 密码</string>
+    <string name="fast_vault_password_screen_hint">这是因为密码用于对备份文件进行本地加密，类似于硬盘的加密方式。下一步，您可以选择添加密码提示。</string>
+    <string name="fast_vault_password_screen_hint_title">更多信息</string>
+    <string name="peer_discovery_local_mode_hint">您处于本地模式</string>
+    <string name="peer_discovery_recommended_devices_hint">使用其他设备扫描二维码。建议设置 3 台设备，2 台也足够。</string>
+    <string name="fast_vault_name_screen_title">为您的保险库命名</string>
+    <string name="tx_overview_screen_tx_network">网络</string>
+    <string name="fast_vault_password_screen_reenter_password_hint">重新输入密码</string>
+    <string name="fast_vault_name_screen_next">下一步</string>
+    <string name="enter_email_screen_next">下一步</string>
+    <string name="scan_qr_code_modal_next">下一步</string>
+    <string name="peer_discovery_action_next_title">下一步</string>
+    <string name="home_page_no_chains_enabled">未启用任何链式存储</string>
+    <string name="onboarding_desc_page_3_part_3">共享一个金库</string>
+    <string name="onboarding_security_backup_desc_page_2_part_3">为确保访问，最好</string>
+    <string name="onboarding_security_backup_desc_page_2_part_4">在线共享</string>
+    <string name="select_vault_type_fast_title">快速单设备设置</string>
+    <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
+    <string name="scan_qr_code_modal_scan_the">扫描</string>
+    <string name="scan_qr_code_modal_qr_code">二维码</string>
+    <string name="create_new_vault_screen_or">或</string>
+    <string name="tx_overview_screen_title">概述</string>
+    <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
+    <string name="referral_top_bar_list">推荐</string>
+    <string name="onboarding_desc_page_1_part_3">您的新</string>
+    <string name="onboarding_desc_page_1_part_4">恢复方法</string>
+    <string name="vault_backup_screen_restart_keygen">重启密钥生成器</string>
+    <string name="onboarding_intro_preview_part_1">告别</string>
+    <string name="onboarding_desc_page_1_part_1">迎接</string>
+    <string name="peer_discovery_this_device">此设备</string>
+    <string name="peer_discovery_scan_with_n_device">使用 %1$s 设备扫描</string>
+    <string name="select_chain_title">选择链</string>
+    <string name="keygen_benefit_2_emphasized">自保</string>
+    <string name="sign_message_sign_screen_title">签名消息</string>
+    <string name="vault_settings_sign_message_title">签名</string>
+    <string name="vault_settings_sign_message_description">签名自定义消息</string>
+    <string name="dialog_default_error_body">出错了</string>
+    <string name="onboarding_desc_page_2_part_1">它们是</string>
+    <string name="onboarding_desc_page_2_part_2">拆分为多个部分</string>
+    <string name="select_vault_type_fast_desc_2">存放少量资金用于日常开支</string>
+    <string name="peer_discovery_switch_network_mode_want_to_sign_privately">想创建私密保险库？</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
+    <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
+    <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
+    <string name="keygen_connecting_with_server_take_a_minute">这只需几秒钟。</string>
+    <string name="onboarding_security_backup_desc_page_2_part_2">此保险库共享</string>
+    <string name="function_switch_thorchain_address">THORChain 地址</string>
+    <string name="tx_transaction_successful_screen_title">交易成功</string>
+    <string name="tx_overview_screen_tx_successful">交易成功</string>
+    <string name="migration_onboarding_step_3_text_end">Je kunt je kluis later altijd hernoemen in de instellingen</string>
+    <string name="migration_onboarding_upgrade_your_vault">升级您的金库</string>
+    <string name="migration_onboarding_upgrade_now">立即升级</string>
+    <string name="migration_onboarding_step_1_text_start">将此金库升级至</string>
+    <string name="onboarding_security_backup_title">保险库概览</string>
+    <string name="onboarding_desc_page_1_part_2">保险库共享</string>
+    <string name="verify_swap_youre_swapping_title">您正在切换</string>
+    <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
 
 </resources>
