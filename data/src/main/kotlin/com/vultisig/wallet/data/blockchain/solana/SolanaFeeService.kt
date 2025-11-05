@@ -1,11 +1,11 @@
 package com.vultisig.wallet.data.blockchain.solana
 
 import com.vultisig.wallet.data.api.SolanaApi
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.GasFees
-import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
