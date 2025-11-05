@@ -102,7 +102,7 @@ internal fun LpWidget(
                     )
                 } else {
                     Text(
-                        text = "4,300$",
+                        text = state.totalPriceLp,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.colors.text.primary,
                     )
