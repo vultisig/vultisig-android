@@ -297,7 +297,7 @@ private fun NodeContent(
             )
         }
 
-        if (!node.status.canBond) {
+        if (!node.status.canUnbond) {
             UiSpacer(16.dp)
 
             Text(
