@@ -732,4 +732,7 @@
     <string name="bond_node_state_disabled">Отключен</string>
     <string name="bond_node_state_unknown">Неизвестно</string>
     <string name="defi_balance">Баланс</string>
+    <string name="lp_position">Позиция</string>
+    <string name="add">Добавить</string>
+    <string name="remove">Удалить</string>
 </resources>
