@@ -163,7 +163,11 @@ fun ApyInfoItem(
 }
 
 @Composable
-internal fun PositionsSelectionDialog() {
+internal fun PositionsSelectionDialog(
+    searchTextFieldState: TextFieldState = TextFieldState(),
+    onDoneClick: () -> Unit = {},
+    onCancelClick: () -> Unit = {},
+) {
     TokenSelectionList(
         groups = listOf(
             TokenSelectionGroupUiModel(
@@ -173,18 +177,7 @@ internal fun PositionsSelectionDialog() {
                 ),
                 mapper = {
                     val tokenSelectionUiModel = when (it) {
-                        is GridTokenUiModel.PairToken<Coin> -> {
-                            TokenSelectionUiModel.TokenUiPair(
-                                left = TokenSelectionUiModel.TokenUiSingle(
-                                    name = it.data.first.ticker,
-                                    logo = getCoinLogo(it.data.first.logo)
-                                ),
-                                right = TokenSelectionUiModel.TokenUiSingle(
-                                    name = it.data.second.ticker,
-                                    logo = getCoinLogo(it.data.second.logo)
-                                ),
-                            )
-                        }
+                        is GridTokenUiModel.PairToken<Coin> -> error("Not supported")
 
                         is GridTokenUiModel.SingleToken<Coin> -> {
                             TokenSelectionUiModel.TokenUiSingle(
@@ -201,27 +194,17 @@ internal fun PositionsSelectionDialog() {
                 plusUiModel = null,
             ),
             TokenSelectionGroupUiModel(
-                title = "Group 2",
+                title = "Stake",
                 items = listOf(
-                    GridTokenUiModel.SingleToken(data = Coins.Ethereum.USDT),
-                    GridTokenUiModel.SingleToken(data = Coins.Polygon.USDC),
-                    GridTokenUiModel.SingleToken(data = Coins.Optimism.USDC_e),
-                    GridTokenUiModel.PairToken(data = Coins.BscChain.USDT to Coins.Solana.USDT),
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.RUJI),
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.TCY),
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.sTCY),
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.yRUNE),
+                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.yTCY),
                 ),
                 mapper = {
                     val tokenSelectionUiModel = when (it) {
-                        is GridTokenUiModel.PairToken<Coin> -> {
-                            TokenSelectionUiModel.TokenUiPair(
-                                left = TokenSelectionUiModel.TokenUiSingle(
-                                    name = it.data.first.ticker,
-                                    logo = getCoinLogo(it.data.first.logo)
-                                ),
-                                right = TokenSelectionUiModel.TokenUiSingle(
-                                    name = it.data.second.ticker,
-                                    logo = getCoinLogo(it.data.second.logo)
-                                ),
-                            )
-                        }
+                        is GridTokenUiModel.PairToken<Coin> -> error("Not Supported")
 
                         is GridTokenUiModel.SingleToken<Coin> -> {
                             TokenSelectionUiModel.TokenUiSingle(
@@ -238,38 +221,42 @@ internal fun PositionsSelectionDialog() {
                 plusUiModel = null,
             ),
         ),
-        searchTextFieldState = TextFieldState(),
+
+        searchTextFieldState = searchTextFieldState,
 
         titleContent = {
             Column {
                 Text(
-                    "Select tokens to manage",
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight
+                    stringResource(R.string.select_positions),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.colors.neutrals.n100,
+                )
+
+                UiSpacer(16.dp)
+
+                Text(
+                    text = stringResource(R.string.enable_at_least_one_position),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
                 )
             }
         },
         notFoundContent = {
             NoFoundContent(
-                message = "No positions found"
+                message = stringResource(R.string.no_positions_found)
             )
         },
         onCheckChange = { isSelected, uiModel ->
             when (uiModel) {
-                is GridTokenUiModel.PairToken<Coin> -> {
-                    val (firstToken, secondToken) = uiModel.data
-                    println("$firstToken $secondToken $isSelected")
-                }
-
                 is GridTokenUiModel.SingleToken<Coin> -> {
                     val token = uiModel.data
                     println(token)
                 }
+                else -> error("Not supported double coin")
             }
-
         },
-        onDoneClick = {},
-        onCancelClick = {},
+        onDoneClick = onDoneClick,
+        onCancelClick = onCancelClick,
         onSetSearchText = {}
     )
 }

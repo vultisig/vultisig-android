@@ -720,4 +720,10 @@
     <string name="bond_node_state_disabled">Deshabilitado</string>
     <string name="bond_node_state_unknown">Desconocido</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Posición</string>
+    <string name="add">Añadir</string>
+    <string name="remove">Eliminar</string>
+    <string name="no_positions_found">No se encontraron posiciones</string>
+    <string name="select_positions">Seleccionar posiciones</string>
+    <string name="enable_at_least_one_position">Habilite al menos una posición para ver saldos y gestionar posiciones.</string>
 </resources>

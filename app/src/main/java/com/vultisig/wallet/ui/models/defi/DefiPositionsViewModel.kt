@@ -381,10 +381,10 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun onEditPositionClick() {
+    fun setPositionSelectionDialogVisibility(show: Boolean) {
         viewModelScope.launch {
             state.update {
-                it.copy(showPositionSelectionDialog = true)
+                it.copy(showPositionSelectionDialog = show)
             }
         }
     }

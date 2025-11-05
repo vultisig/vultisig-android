@@ -729,4 +729,10 @@
     <string name="bond_node_state_disabled">Uitgeschakeld</string>
     <string name="bond_node_state_unknown">Onbekend</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Positie</string>
+    <string name="add">Toevoegen</string>
+    <string name="remove">Verwijderen</string>
+    <string name="no_positions_found">Geen posities gevonden</string>
+    <string name="select_positions">Selecteer posities</string>
+    <string name="enable_at_least_one_position">Schakel ten minste één positie in om saldi te bekijken en posities te beheren.</string>
 </resources>

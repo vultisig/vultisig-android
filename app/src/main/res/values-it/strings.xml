@@ -720,4 +720,10 @@
     <string name="bond_node_state_disabled">Disabilitato</string>
     <string name="bond_node_state_unknown">Sconosciuto</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Posizione</string>
+    <string name="add">Aggiungi</string>
+    <string name="remove">Rimuovi</string>
+    <string name="no_positions_found">Nessuna posizione trovata</string>
+    <string name="select_positions">Seleziona posizioni</string>
+    <string name="enable_at_least_one_position">Abilita almeno una posizione per visualizzare i saldi e gestire le posizioni.</string>
 </resources>

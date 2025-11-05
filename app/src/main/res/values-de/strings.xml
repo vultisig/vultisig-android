@@ -722,4 +722,10 @@
     <string name="bond_node_state_disabled">Deaktiviert</string>
     <string name="bond_node_state_unknown">Unbekannt</string>
     <string name="defi_balance">Guthaben</string>
+    <string name="lp_position">Position</string>
+    <string name="add">Hinzufügen</string>
+    <string name="remove">Entfernen</string>
+    <string name="no_positions_found">Keine Positionen gefunden</string>
+    <string name="select_positions">Positionen auswählen</string>
+    <string name="enable_at_least_one_position">Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Positionen zu verwalten.</string>
 </resources>
