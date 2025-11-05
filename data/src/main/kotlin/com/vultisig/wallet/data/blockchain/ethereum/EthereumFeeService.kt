@@ -2,12 +2,12 @@ package com.vultisig.wallet.data.blockchain.ethereum
 
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.Eip1559
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Eip1559
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.GasFees
-import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.supportsLegacyGas

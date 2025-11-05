@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.blockchain
+package com.vultisig.wallet.data.blockchain.model
 
 import java.math.BigInteger
 

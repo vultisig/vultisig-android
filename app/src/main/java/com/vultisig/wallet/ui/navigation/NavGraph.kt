@@ -207,9 +207,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
             )
         ) {
-            DefiPositionsScreen(
-                navController = navController,
-            )
+            DefiPositionsScreen()
         }
 
         dialog<TokenDetail> {

@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.blockchain.sui
 
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.blockchain.BasicFee
-import com.vultisig.wallet.data.blockchain.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.Fee
+import com.vultisig.wallet.data.blockchain.model.BasicFee
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.FeeService
-import com.vultisig.wallet.data.blockchain.GasFees
-import com.vultisig.wallet.data.blockchain.Transfer
+import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload

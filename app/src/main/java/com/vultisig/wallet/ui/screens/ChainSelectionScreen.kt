@@ -64,18 +64,13 @@ private fun ChainSelectionScreen(
             )
         },
         mapper = {
-            when (it) {
-                is GridTokenUiModel.PairToken<ChainUiModel> -> error("can not occurs")
-                is GridTokenUiModel.SingleToken<ChainUiModel> -> {
-                    TokenSelectionGridUiModel(
-                        tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
-                            name = it.data.coin.chain.name,
-                            logo = it.data.coin.chain.logo,
-                        ),
-                        isChecked = it.data.isEnabled
-                    )
-                }
-            }
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+                    name = it.data.coin.chain.name,
+                    logo = it.data.coin.chain.logo,
+                ),
+                isChecked = it.data.isEnabled
+            )
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,
