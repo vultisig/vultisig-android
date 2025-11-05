@@ -16,10 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -88,11 +93,14 @@ internal fun ChainAccount(
             size = 9.dp
         )
 
-        Column {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+        ) {
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = Theme.colors.text.primary
             )
@@ -122,11 +130,12 @@ internal fun ChainAccount(
         }
 
         UiSpacer(
-            weight = 1f
+            size = 8.dp
         )
 
         Column(
             horizontalAlignment = Alignment.End,
+            modifier = Modifier.weight(1f),
         ) {
             LoadableValue(
                 value = fiatBalance,
@@ -144,6 +153,8 @@ internal fun ChainAccount(
                 isVisible = isBalanceVisible,
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.colors.text.extraLight,
+                maxLines = 2,
+                textAlign = TextAlign.End,
             )
         }
 
@@ -157,4 +168,40 @@ internal fun ChainAccount(
             tint = Theme.colors.text.primary,
         )
     }
+}
+
+@Preview
+@Composable
+fun ChainAccountPreview(){
+    ChainAccount(
+        modifier = Modifier,
+        title = "LP-THOR.RUJI/ ETH.USDC-XYK",
+        balance = "0.11412095 LP-THOR.RUJI",
+        price = "$1.00",
+        fiatBalance = "$11.94",
+        isBalanceVisible = true,
+        tokenLogo = Coins.Ethereum.USDT.logo,
+        chainLogo = Coins.Ethereum.USDT.chain.logo,
+        monoToneChainLogo = Coins.Ethereum.USDT.chain.monoToneLogo,
+        onClick = {  },
+        mergedBalance = "",
+    )
+}
+
+@Preview
+@Composable
+fun ChainAccountPreview2(){
+    ChainAccount(
+        modifier = Modifier,
+        title = Coins.Ethereum.USDT.ticker,
+        balance = "11.94",
+        price = "$1.00",
+        fiatBalance = "$11.94",
+        isBalanceVisible = true,
+        tokenLogo = Coins.Ethereum.USDT.logo,
+        chainLogo = Coins.Ethereum.USDT.chain.logo,
+        monoToneChainLogo = Coins.Ethereum.USDT.chain.monoToneLogo,
+        onClick = {  },
+        mergedBalance = "",
+    )
 }

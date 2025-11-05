@@ -15,6 +15,7 @@
     <string name="active_nodes">活跃节点</string>
     <string name="next_churn">下次轮换</string>
     <string name="next_award">下次奖励</string>
+    <string name="next_payout">下次支付</string>
     <string name="wait_until_node_churned_out">等待节点被淘汰</string>
     <string name="deposit_option_leave">离开</string>
     <string name="deposit_option_stake">质押</string>
@@ -24,6 +25,7 @@
     <string name="deposit_option_switch">切换</string>
     <string name="deposit_option_merge">合并</string>
     <string name="deposit_option_withdraw_ruji">提取 RUJI</string>
+    <string name="withdraw_amount">提取 %s</string>
     <string name="deposit_option_stake_tcy">质押 TCY</string>
     <string name="deposit_option_unstake_tcy">取消质押 TCY</string>
     <string name="deposit_option_stake_ruji">质押 RUJI</string>
@@ -1125,5 +1127,8 @@
     <string name="bond_node_state_disabled">已禁用</string>
     <string name="bond_node_state_unknown">未知</string>
     <string name="defi_balance">余额</string>
+    <string name="lp_position">仓位</string>
+    <string name="add">添加</string>
+    <string name="remove">移除</string>
 
 </resources>

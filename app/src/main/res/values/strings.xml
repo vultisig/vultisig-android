@@ -13,7 +13,8 @@
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
     <string name="next_award">Next award</string>
-    <string name="wait_until_node_churned_out">Wait until Node is churned out</string>
+    <string name="next_payout">Next Payout</string>
+    <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -22,6 +23,7 @@
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Withdraw RUJI</string>
+    <string name="withdraw_amount">Withdraw %s</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_option_stake_ruji">Stake RUJI</string>
@@ -800,6 +802,12 @@
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
+    
+    <string name="defi_action_stake" translatable="false">Stake</string>
+    <string name="defi_action_unstake" translatable="false">Unstake</string>
+    <string name="defi_action_mint" translatable="false">Mint</string>
+    <string name="defi_action_redeem" translatable="false">Redeem</string>
+    
     <plurals name="seconds_format">
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>
@@ -825,7 +833,7 @@
     <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
     <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, this  will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
-    <string name="backup_password_request_caution_cannot_reset_desc">Remember: if you forget your vault password, it cannot be reset or recovered.</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Remember: If you forget your vault password, it cannot be reset or recovered.</string>
     <string name="backup_password_request_highlight_cannot">cannot</string>
     <string name="backup_password_request_caution_secure_without_desc">By default, your backup is secure without an extra password, since you store Vault shares in different locations.</string>
     <string name="backup_password_request_highlight_secure_without">secure without</string>
@@ -974,5 +982,8 @@
     <string name="bond_node_state_disabled">Disabled</string>
     <string name="bond_node_state_unknown">Unknown</string>
     <string name="defi_balance">Balance</string>
+    <string name="lp_position">Position</string>
+    <string name="add">Add</string>
+    <string name="remove">Remove</string>
 
 </resources>

@@ -84,18 +84,13 @@ internal fun TokenSelectionScreen(
             }
         },
         mapper = {
-            when(it){
-                is GridTokenUiModel.PairToken<TokenUiModel> -> error("PairToken cannot occur in single-token selection")
-                is GridTokenUiModel.SingleToken<TokenUiModel> -> {
-                    TokenSelectionGridUiModel(
-                        tokenSelectionUiModel = TokenUiSingle(
-                            name = it.data.coin.ticker,
-                            logo = getCoinLogo(logoName = it.data.coin.logo),
-                        ),
-                        isChecked = it.data.isEnabled
-                    )
-                }
-            }
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel = TokenUiSingle(
+                    name = it.data.coin.ticker,
+                    logo = getCoinLogo(logoName = it.data.coin.logo),
+                ),
+                isChecked = it.data.isEnabled
+            )
         },
         searchTextFieldState = searchTextFieldState,
         onDoneClick = onDoneClick,
