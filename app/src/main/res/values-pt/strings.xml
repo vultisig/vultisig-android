@@ -792,7 +792,6 @@
     <string name="select_vault_type_choose_setup">Selecione Configurar</string>
     <string name="home_screen_scan_qr_code">Leia o QR Code</string>
     <string name="create_new_vault_screen_create_new_vault">Criar novo cofre</string>
-    <string name="create_new_vault_screen_create_new_vault">Criar novo cofre.</string>
     <string name="onboarding_desc_page_6_part_2">Desbloqueie o seu cofre</string>
     <string name="onboarding_summary_button">Crie o seu cofre</string>
     <string name="keygen_while_you_wait_title">Enquanto espera, o Vultisig está...</string>

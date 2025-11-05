@@ -378,16 +378,6 @@
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
     <string name="vault_list_folders_list">Folders</string>
-
-    <!--    fast&active vaults are temporarily disabled -->
-    <!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
-    <!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
-    <!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
-    <!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
-    <!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
-    <!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
-    <!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
-
     <string name="keygen_email_continue_button">Continue</string>
     <string name="keygen_email_caption">Enter your email to receive your backup</string>
     <string name="create_folder">Create Folder</string>
@@ -410,7 +400,6 @@
     <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
-
     <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
     <string name="naming_vault_placeholder_secure_vault">Secure Vault</string>
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
@@ -475,7 +464,6 @@
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
 
-    <!-- TODO needs translation-->
     <string name="verify_sign_message_method_field_title">Method</string>
     <string name="signing_error_blockhash_not_found">Transaction time out due to slow signing. Please try again.</string>
     <string name="verify_sign_message_message_field_title">Message</string>

@@ -343,7 +343,6 @@
     <string name="vault_name_too_long_error">金库名称太长</string>
     
     <!-- Swap Form -->
-    <string name="vault_name_too_long_error">保险库名称过长</string>
     <string name="swap_form_invalid_amount">无效金额</string>
     <string name="send_from_invalid_amount">无效金额</string>
     
@@ -1200,7 +1199,6 @@
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
     <string name="home_screen_scan_qr_code">扫描二维码</string>
-    <string name="create_new_vault_screen_create_new_vault">创建新密钥库</string>
     <string name="onboarding_desc_page_6_part_2">解锁您的金库</string>
     <string name="onboarding_summary_button">创建您的金库</string>
     <string name="keygen_while_you_wait_title">等待期间，Vultisig 正在……</string>
