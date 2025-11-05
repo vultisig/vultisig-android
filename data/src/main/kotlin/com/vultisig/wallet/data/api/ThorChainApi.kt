@@ -166,6 +166,7 @@ internal class ThorChainApiImpl @Inject constructor(
         val affiliateParams = buildAffiliateParams(
             referralCode = referralCode,
             discountBps = bpsDiscount,
+            isAffiliate = isAffiliate,
         )
 
         val response = httpClient
@@ -202,15 +203,16 @@ internal class ThorChainApiImpl @Inject constructor(
 
     private fun buildAffiliateParams(
         referralCode: String,
-        discountBps: Int
+        discountBps: Int,
+        isAffiliate: Boolean,
     ): Map<String, String> {
         val affiliateParams = mutableMapOf<String, String>()
 
         // If there is referral apply discount and referral
-        if (referralCode.isNotEmpty()) {
+        if (referralCode.isNotEmpty() && isAffiliate) {
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
-                THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
-                discountBps
+                baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
+                discountBps = discountBps,
             )
 
             // Build nested affiliate with new thorchain structure
@@ -220,9 +222,14 @@ internal class ThorChainApiImpl @Inject constructor(
             affiliateParams["affiliate"] = affiliates
             affiliateParams["affiliate_bps"] = affiliateBps
         } else {
+            val baseBps = if (isAffiliate) {
+                THORChainSwaps.AFFILIATE_FEE_RATE_BP
+            } else {
+                0
+            }
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
-                THORChainSwaps.AFFILIATE_FEE_RATE_BP,
-                discountBps
+                baseBps = baseBps,
+                discountBps = discountBps,
             )
 
             affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
