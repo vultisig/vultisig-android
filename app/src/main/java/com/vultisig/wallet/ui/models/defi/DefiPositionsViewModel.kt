@@ -229,8 +229,10 @@ internal class DefiPositionsViewModel @Inject constructor(
                         when {
                             coin.ticker.equals("ruji", ignoreCase = true) ->
                                 createRujiStakePosition(address)
+
                             coin.ticker.equals("tcy", ignoreCase = true) ->
                                 createTCYStakePosition(address)
+
                             else ->
                                 createGenericStakePosition(coin, address)
                         }
@@ -274,7 +276,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             stakeAssetHeader = "Staked RUJI",
             stakeAmount = formattedAmount,
             apy = details.apr?.formatPercentage(),
-            canWithdraw = rewards != null && details.rewards!! > BigDecimal.ZERO,
+            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
             canStake = true,
             canUnstake = details.stakeAmount > BigInteger.ZERO,
             rewards = rewards,
@@ -289,11 +291,12 @@ internal class DefiPositionsViewModel @Inject constructor(
             val result = tcyStakingService.getStakingDetails(
                 address = address,
             )
-            
+
             // Convert stake amount to readable format
             val stakedAmount = Chain.ThorChain.coinType.toValue(result.stakeAmount)
-            val formattedAmount = "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} TCY"
-            
+            val formattedAmount =
+                "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} TCY"
+
             // Create and return the UI model
             StakePositionUiModel(
                 stakeAssetHeader = "Staked TCY",
@@ -312,32 +315,40 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createGenericStakePosition(coin: Coin, address: String): StakePositionUiModel? {
-        val addresses = listOf(address)
-        val coins = listOf(coin)
+    private suspend fun createGenericStakePosition(
+        coin: Coin,
+        address: String
+    ): StakePositionUiModel? {
+        return try {
+            val addresses = listOf(address)
+            val coins = listOf(coin)
 
-        val balance =
-            balanceRepository.getCachedTokenBalances(addresses, coins).firstOrNull()
-                ?.tokenBalance
-                ?.tokenValue
-                ?.value
-                ?: BigInteger.ZERO
+            val balance =
+                balanceRepository.getCachedTokenBalances(addresses, coins).firstOrNull()
+                    ?.tokenBalance
+                    ?.tokenValue
+                    ?.value
+                    ?: BigInteger.ZERO
 
-        val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
-                coin.ticker.contains("ytcy", ignoreCase = true)
+            val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
+                    coin.ticker.contains("ytcy", ignoreCase = true)
 
-        return StakePositionUiModel(
-            stakeAssetHeader = "Staked ${coin.ticker}",
-            stakeAmount = balance.formatAmount(CoinType.THORCHAIN, coin.ticker),
-            apy = null,
-            supportsMint = supportsMint,
-            canWithdraw = false, // TCY auto-distributes rewards
-            canStake = true,
-            canUnstake = true,
-            rewards = null,
-            nextReward = null,
-            nextPayout = null,
-        )
+            return StakePositionUiModel(
+                stakeAssetHeader = "Staked ${coin.ticker}",
+                stakeAmount = balance.formatAmount(CoinType.THORCHAIN, coin.ticker),
+                apy = null,
+                supportsMint = supportsMint,
+                canWithdraw = false, // TCY auto-distributes rewards
+                canStake = true,
+                canUnstake = true,
+                rewards = null,
+                nextReward = null,
+                nextPayout = null,
+            )
+        } catch (t: Throwable) {
+            Timber.e(t, "Failed to create stake position for ${coin.ticker}")
+            null
+        }
     }
 
     fun onTabSelected(tab: String) {

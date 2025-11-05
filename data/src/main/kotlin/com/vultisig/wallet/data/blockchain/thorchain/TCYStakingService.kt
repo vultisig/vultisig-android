@@ -106,7 +106,7 @@ class TCYStakingService @Inject constructor(
 
         if (tcyPrice <= BigDecimal.ZERO ||
             runePrice <= BigDecimal.ZERO ||
-            stakedAmount == BigInteger.ZERO
+            stakedAmount == BigDecimal.ZERO
         ) {
             return 0.0
         }
