@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -405,10 +406,12 @@ internal fun SwapToken(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenLogo(
-            logo = getCoinLogo(token.logo),
+            logo = getCoinLogo(token.ticker),
             title = token.ticker,
             errorLogoModifier = Modifier
-                .size(24.dp),
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(Theme.colors.neutral200),
             modifier = Modifier
                 .size(24.dp)
                 .border(
