@@ -899,7 +899,7 @@
     <string name="select_vault_type_fast_desc_2">Conserva fondi più piccoli per l\'uso quotidiano</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Vuoi creare un vault privatamente?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Passa alla modalità locale</string>
-    <string name="peer_discovery_switch_network_mode_switch_to_internet">Torna alla modalità Internet</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_internet">Passa alla modalità Internet</string>
     <string name="onboarding_desc_page_6_part_1">Queste condivisioni collaborano per</string>
     <string name="enter_email_screen_desc">Questa email viene utilizzata solo per inviare il backup del server</string>
     <string name="keygen_connecting_with_server_take_a_minute">L\'operazione dovrebbe richiedere solo un secondo</string>

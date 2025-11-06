@@ -502,7 +502,7 @@
     <string name="referral_external_not_failed">Controleren van referralcode mislukt</string>
     <string name="referral_invite_next">Volgende</string>
     <string name="referral_code_settings_title">Referralcode</string>
-    <string name="referral_screen_title">Vultisig - Verwijzing</string>
+    <string name="referral_screen_title">Vultisig - Verwijzingen</string>
     <string name="referral_screen_code_hint">Voer maximaal 4 tekens in</string>
     <string name="referral_onboarding_title">Verwijzing</string>
     <string name="referral_onboarding_get_started">Aan de slag</string>
