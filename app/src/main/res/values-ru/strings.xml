@@ -83,7 +83,7 @@
     <string name="send_from_address">От</string>
     <string name="send_to_address">Кому</string>
     <string name="send_to_address_hint">Введите адрес</string>
-    <string name="send_amount">Количество</string>
+    <string name="send_amount">Сумма</string>
     <string name="send_amount_hint">Введите сумму</string>
     <string name="send_amount_currency">Сумма (в %s)</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
@@ -120,8 +120,8 @@
     <string name="verify_transaction_screen_title">Проверить</string>
     <string name="verify_transaction_from_title">От</string>
     <string name="verify_transaction_to_title">Кому</string>
-    <string name="verify_transaction_amount_title">Количество</string>
-    <string name="verify_transaction_value">Ценить</string>
+    <string name="verify_transaction_amount_title">Сумма</string>
+    <string name="verify_transaction_value">Стоимость</string>
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
@@ -231,8 +231,8 @@
     <string name="keygen_peer_discovery_looking_for_devices">Поиск устройств…</string>
     <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Выберите сопрягаемые устройства</string>
-    <string name="peer_discovery_hint_connect_to_internet">Подключите все устройства к одной сети с открытым приложением Vultisig</string>
-    <string name="peer_discovery_hint_connect_to_same_wifi">Подключите все устройства к интернету с открытым приложением Vultisig</string>
+    <string name="peer_discovery_hint_connect_to_internet">Подключите все устройства к интернету и откройте Vultisig</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Подключите все устройства к одной Wi‑Fi сети и откройте Vultisig</string>
     <string name="verify_transaction_memo_title">Мемо</string>
     <string name="send_form_screen_memo_optional">МЕМО (необязательно)</string>
     <string name="circular_progress_indicator_done">Готово</string>
@@ -260,7 +260,7 @@
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
     <string name="backup_now">Сделайте резервную копию своего хранилища прямо сейчас!</string>
-    <string name="deposit_screen_title">Функция Подпись</string>
+    <string name="deposit_screen_title">Подпись функции</string>
     <string name="deposit_screen_amount_title">Количество</string>
     <string name="verify_deposit_gas_title">Газ</string>
     <string name="token_selection_screen_custom_token">Пользовательский токен</string>
@@ -458,7 +458,7 @@
     <string name="keygen_step_preparing_vault">Подготовка Хранилища</string>
     <string name="keygen_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
-    <string name="keygen_connecting_with_server">Генерация ключа ECDSA</string>
+    <string name="keygen_connecting_with_server">Подключение к серверу…</string>
     <string name="keygen_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="reshare_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="merge_account_doesnt_exist">Выбранный токен не найден для этого адреса</string>

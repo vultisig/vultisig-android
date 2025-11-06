@@ -443,7 +443,7 @@
     <string name="slippage_hint">滑点百分比</string>
     
     <!-- Deposit -->
-    <string name="deposit_message_deposit_title">%s 消息存款</string>
+    <string name="deposit_message_deposit_title">%s 存款消息</string>
     <string name="deposit_form_custom_memo_title">自定义备注</string>
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
     <string name="deposit_form_pending_rewards_hint">待处理奖励</string>
@@ -738,7 +738,7 @@
     <string name="keygen_connecting_with_server">连接服务器中...</string>
 
     <!-- Vault Settings Migration -->
-    <string name="vault_backup_summary_start_using_vault">开始使用您的保险库。</string>
+    <string name="vault_backup_summary_start_using_vault">开始使用您的金库</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
@@ -1196,6 +1196,7 @@
     <string name="onboarding_fast_backup_desc_page_3_part_2">检查您的邮箱以进行验证</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">我们已向您发送新的服务器共享！</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_2">检查您的邮箱以进行验证</string>
+    <string name="create_new_vault_screen_create_new_vault">创建一个新保险库</string>
     <string name="select_vault_type_next">下一步</string>
     <string name="select_vault_type_choose_setup">选择“设置”</string>
     <string name="home_screen_scan_qr_code">扫描二维码</string>
@@ -1242,7 +1243,7 @@
     <string name="select_vault_type_fast">快速</string>
     <string name="vault_backup_screen_paste">粘贴</string>
     <string name="enter_backup_screen_title">请输入我们通过电子邮件发送给您的 4 位验证码</string>
-    +<string name="enter_backup_screen_desc">此代码将确认您已通过电子邮件收到您的金库份额 1</string>
+    <string name="enter_backup_screen_desc">此代码将确认您已通过电子邮件收到您的金库份额 1</string>
     <string name="vault_backup_error_pin">验证码出错，请重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>

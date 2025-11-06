@@ -493,7 +493,7 @@
     <string name="referral_external_not_failed">Error al verificar el código de referido</string>
     <string name="referral_invite_next">Siguiente</string>
     <string name="referral_code_settings_title">Código de referido</string>
-    <string name="referral_screen_title">Vultisig - Referencia</string>
+    <string name="referral_screen_title">Vultisig - Referidos</string>
     <string name="referral_screen_code_hint">Introduce hasta 4 caracteres</string>
     <string name="referral_onboarding_title">Referido</string>
     <string name="referral_onboarding_get_started">Empezar</string>
@@ -562,7 +562,7 @@
     <string name="sign_message_form_method_field_title">Método</string>
     <string name="hint_signing_method">Método de firma</string>
     <string name="verify_sign_message_signing_method" >Método de firma</string>
-    <string name="signing_error_blockhash_not_found">Método de firma</string>
+    <string name="signing_error_blockhash_not_found">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
     <string name="verify_sign_message_message_sign">Mensaje para firmar</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
@@ -653,7 +653,7 @@
     <string name="search_bar_search">Buscar</string>
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleccionar cadenas</string>
-    <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
+    <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
     <string name="chain_tokens_tab_hidden">Oculto</string>
@@ -813,7 +813,7 @@
     <string name="vault_backup_screen_email_sent_to">Enviado a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
-    <string name="onboarding_desc_page_5_part_3">Другое местоположение</string>
+    <string name="onboarding_desc_page_5_part_3">Otra ubicación</string>
     <string name="scan_qr_code_modal_annotation">Descarga Vultisig en tus otros dispositivos y selecciona «Escanear código QR».</string>
     <string name="onboarding_desc_page_2_part_3">para aumentar la seguridad y</string>
     <string name="onboarding_desc_page_2_part_4">Elimina el único punto de fallo</string>
@@ -887,7 +887,7 @@
     <string name="onboarding_intro_preview_part_1">Dile adiós a</string>
     <string name="onboarding_desc_page_1_part_1">Dile hola a</string>
     <string name="peer_discovery_this_device">Este dispositivo</string>
-    <string name="peer_discovery_scan_with_n_device">Escanear con el dispositivo de %1$</string>
+    <string name="peer_discovery_scan_with_n_device">Escanear con el dispositivo de %1$s</string>
     <string name="select_chain_title">Seleccionar cadena</string>
     <string name="keygen_benefit_2_emphasized">Autocustodia</string>
     <string name="sign_message_sign_screen_title">Firmar mensaje</string>

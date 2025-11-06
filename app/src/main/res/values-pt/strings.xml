@@ -348,7 +348,7 @@
     <string name="deposit_error_invalid_assets">Os recursos são inválidos</string>
     <string name="deposit_form_screen_assets">Ativas</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
-    <string name="eth_gas_settings_title">Avançada</string>
+    <string name="eth_gas_settings_title">Avançado</string>
     <string name="join_keysign_error_wrong_vault_share">A mesma partilha do cofre. Por favor, altere a partilha para assinar</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Alterar cofre</string>
     <string name="eth_gas_settings_base_fee_title">Taxa Base Atual (Gwei)</string>
@@ -378,7 +378,7 @@
     <string name="register_vault_screen_save_qr_code">Guardar código QR</string>
     <string name="verify_swap_screen_total_fees">Taxas totais</string>
     <string name="scan_qr_code_error_text">O código QR não relacionado é digitalizado</string>
-    <string name="scan_qr_code_error_button">Costas</string>
+    <string name="scan_qr_code_error_button">Voltar</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Ativo</string>
     <string name="insufficient_native_token">%1$s insuficiente</string>
@@ -679,7 +679,7 @@
     <string name="vault_confirmation_vault_upgraded">Cofre atualizado</string>
     <string name="vault_confirmation_well_done">Muito bem.</string>
     <string name="this_amount_would_leave_too_little_change">Este valor deixaria muito pouco troco. 💡 Experimente \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
-    <string name="swap_form_native">Native</string>
+    <string name="swap_form_native">Nativo</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash de Transação de Aprovação</string>
     <string name="swap_transaction_overview_track">Rastrear</string>
     <string name="token_selection_screen_select_tokens">Selecionar Tokens</string>

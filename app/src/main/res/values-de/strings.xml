@@ -250,7 +250,7 @@
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="deposit_screen_title">Funktionssignatur</string>
-    <string name="deposit_screen_amount_title">Menge</string>
+    <string name="deposit_screen_amount_title">Betrag</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
     <string name="verify_deposit_gas_title">Gas</string>
@@ -260,7 +260,7 @@
     <string name="custom_token_token_not_found">Token nicht gefunden</string>
     <string name="custom_token_add_token">%1$s Token hinzufügen</string>
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Menge</string>
+    <string name="deposit_form_amount_title_without_balance">Betrag</string>
     <string name="share_vault_qr_title">Vault-QR teilen</string>
     <string name="share_vault_qr_save" >Speichern</string>
     <string name="vault_settings_enable_biometrics_save" >Speichern</string>
@@ -631,7 +631,7 @@
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
-    <string name="transaction_done_form_approve">Es ist ein Fehler aufgetreten</string>
+    <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
     <string name="transaction_receive">Erhalten</string>
@@ -767,7 +767,7 @@
     <string name="onboarding_security_backup_desc_page_1_part_2">benötigt ein eigenes Backup.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1">Sicherung</string>
     <string name="error_view_try_again_button">Erneut versuchen</string>
-    <string name="error_view_default_title">Genehmigen</string>
+    <string name="error_view_default_title">Etwas ist schiefgelaufen</string>
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
     <string name="migration_onboarding_step_1_text_emphasized">das weltweit schnellste MPC-Protokoll</string>
     <string name="migration_onboarding_step_1_text_end">und schneller als je zuvor signieren</string>

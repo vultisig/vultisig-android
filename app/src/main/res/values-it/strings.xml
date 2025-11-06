@@ -22,7 +22,7 @@
     <string name="vault_tier_silver_discount">Sconto: 20bps</string>
     <string name="vault_tier_gold_discount">Sconto: 30bps</string>
     <string name="vault_tier_platinum_discount">Sconto: 35bps</string>
-    <string name="vault_tier_hold">Trattenimento</string>
+    <string name="vault_tier_hold">Mantieni</string>
     <string name="vault_tier_unlock">Sblocca Livello</string>
     <string name="vault_tier_active">Attivo</string>
     <string name="vault_tier_unlock_bronze_part1">Sblocca Livello </string>
@@ -253,14 +253,14 @@
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
-    <string name="verify_deposit_gas_title">Gas</string>
+    <string name="verify_deposit_gas_title">Commissione di rete</string>
     <string name="token_selection_screen_custom_token">Token personalizzato</string>
     <string name="custom_token_find_your_custom_token">Trova il tuo token personalizzato</string>
     <string name="custom_token_enter_contract_address">Inserisci l\’indirizzo del contratto</string>
     <string name="custom_token_token_not_found">Token non trovato</string>
     <string name="custom_token_add_token">Aggiungi token %1$s</string>
     <string name="deposit_form_amount_title">Importo (Saldo: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance">Quantità</string>
+    <string name="deposit_form_amount_title_without_balance">Importo</string>
     <string name="share_vault_qr_title">Condividi Vault QR</string>
     <string name="share_vault_qr_save" >Salva</string>
     <string name="vault_settings_enable_biometrics_save" >Salva</string>
@@ -287,7 +287,7 @@
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>
     <string name="join_keysign_failed_to_start">Impossibile unirsi al keysign</string>
     <string name="settings_screen_legal">Legal</string>
-    <string name="settings_screen_privacy_policy">politica sulla riservatezza</string>
+    <string name="settings_screen_privacy_policy">Informativa sulla privacy</string>
     <string name="settings_screen_tos">Termini di servizio</string>
     <string name="import_file_not_supported">Il tipo di file non è supportato</string>
     <string name="failed_to_resolve_address">Errore nel risolvere l&#8217;indirizzo</string>
