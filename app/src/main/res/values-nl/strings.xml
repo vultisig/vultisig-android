@@ -897,7 +897,7 @@
     <string name="onboarding_desc_page_1_part_1">Zeg hallo tegen</string>
     <string name="peer_discovery_this_device">Dit apparaat</string>
     <string name="peer_discovery_scan_with_n_device">Scan met %1$s apparaat</string>
-    <string name="select_chain_title">Selecteer ketting</string>
+    <string name="select_chain_title">Selecteer keten</string>
     <string name="keygen_benefit_2_emphasized">Zelfbeheer,</string>
     <string name="sign_message_sign_screen_title">Bericht ondertekenen</string>
     <string name="vault_settings_sign_message_title">Ondertekenen</string>
