@@ -729,4 +729,7 @@
     <string name="bond_node_state_disabled">Uitgeschakeld</string>
     <string name="bond_node_state_unknown">Onbekend</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Positie</string>
+    <string name="add">Toevoegen</string>
+    <string name="remove">Verwijderen</string>
 </resources>

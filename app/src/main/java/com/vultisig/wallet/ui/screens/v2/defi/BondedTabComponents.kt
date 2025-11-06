@@ -296,6 +296,16 @@ private fun NodeContent(
                 iconCircleColor = Theme.v2.colors.primary.accent4
             )
         }
+
+        if (!node.status.canUnbond) {
+            UiSpacer(16.dp)
+
+            Text(
+                text = stringResource(R.string.wait_until_node_churned_out),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.light,
+            )
+        }
     }
 }
 
@@ -451,50 +461,4 @@ private fun ActiveNodesWidgetPreview() {
         onClickBond = {},
         onClickUnbond = {},
     )
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Node Content - Active")
-@Composable
-private fun NodeContentActivePreview() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        NodeContent(
-            node = BondedNodeUiModel(
-                address = "thor1abcd...xyz",
-                status = BondNodeState.ACTIVE,
-                apy = "12.5%",
-                bondedAmount = "1000 RUNE",
-                nextAward = "20 RUNE",
-                nextChurn = "Oct 15, 25"
-            ),
-            onClickBond = {},
-            onClickUnbond = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Node Content - Disabled")
-@Composable
-private fun NodeContentDisabledPreview() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        NodeContent(
-            node = BondedNodeUiModel(
-                address = "thor1dis...def",
-                status = BondNodeState.DISABLED,
-                apy = "0%",
-                bondedAmount = "250 RUNE",
-                nextAward = "0 RUNE",
-                nextChurn = "N/A"
-            ),
-            onClickBond = {},
-            onClickUnbond = {}
-        )
-    }
 }

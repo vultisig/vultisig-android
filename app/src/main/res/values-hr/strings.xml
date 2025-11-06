@@ -720,4 +720,7 @@
     <string name="bond_node_state_disabled">Onemogućen</string>
     <string name="bond_node_state_unknown">Nepoznat</string>
     <string name="defi_balance">Stanje</string>
+    <string name="lp_position">Pozicija</string>
+    <string name="add">Dodaj</string>
+    <string name="remove">Ukloni</string>
 </resources>

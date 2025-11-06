@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens.folder
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -113,221 +115,227 @@ private fun CreateFolderScreen(
     onDeleteFolderClick: () -> Unit,
 ) {
 
-    Column(
-        modifier = Modifier
-            .padding(
-                horizontal = 16.dp
+    Box {
+        Column(
+            modifier = Modifier
+                .padding(
+                    horizontal = 16.dp
+                )
+        ) {
+
+            UiSpacer(
+                size = 24.dp
             )
-    ) {
 
-        UiSpacer(
-            size = 24.dp
-        )
+            val title = if (isEditMode) stringResource(R.string.add_folder_edit_folder_title)
+            else stringResource(R.string.add_folder_title)
 
-        val title = if (isEditMode) stringResource(R.string.add_folder_edit_folder_title)
-        else stringResource(R.string.add_folder_title)
-
-        val button: @Composable BoxScope.() -> Unit = if (isEditMode) {
-            {
-                VsCircleButton(
-                    designType = DesignType.Solid,
-                    size = VsCircleButtonSize.Small,
-                    type = VsCircleButtonType.Custom(Theme.colors.alerts.error),
-                    icon = R.drawable.trash_outline,
-                    onClick = onDeleteFolderClick,
-                )
+            val button: @Composable BoxScope.() -> Unit = if (isEditMode) {
+                {
+                    VsCircleButton(
+                        designType = DesignType.Solid,
+                        size = VsCircleButtonSize.Small,
+                        type = VsCircleButtonType.Custom(Theme.colors.alerts.error),
+                        icon = R.drawable.trash_outline,
+                        onClick = onDeleteFolderClick,
+                    )
+                }
+            } else {
+                {
+                    VsCircleButton(
+                        designType = DesignType.Solid,
+                        size = VsCircleButtonSize.Small,
+                        type = VsCircleButtonType.Secondary,
+                        drawableResId = R.drawable.big_close,
+                        onClick = onCloseClick,
+                    )
+                }
             }
-        } else {
-            {
-                VsCircleButton(
-                    designType = DesignType.Solid,
-                    size = VsCircleButtonSize.Small,
-                    type = VsCircleButtonType.Secondary,
-                    drawableResId = R.drawable.big_close,
-                    onClick = onCloseClick,
-                )
-            }
-        }
-        BottomSheetHeader(
-            title = title,
-            rightAction = button
-        )
+            BottomSheetHeader(
+                title = title,
+                rightAction = button
+            )
 
-        UiSpacer(
-            size = 24.dp
-        )
-
-        Text(
-            text = stringResource(R.string.add_folder_folder_name_title),
-            color = Theme.colors.text.primary,
-            style = Theme.brockmann.body.m.medium,
-        )
-        UiSpacer(
-            size = 8.dp
-        )
-
-        FolderNameTextField(
-            textFieldState = textFieldState
-        )
-
-        UiSpacer(
-            size = 24.dp
-        )
-
-
-        if (isEditMode) {
+            UiSpacer(
+                size = 24.dp
+            )
 
             Text(
-                text = stringResource(R.string.add_folder_active_vaults),
-                color = Theme.colors.text.light,
-                style = Theme.brockmann.body.s.medium,
+                text = stringResource(R.string.add_folder_folder_name_title),
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.body.m.medium,
             )
-
             UiSpacer(
                 size = 8.dp
             )
 
-            VerticalReorderList(
-                onMove = onMoveVaults,
-                data = state.vaults,
-                isReorderEnabled = true,
-                key = { it.vault.id },
-                afterContents = listOf(
-                    {
-                        UiSpacer(size = 20.dp)
-                        Text(
-                            text = stringResource(id = R.string.add_folder_available_vaults),
-                            color = Theme.colors.text.light,
-                            style = Theme.brockmann.body.s.medium,
-                        )
+            FolderNameTextField(
+                textFieldState = textFieldState
+            )
 
-                        UiSpacer(size = 8.dp)
+            UiSpacer(
+                size = 24.dp
+            )
 
-                        state.availableVaults.forEach { vaultAndBalance ->
-                            val vault = vaultAndBalance.vault
-                            val balance = vaultAndBalance.balance
-                            val check = remember { mutableStateOf(false) }
-                            VaultCeil(
-                                model = VaultCeilUiModel(
-                                    id = vault.id,
-                                    name = vault.name,
-                                    isFolder = false,
-                                    isFastVault = vault.isFastVault(),
-                                    vaultPart = vault.getVaultPart(),
-                                    signersSize = vault.signers.size,
-                                    balance = balance,
-                                ),
-                                isInEditMode = false,
-                                onSelect = {},
-                                trailingContent = {
-                                    ->
-                                    VsSwitch(
-                                        checked = check.value,
-                                        onCheckedChange = {
-                                            check.value = tryCheck(it, vault.id)
-                                        },
-                                    )
-                                },
-                                isSelected = false,
-                                activeVaultName = null,
-                                vaultCounts = null,
-                            )
-                            UiSpacer(size = 8.dp)
-                        }
-                    }
-                ),
-            ) { vaultAndBalance ->
-                val vault = vaultAndBalance.vault
-                val check = remember { mutableStateOf(true) }
-                VaultCeil(
-                    model = VaultCeilUiModel(
-                        id = vault.id,
-                        name = vault.name,
-                        isFolder = false,
-                        isFastVault = vault.isFastVault(),
-                        vaultPart = vault.getVaultPart(),
-                        signersSize = vault.signers.size,
-                    ),
-                    isInEditMode = true,
-                    onSelect = {},
-                    trailingContent = {
-                        VsSwitch(
-                            checked = check.value,
-                            onCheckedChange = {
-                                check.value = tryCheck(it, vault.id)
-                            },
-                        )
-                    },
-                    isSelected = true,
-                    activeVaultName = null,
-                    vaultCounts = null,
+
+            if (isEditMode) {
+
+                Text(
+                    text = stringResource(R.string.add_folder_active_vaults),
+                    color = Theme.colors.text.light,
+                    style = Theme.brockmann.body.s.medium,
                 )
+
                 UiSpacer(
                     size = 8.dp
                 )
-            }
-        }
 
-
-        if (!isEditMode) {
-            Text(
-                text = stringResource(id = R.string.add_folder_list_title),
-                color = Theme.colors.text.light,
-                style = Theme.brockmann.body.s.medium,
-            )
-            UiSpacer(size = 12.dp)
-            TopShineContainer {
-                LazyColumn {
-                    itemsIndexed(state.checkedVaults.toList()) { index, vaultPair ->
-                        val vault = vaultPair.first.vault
-                        val balance = vaultPair.first.balance
-                        Column {
-                            VaultCeil(
-                                model = VaultCeilUiModel(
-                                    id = vault.id,
-                                    name = vault.name,
-                                    isFolder = false,
-                                    isFastVault = vault.isFastVault(),
-                                    vaultPart = vault.getVaultPart(),
-                                    signersSize = vault.signers.size,
-                                    balance = balance
-                                ),
-                                isInEditMode = false,
-                                onSelect = {},
-                                isSelected = true,
-                                activeVaultName = null,
-                                vaultCounts = null,
-                                trailingContent = {
-                                    VsSwitch(
-                                        checked = vaultPair.second,
-                                        onCheckedChange = { checked ->
-                                            onCheckVault(vaultPair.first, checked)
-                                        }
-                                    )
-                                }
+                VerticalReorderList(
+                    onMove = onMoveVaults,
+                    data = state.vaults,
+                    isReorderEnabled = true,
+                    key = { it.vault.id },
+                    contentPadding = PaddingValues(
+                        bottom = 74.dp
+                    ),
+                    afterContents = listOf(
+                        {
+                            UiSpacer(size = 20.dp)
+                            Text(
+                                text = stringResource(id = R.string.add_folder_available_vaults),
+                                color = Theme.colors.text.light,
+                                style = Theme.brockmann.body.s.medium,
                             )
-                            if (state.checkedVaults.toList().lastIndex != index) {
-                                FadingHorizontalDivider()
+
+                            UiSpacer(size = 8.dp)
+
+                            state.availableVaults.forEach { vaultAndBalance ->
+                                val vault = vaultAndBalance.vault
+                                val balance = vaultAndBalance.balance
+                                val check = remember { mutableStateOf(false) }
+                                VaultCeil(
+                                    model = VaultCeilUiModel(
+                                        id = vault.id,
+                                        name = vault.name,
+                                        isFolder = false,
+                                        isFastVault = vault.isFastVault(),
+                                        vaultPart = vault.getVaultPart(),
+                                        signersSize = vault.signers.size,
+                                        balance = balance,
+                                    ),
+                                    isInEditMode = false,
+                                    onSelect = {},
+                                    trailingContent = {
+                                        ->
+                                        VsSwitch(
+                                            checked = check.value,
+                                            onCheckedChange = {
+                                                check.value = tryCheck(it, vault.id)
+                                            },
+                                        )
+                                    },
+                                    isSelected = false,
+                                    activeVaultName = null,
+                                    vaultCounts = null,
+                                )
+                                UiSpacer(size = 8.dp)
                             }
                         }
+                    ),
+                ) { vaultAndBalance ->
+                    val vault = vaultAndBalance.vault
+                    val check = remember { mutableStateOf(true) }
+                    VaultCeil(
+                        model = VaultCeilUiModel(
+                            id = vault.id,
+                            name = vault.name,
+                            isFolder = false,
+                            isFastVault = vault.isFastVault(),
+                            vaultPart = vault.getVaultPart(),
+                            signersSize = vault.signers.size,
+                        ),
+                        isInEditMode = true,
+                        onSelect = {},
+                        trailingContent = {
+                            VsSwitch(
+                                checked = check.value,
+                                onCheckedChange = {
+                                    check.value = tryCheck(it, vault.id)
+                                },
+                            )
+                        },
+                        isSelected = true,
+                        activeVaultName = null,
+                        vaultCounts = null,
+                    )
+                    UiSpacer(
+                        size = 8.dp
+                    )
+                }
+            }
 
+
+            if (!isEditMode) {
+                Text(
+                    text = stringResource(id = R.string.add_folder_list_title),
+                    color = Theme.colors.text.light,
+                    style = Theme.brockmann.body.s.medium,
+                )
+                UiSpacer(size = 12.dp)
+                TopShineContainer {
+                    LazyColumn {
+                        itemsIndexed(state.checkedVaults.toList()) { index, vaultPair ->
+                            val vault = vaultPair.first.vault
+                            val balance = vaultPair.first.balance
+                            Column {
+                                VaultCeil(
+                                    model = VaultCeilUiModel(
+                                        id = vault.id,
+                                        name = vault.name,
+                                        isFolder = false,
+                                        isFastVault = vault.isFastVault(),
+                                        vaultPart = vault.getVaultPart(),
+                                        signersSize = vault.signers.size,
+                                        balance = balance
+                                    ),
+                                    isInEditMode = false,
+                                    onSelect = {},
+                                    isSelected = true,
+                                    activeVaultName = null,
+                                    vaultCounts = null,
+                                    trailingContent = {
+                                        VsSwitch(
+                                            checked = vaultPair.second,
+                                            onCheckedChange = { checked ->
+                                                onCheckVault(vaultPair.first, checked)
+                                            }
+                                        )
+                                    }
+                                )
+                                if (state.checkedVaults.toList().lastIndex != index) {
+                                    FadingHorizontalDivider()
+                                }
+                            }
+
+                        }
                     }
                 }
             }
-        }
 
-        UiSpacer(
-            size = 16.dp
-        )
+        }
 
         VsButton(
             label = if (isEditMode) stringResource(R.string.save_changes)
             else stringResource(R.string.add_vault_save),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+                .padding(
+                    horizontal = 16.dp
+                )
+            ,
             onClick = onAddVaultClick,
-        )
-        UiSpacer(
-            size = 16.dp
         )
     }
 }
