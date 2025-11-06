@@ -165,97 +165,120 @@ fun ApyInfoItem(
 
 @Composable
 internal fun PositionsSelectionDialog(
+    selectedPositions: Set<String>,
     searchTextFieldState: TextFieldState = TextFieldState(),
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onDoneClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
 ) {
-    TokenSelectionList(
-        groups = listOf(
+    val searchQuery = searchTextFieldState.text.toString().lowercase()
+    val bondPositions = listOf(
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
+            title = Coins.ThorChain.RUNE.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.RUNE.ticker),
+        )
+    )
+
+    val stakePositions = listOf(
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
+            title = Coins.ThorChain.RUJI.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.RUJI.ticker),
+        ),
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.TCY.logo),
+            title = Coins.ThorChain.TCY.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.TCY.ticker),
+        ),
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.sTCY.logo),
+            title = Coins.ThorChain.sTCY.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.sTCY.ticker),
+        ),
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.yRUNE.logo),
+            title = Coins.ThorChain.yRUNE.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.yRUNE.ticker),
+        ),
+        PositionUiModelDialog(
+            logo = getCoinLogo(Coins.ThorChain.yTCY.logo),
+            title = Coins.ThorChain.yTCY.ticker,
+            isSelected = selectedPositions.contains(Coins.ThorChain.yTCY.ticker),
+        ),
+    )
+
+    // Filter positions based on search query
+    val filteredBondPositions = if (searchQuery.isEmpty()) {
+        bondPositions
+    } else {
+        bondPositions.filter { it.title.lowercase().contains(searchQuery) }
+    }
+
+    val filteredStakePositions = if (searchQuery.isEmpty()) {
+        stakePositions
+    } else {
+        stakePositions.filter { it.title.lowercase().contains(searchQuery) }
+    }
+
+    val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
+    
+    if (filteredBondPositions.isNotEmpty()) {
+        groups.add(
             TokenSelectionGroupUiModel(
                 title = "Bond",
-                items = listOf(
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
-                            title = Coins.ThorChain.RUNE.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                ),
-                mapper = {
-                    val tokenSelectionUiModel = when (it) {
+                items = filteredBondPositions.map { position ->
+                    GridTokenUiModel.SingleToken(data = position)
+                },
+                mapper = { gridToken ->
+                    val tokenSelectionUiModel = when (gridToken) {
                         is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not supported")
                         is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = it.data.title,
-                                logo = it.data.logo,
+                                name = gridToken.data.title,
+                                logo = gridToken.data.logo,
                             )
                         }
                     }
                     TokenSelectionGridUiModel(
-                        isChecked = it.data.isSelected,
+                        isChecked = gridToken.data.isSelected,
                         tokenSelectionUiModel = tokenSelectionUiModel
                     )
                 },
                 plusUiModel = null,
-            ),
+            )
+        )
+    }
+    
+    if (filteredStakePositions.isNotEmpty()) {
+        groups.add(
             TokenSelectionGroupUiModel(
                 title = "Stake",
-                items = listOf(
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
-                            title = Coins.ThorChain.RUJI.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.TCY.logo),
-                            title = Coins.ThorChain.TCY.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.sTCY.logo),
-                            title = Coins.ThorChain.sTCY.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.yRUNE.logo),
-                            title = Coins.ThorChain.yRUNE.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                    GridTokenUiModel.SingleToken(
-                        data = PositionUiModelDialog(
-                            logo = getCoinLogo(Coins.ThorChain.yTCY.logo),
-                            title = Coins.ThorChain.yTCY.ticker,
-                            isSelected = true,
-                        )
-                    ),
-                ),
-                mapper = {
-                    val tokenSelectionUiModel = when (it) {
+                items = filteredStakePositions.map { position ->
+                    GridTokenUiModel.SingleToken(data = position)
+                },
+                mapper = { gridToken ->
+                    val tokenSelectionUiModel = when (gridToken) {
                         is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not Supported")
                         is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = it.data.title,
-                                logo = it.data.logo
+                                name = gridToken.data.title,
+                                logo = gridToken.data.logo
                             )
                         }
                     }
                     TokenSelectionGridUiModel(
-                        isChecked = it.data.isSelected,
+                        isChecked = gridToken.data.isSelected,
                         tokenSelectionUiModel = tokenSelectionUiModel
                     )
                 },
                 plusUiModel = null,
-            ),
-        ),
+            )
+        )
+    }
+
+    TokenSelectionList(
+        groups = groups,
 
         searchTextFieldState = searchTextFieldState,
 
@@ -284,23 +307,24 @@ internal fun PositionsSelectionDialog(
         onCheckChange = { isSelected, uiModel ->
             when (uiModel) {
                 is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
-                    val token = uiModel.data
-                    println(token)
+                    val position = uiModel.data
+                    onPositionSelectionChange(position.title, isSelected)
                 }
-
                 else -> error("Not supported double coin")
             }
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onSetSearchText = {}
+        onSetSearchText = { /* Search is handled by the searchTextFieldState */ }
     )
 }
 
 @Preview(showBackground = true, name = "Positions Selection Dialog")
 @Composable
 private fun PositionsSelectionDialogPreview() {
-    PositionsSelectionDialog()
+    PositionsSelectionDialog(
+        selectedPositions = setOf("RUNE", "TCY")
+    )
 }
 
 @Preview(showBackground = true, name = "Info Item - With Value")

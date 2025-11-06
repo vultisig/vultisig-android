@@ -58,6 +58,8 @@ internal fun DefiPositionsScreen(
         onTabSelected = model::onTabSelected,
         onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
+        onDonePositionClick = model::onPositionSelectionDone,
+        onPositionSelectionChange = model::onPositionSelectionChange,
     )
 }
 
@@ -71,6 +73,8 @@ internal fun DefiPositionScreenContent(
     onClickBond: (String) -> Unit,
     onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
+    onDonePositionClick: () -> Unit = {},
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onTabSelected: (String) -> Unit = {},
 ) {
     val tabs = listOf(
@@ -118,8 +122,10 @@ internal fun DefiPositionScreenContent(
 
             if (state.showPositionSelectionDialog) {
                 PositionsSelectionDialog(
+                    selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
-                    onDoneClick = {},
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onDonePositionClick,
                     onCancelClick = onCancelEditPositionClick,
                 )
             }

@@ -51,7 +51,8 @@ internal data class DefiPositionsUiModel(
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val showPositionSelectionDialog: Boolean = false,
-    //val availablePositions: List<GridTokenUiModel.SingleToken> = emptyList(),
+    val selectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"), // Default all selected
+    val tempSelectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"), // Temporary state for dialog
 )
 
 internal data class BondedTabUiModel(
@@ -115,6 +116,21 @@ internal class DefiPositionsViewModel @Inject constructor(
         loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
+            // Check if RUNE is selected
+            if (!state.value.selectedPositions.contains("RUNE")) {
+                state.update {
+                    it.copy(
+                        bonded = BondedTabUiModel(
+                            isLoading = false,
+                            totalBondedAmount = "0 ${Chain.ThorChain.coinType.symbol}",
+                            nodes = emptyList()
+                        ),
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) "$0.00" else it.totalAmountPrice
+                    )
+                }
+                return@launch
+            }
+
             state.update {
                 it.copy(
                     bonded = it.bonded.copy(isLoading = true)
@@ -227,9 +243,15 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 val address = runeCoin.address
+                val selectedPositions = state.value.selectedPositions
+
+                // Filter coins based on selected positions
+                val coinsToLoad = supportDeFiCoins.filter { coin ->
+                    selectedPositions.contains(coin.ticker)
+                }
 
                 // Decouple loading upcoming PR
-                val positions = supportDeFiCoins.map { coin ->
+                val positions = coinsToLoad.map { coin ->
                     async(Dispatchers.IO) {
                         when {
                             coin.ticker.equals("ruji", ignoreCase = true) ->
@@ -383,8 +405,52 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun setPositionSelectionDialogVisibility(show: Boolean) {
         viewModelScope.launch {
+            if (show) {
+                // When opening dialog, copy current selections to temp
+                state.update {
+                    it.copy(
+                        showPositionSelectionDialog = true,
+                        tempSelectedPositions = it.selectedPositions
+                    )
+                }
+            } else {
+                // When closing dialog (cancel), revert temp changes
+                state.update {
+                    it.copy(
+                        showPositionSelectionDialog = false,
+                        tempSelectedPositions = it.selectedPositions
+                    )
+                }
+            }
+        }
+    }
+
+    fun onPositionSelectionChange(positionTitle: String, isSelected: Boolean) {
+        viewModelScope.launch {
+            state.update { currentState ->
+                val updatedPositions = if (isSelected) {
+                    currentState.tempSelectedPositions + positionTitle
+                } else {
+                    currentState.tempSelectedPositions - positionTitle
+                }
+                currentState.copy(tempSelectedPositions = updatedPositions)
+            }
+        }
+    }
+
+    fun onPositionSelectionDone() {
+        viewModelScope.launch {
+            // Apply temp selections to actual selections
             state.update {
-                it.copy(showPositionSelectionDialog = show)
+                it.copy(
+                    showPositionSelectionDialog = false,
+                    selectedPositions = it.tempSelectedPositions
+                )
+            }
+            // Reload the current tab to reflect the selected positions
+            when (state.value.selectedTab) {
+                DefiTab.BONDED.displayName -> loadBondedNodes()
+                DefiTab.STAKING.displayName -> loadStakingPositions()
             }
         }
     }
