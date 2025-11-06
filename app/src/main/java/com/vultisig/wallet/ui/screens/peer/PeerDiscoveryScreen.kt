@@ -745,7 +745,7 @@ internal fun ConnectingToServer(
         UiSpacer(16.dp)
 
         Text(
-            text = stringResource(R.string.keygen_connecting_with_server_take_a_minute),
+            text = stringResource(R.string.keygen_connecting_with_server_take_a_second),
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.light,
             textAlign = TextAlign.Center,
