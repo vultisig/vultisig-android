@@ -78,7 +78,7 @@ internal fun VsOverviewToken(
 
         Box {
             TokenLogo(
-                logo = getCoinLogo(token.logo),
+                logo = getCoinLogo(token.ticker),
                 title = token.ticker,
                 modifier = Modifier
                     .size(36.dp)
@@ -94,7 +94,7 @@ internal fun VsOverviewToken(
                     .background(Theme.colors.neutral200),
             )
 
-            chainLogo.takeIf { it != getCoinLogo(token.logo) }?.let {
+            chainLogo.takeIf { it != getCoinLogo(token.ticker) }?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,

@@ -406,7 +406,7 @@ internal fun SwapToken(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenLogo(
-            logo = getCoinLogo(token.logo),
+            logo = getCoinLogo(token.ticker),
             title = token.ticker,
             errorLogoModifier = Modifier
                 .size(24.dp)

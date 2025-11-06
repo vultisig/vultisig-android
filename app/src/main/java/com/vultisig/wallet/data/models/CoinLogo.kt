@@ -35,7 +35,6 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "tgt" -> R.drawable.tgt
         "fox" -> R.drawable.fox
         "dot" -> R.drawable.dot
-        "wETH" -> R.drawable.weth
         "wewe" -> R.drawable.wewe
         "omni" -> R.drawable.omni
         "pyth" -> R.drawable.pyth
