@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ActiveBondedNode
@@ -24,10 +25,17 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
+import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
+import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
+import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
+import com.vultisig.wallet.ui.screens.v2.defi.emptyBondedTabUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.emptyStakingTabUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.formatToString
+import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
@@ -52,7 +60,7 @@ import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
     // tabs info
-    val totalAmountPrice: String = "$0.00",
+    val totalAmountPrice: String = DefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
     val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
@@ -124,6 +132,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val rujiStakingService: RujiStakingService,
     private val tcyStakingService: TCYStakingService,
     private val balanceRepository: BalanceRepository,
+    private val defiPositionsRepository: DefiPositionsRepository,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
@@ -131,18 +140,43 @@ internal class DefiPositionsViewModel @Inject constructor(
     val state = MutableStateFlow(DefiPositionsUiModel())
 
     private val loadedTabs = mutableSetOf<String>()
-    val searchTextFieldState = TextFieldState()
 
     init {
-        loadBondedNodes()
+        loadSavedPositions()
+    }
+
+    private fun loadSavedPositions() {
+        viewModelScope.launch {
+            val savedPositions = defiPositionsRepository.getSelectedPositions(vaultId).first()
+            state.update {
+                it.copy(
+                    selectedPositions = savedPositions.toList(),
+                    tempSelectedPositions = savedPositions.toList()
+                )
+            }
+
+            when (state.value.selectedTab) {
+                DefiTab.BONDED.displayName -> loadBondedNodes()
+                DefiTab.STAKING.displayName -> loadStakingPositions()
+            }
+        }
     }
 
     private fun loadBondedNodes() {
         loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
-            if (!state.value.selectedPositions.contains("RUNE")) {
-                // SHOW NO COINS
+            if (!state.value.selectedPositions.hasBondPositions()) {
+                state.update {
+                    it.copy(
+                        bonded = emptyBondedTabUiModel(),
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName){
+                            DEFAULT_ZERO_BALANCE
+                        } else {
+                            it.totalAmountPrice
+                        }
+                    )
+                }
                 return@launch
             }
 
@@ -231,12 +265,23 @@ internal class DefiPositionsViewModel @Inject constructor(
             currencyFormat.format(totalValue.toDouble())
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate total value")
-            "$0.00"
+            DEFAULT_ZERO_BALANCE
         }
     }
 
     private fun loadStakingPositions() {
         viewModelScope.launch {
+            val selectedPositions = state.value.selectedPositions
+            
+            if (!selectedPositions.hasStakingPositions()) {
+                state.update {
+                    it.copy(
+                        staking = emptyStakingTabUiModel()
+                    )
+                }
+                return@launch
+            }
+            
             state.update {
                 it.copy(
                     staking = StakingTabUiModel(
@@ -262,7 +307,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 val address = runeCoin.address
-                val selectedPositions = state.value.selectedPositions
                 val coinsToLoad = supportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
                 }
@@ -524,12 +568,21 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun onPositionSelectionDone() {
         viewModelScope.launch {
+            val selectedPositions = state.value.tempSelectedPositions
+
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
+                }
+            }
+            
             state.update {
                 it.copy(
                     showPositionSelectionDialog = false,
-                    selectedPositions = it.tempSelectedPositions
+                    selectedPositions = selectedPositions
                 )
             }
+            
             when (state.value.selectedTab) {
                 DefiTab.BONDED.displayName -> loadBondedNodes()
                 DefiTab.STAKING.displayName -> loadStakingPositions()
@@ -555,17 +608,15 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun setSearchText(searchText: String) {
-        searchTextFieldState.setTextAndPlaceCursorAtEnd(text = searchText)
-    }
-
     companion object {
+        internal const val DEFAULT_ZERO_BALANCE = "$0.00"
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
+        private const val TCY_SYMBOL = "TCY"
 
         private fun createLoadingRujiPosition() = StakePositionUiModel(
-            stakeAssetHeader = "Staked RUJI",
-            stakeAmount = "0 RUJI",
+            stakeAssetHeader = "Staked $RUJI_SYMBOL",
+            stakeAmount = "0 $RUJI_SYMBOL",
             apy = null, // Does not support APY for now
             canWithdraw = false,
             canStake = true,
@@ -576,8 +627,8 @@ internal class DefiPositionsViewModel @Inject constructor(
         )
 
         private fun createTCYLoadingPosition() = StakePositionUiModel(
-            stakeAssetHeader = "Staked TCY",
-            stakeAmount = "0 TCY",
+            stakeAssetHeader = "Staked $TCY_SYMBOL",
+            stakeAmount = "0 $TCY_SYMBOL",
             apy = null,
             canWithdraw = false,
             canStake = true,
@@ -587,27 +638,4 @@ internal class DefiPositionsViewModel @Inject constructor(
             nextPayout = null
         )
     }
-}
-
-private fun defaultPositionsBondDialog(): List<PositionUiModelDialog> {
-    return supportsBonDeFi.map { coin ->
-        PositionUiModelDialog(
-            logo = getCoinLogo(coin.logo),
-            ticker = coin.ticker,
-            isSelected = true,
-        )
-    }
-}
-private fun defaultPositionsStakingDialog(): List<PositionUiModelDialog> {
-    return supportStakingDeFi.map { coin ->
-        PositionUiModelDialog(
-            logo = getCoinLogo(coin.logo),
-            ticker = coin.ticker,
-            isSelected = true,
-        )
-    }
-}
-
-private fun defaultSelectedPositionsDialog(): List<String> {
-   return supportsBonDeFi.map { it.ticker } + supportStakingDeFi.map { it.ticker }
 }

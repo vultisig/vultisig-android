@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
@@ -37,6 +40,7 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
+import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -171,6 +175,7 @@ internal fun PositionsSelectionDialog(
     onCancelClick: () -> Unit = {},
 ) {
     val searchQuery = searchTextFieldState.text.toString().lowercase()
+
     val updateBondPositions = bondPositions.map {
         it.copy(
             isSelected = selectedPositions.contains(it.ticker)
@@ -290,6 +295,33 @@ internal fun PositionsSelectionDialog(
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
         onSetSearchText = { /* Search is handled by the searchTextFieldState */ }
+    )
+}
+
+@Composable
+internal fun NoPositionsContainer(
+    onManagePositionsClick: () -> Unit = {}
+) {
+    NotEnabledContainer(
+        title = stringResource(R.string.defi_no_positions_selected),
+        content = stringResource(R.string.defi_no_positions_selected_desc),
+        action = {
+            Text(
+                text = stringResource(R.string.manage_positions),
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.colors.text.primary,
+                modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .clickOnce(onClick = onManagePositionsClick)
+                    .background(
+                        color = Theme.v2.colors.border.primaryAccent4
+                    )
+                    .padding(
+                        vertical = 8.dp,
+                        horizontal = 16.dp
+                    )
+            )
+        }
     )
 }
 
