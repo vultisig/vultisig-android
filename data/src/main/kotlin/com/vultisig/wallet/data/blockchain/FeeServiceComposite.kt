@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.blockchain
 
+import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
+import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import timber.log.Timber

@@ -351,7 +351,7 @@
     <string name="eth_gas_settings_priority_title">Prioritet</string>
     <string name="eth_gas_setting_total_fee_title">Ukupna naknada (Gwei)</string>
     <string name="vault_details_screen_vault_part">Trezorski dio</string>
-    <string name="vault_details_screen_vault_type">Vrsta trezoraا</string>
+    <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
@@ -405,6 +405,7 @@
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
     <string name="next_award">Sljedeća nagrada</string>
+    <string name="next_payout">Sljedeća isplata</string>
     <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
@@ -413,7 +414,8 @@
     <string name="deposit_option_ibc_transfer">IBC Transfer</string>
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
-    <string name="deposit_option_withdraw_ruji">Verzamel RUJI-stakingbeloning</string>
+    <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
+    <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
@@ -718,4 +720,7 @@
     <string name="bond_node_state_disabled">Onemogućen</string>
     <string name="bond_node_state_unknown">Nepoznat</string>
     <string name="defi_balance">Stanje</string>
+    <string name="lp_position">Pozicija</string>
+    <string name="add">Dodaj</string>
+    <string name="remove">Ukloni</string>
 </resources>

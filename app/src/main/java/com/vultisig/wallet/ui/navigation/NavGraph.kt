@@ -159,7 +159,7 @@ internal fun SetupNavGraph(
         }
 
         composable<ImportVault> {
-            ImportFileScreen(navController)
+            ImportFileScreen()
         }
 
         dialog<AddChainAccount> {
@@ -207,9 +207,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
             )
         ) {
-            DefiPositionsScreen(
-                navController = navController,
-            )
+            DefiPositionsScreen()
         }
 
         dialog<TokenDetail> {

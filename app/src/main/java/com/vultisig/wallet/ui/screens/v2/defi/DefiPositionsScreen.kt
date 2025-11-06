@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,19 +16,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
@@ -40,18 +33,16 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
-import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
+import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun DefiPositionsScreen(
-    navController: NavHostController,
     model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
@@ -62,6 +53,7 @@ internal fun DefiPositionsScreen(
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
+        onTabSelected = model::onTabSelected,
     )
 }
 
@@ -72,9 +64,9 @@ internal fun DefiPositionScreenContent(
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
+    onTabSelected: (String) -> Unit = {},
 ) {
-    val tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB)
-    var selectedTab by remember { mutableStateOf(tabs.first()) }
+    val tabs = listOf(DefiTab.BONDED.displayName, DefiTab.STAKING.displayName, DefiTab.LPS.displayName)
 
     V2Scaffold(
         onBackClick = onBackClick,
@@ -87,20 +79,20 @@ internal fun DefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
-                isLoading = state.isLoading,
+                isLoading = state.bonded.isLoading,
                 totalValue = state.totalAmountPrice
             )
 
             VsTabs(
-                tabs = listOf(BONDED_TAB, STAKING_TAB, LPs_TAB),
-                onTabSelected = { selectedTab = it },
-                selectedTab = selectedTab,
+                tabs = tabs,
+                onTabSelected = onTabSelected,
+                selectedTab = state.selectedTab,
                 content = {
                     V2Container(
                         type = ContainerType.SECONDARY,
                         cornerType = CornerType.Circular,
                         modifier = Modifier
-                            .clickOnce(onClick = {} )
+                            .clickOnce(onClick = {})
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.edit_chain,
@@ -112,8 +104,8 @@ internal fun DefiPositionScreenContent(
                 }
             )
 
-            when (selectedTab) {
-                BONDED_TAB -> {
+            when (state.selectedTab) {
+                DefiTab.BONDED.displayName -> {
                     BondedTabContent(
                         bondToNodeOnClick = onClickBondToNode,
                         state = state,
@@ -121,17 +113,26 @@ internal fun DefiPositionScreenContent(
                         onClickBond = onClickBond,
                     )
                 }
-                STAKING_TAB -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = { }
+
+                DefiTab.STAKING.displayName -> {
+                    StakingTabContent(
+                        state = state.staking,
+                        onClickStake = { /* TODO: Implement stake action */ },
+                        onClickUnstake = { /* TODO: Implement unstake action */ },
+                        onClickWithdraw = { /* TODO: Implement withdraw action */ }
                     )
                 }
-                LPs_TAB -> {
-                    NoPositionsContainer(
-                        onManagePositionsClick = { }
+
+                DefiTab.LPS.displayName -> {
+                    LpTabContent(
+                        state = state.lp,
+                        onClickAdd = { /* TODO: Implement add action */ },
+                        onClickRemove = {/* TODO: Implement remove action */  },
                     )
                 }
             }
+            
+            UiSpacer(size = 16.dp)
         }
     }
 }
@@ -218,31 +219,85 @@ private fun BalanceBanner(
 }
 
 @Composable
-@Preview(showBackground = true)
-private fun DefiPositionsScreenPreview() {
+@Preview(showBackground = true, name = "DeFi Positions - Empty")
+private fun DefiPositionsScreenPreviewEmpty() {
+    DefiPositionScreenContent(
+        onBackClick = { },
+        state = DefiPositionsUiModel(),
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickBondToNode = {},
+        onTabSelected = {}
+    )
+}
+
+@Composable
+@Preview(showBackground = true, name = "DeFi Positions - With Data")
+private fun DefiPositionsScreenPreviewWithData() {
+    val mockNodes = listOf(
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1abcd...xyz",
+            status = BondNodeState.ACTIVE,
+            apy = "12.5%",
+            bondedAmount = "1000 RUNE",
+            nextAward = "20 RUNE",
+            nextChurn = "Oct 15, 25"
+        ),
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1efgh...123",
+            status = BondNodeState.STANDBY,
+            apy = "11.2%",
+            bondedAmount = "500 RUNE",
+            nextAward = "10 RUNE",
+            nextChurn = "Oct 16, 25"
+        ),
+        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+            address = "thor1ijkl...456",
+            status = BondNodeState.READY,
+            apy = "10.8%",
+            bondedAmount = "750 RUNE",
+            nextAward = "15 RUNE",
+            nextChurn = "Oct 17, 25"
+        )
+    )
+
     DefiPositionScreenContent(
         onBackClick = { },
         state = DefiPositionsUiModel(
-            bonded = BondedTabUiModel(
-                totalBondedAmount = "1000 RUNE",
-                nodes = listOf<BondedNodeUiModel>(
-                    BondedNodeUiModel(
-                        address = "thor1xxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyy",
-                        bondedAmount = "500 RUNE",
-                        status = BondNodeState.WHITELISTED,
-                        apy = "12.5%",
-                        nextAward = "25 RUNE",
-                        nextChurn = "in 2 days",
-                    )
-                ),
+            totalAmountPrice = "$3,250.00",
+            selectedTab = DefiTab.BONDED.displayName,
+            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+                isLoading = false,
+                totalBondedAmount = "2250 RUNE",
+                nodes = mockNodes
             )
         ),
         onClickBond = {},
         onClickUnbond = {},
-        onClickBondToNode = {}
+        onClickBondToNode = {},
+        onTabSelected = {}
     )
 }
 
-internal const val BONDED_TAB = "Bonded"
-internal const val STAKING_TAB = "Staked"
-internal const val LPs_TAB = "LPs"
+@Composable
+@Preview(showBackground = true, name = "DeFi Positions - Loading")
+private fun DefiPositionsScreenPreviewLoading() {
+    DefiPositionScreenContent(
+        onBackClick = { },
+        state = DefiPositionsUiModel(
+            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+                isLoading = true
+            )
+        ),
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickBondToNode = {},
+        onTabSelected = {}
+    )
+}
+
+internal enum class DefiTab(val displayName: String) {
+    BONDED("Bonded"),
+    STAKING("Staked"),
+    LPS("LPs");
+}

@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.defi
+package com.vultisig.wallet.ui.screens.v2.defi.model
 
 enum class BondNodeState(val state: String) {
     WHITELISTED("whitelisted"),

@@ -10,15 +10,20 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
 import java.io.OutputStream
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import kotlin.collections.forEach
 
 private const val DIRECTORY_NAME = "Vultisig"
 private const val QRCODE_DIRECTORY_NAME = "QRCodes"
@@ -73,7 +78,7 @@ fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
     }
 }
 
-fun Context.saveContentToUri(uri: Uri, contentList: List<ZipFileEntry>): Boolean {
+fun Context.saveContentToUri(uri: Uri, contentList: List<AppZipEntry>): Boolean {
     try {
         contentResolver.openOutputStream(uri).use { outputStream ->
             ZipOutputStream(outputStream).use { zipOutputStream ->
@@ -212,3 +217,52 @@ fun Uri.fileName(context: Context): String {
 
 internal fun Bitmap.compressPng(stream: OutputStream) =
     compress(Bitmap.CompressFormat.PNG, 100, stream)
+
+
+suspend fun Uri.processZip(context: Context): List<AppZipEntry> = withContext(Dispatchers.IO) {
+    val entries = mutableListOf<AppZipEntry>()
+    context.contentResolver.openInputStream(this@processZip)?.use { inputStream ->
+        ZipInputStream(inputStream).use { zipInputStream ->
+            var zipEntry = zipInputStream.nextEntry
+            while (zipEntry != null) {
+                if (!zipEntry.isDirectory) {
+                    val entryName = zipEntry.name
+                    val ext = File(entryName).extension.lowercase()
+                    if (FILE_ALLOWED_EXTENSIONS.contains(ext)) {
+                        try {
+                            val buffer = ByteArrayOutputStream()
+                            val data = ByteArray(8192)
+                            var count: Int
+                            while (zipInputStream.read(data).also { count = it } != -1) {
+                                buffer.write(data, 0, count)
+                            }
+                            val fileContent = buffer.toString(Charsets.UTF_8.name())
+                            coroutineContext.ensureActive()
+                            entries.add(AppZipEntry(entryName, fileContent))
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing file: $entryName")
+                        }
+                    }
+                }
+
+                zipInputStream.closeEntry()
+                zipEntry = zipInputStream.nextEntry
+            }
+        }
+    } ?: run {
+        Timber.w("Failed to open input stream for URI: $this")
+    }
+    return@withContext entries
+}
+
+
+fun Uri.isValidZipFile(context: Context) = try {
+    context.contentResolver.openInputStream(this)?.use { inputStream ->
+        ZipInputStream(inputStream).use { zipStream ->
+            zipStream.nextEntry != null
+        }
+    } ?: false
+} catch (_: Exception) {
+    false
+}
+

@@ -172,7 +172,9 @@ internal class TokenSelectionViewModel @Inject constructor(
             }.asUiTokens(enabledTokenIds)
 
             val tokens = (selectedUiTokens + otherUiTokens + tempSelections)
-                .associateBy(TokenUiModel::coin)
+                .associateBy {
+                    it.coin.id
+                }
                 .values
                 .toList()
 

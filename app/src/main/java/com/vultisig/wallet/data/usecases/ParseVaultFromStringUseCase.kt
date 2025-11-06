@@ -45,7 +45,10 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
             input.decodeBase64Bytes(),
         )
 
-        val possiblyEncryptedVaultBytes = containerProto.vault.decodeBase64Bytes()
+        val possiblyEncryptedVaultBytes =
+            containerProto.vault.decodeBase64Bytes().takeIf { it.isNotEmpty() }
+                ?: error("Empty vault")
+
 
         val vaultBytes = if (containerProto.isEncrypted) {
             if (!password.isNullOrBlank()) {

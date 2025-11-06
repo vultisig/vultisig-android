@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.ZipFileEntry
+import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.Vault
@@ -167,7 +167,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
                 null
             ) ?: return false
             val fileName = createVaultBackupFileName(vault)
-            ZipFileEntry(fileName, vaultBackupData)
+            AppZipEntry(fileName, vaultBackupData)
         }
 
         return context.saveContentToUri(uri, content)

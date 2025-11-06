@@ -416,6 +416,7 @@
     <string name="active_nodes">Actieve Nodes</string>
     <string name="next_churn">Volgende Wisseling</string>
     <string name="next_award">Volgende beloning</string>
+    <string name="next_payout">Volgende uitbetaling</string>
     <string name="wait_until_node_churned_out">Wacht tot de node is uitgefaseerd</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
@@ -425,6 +426,7 @@
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">RUJI opnemen</string>
+    <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
@@ -727,4 +729,7 @@
     <string name="bond_node_state_disabled">Uitgeschakeld</string>
     <string name="bond_node_state_unknown">Onbekend</string>
     <string name="defi_balance">Saldo</string>
+    <string name="lp_position">Positie</string>
+    <string name="add">Toevoegen</string>
+    <string name="remove">Verwijderen</string>
 </resources>
