@@ -214,7 +214,6 @@ internal fun PositionsSelectionDialog(
     } else {
         bondPositions.filter { it.title.lowercase().contains(searchQuery) }
     }
-
     val filteredStakePositions = if (searchQuery.isEmpty()) {
         stakePositions
     } else {

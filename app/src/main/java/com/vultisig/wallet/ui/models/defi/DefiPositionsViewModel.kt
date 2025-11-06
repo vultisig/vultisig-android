@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
-import com.vultisig.wallet.ui.screens.v2.defi.supportDeFiCoins
+import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -51,8 +51,8 @@ internal data class DefiPositionsUiModel(
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val showPositionSelectionDialog: Boolean = false,
-    val selectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"), // Default all selected
-    val tempSelectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"), // Temporary state for dialog
+    val selectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"),
+    val tempSelectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"),
 )
 
 internal data class BondedTabUiModel(
@@ -116,18 +116,8 @@ internal class DefiPositionsViewModel @Inject constructor(
         loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
-            // Check if RUNE is selected
             if (!state.value.selectedPositions.contains("RUNE")) {
-                state.update {
-                    it.copy(
-                        bonded = BondedTabUiModel(
-                            isLoading = false,
-                            totalBondedAmount = "0 ${Chain.ThorChain.coinType.symbol}",
-                            nodes = emptyList()
-                        ),
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) "$0.00" else it.totalAmountPrice
-                    )
-                }
+                // SHOW NO COINS
                 return@launch
             }
 
@@ -244,9 +234,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 val address = runeCoin.address
                 val selectedPositions = state.value.selectedPositions
-
-                // Filter coins based on selected positions
-                val coinsToLoad = supportDeFiCoins.filter { coin ->
+                val coinsToLoad = supportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
                 }
 
