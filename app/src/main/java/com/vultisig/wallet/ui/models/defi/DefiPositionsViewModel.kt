@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.defi
 
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,8 +8,8 @@ import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
@@ -39,7 +37,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
-import com.vultisig.wallet.ui.screens.v2.defi.supportsBonDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -170,7 +167,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         bonded = emptyBondedTabUiModel(),
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName){
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
                             DEFAULT_ZERO_BALANCE
                         } else {
                             it.totalAmountPrice
@@ -212,7 +209,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName){
+                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
                             totalValue
                         } else {
                             it.totalAmountPrice
@@ -272,7 +269,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun loadStakingPositions() {
         viewModelScope.launch {
             val selectedPositions = state.value.selectedPositions
-            
+
             if (!selectedPositions.hasStakingPositions()) {
                 state.update {
                     it.copy(
@@ -281,12 +278,16 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
                 return@launch
             }
-            
+
+            val defaultLoadingPositions = loadDefaultStakingPositions().filter { coin ->
+                selectedPositions.contains(coin.stakeAmount)
+            }
+
             state.update {
                 it.copy(
                     staking = StakingTabUiModel(
                         isLoading = true,
-                        positions = listOf(createLoadingRujiPosition(), createTCYLoadingPosition())
+                        positions = defaultLoadingPositions,
                     )
                 )
             }
@@ -575,14 +576,14 @@ internal class DefiPositionsViewModel @Inject constructor(
                     defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
                 }
             }
-            
+
             state.update {
                 it.copy(
                     showPositionSelectionDialog = false,
                     selectedPositions = selectedPositions
                 )
             }
-            
+
             when (state.value.selectedTab) {
                 DefiTab.BONDED.displayName -> loadBondedNodes()
                 DefiTab.STAKING.displayName -> loadStakingPositions()
@@ -612,30 +613,70 @@ internal class DefiPositionsViewModel @Inject constructor(
         internal const val DEFAULT_ZERO_BALANCE = "$0.00"
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
-        private const val TCY_SYMBOL = "TCY"
 
-        private fun createLoadingRujiPosition() = StakePositionUiModel(
-            stakeAssetHeader = "Staked $RUJI_SYMBOL",
-            stakeAmount = "0 $RUJI_SYMBOL",
-            apy = null, // Does not support APY for now
-            canWithdraw = false,
-            canStake = true,
-            canUnstake = false,
-            rewards = null,
-            nextReward = null,
-            nextPayout = null
-        )
+        private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
+            val rujiCoin = Coins.ThorChain.RUJI
+            val tcy = Coins.ThorChain.TCY
+            val stcy = Coins.ThorChain.sTCY
+            val ytcy = Coins.ThorChain.yTCY
+            val yrune = Coins.ThorChain.yRUNE
 
-        private fun createTCYLoadingPosition() = StakePositionUiModel(
-            stakeAssetHeader = "Staked $TCY_SYMBOL",
-            stakeAmount = "0 $TCY_SYMBOL",
-            apy = null,
-            canWithdraw = false,
-            canStake = true,
-            canUnstake = false,
-            rewards = null,
-            nextReward = null,
-            nextPayout = null
-        )
+            return listOf(
+                StakePositionUiModel(
+                    stakeAssetHeader = "Staked ${rujiCoin.ticker}",
+                    stakeAmount = rujiCoin.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ),
+                StakePositionUiModel(
+                    stakeAssetHeader = "Staked ${tcy.ticker}",
+                    stakeAmount = tcy.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ), StakePositionUiModel(
+                    stakeAssetHeader = "Staked ${ytcy.ticker}",
+                    stakeAmount = ytcy.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ),
+                StakePositionUiModel(
+                    stakeAssetHeader = "Staked ${yrune.ticker}",
+                    stakeAmount = yrune.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                ),
+                StakePositionUiModel(
+                    stakeAssetHeader = "Staked ${stcy.ticker}",
+                    stakeAmount = stcy.ticker,
+                    apy = null,
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    rewards = null,
+                    nextReward = null,
+                    nextPayout = null
+                )
+            )
+        }
     }
 }
