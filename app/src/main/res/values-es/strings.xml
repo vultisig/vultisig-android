@@ -193,7 +193,7 @@
     <string name="home_scree_done">hecho</string>
     <string name="verify_swap_sign_button">Firmar transacción</string>
     <string name="swap_form_vault">Bóveda</string>
-    <string name="swap_form_min_pay">pago mín.</string>
+    <string name="swap_form_min_pay">Pago mín.</string>
     <string name="swap_error_no_amount">La cantidad debe ser un número positivo</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>

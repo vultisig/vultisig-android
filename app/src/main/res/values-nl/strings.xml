@@ -2,7 +2,7 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
-    <string name="chains">Ketting</string>
+    <string name="chains">Keten</string>
     <string name="keysign">Sleutel tekenen</string>
     <string name="danger_icon">Gevaarpictogram</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
@@ -239,7 +239,7 @@
     <string name="vault_detail_this_device">%1$s (Dit apparaat)</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
     <string name="swap_screen_provider_title">Leverancier</string>
-    <string name="swap_form_minimum_amount">ProvideraSwap bedrag te klein. Aanbevolen bedrag %1$s %2$s</string>
+    <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>
     <string name="verify_approve_amount_title">Bedrag om goed te keuren</string>
     <string name="backup_password_screen_title">Back-up</string>
     <string name="backup_password_screen_warning">Sla Vault Shares van verschillende apparaten nooit op dezelfde locatie op</string>

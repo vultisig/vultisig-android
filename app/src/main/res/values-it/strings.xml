@@ -857,7 +857,7 @@
     <string name="verify_sign_message_message_field_title">Messaggio</string>
     <string name="verify_sign_message_method_field_title">Metodo</string>
     <string name="vault_settings_migration_subtitle">Migrazione del vault GG20 a DKLS</string>
-    <string name="fast_vault_password_screen_title">Password Vultiserver</string>
+    <string name="fast_vault_password_screen_title">Password di Vultiserver</string>
     <string name="fast_vault_password_screen_hint">Ciò si verifica perché la password viene utilizzata per crittografare localmente il file di backup, in modo simile a come viene crittografato un disco rigido. Nel passaggio successivo, è possibile aggiungere un suggerimento.</string>
     <string name="fast_vault_password_screen_hint_title">Ulteriori informazioni</string>
     <string name="peer_discovery_local_mode_hint">Sei in modalità locale</string>
