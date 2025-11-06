@@ -914,4 +914,7 @@
     <string name="onboarding_desc_page_1_part_2">Condivisioni del Vault,</string>
     <string name="verify_swap_youre_swapping_title">Stai effettuando uno scambio</string>
     <string name="keysign_app_version_text">Versione %1$s (%2$s)</string>
+    <string name="lp_position">Posizione</string>
+    <string name="add">Aggiungi</string>
+    <string name="remove">Rimuovi</string>
 </resources>

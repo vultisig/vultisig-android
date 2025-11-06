@@ -915,4 +915,7 @@
     <string name="onboarding_desc_page_1_part_2">dijeljenja trezora,</string>
     <string name="verify_swap_youre_swapping_title">Zamjenjujete</string>
     <string name="keysign_app_version_text">Verzija %1$s (%2$s)</string>
+    <string name="lp_position">Pozicija</string>
+    <string name="add">Dodaj</string>
+    <string name="remove">Ukloni</string>
 </resources>

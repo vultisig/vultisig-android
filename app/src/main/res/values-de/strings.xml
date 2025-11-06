@@ -916,4 +916,7 @@
     <string name="onboarding_desc_page_1_part_2">Tresorfreigaben</string>
     <string name="verify_swap_youre_swapping_title">Sie tauschen gerade Daten aus.</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
+    <string name="lp_position">Position</string>
+    <string name="add">Hinzufügen</string>
+    <string name="remove">Entfernen</string>
 </resources>

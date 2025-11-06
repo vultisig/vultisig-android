@@ -1321,5 +1321,8 @@
     <string name="onboarding_desc_page_1_part_2">保险库共享</string>
     <string name="verify_swap_youre_swapping_title">您正在切换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
+    <string name="lp_position">仓位</string>
+    <string name="add">添加</string>
+    <string name="remove">移除</string>
 
 </resources>

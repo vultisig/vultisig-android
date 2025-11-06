@@ -913,4 +913,7 @@
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>
     <string name="keysign_app_version_text">Versão %1$s (%2$s)</string>
+    <string name="lp_position">Posição</string>
+    <string name="add">Adicionar</string>
+    <string name="remove">Remover</string>
 </resources>

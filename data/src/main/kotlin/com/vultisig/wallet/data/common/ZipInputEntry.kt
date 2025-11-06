@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.common
 
-data class ZipFileEntry(
+data class AppZipEntry(
     val name: String,
     val content: String,
 )

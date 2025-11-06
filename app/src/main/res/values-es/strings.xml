@@ -914,4 +914,7 @@
     <string name="onboarding_desc_page_1_part_2">Recursos compartidos de la bóveda</string>
     <string name="verify_swap_youre_swapping_title">Estás intercambiando</string>
     <string name="keysign_app_version_text">Versión %1$s (%2$s)</string>
+    <string name="lp_position">Posición</string>
+    <string name="add">Añadir</string>
+    <string name="remove">Eliminar</string>
 </resources>

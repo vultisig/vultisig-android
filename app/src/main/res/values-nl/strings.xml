@@ -923,4 +923,7 @@
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
+    <string name="lp_position">Positie</string>
+    <string name="add">Toevoegen</string>
+    <string name="remove">Verwijderen</string>
 </resources>

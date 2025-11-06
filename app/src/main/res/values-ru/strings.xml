@@ -926,4 +926,7 @@
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
     <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
     <string name="keysign_app_version_text">Версия %1$s (%2$s)</string>
+    <string name="lp_position">Позиция</string>
+    <string name="add">Добавить</string>
+    <string name="remove">Удалить</string>
 </resources>
