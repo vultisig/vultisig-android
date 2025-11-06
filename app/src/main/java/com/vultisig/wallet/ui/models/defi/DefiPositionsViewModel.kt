@@ -555,7 +555,6 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     companion object {
-        // Ruji Constants
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
 
