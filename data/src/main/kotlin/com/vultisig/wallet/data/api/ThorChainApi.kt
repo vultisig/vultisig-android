@@ -218,7 +218,6 @@ internal class ThorChainApiImpl @Inject constructor(
     ): Map<String, String> {
         val affiliateParams = mutableMapOf<String, String>()
 
-        // If there is referral apply discount and referral
         if (referralCode.isNotEmpty() && isAffiliate) {
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
                 baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
