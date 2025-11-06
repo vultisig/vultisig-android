@@ -182,7 +182,7 @@
     <string name="verify_transaction_consent_correct_dst">Não estou enviando para um golpe ou hacker</string>
     <string name="naming_vault_screen_invalid_name">Nome inválido</string>
     <string name="rename_vault_invalid_name">Nome inválido</string>
-    <string name="vault_name_too_long_error">De kluisnaam is te lang</string>
+    <string name="vault_name_too_long_error">O nome do cofre é muito longo</string>
     <string name="swap_form_invalid_amount">Montante inválido</string>
     <string name="send_from_invalid_amount">Montante inválido</string>
     <string name="insufficient_utxos_error">UTXOs disponíveis insuficientes para cobrir o valor selecionado. Por favor, adicione mais fundos ou reduza o valor que está enviando</string>
