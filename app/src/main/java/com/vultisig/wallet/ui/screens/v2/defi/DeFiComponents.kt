@@ -193,7 +193,7 @@ internal fun PositionsSelectionDialog(
                         }
                     }
                     TokenSelectionGridUiModel(
-                        isChecked = true,
+                        isChecked = it.data.isSelected,
                         tokenSelectionUiModel = tokenSelectionUiModel
                     )
                 },
@@ -249,7 +249,7 @@ internal fun PositionsSelectionDialog(
                         }
                     }
                     TokenSelectionGridUiModel(
-                        isChecked = false,
+                        isChecked = it.data.isSelected,
                         tokenSelectionUiModel = tokenSelectionUiModel
                     )
                 },
