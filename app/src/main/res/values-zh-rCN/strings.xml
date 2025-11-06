@@ -75,7 +75,7 @@
     <string name="vault_tier_silver_discount">折扣：20基点</string>
     <string name="vault_tier_gold_discount">折扣：30基点</string>
     <string name="vault_tier_platinum_discount">折扣：35基点</string>
-    <string name="vault_tier_hold">保留</string>
+    <string name="vault_tier_hold">持有</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
     <string name="vault_tier_unlock_bronze_part1">解锁</string>
@@ -1179,7 +1179,7 @@
     <string name="vault_created_success_part_2">成功</string>
     <string name="backup_vault_backup_now_button">立即备份</string>
     <string name="backup_vault_backup_vault_share_title">在线备份您的金库共享</string>
-    <string name="backup_password_request_description">我们建议您不要为设备库共享设置备份密码——如果备份数据妥善存储在不同位置，您的数据就很安全，这本身就是一项重要的保护措施。请记住，如果您忘记了备份密码，则无法恢复。一切由您决定！</string>
+    <string name="backup_password_request_description">我们建议不要为设备金库份额设置备份密码——只要将备份妥善存放在不同位置，数据依然安全。请注意：忘记备份密码将无法找回。一切由您决定！</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>
     <string name="backup_vault_topbar_title">备份金库</string>
     <string name="onboarding_fast_backup_desc_page_1_part_1">您的金库持有 2 份份额，</string>

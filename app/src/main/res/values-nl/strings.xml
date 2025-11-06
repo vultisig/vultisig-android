@@ -637,7 +637,7 @@
     <string name="vault_settings_back_up_your">Maak een back-up van uw Vault Share naar een apparaat of server.</string>
     <string name="vault_settings_migrate_gg20">Migreer GG20-kluis DKLS</string>
     <string name="vault_settings_reshare_change">Deel, wijzig TSS of onderteken berichten opnieuw.</string>
-    <string name="vault_backup_summary_start_using_vault">Start met het gebruiken van je kluis</string>
+    <string name="vault_backup_summary_start_using_vault">Begin met het gebruiken van uw kluis</string>
     <string name="transaction_done_form_approve">Goedkeuren</string>
     <string name="vault_settings_migration_title">Migreren</string>
     <string name="transaction_buy">Kopen</string>
@@ -784,7 +784,7 @@
     <string name="keygen_vault_created_success_part_1">Kluis aangemaakt</string>
     <string name="vault_created_success_part_2">Succesvol</string>
     <string name="backup_vault_backup_now_button">Maak nu een back-up</string>
-    <string name="backup_vault_backup_vault_share_title">Maak online een back-up van je kluis</string>
+    <string name="backup_vault_backup_vault_share_title">Maak online een back‑up van uw kluis</string>
     <string name="backup_vault_topbar_title">Back-upkluis</string>
     <string name="backup_password_request_description">We raden u aan geen back-upwachtwoord in te stellen voor gedeelde apparaatkluisjes. Uw gegevens zijn veilig als de back-ups correct op verschillende locaties worden opgeslagen, wat al een aanzienlijke bescherming biedt. Vergeet niet dat back-upwachtwoorden niet kunnen worden hersteld als u ze vergeet. Uw keuze!</string>
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
@@ -803,7 +803,7 @@
     <string name="create_new_vault_screen_create_new_vault">Maak een nieuwe kluis aan</string>
     <string name="onboarding_desc_page_6_part_2">Ontgrendel uw kluis</string>
     <string name="onboarding_summary_button">Maak je kluis aan</string>
-    <string name="keygen_while_you_wait_title">Terwijl je wacht, is Vultisig...</string>
+    <string name="keygen_while_you_wait_title">Terwijl u wacht, is Vultisig…</string>
     <string name="keygen_top_bar_title">Kluis aanmaken</string>
     <string name="keygen_benefit_3_template">Wissel uw favoriete tokens allemaal in één kluis</string>
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>

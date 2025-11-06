@@ -725,7 +725,7 @@
     <string name="backup_vault_online_storage_is_recommended">L\'archiviazione online è consigliata e sicura: le condivisioni Vault sono progettate per questo scopo.</string>
     <string name="deposit_form_enter_asset_hint">Inserisci risorse</string>
     <string name="share_balance_loading">Caricamento in corso...</string>
-    <string name="custom_token_screen_finding_token">Trovare token</string>
+    <string name="custom_token_screen_finding_token">Ricerca del token</string>
     <string name="retry">Riprova</string>
     <string name="custom_token_screen_title">Trova token personalizzato</string>
     <string name="rename_vault_screen_rename_vault">Rinomina Vault</string>
@@ -749,7 +749,7 @@
     <string name="migration_onboarding_step_2_text_start">Creerai nuovi backup di Vault Share,</string>
     <string name="migration_onboarding_step_2_text_end">Conservali come facevi prima</string>
     <string name="migration_onboarding_step_3_text_start">Assicurati che</string>
-    <string name="migration_onboarding_step_3_text_emphasize">tutti i dispositivi iniziali sono presenti</string>
+    <string name="migration_onboarding_step_3_text_emphasize">tutti i dispositivi iniziali siano presenti</string>
     <string name="onboarding_desc_page_4_part_1">Recupera il tuo vault anche</string>
     <string name="onboarding_desc_page_4_part_2">se un dispositivo viene smarrito o danneggiato</string>
     <string name="onboarding_desc_page_5_part_1">Esegui sempre il backup di ogni condivisione del vault</string>
@@ -807,7 +807,7 @@
     <string name="select_vault_type_secure_desc_3">Proteggi qualsiasi quantità di risorse</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver co-firma istantaneamente</string>
     <string name="peer_discovery_topbar_title">Scansiona il codice QR</string>
-    <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi...</string>
+    <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivi (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Non hai ricevuto un\'email?</string>
@@ -831,7 +831,7 @@
     <string name="fast_vault_password_hint_screen_hint">Inserisci suggerimento</string>
     <string name="fast_vault_password_screen_password_hint">Inserisci la password</string>
     <string name="send_error_same_address">L\'indirizzo del destinatario deve essere diverso dall\'indirizzo del mittente</string>
-    <string name="select_vault_type_secure">Proteggi</string>
+    <string name="select_vault_type_secure">Sicura</string>
     <string name="select_vault_type_fast">Veloce</string>
     <string name="vault_backup_screen_paste">Incolla</string>
     <string name="enter_backup_screen_title">Inserisci il codice di 4 cifre che ti abbiamo inviato via email</string>

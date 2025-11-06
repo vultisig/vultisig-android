@@ -262,7 +262,7 @@
     <string name="backup_now">Сделайте резервную копию своего хранилища прямо сейчас!</string>
     <string name="deposit_screen_title">Подпись функции</string>
     <string name="deposit_screen_amount_title">Количество</string>
-    <string name="verify_deposit_gas_title">Газ</string>
+    <string name="verify_deposit_gas_title">Комиссия сети</string>
     <string name="token_selection_screen_custom_token">Пользовательский токен</string>
     <string name="custom_token_find_your_custom_token">Найдите свой индивидуальный токен</string>
     <string name="custom_token_enter_contract_address">Введите адрес контракта</string>
@@ -455,7 +455,7 @@
     <string name="security_scanner_transaction_scanned_by">Транзакция отсканирована</string>
     <string name="security_scanner_transaction_scanning">Сканирование…</string>
     <string name="security_scanner_transaction_not_scanned">Транзакция не отсканирована</string>
-    <string name="keygen_step_preparing_vault">Подготовка Хранилища</string>
+    <string name="keygen_step_preparing_vault">Подготовка хранилища</string>
     <string name="keygen_step_generating_ecdsa">Генерация ключа ECDSA</string>
     <string name="reshare_step_generating_eddsa">Генерация ключа EdDSA</string>
     <string name="keygen_connecting_with_server">Подключение к серверу…</string>
@@ -567,7 +567,7 @@
     <string name="faq_settings_a9">Он построен на технологии MPC, которая устраняет необходимость в сид-фразах и поддерживает несколько блокчейнов, что делает Vultisig гибким и независимым от цепочек блоков.</string>
     <string name="vault_settings_advanced_title">Дополнительно</string>
     <string name="sign_message_continue">Продолжить</string>
-    <string name="sign_message_form_method_field_title">Способ</string>
+    <string name="sign_message_form_method_field_title">Метод</string>
     <string name="hint_signing_method">Метод подписания</string>
     <string name="verify_sign_message_signing_method" >Метод подписания</string>
     <string name="signing_error_transaction_timeout">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
@@ -642,7 +642,7 @@
     <string name="vault_settings_back_up_your">Создание резервной копии общего ресурса хранилища на устройстве или сервере.</string>
     <string name="vault_settings_migrate_gg20">Миграция хранилища GG20 DKLS</string>
     <string name="vault_settings_reshare_change">Повторный доступ, изменение TSS или подпись сообщений.</string>
-    <string name="vault_backup_summary_start_using_vault">Начать использовать Хранилище</string>
+    <string name="vault_backup_summary_start_using_vault">Начать использовать хранилище</string>
     <string name="transaction_done_form_approve">Одобрить</string>
     <string name="vault_settings_migration_title">Мигрировать</string>
     <string name="transaction_buy">Купить</string>
@@ -801,7 +801,7 @@
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Мы отправили вам новый общий ресурс на сервере!</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Проверьте адрес электронной почты для подтверждения.</string>
     <string name="select_vault_type_next">Далее</string>
-    <string name="select_vault_type_choose_setup">Выберите «Настроить»</string>
+    <string name="select_vault_type_choose_setup">Выберите конфигурацию</string>
     <string name="home_screen_scan_qr_code">Сканируйте QR-код</string>
     <string name="create_new_vault_screen_create_new_vault">Создать новое хранилище</string>
     <string name="onboarding_desc_page_6_part_2">Разблокируйте своё хранилище</string>
@@ -819,7 +819,7 @@
     <string name="select_vault_type_secure_desc_3">Защитите любое количество активов</string>
     <string name="select_vault_type_fast_desc_3">Vultisig мгновенно подписывается</string>
     <string name="peer_discovery_topbar_title">Сканируйте QR-код</string>
-    <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Ожидание устройств…</string>
     <string name="peer_discovery_devices_n_of_n">Устройства (%1$s/%2$s)</string>
     <string name="vault_backup_screen_email_sent_to">Отправлено %s.</string>
     <string name="vault_backup_screen_donot_recieve_email">Не получили письмо?</string>
@@ -843,7 +843,7 @@
     <string name="fast_vault_password_hint_screen_hint">Введите подсказку</string>
     <string name="fast_vault_password_screen_password_hint">Введите пароль</string>
     <string name="send_error_same_address">Адрес получателя должен отличаться от адреса отправителя.</string>
-    <string name="select_vault_type_secure">Безопасно</string>
+    <string name="select_vault_type_secure">Безопасный</string>
     <string name="select_vault_type_fast">Быстрый</string>
     <string name="vault_backup_screen_paste">Вставить</string>
     <string name="enter_backup_screen_title">Введите 4-значный код, который мы отправили вам по электронной почте</string>
@@ -897,7 +897,7 @@
     <string name="vault_backup_screen_restart_keygen">Перезапустите генератор ключей.</string>
     <string name="onboarding_intro_preview_part_1">Попрощайтесь с</string>
     <string name="onboarding_desc_page_1_part_1">Поздоровайтесь с</string>
-    <string name="peer_discovery_this_device">Это устройство.</string>
+    <string name="peer_discovery_this_device">Это устройство</string>
     <string name="peer_discovery_scan_with_n_device">Сканируйте с помощью устройства %1$s</string>
     <string name="select_chain_title">Выбрать цепочку</string>
     <string name="keygen_benefit_2_emphasized">Самостоятельное хранение,</string>

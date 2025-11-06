@@ -40,7 +40,7 @@
     <string name="vault_tier_unlock_platinum_part1">Desbloquear Nível </string>
     <string name="vault_tier_unlock_platinum_part2">Platina</string>
     <string name="vault_tier_unlock_platinum_part3"></string>
-    <string name="vault_tier_description">Hold $VULT para desbloquear taxas de negociação mais baixas.</string>
+    <string name="vault_tier_description">Mantenha $VULT para desbloquear taxas de negociação mais baixas.</string>
     <string name="vault_tier_bronze_description">Ao manter 1.000 $VULT, você desbloqueará o Nível Bronze e receberá um desconto de 10 pontos base nas taxas de negociação em todas as trocas.</string>
     <string name="vault_tier_silver_description">Ao manter 2.500 $VULT, você desbloqueará o Nível Prata e receberá um desconto de 20 pontos base nas taxas de negociação em todas as trocas.</string>
     <string name="vault_tier_gold_description">Ao manter 5.000 $VULT, você desbloqueará o Nível Ouro e receberá um desconto de 30 pontos base nas taxas de negociação em todas as trocas.</string>

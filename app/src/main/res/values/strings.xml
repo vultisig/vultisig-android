@@ -544,7 +544,7 @@
     <string name="peer_discovery_action_next_title">Next</string>
     <string name="peer_discovery_this_device">This Device</string>
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
-    <string name="peer_discovery_waiting_for_devices_action">Waiting on devices...</string>
+    <string name="peer_discovery_waiting_for_devices_action">Waiting on devices…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
     <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
     <string name="scan_qr_code_modal_next">Next</string>

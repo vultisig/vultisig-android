@@ -27,7 +27,7 @@
     <string name="vault_tier_silver_discount">Rabatt: 20bps</string>
     <string name="vault_tier_gold_discount">Rabatt: 30bps</string>
     <string name="vault_tier_platinum_discount">Rabatt: 35bps</string>
-    <string name="vault_tier_hold">Aufbewahren</string>
+    <string name="vault_tier_hold">Halten</string>
     <string name="vault_tier_unlock">Stufe freischalten</string>
     <string name="vault_tier_active">Aktiv</string>
     <string name="vault_tier_unlock_bronze_part1"></string>
@@ -452,7 +452,7 @@
     <string name="keygen_connecting_with_server">Mit Server verbinden …</string>
     <string name="keygen_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
     <string name="reshare_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
-    <string name="merge_account_doesnt_exist">Der ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
+    <string name="merge_account_doesnt_exist">Das ausgewählte Token wurde für diese Adresse nicht gefunden.</string>
     <string name="keygen_email_error">Falsche E-Mail, bitte überprüfen</string>
     <string name="deposit_option_stake_ruji">RUJI staken</string>
     <string name="deposit_option_unstake_ruji">RUJI entstaken</string>
@@ -727,7 +727,7 @@
     <string name="backup_vault_online_storage_is_recommended">Online-Speicherung ist empfehlenswert und sicher – Tresorfreigaben sind dafür konzipiert.</string>
     <string name="deposit_form_enter_asset_hint">Assets eingeben</string>
     <string name="share_balance_loading">Wird geladen...</string>
-    <string name="custom_token_screen_finding_token">Ricerca del token in corso</string>
+    <string name="custom_token_screen_finding_token">Token wird gesucht …</string>
     <string name="retry">Erneut versuchen</string>
     <string name="custom_token_screen_title">Benutzerdefinierten Token suchen</string>
     <string name="rename_vault_screen_rename_vault">Tresor umbenennen</string>
@@ -747,7 +747,7 @@
     <string name="vault_ceil_active">Aktiv</string>
     <string name="fast_vault_password_screen_error">Passwörter stimmen nicht überein</string>
     <string name="fast_vault_password_screen_next">Weiter</string>
-    <string name="fast_vault_password_hint_screen_title">Füge einen optionalen Hinweis hinzu</string>
+    <string name="fast_vault_password_hint_screen_title">Fügen Sie einen optionalen Hinweis hinzu</string>
     <string name="migration_onboarding_step_2_text_start">Sie erstellen neue Tresor-Anteilssicherungen.</string>
     <string name="migration_onboarding_step_2_text_end">Speichern Sie sie wie zuvor</string>
     <string name="migration_onboarding_step_3_text_start">Stellen Sie sicher, dass</string>
