@@ -911,7 +911,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit e-mailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
-    <string name="keygen_connecting_with_server_take_a_minute">Dit duurt slechts een seconde.</string>
+    <string name="keygen_connecting_with_server_take_a_minute">Dit duurt maar even.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Deze kluis delen</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>

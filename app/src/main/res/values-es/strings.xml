@@ -631,7 +631,7 @@
     <string name="vault_settings_back_up_your">Realice una copia de seguridad del recurso compartido de bóveda en un dispositivo o servidor</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Recompartir, cambiar TSS o firmar mensajes</string>
-    <string name="vault_backup_summary_start_using_vault">Comenzar a usar su Bóveda</string>
+    <string name="vault_backup_summary_start_using_vault">Comienza a usar tu bóveda</string>
     <string name="transaction_done_form_approve">Aprobar</string>
     <string name="vault_settings_migration_title">Migrar</string>
     <string name="transaction_buy">Comprar</string>
