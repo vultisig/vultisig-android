@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -173,16 +174,21 @@ internal fun PositionsSelectionDialog(
             TokenSelectionGroupUiModel(
                 title = "Bond",
                 items = listOf(
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.RUNE),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
+                            title = Coins.ThorChain.RUNE.ticker,
+                            isSelected = true,
+                        )
+                    ),
                 ),
                 mapper = {
                     val tokenSelectionUiModel = when (it) {
-                        is GridTokenUiModel.PairToken<Coin> -> error("Not supported")
-
-                        is GridTokenUiModel.SingleToken<Coin> -> {
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not supported")
+                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = it.data.ticker,
-                                logo = getCoinLogo(it.data.logo)
+                                name = it.data.title,
+                                logo = it.data.logo,
                             )
                         }
                     }
@@ -196,20 +202,49 @@ internal fun PositionsSelectionDialog(
             TokenSelectionGroupUiModel(
                 title = "Stake",
                 items = listOf(
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.RUJI),
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.TCY),
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.sTCY),
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.yRUNE),
-                    GridTokenUiModel.SingleToken(data = Coins.ThorChain.yTCY),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
+                            title = Coins.ThorChain.RUJI.ticker,
+                            isSelected = true,
+                        )
+                    ),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.TCY.logo),
+                            title = Coins.ThorChain.TCY.ticker,
+                            isSelected = true,
+                        )
+                    ),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.sTCY.logo),
+                            title = Coins.ThorChain.sTCY.ticker,
+                            isSelected = true,
+                        )
+                    ),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.yRUNE.logo),
+                            title = Coins.ThorChain.yRUNE.ticker,
+                            isSelected = true,
+                        )
+                    ),
+                    GridTokenUiModel.SingleToken(
+                        data = PositionUiModelDialog(
+                            logo = getCoinLogo(Coins.ThorChain.yTCY.logo),
+                            title = Coins.ThorChain.yTCY.ticker,
+                            isSelected = true,
+                        )
+                    ),
                 ),
                 mapper = {
                     val tokenSelectionUiModel = when (it) {
-                        is GridTokenUiModel.PairToken<Coin> -> error("Not Supported")
-
-                        is GridTokenUiModel.SingleToken<Coin> -> {
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not Supported")
+                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = it.data.ticker,
-                                logo = getCoinLogo(it.data.logo)
+                                name = it.data.title,
+                                logo = it.data.logo
                             )
                         }
                     }
@@ -248,10 +283,11 @@ internal fun PositionsSelectionDialog(
         },
         onCheckChange = { isSelected, uiModel ->
             when (uiModel) {
-                is GridTokenUiModel.SingleToken<Coin> -> {
+                is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                     val token = uiModel.data
                     println(token)
                 }
+
                 else -> error("Not supported double coin")
             }
         },
@@ -448,9 +484,9 @@ private fun CompleteNodeCardMockPreview() {
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.colors.text.primary
             )
-            
+
             UiSpacer(12.dp)
-            
+
             // Info Items
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -472,9 +508,9 @@ private fun CompleteNodeCardMockPreview() {
                     value = "20 RUNE"
                 )
             }
-            
+
             UiSpacer(16.dp)
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
