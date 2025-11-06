@@ -900,7 +900,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Volte ao modo internet</string>
     <string name="enter_email_screen_desc">Este e-mail é apenas utilizado para enviar o backup do servidor</string>
     <string name="onboarding_desc_page_6_part_1">Estas ações colaboram para</string>
-    <string name="keygen_connecting_with_server_take_a_minute">Isto deve demorar apenas um segundo.</string>
+    <string name="keygen_connecting_with_server_take_a_second">Isto deve demorar apenas um segundo.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Este compartilhamento do cofre</string>
     <string name="function_switch_thorchain_address">Endereço THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transação concluída com sucesso</string>

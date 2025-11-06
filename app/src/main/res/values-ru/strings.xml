@@ -913,7 +913,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Переключитесь обратно в интернет-режим</string>
     <string name="onboarding_desc_page_6_part_1">Эти общие ресурсы взаимодействуют с</string>
     <string name="enter_email_screen_desc">Этот адрес электронной почты используется только для отправки резервной копии сервера.</string>
-    <string name="keygen_connecting_with_server_take_a_minute">Это займёт всего секунду.</string>
+    <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">это хранилище общего доступа.</string>
     <string name="function_switch_thorchain_address">Адрес THORChain</string>
     <string name="tx_transaction_successful_screen_title">Транзакция выполнена успешно</string>

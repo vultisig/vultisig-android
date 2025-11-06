@@ -1307,7 +1307,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
     <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
     <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
-    <string name="keygen_connecting_with_server_take_a_minute">这只需几秒钟。</string>
+    <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">此金库共享</string>
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>

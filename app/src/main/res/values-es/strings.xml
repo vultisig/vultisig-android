@@ -901,7 +901,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Cambia al modo de internet.</string>
     <string name="onboarding_desc_page_6_part_1">Estas comparticiones colaboran para</string>
     <string name="enter_email_screen_desc">Este correo electrónico solo se utiliza para enviar la copia de seguridad del servidor</string>
-    <string name="keygen_connecting_with_server_take_a_minuto">Esto debería tardar solo un minuto.</string>
+    <string name="keygen_connecting_with_server_take_a_second">Esto solo debería tardar un segundo.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Este recurso compartido</string>
     <string name="function_switch_thorchain_address">Dirección de THORChain</string>
     <string name="tx_transaction_successful_screen_title">Transacción exitosa</string>

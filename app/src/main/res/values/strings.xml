@@ -576,7 +576,7 @@
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server">Connecting with server...</string>
-    <string name="keygen_connecting_with_server_take_a_minute">This should only take a second</string>
+    <string name="keygen_connecting_with_server_take_a_second">This should only take a second</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Want to create vault privately?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Switch back to internet mode</string>

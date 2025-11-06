@@ -902,7 +902,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Vratite se na internetski način rada</string>
     <string name="onboarding_desc_page_6_part_1">Ovi dijeljeni resursi surađuju s</string>
     <string name="enter_email_screen_desc">Ova e-pošta koristi se samo za slanje sigurnosne kopije poslužitelja</string>
-    <string name="keygen_connecting_with_server_take_a_minute">Ovo bi trebalo trajati samo sekundu</string>
+    <string name="keygen_connecting_with_server_take_a_second">Ovo bi trebalo trajati samo sekundu</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">ovaj trezor dijeljenja</string>
     <string name="function_switch_thorchain_address">THORChain adresa</string>
     <string name="tx_transaction_successful_screen_title">Transakcija uspješna</string>
