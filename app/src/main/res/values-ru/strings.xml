@@ -571,7 +571,7 @@
     <string name="sign_message_form_method_field_title">Способ</string>
     <string name="hint_signing_method">Метод подписания</string>
     <string name="verify_sign_message_signing_method" >Метод подписания</string>
-    <string name="signing_error_blockhash_not_found">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
+    <string name="signing_error_transaction_timeout">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
     <string name="hint_message_to_sign">Сообщение для подписи</string>
     <string name="verify_sign_message_message_sign">Сообщение для подписи</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
@@ -798,7 +798,7 @@
     <string name="vault_backup_verifying_pin">Подтверждение кода, пожалуйста, подождите.</string>
     <string name="vault_backup_screen_change_email">Измените адрес электронной почты и перезапустите кейген.</string>
     <string name="onboarding_fast_backup_desc_page_3_part_1">Отправлено вам на полное самостоятельное хранение!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2">Проверьте адрес электронной почты для подтверждения.=</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">Проверьте адрес электронной почты для подтверждения.</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_1">Мы отправили вам новый общий ресурс на сервере!</string>
     <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Проверьте адрес электронной почты для подтверждения.</string>
     <string name="select_vault_type_next">Далее</string>

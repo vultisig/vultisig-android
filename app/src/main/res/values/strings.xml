@@ -465,7 +465,7 @@
 
 
     <string name="verify_sign_message_method_field_title">Method</string>
-    <string name="signing_error_blockhash_not_found">Transaction time out due to slow signing. Please try again.</string>
+    <string name="signing_error_transaction_timeout">Transaction time out due to slow signing. Please try again.</string>
     <string name="verify_sign_message_message_field_title">Message</string>
     <string name="sign_message_form_method_field_title">Method</string>
     <string name="hint_signing_method" >Signing method</string>

@@ -559,7 +559,7 @@
     <string name="sign_message_form_method_field_title">Methode</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="verify_sign_message_signing_method" >Signaturmethode</string>
-    <string name="signing_error_blockhash_not_found">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
+    <string name="signing_error_transaction_timeout">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
     <string name="verify_sign_message_message_sign">Zu unterschreibende Nachricht</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
@@ -832,7 +832,7 @@
     <string name="fast_vault_password_hint_skip">Überspringen</string>
     <string name="fast_vault_password_hint_next">Weiter</string>
     <string name="fast_vault_password_hint_screen_hint">Hinweis eingeben</string>
-    <string name="fast_vault_password_screen_password_hint">passwort eingeben</string>
+    <string name="fast_vault_password_screen_password_hint">Passwort eingeben</string>
     <string name="send_error_same_address">Die Empfängeradresse muss sich von der Absenderadresse unterscheiden.</string>
     <string name="select_vault_type_secure">Sichern</string>
     <string name="select_vault_type_fast">Schnell</string>

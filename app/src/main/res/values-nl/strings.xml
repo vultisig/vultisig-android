@@ -17,9 +17,9 @@
     <string name="vault_settings_backup_subtitle">Back-up van uw kluis delen</string>
     <string name="vault_settings_rename_title">Hernoemen</string>
     <string name="swap_form_on_chain">op</string>
-    <string name="select_asset_title">Actief selecteren</string>
-    <string name="select_asset_chain_title">Ketting</string>
-    <string name="select_chain_chain_title">Ketting</string>
+    <string name="select_asset_title">Asset selecteren</string>
+    <string name="select_asset_chain_title">Keten</string>
+    <string name="select_chain_chain_title">Keten</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="vault_settings_rename_subtitle">Wijzig uw kluisnaam</string>
     <string name="vault_settings_reshare_title">Opnieuw delen</string>
@@ -568,7 +568,7 @@
     <string name="sign_message_form_method_field_title">Methode</string>
     <string name="hint_signing_method">Ondertekeningsmethode</string>
     <string name="verify_sign_message_signing_method" >Ondertekeningsmethode</string>
-    <string name="signing_error_blockhash_not_found">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
+    <string name="signing_error_transaction_timeout">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
     <string name="hint_message_to_sign">Bericht om te ondertekenen</string>
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
@@ -689,7 +689,7 @@
     <string name="vault_confirmation_vault_upgraded">Vault geüpgraded</string>
     <string name="vault_confirmation_well_done">Goed gedaan.</string>
     <string name="this_amount_would_leave_too_little_change">Dit bedrag zou te weinig wisselgeld opleveren. 💡 Probeer \'Send Max\' (%1$s ADA) om dit probleem te voorkomen.</string>
-    <string name="swap_form_native">Oorspronkelijk</string>
+    <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Goedkeuring Tx Hash</string>
     <string name="swap_transaction_overview_track">Spoor</string>
     <string name="token_selection_screen_select_tokens">Selecteer tokens</string>
@@ -769,7 +769,7 @@
     <string name="keygen_benefit_4_template">op Android, iOS, macOS en Windows</string>
     <string name="keygen_benefit_4_emphasized">Beschikbaar</string>
     <string name="onboarding_intro_preview_part_2">zaadzinnen</string>
-    <string name="onboarding_intro_back">Rug</string>
+    <string name="onboarding_intro_back">Terug</string>
     <string name="onboarding_security_backup_desc_page_1_part_1">Je kluis bevat %s shares,</string>
     <string name="onboarding_security_backup_desc_page_1_part_2">Elk apparaat heeft een eigen back-up nodig.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1">Back-up</string>

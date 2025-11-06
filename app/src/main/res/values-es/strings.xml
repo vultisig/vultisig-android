@@ -562,7 +562,7 @@
     <string name="sign_message_form_method_field_title">Método</string>
     <string name="hint_signing_method">Método de firma</string>
     <string name="verify_sign_message_signing_method" >Método de firma</string>
-    <string name="signing_error_blockhash_not_found">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
+    <string name="signing_error_transaction_timeout">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
     <string name="verify_sign_message_message_sign">Mensaje para firmar</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>

@@ -25,7 +25,7 @@
     <string name="vault_tier_silver_discount">Desconto: 20bps</string>
     <string name="vault_tier_gold_discount">Desconto: 30bps</string>
     <string name="vault_tier_platinum_discount">Desconto: 35bps</string>
-    <string name="vault_tier_hold">Retido</string>
+    <string name="vault_tier_hold">Manter</string>
     <string name="vault_tier_unlock">Desbloquear Nível</string>
     <string name="vault_tier_active">Ativo</string>
     <string name="vault_tier_unlock_bronze_part1">Desbloquear Nível </string>
@@ -254,7 +254,7 @@
     <string name="deposit_screen_amount_title">Montante</string>
     <string name="verify_deposit_memo_title">Memorando</string>
     <string name="verify_deposit_node_address_title">Endereço do nó</string>
-    <string name="verify_deposit_gas_title">Gás</string>
+    <string name="verify_deposit_gas_title">Taxa de rede</string>
     <string name="token_selection_screen_custom_token">Token personalizado</string>
     <string name="custom_token_find_your_custom_token">Encontre o seu token personalizado</string>
     <string name="custom_token_enter_contract_address">Introduza o endereço do contrato</string>
@@ -447,7 +447,7 @@
     <string name="keygen_step_preparing_vault">Preparar o cofre</string>
     <string name="keygen_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Gerando chave EdDSA</string>
-    <string name="keygen_connecting_with_server">Gerando chave ECDSA</string>
+    <string name="keygen_connecting_with_server">A ligar ao servidor…</string>
     <string name="keygen_step_generating_eddsa">Gerando chave EDDSA</string>
     <string name="reshare_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="merge_account_doesnt_exist">O token selecionado não foi encontrado para este endereço</string>
@@ -557,7 +557,7 @@
     <string name="sign_message_form_method_field_title">Método</string>
     <string name="hint_signing_method">Método de assinatura</string>
     <string name="verify_sign_message_signing_method" >Método de assinatura</string>
-    <string name="signing_error_blockhash_not_found">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
+    <string name="signing_error_transaction_timeout">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
     <string name="hint_message_to_sign">Mensagem para assinar</string>
     <string name="verify_sign_message_message_sign">Mensagem para assinar</string>
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados num só lugar.</string>
@@ -663,7 +663,7 @@
     <string name="vault_list_edit_vaults_header">Editar Cofres</string>
     <string name="token_details_bottom_sheet_price">Preço</string>
     <string name="token_details_bottom_sheet_network">Rede</string>
-    <string name="send_tx_overview_add_to_address_book">Adicionar à agenda de endereços</string>
+    <string name="send_tx_overview_add_to_address_book">Adicionar ao Catálogo de Endereços</string>
     <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
     <string name="invite_to_x_banner_button">Siga %s</string>
@@ -743,7 +743,7 @@
     <string name="bond_node_state_unknown">Desconhecido</string>
     <string name="defi_balance">Saldo</string>
     <string name="vault_ceil_active">Ativo</string>
-    <string name="fast_vault_password_screen_error">As senhas não coincidem</string>
+    <string name="fast_vault_password_screen_error">As palavras‑passe não coincidem</string>
     <string name="fast_vault_password_screen_next">Próximo</string>
     <string name="fast_vault_password_hint_screen_title">Adicione uma dica opcional</string>
     <string name="migration_onboarding_step_2_text_start">Irá criar novos backups de ações do cofre,</string>
