@@ -4,6 +4,6 @@ import com.vultisig.wallet.data.models.ImageModel
 
 internal data class PositionUiModelDialog(
     val logo: ImageModel,
-    val title: String,
+    val ticker: String,
     val isSelected: Boolean = true,
 )

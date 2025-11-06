@@ -122,6 +122,8 @@ internal fun DefiPositionScreenContent(
 
             if (state.showPositionSelectionDialog) {
                 PositionsSelectionDialog(
+                    bondPositions = state.bondPositionsDialog,
+                    stakePositions = state.stakingPositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
                     onPositionSelectionChange = onPositionSelectionChange,

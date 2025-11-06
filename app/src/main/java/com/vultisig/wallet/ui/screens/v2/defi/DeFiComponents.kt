@@ -28,9 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
@@ -165,63 +162,40 @@ fun ApyInfoItem(
 
 @Composable
 internal fun PositionsSelectionDialog(
-    selectedPositions: Set<String>,
+    selectedPositions: List<String>,
+    bondPositions: List<PositionUiModelDialog> = emptyList(),
+    stakePositions: List<PositionUiModelDialog> = emptyList(),
     searchTextFieldState: TextFieldState = TextFieldState(),
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onDoneClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
 ) {
     val searchQuery = searchTextFieldState.text.toString().lowercase()
-    val bondPositions = listOf(
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
-            title = Coins.ThorChain.RUNE.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.RUNE.ticker),
+    val updateBondPositions = bondPositions.map {
+        it.copy(
+            isSelected = selectedPositions.contains(it.ticker)
         )
-    )
-
-    val stakePositions = listOf(
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.RUJI.logo),
-            title = Coins.ThorChain.RUJI.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.RUJI.ticker),
-        ),
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.TCY.logo),
-            title = Coins.ThorChain.TCY.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.TCY.ticker),
-        ),
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.sTCY.logo),
-            title = Coins.ThorChain.sTCY.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.sTCY.ticker),
-        ),
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.yRUNE.logo),
-            title = Coins.ThorChain.yRUNE.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.yRUNE.ticker),
-        ),
-        PositionUiModelDialog(
-            logo = getCoinLogo(Coins.ThorChain.yTCY.logo),
-            title = Coins.ThorChain.yTCY.ticker,
-            isSelected = selectedPositions.contains(Coins.ThorChain.yTCY.ticker),
-        ),
-    )
+    }
+    val updateStakePositions = stakePositions.map {
+        it.copy(
+            isSelected = selectedPositions.contains(it.ticker),
+        )
+    }
 
     // Filter positions based on search query
     val filteredBondPositions = if (searchQuery.isEmpty()) {
-        bondPositions
+        updateBondPositions
     } else {
-        bondPositions.filter { it.title.lowercase().contains(searchQuery) }
+        updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
     }
     val filteredStakePositions = if (searchQuery.isEmpty()) {
-        stakePositions
+        updateStakePositions
     } else {
-        stakePositions.filter { it.title.lowercase().contains(searchQuery) }
+        updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
     }
 
     val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
-    
+
     if (filteredBondPositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
@@ -231,10 +205,11 @@ internal fun PositionsSelectionDialog(
                 },
                 mapper = { gridToken ->
                     val tokenSelectionUiModel = when (gridToken) {
-                        is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not supported")
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                            error("Not supported")
                         is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = gridToken.data.title,
+                                name = gridToken.data.ticker,
                                 logo = gridToken.data.logo,
                             )
                         }
@@ -248,7 +223,7 @@ internal fun PositionsSelectionDialog(
             )
         )
     }
-    
+
     if (filteredStakePositions.isNotEmpty()) {
         groups.add(
             TokenSelectionGroupUiModel(
@@ -258,10 +233,11 @@ internal fun PositionsSelectionDialog(
                 },
                 mapper = { gridToken ->
                     val tokenSelectionUiModel = when (gridToken) {
-                        is GridTokenUiModel.PairToken<PositionUiModelDialog> -> error("Not Supported")
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                            error("Not Supported")
                         is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                             TokenSelectionUiModel.TokenUiSingle(
-                                name = gridToken.data.title,
+                                name = gridToken.data.ticker,
                                 logo = gridToken.data.logo
                             )
                         }
@@ -278,9 +254,7 @@ internal fun PositionsSelectionDialog(
 
     TokenSelectionList(
         groups = groups,
-
         searchTextFieldState = searchTextFieldState,
-
         titleContent = {
             Column {
                 Text(
@@ -307,8 +281,9 @@ internal fun PositionsSelectionDialog(
             when (uiModel) {
                 is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
                     val position = uiModel.data
-                    onPositionSelectionChange(position.title, isSelected)
+                    onPositionSelectionChange(position.ticker, isSelected)
                 }
+
                 else -> error("Not supported double coin")
             }
         },
@@ -322,7 +297,7 @@ internal fun PositionsSelectionDialog(
 @Composable
 private fun PositionsSelectionDialogPreview() {
     PositionsSelectionDialog(
-        selectedPositions = setOf("RUNE", "TCY")
+        selectedPositions = listOf("RUNE", "TCY")
     )
 }
 

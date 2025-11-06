@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -28,7 +29,9 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
+import com.vultisig.wallet.ui.screens.v2.defi.supportsBonDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -48,14 +51,20 @@ import java.math.RoundingMode
 import javax.inject.Inject
 
 internal data class DefiPositionsUiModel(
+    // tabs info
     val totalAmountPrice: String = "$0.00",
     val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
+
+    // position selection dialog
     val showPositionSelectionDialog: Boolean = false,
-    val selectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"),
-    val tempSelectedPositions: Set<String> = setOf("RUNE", "RUJI", "TCY", "sTCY", "yRUNE", "yTCY"),
+    val bondPositionsDialog: List<PositionUiModelDialog> = defaultPositionsBondDialog(),
+    val stakingPositionsDialog: List<PositionUiModelDialog> = defaultPositionsStakingDialog(),
+    val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
+    val selectedPositions: List<String> = defaultSelectedPositionsDialog(),
+    val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
 )
 
 internal data class BondedTabUiModel(
@@ -483,7 +492,6 @@ internal class DefiPositionsViewModel @Inject constructor(
     fun setPositionSelectionDialogVisibility(show: Boolean) {
         viewModelScope.launch {
             if (show) {
-                // When opening dialog, copy current selections to temp
                 state.update {
                     it.copy(
                         showPositionSelectionDialog = true,
@@ -491,7 +499,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
                 }
             } else {
-                // When closing dialog (cancel), revert temp changes
                 state.update {
                     it.copy(
                         showPositionSelectionDialog = false,
@@ -517,14 +524,12 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun onPositionSelectionDone() {
         viewModelScope.launch {
-            // Apply temp selections to actual selections
             state.update {
                 it.copy(
                     showPositionSelectionDialog = false,
                     selectedPositions = it.tempSelectedPositions
                 )
             }
-            // Reload the current tab to reflect the selected positions
             when (state.value.selectedTab) {
                 DefiTab.BONDED.displayName -> loadBondedNodes()
                 DefiTab.STAKING.displayName -> loadStakingPositions()
@@ -582,4 +587,27 @@ internal class DefiPositionsViewModel @Inject constructor(
             nextPayout = null
         )
     }
+}
+
+private fun defaultPositionsBondDialog(): List<PositionUiModelDialog> {
+    return supportsBonDeFi.map { coin ->
+        PositionUiModelDialog(
+            logo = getCoinLogo(coin.logo),
+            ticker = coin.ticker,
+            isSelected = true,
+        )
+    }
+}
+private fun defaultPositionsStakingDialog(): List<PositionUiModelDialog> {
+    return supportStakingDeFi.map { coin ->
+        PositionUiModelDialog(
+            logo = getCoinLogo(coin.logo),
+            ticker = coin.ticker,
+            isSelected = true,
+        )
+    }
+}
+
+private fun defaultSelectedPositionsDialog(): List<String> {
+   return supportsBonDeFi.map { it.ticker } + supportStakingDeFi.map { it.ticker }
 }
