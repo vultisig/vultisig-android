@@ -877,7 +877,6 @@
     <string name="chain_tokens_tab_hidden">Hidden</string>
     <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
     <string name="address_copied">%1$s address copied</string>
-    <string name="vault_list_vaults_count">%d Vault%s</string>
     <string name="add_folder_title">Add Folder</string>
     <string name="add_folder_list_title">Select Vaults</string>
     <string name="add_folder_active_vaults">Active Vaults</string>

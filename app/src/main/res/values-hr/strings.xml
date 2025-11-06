@@ -657,7 +657,6 @@
     <string name="chain_tokens_tab_hidden">Skriveno</string>
     <string name="chain_tokens_qr_receive_label">Primi %1$s</string>
     <string name="address_copied">Adresa %1$s kopirana</string>
-    <string name="vault_list_vaults_count">%d Trezor%s</string>
     <string name="add_folder_title">Dodaj mapu</string>
     <string name="add_folder_list_title">Odaberi trezore</string>
     <string name="add_folder_edit_folder_title">Uredi mapu</string>

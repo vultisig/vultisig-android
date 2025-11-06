@@ -656,7 +656,6 @@
     <string name="chain_tokens_tab_hidden">Nascosto</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
     <string name="address_copied">Indirizzo %1$s copiato</string>
-    <string name="vault_list_vaults_count">%d Vault%s</string>
     <string name="add_folder_title">Aggiungi cartella</string>
     <string name="add_folder_list_title">Seleziona Vault</string>
     <string name="add_folder_edit_folder_title">Modifica cartella</string>
@@ -797,7 +796,7 @@
     <string name="onboarding_summary_button">Crea il tuo vault</string>
     <string name="keygen_while_you_wait_title">Mentre aspetti, Vultisig è...</string>
     <string name="keygen_top_bar_title">Creazione della cassaforte</string>
-    <string name="keygen_benefit_3_template">Scambia i tuoi token preferiti tutti in un'unica cassaforte</string>
+    <string name="keygen_benefit_3_template">Scambia i tuoi token preferiti tutti in un\'unica cassaforte</string>
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
     <string name="upgrade_banner_title">Aggiorna il tuo vault ora</string>
     <string name="deposit_form_custom_memo_optional_title">Memo personalizzato (facoltativo)</string>

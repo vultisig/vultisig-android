@@ -1110,8 +1110,7 @@
     <string name="address_copied">%1$s 地址已复制</string>
     
     <!-- Vault List -->
-    <string name="vault_list_vaults_count">%d 个金库%s</string>
-    
+
     <!-- Add Folder -->
     <string name="add_folder_title">添加文件夹</string>
     <string name="add_folder_list_title">选择金库</string>

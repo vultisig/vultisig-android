@@ -526,7 +526,6 @@
     <string name="referral_create_create_referral_code">Создать реферальный код</string>
     <string name="referral_create_invalid">Недействительный</string>
     <string name="referral_create_available">Доступен</string>
-    <string name="vault_list_vaults_count">%d Хранилище%s</string>
     <string name="add_folder_title">Добавить папку</string>
     <string name="add_folder_list_title">Выбрать хранилища</string>
     <string name="add_folder_active_vaults">Активные хранилища</string>

@@ -2,13 +2,13 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
-    <string name="chains">Keten</string>
+    <string name="chains">Ketens</string>
     <string name="keysign">Sleutel tekenen</string>
     <string name="danger_icon">Gevaarpictogram</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
-    <string name="vault_choose_chains">Kies kettingen</string>
+    <string name="vault_choose_chains">Kies ketens</string>
     <string name="plus_icon">Plus-pictogram</string>
     <string name="vault_settings_title">Kluisinstellingen</string>
     <string name="vault_settings_details_title">Details</string>
@@ -665,7 +665,6 @@
     <string name="chain_tokens_tab_hidden">Verborgen</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
     <string name="address_copied">%1$s-adres gekopieerd</string>
-    <string name="vault_list_vaults_count">%d Kluis%s</string>
     <string name="add_folder_title">Map toevoegen</string>
     <string name="add_folder_list_title">Kluizen selecteren</string>
     <string name="add_folder_edit_folder_title">Map bewerken</string>
@@ -911,7 +910,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit e-mailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
-    <string name="keygen_connecting_with_server_take_a_minute">Dit duurt maar even.</string>
+    <string name="keygen_connecting_with_server_take_a_minute">Dit duurt slechts een minuut.</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Deze kluis delen</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>

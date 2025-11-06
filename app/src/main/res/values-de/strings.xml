@@ -658,7 +658,6 @@
     <string name="chain_tokens_tab_hidden">Versteckt</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
     <string name="address_copied">%1$s Adresse kopiert</string>
-    <string name="vault_list_vaults_count">%d Vault%s</string>
     <string name="add_folder_title">Ordner hinzufügen</string>
     <string name="add_folder_list_title">Vaults auswählen</string>
     <string name="add_folder_edit_folder_title">Ordner bearbeiten</string>
