@@ -781,7 +781,7 @@
     <string name="keygen_benefit_5_emphasized">Een seedless wallet,</string>
     <string name="onboarding_fast_backup_desc_page_1_part_1">Je kluis bevat 2 shares,</string>
     <string name="onboarding_fast_backup_desc_page_1_part_2">Maak nu een back-up</string>
-    <string name="keygen_vault_created_success_part_1">Vault aangemaakt</string>
+    <string name="keygen_vault_created_success_part_1">Kluis aangemaakt</string>
     <string name="vault_created_success_part_2">Succesvol</string>
     <string name="backup_vault_backup_now_button">Maak nu een back-up</string>
     <string name="backup_vault_backup_vault_share_title">Maak online een back-up van je kluis</string>
@@ -804,7 +804,7 @@
     <string name="onboarding_desc_page_6_part_2">Ontgrendel uw kluis</string>
     <string name="onboarding_summary_button">Maak je kluis aan</string>
     <string name="keygen_while_you_wait_title">Terwijl je wacht, is Vultisig...</string>
-    <string name="keygen_top_bar_title">Vault aanmaken</string>
+    <string name="keygen_top_bar_title">Kluis aanmaken</string>
     <string name="keygen_benefit_3_template">Wissel uw favoriete tokens allemaal in één kluis</string>
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
     <string name="upgrade_banner_title">Upgrade nu uw kluis</string>
@@ -910,7 +910,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze shares werken samen om</string>
     <string name="enter_email_screen_desc">Dit e-mailadres wordt alleen gebruikt om de serverback-up te verzenden</string>
-    <string name="keygen_connecting_with_server_take_a_second">Dit duurt slechts een minuut.</string>
+    <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
     <string name="onboarding_security_backup_desc_page_2_part_2">Deze kluis delen</string>
     <string name="function_switch_thorchain_address">THORChain-adres</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>

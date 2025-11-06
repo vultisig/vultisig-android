@@ -253,7 +253,7 @@
     <string name="deposit_screen_amount_title">Betrag</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
-    <string name="verify_deposit_gas_title">Gas</string>
+    <string name="verify_deposit_gas_title">Netzwerkgebühr</string>
     <string name="token_selection_screen_custom_token">Benutzerdefiniertes Token</string>
     <string name="custom_token_find_your_custom_token">Finden Sie Ihr benutzerdefiniertes Token</string>
     <string name="custom_token_enter_contract_address">Vertragsadresse eingeben</string>
@@ -801,7 +801,7 @@
     <string name="keygen_benefit_3_template">Tauschen Sie Ihre bevorzugten Token in einem einzigen Tresor</string>
     <string name="keygen_benefit_3_emphasized">Chainübergreifend</string>
     <string name="upgrade_banner_title">Jetzt Ihren Tresor upgraden</string>
-    <string name="deposit_form_custom_memo_optional_title">Benutzerdefinierte Memo (optional)</string>
+    <string name="deposit_form_custom_memo_optional_title">Benutzerdefiniertes Memo (optional)</string>
     <string name="home_defi_portfolio">DeFi-Portfolio</string>
     <string name="backup_password_request_with_password_action">Passwort verwenden</string>
     <string name="backup_password_topbar_title">Passwort</string>
