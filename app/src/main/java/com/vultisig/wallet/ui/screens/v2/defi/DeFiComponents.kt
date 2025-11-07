@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -29,6 +33,15 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
+import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -150,6 +163,189 @@ fun ApyInfoItem(
             color = Theme.v2.colors.alerts.success,
         )
     }
+}
+
+@Composable
+internal fun PositionsSelectionDialog(
+    selectedPositions: List<String>,
+    bondPositions: List<PositionUiModelDialog> = emptyList(),
+    stakePositions: List<PositionUiModelDialog> = emptyList(),
+    searchTextFieldState: TextFieldState,
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
+    onDoneClick: () -> Unit = {},
+    onCancelClick: () -> Unit = {},
+) {
+    val searchQuery = searchTextFieldState.text.toString().lowercase()
+
+    // Update selections with remember to avoid recreation
+    val updateBondPositions = remember(bondPositions, selectedPositions) {
+        bondPositions.map {
+            it.copy(
+                isSelected = selectedPositions.contains(it.ticker)
+            )
+        }
+    }
+    
+    val updateStakePositions = remember(stakePositions, selectedPositions) {
+        stakePositions.map {
+            it.copy(
+                isSelected = selectedPositions.contains(it.ticker),
+            )
+        }
+    }
+
+    // Filter positions based on search query with remember
+    val filteredBondPositions = remember(searchQuery, updateBondPositions) {
+        if (searchQuery.isEmpty()) {
+            updateBondPositions
+        } else {
+            updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
+    }
+    
+    val filteredStakePositions = remember(searchQuery, updateStakePositions) {
+        if (searchQuery.isEmpty()) {
+            updateStakePositions
+        } else {
+            updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
+    }
+
+    val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
+
+    if (filteredBondPositions.isNotEmpty()) {
+        groups.add(
+            TokenSelectionGroupUiModel(
+                title = "Bond",
+                items = filteredBondPositions.map { position ->
+                    GridTokenUiModel.SingleToken(data = position)
+                },
+                mapper = { gridToken ->
+                    val tokenSelectionUiModel = when (gridToken) {
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                            error("Not supported")
+                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
+                            TokenSelectionUiModel.TokenUiSingle(
+                                name = gridToken.data.ticker,
+                                logo = gridToken.data.logo,
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = gridToken.data.isSelected,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            )
+        )
+    }
+
+    if (filteredStakePositions.isNotEmpty()) {
+        groups.add(
+            TokenSelectionGroupUiModel(
+                title = "Stake",
+                items = filteredStakePositions.map { position ->
+                    GridTokenUiModel.SingleToken(data = position)
+                },
+                mapper = { gridToken ->
+                    val tokenSelectionUiModel = when (gridToken) {
+                        is GridTokenUiModel.PairToken<PositionUiModelDialog> ->
+                            error("Not Supported")
+                        is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
+                            TokenSelectionUiModel.TokenUiSingle(
+                                name = gridToken.data.ticker,
+                                logo = gridToken.data.logo
+                            )
+                        }
+                    }
+                    TokenSelectionGridUiModel(
+                        isChecked = gridToken.data.isSelected,
+                        tokenSelectionUiModel = tokenSelectionUiModel
+                    )
+                },
+                plusUiModel = null,
+            )
+        )
+    }
+
+    TokenSelectionList(
+        groups = groups,
+        searchTextFieldState = searchTextFieldState,
+        titleContent = {
+            Column {
+                Text(
+                    stringResource(R.string.select_positions),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.colors.neutrals.n100,
+                )
+
+                UiSpacer(16.dp)
+
+                Text(
+                    text = stringResource(R.string.enable_at_least_one_position),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+        },
+        notFoundContent = {
+            NoFoundContent(
+                message = stringResource(R.string.no_positions_found)
+            )
+        },
+        onCheckChange = { isSelected, uiModel ->
+            when (uiModel) {
+                is GridTokenUiModel.SingleToken<PositionUiModelDialog> -> {
+                    val position = uiModel.data
+                    onPositionSelectionChange(position.ticker, isSelected)
+                }
+
+                else -> error("Not supported double coin")
+            }
+        },
+        onDoneClick = onDoneClick,
+        onCancelClick = onCancelClick,
+        onSetSearchText = { /* Search is handled by the searchTextFieldState */ }
+    )
+}
+
+@Composable
+internal fun NoPositionsContainer(
+    onManagePositionsClick: () -> Unit = {}
+) {
+    NotEnabledContainer(
+        title = stringResource(R.string.defi_no_positions_selected),
+        content = stringResource(R.string.defi_no_positions_selected_desc),
+        action = {
+            Text(
+                text = stringResource(R.string.manage_positions),
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.colors.text.primary,
+                modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .clickOnce(onClick = onManagePositionsClick)
+                    .background(
+                        color = Theme.v2.colors.border.primaryAccent4
+                    )
+                    .padding(
+                        vertical = 8.dp,
+                        horizontal = 16.dp
+                    )
+            )
+        }
+    )
+}
+
+@Preview(showBackground = true, name = "Positions Selection Dialog")
+@Composable
+private fun PositionsSelectionDialogPreview() {
+    PositionsSelectionDialog(
+        bondPositions = defaultPositionsBondDialog(),
+        stakePositions = defaultPositionsStakingDialog(),
+        selectedPositions = listOf("RUNE", "TCY"),
+        searchTextFieldState = TextFieldState()
+    )
 }
 
 @Preview(showBackground = true, name = "Info Item - With Value")
@@ -333,9 +529,9 @@ private fun CompleteNodeCardMockPreview() {
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.colors.text.primary
             )
-            
+
             UiSpacer(12.dp)
-            
+
             // Info Items
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -357,9 +553,9 @@ private fun CompleteNodeCardMockPreview() {
                     value = "20 RUNE"
                 )
             }
-            
+
             UiSpacer(16.dp)
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

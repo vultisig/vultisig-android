@@ -1323,5 +1323,8 @@
     <string name="lp_position">仓位</string>
     <string name="add">添加</string>
     <string name="remove">移除</string>
+    <string name="no_positions_found">未找到仓位</string>
+    <string name="select_positions">选择仓位</string>
+    <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
 
 </resources>

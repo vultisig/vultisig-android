@@ -13,7 +13,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.NoChainFound
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 import com.vultisig.wallet.ui.models.ChainUiModel
@@ -76,7 +76,9 @@ private fun ChainSelectionScreen(
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
         notFoundContent = {
-            NoChainFound()
+            NoFoundContent(
+                message = stringResource(R.string.chain_selection_no_chains_found)
+            )
         },
         onCheckChange = { checked, chain ->
             if (checked) {
