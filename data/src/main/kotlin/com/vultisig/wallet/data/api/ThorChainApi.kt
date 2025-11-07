@@ -173,7 +173,11 @@ internal class ThorChainApiImpl @Inject constructor(
         referralCode: String,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
-        val affiliateBPS = calculateAffiliate(isAffiliate, referralCode, bpsDiscount)
+        val affiliateParams = buildAffiliateParams(
+            referralCode = referralCode,
+            discountBps = bpsDiscount,
+            isAffiliate = isAffiliate,
+        )
 
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
@@ -182,11 +186,13 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("amount", amount)
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
-                parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter("affiliate_bps", affiliateBPS)
-                if (referralCode.isNotEmpty() && isAffiliate) {
-                    parameter("affiliate", referralCode)
-                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_REFERRAL_RATE)
+                if (affiliateParams.isNotEmpty()) {
+                    affiliateParams.forEach { (key, value) ->
+                        when (key) {
+                            "affiliate" -> parameter("affiliate", value)
+                            "affiliate_bps" -> parameter("affiliate_bps", value)
+                        }
+                    }
                 }
             }
         return try {
@@ -205,18 +211,45 @@ internal class ThorChainApiImpl @Inject constructor(
         }
     }
 
-    private fun calculateAffiliate(isAffiliate: Boolean, referralCode: String, bpsDiscount: Int): String {
-        val affiliateBPS = when {
-            isAffiliate && referralCode.isNotEmpty() -> THORChainSwaps.AFFILIATE_FEE_RATE_PARTIAL
-            isAffiliate -> THORChainSwaps.AFFILIATE_FEE_RATE
-            else -> "0"
+    private fun buildAffiliateParams(
+        referralCode: String,
+        discountBps: Int,
+        isAffiliate: Boolean,
+    ): Map<String, String> {
+        val affiliateParams = mutableMapOf<String, String>()
+
+        if (referralCode.isNotEmpty() && isAffiliate) {
+            val affiliateFeeRateBp = calculateBpsAfterDiscount(
+                baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
+                discountBps = discountBps,
+            )
+
+            // Build nested affiliate with new thorchain structure
+            val affiliates = "$referralCode/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}"
+            val affiliateBps = "${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/$affiliateFeeRateBp"
+
+            affiliateParams["affiliate"] = affiliates
+            affiliateParams["affiliate_bps"] = affiliateBps
+        } else {
+            val baseBps = if (isAffiliate) {
+                THORChainSwaps.AFFILIATE_FEE_RATE_BP
+            } else {
+                0
+            }
+            val affiliateFeeRateBp = calculateBpsAfterDiscount(
+                baseBps = baseBps,
+                discountBps = discountBps,
+            )
+
+            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
+            affiliateParams["affiliate_bps"] = affiliateFeeRateBp.toString()
         }
 
-        return if (affiliateBPS.toInt() > 0) {
-            maxOf(affiliateBPS.toInt() - bpsDiscount, 0).toString()
-        } else {
-            affiliateBPS
-        }
+        return affiliateParams
+    }
+
+    private fun calculateBpsAfterDiscount(baseBps: Int, discountBps: Int): Int {
+        return maxOf(0, baseBps - discountBps)
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
@@ -467,7 +500,7 @@ internal class ThorChainApiImpl @Inject constructor(
             .get("$MIDGARD_URL/thorname/rlookup/$address") {
                 header(xClientID, xClientIDValue)
             }
-        if (response.status.isSuccess()){
+        if (response.status.isSuccess()) {
             return response.bodyOrThrow<List<String>>()
         }
         return emptyList()
