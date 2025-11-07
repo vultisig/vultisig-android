@@ -434,16 +434,15 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
         database.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `active_bonded_nodes` (
-                `id` TEXT PRIMARY KEY NOT NULL,
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 `node_address` TEXT NOT NULL,
                 `node_state` TEXT NOT NULL,
+                `coin_id` TEXT NOT NULL,
+                `vault_id` TEXT NOT NULL,
                 `amount` TEXT NOT NULL,
                 `apy` REAL NOT NULL,
                 `next_reward` REAL NOT NULL,
                 `next_churn` INTEGER,
-                `vault_id` TEXT NOT NULL,
-                `created_at` INTEGER NOT NULL,
-                `updated_at` INTEGER NOT NULL
             )
             """.trimIndent()
         )
@@ -464,8 +463,8 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
         
         database.execSQL(
             """
-            CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_updated_at` 
-            ON `active_bonded_nodes` (`updated_at`)
+            CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_last_updated` 
+            ON `active_bonded_nodes` (`last_updated`)
             """.trimIndent()
         )
     }
