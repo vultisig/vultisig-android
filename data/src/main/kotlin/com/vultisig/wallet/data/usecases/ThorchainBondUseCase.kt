@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.ChurnEntry
 import com.vultisig.wallet.data.api.MidgardNetworkData
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -43,6 +44,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                     )
                     val activeNode = ActiveBondedNode(
                         id = node.address,
+                        coinId = Coins.ThorChain.RUNE.id,
                         node = bondNode,
                         amount = myBondMetrics.myBond,
                         apy = myBondMetrics.apy,
@@ -213,6 +215,7 @@ data class ActiveBondedNode(
     val id: String,
     val node: BondedNode,
     val amount: BigInteger,
+    val coinId: String,
     val apy: Double,
     val nextReward: Double,
     val nextChurn: Date?,
