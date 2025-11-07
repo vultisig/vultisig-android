@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -169,34 +170,45 @@ internal fun PositionsSelectionDialog(
     selectedPositions: List<String>,
     bondPositions: List<PositionUiModelDialog> = emptyList(),
     stakePositions: List<PositionUiModelDialog> = emptyList(),
-    searchTextFieldState: TextFieldState = TextFieldState(),
+    searchTextFieldState: TextFieldState,
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onDoneClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
 ) {
     val searchQuery = searchTextFieldState.text.toString().lowercase()
 
-    val updateBondPositions = bondPositions.map {
-        it.copy(
-            isSelected = selectedPositions.contains(it.ticker)
-        )
+    // Update selections with remember to avoid recreation
+    val updateBondPositions = remember(bondPositions, selectedPositions) {
+        bondPositions.map {
+            it.copy(
+                isSelected = selectedPositions.contains(it.ticker)
+            )
+        }
     }
-    val updateStakePositions = stakePositions.map {
-        it.copy(
-            isSelected = selectedPositions.contains(it.ticker),
-        )
+    
+    val updateStakePositions = remember(stakePositions, selectedPositions) {
+        stakePositions.map {
+            it.copy(
+                isSelected = selectedPositions.contains(it.ticker),
+            )
+        }
     }
 
-    // Filter positions based on search query
-    val filteredBondPositions = if (searchQuery.isEmpty()) {
-        updateBondPositions
-    } else {
-        updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
+    // Filter positions based on search query with remember
+    val filteredBondPositions = remember(searchQuery, updateBondPositions) {
+        if (searchQuery.isEmpty()) {
+            updateBondPositions
+        } else {
+            updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
     }
-    val filteredStakePositions = if (searchQuery.isEmpty()) {
-        updateStakePositions
-    } else {
-        updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+    
+    val filteredStakePositions = remember(searchQuery, updateStakePositions) {
+        if (searchQuery.isEmpty()) {
+            updateStakePositions
+        } else {
+            updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
+        }
     }
 
     val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
@@ -329,7 +341,10 @@ internal fun NoPositionsContainer(
 @Composable
 private fun PositionsSelectionDialogPreview() {
     PositionsSelectionDialog(
-        selectedPositions = listOf("RUNE", "TCY")
+        bondPositions = defaultPositionsBondDialog(),
+        stakePositions = defaultPositionsStakingDialog(),
+        selectedPositions = listOf("RUNE", "TCY"),
+        searchTextFieldState = TextFieldState()
     )
 }
 

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +50,6 @@ internal fun DefiPositionsScreen(
 
     DefiPositionScreenContent(
         state = state,
-        searchTextFieldState = TextFieldState(),
         onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
@@ -65,7 +65,6 @@ internal fun DefiPositionsScreen(
 @Composable
 internal fun DefiPositionScreenContent(
     state: DefiPositionsUiModel = DefiPositionsUiModel(),
-    searchTextFieldState: TextFieldState,
     onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
@@ -76,6 +75,8 @@ internal fun DefiPositionScreenContent(
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onTabSelected: (String) -> Unit = {},
 ) {
+    val searchTextFieldState = remember { TextFieldState() }
+
     val tabs = listOf(
         DefiTab.BONDED.displayName,
         DefiTab.STAKING.displayName,
@@ -233,7 +234,6 @@ private fun BalanceBanner(
 private fun DefiPositionsScreenPreviewEmpty() {
     DefiPositionScreenContent(
         onBackClick = { },
-        searchTextFieldState = TextFieldState(),
         state = DefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
@@ -274,7 +274,6 @@ private fun DefiPositionsScreenPreviewWithData() {
 
     DefiPositionScreenContent(
         onBackClick = { },
-        searchTextFieldState = TextFieldState(),
         state = DefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
             selectedTab = DefiTab.BONDED.displayName,
@@ -296,7 +295,6 @@ private fun DefiPositionsScreenPreviewWithData() {
 private fun DefiPositionsScreenPreviewLoading() {
     DefiPositionScreenContent(
         onBackClick = { },
-        searchTextFieldState = TextFieldState(),
         state = DefiPositionsUiModel(
             bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
                 isLoading = true
