@@ -152,9 +152,12 @@ internal class DefiPositionsViewModel @Inject constructor(
                 )
             }
 
-            when (state.value.selectedTab) {
-                DefiTab.BONDED.displayName -> loadBondedNodes()
-                DefiTab.STAKING.displayName -> loadStakingPositions()
+            launch {
+                loadBondedNodes()
+            }
+            
+            launch { 
+                loadStakingPositions()
             }
         }
     }
