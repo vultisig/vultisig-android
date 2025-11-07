@@ -10,12 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,10 @@ internal fun DefiPositionsScreen(
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
         onTabSelected = model::onTabSelected,
+        onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
+        onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
+        onDonePositionClick = model::onPositionSelectionDone,
+        onPositionSelectionChange = model::onPositionSelectionChange,
     )
 }
 
@@ -64,9 +69,19 @@ internal fun DefiPositionScreenContent(
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
+    onEditPositionClick: () -> Unit = {},
+    onCancelEditPositionClick: () -> Unit = {},
+    onDonePositionClick: () -> Unit = {},
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onTabSelected: (String) -> Unit = {},
 ) {
-    val tabs = listOf(DefiTab.BONDED.displayName, DefiTab.STAKING.displayName, DefiTab.LPS.displayName)
+    val searchTextFieldState = remember { TextFieldState() }
+
+    val tabs = listOf(
+        DefiTab.BONDED.displayName,
+        DefiTab.STAKING.displayName,
+        DefiTab.LPS.displayName
+    )
 
     V2Scaffold(
         onBackClick = onBackClick,
@@ -99,35 +114,58 @@ internal fun DefiPositionScreenContent(
                             size = 16.dp,
                             modifier = Modifier.padding(all = 12.dp),
                             tint = Theme.colors.primary.accent4,
+                            onClick = onEditPositionClick,
                         )
                     }
                 }
             )
 
+            if (state.showPositionSelectionDialog) {
+                PositionsSelectionDialog(
+                    bondPositions = state.bondPositionsDialog,
+                    stakePositions = state.stakingPositionsDialog,
+                    selectedPositions = state.tempSelectedPositions,
+                    searchTextFieldState = searchTextFieldState,
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onDonePositionClick,
+                    onCancelClick = onCancelEditPositionClick,
+                )
+            }
+
             when (state.selectedTab) {
                 DefiTab.BONDED.displayName -> {
-                    BondedTabContent(
-                        bondToNodeOnClick = onClickBondToNode,
-                        state = state,
-                        onClickUnbond = onClickUnbond,
-                        onClickBond = onClickBond,
-                    )
+                    if (!state.selectedPositions.hasBondPositions()) {
+                        NoPositionsContainer(
+                            onManagePositionsClick = onEditPositionClick
+                        )
+                    } else {
+                        BondedTabContent(
+                            bondToNodeOnClick = onClickBondToNode,
+                            state = state,
+                            onClickUnbond = onClickUnbond,
+                            onClickBond = onClickBond,
+                        )
+                    }
                 }
 
                 DefiTab.STAKING.displayName -> {
-                    StakingTabContent(
-                        state = state.staking,
-                        onClickStake = { /* TODO: Implement stake action */ },
-                        onClickUnstake = { /* TODO: Implement unstake action */ },
-                        onClickWithdraw = { /* TODO: Implement withdraw action */ }
-                    )
+                    if (!state.selectedPositions.hasStakingPositions()) {
+                        NoPositionsContainer(
+                            onManagePositionsClick = onEditPositionClick
+                        )
+                    } else {
+                        StakingTabContent(
+                            state = state.staking,
+                            onClickStake = { /* TODO: Implement stake action */ },
+                            onClickUnstake = { /* TODO: Implement unstake action */ },
+                            onClickWithdraw = { /* TODO: Implement withdraw action */ }
+                        )
+                    }
                 }
 
                 DefiTab.LPS.displayName -> {
-                    LpTabContent(
-                        state = state.lp,
-                        onClickAdd = { /* TODO: Implement add action */ },
-                        onClickRemove = {/* TODO: Implement remove action */  },
+                    NoPositionsContainer(
+                        onManagePositionsClick = onEditPositionClick
                     )
                 }
             }
@@ -135,33 +173,6 @@ internal fun DefiPositionScreenContent(
             UiSpacer(size = 16.dp)
         }
     }
-}
-
-@Composable
-private fun NoPositionsContainer(
-    onManagePositionsClick: () -> Unit = {}
-) {
-    NotEnabledContainer(
-        title = stringResource(R.string.defi_no_positions_selected),
-        content = stringResource(R.string.defi_no_positions_selected_desc),
-        action = {
-            Text(
-                text = stringResource(R.string.manage_positions),
-                style = Theme.brockmann.button.medium.medium,
-                color = Theme.colors.text.primary,
-                modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .clickOnce(onClick = onManagePositionsClick)
-                    .background(
-                        color = Theme.v2.colors.border.primaryAccent4
-                    )
-                    .padding(
-                        vertical = 8.dp,
-                        horizontal = 16.dp
-                    )
-            )
-        }
-    )
 }
 
 @Composable

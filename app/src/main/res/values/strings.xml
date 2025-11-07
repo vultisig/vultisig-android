@@ -972,5 +972,8 @@
     <string name="lp_position">Position</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>
+    <string name="no_positions_found">No positions found</string>
+    <string name="select_positions">Select positions</string>
+    <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
 
 </resources>

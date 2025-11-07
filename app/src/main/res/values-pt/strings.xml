@@ -915,4 +915,7 @@
     <string name="lp_position">Posição</string>
     <string name="add">Adicionar</string>
     <string name="remove">Remover</string>
+    <string name="no_positions_found">Nenhuma posição encontrada</string>
+    <string name="select_positions">Selecionar posições</string>
+    <string name="enable_at_least_one_position">Ative pelo menos uma posição para visualizar saldos e gerenciar posições.</string>
 </resources>
