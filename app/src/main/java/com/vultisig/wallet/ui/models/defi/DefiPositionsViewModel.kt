@@ -571,7 +571,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         viewModelScope.launch {
             val selectedPositions = state.value.tempSelectedPositions
 
-            viewModelScope.launch {
+            launch {
                 withContext(Dispatchers.IO) {
                     defiPositionsRepository.saveSelectedPositions(vaultId, selectedPositions)
                 }
@@ -584,9 +584,16 @@ internal class DefiPositionsViewModel @Inject constructor(
                 )
             }
 
-            when (state.value.selectedTab) {
-                DefiTab.BONDED.displayName -> loadBondedNodes()
-                DefiTab.STAKING.displayName -> loadStakingPositions()
+            loadedTabs.clear()
+            
+            launch {
+                loadBondedNodes()
+                loadedTabs.add(DefiTab.BONDED.displayName)
+            }
+            
+            launch {
+                loadStakingPositions()
+                loadedTabs.add(DefiTab.STAKING.displayName)
             }
         }
     }
