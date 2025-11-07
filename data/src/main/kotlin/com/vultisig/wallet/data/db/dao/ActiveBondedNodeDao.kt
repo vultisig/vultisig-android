@@ -25,7 +25,4 @@ interface ActiveBondedNodeDao {
     
     @Query("SELECT * FROM active_bonded_nodes WHERE vault_id = :vaultId ORDER BY amount DESC")
     suspend fun getAllByVaultIdSuspend(vaultId: String): List<ActiveBondedNodeEntity>
-    
-    @Query("SELECT SUM(CAST(amount AS INTEGER)) FROM active_bonded_nodes WHERE vault_id = :vaultId")
-    suspend fun getTotalBondedAmount(vaultId: String): Long?
 }
