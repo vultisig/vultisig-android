@@ -163,6 +163,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
+            // Initial Loading State
             if (!state.value.selectedPositions.hasBondPositions()) {
                 state.update {
                     it.copy(
@@ -183,8 +184,11 @@ internal class DefiPositionsViewModel @Inject constructor(
                 )
             }
 
+            // Load actual bond data
             try {
-                val vault = vaultRepository.get(vaultId)
+                val vault = withContext(Dispatchers.IO){
+                    vaultRepository.get(vaultId)
+                }
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
                 if (runeCoin == null) {
@@ -199,9 +203,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 val activeNodes = withContext(Dispatchers.IO) {
                     val address = runeCoin.address
-                    bondUseCase.getActiveNodes(address)
+                    bondUseCase.getActiveNodes("thor1fkwmkl96zpl93a547arcc8e00n5zh7eegdq5tv")
                 }
 
+                // Format UI data and show
                 val nodeUiModels = activeNodes.map { it.toUiModel() }
                 val totalBonded = calculateTotalBonded(activeNodes)
                 val totalBondedRaw = calculateTotalBondedRaw(activeNodes)
@@ -267,9 +272,12 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private fun loadStakingPositions() {
+        loadedTabs.add(DefiTab.STAKING.displayName)
+
         viewModelScope.launch {
             val selectedPositions = state.value.selectedPositions
 
+            // Initial Loading Status
             if (!selectedPositions.hasStakingPositions()) {
                 state.update {
                     it.copy(
@@ -278,11 +286,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
                 return@launch
             }
-
             val defaultLoadingPositions = loadDefaultStakingPositions().filter { coin ->
                 selectedPositions.contains(coin.stakeAmount)
             }
-
             state.update {
                 it.copy(
                     staking = StakingTabUiModel(
@@ -292,8 +298,11 @@ internal class DefiPositionsViewModel @Inject constructor(
                 )
             }
 
+            // Fetch all staking positions
             try {
-                val vault = vaultRepository.get(vaultId)
+                val vault = withContext(Dispatchers.IO) {
+                    vaultRepository.get(vaultId)
+                }
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
                 if (runeCoin == null) {
@@ -315,19 +324,25 @@ internal class DefiPositionsViewModel @Inject constructor(
                 // Decouple loading upcoming PR
                 val positions = coinsToLoad.map { coin ->
                     async(Dispatchers.IO) {
-                        when {
-                            coin.ticker.equals("ruji", ignoreCase = true) ->
-                                createRujiStakePosition(address)
+                        try {
+                            when {
+                                coin.ticker.equals("ruji", ignoreCase = true) ->
+                                    createRujiStakePosition(address)
 
-                            coin.ticker.equals("tcy", ignoreCase = true) ->
-                                createTCYStakePosition(address)
+                                coin.ticker.equals("tcy", ignoreCase = true) ->
+                                    createTCYStakePosition(address)
 
-                            else ->
-                                createGenericStakePosition(coin, address)
+                                else ->
+                                    createGenericStakePosition(coin, address)
+                            }
+                        } catch (t: Throwable) {
+                            Timber.e(t)
+                            null
                         }
                     }
                 }.awaitAll().filterNotNull()
 
+                // Update status finally
                 state.update {
                     it.copy(
                         staking = StakingTabUiModel(
@@ -349,9 +364,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private suspend fun createRujiStakePosition(address: String): StakePositionUiModel? {
         return try {
-            val details = withContext(Dispatchers.IO) {
-                rujiStakingService.getStakingDetails(address)
-            }
+            val details = rujiStakingService.getStakingDetails(address)
 
             val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
             val formattedAmount =
