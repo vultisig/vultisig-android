@@ -7,7 +7,6 @@ import java.math.BigInteger
 
 fun ActiveBondedNode.toEntity(vaultId: String): ActiveBondedNodeEntity {
     return ActiveBondedNodeEntity(
-        id = this.id,
         node = BondedNodeEntity(
             address = this.node.address,
             state = this.node.state
@@ -23,7 +22,6 @@ fun ActiveBondedNode.toEntity(vaultId: String): ActiveBondedNodeEntity {
 
 fun ActiveBondedNodeEntity.toDomainModel(): ActiveBondedNode {
     return ActiveBondedNode(
-        id = this.id,
         node = ActiveBondedNode.BondedNode(
             address = this.node.address,
             state = this.node.state

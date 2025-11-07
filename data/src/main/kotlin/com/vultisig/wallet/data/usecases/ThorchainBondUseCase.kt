@@ -42,8 +42,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                         address = node.address,
                         state = node.status,
                     )
+
                     val activeNode = ActiveBondedNode(
-                        id = node.address,
                         coinId = Coins.ThorChain.RUNE.id,
                         node = bondNode,
                         amount = myBondMetrics.myBond,
@@ -51,7 +51,6 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                         nextReward = myBondMetrics.myAward,
                         nextChurn = networkInfoDeferred.await().nextChurnDate,
                     )
-
                     activeNodes.add(activeNode)
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -212,7 +211,6 @@ internal data class NetworkBondInfo(
 )
 
 data class ActiveBondedNode(
-    val id: String,
     val node: BondedNode,
     val amount: BigInteger,
     val coinId: String,
