@@ -233,14 +233,14 @@ private fun CarouselChainItem(
                 .size(32.dp)
                 .background(Theme.colors.neutral100),
             logo = logo,
-            title = "${chain.name} logo",
+            title = "${chain.raw} logo",
             modifier = Modifier.size(26.dp)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
-            text = chain.name,
+            text = chain.raw,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
         )
