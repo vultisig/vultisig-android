@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,6 +65,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.select.SELECT_NETWORK_POPUP
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -206,7 +208,7 @@ internal class SendFormViewModel @Inject constructor(
     val fiatAmountFieldState = TextFieldState()
     val memoFieldState = TextFieldState()
 
-    private var vaultId: String? = null
+    var vaultId: String? = null
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -368,18 +370,47 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            val chain: Chain? = requestResultRepository.request(requestId)
-
-            if (chain == null || chain == selectedChain) {
-                return@launch
-            }
-
-            val account = accounts.value.find {
-                it.token.isNativeToken && it.token.chain == chain
-            } ?: return@launch
-
-            selectToken(account.token)
+            updateChain(requestId = requestId, selectedChain = selectedChain)
         }
+    }
+
+    fun openNetworkPopup(position: Offset) {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val selectedChain = selectedTokenValue?.chain ?: return@launch
+
+            val requestId = Uuid.random().toString()
+
+            navigator.route(
+                Route.Send.SelectNetworkPopup(
+                    requestId = requestId,
+                    pressX = position.x,
+                    pressY = position.y,
+                    vaultId = vaultId ,
+                    selectedNetworkId = selectedChain.id,
+                    filters = Route.SelectNetwork.Filters.None
+                )
+            )
+
+            updateChain(requestId, selectedChain)
+        }
+    }
+
+    private suspend fun updateChain(
+        requestId: String,
+        selectedChain: Chain,
+    ) {
+        val chain: Chain? = requestResultRepository.request(requestId)
+
+        if (chain == null || chain == selectedChain) {
+            return
+        }
+
+        val account = accounts.value.find {
+            it.token.isNativeToken && it.token.chain == chain
+        } ?: return
+
+        selectToken(account.token)
     }
 
     fun openTokenSelection() {

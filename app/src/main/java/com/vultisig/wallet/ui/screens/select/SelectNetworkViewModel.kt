@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.select
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,9 +9,10 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -33,16 +35,124 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
+
+const val SELECT_NETWORK_POPUP = "SELECT_NETWORK_POPUP"
 internal data class SelectNetworkUiModel(
     val selectedNetwork: Chain = Chain.ThorChain,
     val networks: List<NetworkUiModel> = emptyList(),
 )
+
+data class SelectableNetworkUiModel(
+    val networkUiModel: NetworkUiModel,
+    val isSelected: Boolean = false,
+)
+internal data class SelectNetworkPopupSharedUiModel(
+    val selectedNetwork: Chain = Chain.ThorChain,
+    val networks: List<SelectableNetworkUiModel> = emptyList(),
+    val isLongPressActive: Boolean = false,
+    val currentDragPosition: Offset? = null,
+    val vaultId: VaultId = "",
+)
+
+
+@HiltViewModel
+internal class SelectNetworkPopupSharedViewModel @Inject constructor(
+    private val vaultRepository: VaultRepository,
+    private val requestResultRepository: RequestResultRepository,
+
+) : ViewModel() {
+
+
+    val uiState = MutableStateFlow(SelectNetworkPopupSharedUiModel())
+
+
+    fun loadData() {
+        val vaultId = uiState.value.vaultId
+        vaultRepository.getEnabledChains(vaultId)
+            .onEach { x ->
+                uiState.update {
+                    it.copy(
+                        networks = x.map { chain ->
+                            SelectableNetworkUiModel(
+                                networkUiModel = NetworkUiModel(
+                                    chain = chain,
+                                    logo = chain.logo,
+                                    title = chain.raw,
+                                    value = ""
+                                ),
+                                isSelected = uiState.value.selectedNetwork.id == chain.id
+                            )
+                        }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+
+    fun setVaultId(vaultId: VaultId) {
+        uiState.update {
+            it.copy(
+                vaultId = vaultId
+            )
+        }
+    }
+
+
+    fun onItemSelected(x: SelectableNetworkUiModel) {
+        val items = uiState.value.networks.map {
+           it.copy(
+               isSelected = it.networkUiModel.chain.id == x.networkUiModel.chain.id
+           )
+        }
+
+        uiState.update {
+            it.copy(
+                selectedNetwork = x.networkUiModel.chain,
+                networks = items
+            )
+        }
+
+        viewModelScope.launch {
+            requestResultRepository.respond(SELECT_NETWORK_POPUP,x.networkUiModel.chain)
+        }
+    }
+
+    fun onDragStart(position: Offset) {
+        uiState.update {
+            it.copy(
+                isLongPressActive = true,
+                currentDragPosition = position
+            )
+        }
+    }
+
+    fun onDrag(position: Offset) {
+        uiState.update {
+            it.copy(
+                currentDragPosition = position
+            )
+        }
+    }
+
+    fun resetDrag() {
+        uiState.update {
+            it.copy(
+                isLongPressActive = false,
+                currentDragPosition = null
+            )
+        }
+    }
+
+
+}
 
 data class NetworkUiModel(
     val chain: Chain,
