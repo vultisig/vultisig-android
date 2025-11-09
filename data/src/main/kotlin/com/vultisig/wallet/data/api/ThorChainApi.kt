@@ -515,8 +515,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
-        val url =
-            "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+        val url = "https://api-thorchain.rorcual.xyz/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<VaultRedemptionResponseJson>()
@@ -592,7 +591,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getMidgardNetworkData(): MidgardNetworkData {
         val url = "$MIDGARD_URL/network"
-
+        
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<MidgardNetworkData>()
