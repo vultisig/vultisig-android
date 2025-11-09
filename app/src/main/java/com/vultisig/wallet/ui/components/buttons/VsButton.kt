@@ -169,7 +169,7 @@ fun VsButton(
         }
 
         if (label != null) {
-            Text(
+            AutoSizingText(
                 text = label,
                 style = Theme.brockmann.button.semibold.small,
                 color = contentColor,
