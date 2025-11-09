@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
@@ -117,7 +118,10 @@ internal fun VerifyDepositScreen(
             .fillMaxSize(),
         content = { contentPadding ->
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(
+                    16.dp,
+                    Alignment.CenterVertically
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(contentPadding)
@@ -131,171 +135,192 @@ internal fun VerifyDepositScreen(
 
                 Column(
                     modifier = Modifier
-                        .background(
-                            color = Theme.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(
-                            all = 24.dp,
-                        )
-                ) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_sending),
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.light,
-                    )
-
-                    UiSpacer(24.dp)
-
-                    SwapToken(
-                        valuedToken = tx.token,
-                        isLoading = state.isLoading,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    VerifyCardDivider(8.dp)
-
-                    tx.srcAddress.takeIf { it.isNotEmpty() }?.let {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_from_title),
-                            subtitle = tx.srcAddress
-                        )
-
-                        VerifyCardDivider(0.dp)
-                    }
-
-
-                    if (tx.dstAddress.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = tx.dstAddress
-                        )
-                    }
-
-                    if (tx.memo.isNotEmpty()) {
-                        if (tx.dstAddress.isNotEmpty())
-                            VerifyCardDivider(0.dp)
-
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_memo_title),
-                            subtitle = tx.memo
-                        )
-                    }
-
-                    if (tx.token.value.isNotEmpty() && try {
-                            tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (e: Exception) {
-                            false
-                        }
-                    ) {
-                        VerifyCardDivider(0.dp)
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = (tx.token.value)
-                        )
-                    }
-                    
-                    val hasContent =
-                        tx.srcAddress.isNotEmpty()
-                                || tx.dstAddress.isNotEmpty()
-                                || tx.memo.isNotEmpty()
-
-                    if (hasContent) {
-                        VerifyCardDivider(0.dp)
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                vertical = 12.dp,
-                            )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.verify_deposit_network),
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.colors.text.extraLight,
-                            maxLines = 1,
-                        )
-
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val chain = state.depositTransactionUiModel.token.token.chain
-
-                            if (state.isLoading) {
-                                UiPlaceholderLoader(
-                                    modifier = Modifier
-                                        .height(20.dp)
-                                        .width(150.dp)
+                        .run {
+                            if (!state.isLoading) {
+                                background(
+                                    color = Theme.colors.backgrounds.secondary,
+                                    shape = RoundedCornerShape(16.dp)
                                 )
+                                    .padding(
+                                        all = 24.dp,
+                                    )
                             } else {
-                                Image(
-                                    painter = painterResource(chain.logo),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(16.dp),
-                                )
-
-                                Text(
-                                    text = chain.raw,
-                                    style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.colors.text.primary,
-                                    textAlign = TextAlign.End,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.MiddleEllipsis,
-                                )
+                                this
                             }
                         }
+
+                ) {
+                    if (state.isLoading) {
+                        V2Loading(
+                            modifier = Modifier.size(170.dp)
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.verify_deposit_sending),
+                            style = Theme.brockmann.headings.subtitle,
+                            color = Theme.colors.text.light,
+                        )
+
+                        UiSpacer(24.dp)
+
+                        SwapToken(
+                            valuedToken = tx.token,
+                            isLoading = state.isLoading,
+                        )
+
+                        UiSpacer(12.dp)
+
+                        VerifyCardDivider(8.dp)
+
+                        tx.srcAddress.takeIf { it.isNotEmpty() }?.let {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.verify_transaction_from_title),
+                                subtitle = tx.srcAddress
+                            )
+
+                            VerifyCardDivider(0.dp)
+                        }
+
+
+                        if (tx.dstAddress.isNotEmpty()) {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.verify_transaction_to_title),
+                                subtitle = tx.dstAddress
+                            )
+                        }
+
+                        if (tx.memo.isNotEmpty()) {
+                            if (tx.dstAddress.isNotEmpty())
+                                VerifyCardDivider(0.dp)
+
+                            VerifyCardDetails(
+                                title = stringResource(R.string.verify_transaction_memo_title),
+                                subtitle = tx.memo
+                            )
+                        }
+
+                        if (tx.token.value.isNotEmpty() && try {
+                                tx.token.value.toBigInteger() > BigInteger.ZERO
+                            } catch (e: Exception) {
+                                false
+                            }
+                        ) {
+                            VerifyCardDivider(0.dp)
+                            VerifyCardDetails(
+                                title = stringResource(R.string.verify_transaction_amount_title),
+                                subtitle = (tx.token.value)
+                            )
+                        }
+
+                        val hasContent =
+                            tx.srcAddress.isNotEmpty()
+                                    || tx.dstAddress.isNotEmpty()
+                                    || tx.memo.isNotEmpty()
+
+                        if (hasContent) {
+                            VerifyCardDivider(0.dp)
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = 12.dp,
+                                )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.verify_deposit_network),
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.colors.text.extraLight,
+                                maxLines = 1,
+                            )
+
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    4.dp,
+                                    Alignment.End
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val chain = state.depositTransactionUiModel.token.token.chain
+
+                                if (state.isLoading) {
+                                    UiPlaceholderLoader(
+                                        modifier = Modifier
+                                            .height(20.dp)
+                                            .width(150.dp)
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(chain.logo),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(16.dp),
+                                    )
+
+                                    Text(
+                                        text = chain.raw,
+                                        style = Theme.brockmann.supplementary.footnote,
+                                        color = Theme.colors.text.primary,
+                                        textAlign = TextAlign.End,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.MiddleEllipsis,
+                                    )
+                                }
+                            }
+                        }
+
+
+                        VerifyCardDivider(0.dp)
+
+                        UiSpacer(12.dp)
+
+                        EstimatedNetworkFee(
+                            tokenGas = tx.networkFeeTokenValue,
+                            fiatGas = tx.networkFeeFiatValue,
+                            isLoading = state.isLoading,
+                        )
                     }
 
-                    VerifyCardDivider(0.dp)
-
-                    UiSpacer(12.dp)
-
-                    EstimatedNetworkFee(
-                        tokenGas = tx.networkFeeTokenValue,
-                        fiatGas = tx.networkFeeFiatValue,
-                        isLoading = state.isLoading,
-                    )
                 }
+
             }
         },
         bottomBar = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp
-                    )
-            ) {
+            if (!state.isLoading) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 24.dp,
+                            vertical = 12.dp
+                        )
+                ) {
 
-                if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.extraLight,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
-                        label = stringResource(R.string.verify_deposit_sign_transaction),
-                        onLongClick = onConfirm,
-                        onClick = onFastSignClick,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    VsButton(
-                        label = confirmTitle,
-                        onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    if (state.hasFastSign) {
+                        Text(
+                            text = stringResource(R.string.verify_deposit_hold_paired),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                        )
+                        VsHoldableButton(
+                            label = stringResource(R.string.verify_deposit_sign_transaction),
+                            onLongClick = onConfirm,
+                            onClick = onFastSignClick,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        VsButton(
+                            label = confirmTitle,
+                            onClick = onConfirm,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }
