@@ -45,6 +45,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -307,33 +308,12 @@ private fun ReferralCreateScreen(
                 )
             }
         )
-        
-        AnimatedVisibility(
-            visible = state.showInfoBox,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onHideInfoBox
-                    )
-            ) {
-                MoreInfoBox(
-                    text = stringResource(R.string.referral_create_info_content),
-                    title = stringResource(R.string.referral_create_info_title),
-                    modifier = Modifier
-                        .padding(start = 62.dp, end = 8.dp, top = 8.dp)
-                        .offset(y = statusBarHeightDp)
-                        .wrapContentSize()
-                        .align(Alignment.TopStart)
-                        .clickable(onClick = onHideInfoBox)
-                )
-            }
-        }
+
+        ShowInfoDialog(
+            isVisible = state.showInfoBox,
+            statusBarHeightDp = statusBarHeightDp,
+            onHideInfoBox = onHideInfoBox,
+        )
     }
 }
 
@@ -355,6 +335,40 @@ private fun CreateReferralUiState.getInnerState() =
         this.searchStatus == SearchStatusType.SUCCESS -> VsTextInputFieldInnerState.Success
         else -> VsTextInputFieldInnerState.Default
     }
+
+@Composable
+private fun ShowInfoDialog(
+    isVisible: Boolean,
+    statusBarHeightDp: Dp,
+    onHideInfoBox: () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onHideInfoBox
+                )
+        ) {
+            MoreInfoBox(
+                text = stringResource(R.string.referral_create_info_content),
+                title = stringResource(R.string.referral_create_info_title),
+                modifier = Modifier
+                    .padding(start = 62.dp, end = 8.dp, top = 8.dp)
+                    .offset(y = statusBarHeightDp)
+                    .wrapContentSize()
+                    .align(Alignment.TopStart)
+                    .clickable(onClick = onHideInfoBox)
+            )
+        }
+    }
+}
 
 @Composable
 private fun SearchReferralTag(
