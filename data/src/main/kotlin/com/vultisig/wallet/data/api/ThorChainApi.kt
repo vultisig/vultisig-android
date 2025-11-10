@@ -62,7 +62,6 @@ interface ThorChainApi {
         toAsset: String,
         amount: String,
         interval: String,
-        isAffiliate: Boolean,
         referralCode: String,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
@@ -169,14 +168,12 @@ internal class ThorChainApiImpl @Inject constructor(
         toAsset: String,
         amount: String,
         interval: String,
-        isAffiliate: Boolean,
         referralCode: String,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         val affiliateParams = buildAffiliateParams(
             referralCode = referralCode,
             discountBps = bpsDiscount,
-            isAffiliate = isAffiliate,
         )
 
         val response = httpClient
@@ -214,11 +211,10 @@ internal class ThorChainApiImpl @Inject constructor(
     private fun buildAffiliateParams(
         referralCode: String,
         discountBps: Int,
-        isAffiliate: Boolean,
     ): Map<String, String> {
         val affiliateParams = mutableMapOf<String, String>()
 
-        if (referralCode.isNotEmpty() && isAffiliate) {
+        if (referralCode.isNotEmpty()) {
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
                 baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
                 discountBps = discountBps,
@@ -231,13 +227,8 @@ internal class ThorChainApiImpl @Inject constructor(
             affiliateParams["affiliate"] = affiliates
             affiliateParams["affiliate_bps"] = affiliateBps
         } else {
-            val baseBps = if (isAffiliate) {
-                THORChainSwaps.AFFILIATE_FEE_RATE_BP
-            } else {
-                0
-            }
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
-                baseBps = baseBps,
+                baseBps = THORChainSwaps.AFFILIATE_FEE_RATE_BP,
                 discountBps = discountBps,
             )
 
