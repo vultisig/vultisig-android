@@ -474,25 +474,6 @@ internal class DefiPositionsViewModel @Inject constructor(
         state.update { currentState ->
             currentState.copy(selectedTab = tab)
         }
-
-        if (!loadedTabs.contains(tab)) {
-            when (tab) {
-                DefiTab.STAKING.displayName -> {
-                    loadStakingPositions()
-                    loadedTabs.add(DefiTab.STAKING.displayName)
-                }
-
-                DefiTab.BONDED.displayName -> {
-                    loadBondedNodes()
-                    loadedTabs.add(DefiTab.BONDED.displayName)
-                }
-
-                DefiTab.LPS.displayName -> {
-                    loadLpPositions()
-                    loadedTabs.add(DefiTab.LPS.displayName)
-                }
-            }
-        }
     }
 
     // Dummy Loading, remove after real LP logic
@@ -613,12 +594,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             launch {
                 loadBondedNodes()
-                loadedTabs.add(DefiTab.BONDED.displayName)
             }
 
             launch {
                 loadStakingPositions()
-                loadedTabs.add(DefiTab.STAKING.displayName)
             }
         }
     }
