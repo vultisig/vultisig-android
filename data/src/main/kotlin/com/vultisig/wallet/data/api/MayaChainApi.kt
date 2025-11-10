@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -83,7 +84,7 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("to_asset", toAsset)
                     parameter("amount", amount)
                     parameter("destination", address)
-                    parameter("streaming_interval", "3")
+                    parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                     parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
