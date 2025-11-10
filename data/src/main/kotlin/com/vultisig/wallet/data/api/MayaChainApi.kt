@@ -40,7 +40,6 @@ interface MayaChainApi {
         fromAsset: String,
         toAsset: String,
         amount: String,
-        interval: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
@@ -71,7 +70,6 @@ internal class MayaChainApiImp @Inject constructor(
         fromAsset: String,
         toAsset: String,
         amount: String,
-        interval: String,
         isAffiliate: Boolean,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
@@ -85,7 +83,7 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("to_asset", toAsset)
                     parameter("amount", amount)
                     parameter("destination", address)
-                    parameter("streaming_interval", interval)
+                    parameter("streaming_interval", "3")
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                     parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
