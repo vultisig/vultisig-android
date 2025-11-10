@@ -203,7 +203,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = srcToken.mayaStreamingInterval,
             isAffiliate = isAffiliate,
             bpsDiscount = bpsDiscount,
         )
@@ -406,14 +405,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             )
         )
     }
-
-
-    private val Coin.mayaStreamingInterval: String
-        get() = when (chain) {
-            Chain.MayaChain -> "3"
-            Chain.ThorChain -> "1"
-            else -> "0"
-        }
 
     private fun String.convertToTokenValue(token: Coin): TokenValue =
         BigDecimal(this)
