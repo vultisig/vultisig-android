@@ -567,6 +567,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.LIFI,
                 SwapProvider.THORCHAIN,
             )
+            Chain.Sei -> setOf(
+                SwapProvider.LIFI,
+            )
 
             Chain.Optimism, Chain.Polygon, Chain.ZkSync -> setOf(
                 SwapProvider.ONEINCH,

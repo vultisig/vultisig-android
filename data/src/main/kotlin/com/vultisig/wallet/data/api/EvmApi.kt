@@ -125,6 +125,10 @@ class EvmApiFactoryImp @Inject constructor(
                 httpClient,
                 "https://api.vultisig.com/mantle/"
             )
+            Chain.Sei -> EvmApiImp(
+                httpClient,
+                "https://evm-rpc.sei-apis.com/"
+            )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
