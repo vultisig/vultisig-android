@@ -442,7 +442,8 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
                 `amount` TEXT NOT NULL,
                 `apy` REAL NOT NULL,
                 `next_reward` REAL NOT NULL,
-                `next_churn` INTEGER
+                `next_churn` INTEGER,
+                FOREIGN KEY(`vault_id`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
             )
             """.trimIndent()
         )
