@@ -898,7 +898,6 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
-                                        isAffiliate = isAffiliate,
                                         referralCode = referral.orEmpty(),
                                         bpsDiscount = vultBPSDiscount,
                                     )

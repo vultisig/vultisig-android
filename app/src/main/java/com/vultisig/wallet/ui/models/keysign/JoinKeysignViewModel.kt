@@ -553,19 +553,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
 
                     is SwapPayload.ThorChain -> {
-                        val srcUsdFiatValue = convertTokenValueToFiat(
-                            srcToken, srcTokenValue, AppCurrency.USD,
-                        )
-
-                        val isAffiliate =
-                            srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
                         val quote = swapQuoteRepository.getSwapQuote(
                             srcToken = srcToken,
                             dstToken = dstToken,
                             dstAddress = swapPayload.data.toAddress,
                             tokenValue = srcTokenValue,
-                            isAffiliate = isAffiliate,
                         )
 
                         val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
