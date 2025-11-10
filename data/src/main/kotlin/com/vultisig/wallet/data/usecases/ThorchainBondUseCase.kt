@@ -5,9 +5,11 @@ import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
@@ -64,7 +66,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                     throw e
                 }
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     override suspend fun getActiveNodesRemote(address: String): List<ActiveBondedNode> =
         supervisorScope {
