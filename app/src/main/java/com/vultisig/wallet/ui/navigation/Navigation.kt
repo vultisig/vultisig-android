@@ -383,28 +383,28 @@ internal sealed class Route {
 
         @Serializable
         object SendMain
-
-        @Serializable
-        data class SelectNetworkPopup(
-            val pressX: Float = 0f,
-            val pressY: Float = 0f,
-            val vaultId: VaultId,
-            val selectedNetworkId: ChainId,
-            val requestId: String,
-            val filters: Filters,
-        )
-
-        @Serializable
-        data class SelectAssetPopup(
-            val vaultId: VaultId,
-            val preselectedNetworkId: ChainId,
-            val selectedAssetId: String,
-            val networkFilters: Filters,
-            val requestId: String,
-            val pressX: Float = 0f,
-            val pressY: Float = 0f,
-        )
     }
+
+    @Serializable
+    data class SelectNetworkPopup(
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
+        val vaultId: VaultId,
+        val selectedNetworkId: ChainId,
+        val requestId: String,
+        val filters: Filters,
+    )
+
+    @Serializable
+    data class SelectAssetPopup(
+        val vaultId: VaultId,
+        val preselectedNetworkId: ChainId,
+        val selectedAssetId: String,
+        val networkFilters: Filters,
+        val requestId: String,
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
+    )
 
     @Serializable
     data class VerifySend(
@@ -420,7 +420,10 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val srcTokenId: TokenId? = null,
         val dstTokenId: TokenId? = null,
-    )
+    ) {
+        @Serializable
+        object SwapMain
+    }
 
     @Serializable
     data class VerifySwap(

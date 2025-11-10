@@ -64,8 +64,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
@@ -80,11 +78,11 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.select.SelectNetworkPopupSharedViewModel
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
@@ -96,13 +94,12 @@ import com.vultisig.wallet.ui.utils.asString
 internal fun NavGraphBuilder.sendScreen(
     navController: NavHostController,
 ) {
-    composable<Route.Send.SendMain> { backStackEntry ->
+    contentWithFastSelection<Route.Send.SendMain, Route.Send>(
+        navController = navController
+    ) { onNetworkDragStart, onNetworkDrag, onNetworkDragEnd ->
         val viewModel: SendFormViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsState()
-        val parentEntry = remember(backStackEntry) {
-            navController.getBackStackEntry<Route.Send>()
-        }
-        val sharedViewModel: SelectNetworkPopupSharedViewModel = hiltViewModel(parentEntry)
+
         SendFormScreen(
             state = state,
             addressFieldState = viewModel.addressFieldState,
@@ -125,21 +122,17 @@ internal fun NavGraphBuilder.sendScreen(
             onBackClick = viewModel::back,
             onToogleAmountInputType = viewModel::toggleAmountInputType,
             onExpandSection = viewModel::expandSection,
-
-            onNetworkDragStart = sharedViewModel::onNetworkDragStart,
-            onNetworkDrag = sharedViewModel::onNetworkDrag,
-            onNetworkDragEnd = sharedViewModel::onNetworkDragEnd,
-            onNetworkDragCancel = sharedViewModel::onNetworkDragEnd,
+            onNetworkDragStart = onNetworkDragStart,
+            onNetworkDrag = onNetworkDrag,
+            onNetworkDragEnd = onNetworkDragEnd,
+            onNetworkDragCancel = onNetworkDragEnd,
             onNetworkLongPressStarted = viewModel::onNetworkLongPressStarted,
-
-            onAssetDragStart = sharedViewModel::onNetworkDragStart,
-            onAssetDrag = sharedViewModel::onNetworkDrag,
-            onAssetDragEnd = sharedViewModel::onNetworkDragEnd,
-            onAssetDragCancel = sharedViewModel::onNetworkDragEnd,
+            onAssetDragStart = onNetworkDragStart,
+            onAssetDrag = onNetworkDrag,
+            onAssetDragEnd = onNetworkDragEnd,
+            onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
-
-
-            )
+        )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
         val specific = state.specific
@@ -153,25 +146,6 @@ internal fun NavGraphBuilder.sendScreen(
             )
         }
     }
-
-
-
-    dialog<Route.Send.SelectNetworkPopup> { backStackEntry ->
-        SelectChainPopup(
-            backStackEntry = backStackEntry,
-            navController = navController
-        )
-    }
-
-
-    dialog<Route.Send.SelectAssetPopup> { backStackEntry ->
-        SelectAssetPopup(
-            backStackEntry = backStackEntry,
-            navController = navController
-        )
-    }
-
-
 }
 
 

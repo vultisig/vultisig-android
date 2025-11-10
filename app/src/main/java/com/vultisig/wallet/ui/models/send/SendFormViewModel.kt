@@ -382,7 +382,7 @@ internal class SendFormViewModel @Inject constructor(
             val requestId = Uuid.random().toString()
 
             navigator.route(
-                Route.Send.SelectNetworkPopup(
+                Route.SelectNetworkPopup(
                     requestId = requestId,
                     pressX = position.x,
                     pressY = position.y,
@@ -447,7 +447,7 @@ internal class SendFormViewModel @Inject constructor(
 
             val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
             navigator.route(
-                Route.Send.SelectAssetPopup(
+                Route.SelectAssetPopup(
                     vaultId = vaultId,
                     preselectedNetworkId = selectedChain.id,
                     networkFilters = Route.SelectNetwork.Filters.None,

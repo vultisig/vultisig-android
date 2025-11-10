@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.fastselection.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -21,6 +22,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import kotlin.math.min
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 internal fun <T> SelectPopup(
     uiModel: SelectPopupUiModel<T>,
@@ -28,7 +30,7 @@ internal fun <T> SelectPopup(
     itemContent: @Composable (T, distanceFromCenter: Int) -> Unit,
 ) {
     val visibleItems = 7
-    var currentSelectionIndex by remember { mutableIntStateOf(uiModel.initialIndex) } // apply preselected immediately
+    var currentSelectionIndex by remember { mutableIntStateOf(uiModel.initialIndex) }
     var accumulatedDragY by remember { mutableFloatStateOf(0f) }
     var measuredItemHeight by remember { mutableIntStateOf(0) }
     var lastKnownY by remember { mutableStateOf<Float?>(null) }
@@ -36,7 +38,7 @@ internal fun <T> SelectPopup(
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
 
-    // max per-item drag allowed (20.dp)
+    // max per-item drag allowed (10.dp)
     val maxPerItemPx = with(density) { 10.dp.toPx() }
     // pad inside modal
     val padPx = with(density) { 10.dp.toPx() }
@@ -69,12 +71,11 @@ internal fun <T> SelectPopup(
         val currentY = pos.y
 
         val itemsCount = uiModel.items.size
-        val visibleCount = visibleItems
         val itemH = measuredItemHeight
         val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
 
         // compute modal inner height (space available for items)
-        val modalHeightPx = if (itemH > 0) itemH * visibleCount else 0
+        val modalHeightPx = if (itemH > 0) itemH * visibleItems else 0
         val innerHeight = (modalHeightPx - 2f * padPx).coerceAtLeast(0f)
 
         // per-item derived from modal when mapping top->bottom
@@ -84,7 +85,7 @@ internal fun <T> SelectPopup(
         // If modal-based per-item is small enough (<= max), use absolute mapping top->bottom.
         // Otherwise (few items / large spacing), use delta mode with sensitivity capped to maxPerItemPx.
         val useAbsoluteModalMapping =
-            perItemFromModal.isFinite() && perItemFromModal <= maxPerItemPx && itemsCount > visibleCount
+            perItemFromModal.isFinite() && perItemFromModal <= maxPerItemPx && itemsCount > visibleItems
 
         if (useAbsoluteModalMapping) {
             // absolute mapping: top+pad -> first, bottom-pad -> last
@@ -98,7 +99,7 @@ internal fun <T> SelectPopup(
 
             if (target != currentSelectionIndex) {
                 currentSelectionIndex = target
-                haptic.performHapticFeedback(HapticFeedbackType.Companion.TextHandleMove)
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
 
             // reset delta anchors
@@ -125,7 +126,7 @@ internal fun <T> SelectPopup(
                     )
                     if (newIndex != currentSelectionIndex) {
                         currentSelectionIndex = newIndex
-                        haptic.performHapticFeedback(HapticFeedbackType.Companion.TextHandleMove)
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     }
                     accumulatedDragY %= sensitivityPx
                 }
@@ -145,7 +146,7 @@ internal fun <T> SelectPopup(
             decorFitsSystemWindows = false
         )
     ) {
-        Box(modifier = Modifier.Companion.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
             FastSelectionModalContent(
                 items = uiModel.items,
                 currentIndex = currentSelectionIndex,

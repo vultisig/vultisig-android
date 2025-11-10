@@ -113,6 +113,7 @@ import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -525,8 +526,12 @@ internal fun SetupNavGraph(
         }
 
         // swap
-        composable<Swap> {
-            SwapScreen()
+        navigation<Swap>(
+            startDestination = Swap.SwapMain
+        ) {
+            swapScreen(
+                navController = navController
+            )
         }
 
         composable<VerifySwap> {

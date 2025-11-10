@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.send
+package com.vultisig.wallet.ui.components.v2.fastselection.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,22 +9,20 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
-import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
+import com.vultisig.wallet.ui.components.v2.fastselection.FastSelectionPopupSharedViewModel
 import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.select.NetworkUiModel
-import com.vultisig.wallet.ui.screens.select.SelectNetworkPopupSharedViewModel
 
 @Composable
-fun SelectChainPopup(
+internal inline fun <reified T : Any> SelectChainPopup(
     backStackEntry: NavBackStackEntry,
     navController: NavHostController,
 ) {
-    val args = backStackEntry.toRoute<Route.Send.SelectNetworkPopup>()
+    val args = backStackEntry.toRoute<Route.SelectNetworkPopup>()
     val parentEntry = remember(backStackEntry) {
-        navController.getBackStackEntry<Route.Send>()
+        navController.getBackStackEntry<T>()
     }
-    val sharedViewModel: SelectNetworkPopupSharedViewModel = hiltViewModel(parentEntry)
+    val sharedViewModel: FastSelectionPopupSharedViewModel = hiltViewModel(parentEntry)
     val selectNetworkUiModel = sharedViewModel.uiState.collectAsState().value
     val initialIndex = remember(selectNetworkUiModel.networks, key2 = args.selectedNetworkId) {
         selectNetworkUiModel.networks.indexOfFirst { it.chain.id == args.selectedNetworkId }
@@ -41,9 +39,7 @@ fun SelectChainPopup(
             currentDragPosition = selectNetworkUiModel.currentDragPosition,
             pressPosition = Offset(args.pressX, args.pressY)
         ),
-        onItemSelected = { it: NetworkUiModel ->
-            sharedViewModel.onNetworkSelected(it)
-        },
+        onItemSelected = sharedViewModel::onNetworkSelected,
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(
                 item = item,
