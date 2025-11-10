@@ -208,7 +208,7 @@ internal class SendFormViewModel @Inject constructor(
     val fiatAmountFieldState = TextFieldState()
     val memoFieldState = TextFieldState()
 
-    var vaultId: String? = null
+    private var vaultId: String? = null
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 

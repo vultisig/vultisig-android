@@ -32,16 +32,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.app.activity.fadingEdge
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
@@ -72,7 +75,7 @@ internal fun <T> FastSelectionModalContent(
     val modalHeight = itemHeightPx * visibleItemCount
     val centerOffset = (modalHeight / 2 - itemHeightPx / 2)
 
-    val maximumXOffset = configuration.screenWidthDp * density.density - modalWidth
+    val maximumXOffset = (configuration.screenWidthDp * density.density - modalWidth).coerceAtLeast(0f)
     val xOffset = if (modalWidth > 0) {
         (pressPosition.x - modalWidth / 2)
             .coerceIn(0f, maximumXOffset)
@@ -156,13 +159,17 @@ internal fun <T> FastSelectionModalContent(
                     state = listState,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fadingEdge(
-                            Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                0.5f to Color.Black,
-                                1f to Color.Transparent
+                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    0f to Color.Transparent,
+                                    0.5f to Color.Black,
+                                    1f to Color.Transparent
+                                ), blendMode = BlendMode.DstIn
                             )
-                        ),
+                        },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = false
                 ) {
