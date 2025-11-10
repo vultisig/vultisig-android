@@ -442,29 +442,15 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
                 `amount` TEXT NOT NULL,
                 `apy` REAL NOT NULL,
                 `next_reward` REAL NOT NULL,
-                `next_churn` INTEGER,
+                `next_churn` INTEGER
             )
             """.trimIndent()
         )
-        
+
         database.execSQL(
             """
             CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_vault_id` 
             ON `active_bonded_nodes` (`vault_id`)
-            """.trimIndent()
-        )
-        
-        database.execSQL(
-            """
-            CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_vault_state` 
-            ON `active_bonded_nodes` (`vault_id`, `node_state`)
-            """.trimIndent()
-        )
-        
-        database.execSQL(
-            """
-            CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_last_updated` 
-            ON `active_bonded_nodes` (`last_updated`)
             """.trimIndent()
         )
     }

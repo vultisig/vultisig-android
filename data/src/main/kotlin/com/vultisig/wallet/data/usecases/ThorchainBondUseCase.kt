@@ -3,8 +3,11 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.ChurnEntry
 import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
@@ -14,55 +17,98 @@ import java.util.Date
 import javax.inject.Inject
 import kotlin.math.pow
 
-fun interface ThorchainBondUseCase {
-    suspend fun getActiveNodes(address: String): List<ActiveBondedNode>
+interface ThorchainBondUseCase {
+
+    suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<ActiveBondedNode>>
+
+    suspend fun getActiveNodesRemote(address: String): List<ActiveBondedNode>
 }
 
 class ThorchainBondUseCaseImpl @Inject constructor(
     private val thorchainBondRepository: ThorchainBondRepository,
+    private val activeBondedNodeRepository: ActiveBondedNodeRepository,
 ) : ThorchainBondUseCase {
-    override suspend fun getActiveNodes(address: String): List<ActiveBondedNode> = supervisorScope {
-        val activeNodes = mutableListOf<ActiveBondedNode>()
-        val bondedNodeAddresses = mutableSetOf<String>()
 
-        try {
-            val networkInfoDeferred = async { getNetworkInfo() }
-            val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
+    override suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<ActiveBondedNode>> =
+        flow {
+            try {
+                // First get cache nodes and emit
+                val cachedNodes = activeBondedNodeRepository.getBondedNodes(vaultId)
+                if (cachedNodes.isNotEmpty()) {
+                    Timber.d("Emitting ${cachedNodes.size} cached bonded nodes for vault $vaultId")
+                    emit(cachedNodes)
+                }
 
-            for (node in bondedNodes) {
-                bondedNodeAddresses.add(node.address)
+                // Fetch remote and update cache if require
+                val freshNodes = getActiveNodesRemote(address)
 
-                try {
-                    val myBondMetrics = calculateBondMetrics(
-                        nodeAddress = node.address,
-                        myBondAddress = address
-                    )
+                Timber.d("Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId")
 
-                    val bondNode = ActiveBondedNode.BondedNode(
-                        address = node.address,
-                        state = node.status,
-                    )
+                if (freshNodes.isEmpty()) {
+                    Timber.d("Clearing bonded nodes cache for vault $vaultId (remote is empty)")
+                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
+                } else {
+                    // Replace cache with new data
+                    activeBondedNodeRepository.deleteBondedNodes(vaultId)
+                    activeBondedNodeRepository.saveBondedNodes(vaultId, freshNodes)
+                }
 
-                    val activeNode = ActiveBondedNode(
-                        coinId = Coins.ThorChain.RUNE.id,
-                        node = bondNode,
-                        amount = myBondMetrics.myBond,
-                        apy = myBondMetrics.apy,
-                        nextReward = myBondMetrics.myAward,
-                        nextChurn = networkInfoDeferred.await().nextChurnDate,
-                    )
-                    activeNodes.add(activeNode)
-                } catch (e: Exception) {
-                    Timber.e(e)
+                emit(freshNodes)
+            } catch (e: Exception) {
+                Timber.e(e, "Error fetching bonded nodes for vault $vaultId")
+
+                val cachedNodes = activeBondedNodeRepository.getBondedNodes(vaultId)
+                if (cachedNodes.isNotEmpty()) {
+                    emit(cachedNodes)
+                } else {
+                    throw e
                 }
             }
-
-        } catch (e: Exception) {
-            Timber.e(e)
         }
 
-        return@supervisorScope activeNodes.toList()
-    }
+    override suspend fun getActiveNodesRemote(address: String): List<ActiveBondedNode> =
+        supervisorScope {
+            val activeNodes = mutableListOf<ActiveBondedNode>()
+            val bondedNodeAddresses = mutableSetOf<String>()
+
+            try {
+                val networkInfoDeferred = async { getNetworkInfo() }
+                val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
+
+                for (node in bondedNodes) {
+                    bondedNodeAddresses.add(node.address)
+
+                    try {
+                        val myBondMetrics = calculateBondMetrics(
+                            nodeAddress = node.address,
+                            myBondAddress = address
+                        )
+
+                        val bondNode = ActiveBondedNode.BondedNode(
+                            address = node.address,
+                            state = node.status,
+                        )
+
+                        val activeNode = ActiveBondedNode(
+                            coinId = Coins.ThorChain.RUNE.id,
+                            node = bondNode,
+                            amount = myBondMetrics.myBond,
+                            apy = myBondMetrics.apy,
+                            nextReward = myBondMetrics.myAward,
+                            nextChurn = networkInfoDeferred.await().nextChurnDate,
+                        )
+                        activeNodes.add(activeNode)
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                    }
+                }
+
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+
+            return@supervisorScope activeNodes.toList()
+        }
 
     private suspend fun getNetworkInfo(): NetworkBondInfo {
         val network = thorchainBondRepository.getMidgardNetworkData()
@@ -83,12 +129,13 @@ class ThorchainBondUseCaseImpl @Inject constructor(
         val currentHeight = healthDeferred.await().lastThorNode.height
         val currentTimeStamp = healthDeferred.await().lastThorNode.timestamp.toDouble()
 
-        if (nextChurnHeight <= currentHeight){
+        if (nextChurnHeight <= currentHeight) {
             return@supervisorScope null
         }
 
         // Derive avg block time from churn history; fallback if unavailable
-        val avgBlockTime = averageBlockTimeFromChurns(churnsDeferred.await(), pairs = 8) ?: 6.0 // seconds per block
+        val avgBlockTime = averageBlockTimeFromChurns(churnsDeferred.await(), pairs = 8)
+            ?: 6.0 // seconds per block
 
         val remainingBlocks = nextChurnHeight - currentHeight
         val etaSeconds = remainingBlocks * avgBlockTime
@@ -161,7 +208,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
         // 5. Calculate current award after node operator fee
         val currentAward =
-            (nodeData.currentAward.toBigDecimalOrNull() ?: BigDecimal.ZERO) * (BigDecimal.ONE - nodeOperatorFee)
+            (nodeData.currentAward.toBigDecimalOrNull()
+                ?: BigDecimal.ZERO) * (BigDecimal.ONE - nodeOperatorFee)
         val myAward = myBondOwnershipPercentage * currentAward
 
         // 6. Get recent churn timestamp to calculate APY

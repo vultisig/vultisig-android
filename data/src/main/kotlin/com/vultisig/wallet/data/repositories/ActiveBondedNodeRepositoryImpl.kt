@@ -18,6 +18,10 @@ interface ActiveBondedNodeRepository {
     suspend fun saveBondedNode(vaultId: String, node: ActiveBondedNode)
 
     suspend fun saveBondedNodes(vaultId: String, nodes: List<ActiveBondedNode>)
+
+    suspend fun deleteBondedNodes(vaultId: String)
+
+    suspend fun deletedBondedNodeByAddress(vaultId: String, nodeAddress: String)
 }
 
 @Singleton
@@ -40,5 +44,13 @@ internal class ActiveBondedNodeRepositoryImpl @Inject constructor(
 
     override suspend fun saveBondedNodes(vaultId: String, nodes: List<ActiveBondedNode>) {
         activeBondedNodeDao.insertAll(nodes.toEntities(vaultId))
+    }
+
+    override suspend fun deleteBondedNodes(vaultId: String) {
+        activeBondedNodeDao.deleteAllByVaultId(vaultId)
+    }
+
+    override suspend fun deletedBondedNodeByAddress(vaultId: String, nodeAddress: String) {
+        activeBondedNodeDao.deleteByVaultIdAndNodeAddress(vaultId, nodeAddress)
     }
 }

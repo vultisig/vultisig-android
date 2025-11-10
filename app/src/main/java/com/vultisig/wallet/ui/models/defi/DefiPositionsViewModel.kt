@@ -44,6 +44,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -155,8 +156,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             launch {
                 loadBondedNodes()
             }
-            
-            launch { 
+
+            launch {
                 loadStakingPositions()
             }
         }
@@ -189,7 +190,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             // Load actual bond data
             try {
-                val vault = withContext(Dispatchers.IO){
+                val vault = withContext(Dispatchers.IO) {
                     vaultRepository.get(vaultId)
                 }
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
@@ -204,31 +205,39 @@ internal class DefiPositionsViewModel @Inject constructor(
                     return@launch
                 }
 
-                val activeNodes = withContext(Dispatchers.IO) {
-                    val address = runeCoin.address
-                    bondUseCase.getActiveNodes("thor1fkwmkl96zpl93a547arcc8e00n5zh7eegdq5tv")
-                }
+                val address = runeCoin.address
 
-                // Format UI data and show
-                val nodeUiModels = activeNodes.map { it.toUiModel() }
-                val totalBonded = calculateTotalBonded(activeNodes)
-                val totalBondedRaw = calculateTotalBondedRaw(activeNodes)
-                val totalValue = calculateTotalValue(totalBondedRaw)
+                bondUseCase.getActiveNodes(vaultId, address)
+                    .catch { it ->
+                        Timber.e(it)
+                        state.update {
+                            it.copy(
+                                bonded = it.bonded.copy(isLoading = false)
+                            )
+                        }
+                    }
+                    .collect { activeNodes ->
+                        // Format UI data and show
+                        val nodeUiModels = activeNodes.map { it.toUiModel() }
+                        val totalBonded = calculateTotalBonded(activeNodes)
+                        val totalBondedRaw = calculateTotalBondedRaw(activeNodes)
+                        val totalValue = calculateTotalValue(totalBondedRaw)
 
-                state.update {
-                    it.copy(
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
-                            totalValue
-                        } else {
-                            it.totalAmountPrice
-                        },
-                        bonded = BondedTabUiModel(
-                            isLoading = false,
-                            totalBondedAmount = totalBonded,
-                            nodes = nodeUiModels
-                        )
-                    )
-                }
+                        state.update {
+                            it.copy(
+                                totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
+                                    totalValue
+                                } else {
+                                    it.totalAmountPrice
+                                },
+                                bonded = BondedTabUiModel(
+                                    isLoading = false,
+                                    totalBondedAmount = totalBonded,
+                                    nodes = nodeUiModels
+                                )
+                            )
+                        }
+                    }
             } catch (t: Throwable) {
                 Timber.e(t)
                 state.update {
@@ -601,12 +610,12 @@ internal class DefiPositionsViewModel @Inject constructor(
             }
 
             loadedTabs.clear()
-            
+
             launch {
                 loadBondedNodes()
                 loadedTabs.add(DefiTab.BONDED.displayName)
             }
-            
+
             launch {
                 loadStakingPositions()
                 loadedTabs.add(DefiTab.STAKING.displayName)
