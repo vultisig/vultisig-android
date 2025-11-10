@@ -27,6 +27,8 @@ class THORChainSwaps(
         
         // Legacy constants for backward compatibility
         const val AFFILIATE_FEE_RATE = "50"
+
+        const val MAYA_STREAMING_INTERVAL = "3"
     }
 
     private fun getPreSignedInputData(
