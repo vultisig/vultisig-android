@@ -24,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -80,6 +81,7 @@ internal fun ChainSelector(
             .onGloballyPositioned { coordinates ->
                 fieldPosition = coordinates.positionInWindow()
             }
+            .clickOnce(onClick = onClick)
             .pointerInput(Unit) {
 
                 detectDragGesturesAfterLongPress(

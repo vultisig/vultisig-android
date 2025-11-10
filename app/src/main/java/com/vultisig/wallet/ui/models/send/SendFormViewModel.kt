@@ -65,9 +65,9 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.select.AssetSelected
-import com.vultisig.wallet.ui.screens.select.SELECT_NETWORK_POPUP
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.or
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -374,7 +374,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun openNetworkPopup(position: Offset) {
+    fun onNetworkLongPressStarted(position: Offset) {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
@@ -425,6 +425,36 @@ internal class SendFormViewModel @Inject constructor(
                     preselectedNetworkId = selectedChain.id,
                     networkFilters = Route.SelectNetwork.Filters.None,
                     requestId = requestId,
+                )
+            )
+
+            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
+            val newToken = newAssetSelected?.token
+
+            if (newToken != null) {
+                selectToken(newToken)
+                expandSection(SendSections.Address)
+            }
+        }
+    }
+
+    fun openTokenSelectionPopup(
+        position: Offset
+    ) {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            val requestId = Uuid.random().toString()
+
+            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
+            navigator.route(
+                Route.Send.SelectAssetPopup(
+                    vaultId = vaultId,
+                    preselectedNetworkId = selectedChain.id,
+                    networkFilters = Route.SelectNetwork.Filters.None,
+                    requestId = requestId,
+                    pressX = position.x,
+                    pressY = position.y,
+                    selectedAssetId = selectedToken.value?.id.orEmpty()
                 )
             )
 

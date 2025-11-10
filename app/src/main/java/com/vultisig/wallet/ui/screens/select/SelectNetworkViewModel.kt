@@ -6,24 +6,30 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -41,21 +47,18 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.collections.map
 
 
-const val SELECT_NETWORK_POPUP = "SELECT_NETWORK_POPUP"
 internal data class SelectNetworkUiModel(
     val selectedNetwork: Chain = Chain.ThorChain,
     val networks: List<NetworkUiModel> = emptyList(),
 )
 
-data class SelectableNetworkUiModel(
-    val networkUiModel: NetworkUiModel,
-    val isSelected: Boolean = false,
-)
+
 internal data class SelectNetworkPopupSharedUiModel(
-    val selectedNetwork: Chain = Chain.ThorChain,
-    val networks: List<SelectableNetworkUiModel> = emptyList(),
+    val networks: List<NetworkUiModel> = emptyList(),
+    val assets: List<AssetUiModel> = emptyList(),
     val isLongPressActive: Boolean = false,
     val currentDragPosition: Offset? = null,
     val vaultId: VaultId = "",
@@ -66,66 +69,144 @@ internal data class SelectNetworkPopupSharedUiModel(
 internal class SelectNetworkPopupSharedViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
-
+    private val navigator: Navigator<Destination>,
+    private val enableTokenUseCase: EnableTokenUseCase,
+    private val getChainTokens: GetChainTokensUseCase,
+    private val accountRepository: AccountsRepository,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val fiatValueToString: FiatValueToStringMapper,
 ) : ViewModel() {
 
 
     val uiState = MutableStateFlow(SelectNetworkPopupSharedUiModel())
+    lateinit var networkArgs: Route.Send.SelectNetworkPopup
+    lateinit var assetArgs: Route.Send.SelectAssetPopup
 
 
-    fun loadData() {
-        val vaultId = uiState.value.vaultId
+    fun loadNetworkData() {
+        val vaultId = networkArgs.vaultId
+        val selectedNetwork = Chain.fromRaw(networkArgs.selectedNetworkId)
+
         vaultRepository.getEnabledChains(vaultId)
-            .onEach { x ->
+            .onEach { chains ->
+                val networks = chains
+                    .filter { chains ->
+                        when (networkArgs.filters) {
+                            Filters.SwapAvailable -> chains.isSwapSupported
+                            Filters.DisableNetworkSelection -> chains.id == selectedNetwork.id
+                            Filters.None -> true
+                        }
+                    }.map { chain ->
+                        NetworkUiModel(
+                            chain = chain,
+                            logo = chain.logo,
+                            title = chain.raw,
+                            value = ""
+                        )
+                    }
+
                 uiState.update {
                     it.copy(
-                        networks = x.map { chain ->
-                            SelectableNetworkUiModel(
-                                networkUiModel = NetworkUiModel(
-                                    chain = chain,
-                                    logo = chain.logo,
-                                    title = chain.raw,
-                                    value = ""
-                                ),
-                                isSelected = uiState.value.selectedNetwork.id == chain.id
-                            )
-                        }
+                        networks = networks,
                     )
                 }
             }
             .launchIn(viewModelScope)
     }
 
+    fun loadAssetsData() {
+        val filter = assetArgs.networkFilters
+        val vaultId = assetArgs.vaultId
+        val preselectedChainId = assetArgs.preselectedNetworkId
+        val preselectedChain = Chain.fromRaw(preselectedChainId)
 
-    fun setVaultId(vaultId: VaultId) {
-        uiState.update {
-            it.copy(
-                vaultId = vaultId
-            )
-        }
+            viewModelScope.launch {
+                val vault = vaultRepository.get(vaultId) ?: return@launch
+                getChainTokens(preselectedChain, vault)
+                    .catch { Timber.e(it) }
+                    .map { coinList ->
+                        coinList
+                            .filter { !it.isNativeToken }
+                            .map { coin ->
+                                AssetUiModel(
+                                    token = coin,
+                                    logo = getCoinLogo(coin.logo),
+                                    title = coin.ticker,
+                                    subtitle = coin.chain.raw,
+                                    amount = "0",
+                                    value = "0",
+                                    isDisabled = true,
+                                )
+                            }
+                    }
+                    .combine(
+                        accountRepository.loadAddress(vaultId, preselectedChain)
+                    ) { allTokens, account ->
+                        val filteredAssets = account
+                            .accounts
+                            .asSequence()
+                            .sortedWith(compareByDescending<Account> { it.token.isNativeToken }.thenBy { it.token.ticker })
+                            .toList()
+                            .map {
+                                AssetUiModel(
+                                    token = it.token,
+                                    logo = getCoinLogo(it.token.logo),
+                                    title = it.token.ticker,
+                                    subtitle = it.token.chain.raw,
+                                    amount = it.tokenValue?.let(mapTokenValueToDecimalUiString)
+                                        ?: "0",
+                                    value = it.fiatValue?.let { fiatValueToString.invoke(it) }
+                                        ?: "0",
+                                )
+                            }
+
+                        val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
+                        val additionalAssets =
+                            allTokens.filter {
+                                it.token.id !in filteredTokenIds
+                            }
+                        uiState.update {
+                            it.copy(assets = filteredAssets + additionalAssets)
+                        }
+                        println("updated to ${uiState.value.assets}")
+                    }
+                    .launchIn(this)
+            }
+
     }
 
 
-    fun onItemSelected(x: SelectableNetworkUiModel) {
-        val items = uiState.value.networks.map {
-           it.copy(
-               isSelected = it.networkUiModel.chain.id == x.networkUiModel.chain.id
-           )
-        }
+    fun initNetworks(args: Route.Send.SelectNetworkPopup) {
+        networkArgs = args
+        loadNetworkData()
+    }
 
-        uiState.update {
-            it.copy(
-                selectedNetwork = x.networkUiModel.chain,
-                networks = items
-            )
-        }
+    fun initAssets(args: Route.Send.SelectAssetPopup) {
+        assetArgs = args
+        loadAssetsData()
+    }
 
+
+    fun onNetworkSelected(networkUiModel: NetworkUiModel) {
         viewModelScope.launch {
-            requestResultRepository.respond(SELECT_NETWORK_POPUP,x.networkUiModel.chain)
+            requestResultRepository.respond(networkArgs.requestId, networkUiModel.chain)
+            navigator.back()
         }
     }
 
-    fun onDragStart(position: Offset) {
+    fun onAssetSelected(asset: AssetUiModel) {
+        viewModelScope.launch {
+            val isDisabled = asset.isDisabled
+            if (isDisabled) {
+                enableTokenUseCase(networkArgs.vaultId, asset.token)
+            }
+            val callbackAsset = AssetSelected(asset.token, isDisabled)
+            requestResultRepository.respond(assetArgs.requestId, callbackAsset)
+            navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun onNetworkDragStart(position: Offset) {
         uiState.update {
             it.copy(
                 isLongPressActive = true,
@@ -134,7 +215,7 @@ internal class SelectNetworkPopupSharedViewModel @Inject constructor(
         }
     }
 
-    fun onDrag(position: Offset) {
+    fun onNetworkDrag(position: Offset) {
         uiState.update {
             it.copy(
                 currentDragPosition = position
@@ -142,7 +223,7 @@ internal class SelectNetworkPopupSharedViewModel @Inject constructor(
         }
     }
 
-    fun resetDrag() {
+    fun onNetworkDragEnd() {
         uiState.update {
             it.copy(
                 isLongPressActive = false,
@@ -150,8 +231,6 @@ internal class SelectNetworkPopupSharedViewModel @Inject constructor(
             )
         }
     }
-
-
 }
 
 data class NetworkUiModel(

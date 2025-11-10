@@ -2,18 +2,11 @@
 
 package com.vultisig.wallet.ui.screens.send
 
-import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,19 +18,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,68 +35,39 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
-import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.activity.CommonViewModel
-import com.vultisig.wallet.app.activity.RouteB
-import com.vultisig.wallet.app.activity.RouteBDialog
-import com.vultisig.wallet.app.activity.SelectableItem
-import com.vultisig.wallet.app.activity.XXUiModel
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.ChainId
-import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -126,47 +84,25 @@ import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
-import com.vultisig.wallet.ui.screens.select.SelectNetworkPopupSharedUiModel
 import com.vultisig.wallet.ui.screens.select.SelectNetworkPopupSharedViewModel
-import com.vultisig.wallet.ui.screens.select.SelectableNetworkUiModel
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import kotlin.math.abs
-import kotlin.math.min
-
-
-
 
 
 internal fun NavGraphBuilder.sendScreen(
     navController: NavHostController,
 ) {
-
     composable<Route.Send.SendMain> { backStackEntry ->
-
         val viewModel: SendFormViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsState()
         val parentEntry = remember(backStackEntry) {
             navController.getBackStackEntry<Route.Send>()
         }
         val sharedViewModel: SelectNetworkPopupSharedViewModel = hiltViewModel(parentEntry)
-
-
-        LaunchedEffect(viewModel.vaultId) {
-            viewModel.vaultId?.let { vaultId ->
-                sharedViewModel.setVaultId(vaultId = vaultId)
-            }
-        }
-
-        val selectedItemId = sharedViewModel.uiState.collectAsState().value.selectedNetwork.id
-
         SendFormScreen(
             state = state,
             addressFieldState = viewModel.addressFieldState,
@@ -190,12 +126,20 @@ internal fun NavGraphBuilder.sendScreen(
             onToogleAmountInputType = viewModel::toggleAmountInputType,
             onExpandSection = viewModel::expandSection,
 
-            onDragStart = sharedViewModel::onDragStart,
-            onDrag = sharedViewModel::onDrag,
-            onDragEnd = sharedViewModel::resetDrag,
-            onDragCancel = sharedViewModel::resetDrag,
-            onLongPressStarted = viewModel::openNetworkPopup,
-        )
+            onNetworkDragStart = sharedViewModel::onNetworkDragStart,
+            onNetworkDrag = sharedViewModel::onNetworkDrag,
+            onNetworkDragEnd = sharedViewModel::onNetworkDragEnd,
+            onNetworkDragCancel = sharedViewModel::onNetworkDragEnd,
+            onNetworkLongPressStarted = viewModel::onNetworkLongPressStarted,
+
+            onAssetDragStart = sharedViewModel::onNetworkDragStart,
+            onAssetDrag = sharedViewModel::onNetworkDrag,
+            onAssetDragEnd = sharedViewModel::onNetworkDragEnd,
+            onAssetDragCancel = sharedViewModel::onNetworkDragEnd,
+            onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
+
+
+            )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
         val specific = state.specific
@@ -211,468 +155,25 @@ internal fun NavGraphBuilder.sendScreen(
     }
 
 
+
     dialog<Route.Send.SelectNetworkPopup> { backStackEntry ->
-
-        val args = backStackEntry.toRoute<Route.Send.SelectNetworkPopup>()
-
-        val parentEntry = remember(backStackEntry) {
-            navController.getBackStackEntry<Route.Send>()
-        }
-        val viewModel: SendFormViewModel = hiltViewModel()
-        val sharedViewModel: SelectNetworkPopupSharedViewModel = hiltViewModel(parentEntry)
         SelectChainPopup(
-            navController = navController,
-            uiModel = sharedViewModel.uiState.collectAsState().value,
-            selectedItemId = args.selectedNetworkId,
-            pressPosition = Offset(args.pressX, args.pressY),
-            loadData = {
-                sharedViewModel.loadData()
-            },
-            onItemSelected = {
-                sharedViewModel.onItemSelected(it)
-            }
+            backStackEntry = backStackEntry,
+            navController = navController
         )
     }
-}
 
 
-@Composable
-private fun SelectChainPopup(
-    navController: NavHostController,
-    uiModel: SelectNetworkPopupSharedUiModel,
-    onItemSelected: (SelectableNetworkUiModel) -> Unit,
-    loadData: () -> Unit,
-    selectedItemId: String?,
-    pressPosition: Offset,
-) {
-    LaunchedEffect(Unit) {
-        loadData()
-    }
-
-
-    val initialIndex = remember(uiModel.networks, selectedItemId) {
-        uiModel.networks.indexOfFirst { it.networkUiModel.chain.id == selectedItemId }
-            .takeIf { it >= 0 }
-            ?: uiModel.networks.indexOfFirst { it.isSelected }.takeIf { it >= 0 } ?: 0
-    }
-
-    val visibleItems = 7
-    var currentSelectionIndex by remember { mutableIntStateOf(initialIndex) } // apply preselected immediately
-    var accumulatedDragY by remember { mutableFloatStateOf(0f) }
-    var measuredItemHeight by remember { mutableIntStateOf(0) }
-    var lastKnownY by remember { mutableStateOf<Float?>(null) }
-    val haptic = LocalHapticFeedback.current
-    val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
-
-    // max per-item drag allowed (20.dp)
-    val maxPerItemPx = with(density) { 20.dp.toPx() }
-    // pad inside modal
-    val padPx = with(density) { 10.dp.toPx() }
-
-    var shouldClose by remember { mutableStateOf(false) }
-
-    LaunchedEffect(uiModel.isLongPressActive) {
-        if (!uiModel.isLongPressActive && !shouldClose) {
-            shouldClose = true
-            if (uiModel.networks.isNotEmpty() &&
-                currentSelectionIndex in uiModel.networks.indices
-            ) {
-                onItemSelected(uiModel.networks[currentSelectionIndex])
-            }
-            navController.popBackStack()
-        }
-    }
-
-    LaunchedEffect(
-        uiModel.currentDragPosition,
-        measuredItemHeight,
-        uiModel.isLongPressActive,
-        uiModel.networks,
-    ) {
-        if (!uiModel.isLongPressActive) {
-            lastKnownY = null
-            accumulatedDragY = 0f
-            return@LaunchedEffect
-        }
-        val pos = uiModel.currentDragPosition ?: return@LaunchedEffect
-        val currentY = pos.y
-
-        val itemsCount = uiModel.networks.size
-        val visibleCount = visibleItems
-        val itemH = measuredItemHeight
-        val screenHeightPx = with(density) { configuration.screenHeightDp.dp.toPx() }
-
-        // compute modal inner height (space available for items)
-        val modalHeightPx = if (itemH > 0) itemH * visibleCount else 0
-        val innerHeight = (modalHeightPx - 2f * padPx).coerceAtLeast(0f)
-
-        // per-item derived from modal when mapping top->bottom
-        val perItemFromModal =
-            if (itemsCount > 1 && innerHeight > 0f) innerHeight / (itemsCount - 1) else Float.MAX_VALUE
-
-        // If modal-based per-item is small enough (<= max), use absolute mapping top->bottom.
-        // Otherwise (few items / large spacing), use delta mode with sensitivity capped to maxPerItemPx.
-        val useAbsoluteModalMapping =
-            perItemFromModal.isFinite() && perItemFromModal <= maxPerItemPx && itemsCount > visibleCount
-
-        if (useAbsoluteModalMapping) {
-            // absolute mapping: top+pad -> first, bottom-pad -> last
-            val rawTop = pressPosition.y - modalHeightPx / 2f
-            val maxTop = (screenHeightPx - modalHeightPx).coerceAtLeast(0f)
-            val modalTop = rawTop.coerceIn(0f, maxTop)
-
-            val relativeY = (currentY - modalTop - padPx).coerceIn(0f, innerHeight)
-            val fraction = if (innerHeight > 0f) (relativeY / innerHeight) else 0f
-            val target = ((fraction * (itemsCount - 1)) + 0.5f).toInt().coerceIn(0, itemsCount - 1)
-
-            if (target != currentSelectionIndex) {
-                currentSelectionIndex = target
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            }
-
-            // reset delta anchors
-            accumulatedDragY = 0f
-            lastKnownY = currentY
-        } else {
-            // delta-based mode. Sensitivity per-item = min(measured item height, maxPerItemPx)
-            val baseSensitivity = if (itemH > 0) itemH.toFloat() else maxPerItemPx
-            val sensitivityPx = min(baseSensitivity, maxPerItemPx)
-
-            if (lastKnownY == null) {
-                lastKnownY = currentY
-                return@LaunchedEffect
-            }
-
-            val dy = currentY - lastKnownY!!
-            if (dy != 0f) {
-                accumulatedDragY += dy
-                val indexChange = (accumulatedDragY / sensitivityPx).toInt()
-                if (indexChange != 0) {
-                    val newIndex = (currentSelectionIndex - indexChange).coerceIn(
-                        0,
-                        (itemsCount.coerceAtLeast(1) - 1)
-                    )
-                    if (newIndex != currentSelectionIndex) {
-                        currentSelectionIndex = newIndex
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    }
-                    accumulatedDragY %= sensitivityPx
-                }
-            }
-            lastKnownY = currentY
-        }
-    }
-
-
-
-    Dialog(
-        onDismissRequest = { /* prevent dismissal while gesture active */ },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
+    dialog<Route.Send.SelectAssetPopup> { backStackEntry ->
+        SelectAssetPopup(
+            backStackEntry = backStackEntry,
+            navController = navController
         )
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            FastSelectionModalContent(
-                items = uiModel.networks,
-                currentIndex = currentSelectionIndex,
-                pressPosition = pressPosition,
-                visibleItemCount = visibleItems,
-                itemContent = { item, isCenterItem, distanceFromCenter ->
-                    PickerItem(
-                        item = item,
-                        isCenterItem = isCenterItem,
-                        distanceFromCenter = distanceFromCenter
-                    )
-                },
-                onItemHeightMeasured = { height ->
-                    if (measuredItemHeight == 0) measuredItemHeight = height
-                }
-            )
-        }
     }
+
+
 }
 
-
-@SuppressLint("ConfigurationScreenWidthHeight")
-@Composable
-private fun FastSelectionModalContent(
-    items: List<SelectableNetworkUiModel>,
-    currentIndex: Int,
-    pressPosition: Offset,
-    visibleItemCount: Int = 9,
-    onItemHeightMeasured: (Int) -> Unit,
-    itemContent: @Composable (item: SelectableNetworkUiModel, isCenterItem: Boolean, distanceFromCenter: Int) -> Unit,
-) {
-    val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
-
-    var itemHeightPx by remember { mutableIntStateOf(0) }
-    var isHeightMeasured by remember { mutableStateOf(false) }
-
-    val modalWidth = with(density) { (configuration.screenWidthDp * 0.85f).dp.toPx() }
-
-    val modalHeight = itemHeightPx * visibleItemCount
-    val centerOffset = (modalHeight / 2 - itemHeightPx / 2).toInt()
-
-    val xOffset = if (modalWidth > 0) {
-        (pressPosition.x - modalWidth / 2)
-            .coerceIn(0f, configuration.screenWidthDp * density.density - modalWidth)
-    } else 0f
-
-    val yOffset = if (modalHeight > 0) {
-        (pressPosition.y - modalHeight / 2)
-            .coerceIn(0f, configuration.screenHeightDp * density.density - modalHeight)
-    } else 0f
-
-    LaunchedEffect(currentIndex, isHeightMeasured) {
-        if (currentIndex in items.indices && isHeightMeasured) {
-            scope.launch {
-                val paddingItems = visibleItemCount / 2
-                listState.animateScrollToItem(
-                    index = currentIndex + paddingItems,
-                    scrollOffset = -centerOffset
-                )
-            }
-        }
-    }
-
-    LaunchedEffect(isHeightMeasured) {
-        if (isHeightMeasured) {
-            val paddingItems = visibleItemCount / 2
-            listState.scrollToItem(
-                index = currentIndex + paddingItems,
-                scrollOffset = -centerOffset
-            )
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .offset { IntOffset(xOffset.toInt(), yOffset.toInt()) }
-    ) {
-        AnimatedVisibility(
-            visible = true,
-            enter = scaleIn(
-                initialScale = 0.8f,
-                transformOrigin = TransformOrigin.Center,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(durationMillis = 200)),
-            exit = scaleOut(
-                targetScale = 0.8f,
-                animationSpec = tween(durationMillis = 150)
-            ) + fadeOut(animationSpec = tween(durationMillis = 150))
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(with(density) { modalWidth.toDp() })
-                    .then(
-                        if (isHeightMeasured) {
-                            Modifier.height(with(density) { modalHeight.toDp() })
-                        } else {
-                            Modifier.wrapContentHeight()
-                        }
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                if (items.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No items available",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    val paddingItems = visibleItemCount / 2
-                    val paddedItems = buildList {
-                        repeat(paddingItems) { add(null) }
-                        addAll(items)
-                        repeat(paddingItems) { add(null) }
-                    }
-
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        userScrollEnabled = false
-                    ) {
-                        itemsIndexed(paddedItems) { index, item ->
-                            val actualIndex = index - paddingItems
-
-                            if (item != null) {
-                                val distanceFromCenter = abs(actualIndex - currentIndex)
-                                val isCenterItem = distanceFromCenter == 0
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .onGloballyPositioned { coordinates ->
-                                            if (!isHeightMeasured && coordinates.size.height > 0) {
-                                                itemHeightPx = coordinates.size.height
-                                                onItemHeightMeasured(coordinates.size.height)
-                                                isHeightMeasured = true
-                                            }
-                                        }
-                                ) {
-                                    itemContent(item, isCenterItem, distanceFromCenter)
-                                }
-                            } else {
-                                if (isHeightMeasured) {
-                                    Spacer(modifier = Modifier.height(with(density) { itemHeightPx.toDp() }))
-                                } else {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
-                        }
-                    }
-
-                    if (isHeightMeasured) {
-                        // Center highlight indicator
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(with(density) { itemHeightPx.toDp() })
-                                .align(Alignment.Center)
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-                                    RoundedCornerShape(12.dp)
-                                )
-                        )
-
-                        // Top and bottom fade gradients
-                        val fadeHeight = with(density) { (itemHeightPx * 1.5f).toDp() }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(fadeHeight)
-                                .align(Alignment.TopCenter)
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            Color.Transparent
-                                        )
-                                    )
-                                )
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(fadeHeight)
-                                .align(Alignment.BottomCenter)
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.surface
-                                        )
-                                    )
-                                )
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PickerItem(
-    item: SelectableNetworkUiModel,
-    isCenterItem: Boolean,
-    distanceFromCenter: Int,
-    modifier: Modifier = Modifier,
-) {
-    val scale = when (distanceFromCenter) {
-        0 -> 1f
-        1 -> 0.95f
-        2 -> 0.90f
-        else -> 0.85f
-    }
-
-    val alpha = when (distanceFromCenter) {
-        0 -> 1f
-        1 -> 0.7f
-        2 -> 0.4f
-        else -> 0.2f
-    }
-
-    val animatedScale by animateFloatAsState(
-        targetValue = scale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "scale"
-    )
-
-    val animatedAlpha by animateFloatAsState(
-        targetValue = alpha,
-        animationSpec = tween(durationMillis = 200),
-        label = "alpha"
-    )
-
-    Surface(
-        modifier = modifier
-            .scale(animatedScale)
-            .alpha(animatedAlpha),
-        color = Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = item.networkUiModel.chain.raw.take(1).uppercase(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    fontSize = 16.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = item.networkUiModel.chain.raw,
-                fontSize = 16.sp,
-                fontWeight = if (isCenterItem) FontWeight.Bold else FontWeight.Medium,
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-
-            Text(
-                text = item.networkUiModel.value.orEmpty(),
-                fontSize = 14.sp,
-                fontWeight = if (isCenterItem) FontWeight.SemiBold else FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-        }
-    }
-}
 
 @Composable
 private fun SendFormScreen(
@@ -698,11 +199,17 @@ private fun SendFormScreen(
     onToogleAmountInputType: (Boolean) -> Unit = {},
     onExpandSection: (SendSections) -> Unit = {},
 
-    onDragStart: (Offset) -> Unit,
-    onDrag: (Offset) -> Unit,
-    onDragEnd: () -> Unit,
-    onDragCancel: () -> Unit,
-    onLongPressStarted: (Offset) -> Unit,
+    onNetworkDragStart: (Offset) -> Unit,
+    onNetworkDrag: (Offset) -> Unit,
+    onNetworkDragEnd: () -> Unit,
+    onNetworkDragCancel: () -> Unit,
+    onNetworkLongPressStarted: (Offset) -> Unit,
+
+    onAssetDragStart: (Offset) -> Unit,
+    onAssetDrag: (Offset) -> Unit,
+    onAssetDragEnd: () -> Unit,
+    onAssetDragCancel: () -> Unit,
+    onAssetLongPressStarted: (Offset) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -799,11 +306,11 @@ private fun SendFormScreen(
                                 chain = state.selectedCoin?.model?.address?.chain
                                     ?: Chain.ThorChain,
                                 onClick = onSelectNetworkRequest,
-                                onDragCancel = onDragCancel,
-                                onDrag = onDrag,
-                                onDragStart = onDragStart,
-                                onDragEnd = onDragEnd,
-                                onLongPressStarted = onLongPressStarted,
+                                onDragCancel = onNetworkDragCancel,
+                                onDrag = onNetworkDrag,
+                                onDragStart = onNetworkDragStart,
+                                onDragEnd = onNetworkDragEnd,
+                                onLongPressStarted = onNetworkLongPressStarted,
                             )
 
                             UiSpacer(12.dp)
@@ -815,7 +322,14 @@ private fun SendFormScreen(
                                 TokenChip(
                                     selectedToken = state.selectedCoin,
                                     onSelectTokenClick = onSelectTokenRequest,
-                                )
+
+                                    onDragCancel = onAssetDragCancel,
+                                    onDrag = onAssetDrag,
+                                    onDragStart = onAssetDragStart,
+                                    onDragEnd = onAssetDragEnd,
+                                    onLongPressStarted = onAssetLongPressStarted,
+
+                                    )
 
                                 Column(
                                     horizontalAlignment = Alignment.End,
@@ -1579,10 +1093,17 @@ private fun SendScreenPreview() {
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),
         memoFieldState = TextFieldState(),
-        onDragStart = {},
-        onDrag = {},
-        onDragEnd = {},
-        onDragCancel = {},
-        onLongPressStarted = {},
+
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
     )
 }

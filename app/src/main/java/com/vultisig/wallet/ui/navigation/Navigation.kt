@@ -353,7 +353,7 @@ internal sealed class Route {
     data class SelectAsset(
         val vaultId: VaultId,
         val preselectedNetworkId: ChainId,
-        val networkFilters: SelectNetwork.Filters,
+        val networkFilters: Filters,
         val requestId: String,
     )
 
@@ -389,9 +389,20 @@ internal sealed class Route {
             val pressX: Float = 0f,
             val pressY: Float = 0f,
             val vaultId: VaultId,
-            val selectedNetworkId: ChainId?,
+            val selectedNetworkId: ChainId,
             val requestId: String,
             val filters: Filters,
+        )
+
+        @Serializable
+        data class SelectAssetPopup(
+            val vaultId: VaultId,
+            val preselectedNetworkId: ChainId,
+            val selectedAssetId: String,
+            val networkFilters: Filters,
+            val requestId: String,
+            val pressX: Float = 0f,
+            val pressY: Float = 0f,
         )
     }
 

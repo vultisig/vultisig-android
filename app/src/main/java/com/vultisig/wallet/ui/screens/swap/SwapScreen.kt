@@ -14,6 +14,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -85,6 +90,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -611,11 +617,46 @@ private fun TokenInput(
 internal fun TokenChip(
     selectedToken: TokenBalanceUiModel?,
     onSelectTokenClick: () -> Unit,
+    onDragStart: (Offset) -> Unit = {},
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onDragCancel: () -> Unit = {},
+    onLongPressStarted: (Offset) -> Unit = {},
 ) {
+
+    var fieldPosition by remember { mutableStateOf(Offset.Zero) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clickable(onClick = onSelectTokenClick)
+            .onGloballyPositioned { coordinates ->
+                fieldPosition = coordinates.positionInWindow()
+            }
+            .pointerInput(Unit) {
+
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { offset ->
+                        val screenPosition = Offset(
+                            x = fieldPosition.x + offset.x,
+                            y = fieldPosition.y + offset.y
+                        )
+                        onDragStart(screenPosition)
+                        onLongPressStarted(screenPosition)
+                    },
+                    onDrag = { change: PointerInputChange, _ ->
+                        val localPos = change.position
+                        val screenPos = Offset(
+                            x = fieldPosition.x + localPos.x,
+                            y = fieldPosition.y + localPos.y
+                        )
+                        onDrag(screenPos)
+                        change.consume()
+                    },
+                    onDragEnd = onDragEnd,
+                    onDragCancel = onDragCancel
+                )
+            }
             .background(
                 color = Theme.colors.backgrounds.tertiary,
                 shape = RoundedCornerShape(99.dp)
@@ -623,6 +664,7 @@ internal fun TokenChip(
             .padding(
                 all = 6.dp,
             )
+
     ) {
         TokenLogo(
             errorLogoModifier = Modifier
