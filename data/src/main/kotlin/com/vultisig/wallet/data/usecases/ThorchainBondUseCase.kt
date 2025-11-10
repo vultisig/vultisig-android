@@ -114,7 +114,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
     private suspend fun getNetworkInfo(): NetworkBondInfo {
         val network = thorchainBondRepository.getMidgardNetworkData()
-        val apy = runCatching { network.bondingAPY.toDouble() }.getOrDefault(0.0)
+        val apy = runCatching { network.bondingAPY.toBigDecimal().toDouble() }.getOrDefault(0.0)
         val nextChurnDate = estimateNextChurnETA(network)
 
         return NetworkBondInfo(
