@@ -188,7 +188,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 )
             }
 
-            // Load actual bond data
+            // Load selected positions, if disabled then show nothing
             try {
                 val vault = withContext(Dispatchers.IO) {
                     vaultRepository.get(vaultId)

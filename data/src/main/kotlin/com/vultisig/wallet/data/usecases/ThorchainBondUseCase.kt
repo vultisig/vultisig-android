@@ -37,17 +37,17 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                 // First get cache nodes and emit
                 val cachedNodes = activeBondedNodeRepository.getBondedNodes(vaultId)
                 if (cachedNodes.isNotEmpty()) {
-                    Timber.d("Emitting ${cachedNodes.size} cached bonded nodes for vault $vaultId")
+                    Timber.d("ThorchainBondUseCase: Emitting ${cachedNodes.size} cached bonded nodes for vault $vaultId")
                     emit(cachedNodes)
                 }
 
                 // Fetch remote and update cache if require
                 val freshNodes = getActiveNodesRemote(address)
 
-                Timber.d("Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId")
+                Timber.d("ThorchainBondUseCase: Emitting ${freshNodes.size} fresh bonded nodes for vault $vaultId")
 
                 if (freshNodes.isEmpty()) {
-                    Timber.d("Clearing bonded nodes cache for vault $vaultId (remote is empty)")
+                    Timber.d("ThorchainBondUseCase: Clearing bonded nodes cache for vault $vaultId (remote is empty)")
                     activeBondedNodeRepository.deleteBondedNodes(vaultId)
                 } else {
                     // Replace cache with new data
@@ -57,7 +57,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
 
                 emit(freshNodes)
             } catch (e: Exception) {
-                Timber.e(e, "Error fetching bonded nodes for vault $vaultId")
+                Timber.e(e, "ThorchainBondUseCase: Error fetching bonded nodes for vault $vaultId")
 
                 val cachedNodes = activeBondedNodeRepository.getBondedNodes(vaultId)
                 if (cachedNodes.isNotEmpty()) {
