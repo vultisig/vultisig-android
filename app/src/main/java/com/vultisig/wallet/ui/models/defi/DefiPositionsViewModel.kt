@@ -386,8 +386,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             val details = rujiStakingService.getStakingDetails(address)
 
             val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-            val formattedAmount =
-                "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} $RUJI_SYMBOL"
+            val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
 
             val rewards = details.rewards?.let { rewardAmount ->
                 val rewardValue = rewardAmount.setScale(2, RoundingMode.HALF_UP)
@@ -420,8 +419,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             // Convert stake amount to readable format
             val stakedAmount = Chain.ThorChain.coinType.toValue(result.stakeAmount)
-            val formattedAmount =
-                "${stakedAmount.setScale(2, RoundingMode.HALF_UP).toPlainString()} TCY"
+            val formattedAmount = "${stakedAmount.toPlainString()} TCY"
 
             // Create and return the UI model
             StakePositionUiModel(
@@ -456,13 +454,14 @@ internal class DefiPositionsViewModel @Inject constructor(
                     ?.tokenValue
                     ?.value
                     ?: BigInteger.ZERO
+            val stakeAmount = Chain.ThorChain.coinType.toValue(balance)
 
             val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
                     coin.ticker.contains("ytcy", ignoreCase = true)
 
             return StakePositionUiModel(
                 stakeAssetHeader = "Staked ${coin.ticker}",
-                stakeAmount = balance.formatAmount(CoinType.THORCHAIN, coin.ticker),
+                stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
                 apy = null,
                 supportsMint = supportsMint,
                 canWithdraw = false, // TCY auto-distributes rewards
