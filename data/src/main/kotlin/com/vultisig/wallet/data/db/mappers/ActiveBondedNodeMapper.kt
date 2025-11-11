@@ -1,11 +1,11 @@
 package com.vultisig.wallet.data.db.mappers
 
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.db.models.ActiveBondedNodeEntity
 import com.vultisig.wallet.data.db.models.BondedNodeEntity
-import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import java.math.BigInteger
 
-fun ActiveBondedNode.toEntity(vaultId: String): ActiveBondedNodeEntity {
+fun BondedNodePosition.toEntity(vaultId: String): ActiveBondedNodeEntity {
     return ActiveBondedNodeEntity(
         node = BondedNodeEntity(
             address = this.node.address,
@@ -20,9 +20,9 @@ fun ActiveBondedNode.toEntity(vaultId: String): ActiveBondedNodeEntity {
     )
 }
 
-fun ActiveBondedNodeEntity.toDomainModel(): ActiveBondedNode {
-    return ActiveBondedNode(
-        node = ActiveBondedNode.BondedNode(
+fun ActiveBondedNodeEntity.toDomainModel(): BondedNodePosition {
+    return BondedNodePosition(
+        node = BondedNodePosition.BondedNode(
             address = this.node.address,
             state = this.node.state
         ),
@@ -34,10 +34,10 @@ fun ActiveBondedNodeEntity.toDomainModel(): ActiveBondedNode {
     )
 }
 
-fun List<ActiveBondedNodeEntity>.toDomainModels(): List<ActiveBondedNode> {
+fun List<ActiveBondedNodeEntity>.toDomainModels(): List<BondedNodePosition> {
     return this.map { it.toDomainModel() }
 }
 
-fun List<ActiveBondedNode>.toEntities(vaultId: String): List<ActiveBondedNodeEntity> {
+fun List<BondedNodePosition>.toEntities(vaultId: String): List<ActiveBondedNodeEntity> {
     return this.map { it.toEntity(vaultId) }
 }

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import javax.inject.Inject
 
 class RujiStakingService @Inject constructor(
@@ -33,6 +34,8 @@ class RujiStakingService @Inject constructor(
         }
 
         return StakingDetails(
+            id = Coins.ThorChain.RUJI.ticker + Coins.ThorChain.RUJI.contractAddress,
+            coin = Coins.ThorChain.RUJI,
             stakeAmount = rujiStakeInfo.stakeAmount,
             apr = apr,
             estimatedRewards = null, // Not available for Ruji

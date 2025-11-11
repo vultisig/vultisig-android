@@ -1,23 +1,23 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.db.dao.ActiveBondedNodeDao
 import com.vultisig.wallet.data.db.mappers.toDomainModels
 import com.vultisig.wallet.data.db.mappers.toEntities
 import com.vultisig.wallet.data.db.mappers.toEntity
-import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface ActiveBondedNodeRepository {
-    fun getBondedNodesFlow(vaultId: String): Flow<List<ActiveBondedNode>>
+    fun getBondedNodesFlow(vaultId: String): Flow<List<BondedNodePosition>>
 
-    suspend fun getBondedNodes(vaultId: String): List<ActiveBondedNode>
+    suspend fun getBondedNodes(vaultId: String): List<BondedNodePosition>
 
-    suspend fun saveBondedNode(vaultId: String, node: ActiveBondedNode)
+    suspend fun saveBondedNode(vaultId: String, node: BondedNodePosition)
 
-    suspend fun saveBondedNodes(vaultId: String, nodes: List<ActiveBondedNode>)
+    suspend fun saveBondedNodes(vaultId: String, nodes: List<BondedNodePosition>)
 
     suspend fun deleteBondedNodes(vaultId: String)
 
@@ -29,20 +29,20 @@ internal class ActiveBondedNodeRepositoryImpl @Inject constructor(
     private val activeBondedNodeDao: ActiveBondedNodeDao
 ): ActiveBondedNodeRepository {
 
-    override fun getBondedNodesFlow(vaultId: String): Flow<List<ActiveBondedNode>> {
+    override fun getBondedNodesFlow(vaultId: String): Flow<List<BondedNodePosition>> {
         return activeBondedNodeDao.getAllByVaultId(vaultId)
             .map { entities -> entities.toDomainModels() }
     }
 
-    override suspend fun getBondedNodes(vaultId: String): List<ActiveBondedNode> {
+    override suspend fun getBondedNodes(vaultId: String): List<BondedNodePosition> {
         return activeBondedNodeDao.getAllByVaultIdSuspend(vaultId).toDomainModels()
     }
 
-    override suspend fun saveBondedNode(vaultId: String, node: ActiveBondedNode) {
+    override suspend fun saveBondedNode(vaultId: String, node: BondedNodePosition) {
         activeBondedNodeDao.insert(node.toEntity(vaultId))
     }
 
-    override suspend fun saveBondedNodes(vaultId: String, nodes: List<ActiveBondedNode>) {
+    override suspend fun saveBondedNodes(vaultId: String, nodes: List<BondedNodePosition>) {
         activeBondedNodeDao.insertAll(nodes.toEntities(vaultId))
     }
 

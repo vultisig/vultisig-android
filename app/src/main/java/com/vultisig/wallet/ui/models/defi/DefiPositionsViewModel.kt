@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
@@ -15,7 +16,6 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.ActiveBondedNode
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
@@ -40,12 +40,14 @@ import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -136,6 +138,8 @@ internal class DefiPositionsViewModel @Inject constructor(
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     val state = MutableStateFlow(DefiPositionsUiModel())
+    
+    private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
     private val loadedTabs = mutableSetOf<String>()
 
@@ -163,6 +167,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
         loadedTabs.add(DefiTab.BONDED.displayName)
 
@@ -207,7 +212,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 val address = runeCoin.address
 
-                bondUseCase.getActiveNodes(vaultId, address)
+                bondedNodesRefreshTrigger
+                    .flatMapLatest { 
+                        bondUseCase.getActiveNodes(vaultId, address)
+                    }
                     .catch { it ->
                         Timber.e(it)
                         state.update {
@@ -249,14 +257,14 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    private fun calculateTotalBonded(nodes: List<ActiveBondedNode>): String {
+    private fun calculateTotalBonded(nodes: List<BondedNodePosition>): String {
         val total = nodes.fold(BigInteger.ZERO) { acc, node ->
             acc + node.amount
         }
         return total.formatAmount(CoinType.THORCHAIN)
     }
 
-    private fun calculateTotalBondedRaw(nodes: List<ActiveBondedNode>): BigDecimal {
+    private fun calculateTotalBondedRaw(nodes: List<BondedNodePosition>): BigDecimal {
         val total = nodes.fold(BigInteger.ZERO) { acc, node ->
             acc + node.amount
         }

@@ -4,8 +4,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins.ThorChain.RUNE
-import com.vultisig.wallet.data.models.Coins.ThorChain.TCY
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
@@ -69,6 +68,8 @@ class TCYStakingService @Inject constructor(
 
         if (stakedAmount == BigInteger.ZERO) {
             return@supervisorScope StakingDetails(
+                id = Coins.ThorChain.TCY.ticker + Coins.ThorChain.TCY.contractAddress,
+                coin = Coins.ThorChain.TCY,
                 stakeAmount = stakedAmount,
                 apr = null,
                 estimatedRewards = null,
@@ -84,6 +85,8 @@ class TCYStakingService @Inject constructor(
         val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
 
         StakingDetails(
+            id = Coins.ThorChain.TCY.ticker + Coins.ThorChain.TCY.contractAddress,
+            coin = Coins.ThorChain.TCY,
             stakeAmount = stakedAmount,
             apr = convertAPYtoAPR(apyDeferred.await()),
             estimatedRewards = estimatedRewardDeferred.await(),
@@ -99,9 +102,11 @@ class TCYStakingService @Inject constructor(
     ): Double {
         // Get prices
         val currency = AppCurrency.USD
-        val tcyPrice = tokenPriceRepository.getCachedPrice(TCY.id, currency)
+        val tcyCoin = Coins.ThorChain.TCY
+        val runeCoin = Coins.ThorChain.RUNE
+        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.id, currency)
             ?: BigDecimal.ZERO
-        val runePrice = tokenPriceRepository.getCachedPrice(RUNE.id, currency)
+        val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.id, currency)
             ?: BigDecimal.ZERO
 
         if (tcyPrice <= BigDecimal.ZERO ||

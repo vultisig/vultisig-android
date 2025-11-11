@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.ChurnEntry
 import com.vultisig.wallet.data.api.MidgardNetworkData
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
@@ -17,13 +18,14 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.Date
 import javax.inject.Inject
+import kotlin.collections.isNotEmpty
 import kotlin.math.pow
 
 interface ThorchainBondUseCase {
 
-    suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<ActiveBondedNode>>
+    suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<BondedNodePosition>>
 
-    suspend fun getActiveNodesRemote(address: String): List<ActiveBondedNode>
+    suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition>
 }
 
 class ThorchainBondUseCaseImpl @Inject constructor(
@@ -31,7 +33,7 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     private val activeBondedNodeRepository: ActiveBondedNodeRepository,
 ) : ThorchainBondUseCase {
 
-    override suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<ActiveBondedNode>> =
+    override suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<BondedNodePosition>> =
         flow {
             try {
                 // First get cache nodes and emit
@@ -68,9 +70,9 @@ class ThorchainBondUseCaseImpl @Inject constructor(
             }
         }.flowOn(Dispatchers.IO)
 
-    override suspend fun getActiveNodesRemote(address: String): List<ActiveBondedNode> =
+    override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> =
         supervisorScope {
-            val activeNodes = mutableListOf<ActiveBondedNode>()
+            val activeNodes = mutableListOf<BondedNodePosition>()
             val bondedNodeAddresses = mutableSetOf<String>()
 
             try {
@@ -86,12 +88,12 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                             myBondAddress = address
                         )
 
-                        val bondNode = ActiveBondedNode.BondedNode(
+                        val bondNode = BondedNodePosition.BondedNode(
                             address = node.address,
                             state = node.status,
                         )
 
-                        val activeNode = ActiveBondedNode(
+                        val activeNode = BondedNodePosition(
                             coinId = Coins.ThorChain.RUNE.id,
                             node = bondNode,
                             amount = myBondMetrics.myBond,
@@ -259,17 +261,3 @@ internal data class NetworkBondInfo(
     val apy: Double,
     val nextChurnDate: Date?,
 )
-
-data class ActiveBondedNode(
-    val node: BondedNode,
-    val amount: BigInteger,
-    val coinId: String,
-    val apy: Double,
-    val nextReward: Double,
-    val nextChurn: Date?,
-) {
-    data class BondedNode(
-        val address: String,
-        val state: String,
-    )
-}
