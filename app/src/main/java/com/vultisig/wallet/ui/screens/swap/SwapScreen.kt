@@ -556,12 +556,12 @@ private fun TokenInput(
     focused: Boolean,
     modifier: Modifier = Modifier,
     @SuppressLint("ComposableLambdaParameterNaming")
-    textFieldContent: @Composable ColumnScope.() -> Unit,
     onDragStart: (Offset) -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragEnd: () -> Unit = {},
     onDragCancel: () -> Unit = {},
     onLongPressStarted: (Offset) -> Unit = {},
+    textFieldContent: @Composable ColumnScope.() -> Unit,
     ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
