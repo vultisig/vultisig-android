@@ -39,7 +39,6 @@ interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
         referralCode: String = "",
         bpsDiscount: Int = 0,
     ): SwapQuote
@@ -242,7 +241,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-        isAffiliate: Boolean,
         referralCode: String,
         bpsDiscount: Int,
     ): SwapQuote {
@@ -255,7 +253,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 toAsset = dstToken.swapAssetName(),
                 amount = thorTokenValue.toString(),
                 interval = "1",
-                isAffiliate = isAffiliate,
                 referralCode = referralCode,
                 bpsDiscount = bpsDiscount,
             )
