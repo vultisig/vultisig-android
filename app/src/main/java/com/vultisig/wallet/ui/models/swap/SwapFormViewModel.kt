@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -552,6 +553,18 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
+    fun selectSrcNetworkPopup(offset: Offset) {
+        viewModelScope.launch {
+            val newSendSrc = selectNetworkPopup(
+                vaultId = vaultId ?: return@launch,
+                selectedChain = selectedSrc.value?.address?.chain ?: return@launch,
+                position = offset,
+            ) ?: return@launch
+
+            selectedSrcId.value = newSendSrc.account.token.id
+        }
+    }
+
     fun selectDstNetwork() {
         viewModelScope.launch {
             val newSendSrc = selectNetwork(
@@ -562,6 +575,21 @@ internal class SwapFormViewModel @Inject constructor(
             selectedDstId.value = newSendSrc.account.token.id
         }
     }
+    fun selectDstNetworkPopup(
+        position: Offset,
+    ) {
+        viewModelScope.launch {
+            val newSendSrc = selectNetworkPopup(
+                vaultId = vaultId ?: return@launch,
+                selectedChain = selectedDst.value?.address?.chain ?: return@launch,
+                position = position
+            ) ?: return@launch
+
+            selectedDstId.value = newSendSrc.account.token.id
+        }
+    }
+
+
 
     private suspend fun selectNetwork(
         vaultId: VaultId,
@@ -573,6 +601,35 @@ internal class SwapFormViewModel @Inject constructor(
                 vaultId = vaultId,
                 selectedNetworkId = selectedChain.id,
                 requestId = requestId,
+                filters = Route.SelectNetwork.Filters.SwapAvailable,
+            )
+        )
+
+        val chain: Chain = requestResultRepository.request(requestId) ?: return null
+
+        if (chain == selectedChain) {
+            return null
+        }
+
+        return addresses.value.firstSendSrc(
+            selectedTokenId = null,
+            filterByChain = chain,
+        )
+    }
+
+    private suspend fun selectNetworkPopup(
+        vaultId: VaultId,
+        selectedChain: Chain,
+        position: Offset,
+    ): SendSrc? {
+        val requestId = Uuid.random().toString()
+        navigator.route(
+            Route.SelectNetworkPopup(
+                requestId = requestId,
+                pressX = position.x,
+                pressY = position.y,
+                vaultId = vaultId,
+                selectedNetworkId = selectedChain.id,
                 filters = Route.SelectNetwork.Filters.SwapAvailable,
             )
         )
