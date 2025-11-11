@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -84,6 +87,8 @@ internal fun ReferralCreateScreen(
         onCreateReferral = model::onCreateReferralCode,
         onCleanReferralClick = model::onCleanReferralClick,
         onDismissError = model::onDismissError,
+        onToggleInfoBox = { model.setInfoBoxVisibility(!state.showInfoBox) },
+        onHideInfoBox = { model.setInfoBoxVisibility(false) },
     )
 }
 
@@ -98,6 +103,8 @@ private fun ReferralCreateScreen(
     onCreateReferral: () -> Unit,
     onCleanReferralClick: () -> Unit,
     onDismissError: () -> Unit,
+    onToggleInfoBox: () -> Unit,
+    onHideInfoBox: () -> Unit,
 ) {
     val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
     val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
@@ -116,30 +123,17 @@ private fun ReferralCreateScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_create_create_referral),
-                onBackClick = onBackPressed,
-                iconRight = R.drawable.ic_info,
-            )
-            AnimatedVisibility(
-                visible = false,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                MoreInfoBox(
-                    text = stringResource(R.string.referral_create_info_content),
-                    title = stringResource(R.string.referral_create_info_title),
-                    modifier = Modifier
-                        .padding(start = 62.dp, end = 8.dp)
-                        .offset(y = statusBarHeightDp)
-                        .wrapContentSize()
-                        .clickable(onClick = {})
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Theme.colors.backgrounds.primary,
+            topBar = {
+                VsTopAppBar(
+                    title = stringResource(R.string.referral_create_create_referral),
+                    onBackClick = onBackPressed,
+                    iconRight = R.drawable.ic_info,
+                    onIconRightClick = onToggleInfoBox,
                 )
-            }
-        },
+            },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -311,9 +305,16 @@ private fun ReferralCreateScreen(
                     VsButtonState.Disabled
                 },
                 onClick = onCreateReferral,
-            )
-        }
-    )
+                )
+            }
+        )
+
+        ShowInfoDialog(
+            isVisible = state.showInfoBox,
+            statusBarHeightDp = statusBarHeightDp,
+            onHideInfoBox = onHideInfoBox,
+        )
+    }
 }
 
 private fun CreateReferralUiState.getFees() =
@@ -334,6 +335,40 @@ private fun CreateReferralUiState.getInnerState() =
         this.searchStatus == SearchStatusType.SUCCESS -> VsTextInputFieldInnerState.Success
         else -> VsTextInputFieldInnerState.Default
     }
+
+@Composable
+private fun ShowInfoDialog(
+    isVisible: Boolean,
+    statusBarHeightDp: Dp,
+    onHideInfoBox: () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onHideInfoBox
+                )
+        ) {
+            MoreInfoBox(
+                text = stringResource(R.string.referral_create_info_content),
+                title = stringResource(R.string.referral_create_info_title),
+                modifier = Modifier
+                    .padding(start = 62.dp, end = 8.dp, top = 8.dp)
+                    .offset(y = statusBarHeightDp)
+                    .wrapContentSize()
+                    .align(Alignment.TopStart)
+                    .clickable(onClick = onHideInfoBox)
+            )
+        }
+    }
+}
 
 @Composable
 private fun SearchReferralTag(
@@ -510,6 +545,8 @@ private fun ReferralCreateScreenPreview() {
         onCreateReferral = {},
         onCleanReferralClick = {},
         onDismissError = {},
+        onToggleInfoBox = {},
+        onHideInfoBox = {},
     )
 }
 
@@ -532,6 +569,8 @@ private fun ReferralCreateScreenLoadingPreview() {
         onCreateReferral = {},
         onCleanReferralClick = {},
         onDismissError = {},
+        onToggleInfoBox = {},
+        onHideInfoBox = {},
     )
 }
 
