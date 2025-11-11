@@ -172,7 +172,6 @@ internal class DefiPositionsViewModel @Inject constructor(
         loadedTabs.add(DefiTab.BONDED.displayName)
 
         viewModelScope.launch {
-            // Initial Loading State
             if (!state.value.selectedPositions.hasBondPositions()) {
                 state.update {
                     it.copy(
@@ -396,7 +395,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             }
 
             StakePositionUiModel(
-                stakeAssetHeader = "Staked RUJI",
+                stakeAssetHeader = "Staked $RUJI_SYMBOL",
                 stakeAmount = formattedAmount,
                 apy = details.apr?.formatPercentage(),
                 canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
@@ -451,7 +450,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val coins = listOf(coin)
 
             val balance =
-                balanceRepository.getCachedTokenBalances(addresses, coins).firstOrNull()
+                balanceRepository.getCachedTokenBalances(addresses, coins)
+                    .find { it.coinId == coin.id }
                     ?.tokenBalance
                     ?.tokenValue
                     ?.value
