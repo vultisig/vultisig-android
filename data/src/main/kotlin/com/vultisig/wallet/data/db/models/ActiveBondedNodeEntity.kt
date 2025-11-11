@@ -35,7 +35,7 @@ data class ActiveBondedNodeEntity(
     val node: BondedNodeEntity,
 
     @ColumnInfo(name = "coin_id")
-    val coinId: String, // foreign key to coin
+    val coinId: String,
 
     @ColumnInfo(name = "vault_id")
     val vaultId: String, // foreign key to vault

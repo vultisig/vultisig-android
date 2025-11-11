@@ -3,10 +3,7 @@ package com.vultisig.wallet.data.db.converters
 import androidx.room.TypeConverter
 import java.util.Date
 
-/**
- * Type converters for ActiveBondedNode entity
- */
-class ActiveBondedNodeConverters {
+class DateConverter {
     
     @TypeConverter
     fun fromDate(value: Long?): Date? {

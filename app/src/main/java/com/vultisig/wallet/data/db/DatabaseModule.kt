@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
 import com.vultisig.wallet.data.db.dao.FolderOrderDao
+import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.VaultDao
@@ -147,5 +148,11 @@ internal interface DatabaseModule {
         fun provideActiveBondedNodeDao(
             appDatabase: AppDatabase,
         ): ActiveBondedNodeDao = appDatabase.activeBondedNodeDao()
+
+        @Provides
+        @Singleton
+        fun provideStakingDetailsDao(
+            appDatabase: AppDatabase,
+        ): StakingDetailsDao = appDatabase.stakingDetailsDao()
     }
 }
