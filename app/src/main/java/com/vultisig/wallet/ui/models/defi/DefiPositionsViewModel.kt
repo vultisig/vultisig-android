@@ -384,7 +384,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private suspend fun createRujiStakePosition(address: String): StakePositionUiModel? {
-        return try {
+        /*return try {
             val details = rujiStakingService.getStakingDetails(address)
 
             val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
@@ -409,7 +409,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         } catch (t: Throwable) {
             Timber.e(t, "Failed to create RUJI stake position")
             null
-        }
+        } */
     }
 
     private suspend fun createTCYStakePosition(address: String): StakePositionUiModel? {
