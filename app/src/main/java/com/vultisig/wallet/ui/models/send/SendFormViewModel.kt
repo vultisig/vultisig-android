@@ -7,7 +7,6 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -369,47 +368,18 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            updateChain(requestId = requestId, selectedChain = selectedChain)
+            val chain: Chain? = requestResultRepository.request(requestId)
+
+            if (chain == null || chain == selectedChain) {
+                return@launch
+            }
+
+            val account = accounts.value.find {
+                it.token.isNativeToken && it.token.chain == chain
+            } ?: return@launch
+
+            selectToken(account.token)
         }
-    }
-
-    fun onNetworkLongPressStarted(position: Offset) {
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
-            val selectedChain = selectedTokenValue?.chain ?: return@launch
-
-            val requestId = Uuid.random().toString()
-
-            navigator.route(
-                Route.SelectNetworkPopup(
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    vaultId = vaultId ,
-                    selectedNetworkId = selectedChain.id,
-                    filters = Route.SelectNetwork.Filters.None
-                )
-            )
-
-            updateChain(requestId, selectedChain)
-        }
-    }
-
-    private suspend fun updateChain(
-        requestId: String,
-        selectedChain: Chain,
-    ) {
-        val chain: Chain? = requestResultRepository.request(requestId)
-
-        if (chain == null || chain == selectedChain) {
-            return
-        }
-
-        val account = accounts.value.find {
-            it.token.isNativeToken && it.token.chain == chain
-        } ?: return
-
-        selectToken(account.token)
     }
 
     fun openTokenSelection() {
@@ -424,36 +394,6 @@ internal class SendFormViewModel @Inject constructor(
                     preselectedNetworkId = selectedChain.id,
                     networkFilters = Route.SelectNetwork.Filters.None,
                     requestId = requestId,
-                )
-            )
-
-            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
-            val newToken = newAssetSelected?.token
-
-            if (newToken != null) {
-                selectToken(newToken)
-                expandSection(SendSections.Address)
-            }
-        }
-    }
-
-    fun openTokenSelectionPopup(
-        position: Offset
-    ) {
-        val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            val requestId = Uuid.random().toString()
-
-            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
-            navigator.route(
-                Route.SelectAssetPopup(
-                    vaultId = vaultId,
-                    preselectedNetworkId = selectedChain.id,
-                    networkFilters = Route.SelectNetwork.Filters.None,
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    selectedAssetId = selectedToken.value?.id.orEmpty()
                 )
             )
 

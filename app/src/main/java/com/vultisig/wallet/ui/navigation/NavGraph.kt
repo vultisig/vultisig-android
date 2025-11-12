@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
-import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
@@ -99,8 +98,8 @@ import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
+import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
-import com.vultisig.wallet.ui.screens.send.sendScreen
 import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
@@ -113,7 +112,6 @@ import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
-import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -513,12 +511,8 @@ internal fun SetupNavGraph(
         }
 
         // send
-        navigation<Send>(
-            startDestination = Send.SendMain
-        ) {
-            sendScreen(
-                navController = navController
-            )
+        composable<Send> {
+            SendScreen()
         }
 
         composable<VerifySend> {
@@ -526,12 +520,8 @@ internal fun SetupNavGraph(
         }
 
         // swap
-        navigation<Swap>(
-            startDestination = Swap.SwapMain
-        ) {
-            swapScreen(
-                navController = navController
-            )
+        composable<Swap> {
+            SwapScreen()
         }
 
         composable<VerifySwap> {

@@ -49,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
@@ -62,8 +61,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
@@ -78,11 +75,9 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
@@ -90,64 +85,48 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 
-
-internal fun NavGraphBuilder.sendScreen(
-    navController: NavHostController,
+@Composable
+internal fun SendScreen(
+    viewModel: SendFormViewModel = hiltViewModel(),
 ) {
-    contentWithFastSelection<Route.Send.SendMain, Route.Send>(
-        navController = navController
-    ) { onNetworkDragStart, onNetworkDrag, onNetworkDragEnd ->
-        val viewModel: SendFormViewModel = hiltViewModel()
-        val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsState()
 
-        SendFormScreen(
-            state = state,
-            addressFieldState = viewModel.addressFieldState,
-            tokenAmountFieldState = viewModel.tokenAmountFieldState,
-            fiatAmountFieldState = viewModel.fiatAmountFieldState,
-            memoFieldState = viewModel.memoFieldState,
-            onDstAddressLostFocus = { /* no-op */ },
-            onTokenAmountLostFocus = viewModel::validateTokenAmount,
-            onDismissError = viewModel::dismissError,
-            onSelectNetworkRequest = viewModel::selectNetwork,
-            onSelectTokenRequest = viewModel::openTokenSelection,
-            onSetOutputAddress = viewModel::setOutputAddress,
-            onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
-            onChoosePercentageAmount = viewModel::choosePercentageAmount,
-            onScanDstAddressRequest = viewModel::scanAddress,
-            onAddressBookClick = viewModel::openAddressBook,
-            onSend = viewModel::send,
-            onRefreshRequest = viewModel::refreshGasFee,
-            onGasSettingsClick = viewModel::openGasSettings,
-            onBackClick = viewModel::back,
-            onToogleAmountInputType = viewModel::toggleAmountInputType,
-            onExpandSection = viewModel::expandSection,
-            onNetworkDragStart = onNetworkDragStart,
-            onNetworkDrag = onNetworkDrag,
-            onNetworkDragEnd = onNetworkDragEnd,
-            onNetworkDragCancel = onNetworkDragEnd,
-            onNetworkLongPressStarted = viewModel::onNetworkLongPressStarted,
-            onAssetDragStart = onNetworkDragStart,
-            onAssetDrag = onNetworkDrag,
-            onAssetDragEnd = onNetworkDragEnd,
-            onAssetDragCancel = onNetworkDragEnd,
-            onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
-        )
+    SendFormScreen(
+        state = state,
+        addressFieldState = viewModel.addressFieldState,
+        tokenAmountFieldState = viewModel.tokenAmountFieldState,
+        fiatAmountFieldState = viewModel.fiatAmountFieldState,
+        memoFieldState = viewModel.memoFieldState,
+        onDstAddressLostFocus = { /* no-op */ },
+        onTokenAmountLostFocus = viewModel::validateTokenAmount,
+        onDismissError = viewModel::dismissError,
+        onSelectNetworkRequest = viewModel::selectNetwork,
+        onSelectTokenRequest = viewModel::openTokenSelection,
+        onSetOutputAddress = viewModel::setOutputAddress,
+        onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
+        onChoosePercentageAmount = viewModel::choosePercentageAmount,
+        onScanDstAddressRequest = viewModel::scanAddress,
+        onAddressBookClick = viewModel::openAddressBook,
+        onSend = viewModel::send,
+        onRefreshRequest = viewModel::refreshGasFee,
+        onGasSettingsClick = viewModel::openGasSettings,
+        onBackClick = viewModel::back,
+        onToogleAmountInputType = viewModel::toggleAmountInputType,
+        onExpandSection = viewModel::expandSection,
+    )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
         val specific = state.specific
 
-        if (state.showGasSettings && selectedChain != null && specific != null) {
-            GasSettingsScreen(
-                chain = selectedChain,
-                specific = specific,
-                onSaveGasSettings = viewModel::saveGasSettings,
-                onDismissGasSettings = viewModel::dismissGasSettings,
-            )
-        }
+    if (state.showGasSettings && selectedChain != null && specific != null) {
+        GasSettingsScreen(
+            chain = selectedChain,
+            specific = specific,
+            onSaveGasSettings = viewModel::saveGasSettings,
+            onDismissGasSettings = viewModel::dismissGasSettings,
+        )
     }
 }
-
 
 @Composable
 private fun SendFormScreen(
@@ -172,18 +151,6 @@ private fun SendFormScreen(
     onBackClick: () -> Unit = {},
     onToogleAmountInputType: (Boolean) -> Unit = {},
     onExpandSection: (SendSections) -> Unit = {},
-
-    onNetworkDragStart: (Offset) -> Unit,
-    onNetworkDrag: (Offset) -> Unit,
-    onNetworkDragEnd: () -> Unit,
-    onNetworkDragCancel: () -> Unit,
-    onNetworkLongPressStarted: (Offset) -> Unit,
-
-    onAssetDragStart: (Offset) -> Unit,
-    onAssetDrag: (Offset) -> Unit,
-    onAssetDragEnd: () -> Unit,
-    onAssetDragCancel: () -> Unit,
-    onAssetLongPressStarted: (Offset) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -280,11 +247,6 @@ private fun SendFormScreen(
                                 chain = state.selectedCoin?.model?.address?.chain
                                     ?: Chain.ThorChain,
                                 onClick = onSelectNetworkRequest,
-                                onDragCancel = onNetworkDragCancel,
-                                onDrag = onNetworkDrag,
-                                onDragStart = onNetworkDragStart,
-                                onDragEnd = onNetworkDragEnd,
-                                onLongPressStarted = onNetworkLongPressStarted,
                             )
 
                             UiSpacer(12.dp)
@@ -296,14 +258,7 @@ private fun SendFormScreen(
                                 TokenChip(
                                     selectedToken = state.selectedCoin,
                                     onSelectTokenClick = onSelectTokenRequest,
-
-                                    onDragCancel = onAssetDragCancel,
-                                    onDrag = onAssetDrag,
-                                    onDragStart = onAssetDragStart,
-                                    onDragEnd = onAssetDragEnd,
-                                    onLongPressStarted = onAssetLongPressStarted,
-
-                                    )
+                                )
 
                                 Column(
                                     horizontalAlignment = Alignment.End,
@@ -1067,17 +1022,5 @@ private fun SendScreenPreview() {
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),
         memoFieldState = TextFieldState(),
-
-        onNetworkDragStart = {},
-        onNetworkDrag = {},
-        onNetworkDragEnd = {},
-        onNetworkDragCancel = {},
-        onNetworkLongPressStarted = {},
-
-        onAssetDragStart = {},
-        onAssetDrag = {},
-        onAssetDragEnd = {},
-        onAssetDragCancel = {},
-        onAssetLongPressStarted = {},
     )
 }
