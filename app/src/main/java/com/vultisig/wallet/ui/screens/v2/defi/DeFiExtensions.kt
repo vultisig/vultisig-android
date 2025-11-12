@@ -59,7 +59,6 @@ internal fun emptyBondedTabUiModel() = BondedTabUiModel(
 )
 
 internal fun emptyStakingTabUiModel() = StakingTabUiModel(
-    isLoading = false,
     positions = emptyList()
 )
 

@@ -52,7 +52,7 @@ internal fun StakingTabContent(
         state.positions.forEach { stakingPosition ->
             StakingWidget(
                 state = stakingPosition,
-                isLoading = state.isLoading,
+                isLoading = stakingPosition.isLoading,
                 onClickStake = onClickStake,
                 onClickUnstake = onClickUnstake,
                 onClickWithdraw = onClickWithdraw,
@@ -313,6 +313,7 @@ private fun StakingWidgetFullActionsPreview() {
     ) {
         StakingWidget(
             state = StakePositionUiModel(
+                coinId = "",
                 stakeAssetHeader = "Staked RUJI",
                 stakeAmount = "1000 RUJI",
                 apy = "18.5%",
@@ -340,6 +341,7 @@ private fun StakingWidgetLoadingPreview() {
     ) {
         StakingWidget(
             state = StakePositionUiModel(
+                coinId = "",
                 stakeAssetHeader = "Staked RUJI",
                 stakeAmount = "0 RUJI",
                 apy = "0%",

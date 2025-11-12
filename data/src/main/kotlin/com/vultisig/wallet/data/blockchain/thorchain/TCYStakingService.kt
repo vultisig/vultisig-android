@@ -7,10 +7,15 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.toValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import wallet.core.jni.CoinType
@@ -26,6 +31,7 @@ import kotlin.math.pow
 class TCYStakingService @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
     companion object {
         private const val TCY_DECIMALS = 8
@@ -48,53 +54,102 @@ class TCYStakingService @Inject constructor(
         defaultExpirationMs = CONSTANTS_CACHE_DURATION_MS
     )
 
-    suspend fun getStakingDetails(
-        address: String,
-    ): StakingDetails = supervisorScope {
-        // 1. Fetch staked amount
-        val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
-        val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
-        val rewardsCoin = Coin(
-            chain = Chain.ThorChain,
-            ticker = "RUNE",
-            logo = "rune",
-            address = "",
-            decimal = 8,
-            hexPublicKey = "",
-            priceProviderID = "thorchain",
-            contractAddress = "",
-            isNativeToken = true
-        )
+    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails?> = flow {
+        try {
+            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+            if (cachedDetails != null) {
+                Timber.d("TCYStakingService: Emitting cached TCY staking position for vault $vaultId")
+                emit(cachedDetails)
+            }
+            
+            // Fetch fresh data from network
+            val freshDetails = getStakingDetailsFromNetwork(address)
+            
+            if (freshDetails != null) {
+                Timber.d("TCYStakingService: Emitting fresh TCY staking position for vault $vaultId")
+                
+                // Update cache
+                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+                stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
+                
+                emit(freshDetails)
+            } else {
+                Timber.d("TCYStakingService: No TCY staking position found for vault $vaultId")
+                
+                // Clear cache if no position exists
+                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+                
+                emit(null)
+            }
+            
+        } catch (e: Exception) {
+            Timber.e(e, "TCYStakingService: Error fetching TCY staking details for vault $vaultId")
+            
+            // If network fails, try to emit cached data
+            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+            if (cachedDetails != null) {
+                Timber.d("TCYStakingService: Network error, using cached TCY position")
+                emit(cachedDetails)
+            } else {
+                // No cache available, propagate the error
+                throw e
+            }
+        }
+    }.flowOn(Dispatchers.IO)
 
-        if (stakedAmount == BigInteger.ZERO) {
-            return@supervisorScope StakingDetails(
+    private suspend fun getStakingDetailsFromNetwork(
+        address: String,
+    ): StakingDetails? = supervisorScope {
+        try {
+            // 1. Fetch staked amount
+            val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
+            val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
+            
+            val rewardsCoin = Coin(
+                chain = Chain.ThorChain,
+                ticker = "RUNE",
+                logo = "rune",
+                address = "",
+                decimal = 8,
+                hexPublicKey = "",
+                priceProviderID = "thorchain",
+                contractAddress = "",
+                isNativeToken = true
+            )
+
+            if (stakedAmount == BigInteger.ZERO) {
+                return@supervisorScope StakingDetails(
+                    id = Coins.ThorChain.TCY.generateId(),
+                    coin = Coins.ThorChain.TCY,
+                    stakeAmount = stakedAmount,
+                    apr = null,
+                    estimatedRewards = null,
+                    nextPayoutDate = null,
+                    rewards = null,
+                    rewardsCoin = rewardsCoin
+                )
+            }
+
+            // 2. Calculate APR and other metrics in parallel
+            val apyDeferred = async { calculateTcyAPY(address, stakeDecimal) }
+            val nextPayoutDeferred = async { calculateNextPayout() }
+            val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
+
+            StakingDetails(
                 id = Coins.ThorChain.TCY.generateId(),
                 coin = Coins.ThorChain.TCY,
                 stakeAmount = stakedAmount,
-                apr = null,
-                estimatedRewards = null,
-                nextPayoutDate = null,
-                rewards = null,
+                apr = convertAPYtoAPR(apyDeferred.await()),
+                estimatedRewards = estimatedRewardDeferred.await(),
+                nextPayoutDate = nextPayoutDeferred.await(),
+                rewards = null, // TCY auto-distributes, no pending rewards
                 rewardsCoin = rewardsCoin
             )
+        } catch (e: Exception) {
+            Timber.e(e, "TCYStakingService: Failed to fetch TCY staking details from network")
+            throw e
         }
-
-        // 2. Calculate APR
-        val apyDeferred = async { calculateTcyAPY(address, stakeDecimal) }
-        val nextPayoutDeferred = async { calculateNextPayout() }
-        val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
-
-        StakingDetails(
-            id = Coins.ThorChain.TCY.generateId(),
-            coin = Coins.ThorChain.TCY,
-            stakeAmount = stakedAmount,
-            apr = convertAPYtoAPR(apyDeferred.await()),
-            estimatedRewards = estimatedRewardDeferred.await(),
-            nextPayoutDate = nextPayoutDeferred.await(),
-            rewards = null, // TCY auto-distributes, no pending rewards
-            rewardsCoin = rewardsCoin
-        )
     }
 
     private suspend fun calculateTcyAPY(

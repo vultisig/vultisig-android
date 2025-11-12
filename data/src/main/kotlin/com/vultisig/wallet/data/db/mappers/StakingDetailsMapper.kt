@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.db.mappers
 
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.db.models.StakingDetailsEntity
-import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import java.math.BigInteger
 
 fun StakingDetails.toEntity(vaultId: String): StakingDetailsEntity {
@@ -19,9 +19,9 @@ fun StakingDetails.toEntity(vaultId: String): StakingDetailsEntity {
     )
 }
 
-fun StakingDetailsEntity.toDomainModel(
-    coins: List<Coin>
-): StakingDetails {
+fun StakingDetailsEntity.toDomainModel(): StakingDetails {
+    val coins = Coins.all
+
     val coin = coins.find { it.id == this.coinId }
         ?: throw IllegalStateException("Coin not found for id: ${this.coinId}")
     
@@ -41,8 +41,6 @@ fun StakingDetailsEntity.toDomainModel(
     )
 }
 
-fun List<StakingDetailsEntity>.toDomainModels(
-    coins: List<Coin>
-): List<StakingDetails> {
-    return this.map { it.toDomainModel(coins) }
+fun List<StakingDetailsEntity>.toDomainModels(): List<StakingDetails> {
+    return this.map { it.toDomainModel() }
 }

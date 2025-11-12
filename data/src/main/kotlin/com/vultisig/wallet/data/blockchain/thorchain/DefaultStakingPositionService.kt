@@ -37,17 +37,11 @@ class DefaultStakingPositionService @Inject constructor(
             val freshDetails = getStakingDetailsFromNetwork(address)
 
             Timber.d("DefaultStakingPositionService: Emitting ${freshDetails.size} fresh staking positions for vault $vaultId")
-            
-            if (freshDetails.isEmpty()) {
-                Timber.d("DefaultStakingPositionService: Clearing staking details cache for vault $vaultId (no positions found)")
-                stakingDetailsRepository.deleteStakingDetails(vaultId)
-            } else {
-                stakingDetailsRepository.deleteStakingDetails(vaultId)
-                stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
-            }
+
+            stakingDetailsRepository.deleteStakingDetails(vaultId)
+            stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
             
             emit(freshDetails)
-            
         } catch (e: Exception) {
             Timber.e(e, "DefaultStakingPositionService: Error fetching staking details for vault $vaultId")
             val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId)
@@ -74,35 +68,27 @@ class DefaultStakingPositionService @Inject constructor(
             val balance = balances.find { cosmosBalance ->
                 cosmosBalance.denom == coin.contractAddress
             }
-            
-            if (balance != null) {
-                val stakeAmount = try {
-                    balance.amount.toBigInteger()
-                } catch (e: NumberFormatException) {
-                    Timber.e(e, "DefaultStakingPositionService: Failed to parse balance amount: ${balance.amount}")
-                    BigInteger.ZERO
-                }
-                
-                if (stakeAmount > BigInteger.ZERO) {
-                    Timber.d("DefaultStakingPositionService: Found ${coin.ticker} balance: $stakeAmount")
-                    
-                    val stakingDetails = StakingDetails(
-                        id = coin.generateId(),
-                        coin = coin,
-                        stakeAmount = stakeAmount,
-                        apr = null, // Fetch APR if available
-                        estimatedRewards = null,
-                        nextPayoutDate = null,
-                        rewards = null,
-                        rewardsCoin = null,
-                    )
-                    stakingDetailsList.add(stakingDetails)
-                } else {
-                    Timber.d("DefaultStakingPositionService: ${coin.ticker} has zero balance")
-                }
-            } else {
-                Timber.d("DefaultStakingPositionService: No balance found for ${coin.ticker} (denom: ${coin.contractAddress})")
+
+            val stakeAmount = try {
+                balance?.amount?.toBigInteger() ?: BigInteger.ZERO
+            } catch (e: NumberFormatException) {
+                Timber.e(e, "DefaultStakingPositionService: Failed to parse balance amount: $balance")
+                BigInteger.ZERO
             }
+
+            Timber.d("DefaultStakingPositionService: Found ${coin.ticker} balance: $stakeAmount")
+
+            val stakingDetails = StakingDetails(
+                id = coin.generateId(),
+                coin = coin,
+                stakeAmount = stakeAmount,
+                apr = null, // Fetch APR if available
+                estimatedRewards = null,
+                nextPayoutDate = null,
+                rewards = null,
+                rewardsCoin = null,
+            )
+            stakingDetailsList.add(stakingDetails)
         }
         
         return stakingDetailsList

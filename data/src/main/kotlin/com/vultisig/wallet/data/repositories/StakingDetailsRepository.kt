@@ -27,19 +27,16 @@ interface StakingDetailsRepository {
 @Singleton
 internal class StakingDetailsRepositoryImpl @Inject constructor(
     private val stakingDetailsDao: StakingDetailsDao,
-    private val vaultRepository: VaultRepository,
 ) : StakingDetailsRepository {
 
     override suspend fun getStakingDetails(vaultId: String): List<StakingDetails> {
-        val vault = vaultRepository.get(vaultId) ?: return emptyList()
         return stakingDetailsDao.getAllByVaultIdSuspend(vaultId)
-            .toDomainModels(vault.coins)
+            .toDomainModels()
     }
 
     override suspend fun getStakingDetails(vaultId: String, coinId: String): StakingDetails? {
-        val vault = vaultRepository.get(vaultId) ?: return null
         return stakingDetailsDao.getByVaultIdAndCoinId(vaultId, coinId)
-            ?.toDomainModel(vault.coins)
+            ?.toDomainModel()
     }
 
     override suspend fun saveStakingDetails(vaultId: String, stakingDetails: StakingDetails) {
