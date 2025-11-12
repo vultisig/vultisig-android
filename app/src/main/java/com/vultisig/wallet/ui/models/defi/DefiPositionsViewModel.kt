@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
@@ -133,6 +134,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val tcyStakingService: TCYStakingService,
     private val balanceRepository: BalanceRepository,
     private val defiPositionsRepository: DefiPositionsRepository,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
@@ -459,8 +461,14 @@ internal class DefiPositionsViewModel @Inject constructor(
             val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
                     coin.ticker.contains("ytcy", ignoreCase = true)
 
+            val header = if (supportsMint) {
+                "Minted"
+            } else {
+                "Staked"
+            }
+
             return StakePositionUiModel(
-                stakeAssetHeader = "Staked ${coin.ticker}",
+                stakeAssetHeader = "$header ${coin.ticker}",
                 stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
                 apy = null,
                 supportsMint = supportsMint,
