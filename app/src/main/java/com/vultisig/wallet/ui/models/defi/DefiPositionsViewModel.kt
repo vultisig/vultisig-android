@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
@@ -321,6 +320,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 val vault = withContext(Dispatchers.IO) {
                     vaultRepository.get(vaultId)
                 }
+
                 val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
                 if (runeCoin == null) {
@@ -341,28 +341,18 @@ internal class DefiPositionsViewModel @Inject constructor(
                 val address = runeCoin.address
                 val coinsToLoad = supportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
+                }.map {
+                    coin -> coin.id
                 }
 
-                createRujiStakePosition(address, vaultId)
-                createTCYStakePosition(address, vaultId)
-                createGenericStakePosition(address, vaultId)
+                if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)){
+                    createRujiStakePosition(address, vaultId)
+                }
+                if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
+                    createTCYStakePosition(address, vaultId)
+                }
 
-                /*coinsToLoad.forEach { coin ->
-                    try {
-                        when {
-                            coin.ticker.equals("ruji", ignoreCase = true) ->
-                                createRujiStakePosition(address, vaultId)
-
-                            coin.ticker.equals("tcy", ignoreCase = true) ->
-                                createTCYStakePosition(address, vaultId)
-
-                            else ->
-                                createGenericStakePosition(address, vaultId)
-                        }
-                    } catch (t: Throwable) {
-                        Timber.e(t)
-                    }
-                } */
+                createGenericStakePosition(address, vaultId, coinsToLoad)
 
             } catch (t: Throwable) {
                 Timber.e(t, "Failed to load staking positions")
@@ -472,6 +462,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun createGenericStakePosition(
         address: String,
         vaultId: String,
+        coinsToLoad: List<String>,
     ) {
         viewModelScope.launch {
             defaultStakingPositionService.getStakingDetails(address, vaultId)
@@ -489,34 +480,36 @@ internal class DefiPositionsViewModel @Inject constructor(
                     }
                 }
                 .collect { defaultPositions ->
-                    defaultPositions.map { position ->
-                        val stakeAmount =
-                            Chain.ThorChain.coinType.toValue(position.stakeAmount)
-                        val coin =
-                            position.coin
-                        val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
-                                coin.ticker.contains("ytcy", ignoreCase = true)
+                    defaultPositions.forEach { position ->
+                        if (coinsToLoad.contains(position.coin.id)) {
+                            val stakeAmount =
+                                Chain.ThorChain.coinType.toValue(position.stakeAmount)
+                            val coin =
+                                position.coin
+                            val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
+                                    coin.ticker.contains("ytcy", ignoreCase = true)
 
-                        val header = if (supportsMint) {
-                            "Minted"
-                        } else {
-                            "Staked"
+                            val header = if (supportsMint) {
+                                "Minted"
+                            } else {
+                                "Staked"
+                            }
+                            val position = StakePositionUiModel(
+                                coinId = position.coin.id,
+                                stakeAssetHeader = "$header ${coin.ticker}",
+                                stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                apy = null,
+                                supportsMint = supportsMint,
+                                canWithdraw = false, // TCY auto-distributes rewards
+                                canStake = true,
+                                canUnstake = true,
+                                rewards = null,
+                                nextReward = null,
+                                nextPayout = null,
+                            )
+
+                            updateExistingPosition(position)
                         }
-                        val position = StakePositionUiModel(
-                            coinId = position.coin.id,
-                            stakeAssetHeader = "$header ${coin.ticker}",
-                            stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
-                            apy = null,
-                            supportsMint = supportsMint,
-                            canWithdraw = false, // TCY auto-distributes rewards
-                            canStake = true,
-                            canUnstake = true,
-                            rewards = null,
-                            nextReward = null,
-                            nextPayout = null,
-                        )
-
-                        updateExistingPosition(position)
                     }
                 }
         }

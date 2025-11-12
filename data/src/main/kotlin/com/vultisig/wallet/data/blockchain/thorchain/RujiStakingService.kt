@@ -33,7 +33,6 @@ class RujiStakingService @Inject constructor(
 
             if (freshDetails != null) {
                 Timber.d("RujiStakingService: Emitting fresh RUJI staking position for vault $vaultId")
-
                 // Update cache
                 stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
                 stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
