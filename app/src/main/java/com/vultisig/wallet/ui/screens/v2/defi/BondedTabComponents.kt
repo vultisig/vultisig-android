@@ -183,8 +183,8 @@ internal fun ActiveNodesWidget(
 
             NodeContent(
                 node = node,
-                onClickBond = { onClickBond(node.address) },
-                onClickUnbond = { onClickUnbond(node.address) }
+                onClickBond = { onClickBond(node.fullAddress) },
+                onClickUnbond = { onClickUnbond(node.fullAddress) }
             )
         }
     }
@@ -330,6 +330,7 @@ private fun BondedTabContentPreview() {
     val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -338,6 +339,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.STANDBY,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -346,6 +348,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1whit...789",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.WHITELISTED,
             apy = "0%",
             bondedAmount = "100 RUNE",
@@ -354,6 +357,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1ready...abc",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.READY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",
@@ -362,6 +366,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1dis...def",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.DISABLED,
             apy = "0%",
             bondedAmount = "250 RUNE",
@@ -432,6 +437,7 @@ private fun ActiveNodesWidgetPreview() {
     val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -440,6 +446,7 @@ private fun ActiveNodesWidgetPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.DISABLED,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -448,6 +455,7 @@ private fun ActiveNodesWidgetPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1stand...456",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.STANDBY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",

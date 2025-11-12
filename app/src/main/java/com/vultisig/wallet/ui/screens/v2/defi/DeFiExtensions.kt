@@ -65,10 +65,18 @@ internal fun emptyStakingTabUiModel() = StakingTabUiModel(
 internal fun BondedNodePosition.toUiModel(): BondedNodeUiModel {
     return BondedNodeUiModel(
         address = node.address.formatAddress(),
+        fullAddress = node.address,
         status = node.state.fromApiStatus(),
         apy = apy.formatPercentage(),
         bondedAmount = amount.formatAmount(CoinType.THORCHAIN),
         nextAward = nextReward.formatRuneReward(),
         nextChurn = nextChurn.formatDate(),
     )
+}
+
+enum class DeFiNavActions(val type: String){
+    BOND("bond"), UNBOND("unbond"), WITHDRAW_RUJI("withdraw"),
+    STAKE_RUJI("stake_ruji"), UNSTAKE_RUJI("unstake_ruji"),
+    STAKE_TCY("stake_tcy"), UNSTAKE_TCY("unstake_tcy"), MINT_YRUNE("mint_yrune"),
+    REDEEM_YRUNE("redeem_yrune"), MINT_YTCY("mint_ytcy"), REDEEM_YTCY("redeem_ytcy"),
 }

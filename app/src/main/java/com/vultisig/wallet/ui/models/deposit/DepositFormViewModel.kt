@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -210,14 +211,20 @@ internal class DepositFormViewModel @Inject constructor(
 
     private val address = MutableStateFlow<Address?>(null)
     private var addressJob: Job? = null
+    private var depositTypeAction: String? = null
+    private var bondAddress: String? = null
 
     fun loadData(
         vaultId: String,
         chainId: String,
+        depositType: String?,
+        bondAddress: String?,
     ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
+        this.depositTypeAction = depositType
+        this.bondAddress = bondAddress
 
         val depositOptions = when (chain) {
             Chain.ThorChain -> listOf(
@@ -379,6 +386,14 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         collectTcyStakeAutoCompound()
+
+        setMetadataInfo()
+    }
+
+    private fun setMetadataInfo() {
+        if (!bondAddress.isNullOrBlank()) {
+            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
+        }
     }
 
     private suspend fun updateTokenAmount(

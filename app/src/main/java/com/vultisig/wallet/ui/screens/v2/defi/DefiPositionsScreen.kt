@@ -182,6 +182,7 @@ private fun DefiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -190,6 +191,7 @@ private fun DefiPositionsScreenPreviewWithData() {
         ),
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "",
             status = BondNodeState.STANDBY,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -198,6 +200,7 @@ private fun DefiPositionsScreenPreviewWithData() {
         ),
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1ijkl...456",
+            fullAddress = "",
             status = BondNodeState.READY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",

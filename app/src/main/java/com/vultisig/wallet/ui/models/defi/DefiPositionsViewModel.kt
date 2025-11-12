@@ -112,6 +112,7 @@ internal data class StakePositionUiModel(
 
 internal data class BondedNodeUiModel(
     val address: String,
+    val fullAddress: String,
     val status: BondNodeState,
     val apy: String,
     val bondedAmount: String,
@@ -681,7 +682,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.navigate(
                     Destination.Deposit(
                         vaultId = vaultId,
-                        chainId = Chain.ThorChain.id
+                        chainId = Chain.ThorChain.id,
+                        bondAddress = nodeAddress,
+                        depositType = "bond",
                     )
                 )
             } else {
@@ -699,7 +702,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.navigate(
                     Destination.Deposit(
                         vaultId = vaultId,
-                        chainId = Chain.ThorChain.id
+                        chainId = Chain.ThorChain.id,
+                        bondAddress = nodeAddress,
+                        depositType = "unbond",
                     )
                 )
             } else {
