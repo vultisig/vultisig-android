@@ -610,15 +610,29 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     fun onClickBond(nodeAddress: String) {
-        // TODO: Implement new navigation screen
+        // TODO: Implement bond to specific node
     }
 
     fun onClickUnBond(nodeAddress: String) {
-        // TODO: Implement new navigation screen
+        // TODO: Implement unbond from specific node
     }
 
     fun bondToNode() {
-        // TODO: Implement new navigation screen
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+            
+            if (runeCoin != null) {
+                navigator.navigate(
+                    Destination.Deposit(
+                        vaultId = vaultId,
+                        chainId = Chain.ThorChain.id
+                    )
+                )
+            } else {
+                Timber.e("RUNE coin not found in vault")
+            }
+        }
     }
 
     fun onBackClick() {
