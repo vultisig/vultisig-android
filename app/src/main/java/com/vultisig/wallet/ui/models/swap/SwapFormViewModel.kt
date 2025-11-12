@@ -4,7 +4,6 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -553,18 +552,6 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
-    fun selectSrcNetworkPopup(offset: Offset) {
-        viewModelScope.launch {
-            val newSendSrc = selectNetworkPopup(
-                vaultId = vaultId ?: return@launch,
-                selectedChain = selectedSrc.value?.address?.chain ?: return@launch,
-                position = offset,
-            ) ?: return@launch
-
-            selectedSrcId.value = newSendSrc.account.token.id
-        }
-    }
-
     fun selectDstNetwork() {
         viewModelScope.launch {
             val newSendSrc = selectNetwork(
@@ -575,21 +562,6 @@ internal class SwapFormViewModel @Inject constructor(
             selectedDstId.value = newSendSrc.account.token.id
         }
     }
-    fun selectDstNetworkPopup(
-        position: Offset,
-    ) {
-        viewModelScope.launch {
-            val newSendSrc = selectNetworkPopup(
-                vaultId = vaultId ?: return@launch,
-                selectedChain = selectedDst.value?.address?.chain ?: return@launch,
-                position = position
-            ) ?: return@launch
-
-            selectedDstId.value = newSendSrc.account.token.id
-        }
-    }
-
-
 
     private suspend fun selectNetwork(
         vaultId: VaultId,
@@ -601,35 +573,6 @@ internal class SwapFormViewModel @Inject constructor(
                 vaultId = vaultId,
                 selectedNetworkId = selectedChain.id,
                 requestId = requestId,
-                filters = Route.SelectNetwork.Filters.SwapAvailable,
-            )
-        )
-
-        val chain: Chain = requestResultRepository.request(requestId) ?: return null
-
-        if (chain == selectedChain) {
-            return null
-        }
-
-        return addresses.value.firstSendSrc(
-            selectedTokenId = null,
-            filterByChain = chain,
-        )
-    }
-
-    private suspend fun selectNetworkPopup(
-        vaultId: VaultId,
-        selectedChain: Chain,
-        position: Offset,
-    ): SendSrc? {
-        val requestId = Uuid.random().toString()
-        navigator.route(
-            Route.SelectNetworkPopup(
-                requestId = requestId,
-                pressX = position.x,
-                pressY = position.y,
-                vaultId = vaultId,
-                selectedNetworkId = selectedChain.id,
                 filters = Route.SelectNetwork.Filters.SwapAvailable,
             )
         )
@@ -777,11 +720,11 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId).map { addresses ->
-                    addresses.filter { it.chain.isSwapSupported }
-                }.catch {
-                    Timber.e(it)
-                    emit(emptyList())
-                }.collect(addresses)
+                addresses.filter { it.chain.isSwapSupported }
+            }.catch {
+                Timber.e(it)
+                emit(emptyList())
+            }.collect(addresses)
         }
     }
 
@@ -822,44 +765,44 @@ internal class SwapFormViewModel @Inject constructor(
     private fun calculateGas() {
         viewModelScope.launch {
             selectedSrc.filterNotNull().map {
-                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
-                }.catch {
-                    Timber.e(it)
-                }.collect { (selectedSrc, gasFee) ->
-                    this@SwapFormViewModel.gasFee.value = gasFee
-                    val selectedAccount = selectedSrc.account
-                    val chain = selectedAccount.token.chain
-                    val selectedToken = selectedAccount.token
-                    val srcAddress = selectedAccount.token.address
-                    try {
-                        val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
+                it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
+            }.catch {
+                Timber.e(it)
+            }.collect { (selectedSrc, gasFee) ->
+                this@SwapFormViewModel.gasFee.value = gasFee
+                val selectedAccount = selectedSrc.account
+                val chain = selectedAccount.token.chain
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedAccount.token.address
+                try {
+                    val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
 
-                        val estimatedNetworkFee = gasFeeToEstimatedFee(
-                            GasFeeParams(
-                                gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                    (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                                } else {
-                                    BigInteger.valueOf(1)
-                                },
-                                gasFee = gasFee,
-                                selectedToken = selectedToken,
-                            )
+                    val estimatedNetworkFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedToken,
                         )
+                    )
 
-                        estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
-                        estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
+                    estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
+                    estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
 
-                        uiState.update {
-                            it.copy(
-                                networkFee = estimatedNetworkFee.formattedTokenValue,
-                                networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
-                            )
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
+                    uiState.update {
+                        it.copy(
+                            networkFee = estimatedNetworkFee.formattedTokenValue,
+                            networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
+                        )
                     }
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
                 }
+            }
         }
     }
 
@@ -881,9 +824,9 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedSrc.filterNotNull(),
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }.distinctUntilChanged().combine(
-                    srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
-                    address to srcAmount
-                }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
+                srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
+                address to srcAmount
+            }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
@@ -955,6 +898,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
+                                        isAffiliate = isAffiliate,
                                         referralCode = referral.orEmpty(),
                                         bpsDiscount = vultBPSDiscount,
                                     )
@@ -1290,7 +1234,10 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun hideError() {
         uiState.update {
-            it.copy(error = null)
+            it.copy(
+                error = null,
+                formError = null
+            )
         }
     }
 

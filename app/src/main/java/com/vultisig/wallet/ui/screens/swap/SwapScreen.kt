@@ -13,7 +13,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -22,10 +21,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -55,10 +57,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,8 +72,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -85,27 +83,25 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.utils.timerFlow
 import com.vultisig.wallet.ui.components.TokenLogo
-import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
-import com.vultisig.wallet.ui.components.library.form.FormError
+import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
+import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
-import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.screens.swap.components.ErrorBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -116,37 +112,25 @@ import java.math.BigInteger
 import java.util.Locale
 import kotlin.time.Duration
 
-internal fun NavGraphBuilder.swapScreen(
-    navController: NavHostController,
+@Composable
+internal fun SwapScreen(
+    model: SwapFormViewModel = hiltViewModel(),
 ) {
-    contentWithFastSelection<Route.Swap.SwapMain, Route.Swap>(
-        navController = navController
-    ) { onDragStart, onDrag, onDragEnd ->
+    val state by model.uiState.collectAsState()
 
-        val model: SwapFormViewModel = hiltViewModel()
-        val state by model.uiState.collectAsState()
-
-        SwapScreen(
-            state = state,
-            srcAmountTextFieldState = model.srcAmountState,
-            onBackClick = model::back,
-            onSwap = model::swap,
-            onSelectSrcNetworkClick = model::selectSrcNetwork,
-            onSelectSrcToken = model::selectSrcToken,
-            onSelectDstNetworkClick = model::selectDstNetwork,
-            onDismissError = model::hideError,
-            onSelectDstToken = model::selectDstToken,
-            onFlipSelectedTokens = model::flipSelectedTokens,
-            onSelectSrcPercentage = model::selectSrcPercentage,
-
-            onDragStart = onDragStart,
-            onDragCancel = onDragEnd,
-            onDragEnd = onDragEnd,
-            onDrag = onDrag,
-            onDstLongPressStarted = model::selectDstNetworkPopup,
-            onSrcLongPressStarted = model::selectSrcNetworkPopup,
-        )
-    }
+    SwapScreen(
+        state = state,
+        srcAmountTextFieldState = model.srcAmountState,
+        onBackClick = model::back,
+        onSwap = model::swap,
+        onSelectSrcNetworkClick = model::selectSrcNetwork,
+        onSelectSrcToken = model::selectSrcToken,
+        onSelectDstNetworkClick = model::selectDstNetwork,
+        onDismissError = model::hideError,
+        onSelectDstToken = model::selectDstToken,
+        onFlipSelectedTokens = model::flipSelectedTokens,
+        onSelectSrcPercentage = model::selectSrcPercentage,
+    )
 }
 
 
@@ -163,13 +147,6 @@ internal fun SwapScreen(
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
     onSelectSrcPercentage: (Float) -> Unit = {},
-
-    onDragStart: (Offset) -> Unit = {},
-    onDrag: (Offset) -> Unit = {},
-    onDragEnd: () -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onDstLongPressStarted: (Offset) -> Unit = {},
-    onSrcLongPressStarted: (Offset) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -199,15 +176,6 @@ internal fun SwapScreen(
             )
         },
         content = { contentPadding ->
-            val errorText = state.error
-            if (errorText != null) {
-                UiAlertDialog(
-                    title = stringResource(R.string.dialog_default_error_title),
-                    text = errorText.asString(),
-                    confirmTitle = stringResource(R.string.try_again),
-                    onDismiss = onDismissError,
-                )
-            }
 
             var topCenter by remember {
                 mutableStateOf(Offset.Zero)
@@ -217,227 +185,241 @@ internal fun SwapScreen(
             }
             val space = 8.dp
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(contentPadding)
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 16.dp
-                    ),
-            ) {
-                Box {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(space)
-                    ) {
-                        Box {
-                            val rotation = remember { Animatable(0f) }
+            var flipButtonBottomCenter by remember {
+                mutableStateOf(Offset.Zero)
+            }
 
-                            // Trigger spin when this is incremented
-                            var spinTrigger by remember { mutableIntStateOf(0) }
+            val error = state.error ?: state.formError
 
-                            // Launch the animation every time trigger changes
-                            LaunchedEffect(spinTrigger) {
-                                rotation.snapTo(0f)
-                                rotation.animateTo(
-                                    targetValue = 180f,
-                                    animationSpec = tween(
-                                        durationMillis = 600,
-                                        easing = FastOutSlowInEasing
+            Box {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(contentPadding)
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 16.dp
+                        ),
+                ) {
+                    Box {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(space)
+                        ) {
+                            Box {
+                                val rotation = remember { Animatable(0f) }
+
+                                // Trigger spin when this is incremented
+                                var spinTrigger by remember { mutableIntStateOf(0) }
+
+                                // Launch the animation every time trigger changes
+                                LaunchedEffect(spinTrigger) {
+                                    rotation.snapTo(0f)
+                                    rotation.animateTo(
+                                        targetValue = 180f,
+                                        animationSpec = tween(
+                                            durationMillis = 600,
+                                            easing = FastOutSlowInEasing
+                                        )
                                     )
+                                }
+
+                                TokenInput(
+                                    isLoading = state.isLoading,
+                                    title = stringResource(R.string.swap_form_from_title),
+                                    selectedToken = state.selectedSrcToken,
+                                    fiatValue = state.srcFiatValue,
+                                    onSelectNetworkClick = onSelectSrcNetworkClick,
+                                    onSelectTokenClick = onSelectSrcToken,
+                                    shape = RoundedWithCutoutShape(
+                                        cutoutPosition = CutoutPosition.Bottom,
+                                        cutoutOffsetY = -space / 2,
+                                        cutoutRadius = 28.dp,
+                                        onCircleBoundsChanged = {
+                                            topCenter = it
+                                        }
+                                    ),
+                                    focused = true,
+                                    textFieldContent = {
+                                        VsBasicTextField(
+                                            textFieldState = srcAmountTextFieldState,
+                                            style = Theme.brockmann.headings.title2,
+                                            color = Theme.colors.text.light,
+                                            textAlign = TextAlign.End,
+                                            hint = "0",
+                                            hintColor = Theme.colors.text.extraLight,
+                                            hintStyle = Theme.brockmann.headings.title2,
+                                            lineLimits = TextFieldLineLimits.SingleLine,
+                                            interactionSource = interactionSource,
+                                            // TODO onAmountLostFocus
+                                            keyboardOptions = KeyboardOptions(
+                                                keyboardType = KeyboardType.Number,
+                                                imeAction = ImeAction.Done,
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                        )
+                                    }
                                 )
+                                Box(
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            this.translationY = -size.height / 2 + topCenter.y
+                                            this.translationX = (topCenter.x + bottomCenter.x).div(2) - (size.width) / 2
+                                        }
+                                        .size(40.dp)
+                                        .background(
+                                            color = if (error != null) Theme.colors.alerts.error else Theme.colors.persianBlue400,
+                                            shape = CircleShape,
+                                        )
+                                        .padding(all = space)
+                                        .onGloballyPositioned {
+                                            flipButtonBottomCenter = it.boundsInRoot().bottomCenter
+                                        }
+                                    ,
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AnimatedContent(
+                                        targetState = state.isLoading || state.isLoadingNextScreen,
+                                        transitionSpec = {
+                                            fadeIn(animationSpec = tween(150)) togetherWith
+                                                    fadeOut(animationSpec = tween(150))
+                                        },
+                                    ) { isLoading ->
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = Theme.colors.text.primary,
+                                                strokeWidth = 2.dp,
+                                            )
+                                        } else {
+                                            Icon(
+                                                painter = painterResource(
+                                                    id = if (error == null) R.drawable.ic_arrow_bottom_top
+                                                    else R.drawable.iconwarning
+                                                ),
+                                                contentDescription = null,
+                                                tint = Theme.colors.text.primary,
+                                                modifier = Modifier
+                                                    .clickable {
+                                                        spinTrigger++
+                                                        onFlipSelectedTokens()
+                                                    }
+                                                    .size(24.dp)
+                                                    .graphicsLayer {
+                                                        rotationZ =
+                                                            if (error == null) rotation.value else 0f
+                                                    },
+                                            )
+                                        }
+                                    }
+                                }
                             }
 
-
-
                             TokenInput(
+                                title = stringResource(R.string.swap_form_dst_token_title),
                                 isLoading = state.isLoading,
-                                title = stringResource(R.string.swap_form_from_title),
-                                selectedToken = state.selectedSrcToken,
-                                fiatValue = state.srcFiatValue,
-                                onSelectNetworkClick = onSelectSrcNetworkClick,
-                                onSelectTokenClick = onSelectSrcToken,
+                                selectedToken = state.selectedDstToken,
+                                fiatValue = state.estimatedDstFiatValue,
+                                onSelectNetworkClick = onSelectDstNetworkClick,
+                                onSelectTokenClick = onSelectDstToken,
                                 shape = RoundedWithCutoutShape(
-                                    cutoutPosition = CutoutPosition.Bottom,
-                                    cutoutOffsetY = -space/2,
+                                    cutoutPosition = CutoutPosition.Top,
+                                    cutoutOffsetY = -space / 2,
                                     cutoutRadius = 28.dp,
                                     onCircleBoundsChanged = {
-                                        topCenter = it
+                                        bottomCenter = it
                                     }
                                 ),
-                                focused = true,
-                                onDrag = onDrag,
-                                onDragEnd = onDragEnd,
-                                onDragCancel = onDragCancel,
-                                onDragStart = onDragStart,
-                                onLongPressStarted = onSrcLongPressStarted,
+                                focused = false,
                                 textFieldContent = {
-                                    VsBasicTextField(
-                                        textFieldState = srcAmountTextFieldState,
+                                    Text(
+                                        text = state.estimatedDstTokenValue,
                                         style = Theme.brockmann.headings.title2,
                                         color = Theme.colors.text.light,
                                         textAlign = TextAlign.End,
-                                        hint = "0",
-                                        hintColor = Theme.colors.text.extraLight,
-                                        hintStyle = Theme.brockmann.headings.title2,
-                                        lineLimits = TextFieldLineLimits.SingleLine,
-                                        interactionSource = interactionSource,
-                                        // TODO onAmountLostFocus
-                                        keyboardOptions = KeyboardOptions(
-                                            keyboardType = KeyboardType.Number,
-                                            imeAction = ImeAction.Done,
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
+                                        maxLines = 1,
                                     )
                                 }
                             )
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        this.translationY = -size.height/2 + topCenter.y
-                                        this.translationX = (topCenter.x + bottomCenter.x).div(2) - (size.width)/2
-                                    }
-                                    .size(40.dp)
-                                    .background(
-                                        color = Theme.colors.persianBlue400,
-                                        shape = CircleShape,
-                                    )
-                                    .padding(all = space),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AnimatedContent(
-                                    targetState = state.isLoading || state.isLoadingNextScreen,
-                                    transitionSpec = {
-                                        fadeIn(animationSpec = tween(150)) togetherWith
-                                                fadeOut(animationSpec = tween(150))
-                                    },
-                                ) { isLoading ->
-                                    if (isLoading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = Theme.colors.text.primary,
-                                            strokeWidth = 2.dp,
-                                        )
-                                    } else {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_arrow_bottom_top),
-                                            contentDescription = null,
-                                            tint = Theme.colors.text.primary,
-                                            modifier = Modifier
-                                                .clickable {
-                                                    spinTrigger++
-                                                    onFlipSelectedTokens()
-                                                }
-                                                .size(24.dp)
-                                                .graphicsLayer {
-                                                    rotationZ = rotation.value
-                                                },
-                                        )
-                                    }
-                                }
-                            }
                         }
+                    }
 
-                        TokenInput(
-                            title = stringResource(R.string.swap_form_dst_token_title),
-                            isLoading = state.isLoading,
-                            selectedToken = state.selectedDstToken,
-                            fiatValue = state.estimatedDstFiatValue,
-                            onSelectNetworkClick = onSelectDstNetworkClick,
-                            onSelectTokenClick = onSelectDstToken,
-                            shape = RoundedWithCutoutShape(
-                                cutoutPosition = CutoutPosition.Top,
-                                cutoutOffsetY = -space/2,
-                                cutoutRadius = 28.dp,
-                                onCircleBoundsChanged = {
-                                    bottomCenter = it
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier
+                            .padding(
+                                horizontal = 8.dp,
+                            )
+                    ) {
+                        val placeHolderModifier = Modifier
+                            .height(16.dp)
+                            .width(80.dp)
+                        FormDetails2(
+                            title = stringResource(R.string.swap_screen_provider_title),
+                            value = state.provider.asString(),
+                        )
+
+                        FormDetails2(
+                            title = stringResource(R.string.swap_form_estimated_fees_title),
+                            value = state.fee,
+                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                        )
+
+                        FormDetails2(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = buildAnnotatedString {
+                                append(stringResource(R.string.swap_form_gas_title))
+                            },
+                            value = buildAnnotatedString {
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = Theme.colors.neutral100,
+                                    )
+                                ) {
+                                    append(state.networkFee)
                                 }
-                            ),
-                            onDrag = onDrag,
-                            onDragEnd = onDragEnd,
-                            onDragCancel = onDragCancel,
-                            onDragStart = onDragStart,
-                            onLongPressStarted = onDstLongPressStarted,
-                            focused = false,
-                            textFieldContent = {
-                                Text(
-                                    text = state.estimatedDstTokenValue,
-                                    style = Theme.brockmann.headings.title2,
-                                    color = Theme.colors.text.light,
-                                    textAlign = TextAlign.End,
-                                    maxLines = 1,
-                                )
-                            }
+                                append(" ")
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = Theme.colors.neutral400,
+                                    )
+                                ) {
+                                    append(
+                                        if (state.networkFeeFiat.isNotEmpty())
+                                            "(~${state.networkFeeFiat})"
+                                        else ""
+                                    )
+                                }
+                            },
+                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                        )
+
+                        FormDetails2(
+                            title = stringResource(R.string.swap_form_total_fees_title),
+                            value = state.totalFee,
+                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
                         )
                     }
                 }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 8.dp,
-                        )
-                ) {
-                    val placeHolderModifier = Modifier
-                        .height(16.dp)
-                        .width(80.dp)
-                    FormDetails2(
-                        title = stringResource(R.string.swap_screen_provider_title),
-                        value = state.provider.asString(),
-                    )
 
-                    FormDetails2(
-                        title = stringResource(R.string.swap_form_estimated_fees_title),
-                        value = state.fee,
-                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                error?.let {
+                    val errorBoxWidth = 200.dp
+                    val errorWidthBoxPx = errorBoxWidth.toPx().toInt()
+                    val spacePx = space.toPx().toInt()
+                    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx().toInt()
+                    ErrorBox(
+                        modifier = Modifier.width(errorBoxWidth),
+                        errorMessage = error.asString(),
+                        onDismissClick = onDismissError,
+                        errorTitle = stringResource(R.string.dialog_default_error_title),
+                        offset = IntOffset(
+                            x = flipButtonBottomCenter.x.toInt() - errorWidthBoxPx.div(2),
+                            y = flipButtonBottomCenter.y.toInt() + spacePx - statusBarHeight
+                        ),
                     )
-
-                    FormDetails2(
-                        modifier = Modifier.fillMaxWidth(),
-                        title = buildAnnotatedString {
-                            append(stringResource(R.string.swap_form_gas_title))
-                        },
-                        value = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = Theme.colors.neutral100,
-                                )
-                            ) {
-                                append(state.networkFee)
-                            }
-                            append(" ")
-                            withStyle(
-                                style = SpanStyle(
-                                    color = Theme.colors.neutral400,
-                                )
-                            ) {
-                                append(
-                                    if (state.networkFeeFiat.isNotEmpty())
-                                        "(~${state.networkFeeFiat})"
-                                    else ""
-                                )
-                            }
-                        },
-                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
-                    )
-
-                    FormDetails2(
-                        title = stringResource(R.string.swap_form_total_fees_title),
-                        value = state.totalFee,
-                        placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
-                    )
-                }
-
-                when {
-                    state.formError != null -> {
-                        FormError(
-                            errorMessage = state.formError.asString()
-                        )
-                    }
                 }
             }
 
@@ -556,13 +538,8 @@ private fun TokenInput(
     focused: Boolean,
     modifier: Modifier = Modifier,
     @SuppressLint("ComposableLambdaParameterNaming")
-    onDragStart: (Offset) -> Unit = {},
-    onDrag: (Offset) -> Unit = {},
-    onDragEnd: () -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onLongPressStarted: (Offset) -> Unit = {},
     textFieldContent: @Composable ColumnScope.() -> Unit,
-    ) {
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
@@ -594,12 +571,7 @@ private fun TokenInput(
                 ChainSelector(
                     title = title,
                     chain = selectedChain,
-                    onClick = onSelectNetworkClick,
-                    onDragStart = onDragStart,
-                    onDragCancel = onDragCancel,
-                    onDragEnd = onDragEnd,
-                    onDrag = onDrag,
-                    onLongPressStarted = onLongPressStarted,
+                    onClick = onSelectNetworkClick
                 )
             }
 
@@ -658,46 +630,11 @@ private fun TokenInput(
 internal fun TokenChip(
     selectedToken: TokenBalanceUiModel?,
     onSelectTokenClick: () -> Unit,
-    onDragStart: (Offset) -> Unit = {},
-    onDrag: (Offset) -> Unit = {},
-    onDragEnd: () -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onLongPressStarted: (Offset) -> Unit = {},
 ) {
-
-    var fieldPosition by remember { mutableStateOf(Offset.Zero) }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clickable(onClick = onSelectTokenClick)
-            .onGloballyPositioned { coordinates ->
-                fieldPosition = coordinates.positionInWindow()
-            }
-            .pointerInput(Unit) {
-
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { offset ->
-                        val screenPosition = Offset(
-                            x = fieldPosition.x + offset.x,
-                            y = fieldPosition.y + offset.y
-                        )
-                        onDragStart(screenPosition)
-                        onLongPressStarted(screenPosition)
-                    },
-                    onDrag = { change: PointerInputChange, _ ->
-                        val localPos = change.position
-                        val screenPos = Offset(
-                            x = fieldPosition.x + localPos.x,
-                            y = fieldPosition.y + localPos.y
-                        )
-                        onDrag(screenPos)
-                        change.consume()
-                    },
-                    onDragEnd = onDragEnd,
-                    onDragCancel = onDragCancel
-                )
-            }
             .background(
                 color = Theme.colors.backgrounds.tertiary,
                 shape = RoundedCornerShape(99.dp)
@@ -705,7 +642,6 @@ internal fun TokenChip(
             .padding(
                 all = 6.dp,
             )
-
     ) {
         TokenLogo(
             errorLogoModifier = Modifier
