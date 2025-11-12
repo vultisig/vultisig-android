@@ -434,7 +434,7 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
         database.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `active_bonded_nodes` (
-                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `id` TEXT PRIMARY KEY NOT NULL,
                 `node_address` TEXT NOT NULL,
                 `node_state` TEXT NOT NULL,
                 `coin_id` TEXT NOT NULL,
@@ -458,7 +458,7 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
         database.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `staking_details` (
-                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `id` TEXT PRIMARY KEY NOT NULL,
                 `vault_id` TEXT NOT NULL,
                 `coin_id` TEXT NOT NULL,
                 `stake_amount` TEXT NOT NULL,

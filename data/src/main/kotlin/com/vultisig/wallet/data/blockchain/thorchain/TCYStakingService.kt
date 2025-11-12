@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -68,7 +69,7 @@ class TCYStakingService @Inject constructor(
 
         if (stakedAmount == BigInteger.ZERO) {
             return@supervisorScope StakingDetails(
-                id = Coins.ThorChain.TCY.ticker + Coins.ThorChain.TCY.contractAddress,
+                id = Coins.ThorChain.TCY.generateId(),
                 coin = Coins.ThorChain.TCY,
                 stakeAmount = stakedAmount,
                 apr = null,
@@ -85,7 +86,7 @@ class TCYStakingService @Inject constructor(
         val estimatedRewardDeferred = async { calculateEstimatedReward(stakeDecimal) }
 
         StakingDetails(
-            id = Coins.ThorChain.TCY.ticker + Coins.ThorChain.TCY.contractAddress,
+            id = Coins.ThorChain.TCY.generateId(),
             coin = Coins.ThorChain.TCY,
             stakeAmount = stakedAmount,
             apr = convertAPYtoAPR(apyDeferred.await()),

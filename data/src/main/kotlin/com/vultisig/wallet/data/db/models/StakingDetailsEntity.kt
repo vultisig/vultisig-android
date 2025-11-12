@@ -25,9 +25,9 @@ import java.util.Date
 )
 @TypeConverters(ActiveBondedNodeConverters::class)
 data class StakingDetailsEntity(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     @ColumnInfo("id")
-    val id: Long = 0,
+    val id: String,
 
     @ColumnInfo(name = "vault_id")
     val vaultId: String, // foreign key to vault

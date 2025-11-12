@@ -7,6 +7,7 @@ import java.math.BigInteger
 
 fun StakingDetails.toEntity(vaultId: String): StakingDetailsEntity {
     return StakingDetailsEntity(
+        id = this.id,
         vaultId = vaultId,
         coinId = this.coin.id,
         stakeAmount = this.stakeAmount.toString(),

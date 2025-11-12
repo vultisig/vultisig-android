@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.ChurnEntry
 import com.vultisig.wallet.data.api.MidgardNetworkData
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateId
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
@@ -94,7 +95,8 @@ class ThorchainBondUseCaseImpl @Inject constructor(
                         )
 
                         val activeNode = BondedNodePosition(
-                            coinId = Coins.ThorChain.RUNE.id,
+                            id = Coins.ThorChain.RUNE.generateId(node.address),
+                            coin = Coins.ThorChain.RUNE,
                             node = bondNode,
                             amount = myBondMetrics.myBond,
                             apy = myBondMetrics.apy,

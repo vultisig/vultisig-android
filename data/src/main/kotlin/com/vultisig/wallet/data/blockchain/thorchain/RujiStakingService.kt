@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -34,7 +35,7 @@ class RujiStakingService @Inject constructor(
         }
 
         return StakingDetails(
-            id = Coins.ThorChain.RUJI.ticker + Coins.ThorChain.RUJI.contractAddress,
+            id = Coins.ThorChain.RUJI.generateId(),
             coin = Coins.ThorChain.RUJI,
             stakeAmount = rujiStakeInfo.stakeAmount,
             apr = apr,

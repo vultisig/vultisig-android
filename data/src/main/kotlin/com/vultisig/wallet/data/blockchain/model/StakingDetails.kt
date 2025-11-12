@@ -7,7 +7,7 @@ import java.util.Date
 
 
 data class StakingDetails(
-    val id: String,
+    val id: String, // ticker-chainId-contractAddress
     val coin: Coin,
     val stakeAmount: BigInteger,
     val apr: Double?,
@@ -15,7 +15,17 @@ data class StakingDetails(
     val nextPayoutDate: Date?,
     val rewards: BigDecimal?,
     val rewardsCoin: Coin?,
-)
+) {
+    companion object {
+        fun Coin.generateId(nodeAddress: String = "default"): String {
+            return if (contractAddress.isNotEmpty()) {
+                "$id-$contractAddress-$nodeAddress"
+            } else {
+                "$id-$nodeAddress"
+            }
+        }
+    }
+}
 
 data class LpDetails(
     val firstCoin: Coin,

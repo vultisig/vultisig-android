@@ -27,9 +27,9 @@ import java.util.Date
 )
 @TypeConverters(ActiveBondedNodeConverters::class)
 data class ActiveBondedNodeEntity(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     @ColumnInfo("id")
-    val id: Long = 0,
+    val id: String,
 
     @Embedded(prefix = "node_")
     val node: BondedNodeEntity,
