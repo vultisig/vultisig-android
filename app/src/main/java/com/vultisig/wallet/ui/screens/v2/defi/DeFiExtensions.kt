@@ -43,7 +43,6 @@ internal val supportsBonDeFi: List<Coin>
         Coins.ThorChain.RUNE,
     )
 
-
 internal fun defaultSelectedPositionsDialog(): List<String> = 
     (supportsBonDeFi + supportStakingDeFi).map { it.ticker }
 

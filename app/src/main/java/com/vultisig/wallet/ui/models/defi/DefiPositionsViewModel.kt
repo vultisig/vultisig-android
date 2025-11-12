@@ -617,12 +617,42 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
+    // TODO: Add node Address
     fun onClickBond(nodeAddress: String) {
-        // TODO: Implement bond to specific node
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+            if (runeCoin != null) {
+                navigator.navigate(
+                    Destination.Deposit(
+                        vaultId = vaultId,
+                        chainId = Chain.ThorChain.id
+                    )
+                )
+            } else {
+                Timber.e("RUNE coin not found in vault")
+            }
+        }
     }
 
+    // TODO: Add node Address
     fun onClickUnBond(nodeAddress: String) {
-        // TODO: Implement unbond from specific node
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+            if (runeCoin != null) {
+                navigator.navigate(
+                    Destination.Deposit(
+                        vaultId = vaultId,
+                        chainId = Chain.ThorChain.id
+                    )
+                )
+            } else {
+                Timber.e("RUNE coin not found in vault")
+            }
+        }
     }
 
     fun bondToNode() {
