@@ -62,7 +62,6 @@ interface ThorChainApi {
         toAsset: String,
         amount: String,
         interval: String,
-        isAffiliate: Boolean,
         referralCode: String,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
@@ -169,14 +168,12 @@ internal class ThorChainApiImpl @Inject constructor(
         toAsset: String,
         amount: String,
         interval: String,
-        isAffiliate: Boolean,
         referralCode: String,
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         val affiliateParams = buildAffiliateParams(
             referralCode = referralCode,
             discountBps = bpsDiscount,
-            isAffiliate = isAffiliate,
         )
 
         val response = httpClient
@@ -214,11 +211,10 @@ internal class ThorChainApiImpl @Inject constructor(
     private fun buildAffiliateParams(
         referralCode: String,
         discountBps: Int,
-        isAffiliate: Boolean,
     ): Map<String, String> {
         val affiliateParams = mutableMapOf<String, String>()
 
-        if (referralCode.isNotEmpty() && isAffiliate) {
+        if (referralCode.isNotEmpty()) {
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
                 baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
                 discountBps = discountBps,
@@ -231,13 +227,8 @@ internal class ThorChainApiImpl @Inject constructor(
             affiliateParams["affiliate"] = affiliates
             affiliateParams["affiliate_bps"] = affiliateBps
         } else {
-            val baseBps = if (isAffiliate) {
-                THORChainSwaps.AFFILIATE_FEE_RATE_BP
-            } else {
-                0
-            }
             val affiliateFeeRateBp = calculateBpsAfterDiscount(
-                baseBps = baseBps,
+                baseBps = THORChainSwaps.AFFILIATE_FEE_RATE_BP,
                 discountBps = discountBps,
             )
 
@@ -515,8 +506,7 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
-        val url =
-            "https://thornode-mainnet-api.bryanlabs.net/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+        val url = "https://api-thorchain.rorcual.xyz/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<VaultRedemptionResponseJson>()
@@ -592,7 +582,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getMidgardNetworkData(): MidgardNetworkData {
         val url = "$MIDGARD_URL/network"
-
+        
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<MidgardNetworkData>()

@@ -73,11 +73,11 @@ internal fun TokenAddressQrBottomSheet(
                         .weight(1f)
                 )
                 UiSpacer(
-                    size = 8.dp
+                    size = 4.dp
                 )
                 VsButton(
                     variant = VsButtonVariant.Primary,
-                    size = VsButtonSize.Medium,
+                    size = VsButtonSize.Small,
                     label = stringResource(R.string.copy_address),
                     onClick = onCopyAddressClick,
                     modifier = Modifier
