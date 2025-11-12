@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -54,6 +53,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -391,9 +391,13 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private fun setMetadataInfo() {
-        if (!bondAddress.isNullOrBlank()) {
-            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
+        viewModelScope.launch {
+            if (!bondAddress.isNullOrBlank()) {
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
+            }
         }
+        // TODO: Match and set proper option
+        selectDepositOption(DepositOption.Unbond)
     }
 
     private suspend fun updateTokenAmount(
