@@ -25,11 +25,6 @@ interface ChainAccountAddressRepository {
     ): Pair<String, String>
 
     suspend fun getAddress(
-        type: CoinType,
-        publicKey: PublicKey,
-    ): String
-
-    suspend fun getAddress(
         coin: Coin,
         vault: Vault,
     ): Pair<String, String>
@@ -112,11 +107,6 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         }
 
     }
-
-    override suspend fun getAddress(
-        type: CoinType,
-        publicKey: PublicKey,
-    ): String = adjustAddressPrefix(type, type.deriveAddressFromPublicKey(publicKey))
 
     override suspend fun getAddress(
         coin: Coin,

@@ -294,8 +294,8 @@ internal class KeysignViewModel(
             keysignReq.localPartyKey = vault.localPartyID
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
-            keysignReq.derivePath =
-                (keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath()
+            (keysignPayload?.coin?.coinType?.takeIf { it != CoinType.SEI } ?: CoinType.ETHEREUM).derivationPath()
+
 
             val keysignResp = when (keyType) {
                 TssKeyType.ECDSA -> {
