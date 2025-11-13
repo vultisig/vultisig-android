@@ -28,8 +28,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
