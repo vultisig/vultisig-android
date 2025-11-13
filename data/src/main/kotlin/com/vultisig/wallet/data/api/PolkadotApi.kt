@@ -34,8 +34,8 @@ interface PolkadotApi {
 internal class PolkadotApiImp @Inject constructor(
     private val httpClient: HttpClient
 ) : PolkadotApi {
-    private val polkadotApiUrl = "https://polkadot-rpc.publicnode.com"
-    private val polkadotBalanceApiUrl = "https://polkadot.api.subscan.io/api/v2/scan/search"
+    private val polkadotApiUrl = "https://api.vultisig.com/dot/"
+    private val polkadotBalanceApiUrl = "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
 
     override suspend fun getBalance(address: String): BigInteger {
         try {
