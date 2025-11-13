@@ -120,9 +120,7 @@ val Chain.coinType: CoinType
 
 val Chain.supportsLegacyGas: Boolean
     get() = when (this) {
-        Chain.BscChain,
-        Chain.Sei
-            -> true
+        Chain.BscChain -> true
         else -> false
     }
 

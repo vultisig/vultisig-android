@@ -208,7 +208,10 @@ class EvmHelper(
         allSignatures.add(signature)
 
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType,
+            when (coinType) {
+                CoinType.SEI -> CoinType.ETHEREUM
+                else -> coinType
+            },
             inputData,
             allSignatures,
             allPublicKeys
