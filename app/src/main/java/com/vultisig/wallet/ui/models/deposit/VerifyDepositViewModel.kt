@@ -50,7 +50,7 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
-    ) : ViewModel() {
+) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -80,7 +80,7 @@ internal class VerifyDepositViewModel @Inject constructor(
                 }
             } catch (t: Throwable) {
                 Timber.e(t)
-                state.update { 
+                state.update {
                     it.copy(
                         errorText = UiText.StringResource(R.string.try_again),
                         isLoading = false

@@ -48,6 +48,7 @@ internal data class CreateReferralUiState(
     val formattedYearExpiration: String = "",
     val fees: FeesReferral = FeesReferral.Loading,
     val error: ReferralError? = null,
+    val showInfoBox: Boolean = false,
 )
 
 internal interface FeesReferral {
@@ -367,6 +368,12 @@ internal class CreateReferralViewModel @Inject constructor(
         } ?: error("Can't calculate fees")
 
         return gasFeeToEstimate.invoke(gasFeeParams).formattedFiatValue
+    }
+    
+    fun setInfoBoxVisibility(visible: Boolean) {
+        state.update {
+            it.copy(showInfoBox = visible)
+        }
     }
 
     internal companion object {

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -352,7 +353,7 @@ internal sealed class Route {
     data class SelectAsset(
         val vaultId: VaultId,
         val preselectedNetworkId: ChainId,
-        val networkFilters: SelectNetwork.Filters,
+        val networkFilters: Filters,
         val requestId: String,
     )
 
@@ -378,6 +379,31 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val tokenId: TokenId? = null,
         val address: String? = null,
+    ) {
+
+        @Serializable
+        object SendMain
+    }
+
+    @Serializable
+    data class SelectNetworkPopup(
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
+        val vaultId: VaultId,
+        val selectedNetworkId: ChainId,
+        val requestId: String,
+        val filters: Filters,
+    )
+
+    @Serializable
+    data class SelectAssetPopup(
+        val vaultId: VaultId,
+        val preselectedNetworkId: ChainId,
+        val selectedAssetId: String,
+        val networkFilters: Filters,
+        val requestId: String,
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
     )
 
     @Serializable
@@ -394,7 +420,10 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val srcTokenId: TokenId? = null,
         val dstTokenId: TokenId? = null,
-    )
+    ) {
+        @Serializable
+        object SwapMain
+    }
 
     @Serializable
     data class VerifySwap(

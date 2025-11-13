@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.swap
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -14,6 +13,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +55,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,6 +72,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -98,6 +104,8 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -108,25 +116,37 @@ import java.math.BigInteger
 import java.util.Locale
 import kotlin.time.Duration
 
-@Composable
-internal fun SwapScreen(
-    model: SwapFormViewModel = hiltViewModel(),
+internal fun NavGraphBuilder.swapScreen(
+    navController: NavHostController,
 ) {
-    val state by model.uiState.collectAsState()
+    contentWithFastSelection<Route.Swap.SwapMain, Route.Swap>(
+        navController = navController
+    ) { onDragStart, onDrag, onDragEnd ->
 
-    SwapScreen(
-        state = state,
-        srcAmountTextFieldState = model.srcAmountState,
-        onBackClick = model::back,
-        onSwap = model::swap,
-        onSelectSrcNetworkClick = model::selectSrcNetwork,
-        onSelectSrcToken = model::selectSrcToken,
-        onSelectDstNetworkClick = model::selectDstNetwork,
-        onDismissError = model::hideError,
-        onSelectDstToken = model::selectDstToken,
-        onFlipSelectedTokens = model::flipSelectedTokens,
-        onSelectSrcPercentage = model::selectSrcPercentage,
-    )
+        val model: SwapFormViewModel = hiltViewModel()
+        val state by model.uiState.collectAsState()
+
+        SwapScreen(
+            state = state,
+            srcAmountTextFieldState = model.srcAmountState,
+            onBackClick = model::back,
+            onSwap = model::swap,
+            onSelectSrcNetworkClick = model::selectSrcNetwork,
+            onSelectSrcToken = model::selectSrcToken,
+            onSelectDstNetworkClick = model::selectDstNetwork,
+            onDismissError = model::hideError,
+            onSelectDstToken = model::selectDstToken,
+            onFlipSelectedTokens = model::flipSelectedTokens,
+            onSelectSrcPercentage = model::selectSrcPercentage,
+
+            onDragStart = onDragStart,
+            onDragCancel = onDragEnd,
+            onDragEnd = onDragEnd,
+            onDrag = onDrag,
+            onDstLongPressStarted = model::selectDstNetworkPopup,
+            onSrcLongPressStarted = model::selectSrcNetworkPopup,
+        )
+    }
 }
 
 
@@ -143,6 +163,13 @@ internal fun SwapScreen(
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
     onSelectSrcPercentage: (Float) -> Unit = {},
+
+    onDragStart: (Offset) -> Unit = {},
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onDragCancel: () -> Unit = {},
+    onDstLongPressStarted: (Offset) -> Unit = {},
+    onSrcLongPressStarted: (Offset) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -241,6 +268,11 @@ internal fun SwapScreen(
                                     }
                                 ),
                                 focused = true,
+                                onDrag = onDrag,
+                                onDragEnd = onDragEnd,
+                                onDragCancel = onDragCancel,
+                                onDragStart = onDragStart,
+                                onLongPressStarted = onSrcLongPressStarted,
                                 textFieldContent = {
                                     VsBasicTextField(
                                         textFieldState = srcAmountTextFieldState,
@@ -324,6 +356,11 @@ internal fun SwapScreen(
                                     bottomCenter = it
                                 }
                             ),
+                            onDrag = onDrag,
+                            onDragEnd = onDragEnd,
+                            onDragCancel = onDragCancel,
+                            onDragStart = onDragStart,
+                            onLongPressStarted = onDstLongPressStarted,
                             focused = false,
                             textFieldContent = {
                                 Text(
@@ -519,8 +556,13 @@ private fun TokenInput(
     focused: Boolean,
     modifier: Modifier = Modifier,
     @SuppressLint("ComposableLambdaParameterNaming")
+    onDragStart: (Offset) -> Unit = {},
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onDragCancel: () -> Unit = {},
+    onLongPressStarted: (Offset) -> Unit = {},
     textFieldContent: @Composable ColumnScope.() -> Unit,
-) {
+    ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
@@ -552,7 +594,12 @@ private fun TokenInput(
                 ChainSelector(
                     title = title,
                     chain = selectedChain,
-                    onClick = onSelectNetworkClick
+                    onClick = onSelectNetworkClick,
+                    onDragStart = onDragStart,
+                    onDragCancel = onDragCancel,
+                    onDragEnd = onDragEnd,
+                    onDrag = onDrag,
+                    onLongPressStarted = onLongPressStarted,
                 )
             }
 
@@ -611,11 +658,46 @@ private fun TokenInput(
 internal fun TokenChip(
     selectedToken: TokenBalanceUiModel?,
     onSelectTokenClick: () -> Unit,
+    onDragStart: (Offset) -> Unit = {},
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onDragCancel: () -> Unit = {},
+    onLongPressStarted: (Offset) -> Unit = {},
 ) {
+
+    var fieldPosition by remember { mutableStateOf(Offset.Zero) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .clickable(onClick = onSelectTokenClick)
+            .onGloballyPositioned { coordinates ->
+                fieldPosition = coordinates.positionInWindow()
+            }
+            .pointerInput(Unit) {
+
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { offset ->
+                        val screenPosition = Offset(
+                            x = fieldPosition.x + offset.x,
+                            y = fieldPosition.y + offset.y
+                        )
+                        onDragStart(screenPosition)
+                        onLongPressStarted(screenPosition)
+                    },
+                    onDrag = { change: PointerInputChange, _ ->
+                        val localPos = change.position
+                        val screenPos = Offset(
+                            x = fieldPosition.x + localPos.x,
+                            y = fieldPosition.y + localPos.y
+                        )
+                        onDrag(screenPos)
+                        change.consume()
+                    },
+                    onDragEnd = onDragEnd,
+                    onDragCancel = onDragCancel
+                )
+            }
             .background(
                 color = Theme.colors.backgrounds.tertiary,
                 shape = RoundedCornerShape(99.dp)
@@ -623,6 +705,7 @@ internal fun TokenChip(
             .padding(
                 all = 6.dp,
             )
+
     ) {
         TokenLogo(
             errorLogoModifier = Modifier
