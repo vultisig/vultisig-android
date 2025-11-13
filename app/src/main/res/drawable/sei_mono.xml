@@ -4,7 +4,7 @@
     android:viewportWidth="96"
     android:viewportHeight="96">
     <group>
-        <clip-path android:pathData="M0,0h256v96h-256z" />
+        <clip-path android:pathData="M0,0h96v96h-96z" />
         <path
             android:fillColor="#02122B"
             android:fillType="evenOdd"

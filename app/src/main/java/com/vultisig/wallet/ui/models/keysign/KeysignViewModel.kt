@@ -154,8 +154,8 @@ internal class KeysignViewModel(
                         sessionID = sessionId,
                         encryptionKeyHex = encryptionKeyHex,
                         messageToSign = messagesToSign,
-                        chainPath = if (this.keysignPayload?.coin?.coinType != CoinType.SEI) this.keysignPayload?.coin?.coinType?.derivationPath()
-                            ?: "m/44'/60'/0'/0/0" else "m/44'/60'/0'/0/0",
+                        chainPath = this.keysignPayload?.coin?.coinType?.takeIf { it != CoinType.SEI }
+                            ?.derivationPath() ?: "m/44'/60'/0'/0/0",
                         isInitiateDevice = isInitiatingDevice,
                         sessionApi = sessionApi,
                         encryption = encryption,

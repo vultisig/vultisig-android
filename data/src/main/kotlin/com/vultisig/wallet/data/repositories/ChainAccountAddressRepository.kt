@@ -13,7 +13,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
-import wallet.core.jni.Hash
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import javax.inject.Inject
