@@ -28,37 +28,30 @@ class PolkadotHelper(
         val polkadotSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
-        val transfer = Polkadot.Balance.Transfer.newBuilder()
-            .setToAddress(toAddress.description())
-            .setValue(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
-        if (keysignPayload.memo != null) {
-            transfer.setMemo(keysignPayload.memo)
-        }
 
         // After Asset Hub update, even native DOT transfers use assetTransfer
         // with assetID 0 and feeAssetID 0 for native DOT
         // When asset_id is 0, WalletCore encodes it as TransferAllowDeath (Balances.transfer)
         // So we need Balances pallet call indices, not Assets pallet
         // For Asset Hub, Balances pallet is typically module 10, method 0 (transfer_allow_death)
-        val assetTransfer = Polkadot.Balance
-            .AssetTransfer
-            .newBuilder()
+        val assetTransfer = Polkadot.Balance.AssetTransfer.newBuilder()
             .setAssetId(0)
             .setFeeAssetId(0)
+            .setToAddress(toAddress.description())
+            .setValue(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
             .setCallIndices(
                 Polkadot.CallIndices
                     .newBuilder()
                     .setCustom(
-                        Polkadot.CustomCallIndices
-                            .newBuilder()
+                        Polkadot.CustomCallIndices.newBuilder()
                             .setMethodIndex(0)
                             .setModuleIndex(10)
                             .build()
                     )
-            )
+                    .build()
+            ).build()
 
-        val balanceTransfer = Polkadot.Balance
-            .newBuilder()
+        val balanceTransfer = Polkadot.Balance.newBuilder()
             .setAssetTransfer(assetTransfer)
             .build()
 
