@@ -120,7 +120,9 @@ val Chain.coinType: CoinType
 
 val Chain.supportsLegacyGas: Boolean
     get() = when (this) {
-        Chain.BscChain -> true
+        Chain.BscChain,
+        Chain.Sei
+            -> true
         else -> false
     }
 
@@ -158,7 +160,7 @@ val Chain.isSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
-        Chain.Tron, Chain.Sei
+        Chain.Tron
     )
 
 val Chain.isDepositSupported: Boolean
@@ -249,7 +251,6 @@ fun Chain.oneInchChainId(): Long =
         Chain.CronosChain -> 25
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
-        Chain.Sei -> 1
         else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 

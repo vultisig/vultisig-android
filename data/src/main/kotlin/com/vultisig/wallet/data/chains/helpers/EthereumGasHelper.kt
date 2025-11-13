@@ -27,7 +27,10 @@ object EthereumGasHelper {
                 ByteString.copyFrom(BigInteger(if (coinType == CoinType.SEI) "1329" else coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
         }
-        if (keysignPayload.coin.chain == Chain.BscChain) {
+        val requiresLegacyTx = keysignPayload.coin.chain == Chain.BscChain ||
+                keysignPayload.coin.chain == Chain.Sei
+
+        if (requiresLegacyTx) {
             signingInputBuilder.apply {
                 txMode = Ethereum.TransactionMode.Legacy
                 if (gas != BigInteger.ZERO && gasPrice != BigInteger.ZERO) {

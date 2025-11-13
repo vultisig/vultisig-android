@@ -56,8 +56,6 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 )
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-
-
                 if (chain == Chain.MayaChain) {
                     return Pair(
                         MayaChainHelper.getAddress(publicKey), derivedPublicKey

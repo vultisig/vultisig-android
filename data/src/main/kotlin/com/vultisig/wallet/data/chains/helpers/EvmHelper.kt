@@ -152,7 +152,14 @@ class EvmHelper(
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(coinType, result)
+
+        val hashes = TransactionCompiler.preImageHashes(
+            when (coinType) {
+                CoinType.SEI -> CoinType.ETHEREUM
+                else -> coinType
+            },
+            result
+        )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
                 .checkError()
@@ -174,10 +181,19 @@ class EvmHelper(
         val ethPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
             vaultHexChainCode,
-            coinType.derivationPath()
+            when (coinType) {
+                CoinType.SEI -> CoinType.ETHEREUM
+                else -> coinType
+            }.derivationPath()
         )
         val publicKey = PublicKey(ethPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preHashes = TransactionCompiler.preImageHashes(
+            when (coinType) {
+                CoinType.SEI -> CoinType.ETHEREUM
+                else -> coinType
+            },
+            inputData
+        )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
                 .checkError()
