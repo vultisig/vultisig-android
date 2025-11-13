@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionServi
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatToString
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
@@ -96,7 +98,7 @@ internal data class LpPositionUiModel(
 )
 
 internal data class StakePositionUiModel(
-    val coinId: String,
+    val coin: Coin,
     val stakeAssetHeader: String,
     val stakeAmount: String,
     val apy: String?,
@@ -400,7 +402,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                         }
 
                         val stakePosition = StakePositionUiModel(
-                            coinId = details.coin.id,
+                            coin = details.coin,
                             stakeAssetHeader = "Staked $RUJI_SYMBOL",
                             stakeAmount = formattedAmount,
                             apy = details.apr?.formatPercentage(),
@@ -442,7 +444,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                     // Create and return the UI model
                     val stakePosition = StakePositionUiModel(
-                        coinId = position.coin.id,
+                        coin = position.coin,
                         stakeAssetHeader = "Staked TCY",
                         stakeAmount = formattedAmount,
                         apy = position.apr?.formatPercentage(),
@@ -496,7 +498,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                                 "Staked"
                             }
                             val position = StakePositionUiModel(
-                                coinId = position.coin.id,
+                                coin = position.coin,
                                 stakeAssetHeader = "$header ${coin.ticker}",
                                 stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
                                 apy = null,
@@ -520,14 +522,14 @@ internal class DefiPositionsViewModel @Inject constructor(
         state.update { currentState ->
             val existingPositions = currentState.staking.positions
             val positionExists = existingPositions.any {
-                it.coinId == stakePosition.coinId
+                it.coin.id == stakePosition.coin.id
             }
 
             if (positionExists) {
                 currentState.copy(
                     staking = currentState.staking.copy(
                         positions = existingPositions.map {
-                            if (it.coinId == stakePosition.coinId) stakePosition else it
+                            if (it.coin.id == stakePosition.coin.id) stakePosition else it
                         }
                     )
                 )
@@ -731,6 +733,25 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
+    fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
+
+            if (runeCoin != null) {
+                navigator.navigate(
+                    Destination.Deposit(
+                        vaultId = vaultId,
+                        chainId = Chain.ThorChain.id,
+                        depositType = defiNavAction.type,
+                    )
+                )
+            } else {
+                Timber.e("RUNE coin not found in vault")
+            }
+        }
+    }
+
     fun onBackClick() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
@@ -751,7 +772,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             return listOf(
                 StakePositionUiModel(
-                    coinId = rujiCoin.id,
+                    coin = rujiCoin,
                     stakeAssetHeader = "Staked ${rujiCoin.ticker}",
                     stakeAmount = rujiCoin.ticker,
                     apy = null,
@@ -763,7 +784,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextPayout = null
                 ),
                 StakePositionUiModel(
-                    coinId = tcy.id,
+                    coin = tcy,
                     stakeAssetHeader = "Staked ${tcy.ticker}",
                     stakeAmount = tcy.ticker,
                     apy = null,
@@ -774,7 +795,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextReward = null,
                     nextPayout = null
                 ), StakePositionUiModel(
-                    coinId = ytcy.id,
+                    coin = ytcy,
                     stakeAssetHeader = "Staked ${ytcy.ticker}",
                     stakeAmount = ytcy.ticker,
                     apy = null,
@@ -786,7 +807,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextPayout = null
                 ),
                 StakePositionUiModel(
-                    coinId = yrune.id,
+                    coin = yrune,
                     stakeAssetHeader = "Staked ${yrune.ticker}",
                     stakeAmount = yrune.ticker,
                     apy = null,
@@ -798,7 +819,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextPayout = null
                 ),
                 StakePositionUiModel(
-                    coinId = stcy.id,
+                    coin = stcy,
                     stakeAssetHeader = "Staked ${stcy.ticker}",
                     stakeAmount = stcy.ticker,
                     apy = null,

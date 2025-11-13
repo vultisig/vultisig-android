@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -46,6 +47,9 @@ internal fun DefiPositionsScreen(
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = model::onPositionSelectionDone,
         onPositionSelectionChange = model::onPositionSelectionChange,
+        onClickWithdraw = { model.onNavigateToFunctions(it) },
+        onClickStake = { model.onNavigateToFunctions(it) },
+        onClickUnstake = { model.onNavigateToFunctions(it) },
     )
 }
 
@@ -61,6 +65,9 @@ internal fun DefiPositionScreenContent(
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onTabSelected: (String) -> Unit = {},
+    onClickWithdraw: (DeFiNavActions) -> Unit = {},
+    onClickStake: (DeFiNavActions) -> Unit = {},
+    onClickUnstake: (DeFiNavActions) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
@@ -144,9 +151,9 @@ internal fun DefiPositionScreenContent(
                     } else {
                         StakingTabContent(
                             state = state.staking,
-                            onClickStake = { /* TODO: Implement stake action */ },
-                            onClickUnstake = { /* TODO: Implement unstake action */ },
-                            onClickWithdraw = { /* TODO: Implement withdraw action */ }
+                            onClickStake = onClickStake,
+                            onClickUnstake = onClickUnstake,
+                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) }
                         )
                     }
                 }

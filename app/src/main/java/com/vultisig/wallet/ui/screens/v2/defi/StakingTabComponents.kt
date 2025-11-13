@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -34,13 +35,16 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.StakePositionUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.getStakeDeFiNavAction
+import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun StakingTabContent(
     state: StakingTabUiModel,
-    onClickStake: () -> Unit,
-    onClickUnstake: () -> Unit,
+    onClickStake: (DeFiNavActions) -> Unit,
+    onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
 ) {
     Column(
@@ -65,8 +69,8 @@ internal fun StakingTabContent(
 internal fun StakingWidget(
     state: StakePositionUiModel,
     isLoading: Boolean = false,
-    onClickStake: () -> Unit,
-    onClickUnstake: () -> Unit,
+    onClickStake: (DeFiNavActions) -> Unit,
+    onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
 ) {
     Column(
@@ -205,7 +209,7 @@ internal fun StakingWidget(
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
                 contentColor = Theme.v2.colors.text.primary,
-                onClick = onClickUnstake,
+                onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canUnstake,
                 iconCircleColor = Theme.v2.colors.text.extraLight
@@ -218,7 +222,7 @@ internal fun StakingWidget(
                 icon = R.drawable.ic_circle_plus,
                 background = Theme.v2.colors.primary.accent3,
                 contentColor = Theme.v2.colors.text.primary,
-                onClick = onClickStake,
+                onClick = { onClickUnstake(state.coin.getStakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canStake,
                 iconCircleColor = Theme.v2.colors.primary.accent4
@@ -313,7 +317,7 @@ private fun StakingWidgetFullActionsPreview() {
     ) {
         StakingWidget(
             state = StakePositionUiModel(
-                coinId = "",
+                coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
                 stakeAmount = "1000 RUJI",
                 apy = "18.5%",
@@ -341,7 +345,7 @@ private fun StakingWidgetLoadingPreview() {
     ) {
         StakingWidget(
             state = StakePositionUiModel(
-                coinId = "",
+                coin = Coins.ThorChain.RUJI,
                 stakeAssetHeader = "Staked RUJI",
                 stakeAmount = "0 RUJI",
                 apy = "0%",

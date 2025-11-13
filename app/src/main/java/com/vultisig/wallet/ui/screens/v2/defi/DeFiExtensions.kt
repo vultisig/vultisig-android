@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
+import timber.log.Timber
 import wallet.core.jni.CoinType
 
 internal fun defaultPositionsBondDialog(): List<PositionUiModelDialog> =
@@ -74,9 +75,3 @@ internal fun BondedNodePosition.toUiModel(): BondedNodeUiModel {
     )
 }
 
-enum class DeFiNavActions(val type: String){
-    BOND("bond"), UNBOND("unbond"), WITHDRAW_RUJI("withdraw"),
-    STAKE_RUJI("stake_ruji"), UNSTAKE_RUJI("unstake_ruji"),
-    STAKE_TCY("stake_tcy"), UNSTAKE_TCY("unstake_tcy"), MINT_YRUNE("mint_yrune"),
-    REDEEM_YRUNE("redeem_yrune"), MINT_YTCY("mint_ytcy"), REDEEM_YTCY("redeem_ytcy"),
-}

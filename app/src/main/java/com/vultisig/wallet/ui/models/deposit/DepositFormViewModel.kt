@@ -48,12 +48,13 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -392,12 +393,33 @@ internal class DepositFormViewModel @Inject constructor(
 
     private fun setMetadataInfo() {
         viewModelScope.launch {
-            if (!bondAddress.isNullOrBlank()) {
+            if (!bondAddress.isNullOrEmpty()) {
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
-        // TODO: Match and set proper option
-        selectDepositOption(DepositOption.Unbond)
+
+        if (!depositTypeAction.isNullOrEmpty()) {
+            val action = parseDepositType(depositTypeAction)
+            
+            if (action != null) {
+                val depositOption = when (action) {
+                    DeFiNavActions.UNBOND -> DepositOption.Unbond
+                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
+                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
+                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
+                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
+                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
+                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
+                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
+                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+                    else -> DepositOption.Bond
+                }
+                selectDepositOption(depositOption)
+            } else {
+                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+            }
+        }
     }
 
     private suspend fun updateTokenAmount(
