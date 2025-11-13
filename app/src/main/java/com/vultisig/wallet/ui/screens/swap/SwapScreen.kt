@@ -58,11 +58,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -107,9 +107,9 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
-import com.vultisig.wallet.ui.screens.swap.components.ErrorBox
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -251,8 +251,6 @@ internal fun SwapScreen(
                                         )
                                     )
                                 }
-
-
 
                                 TokenInput(
                                     isLoading = state.isLoading,
@@ -449,15 +447,16 @@ internal fun SwapScreen(
                     val errorWidthBoxPx = errorBoxWidth.toPx().toInt()
                     val spacePx = space.toPx().toInt()
                     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx().toInt()
-                    ErrorBox(
+                    HintBox(
                         modifier = Modifier.width(errorBoxWidth),
-                        errorMessage = error.asString(),
+                        message = error.asString(),
                         onDismissClick = onDismissError,
-                        errorTitle = stringResource(R.string.dialog_default_error_title),
+                        title = stringResource(R.string.dialog_default_error_title),
                         offset = IntOffset(
                             x = flipButtonBottomCenter.x.toInt() - errorWidthBoxPx.div(2),
                             y = flipButtonBottomCenter.y.toInt() + spacePx - statusBarHeight
                         ),
+                        isVisible = true,
                     )
                 }
             }

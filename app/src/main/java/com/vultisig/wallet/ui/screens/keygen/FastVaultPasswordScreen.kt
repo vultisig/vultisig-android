@@ -1,19 +1,13 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
@@ -43,10 +37,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MoreInfoBox
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -56,6 +48,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -185,25 +178,20 @@ internal fun FastVaultPasswordScreen(
                 }
             }
 
-            AnimatedVisibility(
-                visible = state.isMoreInfoVisible,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                MoreInfoBox(
-                    text = stringResource(R.string.fast_vault_password_screen_hint),
-                    title = stringResource(R.string.fast_vault_password_screen_hint_title),
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .offset {
-                            IntOffset(
-                                x = 0,
-                                y = hintBoxOffset - statusBarHeight
-                            )
-                        }
-                        .clickable(onClick = onHideMoreInfo)
-                )
-            }
+            HintBox(
+                title = stringResource(R.string.fast_vault_password_screen_hint_title),
+                message = stringResource(R.string.fast_vault_password_screen_hint),
+                offset = IntOffset(
+                    x = 0,
+                    y = hintBoxOffset - statusBarHeight
+                ),
+                pointerAlignment = Alignment.End,
+                onDismissClick = onHideMoreInfo,
+                modifier = Modifier
+                    .padding(horizontal = 24.dp),
+                isVisible = state.isMoreInfoVisible
+            )
+
         },
         bottomBar = {
             VsButton(

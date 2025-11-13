@@ -1,13 +1,16 @@
 package com.vultisig.wallet.ui.screens.swap.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +25,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -32,10 +36,10 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-private fun TopShape(
+private fun PointerShape(
     modifier: Modifier = Modifier,
     shapeSize: DpSize = DpSize(
-        width = 35.dp,
+        width = 40.dp,
         height = 15.dp
     ),
     shapeColor: Color,
@@ -48,7 +52,7 @@ private fun TopShape(
         val path = Path().apply {
             val maxWidth = size.width
             val maxHeight = size.height + 1
-            val offSet = 20f
+            val offSet = 30f
 
 
             moveTo(0f, maxHeight)
@@ -77,32 +81,44 @@ private fun TopShape(
 
 
 @Composable
-internal fun ErrorBox(
+internal fun HintBox(
     modifier: Modifier = Modifier,
-    errorTitle: String,
-    errorMessage: String,
+    isVisible: Boolean,
+    title: String,
+    message: String,
     offset: IntOffset,
+    pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    pointerOffset: DpOffset = DpOffset.Zero,
     onDismissClick: () -> Unit,
 ) {
-    Popup(
-        offset = offset,
-        onDismissRequest = onDismissClick,
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut()
     ) {
-        ErrorBoxPopupContent(
-            modifier = modifier,
-            errorTitle = errorTitle,
-            errorMessage = errorMessage,
-            onDismissClick = onDismissClick
-        )
+        Popup(
+            offset = offset,
+            onDismissRequest = onDismissClick,
+        ) {
+            HintBoxPopupContent(
+                modifier = modifier,
+                title = title,
+                message = message,
+                pointerAlignment = pointerAlignment,
+                pointerOffset = pointerOffset,
+                onDismissClick = onDismissClick,
+            )
+        }
     }
-
 }
 
 @Composable
-private fun ErrorBoxPopupContent(
+private fun HintBoxPopupContent(
     modifier: Modifier = Modifier,
-    errorTitle: String,
-    errorMessage: String,
+    title: String,
+    message: String,
+    pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    pointerOffset: DpOffset = DpOffset.Zero,
     onDismissClick: () -> Unit,
 ) {
 
@@ -110,13 +126,18 @@ private fun ErrorBoxPopupContent(
     Column(
         modifier = modifier
             .clickable(onClick = onDismissClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopShape(
-            shapeColor = shapeColor
+        PointerShape(
+            shapeColor = shapeColor,
+            modifier = Modifier
+                .align(alignment = pointerAlignment)
+                .offset(
+                    x = pointerOffset.x,
+                    y = pointerOffset.y
+                )
         )
-        Box(
-            Modifier
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     color = shapeColor,
@@ -127,50 +148,50 @@ private fun ErrorBoxPopupContent(
                         bottomEnd = 16.dp
                     )
                 )
-        ) {
-            Column(
-                modifier = Modifier.padding(
+                .padding(
                     horizontal = 16.dp,
                     vertical = 12.dp
                 )
-            ) {
-                Row {
-                    Text(
-                        text = errorTitle,
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.colors.text.inverse
-                    )
-                    UiSpacer(
-                        weight = 1f
-                    )
-                    UiIcon(
-                        drawableResId = R.drawable.x,
-                        size = 16.dp,
-                        tint = Theme.colors.text.button.disabled,
-                    )
-                }
-
-                UiSpacer(
-                    size = 2.dp
-                )
-
+        ) {
+            Row {
                 Text(
-                    text = errorMessage,
-                    color = Theme.colors.text.extraLight,
-                    style = Theme.brockmann.supplementary.footnote
+                    text = title,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.colors.text.inverse
+                )
+                UiSpacer(
+                    weight = 1f
+                )
+                UiIcon(
+                    drawableResId = R.drawable.x,
+                    size = 16.dp,
+                    tint = Theme.colors.text.button.disabled,
                 )
             }
+
+            UiSpacer(
+                size = 2.dp
+            )
+
+            Text(
+                text = message,
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.footnote
+            )
         }
     }
 }
 
 @Preview
 @Composable
-private fun ErrorBoxPreview() {
-    ErrorBoxPopupContent(
+private fun HintBoxPreview() {
+    // In preview mode, the popup displays an unwanted background that's not visible in the actual app.
+    HintBox(
         modifier = Modifier.width(250.dp),
-        errorTitle = "Insufficient funds",
-        errorMessage = "Insufficient funds to execute the swap. Please fund the wallet.",
-        onDismissClick = {}
+        title = "Insufficient funds",
+        message = "Insufficient funds to execute the swap. Please fund the wallet.",
+        onDismissClick = {},
+        offset = IntOffset.Zero,
+        isVisible = true,
     )
 }
