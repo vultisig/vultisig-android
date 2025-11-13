@@ -85,16 +85,15 @@ class PolkadotHelper(
     }
 
     fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
-        val dummyPublicKey = PrivateKey().publicKeyEd25519
-
         val inputData = getPreSignedInputData(keysignPayload)
+        val dummyPublicKey = PrivateKey().publicKeyEd25519
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
 
-        // Add a dummy ED25519 signature (64 bytes of zeros) - we still use zeros for the signature
-        // but use the dummy public key so the transaction structure is valid
-        allSignatures.add("0".repeat(128).toHexByteArray())
+        // Exact match: 64 bytes of zero, not hex string
+        val zeroSignature = ByteArray(64) { 0 }
+        allSignatures.add(zeroSignature)
         publicKeys.add(dummyPublicKey.data())
 
         // Compile with the dummy signature
