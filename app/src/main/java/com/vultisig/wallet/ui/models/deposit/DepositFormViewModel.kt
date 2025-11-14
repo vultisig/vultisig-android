@@ -55,6 +55,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -392,12 +393,6 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private fun setMetadataInfo() {
-        viewModelScope.launch {
-            if (!bondAddress.isNullOrEmpty()) {
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
-            }
-        }
-
         if (!depositTypeAction.isNullOrEmpty()) {
             val action = parseDepositType(depositTypeAction)
 
@@ -418,6 +413,7 @@ internal class DepositFormViewModel @Inject constructor(
                     else -> DepositOption.Bond
                 }
                 selectDepositOption(depositOption)
+
                 if (action == DeFiNavActions.STAKE_STCY) {
                     onAutoCompoundTcyStake(true)
                 }
@@ -587,6 +583,12 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 else -> Unit
+            }
+
+            viewModelScope.launch {
+                if (!bondAddress.isNullOrEmpty()) {
+                    nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
+                }
             }
         }
     }

@@ -359,21 +359,22 @@ internal class DefiPositionsViewModel @Inject constructor(
         return total.formatAmount(CoinType.THORCHAIN)
     }
 
-    private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal, coin: Coin): BigDecimal {
+    private suspend fun calculateTotalValue(totalTokenAmount: BigDecimal, coin: Coin): BigDecimal {
         try {
-            if (totalRuneAmount == BigDecimal.ZERO) {
+            if (totalTokenAmount == BigDecimal.ZERO) {
                 return BigDecimal.ZERO
             }
 
             val currency = appCurrencyRepository.currency.first()
-            val runePrice = tokenPriceRepository.getCachedPrice(
+
+            val tokenPrice = tokenPriceRepository.getCachedPrice(
                 tokenId = coin.id,
                 appCurrency = currency
             ) ?: BigDecimal.ZERO
 
-            Timber.d("${coin.id} price: $runePrice, amount: $totalRuneAmount")
+            Timber.d("${coin.id} price: $tokenPrice, amount: $totalTokenAmount")
 
-            return totalRuneAmount * runePrice
+            return totalTokenAmount * tokenPrice
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate total value")
             return BigDecimal.ZERO
