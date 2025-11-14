@@ -127,7 +127,7 @@ internal data class BondedNodeUiModel(
 
 data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
-    val stakeDefaultAmount: BigInteger = BigInteger.ZERO,
+    val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
     val rujiStakeAmount: BigInteger = BigInteger.ZERO,
     val tcyStakeAmount: BigInteger = BigInteger.ZERO,
     val isLoading: Boolean = false,
@@ -156,13 +156,13 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val loadedTabs = mutableSetOf<String>()
 
     private val _totalValueBond = MutableStateFlow(BigInteger.ZERO)
-    private val _totalValueDefaultStake = MutableStateFlow(BigInteger.ZERO)
+    private val _totalValueDefaultStake = MutableStateFlow(StakeDefaultValues())
     private val _totalValueRujiStake = MutableStateFlow(BigInteger.ZERO)
     private val _totalValueTCYStake = MutableStateFlow(BigInteger.ZERO)
     private val _isLoadingTotalAmount = MutableStateFlow(true)
 
     val totalValueBond: StateFlow<BigInteger> = _totalValueBond
-    val totalValueDefaultStake: StateFlow<BigInteger> = _totalValueDefaultStake
+    val totalValueDefaultStake: StateFlow<StakeDefaultValues> = _totalValueDefaultStake
     val totalValueRujiStake: StateFlow<BigInteger> = _totalValueRujiStake
     val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
@@ -183,7 +183,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             ) { bondValue, stakeValue, rujiStake, tcyStake, isLoading ->
                 TotalDefiValue(
                     bondAmount = bondValue,
-                    stakeDefaultAmount = stakeValue,
+                    defaultStakeValues = stakeValue,
                     rujiStakeAmount = rujiStake,
                     tcyStakeAmount = tcyStake,
                     isLoading = isLoading,
@@ -195,7 +195,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             }
         }
     }
-    
+
     private fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
         viewModelScope.launch {
             val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
@@ -206,7 +206,13 @@ internal class DefiPositionsViewModel @Inject constructor(
                 val runeFiat = calculateTotalValue(totalInRune, Coins.ThorChain.RUNE)
                 val rujiFiat = calculateTotalValue(totalInRuji, Coins.ThorChain.RUJI)
                 val tcyFiat = calculateTotalValue(totalInTCY, Coins.ThorChain.TCY)
-                val totalValueFiat = runeFiat + rujiFiat + tcyFiat
+                val defaultStakingFiat =
+                    totalValue.defaultStakeValues.stakeElements.sumOf { position ->
+                        val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
+                        calculateTotalValue(decimalAmount, position.coin)
+                    }
+
+                val totalValueFiat = runeFiat + rujiFiat + tcyFiat + defaultStakingFiat
 
                 val currencyFormat = withContext(Dispatchers.IO) {
                     appCurrencyRepository.getCurrencyFormat()
@@ -374,7 +380,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-   private fun loadStakingPositions() {
+    private fun loadStakingPositions() {
         loadedTabs.add(DefiTab.STAKING.displayName)
 
         viewModelScope.launch {
@@ -382,7 +388,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             // Initial Loading Status
             if (!selectedPositions.hasStakingPositions()) {
-                _totalValueDefaultStake.update { BigInteger.ZERO }
+                _totalValueDefaultStake.update { StakeDefaultValues() }
                 _totalValueRujiStake.update { BigInteger.ZERO }
                 _totalValueTCYStake.update { BigInteger.ZERO }
                 _isLoadingTotalAmount.update { false }
@@ -432,11 +438,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                 val address = runeCoin.address
                 val coinsToLoad = supportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
-                }.map {
-                    coin -> coin.id
-                }
+                }.map { coin -> coin.id }
 
-                if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)){
+                if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
                     createRujiStakePosition(address, vaultId)
                 }
                 if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
@@ -577,12 +581,13 @@ internal class DefiPositionsViewModel @Inject constructor(
                     }
                 }
                 .collect { defaultPositions ->
-                    defaultPositions.forEach { position ->
-                        if (coinsToLoad.contains(position.coin.id)) {
+                    val positions = defaultPositions
+                        .filter { it.coin.id in coinsToLoad }
+                        .map { defaultPosition ->
                             val stakeAmount =
-                                Chain.ThorChain.coinType.toValue(position.stakeAmount)
+                                Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
                             val coin =
-                                position.coin
+                                defaultPosition.coin
                             val supportsMint = coin.ticker.contains("yrune", ignoreCase = true) ||
                                     coin.ticker.contains("ytcy", ignoreCase = true)
 
@@ -592,7 +597,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                                 "Staked"
                             }
                             val position = StakePositionUiModel(
-                                coin = position.coin,
+                                coin = defaultPosition.coin,
                                 stakeAssetHeader = "$header ${coin.ticker}",
                                 stakeAmount = "${stakeAmount.toPlainString()} ${coin.ticker}",
                                 apy = null,
@@ -606,7 +611,19 @@ internal class DefiPositionsViewModel @Inject constructor(
                             )
 
                             updateExistingPosition(position)
+
+                            position to defaultPosition.stakeAmount
                         }
+
+                    _totalValueDefaultStake.update {
+                        StakeDefaultValues(
+                            stakeElements = positions.map { position ->
+                                StakeDefaultValues.StakingElement(
+                                    coin = position.first.coin,
+                                    amount = position.second
+                                )
+                            }
+                        )
                     }
 
                     _isLoadingTotalAmount.update { false }
@@ -614,7 +631,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         }
     }
 
-    fun updateExistingPosition(stakePosition: StakePositionUiModel){
+    fun updateExistingPosition(stakePosition: StakePositionUiModel) {
         state.update { currentState ->
             val existingPositions = currentState.staking.positions
             val positionExists = existingPositions.any {
@@ -931,8 +948,8 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 }
 
-internal data class StakeDefaultValues(
-    val stakeDefaultValues: List<StakingElement> = emptyList()
+data class StakeDefaultValues(
+    val stakeElements: List<StakingElement> = emptyList()
 ) {
     data class StakingElement(
         val coin: Coin,
