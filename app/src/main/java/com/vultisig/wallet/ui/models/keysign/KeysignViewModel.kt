@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.utils.evmDerivationPath
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -154,8 +155,8 @@ internal class KeysignViewModel(
                         sessionID = sessionId,
                         encryptionKeyHex = encryptionKeyHex,
                         messageToSign = messagesToSign,
-                        chainPath = this.keysignPayload?.coin?.coinType?.takeIf { it != CoinType.SEI }
-                            ?.derivationPath() ?: "m/44'/60'/0'/0/0",
+                        chainPath = this.keysignPayload?.coin?.coinType?.evmDerivationPath()
+                            ?: "m/44'/60'/0'/0/0",
                         isInitiateDevice = isInitiatingDevice,
                         sessionApi = sessionApi,
                         encryption = encryption,
@@ -294,8 +295,7 @@ internal class KeysignViewModel(
             keysignReq.localPartyKey = vault.localPartyID
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
-            (keysignPayload?.coin?.coinType?.takeIf { it != CoinType.SEI } ?: CoinType.ETHEREUM).derivationPath()
-
+            keysignReq.derivePath = (keysignPayload?.coin?.coinType?.evmDerivationPath())
 
             val keysignResp = when (keyType) {
                 TssKeyType.ECDSA -> {

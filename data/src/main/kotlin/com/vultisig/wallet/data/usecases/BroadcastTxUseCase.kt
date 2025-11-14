@@ -38,8 +38,8 @@ import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.Chain.Solana
-import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Sei
+import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
 import com.vultisig.wallet.data.models.Chain.ThorChain

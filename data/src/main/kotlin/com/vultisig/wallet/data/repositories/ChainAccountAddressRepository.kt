@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.utils.evmCompatibleType
+import com.vultisig.wallet.data.utils.evmDerivationPath
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -46,7 +48,9 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         when (chain.TssKeysignType) {
             TssKeyType.ECDSA -> {
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-                    vault.pubKeyECDSA, vault.hexChainCode, (chain.coinType.takeIf { it != CoinType.SEI } ?: CoinType.ETHEREUM).derivationPath()
+                    vault.pubKeyECDSA,
+                    vault.hexChainCode,
+                    (chain.coinType.evmDerivationPath())
                 )
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -58,8 +62,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     val pk = publicKey.takeIf { chain.coinType != CoinType.TRON }
                         ?: publicKey.uncompressed()
                     val address = adjustAddressPrefix(
-                        chain.coinType.takeIf { it != CoinType.SEI } ?: CoinType.ETHEREUM,
-                        (chain.coinType.takeIf { it != CoinType.SEI } ?: CoinType.ETHEREUM).deriveAddressFromPublicKey(pk)
+                        chain.coinType.evmCompatibleType,
+                        (chain.coinType.evmCompatibleType).deriveAddressFromPublicKey(pk)
                     )
                     return Pair(
                         address,
@@ -116,20 +120,19 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override fun isValid(
         chain: Chain,
         address: String,
-    ): Boolean = if (chain == Chain.MayaChain) {
-        AnyAddress.isValidBech32(
+    ): Boolean = when (chain) {
+        Chain.MayaChain -> AnyAddress.isValidBech32(
             address,
             chain.coinType,
             "maya"
         )
-    } else
-        if (chain == Chain.Sei) {
-            AnyAddress.isValid(
-                address,
-                CoinType.ETHEREUM
-            )
-        } else {
-            chain.coinType.validate(address)
+
+        Chain.Sei -> AnyAddress.isValid(
+            address,
+            CoinType.ETHEREUM
+        )
+
+        else -> chain.coinType.validate(address)
     }
 
     private fun adjustAddressPrefix(type: CoinType, address: String): String =
