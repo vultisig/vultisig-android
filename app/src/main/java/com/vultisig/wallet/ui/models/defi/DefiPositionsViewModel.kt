@@ -45,7 +45,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -128,7 +127,9 @@ internal data class BondedNodeUiModel(
 
 data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
-    val stakeAmount: BigInteger = BigInteger.ZERO,
+    val stakeDefaultAmount: BigInteger = BigInteger.ZERO,
+    val rujiStakeAmount: BigInteger = BigInteger.ZERO,
+    val tcyStakeAmount: BigInteger = BigInteger.ZERO,
     val isLoading: Boolean = false,
 )
 
@@ -155,11 +156,15 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val loadedTabs = mutableSetOf<String>()
 
     private val _totalValueBond = MutableStateFlow(BigInteger.ZERO)
-    private val _totalValueStake = MutableStateFlow(BigInteger.ZERO)
+    private val _totalValueDefaultStake = MutableStateFlow(BigInteger.ZERO)
+    private val _totalValueRujiStake = MutableStateFlow(BigInteger.ZERO)
+    private val _totalValueTCYStake = MutableStateFlow(BigInteger.ZERO)
     private val _isLoadingTotalAmount = MutableStateFlow(true)
 
     val totalValueBond: StateFlow<BigInteger> = _totalValueBond
-    val totalValueStake: StateFlow<BigInteger> = _totalValueStake
+    val totalValueDefaultStake: StateFlow<BigInteger> = _totalValueDefaultStake
+    val totalValueRujiStake: StateFlow<BigInteger> = _totalValueRujiStake
+    val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
 
     init {
@@ -171,12 +176,16 @@ internal class DefiPositionsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 totalValueBond,
-                totalValueStake,
+                totalValueDefaultStake,
+                totalValueRujiStake,
+                totalValueTCYStake,
                 isLoadingTotalAmount,
-            ) { bondValue, stakeValue, isLoading ->
+            ) { bondValue, stakeValue, rujiStake, tcyStake, isLoading ->
                 TotalDefiValue(
                     bondAmount = bondValue,
-                    stakeAmount = stakeValue,
+                    stakeDefaultAmount = stakeValue,
+                    rujiStakeAmount = rujiStake,
+                    tcyStakeAmount = tcyStake,
                     isLoading = isLoading,
                 )
             }.collect { totalValue ->
@@ -190,16 +199,33 @@ internal class DefiPositionsViewModel @Inject constructor(
     private fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
         viewModelScope.launch {
             val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
+            val totalInRuji = CoinType.THORCHAIN.toValue(totalValue.rujiStakeAmount)
+            val totalInTCY = CoinType.THORCHAIN.toValue(totalValue.tcyStakeAmount)
+
             try {
-                val fiatValue = calculateTotalValue(totalInRune)
+                val runeFiat = calculateTotalValue(totalInRune, Coins.ThorChain.RUNE)
+                val rujiFiat = calculateTotalValue(totalInRuji, Coins.ThorChain.RUJI)
+                val tcyFiat = calculateTotalValue(totalInTCY, Coins.ThorChain.TCY)
+                val totalValueFiat = runeFiat + rujiFiat + tcyFiat
+
+                val currencyFormat = withContext(Dispatchers.IO) {
+                    appCurrencyRepository.getCurrencyFormat()
+                }
+
                 state.update {
                     it.copy(
-                        totalAmountPrice = fiatValue,
+                        totalAmountPrice = currencyFormat.format(totalValueFiat.toDouble()),
                         isTotalAmountLoading = false,
                     )
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to calculate total fiat value")
+
+                state.update {
+                    it.copy(
+                        isTotalAmountLoading = false,
+                    )
+                }
             }
         }
     }
@@ -327,27 +353,28 @@ internal class DefiPositionsViewModel @Inject constructor(
         return total.formatAmount(CoinType.THORCHAIN)
     }
 
-    private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal): String {
-        return try {
+    private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal, coin: Coin): BigDecimal {
+        try {
+            if (totalRuneAmount == BigDecimal.ZERO) {
+                return BigDecimal.ZERO
+            }
+
             val currency = appCurrencyRepository.currency.first()
             val runePrice = tokenPriceRepository.getCachedPrice(
-                tokenId = "RUNE-THORChain",
+                tokenId = coin.id,
                 appCurrency = currency
             ) ?: BigDecimal.ZERO
 
-            Timber.d("RUNE price: $runePrice, amount: $totalRuneAmount")
+            Timber.d("${coin.id} price: $runePrice, amount: $totalRuneAmount")
 
-            val totalValue = totalRuneAmount * runePrice
-            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
-
-            currencyFormat.format(totalValue.toDouble())
+            return totalRuneAmount * runePrice
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate total value")
-            DEFAULT_ZERO_BALANCE
+            return BigDecimal.ZERO
         }
     }
 
-    private fun loadStakingPositions() {
+   private fun loadStakingPositions() {
         loadedTabs.add(DefiTab.STAKING.displayName)
 
         viewModelScope.launch {
@@ -355,7 +382,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             // Initial Loading Status
             if (!selectedPositions.hasStakingPositions()) {
-                _totalValueStake.value = BigInteger.ZERO
+                _totalValueDefaultStake.update { BigInteger.ZERO }
+                _totalValueRujiStake.update { BigInteger.ZERO }
+                _totalValueTCYStake.update { BigInteger.ZERO }
+                _isLoadingTotalAmount.update { false }
+
                 state.update {
                     it.copy(
                         staking = emptyStakingTabUiModel()
@@ -472,6 +503,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                         )
 
                         updateExistingPosition(stakePosition)
+
+                        _totalValueRujiStake.update { details.stakeAmount }
+                        _isLoadingTotalAmount.update { false }
                     }
                 }
         }
@@ -514,6 +548,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
 
                     updateExistingPosition(stakePosition)
+
+                    _totalValueTCYStake.update { position.stakeAmount }
+                    _isLoadingTotalAmount.update { false }
                 }
             }
         }
@@ -571,6 +608,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                             updateExistingPosition(position)
                         }
                     }
+
+                    _isLoadingTotalAmount.update { false }
                 }
         }
     }
@@ -890,4 +929,13 @@ internal class DefiPositionsViewModel @Inject constructor(
             )
         }
     }
+}
+
+internal data class StakeDefaultValues(
+    val stakeDefaultValues: List<StakingElement> = emptyList()
+) {
+    data class StakingElement(
+        val coin: Coin,
+        val amount: BigInteger,
+    )
 }
