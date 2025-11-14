@@ -473,12 +473,15 @@ internal class DefiPositionsViewModel @Inject constructor(
             rujiStakingService.getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions RUJI")
-                    // TODO: Change
                     state.update {
                         it.copy(
                             staking = it.staking.copy(
                                 positions = it.staking.positions.map { position ->
-                                    position.copy(isLoading = false)
+                                    if (position.coin.id == Coins.ThorChain.RUJI.id) {
+                                        position.copy(isLoading = false)
+                                    } else {
+                                        position
+                                    }
                                 }
                             )
                         )
@@ -523,12 +526,15 @@ internal class DefiPositionsViewModel @Inject constructor(
                 vaultId = vaultId,
             ).catch { t ->
                 Timber.e(t, "Failed to load staking positions TCY Stake")
-                // TODO: Change
                 state.update {
                     it.copy(
                         staking = it.staking.copy(
                             positions = it.staking.positions.map { position ->
-                                position.copy(isLoading = false)
+                                if (position.coin.id == Coins.ThorChain.TCY.id) {
+                                    position.copy(isLoading = false)
+                                } else {
+                                    position
+                                }
                             }
                         )
                     )
@@ -570,12 +576,17 @@ internal class DefiPositionsViewModel @Inject constructor(
             defaultStakingPositionService.getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions")
-                    // TODO: Change
                     state.update {
                         it.copy(
                             staking = it.staking.copy(
                                 positions = it.staking.positions.map { position ->
-                                    position.copy(isLoading = false)
+                                    if (position.coin.id == Coins.ThorChain.yRUNE.id
+                                        || position.coin.id == Coins.ThorChain.yTCY.id
+                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
+                                        position.copy(isLoading = false)
+                                    } else {
+                                        position
+                                    }
                                 }
                             )
                         )
