@@ -790,6 +790,8 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             loadedTabs.clear()
 
+            bondedNodesRefreshTrigger.value++
+
             launch {
                 loadBondedNodes()
             }
