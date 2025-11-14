@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.models.Chain.Ethereum
 import com.vultisig.wallet.data.models.Chain.GaiaChain
 import com.vultisig.wallet.data.models.Chain.Kujira
 import com.vultisig.wallet.data.models.Chain.Litecoin
+import com.vultisig.wallet.data.models.Chain.Mantle
 import com.vultisig.wallet.data.models.Chain.MayaChain
 import com.vultisig.wallet.data.models.Chain.Noble
 import com.vultisig.wallet.data.models.Chain.Optimism
@@ -37,6 +38,7 @@ import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.Chain.Solana
+import com.vultisig.wallet.data.models.Chain.Sei
 import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
@@ -83,8 +85,8 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
             )
         }
 
-        Ethereum, CronosChain, Blast, BscChain, Avalanche, Chain.Mantle,
-        Base, Polygon, Optimism, Arbitrum, ZkSync -> {
+        Ethereum, CronosChain, Blast, BscChain, Avalanche, Mantle,
+        Base, Polygon, Optimism, Arbitrum, ZkSync ,Sei -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
             evmApi.sendTransaction(tx.rawTransaction)
         }

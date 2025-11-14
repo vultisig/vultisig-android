@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.utils.compatibleType
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -23,11 +25,6 @@ interface ChainAccountAddressRepository {
         chain: Chain,
         vault: Vault,
     ): Pair<String, String>
-
-    suspend fun getAddress(
-        type: CoinType,
-        publicKey: PublicKey,
-    ): String
 
     suspend fun getAddress(
         coin: Coin,
@@ -51,7 +48,9 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
         when (chain.TssKeysignType) {
             TssKeyType.ECDSA -> {
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-                    vault.pubKeyECDSA, vault.hexChainCode, chain.coinType.derivationPath()
+                    vault.pubKeyECDSA,
+                    vault.hexChainCode,
+                    chain.coinType.compatibleDerivationPath()
                 )
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -63,8 +62,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     val pk = publicKey.takeIf { chain.coinType != CoinType.TRON }
                         ?: publicKey.uncompressed()
                     val address = adjustAddressPrefix(
-                        chain.coinType,
-                        chain.coinType.deriveAddressFromPublicKey(pk)
+                        chain.coinType.compatibleType,
+                        chain.coinType.compatibleType.deriveAddressFromPublicKey(pk)
                     )
                     return Pair(
                         address,
@@ -114,11 +113,6 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     }
 
     override suspend fun getAddress(
-        type: CoinType,
-        publicKey: PublicKey,
-    ): String = adjustAddressPrefix(type, type.deriveAddressFromPublicKey(publicKey))
-
-    override suspend fun getAddress(
         coin: Coin,
         vault: Vault,
     ): Pair<String, String> = getAddress(coin.chain, vault)
@@ -126,10 +120,19 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override fun isValid(
         chain: Chain,
         address: String,
-    ): Boolean = if (chain == Chain.MayaChain) {
-        AnyAddress.isValidBech32(address, chain.coinType, "maya")
-    } else {
-        chain.coinType.validate(address)
+    ): Boolean = when (chain) {
+        Chain.MayaChain -> AnyAddress.isValidBech32(
+            address,
+            chain.coinType,
+            "maya"
+        )
+
+        Chain.Sei -> AnyAddress.isValid(
+            address,
+            CoinType.ETHEREUM
+        )
+
+        else -> chain.coinType.validate(address)
     }
 
     private fun adjustAddressPrefix(type: CoinType, address: String): String =
