@@ -331,6 +331,10 @@ internal class SendFormViewModel @Inject constructor(
             expandSection(SendSections.Address)
         }
 
+        if (preSelectedTokenId != null && address != null) {
+            expandSection(SendSections.Amount)
+        }
+
         amount?.let {
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it)
         }
@@ -1357,7 +1361,7 @@ internal class SendFormViewModel @Inject constructor(
                 if (lastTokenValueUserInput != tokenString) {
                     val tokenDecimal = tokenString.toBigDecimalOrNull()
                     isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
-                    
+
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places

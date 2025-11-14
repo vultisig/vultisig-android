@@ -21,8 +21,12 @@ class DeepLinkHelper(input: String) {
 
         scheme = parts[0]
         parameters = runCatching { parts[1].split("&") }.getOrElse { emptyList() }.associate {
-            val (key, value) = it.split("=")
-            key to value
+            val pair = it.split("=", limit = 2)
+            if (pair.size == 2) {
+                pair[0] to Uri.decode(pair[1])
+            } else {
+                pair[0] to ""
+            }
         }
     }
 
@@ -78,27 +82,31 @@ class DeepLinkHelper(input: String) {
         return null
     }
 
-    fun createSendDeeplink(
-        assetChain: String,
-        assetTicker: String,
-        toAddress: String,
-        amount: String? = null,
-        memo: String? = null
-    ): String {
-        return StringBuilder().apply {
-            append("vultisig://send?")
-            append("assetChain=").append(assetChain)
-            append("&assetTicker=").append(assetTicker)
-            append("&toAddress=").append(toAddress)
+    companion object {
 
-            amount?.let {
-                append("&amount=").append(it)
-            }
+        fun createSendDeeplink(
+            assetChain: String,
+            assetTicker: String,
+            toAddress: String,
+            amount: String? = null,
+            memo: String? = null,
+        ): String {
+            return StringBuilder().apply {
+                append("vultisig://send?")
+                append("assetChain=").append(Uri.encode(assetChain))
+                append("&assetTicker=").append(Uri.encode(assetTicker))
+                append("&toAddress=").append(Uri.encode(toAddress))
 
-            memo?.let {
-                append("&memo=").append(it)
-            }
-        }.toString()
+                amount?.let {
+                    append("&amount=").append(Uri.encode(it))
+                }
+
+                memo?.let {
+                    append("&memo=").append(Uri.encode(it))
+                }
+            }.toString()
+        }
+
     }
 
 }
