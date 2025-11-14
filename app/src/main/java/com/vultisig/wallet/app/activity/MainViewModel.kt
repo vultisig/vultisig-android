@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.vultisig.wallet.data.common.DeepLinkHelper
+import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -94,11 +96,34 @@ internal class MainViewModel @Inject constructor(
     fun openUri(uri: Uri) {
         viewModelScope.launch {
             delay(1.seconds)
-            navigator.route(
-                Route.ImportVault(
-                    uri = uri.toString()
+            val deepLinkHelper = DeepLinkHelper(uri)
+            if (deepLinkHelper.isSendDeeplink()) {
+                if(vaultRepository.hasVaults()) {
+                    navigator.route(
+                        Route.VaultList(
+                            openType = Route.VaultList.OpenType.DeepLink(
+                                sendDeepLinkData = SendDeeplinkData(
+                                    assetChain = deepLinkHelper.getAssetChain(),
+                                    assetTicker = deepLinkHelper.getAssetTicker(),
+                                    toAddress = deepLinkHelper.getToAddress(),
+                                    amount = deepLinkHelper.getAmount(),
+                                    memo = deepLinkHelper.getMemo()
+                                )
+                            )
+                        )
+                    )
+                } else {
+                    navigator.route(
+                        Route.ImportVault()
+                    )
+                }
+            } else {
+                navigator.route(
+                    Route.ImportVault(
+                        uri = uri.toString()
+                    )
                 )
-            )
+            }
         }
     }
 

@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavHost
 import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.rememberVsBottomSheetNavController
@@ -13,14 +12,14 @@ import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.components.
 
 @Composable
 internal fun VaultListBottomSheet(
-    vaultId: VaultId,
+    vaultList: Route.VaultList,
     onDismiss: () -> Unit,
 ) {
     V2BottomSheet(
         onDismissRequest = onDismiss,
     ) {
         val navController = rememberVsBottomSheetNavController(
-            initialRoute = Route.VaultList(vaultId)
+            initialRoute = vaultList
         )
 
         BackHandler {
@@ -36,7 +35,7 @@ internal fun VaultListBottomSheet(
             content = {
                 composable<Route.VaultList> {
                     VaultListScreen(
-                        vaultId = it.vaultId,
+                        openType = vaultList.openType,
                         navController = navController,
                     )
                 }

@@ -15,6 +15,8 @@ import com.vultisig.wallet.data.usecases.VaultAndBalanceUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -56,17 +58,21 @@ internal class VaultListViewModel @Inject constructor(
 
     val state = MutableStateFlow(VaultListUiModel())
 
+    lateinit var openType: Route.VaultList.OpenType
     private var vaultId: VaultId? = null
     private var reIndexJob: Job? = null
     private var collectVaultsJob: Job? = null
     private var collectFoldersJob: Job? = null
 
-    fun init(vaultId: VaultId) {
-        this.vaultId = vaultId
-        collectFolders()
+    fun init(type: Route.VaultList.OpenType) {
+        this.openType = type
         collectEachVaultAndBalance()
-        collectCurrentVaultAndFolder(vaultId)
         collectTotalVaultAndBalance()
+        if (type is Route.VaultList.OpenType.Home) {
+            this.vaultId = type.vaultId
+            collectFolders()
+            collectCurrentVaultAndFolder(type.vaultId)
+        }
     }
 
     private fun collectEachVaultAndBalance() {
@@ -146,8 +152,25 @@ internal class VaultListViewModel @Inject constructor(
 
     fun selectVault(vaultId: String) {
         viewModelScope.launch {
-            lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
-            navigator.navigate(Destination.Back)
+            when (openType) {
+                is Route.VaultList.OpenType.DeepLink -> {
+                    val sendDeepLinkData = (openType as Route.VaultList.OpenType.DeepLink).sendDeepLinkData
+                    navigator.route(
+                        Route.Send(
+                            vaultId = vaultId,
+                            chainId = sendDeepLinkData.assetChain,
+                            tokenId = sendDeepLinkData.assetTicker,
+                            address = sendDeepLinkData.toAddress,
+                            amount = sendDeepLinkData.amount,
+                            memo = sendDeepLinkData.memo,
+                        )
+                    )
+                }
+                is Route.VaultList.OpenType.Home -> {
+                    lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
+                    navigator.back()
+                }
+            }
         }
     }
 

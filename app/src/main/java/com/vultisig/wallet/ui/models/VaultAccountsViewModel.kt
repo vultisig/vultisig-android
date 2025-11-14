@@ -437,7 +437,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun openVaultList(){
         vaultId?.let {
             viewModelScope.launch {
-                navigator.route(Route.VaultList(it))
+                navigator.route(Route.VaultList(
+                    openType = Route.VaultList.OpenType.Home(it)
+                ))
             }
         }
     }
