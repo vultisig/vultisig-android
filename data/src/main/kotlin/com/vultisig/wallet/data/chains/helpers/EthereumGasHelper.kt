@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.utils.evmChainId
+import com.vultisig.wallet.data.utils.compatibleChainId
 import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Ethereum
 import java.math.BigInteger
@@ -25,7 +25,7 @@ object EthereumGasHelper {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
         val signingInputBuilder = signingInput.apply {
             chainId =
-                ByteString.copyFrom(BigInteger(coinType.evmChainId()).toByteArray())
+                ByteString.copyFrom(BigInteger(coinType.compatibleChainId()).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
         }
         if (keysignPayload.coin.chain == Chain.BscChain) {

@@ -10,8 +10,8 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.data.utils.evmCompatibleType
-import com.vultisig.wallet.data.utils.evmDerivationPath
+import com.vultisig.wallet.data.utils.compatibleType
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -156,7 +156,7 @@ class EvmHelper(
         val result = getPreSignedInputData(keysignPayload)
 
         val hashes = TransactionCompiler.preImageHashes(
-            coinType.evmCompatibleType,
+            coinType.compatibleType,
             result
         )
         val preSigningOutput =
@@ -180,11 +180,11 @@ class EvmHelper(
         val ethPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
             vaultHexChainCode,
-            coinType.evmDerivationPath()
+            coinType.compatibleDerivationPath()
         )
         val publicKey = PublicKey(ethPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val preHashes = TransactionCompiler.preImageHashes(
-            coinType.evmCompatibleType,
+            coinType.compatibleType,
             inputData
         )
         val preSigningOutput =
@@ -201,7 +201,7 @@ class EvmHelper(
         allSignatures.add(signature)
 
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
-            coinType.evmCompatibleType,
+            coinType.compatibleType,
             inputData,
             allSignatures,
             allPublicKeys

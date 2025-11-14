@@ -27,7 +27,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
-import com.vultisig.wallet.data.utils.evmDerivationPath
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -48,7 +48,6 @@ import tss.KeysignResponse
 import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -155,7 +154,7 @@ internal class KeysignViewModel(
                         sessionID = sessionId,
                         encryptionKeyHex = encryptionKeyHex,
                         messageToSign = messagesToSign,
-                        chainPath = this.keysignPayload?.coin?.coinType?.evmDerivationPath()
+                        chainPath = this.keysignPayload?.coin?.coinType?.compatibleDerivationPath()
                             ?: "m/44'/60'/0'/0/0",
                         isInitiateDevice = isInitiatingDevice,
                         sessionApi = sessionApi,
@@ -295,7 +294,8 @@ internal class KeysignViewModel(
             keysignReq.localPartyKey = vault.localPartyID
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
-            keysignReq.derivePath = keysignPayload?.coin?.coinType?.evmDerivationPath()
+            keysignReq.derivePath =
+                keysignPayload?.coin?.coinType?.compatibleDerivationPath() ?: "m/44'/60'/0'/0/0"
 
             val keysignResp = when (keyType) {
                 TssKeyType.ECDSA -> {

@@ -11,8 +11,8 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.utils.evmCompatibleType
-import com.vultisig.wallet.data.utils.evmDerivationPath
+import com.vultisig.wallet.data.utils.compatibleType
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -50,7 +50,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
                     vault.pubKeyECDSA,
                     vault.hexChainCode,
-                    chain.coinType.evmDerivationPath()
+                    chain.coinType.compatibleDerivationPath()
                 )
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -62,8 +62,8 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     val pk = publicKey.takeIf { chain.coinType != CoinType.TRON }
                         ?: publicKey.uncompressed()
                     val address = adjustAddressPrefix(
-                        chain.coinType.evmCompatibleType,
-                        chain.coinType.evmCompatibleType.deriveAddressFromPublicKey(pk)
+                        chain.coinType.compatibleType,
+                        chain.coinType.compatibleType.deriveAddressFromPublicKey(pk)
                     )
                     return Pair(
                         address,

@@ -38,19 +38,19 @@ internal val CoinType.getDustThreshold: Long
         else -> error("Unsupported CoinType: $this")
     }
 
-val CoinType.evmCompatibleType: CoinType
+val CoinType.compatibleType: CoinType
     get() = when (this) {
         CoinType.SEI -> CoinType.ETHEREUM
         else -> this
     }
 
-fun CoinType.evmChainId(): String =
+fun CoinType.compatibleChainId(): String =
     when (this) {
         CoinType.SEI -> "1329"
         else -> this.chainId()
     }
 
-fun CoinType.evmDerivationPath(): String =
+fun CoinType.compatibleDerivationPath(): String =
     when (this) {
         CoinType.SEI -> "m/44'/60'/0'/0/0"
         else -> this.derivationPath()
