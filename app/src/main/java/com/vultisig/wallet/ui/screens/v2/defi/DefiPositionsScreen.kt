@@ -88,7 +88,7 @@ internal fun DefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
-                isLoading = state.bonded.isLoading,
+                isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
                 image = R.drawable.referral_data_banner,
             )

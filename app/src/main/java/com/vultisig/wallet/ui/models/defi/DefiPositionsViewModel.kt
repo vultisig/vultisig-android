@@ -44,7 +44,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
@@ -64,6 +67,7 @@ internal data class DefiPositionsUiModel(
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
+    val isTotalAmountLoading: Boolean = false,
 
     // position selection dialog
     val showPositionSelectionDialog: Boolean = false,
@@ -122,6 +126,12 @@ internal data class BondedNodeUiModel(
     val nextChurn: String,
 )
 
+data class TotalDefiValue(
+    val bondAmount: BigInteger = BigInteger.ZERO,
+    val stakeAmount: BigInteger = BigInteger.ZERO,
+    val isLoading: Boolean = false,
+)
+
 @HiltViewModel
 internal class DefiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -144,8 +154,54 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private val loadedTabs = mutableSetOf<String>()
 
+    private val _totalValueBond = MutableStateFlow(BigInteger.ZERO)
+    private val _totalValueStake = MutableStateFlow(BigInteger.ZERO)
+    private val _isLoadingTotalAmount = MutableStateFlow(true)
+
+    val totalValueBond: StateFlow<BigInteger> = _totalValueBond
+    val totalValueStake: StateFlow<BigInteger> = _totalValueStake
+    val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
+
     init {
         loadSavedPositions()
+        loadTotalValue()
+    }
+
+    private fun loadTotalValue() {
+        viewModelScope.launch {
+            combine(
+                totalValueBond,
+                totalValueStake,
+                isLoadingTotalAmount,
+            ) { bondValue, stakeValue, isLoading ->
+                TotalDefiValue(
+                    bondAmount = bondValue,
+                    stakeAmount = stakeValue,
+                    isLoading = isLoading,
+                )
+            }.collect { totalValue ->
+                if (!totalValue.isLoading) {
+                    handleTotalValueUpdate(totalValue)
+                }
+            }
+        }
+    }
+    
+    private fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
+        viewModelScope.launch {
+            val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
+            try {
+                val fiatValue = calculateTotalValue(totalInRune)
+                state.update {
+                    it.copy(
+                        totalAmountPrice = fiatValue,
+                        isTotalAmountLoading = false,
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to calculate total fiat value")
+            }
+        }
     }
 
     private fun loadSavedPositions() {
@@ -174,14 +230,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
         viewModelScope.launch {
             if (!state.value.selectedPositions.hasBondPositions()) {
+                _totalValueBond.value = BigInteger.ZERO
+
                 state.update {
                     it.copy(
                         bonded = emptyBondedTabUiModel(),
-                        totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
-                            DEFAULT_ZERO_BALANCE
-                        } else {
-                            it.totalAmountPrice
-                        }
                     )
                 }
                 return@launch
@@ -228,16 +281,10 @@ internal class DefiPositionsViewModel @Inject constructor(
                         // Format UI data and show
                         val nodeUiModels = activeNodes.map { it.toUiModel() }
                         val totalBonded = calculateTotalBonded(activeNodes)
-                        val totalBondedRaw = calculateTotalBondedRaw(activeNodes)
-                        val totalValue = calculateTotalValue(totalBondedRaw)
 
                         state.update {
                             it.copy(
-                                totalAmountPrice = if (it.selectedTab == DefiTab.BONDED.displayName) {
-                                    totalValue
-                                } else {
-                                    it.totalAmountPrice
-                                },
+                                isTotalAmountLoading = false,
                                 bonded = BondedTabUiModel(
                                     isLoading = false,
                                     totalBondedAmount = totalBonded,
@@ -245,15 +292,31 @@ internal class DefiPositionsViewModel @Inject constructor(
                                 )
                             )
                         }
+
+                        activeNodes.fold(BigInteger.ZERO) { acc, node ->
+                            acc + node.amount
+                        }.let {
+                            updateTotalValueStatus(it, false)
+                        }
                     }
             } catch (t: Throwable) {
                 Timber.e(t)
                 state.update {
                     it.copy(
+                        isTotalAmountLoading = false,
                         bonded = it.bonded.copy(isLoading = false)
                     )
                 }
             }
+        }
+    }
+
+    private fun updateTotalValueStatus(amount: BigInteger, loading: Boolean) {
+        _totalValueBond.update {
+            amount
+        }
+        _isLoadingTotalAmount.update {
+            loading
         }
     }
 
@@ -262,13 +325,6 @@ internal class DefiPositionsViewModel @Inject constructor(
             acc + node.amount
         }
         return total.formatAmount(CoinType.THORCHAIN)
-    }
-
-    private fun calculateTotalBondedRaw(nodes: List<BondedNodePosition>): BigDecimal {
-        val total = nodes.fold(BigInteger.ZERO) { acc, node ->
-            acc + node.amount
-        }
-        return Chain.ThorChain.coinType.toValue(total)
     }
 
     private suspend fun calculateTotalValue(totalRuneAmount: BigDecimal): String {
@@ -299,6 +355,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             // Initial Loading Status
             if (!selectedPositions.hasStakingPositions()) {
+                _totalValueStake.value = BigInteger.ZERO
                 state.update {
                     it.copy(
                         staking = emptyStakingTabUiModel()
