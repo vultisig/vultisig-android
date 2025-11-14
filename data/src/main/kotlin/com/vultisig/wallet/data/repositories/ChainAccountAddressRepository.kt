@@ -50,7 +50,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
                     vault.pubKeyECDSA,
                     vault.hexChainCode,
-                    (chain.coinType.evmDerivationPath())
+                    chain.coinType.evmDerivationPath()
                 )
                 val publicKey =
                     PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
@@ -63,7 +63,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         ?: publicKey.uncompressed()
                     val address = adjustAddressPrefix(
                         chain.coinType.evmCompatibleType,
-                        (chain.coinType.evmCompatibleType).deriveAddressFromPublicKey(pk)
+                        chain.coinType.evmCompatibleType.deriveAddressFromPublicKey(pk)
                     )
                     return Pair(
                         address,
