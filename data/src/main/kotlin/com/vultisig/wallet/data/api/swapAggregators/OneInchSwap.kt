@@ -63,7 +63,9 @@ class OneInchSwap(
                             .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                     )
             )
-        val gasPrice = quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+        val gasPrice = maxOf(quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
+            requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei)
         val gas = maxOf(
             (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
             requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit
