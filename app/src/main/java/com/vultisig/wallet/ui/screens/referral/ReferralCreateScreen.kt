@@ -1,12 +1,7 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -35,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -45,12 +37,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MoreInfoBox
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -68,6 +59,7 @@ import com.vultisig.wallet.ui.models.referral.FeesReferral
 import com.vultisig.wallet.ui.models.referral.ReferralError
 import com.vultisig.wallet.ui.models.referral.SearchStatusType
 import com.vultisig.wallet.ui.models.referral.isError
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -106,8 +98,6 @@ private fun ReferralCreateScreen(
     onToggleInfoBox: () -> Unit,
     onHideInfoBox: () -> Unit,
 ) {
-    val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
-    val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
 
     if (state.error != null) {
         val message = when (state.error) {
@@ -311,7 +301,6 @@ private fun ReferralCreateScreen(
 
         ShowInfoDialog(
             isVisible = state.showInfoBox,
-            statusBarHeightDp = statusBarHeightDp,
             onHideInfoBox = onHideInfoBox,
         )
     }
@@ -339,35 +328,25 @@ private fun CreateReferralUiState.getInnerState() =
 @Composable
 private fun ShowInfoDialog(
     isVisible: Boolean,
-    statusBarHeightDp: Dp,
     onHideInfoBox: () -> Unit,
 ) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onHideInfoBox
-                )
-        ) {
-            MoreInfoBox(
-                text = stringResource(R.string.referral_create_info_content),
-                title = stringResource(R.string.referral_create_info_title),
-                modifier = Modifier
-                    .padding(start = 62.dp, end = 8.dp, top = 8.dp)
-                    .offset(y = statusBarHeightDp)
-                    .wrapContentSize()
-                    .align(Alignment.TopStart)
-                    .clickable(onClick = onHideInfoBox)
+    val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
+    HintBox(
+        isVisible = isVisible,
+        message = stringResource(R.string.referral_create_info_content),
+        title = stringResource(R.string.referral_create_info_title),
+        onDismissClick = onHideInfoBox,
+        offset = IntOffset(
+            x = 0, y = statusBarHeightPx,
+        ),
+        pointerAlignment = Alignment.End,
+        modifier = Modifier
+            .padding(
+                start = 62.dp,
+                end = 8.dp,
+                top = 8.dp
             )
-        }
-    }
+    )
 }
 
 @Composable

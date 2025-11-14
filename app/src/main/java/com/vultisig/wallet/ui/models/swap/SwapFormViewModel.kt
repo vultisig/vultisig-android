@@ -1290,7 +1290,10 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun hideError() {
         uiState.update {
-            it.copy(error = null)
+            it.copy(
+                error = null,
+                formError = null
+            )
         }
     }
 
