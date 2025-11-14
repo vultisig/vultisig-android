@@ -28,6 +28,9 @@ internal fun Date?.formatDate(): String {
 }
 
 internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null): String {
+    if (this == BigInteger.ZERO) {
+        return "0.0 ${symbol ?: coinType.symbol}"
+    }
     val chainAmount = coinType.toValue(this)
     val rounded = chainAmount.setScale(8, RoundingMode.HALF_UP)
     return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
