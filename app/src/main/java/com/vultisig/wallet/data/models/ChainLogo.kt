@@ -38,6 +38,7 @@ internal val Chain.logo: Int
         Chain.Zcash -> R.drawable.zcash
         Chain.Cardano -> R.drawable.cardano
         Chain.Mantle -> R.drawable.mantle
+        Chain.Sei -> R.drawable.sei
     }
 
 internal val Chain.monoToneLogo: Int
@@ -76,4 +77,5 @@ internal val Chain.monoToneLogo: Int
         Chain.Zcash -> R.drawable.zcash_mono
         Chain.Cardano -> R.drawable.cardano_mono
         Chain.Mantle -> R.drawable.mantl_mono
+        Chain.Sei -> R.drawable.sei_mono
     }

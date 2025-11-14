@@ -2411,6 +2411,21 @@ object Coins {
         val all = listOf(JUP, KWEEN, PYTH, RAY, SOL, USDC, USDT, WIF)
     }
 
+    object Sei {
+        val Sei = Coin(
+            chain = Chain.Sei,
+            ticker = "SEI",
+            logo = "sei",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "sei-network",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(Sei)
+    }
+
     object Sui {
         val ETH = Coin(
 
@@ -2871,6 +2886,7 @@ object Coins {
         Chain.ZkSync to ZkSync.all,
         Chain.Zcash to Zcash.all,
         Chain.Cardano to Cardano.all,
+        Chain.Sei to Sei.all
     )
 
     val all: List<Coin> = coins.values.flatten()
