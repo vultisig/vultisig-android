@@ -72,7 +72,7 @@ internal data class Colors(
 
     val gradients: Gradients = Gradients(),
 
-) {
+    ) {
     companion object {
         val Default = Colors()
     }
@@ -119,6 +119,7 @@ internal data class TextColors(
     val primary: Color = Color(0xFFF0F4FC),
     val light: Color = Color(0xFFC9D6E8),
     val extraLight: Color = Color(0xFF8295AE),
+    val inverse: Color = Color(0xFF02122B),
     val button: TextButtonColors = TextButtonColors()
 )
 

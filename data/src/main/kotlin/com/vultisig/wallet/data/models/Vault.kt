@@ -79,7 +79,8 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
         Chain.Optimism,
         Chain.Polygon,
         Chain.ZkSync,
-        Chain.Mantle -> pubKeyECDSA
+        Chain.Mantle,
+        Chain.Sei -> pubKeyECDSA
 
         // Utxo
         Chain.Bitcoin,
