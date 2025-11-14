@@ -94,6 +94,7 @@ object SigningHelper {
 
                 Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum, Chain.Mantle,
                 Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync, Chain.Sei,
+                Chain.Hyperliquid
                     -> {
                     if (payload.coin.isNativeToken) {
                         EvmHelper(

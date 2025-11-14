@@ -2426,6 +2426,21 @@ object Coins {
         val all = listOf(Sei)
     }
 
+    object Hyperliquid {
+        val HYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "HYPE",
+            logo = "hyperliquid",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "hyperliquid",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(HYPE)
+    }
+
     object Sui {
         val ETH = Coin(
 
@@ -2867,6 +2882,7 @@ object Coins {
         Chain.Dydx to Dydx.all,
         Chain.Ethereum to Ethereum.all,
         Chain.GaiaChain to GaiaChain.all,
+        Chain.Hyperliquid to Hyperliquid.all,
         Chain.Kujira to Kujira.all,
         Chain.Litecoin to Litecoin.all,
         Chain.MayaChain to MayaChain.all,

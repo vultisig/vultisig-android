@@ -41,6 +41,7 @@ enum class Chain(
     ZkSync("Zksync", EVM, "Gwei"),
     Mantle("Mantle", EVM, "Gwei"),
     Sei("Sei", EVM, "Gwei"),
+    Hyperliquid("Hyperliquid", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -116,6 +117,7 @@ val Chain.coinType: CoinType
         Chain.Cardano -> CoinType.CARDANO
         Chain.Mantle -> CoinType.MANTLE
         Chain.Sei -> CoinType.SEI
+        Chain.Hyperliquid -> CoinType.ETHEREUM
     }
 
 val Chain.supportsLegacyGas: Boolean

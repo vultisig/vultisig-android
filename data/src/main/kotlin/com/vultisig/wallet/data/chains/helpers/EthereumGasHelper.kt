@@ -25,7 +25,7 @@ object EthereumGasHelper {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
         val signingInputBuilder = signingInput.apply {
             chainId =
-                ByteString.copyFrom(BigInteger(coinType.compatibleChainId()).toByteArray())
+                ByteString.copyFrom(BigInteger(coinType.compatibleChainId(keysignPayload.coin.chain)).toByteArray())
             nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
         }
         if (keysignPayload.coin.chain == Chain.BscChain) {

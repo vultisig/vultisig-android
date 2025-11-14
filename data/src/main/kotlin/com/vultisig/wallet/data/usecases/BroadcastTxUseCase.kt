@@ -86,7 +86,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
         }
 
         Ethereum, CronosChain, Blast, BscChain, Avalanche, Mantle,
-        Base, Polygon, Optimism, Arbitrum, ZkSync ,Sei -> {
+        Base, Polygon, Optimism, Arbitrum, ZkSync, Sei, Hyperliquid -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
             evmApi.sendTransaction(tx.rawTransaction)
         }
