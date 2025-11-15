@@ -7,7 +7,7 @@ import java.util.Date
 
 
 data class StakingDetails(
-    val id: String, // ticker-chainId-contractAddress
+    val id: String, // ticker-chainId-contractAddress-nodeAddress
     val coin: Coin,
     val stakeAmount: BigInteger,
     val apr: Double?,
