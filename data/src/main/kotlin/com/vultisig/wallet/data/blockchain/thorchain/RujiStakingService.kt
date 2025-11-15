@@ -29,9 +29,9 @@ class RujiStakingService @Inject constructor(
             }
 
             // Fetch fresh data from network
-            val freshDetails = getStakingDetailsFromNetwork(address, vaultId)
+            val freshDetails = getStakingDetailsFromNetwork(address)
 
-            if (freshDetails != null) {
+            if (freshDetails.stakeAmount > BigInteger.ZERO) {
                 Timber.d("RujiStakingService: Emitting fresh RUJI staking position for vault $vaultId")
                 // Update cache
                 stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
@@ -44,7 +44,7 @@ class RujiStakingService @Inject constructor(
                 // Clear cache if no position exists
                 stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
 
-                emit(null)
+                emit(freshDetails)
             }
 
         } catch (e: Exception) {
@@ -62,14 +62,9 @@ class RujiStakingService @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getStakingDetailsFromNetwork(address: String, vaultId: String): StakingDetails? {
+    private suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
         return try {
             val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
-
-            if (rujiStakeInfo.stakeAmount <= BigInteger.ZERO) {
-                Timber.d("RujiStakingService: No RUJI staked for address $address")
-                return null
-            }
 
             val rewardsCoin = Coin(
                 chain = Chain.ThorChain,

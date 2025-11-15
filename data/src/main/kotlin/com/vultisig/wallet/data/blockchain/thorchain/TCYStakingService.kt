@@ -65,7 +65,7 @@ class TCYStakingService @Inject constructor(
             // Fetch fresh data from network
             val freshDetails = getStakingDetailsFromNetwork(address)
             
-            if (freshDetails != null) {
+            if (freshDetails.stakeAmount > BigInteger.ZERO) {
                 Timber.d("TCYStakingService: Emitting fresh TCY staking position for vault $vaultId")
                 
                 // Update cache
@@ -79,7 +79,7 @@ class TCYStakingService @Inject constructor(
                 // Clear cache if no position exists
                 stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.TCY.id)
                 
-                emit(null)
+                emit(freshDetails)
             }
             
         } catch (e: Exception) {
@@ -99,7 +99,7 @@ class TCYStakingService @Inject constructor(
 
     private suspend fun getStakingDetailsFromNetwork(
         address: String,
-    ): StakingDetails? = supervisorScope {
+    ): StakingDetails = supervisorScope {
         try {
             // 1. Fetch staked amount
             val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
