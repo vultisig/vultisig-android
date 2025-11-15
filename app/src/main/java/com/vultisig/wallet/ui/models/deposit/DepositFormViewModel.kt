@@ -584,10 +584,9 @@ internal class DepositFormViewModel @Inject constructor(
                 else -> Unit
             }
 
-            viewModelScope.launch {
-                if (!bondAddress.isNullOrEmpty()) {
-                    nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
-                }
+
+            if (!bondAddress.isNullOrEmpty()) {
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
     }
