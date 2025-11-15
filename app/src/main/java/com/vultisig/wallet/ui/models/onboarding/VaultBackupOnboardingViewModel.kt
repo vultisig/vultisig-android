@@ -7,14 +7,17 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
+import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.typeOf
 
 internal data class VaultBackupOnboardingUiModel(
     val vaultType: Route.VaultInfo.VaultType,
@@ -33,7 +36,11 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.Onboarding.VaultBackup>()
+    private val args = savedStateHandle.toRoute<Route.Onboarding.VaultBackup>(
+        typeMap = mapOf(
+            typeOf<BackupPasswordType>() to BackupPasswordTypeNavType
+        )
+    )
     private val vaultId = args.vaultId
 
     init {
@@ -113,6 +120,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
                                 vaultId = vaultId,
                                 vaultType = args.vaultType,
                                 action = args.action,
+                                passwordType = BackupPasswordType.UserSelectionPassword
                             )
                         )
                     }
