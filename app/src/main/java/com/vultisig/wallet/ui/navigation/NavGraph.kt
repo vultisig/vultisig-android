@@ -111,7 +111,6 @@ import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
-import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
@@ -728,9 +727,13 @@ internal fun SetupNavGraph(
         }
 
 
-        dialog<VaultList> { backStackEntry ->
+        dialog<VaultList>(
+            typeMap = mapOf(
+                typeOf<VaultList.OpenType>() to  VaultListOpenTypeNavType
+            )
+        ) { backStackEntry ->
             VaultListBottomSheet(
-                vaultId = backStackEntry.toRoute<VaultList>().vaultId,
+                vaultList = backStackEntry.toRoute<VaultList>(),
                 onDismiss = navController::popBackStack
             )
         }
