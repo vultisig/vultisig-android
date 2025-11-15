@@ -52,7 +52,6 @@ internal interface BlockchainServicesModule {
         fun provideDefaultStakingPositionService(
             thorChainApi: ThorChainApi,
             stakingDetailsRepository: StakingDetailsRepository,
-            vaultRepository: VaultRepository
         ): DefaultStakingPositionService = DefaultStakingPositionService(
             thorChainApi,
             stakingDetailsRepository,
