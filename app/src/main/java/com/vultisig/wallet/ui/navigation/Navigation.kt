@@ -53,7 +53,7 @@ internal sealed class Destination(
 
     data class PositionTokens(
         val vaultId: String,
-    ): Destination (
+    ) : Destination(
         route = "position_detail/${vaultId}"
     ) {
         companion object {
@@ -174,7 +174,7 @@ internal sealed class Destination(
     data object FAQSetting : Destination(route = "settings/faq")
     data object VultisigToken : Destination(route = "settings/vultisig_token")
     data class DiscountTiers(
-        val vaultId: String
+        val vaultId: String,
     ) : Destination(route = "settings/discount_tiers/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "settings/discount_tiers/{$ARG_VAULT_ID}"
@@ -203,7 +203,7 @@ internal sealed class Destination(
     }
 
     data class ReferralCode(
-        val vaultId: String
+        val vaultId: String,
     ) : Destination(route = "referral/referral_screen/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_screen/{$ARG_VAULT_ID}"
@@ -581,7 +581,20 @@ internal sealed class Route {
         val vaultId: VaultId,
         val vaultType: VaultInfo.VaultType?,
         val action: TssAction? = null,
-    )
+        val passwordType: BackupPasswordType,
+    ) {
+
+        @Serializable
+        sealed interface BackupPasswordType {
+            @Serializable
+            data class VultiServerPassword(
+                val password: String?,
+            ) : BackupPasswordType
+
+            @Serializable
+            data object UserSelectionPassword : BackupPasswordType
+        }
+    }
 
     @Serializable
     data class BackupPasswordRequest(
@@ -696,7 +709,7 @@ internal sealed class Route {
 
     @Serializable
     data class Rename(
-        val vaultId: String
+        val vaultId: String,
     )
 }
 
@@ -713,44 +726,29 @@ internal sealed interface BackupType {
 }
 
 
+internal val BackupTypeNavType = createNavType<BackupType>()
 
-internal val BackupTypeNavType = object : NavType<BackupType>(
-    isNullableAllowed = false
-) {
-    override fun put(bundle: Bundle, key: String, value: BackupType) {
+internal val VaultListOpenTypeNavType = createNavType<VaultList.OpenType>()
+
+internal val BackupPasswordTypeNavType = createNavType<BackupVault.BackupPasswordType>()
+
+
+private inline fun <reified T> createNavType(
+    isNullableAllowed: Boolean = false
+): NavType<T> = object : NavType<T>(isNullableAllowed = isNullableAllowed) {
+    override fun put(bundle: Bundle, key: String, value: T) {
         bundle.putString(key, Json.encodeToString(value))
     }
 
-    override fun get(bundle: Bundle, key: String): BackupType {
+    override fun get(bundle: Bundle, key: String): T {
         return Json.decodeFromString(bundle.getString(key)!!)
     }
 
-    override fun parseValue(value: String): BackupType {
+    override fun parseValue(value: String): T {
         return Json.decodeFromString(value)
     }
 
-    override fun serializeAsValue(value: BackupType): String {
-        return Json.encodeToString(value)
-    }
-}
-
-
-internal val VaultListOpenTypeNavType = object : NavType<VaultList.OpenType>(
-    isNullableAllowed = false
-) {
-    override fun put(bundle: Bundle, key: String, value: VaultList.OpenType) {
-        bundle.putString(key, Json.encodeToString(value))
-    }
-
-    override fun get(bundle: Bundle, key: String): VaultList.OpenType {
-        return Json.decodeFromString(bundle.getString(key)!!)
-    }
-
-    override fun parseValue(value: String): VaultList.OpenType {
-        return Json.decodeFromString(value)
-    }
-
-    override fun serializeAsValue(value: VaultList.OpenType): String {
+    override fun serializeAsValue(value: T): String {
         return Json.encodeToString(value)
     }
 }

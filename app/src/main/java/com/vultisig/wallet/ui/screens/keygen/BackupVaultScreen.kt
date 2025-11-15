@@ -24,17 +24,26 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.BackupVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
 @Composable
 internal fun BackupVaultScreen(
     model: BackupVaultViewModel = hiltViewModel(),
 ) {
+
+    RequestCreateDocument(
+        mimeType =  MimeType.OCTET_STREAM.value,
+        onDocumentCreated = model::saveContentToUriResult,
+        createDocumentRequestFlow = model.createDocumentRequestFlow,
+    )
+
     BackupVaultScreen(
         onBackupClick = model::backup,
     )
