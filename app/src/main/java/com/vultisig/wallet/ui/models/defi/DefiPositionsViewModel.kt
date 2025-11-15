@@ -657,24 +657,31 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     fun updateExistingPosition(stakePosition: StakePositionUiModel) {
+        // Ensure only RUJI can have withdraw enabled
+        val correctedPosition = if (stakePosition.coin.id != Coins.ThorChain.RUJI.id) {
+            stakePosition.copy(canWithdraw = false)
+        } else {
+            stakePosition
+        }
+        
         state.update { currentState ->
             val existingPositions = currentState.staking.positions
             val positionExists = existingPositions.any {
-                it.coin.id == stakePosition.coin.id
+                it.coin.id == correctedPosition.coin.id
             }
 
             if (positionExists) {
                 currentState.copy(
                     staking = currentState.staking.copy(
                         positions = existingPositions.map {
-                            if (it.coin.id == stakePosition.coin.id) stakePosition else it
+                            if (it.coin.id == correctedPosition.coin.id) correctedPosition else it
                         }
                     )
                 )
             } else {
                 currentState.copy(
                     staking = currentState.staking.copy(
-                        positions = existingPositions + stakePosition
+                        positions = existingPositions + correctedPosition
                     )
                 )
             }

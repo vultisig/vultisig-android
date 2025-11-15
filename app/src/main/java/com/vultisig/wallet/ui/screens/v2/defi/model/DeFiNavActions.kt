@@ -18,7 +18,7 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "unbond" -> DeFiNavActions.UNBOND
         "stakeruji", "stake_ruji" -> DeFiNavActions.STAKE_RUJI
         "unstakeruji", "unstake_ruji" -> DeFiNavActions.UNSTAKE_RUJI
-        "withdrawruji", "withdraw_ruji", "collectruji" -> DeFiNavActions.WITHDRAW_RUJI
+        "withdrawruji", "withdraw_ruji", "withdraw" -> DeFiNavActions.WITHDRAW_RUJI
         "staketcy", "stake_tcy" -> DeFiNavActions.STAKE_TCY
         "unstaketcy", "unstake_tcy" -> DeFiNavActions.UNSTAKE_TCY
         "mintyrune", "mint_yrune", "receiveyrune", "receive_yrune" -> DeFiNavActions.MINT_YRUNE
