@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -195,7 +196,7 @@ internal fun VerifyDepositScreen(
                             subtitle = (tx.token.value)
                         )
                     }
-                    
+
                     val hasContent =
                         tx.srcAddress.isNotEmpty()
                                 || tx.dstAddress.isNotEmpty()
@@ -292,6 +293,8 @@ internal fun VerifyDepositScreen(
                     )
                 } else {
                     VsButton(
+                        state = state.isLoading.takeIf { it }?.let { VsButtonState.Disabled }
+                            ?: VsButtonState.Enabled,
                         label = confirmTitle,
                         onClick = onConfirm,
                         modifier = Modifier.fillMaxWidth(),
