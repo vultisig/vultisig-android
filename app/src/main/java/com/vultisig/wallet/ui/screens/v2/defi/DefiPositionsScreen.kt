@@ -91,6 +91,7 @@ internal fun DefiPositionScreenContent(
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
                 image = R.drawable.referral_data_banner,
+                isBalanceVisible = state.isBalanceVisible,
             )
 
             VsTabs(
@@ -153,7 +154,8 @@ internal fun DefiPositionScreenContent(
                             state = state.staking,
                             onClickStake = onClickStake,
                             onClickUnstake = onClickUnstake,
-                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) }
+                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                            isBalanceVisible = state.isBalanceVisible,
                         )
                     }
                 }

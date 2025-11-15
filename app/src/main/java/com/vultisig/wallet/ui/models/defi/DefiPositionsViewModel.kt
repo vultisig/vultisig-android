@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -67,6 +68,7 @@ internal data class DefiPositionsUiModel(
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = false,
+    val isBalanceVisible: Boolean = true,
 
     // position selection dialog
     val showPositionSelectionDialog: Boolean = false,
@@ -145,6 +147,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val tcyStakingService: TCYStakingService,
     private val defiPositionsRepository: DefiPositionsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
 
     private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
@@ -168,8 +171,18 @@ internal class DefiPositionsViewModel @Inject constructor(
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
 
     init {
+        loadBalanceVisibility()
         loadSavedPositions()
         loadTotalValue()
+    }
+    
+    private fun loadBalanceVisibility() {
+        viewModelScope.launch {
+            val isVisible = withContext(Dispatchers.IO) {
+                balanceVisibilityRepository.getVisibility(vaultId)
+            }
+            state.update { it.copy(isBalanceVisible = isVisible) }
+        }
     }
 
     private fun loadTotalValue() {

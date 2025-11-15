@@ -53,6 +53,7 @@ internal fun BalanceBanner(
     isLoading: Boolean,
     totalValue: String,
     image: Int,
+    isBalanceVisible: Boolean = true,
 ) {
     Box(
         modifier = Modifier
@@ -94,7 +95,7 @@ internal fun BalanceBanner(
                 )
             } else {
                 Text(
-                    text = totalValue,
+                    text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
                     color = Theme.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
@@ -102,6 +103,8 @@ internal fun BalanceBanner(
         }
     }
 }
+
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Preview(showBackground = true, name = "Balance Banner - With Value")
 @Composable
@@ -114,7 +117,25 @@ private fun BalanceBannerPreview() {
         BalanceBanner(
             isLoading = false,
             totalValue = "$12,345.67",
-            image = R.drawable.referral_data_banner
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = true
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Balance Banner - Hidden")
+@Composable
+private fun BalanceBannerHiddenPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        BalanceBanner(
+            isLoading = false,
+            totalValue = "$12,345.67",
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = false
         )
     }
 }
@@ -130,7 +151,8 @@ private fun BalanceBannerLoadingPreview() {
         BalanceBanner(
             isLoading = true,
             totalValue = "",
-            image = R.drawable.referral_data_banner
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = true
         )
     }
 }

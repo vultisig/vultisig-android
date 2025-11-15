@@ -46,6 +46,7 @@ internal fun StakingTabContent(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
+    isBalanceVisible: Boolean = true,
 ) {
     Column(
         modifier = Modifier
@@ -60,6 +61,7 @@ internal fun StakingTabContent(
                 onClickStake = onClickStake,
                 onClickUnstake = onClickUnstake,
                 onClickWithdraw = onClickWithdraw,
+                isBalanceVisible = isBalanceVisible,
             )
         }
     }
@@ -72,6 +74,7 @@ internal fun StakingWidget(
     onClickStake: (DeFiNavActions) -> Unit,
     onClickUnstake: (DeFiNavActions) -> Unit,
     onClickWithdraw: () -> Unit,
+    isBalanceVisible: Boolean = true,
 ) {
     Column(
         modifier = Modifier
@@ -111,7 +114,7 @@ internal fun StakingWidget(
                     )
                 } else {
                     Text(
-                        text = state.stakeAmount,
+                        text = if (isBalanceVisible) state.stakeAmount else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.colors.text.primary,
                     )
@@ -174,7 +177,7 @@ internal fun StakingWidget(
                     InfoItem(
                         icon = R.drawable.ic_cup,
                         label = stringResource(R.string.next_award),
-                        value = state.nextReward,
+                        value = if (isBalanceVisible) state.nextReward else HIDE_BALANCE_CHARS,
                     )
                 }
             }
@@ -188,7 +191,7 @@ internal fun StakingWidget(
 
         if (state.canWithdraw) {
             VsButton(
-                label = stringResource(R.string.withdraw_amount, state.rewards.orEmpty()),
+                label = stringResource(R.string.withdraw_amount, if (isBalanceVisible) state.rewards.orEmpty() else HIDE_BALANCE_CHARS),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClickWithdraw,
                 state = VsButtonState.Enabled,
@@ -363,3 +366,5 @@ private fun StakingWidgetLoadingPreview() {
         )
     }
 }
+
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
