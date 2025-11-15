@@ -34,7 +34,10 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     private val activeBondedNodeRepository: ActiveBondedNodeRepository,
 ) : ThorchainBondUseCase {
 
-    override suspend fun getActiveNodes(vaultId: String, address: String): Flow<List<BondedNodePosition>> =
+    override suspend fun getActiveNodes(
+        vaultId: String,
+        address: String
+    ): Flow<List<BondedNodePosition>> =
         flow {
             try {
                 // First get cache nodes and emit
@@ -74,43 +77,37 @@ class ThorchainBondUseCaseImpl @Inject constructor(
     override suspend fun getActiveNodesRemote(address: String): List<BondedNodePosition> =
         supervisorScope {
             val activeNodes = mutableListOf<BondedNodePosition>()
-            val bondedNodeAddresses = mutableSetOf<String>()
 
             try {
                 val networkInfoDeferred = async { getNetworkInfo() }
                 val bondedNodes = thorchainBondRepository.getBondedNodes(address).nodes
 
                 for (node in bondedNodes) {
-                    bondedNodeAddresses.add(node.address)
+                    val myBondMetrics = calculateBondMetrics(
+                        nodeAddress = node.address,
+                        myBondAddress = address
+                    )
 
-                    try {
-                        val myBondMetrics = calculateBondMetrics(
-                            nodeAddress = node.address,
-                            myBondAddress = address
-                        )
+                    val bondNode = BondedNodePosition.BondedNode(
+                        address = node.address,
+                        state = node.status,
+                    )
 
-                        val bondNode = BondedNodePosition.BondedNode(
-                            address = node.address,
-                            state = node.status,
-                        )
-
-                        val activeNode = BondedNodePosition(
-                            id = Coins.ThorChain.RUNE.generateId(node.address),
-                            coin = Coins.ThorChain.RUNE,
-                            node = bondNode,
-                            amount = myBondMetrics.myBond,
-                            apy = myBondMetrics.apy,
-                            nextReward = myBondMetrics.myAward,
-                            nextChurn = networkInfoDeferred.await().nextChurnDate,
-                        )
-                        activeNodes.add(activeNode)
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                    }
+                    val activeNode = BondedNodePosition(
+                        id = Coins.ThorChain.RUNE.generateId(node.address),
+                        coin = Coins.ThorChain.RUNE,
+                        node = bondNode,
+                        amount = myBondMetrics.myBond,
+                        apy = myBondMetrics.apy,
+                        nextReward = myBondMetrics.myAward,
+                        nextChurn = networkInfoDeferred.await().nextChurnDate,
+                    )
+                    activeNodes.add(activeNode)
                 }
 
-            } catch (e: Exception) {
-                Timber.e(e)
+            } catch (t: Throwable) {
+                Timber.e(t)
+                throw t // allow getActiveNodes() to fall back to cache
             }
 
             return@supervisorScope activeNodes.toList()
