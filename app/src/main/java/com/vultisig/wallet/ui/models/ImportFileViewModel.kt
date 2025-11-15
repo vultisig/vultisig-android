@@ -107,21 +107,19 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
 
-    private fun parseFileContent() {
+    private suspend fun parseFileContent() {
         val fileContent = uiModel.value.fileContent ?: return
-        viewModelScope.launch {
-            try {
-                saveToDb(fileContent, null)
-            } catch (_: SerializationException) {
-                snackBarChannel.send(UiText.StringResource(R.string.import_file_not_supported))
-            } catch (e: Exception) {
-                Timber.e(e)
-                uiModel.update {
-                    it.copy(
-                        showPasswordPrompt = true,
-                        passwordErrorHint = null,
-                    )
-                }
+        try {
+            saveToDb(fileContent, null)
+        } catch (_: SerializationException) {
+            snackBarChannel.send(UiText.StringResource(R.string.import_file_not_supported))
+        } catch (e: Exception) {
+            Timber.e(e)
+            uiModel.update {
+                it.copy(
+                    showPasswordPrompt = true,
+                    passwordErrorHint = null,
+                )
             }
 
         }
@@ -179,11 +177,13 @@ internal class ImportFileViewModel @Inject constructor(
 
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
-        val fileContent = uri.fileContent(context)
-        uiModel.update {
-            it.copy(fileContent = fileContent)
+        viewModelScope.launch {
+            val fileContent = uri.fileContent(context)
+            uiModel.update {
+                it.copy(fileContent = fileContent)
+            }
+            parseFileContent()
         }
-        parseFileContent()
     }
 
     fun fetchFileName(uri: Uri?) {
@@ -242,10 +242,12 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
     fun importVult(zipOutput: AppZipEntry) {
-        uiModel.update {
-            it.copy(fileContent = zipOutput.content)
+        viewModelScope.launch {
+            uiModel.update {
+                it.copy(fileContent = zipOutput.content)
+            }
+            parseFileContent()
         }
-        parseFileContent()
     }
 
     fun back() {

@@ -25,7 +25,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.usecases.VaultAndBalance
@@ -36,6 +35,7 @@ import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.reorderable.VerticalDoubleReorderList
+import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -52,38 +52,47 @@ import java.math.BigDecimal
 
 @Composable
 internal fun VaultListScreen(
-    vaultId: VaultId,
+    openType: Route.VaultList.OpenType,
     navController: VsBottomSheetNavController,
 ) {
     val viewModel = hiltViewModel<VaultListViewModel>()
     val state by viewModel.state.collectAsState()
-    LaunchedEffect(vaultId) {
-        viewModel.init(vaultId)
+    LaunchedEffect(openType) {
+        viewModel.init(openType)
     }
 
-    VaultListScreen(
-        state = state,
-        onSelectVault = viewModel::selectVault,
-        onSelectFolder = { folderId ->
-            navController.navigate(
-                Route.FolderList(
-                    folderId = folderId,
-                    vaultId = vaultId
-                )
+    when(openType){
+        is Route.VaultList.OpenType.DeepLink -> VaultListScreen(
+            state = state,
+            onSelectVault = viewModel::selectVault,
+        )
+
+        is Route.VaultList.OpenType.Home -> {
+            VaultListScreen(
+                state = state,
+                onSelectVault = viewModel::selectVault,
+                onSelectFolder = { folderId ->
+                    navController.navigate(
+                        Route.FolderList(
+                            folderId = folderId,
+                            vaultId = openType.vaultId
+                        )
+                    )
+                },
+                onCreateNewVault = viewModel::addVault,
+                onCreateNewFolder = {
+                    navController.navigate(
+                        Route.CreateFolder(
+                            folderId = null
+                        )
+                    )
+                },
+                onMoveVaults = viewModel::onMoveVaults,
+                onMoveFolders = viewModel::onMoveFolders,
+                onToggleRearrangeMode = viewModel::toggleRearrangeMode
             )
-        },
-        onCreateNewVault = viewModel::addVault,
-        onCreateNewFolder = {
-            navController.navigate(
-                Route.CreateFolder(
-                    folderId = null
-                )
-            )
-        },
-        onMoveVaults = viewModel::onMoveVaults,
-        onMoveFolders = viewModel::onMoveFolders,
-        onToggleRearrangeMode = viewModel::toggleRearrangeMode
-    )
+        }
+    }
 }
 
 
@@ -214,11 +223,73 @@ private fun VaultListScreen(
 }
 
 @Composable
+private fun VaultListScreen(
+    state: VaultListUiModel,
+    onSelectVault: (vaultId: String) -> Unit,
+) {
+
+    Column(
+        modifier = Modifier
+            .padding(
+                horizontal = 16.dp
+            )
+    ) {
+        UiSpacer(
+            size = 24.dp
+        )
+
+        VaultsInfoHeader(
+            vaultCounts = state.totalVaultsCount,
+            totalBalance = state.totalBalance,
+            onToggleRearrangeMode = null,
+            onCreateNewVault = null
+        )
+
+
+        VerticalReorderList(
+            modifier = Modifier
+                .weight(
+                    weight = 1f,
+                    fill = false
+                ),
+            onMove = { _ , _ ->},
+            data = state.vaults,
+            isReorderEnabled = false,
+            key = { it.vault.id },
+            contentPadding = PaddingValues(
+                vertical = 16.dp,
+            ),
+            content = { vaultAndBalance ->
+                VaultCeil(
+                    model = VaultCeilUiModel(
+                        id = vaultAndBalance.vault.id,
+                        name = vaultAndBalance.vault.name,
+                        isFolder = false,
+                        isFastVault = vaultAndBalance.vault.isFastVault(),
+                        vaultPart = vaultAndBalance.vault.getVaultPart(),
+                        signersSize = vaultAndBalance.vault.signers.size,
+                        balance = vaultAndBalance.balance
+                    ),
+                    isInEditMode = false,
+                    onSelect = onSelectVault,
+                    isSelected = vaultAndBalance.vault.id == state.currentVaultId,
+                    activeVaultName = null,
+                    vaultCounts = null
+                )
+            },
+        )
+        UiSpacer(
+            size = 24.dp
+        )
+    }
+}
+
+@Composable
 private fun VaultsInfoHeader(
     vaultCounts: Int,
     totalBalance: String?,
-    onToggleRearrangeMode: () -> Unit,
-    onCreateNewVault: () -> Unit,
+    onToggleRearrangeMode: (() -> Unit)?,
+    onCreateNewVault: (() -> Unit)?,
 ) {
     Row {
         VaultInfo(
@@ -231,25 +302,30 @@ private fun VaultsInfoHeader(
             weight = 1f
         )
 
-        VsCircleButton(
-            designType = DesignType.Shined,
-            size = VsCircleButtonSize.Small,
-            type = VsCircleButtonType.Secondary,
-            icon = R.drawable.pen_v2,
-            onClick = onToggleRearrangeMode
-        )
+        onToggleRearrangeMode?.let {
+            VsCircleButton(
+                designType = DesignType.Shined,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Secondary,
+                icon = R.drawable.pen_v2,
+                onClick = it
+            )
+        }
 
-        UiSpacer(
-            size = 8.dp
-        )
+        onCreateNewVault?.let {
 
-        VsCircleButton(
-            designType = DesignType.Shined,
-            size = VsCircleButtonSize.Small,
-            type = VsCircleButtonType.Primary,
-            icon = R.drawable.plus,
-            onClick = onCreateNewVault
-        )
+            UiSpacer(
+                size = 8.dp
+            )
+
+            VsCircleButton(
+                designType = DesignType.Shined,
+                size = VsCircleButtonSize.Small,
+                type = VsCircleButtonType.Primary,
+                icon = R.drawable.plus,
+                onClick = it
+            )
+        }
     }
 }
 
@@ -386,5 +462,35 @@ private fun VaultListScreenPreview() {
             ),
             isRearrangeMode = false,
         )
+    )
+}
+
+@Preview
+@Composable
+private fun VaultListScreenPreview2() {
+    VaultListScreen(
+        state = VaultListUiModel(
+            vaults = listOf(
+                VaultAndBalance(
+                    vault = Vault(
+                        id = "1",
+                        name = "Vault 1",
+                    ),
+                    balance = "$13.42",
+                    balanceFiatValue = FiatValue(BigDecimal.valueOf(12.42), "USD")
+                ),
+                VaultAndBalance(
+                    vault = Vault(
+                        id = "2",
+                        name = "Vault 2",
+                    ),
+                    balance = "$10.15",
+                    balanceFiatValue = null,
+                )
+            ),
+        ),
+        onSelectVault = {
+
+        }
     )
 }
