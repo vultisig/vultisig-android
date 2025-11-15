@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.delay
@@ -258,6 +259,8 @@ private fun QrCameraScreen(
 ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val snackbarFlow: SnackbarFlow
+
     val cameraProviderFuture = remember {
         ProcessCameraProvider.getInstance(localContext)
     }
@@ -294,7 +297,9 @@ private fun QrCameraScreen(
     key(viewKey) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { context ->
+            factory = {
+
+                context ->
                 val previewView = PreviewView(context)
                 val resolutionStrategy = ResolutionStrategy(
                     Size(1920, 1080),
@@ -312,20 +317,24 @@ private fun QrCameraScreen(
                     .build()
 
                 preview.surfaceProvider = previewView.surfaceProvider
-
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setResolutionSelector(resolutionSelector)
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                imageAnalysis.setAnalyzer(
-                    executor,
-                    BarcodeAnalyzer {
-                        unbindCameraListener(cameraProviderFuture, localContext)
-                        onSuccess(it)
-                    }
-                )
-
                 try {
+
+
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setResolutionSelector(resolutionSelector)
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+                    imageAnalysis.setAnalyzer(
+                        executor,
+                        BarcodeAnalyzer {
+                            unbindCameraListener(
+                                cameraProviderFuture,
+                                localContext
+                            )
+                            onSuccess(it)
+                        }
+                    )
+
                     val cameraProvider = cameraProviderFuture.get()
                     cameraProvider.unbindAll()
 
@@ -354,10 +363,17 @@ private fun QrCameraScreen(
                         true
                     }
 
-                } catch (e: Throwable) {
-                    Timber.e(e)
-                }
 
+                } catch (e: Exception) {
+
+                    Timber.e(e)
+//                    snackbarFlow.showMessage(
+//                        context.getString(
+//                            R.string.error_saving_qr_code,
+//                            e.localizedMessage ?: ""
+//                        )
+//                    )
+                }
                 previewView
             }
         )
@@ -399,7 +415,7 @@ private class BarcodeAnalyzer(
     }
 }
 
-private fun createScanner() = BarcodeScanning.getClient(
+fun createScanner() = BarcodeScanning.getClient(
     BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         .build()
