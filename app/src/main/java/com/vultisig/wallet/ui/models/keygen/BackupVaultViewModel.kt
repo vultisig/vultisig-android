@@ -85,7 +85,7 @@ internal class BackupVaultViewModel @Inject constructor(
     private suspend fun backupWithVultiServerPassword() {
         val vault = requireNotNull(vaultRepository.get(args.vaultId))
         this@BackupVaultViewModel.vault.value = vault
-        val fileName = createVaultBackupFileName(requireNotNull(vault))
+        val fileName = createVaultBackupFileName(vault)
         createDocumentRequestFlow.emit(fileName)
     }
 
@@ -103,7 +103,12 @@ internal class BackupVaultViewModel @Inject constructor(
 
     fun saveContentToUriResult(uri: Uri, mimeType: String) {
         viewModelScope.launch {
-            val password = requireNotNull(vultiServerPasswordType?.password)
+            val password = runCatching {
+                requireNotNull(vultiServerPasswordType?.password)
+            }.getOrElse {
+                navigateToPasswordRequestBackup()
+                return@launch
+            }
             if (isFileExtensionValid(uri, mimeType.toMimeType())) {
                 val isSuccess = backupCurrentVault(password, uri)
                 completeBackupVault(isSuccess)
@@ -157,7 +162,12 @@ internal class BackupVaultViewModel @Inject constructor(
         viewModelScope.launch {
 
             val backupType = BackupType.CurrentVault(
-                vaultType = args.vaultType,
+                vaultType = runCatching {
+                    requireNotNull(args.vaultType)
+                }.getOrElse {
+                    navigateToPasswordRequestBackup()
+                    return@launch
+                },
                 action = args.action,
             )
             val vaultId = args.vaultId
