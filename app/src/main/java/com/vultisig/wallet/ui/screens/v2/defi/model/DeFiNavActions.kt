@@ -25,7 +25,8 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "redeemyrune", "redeem_yrune", "sellyrune", "sell_yrune" -> DeFiNavActions.REDEEM_YRUNE
         "mintytcy", "mint_ytcy", "receiveytcy", "receive_ytcy" -> DeFiNavActions.MINT_YTCY
         "redeemytcy", "redeem_ytcy", "sellytcy", "sell_ytcy" -> DeFiNavActions.REDEEM_YTCY
-        "stake_stcy", "stakestcy" -> DeFiNavActions.STAKE_TCY
+        "stake_stcy", "stakestcy" -> DeFiNavActions.STAKE_STCY
+        "unstakestcy", "unstake_stcy" -> DeFiNavActions.UNSTAKE_STCY
 
         else -> {
             try {
