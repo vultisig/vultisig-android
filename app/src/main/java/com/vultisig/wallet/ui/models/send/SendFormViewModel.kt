@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -254,6 +255,8 @@ internal class SendFormViewModel @Inject constructor(
             preSelectedChainId = args.chainId,
             preSelectedTokenId = args.tokenId,
             address = args.address,
+            amount = args.amount,
+            memo = args.memo,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -299,6 +302,8 @@ internal class SendFormViewModel @Inject constructor(
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
         address: String?,
+        amount: String?,
+        memo: String?,
     ) {
         memoFieldState.clearText()
 
@@ -310,7 +315,11 @@ internal class SendFormViewModel @Inject constructor(
         }
 
         if (address != null) {
-            setAddressFromQrCode(address)
+            setAddressFromQrCode(
+                qrCode = address,
+                preSelectedChainId = preSelectedChainId,
+                preSelectedTokenId = preSelectedTokenId,
+            )
         } else {
             preSelectToken(
                 preSelectedChainIds = listOf(preSelectedChainId),
@@ -318,8 +327,20 @@ internal class SendFormViewModel @Inject constructor(
             )
         }
 
-        if (preSelectedTokenId != null) {
+        if (preSelectedTokenId != null && address == null) {
             expandSection(SendSections.Address)
+        }
+
+        if (preSelectedTokenId != null && address != null) {
+            expandSection(SendSections.Amount)
+        }
+
+        amount?.let {
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it)
+        }
+
+        memo?.let {
+            memoFieldState.setTextAndPlaceCursorAtEnd(it)
         }
     }
 
@@ -368,18 +389,47 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            val chain: Chain? = requestResultRepository.request(requestId)
-
-            if (chain == null || chain == selectedChain) {
-                return@launch
-            }
-
-            val account = accounts.value.find {
-                it.token.isNativeToken && it.token.chain == chain
-            } ?: return@launch
-
-            selectToken(account.token)
+            updateChain(requestId = requestId, selectedChain = selectedChain)
         }
+    }
+
+    fun onNetworkLongPressStarted(position: Offset) {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val selectedChain = selectedTokenValue?.chain ?: return@launch
+
+            val requestId = Uuid.random().toString()
+
+            navigator.route(
+                Route.SelectNetworkPopup(
+                    requestId = requestId,
+                    pressX = position.x,
+                    pressY = position.y,
+                    vaultId = vaultId ,
+                    selectedNetworkId = selectedChain.id,
+                    filters = Route.SelectNetwork.Filters.None
+                )
+            )
+
+            updateChain(requestId, selectedChain)
+        }
+    }
+
+    private suspend fun updateChain(
+        requestId: String,
+        selectedChain: Chain,
+    ) {
+        val chain: Chain? = requestResultRepository.request(requestId)
+
+        if (chain == null || chain == selectedChain) {
+            return
+        }
+
+        val account = accounts.value.find {
+            it.token.isNativeToken && it.token.chain == chain
+        } ?: return
+
+        selectToken(account.token)
     }
 
     fun openTokenSelection() {
@@ -407,13 +457,47 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    fun openTokenSelectionPopup(
+        position: Offset
+    ) {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            val requestId = Uuid.random().toString()
+
+            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
+            navigator.route(
+                Route.SelectAssetPopup(
+                    vaultId = vaultId,
+                    preselectedNetworkId = selectedChain.id,
+                    networkFilters = Route.SelectNetwork.Filters.None,
+                    requestId = requestId,
+                    pressX = position.x,
+                    pressY = position.y,
+                    selectedAssetId = selectedToken.value?.id.orEmpty()
+                )
+            )
+
+            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
+            val newToken = newAssetSelected?.token
+
+            if (newToken != null) {
+                selectToken(newToken)
+                expandSection(SendSections.Address)
+            }
+        }
+    }
+
     fun openGasSettings() {
         viewModelScope.launch {
             advanceGasUiRepository.showSettings()
         }
     }
 
-    fun setAddressFromQrCode(qrCode: String?) {
+    fun setAddressFromQrCode(
+        qrCode: String?,
+        preSelectedChainId: ChainId?,
+        preSelectedTokenId: TokenId?,
+    ) {
         if (!qrCode.isNullOrBlank()) {
             Timber.d("setAddressFromQrCode(address = $qrCode)")
 
@@ -421,7 +505,9 @@ internal class SendFormViewModel @Inject constructor(
 
             val vaultId = vaultId
             if (!vaultId.isNullOrBlank()) {
-                val chainValidForAddress = Chain.entries.filter { chain ->
+                val chainValidForAddress = preSelectedChainId?.let {
+                    listOf(Chain.fromRaw(preSelectedChainId))
+                } ?: Chain.entries.filter { chain ->
                     chainAccountAddressRepository.isValid(chain, qrCode)
                 }
 
@@ -444,7 +530,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     preSelectToken(
                         preSelectedChainIds = preSelectedChainIds,
-                        preSelectedTokenId = null,
+                        preSelectedTokenId = preSelectedTokenId,
                         forcePreselection = true,
                     )
                 }
@@ -490,7 +576,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             val qr = requestQrScan.invoke()
             if (!qr.isNullOrBlank()) {
-                setAddressFromQrCode(qr)
+                setAddressFromQrCode(qr, null, null)
             }
         }
     }
@@ -1275,7 +1361,7 @@ internal class SendFormViewModel @Inject constructor(
                 if (lastTokenValueUserInput != tokenString) {
                     val tokenDecimal = tokenString.toBigDecimalOrNull()
                     isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
-                    
+
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places

@@ -40,6 +40,7 @@ enum class Chain(
     Polygon("Polygon", EVM, "Gwei"),
     ZkSync("Zksync", EVM, "Gwei"),
     Mantle("Mantle", EVM, "Gwei"),
+    Sei("Sei", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -74,7 +75,12 @@ enum class Chain(
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw == raw }
+            Chain.entries.first {
+                it.raw.equals(
+                    other = raw,
+                    ignoreCase = true
+                )
+            }
     }
 }
 
@@ -114,6 +120,7 @@ val Chain.coinType: CoinType
         Chain.Zcash -> CoinType.ZCASH
         Chain.Cardano -> CoinType.CARDANO
         Chain.Mantle -> CoinType.MANTLE
+        Chain.Sei -> CoinType.SEI
     }
 
 val Chain.supportsLegacyGas: Boolean
@@ -223,6 +230,7 @@ val Chain.banxaAssetName: String?
         Chain.Ripple -> "XRP"
         Chain.Dydx -> "DYDX"
         Chain.Polkadot -> "DOT"
+        Chain.Sei -> "SEI"
         else -> null
     }
 
@@ -285,6 +293,7 @@ fun Chain.swapAssetName(): String {
         Chain.Zcash -> "ZEC"
         Chain.Cardano -> "ADA"
         Chain.Mantle -> "MNT"
+        Chain.Sei -> "SEI"
     }
 }
 
