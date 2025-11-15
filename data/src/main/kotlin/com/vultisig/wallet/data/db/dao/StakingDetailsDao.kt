@@ -19,7 +19,7 @@ interface StakingDetailsDao {
     @Update
     suspend fun update(stakingDetails: StakingDetailsEntity)
     
-    @Query("SELECT * FROM staking_details WHERE vault_id = :vaultId ORDER BY stake_amount DESC")
+    @Query("SELECT * FROM staking_details WHERE vault_id = :vaultId")
     suspend fun getAllByVaultIdSuspend(vaultId: String): List<StakingDetailsEntity>
     
     @Query("SELECT * FROM staking_details WHERE vault_id = :vaultId AND coin_id = :coinId")
