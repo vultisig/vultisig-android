@@ -74,8 +74,7 @@ internal fun Context.setupCamera(
             executor,
             BarcodeAnalyzer {
                 this.unbindCameraListener(
-                    cameraProviderFuture,
-                    this
+                    cameraProviderFuture
                 )
                 onSuccess(it)
             }

@@ -75,6 +75,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.setupCamera
+import com.vultisig.wallet.ui.utils.unbindCameraListener
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -318,9 +319,8 @@ private fun QrCameraScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            unbindCameraListener(
+            localContext.unbindCameraListener(
                 cameraProviderFuture,
-                localContext
             )
         }
     }
@@ -340,18 +340,6 @@ private fun QrCameraScreen(
             }
         )
     }
-}
-
-private fun unbindCameraListener(
-    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
-    context: Context,
-) {
-    cameraProviderFuture.addListener(
-        {
-            cameraProviderFuture.get().unbindAll()
-        },
-        ContextCompat.getMainExecutor(context)
-    )
 }
 
 private class BarcodeAnalyzer(
