@@ -117,11 +117,11 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
     }
 
     fun saveVaultIntoUri(uri: Uri, mimeType: String) {
-        if (isFileExtensionValid(uri = uri, mimeType = mimeType.toMimeType())) {
-            val isSuccess = backup(uri)
-            completeBackupVault(isSuccess)
-        } else {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            if (isFileExtensionValid(uri = uri, mimeType = mimeType.toMimeType())) {
+                val isSuccess = backup(uri)
+                completeBackupVault(isSuccess)
+            } else {
                 DocumentsContract.deleteDocument(context.contentResolver, uri)
 
                 state.update {
@@ -136,7 +136,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
         }
     }
 
-    private fun backup(uri: Uri): Boolean {
+    private suspend fun backup(uri: Uri): Boolean {
         val isSuccess = when (backupType) {
             BackupType.AllVaults -> {
                 backupAllVaults(uri)
@@ -149,7 +149,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
         return isSuccess
     }
 
-    private fun backupCurrentVault(uri: Uri): Boolean {
+    private suspend fun backupCurrentVault(uri: Uri): Boolean {
         val vault = vault.value
             ?: return false
         val vaultBackupData = createVaultBackup(
@@ -160,7 +160,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
         return context.saveContentToUri(uri, vaultBackupData)
     }
 
-    private fun backupAllVaults(uri: Uri): Boolean {
+    private suspend fun backupAllVaults(uri: Uri): Boolean {
         val content = vaults.map { vault ->
             val vaultBackupData = createVaultBackup(
                 mapVaultToProto(vault),

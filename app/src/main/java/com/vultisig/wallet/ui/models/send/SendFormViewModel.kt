@@ -255,6 +255,8 @@ internal class SendFormViewModel @Inject constructor(
             preSelectedChainId = args.chainId,
             preSelectedTokenId = args.tokenId,
             address = args.address,
+            amount = args.amount,
+            memo = args.memo,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -300,6 +302,8 @@ internal class SendFormViewModel @Inject constructor(
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
         address: String?,
+        amount: String?,
+        memo: String?,
     ) {
         memoFieldState.clearText()
 
@@ -311,7 +315,11 @@ internal class SendFormViewModel @Inject constructor(
         }
 
         if (address != null) {
-            setAddressFromQrCode(address)
+            setAddressFromQrCode(
+                qrCode = address,
+                preSelectedChainId = preSelectedChainId,
+                preSelectedTokenId = preSelectedTokenId,
+            )
         } else {
             preSelectToken(
                 preSelectedChainIds = listOf(preSelectedChainId),
@@ -319,8 +327,20 @@ internal class SendFormViewModel @Inject constructor(
             )
         }
 
-        if (preSelectedTokenId != null) {
+        if (preSelectedTokenId != null && address == null) {
             expandSection(SendSections.Address)
+        }
+
+        if (preSelectedTokenId != null && address != null) {
+            expandSection(SendSections.Amount)
+        }
+
+        amount?.let {
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it)
+        }
+
+        memo?.let {
+            memoFieldState.setTextAndPlaceCursorAtEnd(it)
         }
     }
 
@@ -473,7 +493,11 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun setAddressFromQrCode(qrCode: String?) {
+    fun setAddressFromQrCode(
+        qrCode: String?,
+        preSelectedChainId: ChainId?,
+        preSelectedTokenId: TokenId?,
+    ) {
         if (!qrCode.isNullOrBlank()) {
             Timber.d("setAddressFromQrCode(address = $qrCode)")
 
@@ -481,7 +505,9 @@ internal class SendFormViewModel @Inject constructor(
 
             val vaultId = vaultId
             if (!vaultId.isNullOrBlank()) {
-                val chainValidForAddress = Chain.entries.filter { chain ->
+                val chainValidForAddress = preSelectedChainId?.let {
+                    listOf(Chain.fromRaw(preSelectedChainId))
+                } ?: Chain.entries.filter { chain ->
                     chainAccountAddressRepository.isValid(chain, qrCode)
                 }
 
@@ -504,7 +530,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     preSelectToken(
                         preSelectedChainIds = preSelectedChainIds,
-                        preSelectedTokenId = null,
+                        preSelectedTokenId = preSelectedTokenId,
                         forcePreselection = true,
                     )
                 }
@@ -550,7 +576,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             val qr = requestQrScan.invoke()
             if (!qr.isNullOrBlank()) {
-                setAddressFromQrCode(qr)
+                setAddressFromQrCode(qr, null, null)
             }
         }
     }
@@ -1335,7 +1361,7 @@ internal class SendFormViewModel @Inject constructor(
                 if (lastTokenValueUserInput != tokenString) {
                     val tokenDecimal = tokenString.toBigDecimalOrNull()
                     isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
-                    
+
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places

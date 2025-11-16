@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,18 +32,130 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
+
+@Composable
+internal fun BalanceBanner(
+    isLoading: Boolean,
+    totalValue: String,
+    image: Int,
+    isBalanceVisible: Boolean = true,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(16.dp)
+            )
+    ) {
+        SetBackgoundBanner(backgroundImageResId = image)
+
+        Column(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 16.dp)
+        ) {
+            Text(
+                text = Chain.ThorChain.name,
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.body.l.medium,
+            )
+
+            UiSpacer(16.dp)
+
+            Text(
+                text = stringResource(R.string.defi_balance),
+                color = Theme.colors.text.primary,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .size(width = 150.dp, height = 32.dp)
+                )
+            } else {
+                Text(
+                    text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
+                    color = Theme.colors.text.primary,
+                    style = Theme.satoshi.price.title1,
+                )
+            }
+        }
+    }
+}
+
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
+
+@Preview(showBackground = true, name = "Balance Banner - With Value")
+@Composable
+private fun BalanceBannerPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        BalanceBanner(
+            isLoading = false,
+            totalValue = "$12,345.67",
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = true
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Balance Banner - Hidden")
+@Composable
+private fun BalanceBannerHiddenPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        BalanceBanner(
+            isLoading = false,
+            totalValue = "$12,345.67",
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = false
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Balance Banner - Loading")
+@Composable
+private fun BalanceBannerLoadingPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        BalanceBanner(
+            isLoading = true,
+            totalValue = "",
+            image = R.drawable.referral_data_banner,
+            isBalanceVisible = true
+        )
+    }
+}
 
 @Composable
 fun InfoItem(icon: Int, label: String, value: String?) {
