@@ -287,7 +287,6 @@ private fun QrCameraScreen(
 ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val snackbarFlow: SnackbarFlow
 
     val cameraProviderFuture = remember {
         ProcessCameraProvider.getInstance(localContext)
@@ -332,7 +331,6 @@ private fun QrCameraScreen(
             factory = { context ->
                 context.setupCamera(
                     lifecycleOwner,
-                    PreviewView(context),
                     executor,
                     cameraProviderFuture,
                     onSuccess,

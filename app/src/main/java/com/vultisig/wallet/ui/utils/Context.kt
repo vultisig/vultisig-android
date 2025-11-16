@@ -36,7 +36,6 @@ internal fun Context.closestActivityOrNull(): Activity? {
 
 internal fun Context.setupCamera(
     lifecycleOwner: LifecycleOwner,
-    previewView: PreviewView,
     executor: Executor,
     cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
     onSuccess: (List<Barcode>) -> Unit,
@@ -74,7 +73,7 @@ internal fun Context.setupCamera(
         imageAnalysis.setAnalyzer(
             executor,
             BarcodeAnalyzer {
-                unbindCameraListener(
+                this.unbindCameraListener(
                     cameraProviderFuture,
                     this
                 )
@@ -119,15 +118,14 @@ internal fun Context.setupCamera(
     return previewView
 }
 
-private fun unbindCameraListener(
+internal fun Context.unbindCameraListener(
     cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
-    context: Context,
 ) {
     cameraProviderFuture.addListener(
         {
             cameraProviderFuture.get().unbindAll()
         },
-        ContextCompat.getMainExecutor(context)
+        ContextCompat.getMainExecutor(this)
     )
 }
 

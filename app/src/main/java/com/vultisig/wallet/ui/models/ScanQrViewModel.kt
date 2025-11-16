@@ -89,15 +89,10 @@ internal class ScanQrViewModel @Inject constructor(
         }
     }
 
-    suspend fun handleError(error: String) {
-        snackbarFlow.showMessage(error)
+    fun handleError(error: String) {
+        viewModelScope.launch {
+            snackbarFlow.showMessage(error)
+        }
     }
-
-    private fun createScanner() = BarcodeScanning.getClient(
-        BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
-    )
-
 
 }
