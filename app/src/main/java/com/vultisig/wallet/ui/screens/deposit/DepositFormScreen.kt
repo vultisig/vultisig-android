@@ -51,11 +51,13 @@ internal fun DepositFormScreen(
     model: DepositFormViewModel = hiltViewModel(),
     vaultId: String,
     chainId: String,
+    depositType: String? = null,
+    bondAddress: String? = null,
 ) {
     val state by model.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        model.loadData(vaultId, chainId)
+        model.loadData(vaultId, chainId, depositType, bondAddress)
     }
 
     DepositFormScreen(
