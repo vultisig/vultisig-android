@@ -79,14 +79,29 @@ internal sealed class Destination(
     data class Deposit(
         val vaultId: String,
         val chainId: String,
+        val depositType: String? = null,
+        val bondAddress: String? = null,
     ) : Destination(
-        route = buildRoute(vaultId, chainId)
+        route = buildRoute(vaultId, chainId, depositType, bondAddress)
     ) {
         companion object {
-            val staticRoute = buildRoute("{$ARG_VAULT_ID}", "{$ARG_CHAIN_ID}")
+            const val ARG_DEPOSIT_TYPE = "deposit_type"
+            const val ARG_BOND_ADDRESS = "bond_address"
 
-            fun buildRoute(vaultId: String, chainId: String?) =
-                "vault_detail/$vaultId/account/$chainId/deposit"
+            val staticRoute = "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/deposit?deposit_type={$ARG_DEPOSIT_TYPE}&bond_address={$ARG_BOND_ADDRESS}"
+
+            fun buildRoute(
+                vaultId: String,
+                chainId: String?,
+                depositType: String? = null,
+                bondAddress: String? = null
+            ): String {
+                val type = depositType ?: ""
+                val address = bondAddress ?: ""
+
+                return "vault_detail/$vaultId/account/$chainId/deposit" +
+                        "?$ARG_DEPOSIT_TYPE=$type&$ARG_BOND_ADDRESS=$address"
+            }
         }
     }
 
