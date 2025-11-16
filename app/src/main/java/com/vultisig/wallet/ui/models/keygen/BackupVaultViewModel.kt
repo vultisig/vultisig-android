@@ -26,20 +26,17 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.reflect.typeOf
 
-internal data class BackupVaultState(
-    val error: UiText? = null,
-)
 
 @HiltViewModel
 internal class BackupVaultViewModel @Inject constructor(
@@ -66,7 +63,6 @@ internal class BackupVaultViewModel @Inject constructor(
 
     val createDocumentRequestFlow = MutableSharedFlow<String>()
 
-    val state = MutableStateFlow(BackupVaultState())
 
     fun backup() {
         viewModelScope.launch {
@@ -114,15 +110,10 @@ internal class BackupVaultViewModel @Inject constructor(
                 completeBackupVault(isSuccess)
             } else {
                 DocumentsContract.deleteDocument(context.contentResolver, uri)
-
-                state.update {
-                    it.copy(
-                        error = UiText.FormattedText(
-                            R.string.vault_settings_error_extension_backup_file,
-                            listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
-                        )
-                    )
-                }
+                showError(UiText.FormattedText(
+                    R.string.vault_settings_error_extension_backup_file,
+                    listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
+                ))
             }
         }
     }
@@ -131,7 +122,11 @@ internal class BackupVaultViewModel @Inject constructor(
         val vault = vault.value
         if (vault == null) {
             viewModelScope.launch {
-                showError()
+                showError(
+                    UiText.StringResource(
+                        R.string.vault_settings_error_backup_file
+                    )
+                )
             }
             return false
         }
@@ -143,7 +138,11 @@ internal class BackupVaultViewModel @Inject constructor(
 
         if (backup == null) {
             viewModelScope.launch {
-                showError()
+                showError(
+                    UiText.StringResource(
+                        R.string.vault_settings_error_backup_file
+                    )
+                )
             }
             return false
         }
@@ -151,9 +150,9 @@ internal class BackupVaultViewModel @Inject constructor(
         return context.saveContentToUri(uri, backup)
     }
 
-    private suspend fun showError() {
+    private suspend fun showError(message: UiText) {
         snackbarFlow.showMessage(
-            context.getString(R.string.vault_settings_error_backup_file)
+            message.asString(context)
         )
     }
 
