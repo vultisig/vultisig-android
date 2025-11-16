@@ -1,45 +1,33 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
-import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
-import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -59,6 +47,9 @@ internal fun DefiPositionsScreen(
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = model::onPositionSelectionDone,
         onPositionSelectionChange = model::onPositionSelectionChange,
+        onClickWithdraw = { model.onNavigateToFunctions(it) },
+        onClickStake = { model.onNavigateToFunctions(it) },
+        onClickUnstake = { model.onNavigateToFunctions(it) },
     )
 }
 
@@ -74,6 +65,9 @@ internal fun DefiPositionScreenContent(
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onTabSelected: (String) -> Unit = {},
+    onClickWithdraw: (DeFiNavActions) -> Unit = {},
+    onClickStake: (DeFiNavActions) -> Unit = {},
+    onClickUnstake: (DeFiNavActions) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
@@ -94,8 +88,10 @@ internal fun DefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
-                isLoading = state.bonded.isLoading,
-                totalValue = state.totalAmountPrice
+                isLoading = state.isTotalAmountLoading,
+                totalValue = state.totalAmountPrice,
+                image = R.drawable.referral_data_banner,
+                isBalanceVisible = state.isBalanceVisible,
             )
 
             VsTabs(
@@ -156,9 +152,10 @@ internal fun DefiPositionScreenContent(
                     } else {
                         StakingTabContent(
                             state = state.staking,
-                            onClickStake = { /* TODO: Implement stake action */ },
-                            onClickUnstake = { /* TODO: Implement unstake action */ },
-                            onClickWithdraw = { /* TODO: Implement withdraw action */ }
+                            onClickStake = onClickStake,
+                            onClickUnstake = onClickUnstake,
+                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                            isBalanceVisible = state.isBalanceVisible,
                         )
                     }
                 }
@@ -171,60 +168,6 @@ internal fun DefiPositionScreenContent(
             }
             
             UiSpacer(size = 16.dp)
-        }
-    }
-}
-
-@Composable
-private fun BalanceBanner(
-    isLoading: Boolean,
-    totalValue: String,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(
-                width = 1.dp,
-                color = Theme.colors.borders.light,
-                shape = RoundedCornerShape(16.dp)
-            )
-    ) {
-        SetBackgoundBanner(R.drawable.referral_data_banner)
-
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp, top = 16.dp)
-        ) {
-            Text(
-                text = Chain.ThorChain.name,
-                color = Theme.colors.text.primary,
-                style = Theme.brockmann.body.l.medium,
-            )
-
-            UiSpacer(16.dp)
-
-            Text(
-                text = stringResource(R.string.defi_balance),
-                color = Theme.colors.text.primary,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
-
-            if (isLoading) {
-                UiPlaceholderLoader(
-                    modifier = Modifier
-                        .size(width = 150.dp, height = 32.dp)
-                )
-            } else {
-                Text(
-                    text = totalValue,
-                    color = Theme.colors.text.primary,
-                    style = Theme.satoshi.price.title1,
-                )
-            }
         }
     }
 }
@@ -248,6 +191,7 @@ private fun DefiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -256,6 +200,7 @@ private fun DefiPositionsScreenPreviewWithData() {
         ),
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "",
             status = BondNodeState.STANDBY,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -264,6 +209,7 @@ private fun DefiPositionsScreenPreviewWithData() {
         ),
         com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
             address = "thor1ijkl...456",
+            fullAddress = "",
             status = BondNodeState.READY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",

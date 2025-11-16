@@ -76,7 +76,12 @@ enum class Chain(
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw == raw }
+            Chain.entries.first {
+                it.raw.equals(
+                    other = raw,
+                    ignoreCase = true
+                )
+            }
     }
 }
 
