@@ -57,13 +57,15 @@ internal fun BondedTabContent(
             onClickBondToNode = bondToNodeOnClick,
             totalBonded = state.bonded.totalBondedAmount,
             isLoading = state.bonded.isLoading,
+            isBalanceVisible = state.isBalanceVisible,
         )
 
         if (state.bonded.nodes.isNotEmpty()) {
             ActiveNodesWidget(
                 nodes = state.bonded.nodes,
                 onClickBond = onClickBond,
-                onClickUnbond = onClickUnbond
+                onClickUnbond = onClickUnbond,
+                isBalanceVisible = state.isBalanceVisible,
             )
         }
     }
@@ -74,6 +76,7 @@ internal fun TotalBondWidget(
     onClickBondToNode: () -> Unit,
     totalBonded: String,
     isLoading: Boolean = false,
+    isBalanceVisible: Boolean = true,
 ) {
     Column(
         modifier = Modifier
@@ -112,7 +115,7 @@ internal fun TotalBondWidget(
                     )
                 } else {
                     Text(
-                        text = totalBonded,
+                        text = if (isBalanceVisible) totalBonded else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.colors.text.primary,
                     )
@@ -140,6 +143,7 @@ internal fun ActiveNodesWidget(
     nodes: List<BondedNodeUiModel>,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
+    isBalanceVisible: Boolean = true,
 ) {
     Column(
         modifier = Modifier
@@ -183,8 +187,9 @@ internal fun ActiveNodesWidget(
 
             NodeContent(
                 node = node,
-                onClickBond = { onClickBond(node.address) },
-                onClickUnbond = { onClickUnbond(node.address) }
+                onClickBond = { onClickBond(node.fullAddress) },
+                onClickUnbond = { onClickUnbond(node.fullAddress) },
+                isBalanceVisible = isBalanceVisible,
             )
         }
     }
@@ -195,6 +200,7 @@ private fun NodeContent(
     node: BondedNodeUiModel,
     onClickBond: () -> Unit,
     onClickUnbond: () -> Unit,
+    isBalanceVisible: Boolean = true,
 ) {
     Column {
         Row(
@@ -225,7 +231,7 @@ private fun NodeContent(
         UiSpacer(16.dp)
 
         Text(
-            text = stringResource(R.string.bonded_amount, node.bondedAmount),
+            text = stringResource(R.string.bonded_amount, if (isBalanceVisible) node.bondedAmount else HIDE_BALANCE_CHARS),
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
         )
@@ -262,7 +268,7 @@ private fun NodeContent(
                 InfoItem(
                     icon = R.drawable.ic_cup,
                     label = stringResource(R.string.next_award),
-                    value = node.nextAward
+                    value = if (isBalanceVisible) node.nextAward else HIDE_BALANCE_CHARS
                 )
             }
         }
@@ -330,6 +336,7 @@ private fun BondedTabContentPreview() {
     val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -338,6 +345,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.STANDBY,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -346,6 +354,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1whit...789",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.WHITELISTED,
             apy = "0%",
             bondedAmount = "100 RUNE",
@@ -354,6 +363,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1ready...abc",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.READY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",
@@ -362,6 +372,7 @@ private fun BondedTabContentPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1dis...def",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.DISABLED,
             apy = "0%",
             bondedAmount = "250 RUNE",
@@ -432,6 +443,7 @@ private fun ActiveNodesWidgetPreview() {
     val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.ACTIVE,
             apy = "12.5%",
             bondedAmount = "1000 RUNE",
@@ -440,6 +452,7 @@ private fun ActiveNodesWidgetPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1efgh...123",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.DISABLED,
             apy = "11.2%",
             bondedAmount = "500 RUNE",
@@ -448,6 +461,7 @@ private fun ActiveNodesWidgetPreview() {
         ),
         BondedNodeUiModel(
             address = "thor1stand...456",
+            fullAddress = "thor1abcd...xyz",
             status = BondNodeState.STANDBY,
             apy = "10.8%",
             bondedAmount = "750 RUNE",
@@ -462,3 +476,6 @@ private fun ActiveNodesWidgetPreview() {
         onClickUnbond = {},
     )
 }
+
+
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()

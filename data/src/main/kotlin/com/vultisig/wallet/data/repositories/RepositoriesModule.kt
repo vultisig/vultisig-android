@@ -206,6 +206,18 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindActiveBondedNodeRepository(
+        impl: ActiveBondedNodeRepositoryImpl,
+    ): ActiveBondedNodeRepository
+
+    @Binds
+    @Singleton
+    fun bindStakingDetailsRepository(
+        impl: StakingDetailsRepositoryImpl,
+    ): StakingDetailsRepository
+
+    @Binds
+    @Singleton
     fun bindSwapTransactionRepository(
         impl: SwapTransactionRepositoryImpl
     ): SwapTransactionRepository
