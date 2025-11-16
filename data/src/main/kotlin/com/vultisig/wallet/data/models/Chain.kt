@@ -228,6 +228,7 @@ val Chain.banxaAssetName: String?
         Chain.Dydx -> "DYDX"
         Chain.Polkadot -> "DOT"
         Chain.Sei -> "SEI"
+        Chain.Hyperliquid -> "HYPE"
         else -> null
     }
 
@@ -291,6 +292,7 @@ fun Chain.swapAssetName(): String {
         Chain.Cardano -> "ADA"
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
+        Chain.Hyperliquid -> "HYPE"
     }
 }
 
