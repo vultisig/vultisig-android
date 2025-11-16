@@ -2,10 +2,12 @@ package com.vultisig.wallet.data.db
 
 import android.content.Context
 import androidx.room.Room
+import com.vultisig.wallet.data.db.dao.ActiveBondedNodeDao
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
 import com.vultisig.wallet.data.db.dao.FolderOrderDao
+import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.VaultDao
@@ -25,6 +27,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_1_2
 import com.vultisig.wallet.data.db.migrations.MIGRATION_20_21
 import com.vultisig.wallet.data.db.migrations.MIGRATION_21_22
 import com.vultisig.wallet.data.db.migrations.MIGRATION_22_23
+import com.vultisig.wallet.data.db.migrations.MIGRATION_23_24
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
@@ -80,6 +83,7 @@ internal interface DatabaseModule {
                     MIGRATION_20_21,
                     MIGRATION_21_22,
                     MIGRATION_22_23,
+                    MIGRATION_23_24,
                 )
                 .build()
 
@@ -138,5 +142,17 @@ internal interface DatabaseModule {
         fun provideVaultMetadataDao(
             appDatabase: AppDatabase,
         ): VaultMetadataDao = appDatabase.vaultMetadataDao()
+
+        @Provides
+        @Singleton
+        fun provideActiveBondedNodeDao(
+            appDatabase: AppDatabase,
+        ): ActiveBondedNodeDao = appDatabase.activeBondedNodeDao()
+
+        @Provides
+        @Singleton
+        fun provideStakingDetailsDao(
+            appDatabase: AppDatabase,
+        ): StakingDetailsDao = appDatabase.stakingDetailsDao()
     }
 }
