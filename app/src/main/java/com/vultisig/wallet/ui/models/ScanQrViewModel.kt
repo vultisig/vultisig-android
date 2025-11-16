@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.scan.createScanner
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -47,7 +48,9 @@ internal class ScanQrViewModel @Inject constructor(
     private val getFlowTypeUseCase: GetFlowTypeUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val requestResultRepository: RequestResultRepository,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
+
 
     private val args = savedStateHandle.toRoute<Route.ScanQr>()
 
@@ -70,7 +73,10 @@ internal class ScanQrViewModel @Inject constructor(
 
             else -> {
                 viewModelScope.launch {
-                    val dst = getDirectionByQrCodeUseCase(qr, args.vaultId)
+                    val dst = getDirectionByQrCodeUseCase(
+                        qr,
+                        args.vaultId
+                    )
                     navigator.route(dst)
                 }
             }
@@ -83,132 +89,10 @@ internal class ScanQrViewModel @Inject constructor(
         }
     }
 
-    val camera = setupCamera(
-        context = localContext,
-        lifecycleOwner = lifecycleOwner,
-        previewView = previewView,
-        executor = executor,
-        cameraProviderFuture = cameraProviderFuture,
-        onSuccess = onSuccess,
-        onAutoFocusTriggered = onAutoFocusTriggered
-    )
-
-    fun setupCamera(
-        context: Context,
-        lifecycleOwner: LifecycleOwner,
-        previewView: PreviewView,
-        executor: Executor,
-        cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
-        onSuccess: (List<Barcode>) -> Unit,
-        onAutoFocusTriggered: () -> Unit
-    ): Camera? {
-        val resolutionStrategy = ResolutionStrategy(
-            Size(
-                1920,
-                1080
-            ),
-            ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-        )
-        val resolutionSelector = ResolutionSelector.Builder()
-            .setResolutionStrategy(resolutionStrategy)
-            .build()
-
-        val preview = Preview.Builder()
-            .setResolutionSelector(resolutionSelector)
-            .build()
-        val selector = CameraSelector.Builder()
-            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-            .build()
-
-        preview.surfaceProvider = previewView.surfaceProvider
-
-        return try {
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setResolutionSelector(resolutionSelector)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-            imageAnalysis.setAnalyzer(
-                executor,
-                BarcodeAnalyzer {
-                    unbindCameraListener(
-                        cameraProviderFuture,
-                        context
-                    )
-                    onSuccess(it)
-                }
-            )
-
-            val cameraProvider = cameraProviderFuture.get()
-            cameraProvider.unbindAll()
-
-            val camera = cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                selector,
-                preview,
-                imageAnalysis,
-            )
-
-            // In some devices auto-focus does not work very well
-            // We should allow user to touch and perform focus,
-            // the autofocus initiated by a tap will "stick" at that point until
-            // another tap occurs
-            previewView.setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_UP) {
-                    Timber.d("Auto-focus requested : ${event.x} ${event.y}")
-                    val factory = previewView.meteringPointFactory
-                    val point = factory.createPoint(event.x, event.y)
-                    val action = FocusMeteringAction.Builder(point)
-                        .disableAutoCancel()
-                        .build()
-                    camera.cameraControl.startFocusAndMetering(action)
-                    onAutoFocusTriggered()
-                    previewView.performClick()
-                }
-                true
-            }
-
-
-            camera
-        } catch (e: Exception) {
-            Timber.e(e)
-            null
-        }
-    }
-    private fun unbindCameraListener(
-        cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
-        context: Context,
-    ) {
-        cameraProviderFuture.addListener(
-            {
-                cameraProviderFuture.get().unbindAll()
-            },
-            ContextCompat.getMainExecutor(context)
-        )
+    suspend fun handleError(error: String) {
+        snackbarFlow.showMessage(error)
     }
 
-
-    private class BarcodeAnalyzer(
-        private val onSuccess: (List<Barcode>) -> Unit,
-    ) : ImageAnalysis.Analyzer {
-
-        private val scanner = createScanner()
-
-        @ExperimentalGetImage
-        override fun analyze(imageProxy: ImageProxy) {
-            imageProxy.image?.let { image ->
-                scanner.process(
-                    InputImage.fromMediaImage(
-                        image, imageProxy.imageInfo.rotationDegrees
-                    )
-                ).addOnSuccessListener { barcode ->
-                    barcode?.takeIf { it.isNotEmpty() }
-                        ?.let(onSuccess)
-                }.addOnCompleteListener {
-                    imageProxy.close()
-                }
-            }
-        }
-    }
     private fun createScanner() = BarcodeScanning.getClient(
         BarcodeScannerOptions.Builder()
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)

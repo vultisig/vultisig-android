@@ -2,13 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.scan
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
 import android.view.MotionEvent
+import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.FocusMeteringAction
@@ -52,6 +55,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -70,6 +74,7 @@ import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.addWhiteBorder
+import com.vultisig.wallet.ui.utils.setupCamera
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -86,6 +91,7 @@ internal fun ScanQrScreen(
     ScanQrScreen(
         onDismiss = viewModel::back,
         onScanSuccess = viewModel::process,
+        onError = viewModel::handleError
     )
 }
 
@@ -94,10 +100,11 @@ internal fun ScanQrScreen(
 internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
+    onError: (String) -> Unit = {}
 ) {
     var isFrameHighlighted by remember { mutableStateOf(false) }
 
-    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -108,7 +115,12 @@ internal fun ScanQrScreen(
             isScanned = true
             val barcode = barcodes.first()
             val barcodeValue = barcode.rawValue
-            Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
+            Timber.d(
+                context.getString(
+                    R.string.successfully_scanned_barcode,
+                    barcodeValue
+                )
+            )
             if (barcodeValue != null) {
                 onScanSuccess(barcodeValue)
             }
@@ -127,11 +139,24 @@ internal fun ScanQrScreen(
         coroutineScope.launch {
             if (uri != null) {
                 try {
-                    val result = scanImage(InputImage.fromFilePath(context, uri))
+                    val result = scanImage(
+                        InputImage.fromFilePath(
+                            context,
+                            uri
+                        )
+                    )
                     val barcodes = if (result.isEmpty()) {
-                        val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+                        val bitmap = requireNotNull(
+                            uriToBitmap(
+                                context.contentResolver,
+                                uri
+                            )
+                        )
                             .addWhiteBorder(2F)
-                        val inputImage = InputImage.fromBitmap(bitmap, 0)
+                        val inputImage = InputImage.fromBitmap(
+                            bitmap,
+                            0
+                        )
                         val resultBarcodes = scanImage(inputImage)
                         bitmap.recycle()
                         resultBarcodes
@@ -174,8 +199,9 @@ internal fun ScanQrScreen(
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
                     onSuccess = onSuccess,
+                    onError = onError,
                     executor = executor,
-                    onAutoFocusTriggered =  {
+                    onAutoFocusTriggered = {
                         isFrameHighlighted = true
                         coroutineScope.launch {
                             delay(300)
@@ -183,6 +209,7 @@ internal fun ScanQrScreen(
                         }
                     }
                 )
+
 
                 Image(
                     modifier = Modifier
@@ -254,6 +281,7 @@ internal fun ScanQrScreen(
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
+    onError: (String) -> Unit,
     executor: Executor,
     onAutoFocusTriggered: () -> Unit,
 ) {
@@ -283,6 +311,7 @@ private fun QrCameraScreen(
                         Timber.e(e)
                     }
                 }
+
                 else -> {}
             }
         }
@@ -290,91 +319,26 @@ private fun QrCameraScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            unbindCameraListener(cameraProviderFuture, localContext)
+            unbindCameraListener(
+                cameraProviderFuture,
+                localContext
+            )
         }
     }
 
     key(viewKey) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = {
-
-                context ->
-                val previewView = PreviewView(context)
-                val resolutionStrategy = ResolutionStrategy(
-                    Size(1920, 1080),
-                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+            factory = { context ->
+                context.setupCamera(
+                    lifecycleOwner,
+                    PreviewView(context),
+                    executor,
+                    cameraProviderFuture,
+                    onSuccess,
+                    onError,
+                    onAutoFocusTriggered,
                 )
-                val resolutionSelector = ResolutionSelector.Builder()
-                    .setResolutionStrategy(resolutionStrategy)
-                    .build()
-
-                val preview = Preview.Builder()
-                    .setResolutionSelector(resolutionSelector)
-                    .build()
-                val selector = CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                    .build()
-
-                preview.surfaceProvider = previewView.surfaceProvider
-                try {
-
-
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setResolutionSelector(resolutionSelector)
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                    imageAnalysis.setAnalyzer(
-                        executor,
-                        BarcodeAnalyzer {
-                            unbindCameraListener(
-                                cameraProviderFuture,
-                                localContext
-                            )
-                            onSuccess(it)
-                        }
-                    )
-
-                    val cameraProvider = cameraProviderFuture.get()
-                    cameraProvider.unbindAll()
-
-                    val camera = cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        selector,
-                        preview,
-                        imageAnalysis,
-                    )
-
-                    // In some devices auto-focus does not work very well
-                    // We should allow user to touch and perform focus,
-                    // the autofocus initiated by a tap will "stick" at that point until
-                    // another tap occurs
-                    previewView.setOnTouchListener { _, event ->
-                        if (event.action == MotionEvent.ACTION_UP) {
-                            Timber.d("Auto-focus requested : ${event.x} ${event.y}")
-                            val factory = previewView.meteringPointFactory
-                            val point = factory.createPoint(event.x, event.y)
-                            val action = FocusMeteringAction.Builder(point)
-                                .disableAutoCancel()
-                                .build()
-                            camera.cameraControl.startFocusAndMetering(action)
-                            onAutoFocusTriggered()
-                        }
-                        true
-                    }
-
-
-                } catch (e: Exception) {
-
-                    Timber.e(e)
-//                    snackbarFlow.showMessage(
-//                        context.getString(
-//                            R.string.error_saving_qr_code,
-//                            e.localizedMessage ?: ""
-//                        )
-//                    )
-                }
-                previewView
             }
         )
     }
@@ -403,7 +367,8 @@ private class BarcodeAnalyzer(
         imageProxy.image?.let { image ->
             scanner.process(
                 InputImage.fromMediaImage(
-                    image, imageProxy.imageInfo.rotationDegrees
+                    image,
+                    imageProxy.imageInfo.rotationDegrees
                 )
             ).addOnSuccessListener { barcode ->
                 barcode?.takeIf { it.isNotEmpty() }
