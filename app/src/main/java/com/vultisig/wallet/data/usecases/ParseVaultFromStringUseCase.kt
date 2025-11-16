@@ -33,6 +33,9 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
     override fun invoke(input: String, password: String?): Vault =
         parseProtoBufVault(input, password)
             .getOrElse {
+                if (it is java.lang.IllegalStateException && it.message == "Vault is encrypted, but no password provided") {
+                    throw it
+                }
                 parseOldVault(input, password)
                     .getOrThrow()
             }
