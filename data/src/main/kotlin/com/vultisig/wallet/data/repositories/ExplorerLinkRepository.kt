@@ -42,11 +42,11 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         payload: SwapPayload?,
     ): String? = when (payload) {
         is SwapPayload.ThorChain -> "https://thorchain.net/tx/$tx"
-        is SwapPayload.MayaChain -> "https://www.mayascan.org/tx/${tx.removePrefix("0x")}"
+        is SwapPayload.MayaChain -> "https://www.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
         is SwapPayload.EVM -> {
             if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
                 if (payload.data.fromCoin.chain == payload.data.toCoin.chain && payload.data.fromCoin.chain == Chain.Solana) {
-                    "https://solscan.io/tx/${tx}"
+                    "https://orb.helius.dev/tx/${tx}"
                 } else
                     "https://scan.li.fi/tx/${tx}"
             } else {
@@ -59,7 +59,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton, Chain.Tron, Chain.Zcash  , Chain.Cardano->
+            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton, Chain.Tron, Chain.Cardano->
                 "${explorerUrl}transaction/"
 
             Chain.Kujira ->
@@ -73,7 +73,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     private val Chain.blockExplorerUrl: String
         get() = when (this) {
             Chain.Ton -> explorerUrl
-            Chain.Solana, Chain.Ripple -> "${explorerUrl}account/"
+            Chain.Ripple -> "${explorerUrl}account/"
             else -> "${explorerUrl}address/"
         }
 
@@ -94,10 +94,10 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Dydx -> "https://www.mintscan.io/dydx/"
             Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/"
             Chain.Litecoin -> "https://blockchair.com/litecoin/"
-            Chain.MayaChain -> "https://www.mayascan.org/"
+            Chain.MayaChain -> "https://www.explorer.mayachain.info/"
             Chain.Optimism -> "https://optimistic.etherscan.io/"
             Chain.Polygon -> "https://polygonscan.com/"
-            Chain.Solana -> "https://solscan.io/"
+            Chain.Solana -> "https://orb.helius.dev/"
             Chain.ThorChain -> "https://thorchain.net/"
             Chain.Polkadot -> "https://assethub-polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"
@@ -110,7 +110,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Ripple -> "https://xrpscan.com/"
             Chain.Akash -> "https://www.mintscan.io/akash/"
             Chain.Tron -> "https://tronscan.org/#/"
-            Chain.Zcash -> "https://blockchair.com/zcash/"
+            Chain.Zcash -> "https://blockexplorer.one/zcash/mainnet/"
             Chain.Cardano -> "https://cardanoscan.io/"
             Chain.Mantle -> "https://explorer.mantle.xyz/"
             Chain.Sei -> "https://seiscan.io/"

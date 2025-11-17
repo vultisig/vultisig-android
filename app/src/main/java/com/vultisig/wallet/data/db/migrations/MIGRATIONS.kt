@@ -427,3 +427,56 @@ internal val MIGRATION_22_23 = object : Migration(22, 23) {
         )
     }
 }
+
+internal val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // Create active_bonded_nodes table for storing bonded node information
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `active_bonded_nodes` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `node_address` TEXT NOT NULL,
+                `node_state` TEXT NOT NULL,
+                `coin_id` TEXT NOT NULL,
+                `vault_id` TEXT NOT NULL,
+                `amount` TEXT NOT NULL,
+                `apy` REAL NOT NULL,
+                `next_reward` REAL NOT NULL,
+                `next_churn` INTEGER,
+                FOREIGN KEY(`vault_id`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        database.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_active_bonded_nodes_vault_id` 
+            ON `active_bonded_nodes` (`vault_id`)
+            """.trimIndent()
+        )
+
+        database.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `staking_details` (
+                `id` TEXT PRIMARY KEY NOT NULL,
+                `vault_id` TEXT NOT NULL,
+                `coin_id` TEXT NOT NULL,
+                `stake_amount` TEXT NOT NULL,
+                `apr` REAL,
+                `estimated_rewards` TEXT,
+                `next_payout_date` INTEGER,
+                `rewards` TEXT,
+                `rewards_coin_id` TEXT,
+                FOREIGN KEY(`vault_id`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        database.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_staking_details_vault_id` 
+            ON `staking_details` (`vault_id`)
+            """.trimIndent()
+        )
+    }
+}

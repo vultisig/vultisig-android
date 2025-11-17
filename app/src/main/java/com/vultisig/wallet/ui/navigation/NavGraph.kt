@@ -17,12 +17,15 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_BOND_ADDRESS
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_DEPOSIT_TYPE
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Route.AddressBook
 import com.vultisig.wallet.ui.navigation.Route.AddressEntry
 import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
 import com.vultisig.wallet.ui.navigation.Route.BackupVault
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
 import com.vultisig.wallet.ui.navigation.Route.FastVaultPasswordReminder
 import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
@@ -263,6 +266,8 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_DEPOSIT_TYPE) { type = NavType.StringType },
+                navArgument(ARG_BOND_ADDRESS) { type = NavType.StringType },
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
@@ -271,6 +276,8 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = requireNotNull(args.getString(ARG_CHAIN_ID)),
+                depositType = args.getString(ARG_DEPOSIT_TYPE),
+                bondAddress = args.getString(ARG_BOND_ADDRESS),
             )
         }
 
@@ -474,7 +481,11 @@ internal fun SetupNavGraph(
             FastVaultVerificationScreen()
         }
 
-        composable<BackupVault> {
+        composable<BackupVault>(
+            typeMap = mapOf(
+                typeOf<BackupPasswordType>() to BackupPasswordTypeNavType
+            )
+        ) {
             BackupVaultScreen()
         }
 
