@@ -51,7 +51,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         ActiveBondedNodeEntity::class,
         StakingDetailsEntity::class,
     ],
-    version = 24,
+    version = 25,
     exportSchema = false,
 )
 @TypeConverters(
