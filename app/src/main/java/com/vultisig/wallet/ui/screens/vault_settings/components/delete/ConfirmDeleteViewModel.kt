@@ -83,7 +83,6 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                     }
                 }
                 .catch {
-                    // TODO: Handle error
                     Timber.e(it)
                 }.collect { accounts ->
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()

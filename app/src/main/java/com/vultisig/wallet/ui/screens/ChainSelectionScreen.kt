@@ -1,113 +1,124 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.ui.components.FormSearchBar
-import com.vultisig.wallet.ui.components.TokenSelectionItem
-import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
+import com.vultisig.wallet.ui.models.ChainUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainSelectionScreen(
-    navController: NavHostController,
     viewModel: ChainSelectionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
 
     ChainSelectionScreen(
         state = state,
-        navController = navController,
         searchTextFieldState = viewModel.searchTextFieldState,
-        onEnableAccount = viewModel::enableAccount,
-        onDisableAccount = viewModel::disableAccount,
+        onEnableAccount = viewModel::enableAccountTemp,
+        onDisableAccount = viewModel::disableAccountTemp,
+        onDoneClick = viewModel::onCommitChanges,
+        onCancelClick = viewModel::cancelChanges,
+        onSetSearchText = viewModel::setSearchText,
     )
 }
 
 @Composable
 private fun ChainSelectionScreen(
     state: ChainSelectionUiModel,
-    navController: NavHostController,
     searchTextFieldState: TextFieldState,
     onEnableAccount: (Coin) -> Unit,
     onDisableAccount: (Coin) -> Unit,
+    onDoneClick: () -> Unit,
+    onCancelClick: () -> Unit,
+    onSetSearchText: (String) -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
-            .fillMaxSize(),
-    ) {
-        TopBar(
-            centerText = stringResource(R.string.chains), startIcon = R.drawable.ic_caret_left,
-            navController = navController
-        )
 
-        UiSpacer(size = 8.dp)
-
-        FormSearchBar(
-            textFieldState = searchTextFieldState,
-            modifier = Modifier
-                .padding(
-                    horizontal = 16.dp,
-                )
-        )
-
-        UiSpacer(size = 8.dp)
-
-        LazyColumn(
-            contentPadding = PaddingValues(all = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(state.chains) { chain ->
-                val token = chain.coin
-                TokenSelectionItem(
-                    title = token.ticker,
-                    subtitle = token.chain.raw,
-                    logo = token.chain.logo,
-                    isChecked = chain.isEnabled,
-                    onCheckedChange = { checked ->
-                        if (checked) {
-                            onEnableAccount(token)
-                        } else {
-                            onDisableAccount(token)
-                        }
-                    }
-                )
+    TokenSelectionList(
+        titleContent = {
+            Text(
+                text = stringResource(R.string.chain_selection_select_chains),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.colors.neutrals.n100,
+            )
+        },
+        items = state.chains.map {
+            GridTokenUiModel.SingleToken(
+                data = it
+            )
+        },
+        mapper = {
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel = TokenSelectionUiModel.TokenUiSingle(
+                    name = it.data.coin.chain.raw,
+                    logo = it.data.coin.chain.logo,
+                ),
+                isChecked = it.data.isEnabled
+            )
+        },
+        searchTextFieldState = searchTextFieldState,
+        onDoneClick = onDoneClick,
+        onCancelClick = onCancelClick,
+        notFoundContent = {
+            NoFoundContent(
+                message = stringResource(R.string.chain_selection_no_chains_found)
+            )
+        },
+        onCheckChange = { checked, chain ->
+            if (checked) {
+                onEnableAccount(chain.coin)
+            } else {
+                onDisableAccount(chain.coin)
             }
-        }
-    }
+        },
+        onSetSearchText = onSetSearchText,
+    )
 }
 
 @Preview
 @Composable
 fun ChainSelectionViewPreview() {
     ChainSelectionScreen(
-        state = ChainSelectionUiModel(),
-        navController = rememberNavController(),
+        state = ChainSelectionUiModel(
+            chains = listOf(
+                ChainUiModel(
+                    isEnabled = false,
+                    coin = Coins.Ethereum.VULT
+                ),
+                ChainUiModel(
+                    isEnabled = true,
+                    coin = Coins.BscChain.ETH
+                ),
+                ChainUiModel(
+                    isEnabled = false,
+                    coin = Coins.CronosChain.CRO
+                ),
+                ChainUiModel(
+                    isEnabled = true,
+                    coin = Coins.Avalanche.BLS
+                ),
+            )
+        ),
         searchTextFieldState = rememberTextFieldState(),
         onEnableAccount = {},
         onDisableAccount = {},
+        onDoneClick = {},
+        onCancelClick = {},
     )
 }

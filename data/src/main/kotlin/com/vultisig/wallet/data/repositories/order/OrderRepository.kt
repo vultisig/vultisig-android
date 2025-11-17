@@ -19,6 +19,7 @@ interface OrderRepository<T : BaseOrderEntity> {
     suspend fun delete(parentId: String?, name: String)
     suspend fun deleteAll(parentId: String?)
     suspend fun find(parentId: String?, name: String): T?
+    suspend fun find(name: String): T?
     suspend fun insert(parentId: String?, name: String): Float
     suspend fun insert(order: T)
     suspend fun updateList(parentId: String?, names: List<String>)
@@ -63,6 +64,10 @@ abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
 
     override suspend fun find(parentId: String?, name: String): T = withContext(IO) {
         baseOrderDao.find(name, parentId)
+    }
+
+    override suspend fun find(name: String): T? = withContext(IO) {
+        baseOrderDao.safeFind(name)
     }
 
     private suspend fun findMaxOrder(parentId: String?): T = withContext(IO) {

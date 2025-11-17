@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
-import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteErrorResponse
@@ -20,6 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.math.round
 
 interface OneInchApi {
 
@@ -30,7 +31,8 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized
+        bpsDiscount: Int,
+    ): EVMSwapQuoteDeserialized
 
     suspend fun getTokens(
         chain: Chain,
@@ -61,7 +63,8 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteDeserialized = coroutineScope {
+        bpsDiscount: Int,
+    ): EVMSwapQuoteDeserialized = coroutineScope {
         try {
             val baseSwapQuoteUrl = "https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}"
             val requestParams: HttpRequestBuilder.() -> Unit = {
@@ -70,7 +73,8 @@ class OneInchApiImpl @Inject constructor(
                     dstTokenContractAddress,
                     amount,
                     srcAddress,
-                    isAffiliate
+                    isAffiliate,
+                    bpsDiscount,
                 )
             }
             val swapResponseAsync = async {
@@ -87,7 +91,7 @@ class OneInchApiImpl @Inject constructor(
                         responses.forEach { response ->
                             if (!response.status.isSuccess()) {
                                 val resp = response.body<OneInchSwapQuoteErrorResponse>()
-                                return@coroutineScope OneInchSwapQuoteDeserialized.Error(
+                                return@coroutineScope EVMSwapQuoteDeserialized.Error(
                                     error = resp.description
                                 )
                             }
@@ -102,7 +106,7 @@ class OneInchApiImpl @Inject constructor(
                 }
             )
         } catch (e: Exception) {
-            OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
+            EVMSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
         }
     }
 
@@ -112,7 +116,11 @@ class OneInchApiImpl @Inject constructor(
         amount: String,
         srcAddress: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ) {
+        val bpsDiscountTransformed = round(bpsDiscount.toDouble()) / 100.0
+        val referrerFeeUpdated = round((ONEINCH_REFERRER_FEE - bpsDiscountTransformed) * 100) / 100.0
+
         parameter(
             "src",
             srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
@@ -125,7 +133,7 @@ class OneInchApiImpl @Inject constructor(
         parameter("disableEstimate", true)
         parameter("includeGas", true)
         parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-        parameter("fee", if(isAffiliate) ONEINCH_REFERRER_FEE else "0")
+        parameter("fee", if(isAffiliate) referrerFeeUpdated else "0")
     }
 
 
@@ -153,7 +161,7 @@ class OneInchApiImpl @Inject constructor(
     }.body()
 
     companion object {
-        private const val ONEINCH_REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
+        private const val ONEINCH_REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val ONEINCH_REFERRER_FEE = 0.5
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }

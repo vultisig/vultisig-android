@@ -179,6 +179,10 @@ data class RippleSpecific(
 
 @Serializable
 data class TonSpecific(
+    @SerialName("jettons_address")
+    val jettonsAddress: String = "",
+    @SerialName("is_active")
+    val activeDestination: Boolean = false,
     @SerialName("send_max_amount")
     val sendMaxAmount: Boolean,
     @SerialName("sequence_number")
@@ -200,6 +204,8 @@ data class SolanaSpecific(
     val fromAddressPubKey: String? = null,
     @SerialName("to_token_associated_address")
     val toAddressPubKey: String? = null,
+    @SerialName("priority_limit")
+    val priorityLimit: String? = null,
 )
 
 @Serializable
@@ -215,6 +221,8 @@ data class PolkadotSpecific(
     val transactionVersion: Int,
     @SerialName("genesis_hash")
     val genesisHash: String,
+    @SerialName("gas")
+    val gas: Long,
 )
 
 @Serializable
@@ -283,6 +291,8 @@ data class SuiCoin(
 data class SuiSpecific(
     @SerialName("reference_gas_price")
     val referenceGasPrice: String,
+    @SerialName("gas_budget")
+    val gasBudget: String,
     @SerialName("coins")
     val coins: List<SuiCoin>
 )
@@ -321,7 +331,9 @@ data class OneinchSwapPayload(
     @SerialName("to_amount_limit")
     val toAmountLimit: String = "0",
     @SerialName("quote")
-    val quote: OneinchQuote
+    val quote: OneinchQuote,
+    @SerialName("provider")
+    val provider: String = "",
 )
 @Serializable
 data class OneinchQuote(

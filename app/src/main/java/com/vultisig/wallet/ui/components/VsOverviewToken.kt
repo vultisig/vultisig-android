@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,16 +18,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
+import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.util.CutoutPosition
+import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -37,7 +46,7 @@ internal fun VsOverviewToken(
     modifier: Modifier = Modifier,
 ) {
     val token: Coin = valuedToken.token
-    val chainLogo = token.chain.logo
+    val chainLogo = token.chain.monoToneLogo
     val value: String = valuedToken.value
 
     Column(
@@ -69,7 +78,7 @@ internal fun VsOverviewToken(
 
         Box {
             TokenLogo(
-                logo = Tokens.getCoinLogo(token.logo),
+                logo = getCoinLogo(token.ticker),
                 title = token.ticker,
                 modifier = Modifier
                     .size(36.dp)
@@ -81,9 +90,11 @@ internal fun VsOverviewToken(
                     .align(Alignment.Center),
                 errorLogoModifier = Modifier
                     .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Theme.colors.neutral200),
             )
 
-            chainLogo.takeIf { it != Tokens.getCoinLogo(token.logo) }?.let {
+            chainLogo.takeIf { it != getCoinLogo(token.ticker) }?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,
@@ -127,3 +138,34 @@ internal fun VsOverviewToken(
         )
     }
 }
+
+
+@Preview
+@Composable
+private fun VsOverviewTokenPreview() {
+    VsOverviewToken(
+        header = "You will receive",
+        valuedToken = ValuedToken(
+            token = Coin(
+                chain = Chain.Arbitrum,
+                ticker = "ARB",
+                logo = "https://example.com/eth_logo.png",
+                address = "0x0000000000000000000000000000000000000000",
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "ethereum",
+                contractAddress = "",
+                isNativeToken = true
+            ),
+            value = "0.02500000",
+            fiatValue = "$45.00"
+        ),
+        shape = RoundedWithCutoutShape(
+            cutoutPosition = CutoutPosition.Start,
+            cutoutOffsetX = (-4).dp,
+            cutoutRadius = 18.dp,
+        ),
+        modifier = Modifier
+    )
+}
+

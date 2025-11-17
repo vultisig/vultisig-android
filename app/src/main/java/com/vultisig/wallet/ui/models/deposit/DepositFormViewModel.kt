@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -49,6 +48,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -108,7 +109,7 @@ internal enum class DepositOption {
 
 @Immutable
 internal data class DepositFormUiModel(
-    val selectedToken: Coin = Tokens.rune,
+    val selectedToken: Coin = Coins.ThorChain.RUNE,
 
     val depositMessage: UiText = UiText.Empty,
     val depositOption: DepositOption = DepositOption.Bond,
@@ -126,7 +127,7 @@ internal data class DepositFormUiModel(
     val slippageError: UiText? = null,
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
-    val sharesBalance: UiText = "Loading...".asUiText(),
+    val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -211,14 +212,20 @@ internal class DepositFormViewModel @Inject constructor(
 
     private val address = MutableStateFlow<Address?>(null)
     private var addressJob: Job? = null
+    private var depositTypeAction: String? = null
+    private var bondAddress: String? = null
 
     fun loadData(
         vaultId: String,
         chainId: String,
+        depositType: String?,
+        bondAddress: String?,
     ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
+        this.depositTypeAction = depositType
+        this.bondAddress = bondAddress
 
         val depositOptions = when (chain) {
             Chain.ThorChain -> listOf(
@@ -380,6 +387,42 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         collectTcyStakeAutoCompound()
+
+        setMetadataInfo()
+    }
+
+    private fun setMetadataInfo() {
+        if (!depositTypeAction.isNullOrEmpty()) {
+            val action = parseDepositType(depositTypeAction)
+
+            if (action != null) {
+                val depositOption = when (action) {
+                    DeFiNavActions.UNBOND -> DepositOption.Unbond
+                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
+                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
+                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
+                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
+                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
+                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
+                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
+                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+                    DeFiNavActions.STAKE_STCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_STCY -> DepositOption.UnstakeTcy
+                    else -> DepositOption.Bond
+                }
+                selectDepositOption(depositOption)
+
+                if (action == DeFiNavActions.STAKE_STCY) {
+                    onAutoCompoundTcyStake(true)
+                }
+                if (action == DeFiNavActions.UNSTAKE_STCY) {
+                    onAutoCompoundTcyUnStake(true)
+                }
+            } else {
+                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+            }
+        }
     }
 
     private suspend fun updateTokenAmount(
@@ -407,7 +450,10 @@ internal class DepositFormViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         balance = UiText.Empty,
-                        amountError = "$tickerToActivate must be enabled before proceeding.".asUiText()
+                        amountError = UiText.FormattedText(
+                            R.string.must_be_enabled_before_proceeding,
+                            listOf(tickerToActivate.orEmpty())
+                        )
                     )
                 }
             }
@@ -489,12 +535,12 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
                 DepositOption.MintYRUNE ->
                     state.update {
-                        it.copy(selectedToken = Tokens.rune, unstakableAmount = null)
+                        it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
 
                 DepositOption.MintYTCY -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy)
+                        it.copy(selectedToken = Coins.ThorChain.TCY)
                     }
                 }
 
@@ -516,7 +562,7 @@ internal class DepositFormViewModel @Inject constructor(
 
                 DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy, unstakableAmount = null)
+                        it.copy(selectedToken = Coins.ThorChain.TCY, unstakableAmount = null)
                     }
                 }
 
@@ -536,6 +582,11 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 else -> Unit
+            }
+
+
+            if (!bondAddress.isNullOrEmpty()) {
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
     }
@@ -707,7 +758,7 @@ internal class DepositFormViewModel @Inject constructor(
     fun scan() {
         viewModelScope.launch {
             val qr = requestQrScan()
-            if (qr != null) {
+            if (!qr.isNullOrBlank()) {
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
             }
         }
@@ -1762,6 +1813,16 @@ internal class DepositFormViewModel @Inject constructor(
         // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
         // For staking (TCY+), we send the full amount entered by user
         val tokenAmountInt = if (isUnStake) {
+            // Get the appropriate unstakable amount based on compound type
+            val totalUnits = if (isAutoCompoundTcyUnStake) {
+                tcyAutoCompoundAmount?.toBigIntegerOrNull()
+            } else {
+                unstakableAmountCache?.toBigIntegerOrNull()
+            } ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+
+            if (totalUnits < BigInteger.ONE) {
+                throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            }
             // For unstaking, send zero TCY as gas is covered by RUNE
             BigInteger.ZERO
         } else {
@@ -1771,8 +1832,11 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = stakeMemo
 
-        val isAutoCompound = if (isUnStake) isAutoCompoundTcyUnStake
-        else isAutoCompoundTcyStake
+        val isAutoCompound = if (isUnStake){
+            isAutoCompoundTcyUnStake
+        } else {
+            isAutoCompoundTcyStake
+        }
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -1821,10 +1885,10 @@ internal class DepositFormViewModel @Inject constructor(
         tokenAmountInt: BigInteger
     ): WasmExecuteContractPayload? {
         return if (isUnStake) {
-            val units =
-                percentage?.times(tcyAutoCompoundAmount?.toIntOrNull() ?: 0)
-                    ?.div(100)?.roundToInt()
-                    ?: return null
+            val units = percentage?.toBigDecimal()
+                ?.times(tcyAutoCompoundAmount?.toBigDecimal() ?:  BigDecimal.ZERO)
+                ?.div(BigDecimal.valueOf(100))?.toBigInteger() ?: return null
+
             ThorchainFunctions.unStakeTcyCompound(
                 units = units,
                 stakingContract = STAKING_TCY_COMPOUND_CONTRACT,
@@ -2338,7 +2402,7 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private suspend fun handleRujiDepositOption(depositOption: DepositOption) {
-        val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return
+        val rujiToken = Coins.ThorChain.RUJI
         state.update {
             it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
         }

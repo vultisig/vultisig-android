@@ -143,7 +143,9 @@ internal fun JoinKeysignView(
                         navController.navigate(Destination.Home().route)
                     },
                     onBack = keysignViewModel::navigateToHome,
-                    transactionTypeUiModel = keysignViewModel.transactionTypeUiModel
+                    transactionTypeUiModel = keysignViewModel.transactionTypeUiModel,
+                    onAddToAddressBook = keysignViewModel::navigateToAddressBook,
+                    showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
                 )
             }
 

@@ -2,16 +2,17 @@ package com.vultisig.wallet.ui.utils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
+import com.vultisig.wallet.ui.models.OnRampViewModel.Companion.BANXA_URL
 
 @SuppressLint("ComposableNaming")
 @Composable
 internal fun VsUriHandler(): UriHandler {
-    val activity = LocalContext.current.closestActivityOrNull()
+    val activity = LocalActivity.current
     val uriHandler = LocalUriHandler.current
     return VsUriHandler(requireNotNull(activity), uriHandler)
 }
@@ -33,8 +34,10 @@ private class VsUriHandler(
         get() = listOf(
             VsAuxiliaryLinks.PRIVACY,
             VsAuxiliaryLinks.TERMS_OF_SERVICE,
-            VsAuxiliaryLinks.VULT,
-        ).contains(this)
+            VsAuxiliaryLinks.VULT_TOKEN,
+            VsAuxiliaryLinks.VULT_TOKEN_DOCS,
+            VsAuxiliaryLinks.VULT_WEBSITE,
+        ).contains(this) || this.startsWith(BANXA_URL)
 
 }
 

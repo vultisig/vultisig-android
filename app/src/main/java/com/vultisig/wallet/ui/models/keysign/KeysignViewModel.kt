@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -26,6 +27,7 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -33,6 +35,7 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,7 +48,6 @@ import tss.KeysignResponse
 import tss.ServiceImpl
 import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.time.Duration.Companion.seconds
@@ -86,6 +88,7 @@ internal class KeysignViewModel(
     val transactionTypeUiModel: TransactionTypeUiModel?,
     private val pullTssMessages: PullTssMessagesUseCase,
     private val isInitiatingDevice: Boolean,
+    private val addressBookRepository: AddressBookRepository,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -94,6 +97,7 @@ internal class KeysignViewModel(
     val txLink = MutableStateFlow("")
     val approveTxLink = MutableStateFlow("")
     val swapProgressLink = MutableStateFlow<String?>(null)
+    val showSaveToAddressBook = MutableStateFlow(false)
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -105,6 +109,20 @@ internal class KeysignViewModel(
     private var featureFlag: FeatureFlagJson? = null
 
     private var isNavigateToHome: Boolean = false
+
+    init {
+        val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
+        sendTx?.tx?.let { tx ->
+            viewModelScope.launch {
+                val isSavedBefore = addressBookRepository.entryExists(
+                    address = tx.dstAddress,
+                    chainId = tx.token.token.chain.id
+                )
+
+                showSaveToAddressBook.value = isSavedBefore.not()
+            }
+        }
+    }
 
     fun startKeysign() {
         viewModelScope.launch {
@@ -136,7 +154,7 @@ internal class KeysignViewModel(
                         sessionID = sessionId,
                         encryptionKeyHex = encryptionKeyHex,
                         messageToSign = messagesToSign,
-                        chainPath = this.keysignPayload?.coin?.coinType?.derivationPath()
+                        chainPath = this.keysignPayload?.coin?.coinType?.compatibleDerivationPath()
                             ?: "m/44'/60'/0'/0/0",
                         isInitiateDevice = isInitiatingDevice,
                         sessionApi = sessionApi,
@@ -246,7 +264,7 @@ internal class KeysignViewModel(
         val transactionDetail = thorChainApi.getTransactionDetail(txHash.value)
 
         // https://docs.cosmos.network/v0.46/building-modules/errors.html#registration
-        if (transactionDetail.code != null && transactionDetail.codeSpace != null) {
+        if (transactionDetail.code != null && !transactionDetail.codeSpace.isNullOrBlank()) {
             throw Exception(transactionDetail.rawLog)
         }
     }
@@ -277,7 +295,7 @@ internal class KeysignViewModel(
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
             keysignReq.derivePath =
-                (keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath()
+                keysignPayload?.coin?.coinType?.compatibleDerivationPath() ?: "m/44'/60'/0'/0/0"
 
             val keysignResp = when (keyType) {
                 TssKeyType.ECDSA -> {
@@ -381,6 +399,21 @@ internal class KeysignViewModel(
                 )
             } else {
                 navigator.navigate(Destination.Back)
+            }
+        }
+    }
+
+    fun navigateToAddressBook() {
+        val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
+        sendTx?.tx?.let { tx ->
+            viewModelScope.launch {
+                navigator.route(
+                    Route.AddressEntry(
+                        vaultId = vault.id,
+                        address = tx.dstAddress,
+                        chainId = tx.token.token.chain.id
+                    )
+                )
             }
         }
     }

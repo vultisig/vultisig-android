@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -40,8 +41,8 @@ interface MayaChainApi {
         fromAsset: String,
         toAsset: String,
         amount: String,
-        interval: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -70,19 +71,22 @@ internal class MayaChainApiImp @Inject constructor(
         fromAsset: String,
         toAsset: String,
         amount: String,
-        interval: String,
         isAffiliate: Boolean,
+        bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         try {
+            val affiliateFeeRate =
+                maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
+
             val response = httpClient
                 .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
                     parameter("from_asset", fromAsset)
                     parameter("to_asset", toAsset)
                     parameter("amount", amount)
                     parameter("destination", address)
-                    parameter("streaming_interval", interval)
+                    parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", if(isAffiliate)THORChainSwaps.AFFILIATE_FEE_RATE else "0")
+                    parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {

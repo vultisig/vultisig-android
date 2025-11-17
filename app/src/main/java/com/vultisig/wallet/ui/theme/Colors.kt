@@ -68,10 +68,11 @@ internal data class Colors(
     val alerts: AlertsColors = AlertsColors(),
     val neutrals: NeutralsColors = NeutralsColors.Default,
     val fills: FillsColors = FillsColors(),
+    val vibrant: Vibrant = Vibrant(),
 
     val gradients: Gradients = Gradients(),
 
-) {
+    ) {
     companion object {
         val Default = Colors()
     }
@@ -99,7 +100,12 @@ internal data class BackgroundsColors(
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
     val neutral: Color = Color(0xFF061B3A),
-    val disabled: Color = Color(0x800B1A3A)
+    val disabled: Color = Color(0x800B1A3A),
+    val states: BackgroundStateColors = BackgroundStateColors(),
+)
+
+internal data class BackgroundStateColors(
+    val success: Color = Color(0xFF042436),
 )
 
 internal data class PrimaryColors(
@@ -113,6 +119,7 @@ internal data class TextColors(
     val primary: Color = Color(0xFFF0F4FC),
     val light: Color = Color(0xFFC9D6E8),
     val extraLight: Color = Color(0xFF8295AE),
+    val inverse: Color = Color(0xFF02122B),
     val button: TextButtonColors = TextButtonColors()
 )
 
@@ -158,6 +165,10 @@ internal data class NeutralsColors(
 
 internal data class FillsColors(
     val tertiary: Color = Color(0x1F787880),
+)
+
+internal data class Vibrant(
+    val primary: Color = Color(0xFF333333)
 )
 
 internal data class Gradients(

@@ -10,8 +10,18 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.blockchain.model.Eip1559
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -46,7 +56,7 @@ interface BlockChainSpecificRepository {
         chain: Chain,
         address: String,
         token: Coin,
-        gasFee: TokenValue,
+        gasFee: TokenValue, // Deprecated
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
@@ -71,6 +81,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -143,19 +154,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-
-                val defaultGasLimit = BigInteger(
+                val defaultGasLimit =
                     when {
-                        isSwap -> "600000"
-                        chain == Chain.Arbitrum -> {
-                                "160000" // arbitrum has higher gas limit
-                        }
-
-                        token.isNativeToken -> "23000"
-
-                        else -> "120000"
+                        isSwap -> DEFAULT_SWAP_LIMIT
+                        chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER // TODO: Review Arb
+                        token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
+                        else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                     }
-                )
 
                 val estimateGasLimit = if (token.isNativeToken) evmApi.estimateGasForEthTransaction(
                     senderAddress = token.address,
@@ -169,23 +174,30 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     value = tokenAmountValue ?: BigInteger.ZERO,
                 )
 
-                var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-                if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
-                    maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
-                }
                 val nonce = evmApi.getNonce(address)
+
+                val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                val fees = feeServiceComposite.calculateFees(chain, estimateGasLimit, isSwap)
+
+                val (maxFeePerGas, priorityFeeWei) = when (fees) {
+                    is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
+                    is GasFees -> fees.price to BigInteger.ZERO
+                    else -> error("Unsupported fee type ${fees::class.simpleName} for chain=$chain")
+                }
+
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Ethereum(
-                        maxFeePerGasWei = gasFee.value,
-                        priorityFeeWei = minOf(maxPriorityFee, gasFee.value),
+                        maxFeePerGasWei = maxFeePerGas,
+                        priorityFeeWei = priorityFeeWei,
                         nonce = nonce,
-                        gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
+                        gasLimit = gasLimitFee,
                     )
                 )
             }
         }
 
         TokenStandard.UTXO -> {
+            // TODO: Refactor, delegate Cardano UTXO to WalletCore as BTC
             if (chain == Chain.Cardano) {
                 // For send max, don't add fees - let WalletCore handle it
                 // For regular sends, add estimated fees to ensure we have enough
@@ -214,8 +226,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             } else {
                 val utxos = blockChairApi.getAddressInfo(
-                    chain,
-                    address
+                    chain = chain,
+                    address = address,
                 )
 
                 val byteFee = gasFee.value
@@ -268,7 +280,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     priorityFee = gasFee.value,
                     fromAddressPubKey = fromAddressPubKeyResult?.first,
                     toAddressPubKey = toAddressPubKeyResult?.first,
-                    programId = fromAddressPubKeyResult?.second == true
+                    programId = fromAddressPubKeyResult?.second == true,
+                    priorityLimit = SOLANA_PRIORITY_FEE_LIMIT.toBigInteger(),
                 )
             )
         }
@@ -328,28 +341,41 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUBSTRATE -> {
-            if (chain == Chain.Polkadot) {
-                val version: Pair<BigInteger, BigInteger> = polkadotApi.getRuntimeVersion()
-                BlockChainSpecificAndUtxo(
-                    BlockChainSpecific.Polkadot(
-                        recentBlockHash = polkadotApi.getBlockHash(),
-                        nonce = polkadotApi.getNonce(address),
-                        currentBlockNumber = polkadotApi.getBlockHeader(),
-                        specVersion = version.first.toLong().toUInt(),
-                        transactionVersion = version.second.toLong().toUInt(),
-                        genesisHash = polkadotApi.getGenesisBlockHash()
+            when (chain) {
+                Chain.Polkadot -> coroutineScope {
+                    val runtimeVersionDeferred = async { polkadotApi.getRuntimeVersion() }
+                    val blockHashDeferred = async { polkadotApi.getBlockHash() }
+                    val nonceDeferred = async { polkadotApi.getNonce(address) }
+                    val blockHeaderDeferred = async { polkadotApi.getBlockHeader() }
+                    val genesisHashDeferred = async { polkadotApi.getGenesisBlockHash() }
+
+                    val (specVersion, transactionVersion) = runtimeVersionDeferred.await()
+
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Polkadot(
+                            recentBlockHash = blockHashDeferred.await(),
+                            nonce = nonceDeferred.await(),
+                            currentBlockNumber = blockHeaderDeferred.await(),
+                            specVersion = specVersion.toLong().toUInt(),
+                            transactionVersion = transactionVersion.toLong().toUInt(),
+                            genesisHash = genesisHashDeferred.await(),
+                            gas = gasFee.value.toString().toULong(),
+                        )
                     )
-                )
-            } else {
-                error("Unsupported chain: $chain")
+                }
+                else -> error("Unsupported SUBSTRATE chain: $chain")
             }
         }
 
-        TokenStandard.SUI -> {
+        TokenStandard.SUI -> coroutineScope {
+            val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
+            val coinsDeferred = async { suiApi.getAllCoins(address) }
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = suiApi.getReferenceGasPrice(),
-                    coins = suiApi.getAllCoins(address),
+                    referenceGasPrice = gasPriceDeferred.await(),
+                    gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                    coins = coinsDeferred.await(),
                 ),
                 utxos = emptyList(),
             )
@@ -369,6 +395,23 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
                     dstAddress.startsWith("E")
                 }
+                val (destinationActive, jettonsAddress) = if (!token.isNativeToken) {
+                    val destinationIsActiveDeferred = async {
+                        if (dstAddress == null) {
+                            false
+                        } else {
+                            tonApi.getWalletState(dstAddress) != TON_WALLET_STATE_UNINITIALIZED
+                        }
+                    }
+
+                    val jettonsAddressDeferred = async {
+                        tonApi.getJettonWallet(address, token.contractAddress).getJettonsAddress()
+                    }
+
+                    destinationIsActiveDeferred.await() to jettonsAddressDeferred.await()
+                } else {
+                    false to ""
+                }
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific = BlockChainSpecific.Ton(
                         sequenceNumber = sequenceNumberDeferred.await().toString().toULong(),
@@ -377,6 +420,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         bounceable = isBounceable.await(),
                         isDeposit = isDeposit,
                         sendMaxAmount = isMaxAmountEnabled,
+                        isActiveDestination = destinationActive,
+                        jettonAddress = jettonsAddress ?: "",
                     ),
                 )
             }
@@ -394,7 +439,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     gas = gasFee.value.toLong().toULong(),
                 ),
             )
-
         }
 
         TokenStandard.TRC20 -> {
@@ -403,19 +447,21 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val expiration = now + 1.hours
             val rawData = specific.blockHeader.rawData
 
-            // Tron does not have a 0x... it can be any address
-            // We will only simulate the transaction fee with below address
             val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
 
             val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
                 ?: run {
                     val rawBalance = tronApi.getBalance(token)
-                    tronApi.getTriggerConstantContractFee(
+                    val triggerResult = tronApi.getTriggerConstantContractFee(
                         ownerAddressBase58 = token.address,
                         contractAddressBase58 = token.contractAddress,
                         recipientAddressHex = recipientAddressHex,
+                        functionSelector = TRANSFER_FUNCTION_SELECTOR,
                         amount = rawBalance
                     )
+
+                    val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
+                    totalEnergy * ENERGY_TO_SUN_FACTOR
                 }
 
             BlockChainSpecificAndUtxo(
@@ -428,20 +474,15 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockHeaderTxTrieRoot = rawData.txTrieRoot,
                     blockHeaderParentHash = rawData.parentHash,
                     blockHeaderWitnessAddress = rawData.witnessAddress,
-                    gasFeeEstimation = estimation.toULong()
+                    gasFeeEstimation = estimation.toString().toULong(),
                 )
             )
         }
-
-    }
-
-    private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
-        // Let's make sure we pay at least 1GWei as priority fee
-        val oneGwei = 1000000000.toBigInteger()
-        return priorityFee.coerceAtLeast(oneGwei)
     }
 
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
+
+        private const val ENERGY_TO_SUN_FACTOR = 280
     }
 }

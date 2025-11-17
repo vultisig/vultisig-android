@@ -75,7 +75,7 @@ internal fun InputPasswordScreen(
                     ),
             ) {
                 Text(
-                    text = "Enter your password",
+                    text = stringResource(R.string.keysign_password_enter_your_password),
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.headings.largeTitle,
                 )

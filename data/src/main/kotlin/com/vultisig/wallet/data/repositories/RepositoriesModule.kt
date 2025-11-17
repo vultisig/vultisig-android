@@ -200,6 +200,24 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindThorchainBondRepository(
+        impl: ThorchainBondRepositoryImpl,
+    ): ThorchainBondRepository
+
+    @Binds
+    @Singleton
+    fun bindActiveBondedNodeRepository(
+        impl: ActiveBondedNodeRepositoryImpl,
+    ): ActiveBondedNodeRepository
+
+    @Binds
+    @Singleton
+    fun bindStakingDetailsRepository(
+        impl: StakingDetailsRepositoryImpl,
+    ): StakingDetailsRepository
+
+    @Binds
+    @Singleton
     fun bindSwapTransactionRepository(
         impl: SwapTransactionRepositoryImpl
     ): SwapTransactionRepository
@@ -263,6 +281,12 @@ internal interface RepositoriesModule {
     fun bindTemporaryVaultRepository(
         impl: TemporaryVaultRepositoryImpl
     ): TemporaryVaultRepository
+
+    @Binds
+    @Singleton
+    fun bindCryptoConnectionTypeRepository(
+        impl: CryptoConnectionTypeRepositoryImpl
+    ): CryptoConnectionTypeRepository
 }
 
 @Qualifier

@@ -52,7 +52,7 @@ fun Vault.getSignersExceptLocalParty(): List<String> {
 }
 
 fun Vault.containsServerSigner(): Boolean {
-    return signers.firstOrNull { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) } != null
+    return signers.any { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) }
 }
 
 fun Vault.isServerVault(): Boolean {
@@ -61,4 +61,53 @@ fun Vault.isServerVault(): Boolean {
 
 fun Vault.isFastVault(): Boolean {
     return containsServerSigner() && !isServerVault()
+}
+
+fun Vault.getPubKeyByChain(chain: Chain): String {
+    return when (chain) {
+        Chain.ThorChain,
+        Chain.MayaChain -> pubKeyECDSA
+
+        // Evm
+        Chain.Arbitrum,
+        Chain.Avalanche,
+        Chain.Base,
+        Chain.CronosChain,
+        Chain.BscChain,
+        Chain.Blast,
+        Chain.Ethereum,
+        Chain.Optimism,
+        Chain.Polygon,
+        Chain.ZkSync,
+        Chain.Mantle,
+        Chain.Sei -> pubKeyECDSA
+
+        // Utxo
+        Chain.Bitcoin,
+        Chain.BitcoinCash,
+        Chain.Litecoin,
+        Chain.Dogecoin,
+        Chain.Dash,
+        Chain.Zcash -> pubKeyECDSA
+
+        Chain.Cardano -> pubKeyEDDSA
+
+        // Cosmos
+        Chain.GaiaChain,
+        Chain.Kujira,
+        Chain.Dydx,
+        Chain.Osmosis,
+        Chain.Terra,
+        Chain.TerraClassic,
+        Chain.Noble,
+        Chain.Akash -> pubKeyECDSA
+
+        // Others
+        Chain.Solana -> pubKeyEDDSA
+        Chain.Polkadot -> pubKeyEDDSA
+        Chain.Sui -> pubKeyEDDSA
+        Chain.Ton -> pubKeyEDDSA
+        Chain.Ripple -> pubKeyEDDSA
+        Chain.Tron -> pubKeyECDSA
+    }
 }

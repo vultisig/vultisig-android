@@ -31,6 +31,8 @@ internal fun DepositScreen(
     vaultId: String,
     chainId: String,
     viewModel: DepositViewModel = hiltViewModel(),
+    depositType: String? = null,
+    bondAddress: String? = null,
 ) {
     val depositNavHostController = rememberNavController()
     val context = LocalContext.current
@@ -90,6 +92,8 @@ internal fun DepositScreen(
         } ?: {},
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         finishKeysign = viewModel::finishKeysign,
+        depositType = depositType,
+        bondAddress = bondAddress,
     )
 }
 
@@ -108,6 +112,8 @@ private fun DepositScreen(
     endIconClick: () -> Unit = {},
     onKeysignFinished: () -> Unit = {},
     finishKeysign:() -> Unit = {},
+    depositType: String? = null,
+    bondAddress: String? = null,
 ) {
 
     ProgressScreen(
@@ -133,6 +139,8 @@ private fun DepositScreen(
                 DepositFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,
+                    depositType = depositType,
+                    bondAddress = bondAddress,
                 )
             }
             composable(

@@ -17,6 +17,7 @@
       "BlockchainSpecific": {
         "SuicheSpecific": {
           "reference_gas_price": "500",
+          "gas_budget": "3000000",
           "coins": [
             {
               "version":"607586916",

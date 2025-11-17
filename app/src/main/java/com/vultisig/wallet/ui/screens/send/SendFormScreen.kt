@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.screens.send
 
@@ -49,7 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -60,6 +62,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
@@ -68,13 +72,17 @@ import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
@@ -82,48 +90,64 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 
-@Composable
-internal fun SendScreen(
-    viewModel: SendFormViewModel = hiltViewModel(),
+
+internal fun NavGraphBuilder.sendScreen(
+    navController: NavHostController,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    contentWithFastSelection<Route.Send.SendMain, Route.Send>(
+        navController = navController
+    ) { onNetworkDragStart, onNetworkDrag, onNetworkDragEnd ->
+        val viewModel: SendFormViewModel = hiltViewModel()
+        val state by viewModel.uiState.collectAsState()
 
-    SendFormScreen(
-        state = state,
-        addressFieldState = viewModel.addressFieldState,
-        tokenAmountFieldState = viewModel.tokenAmountFieldState,
-        fiatAmountFieldState = viewModel.fiatAmountFieldState,
-        memoFieldState = viewModel.memoFieldState,
-        onDstAddressLostFocus = { /* no-op */ },
-        onTokenAmountLostFocus = viewModel::validateTokenAmount,
-        onDismissError = viewModel::dismissError,
-        onSelectNetworkRequest = viewModel::selectNetwork,
-        onSelectTokenRequest = viewModel::openTokenSelection,
-        onSetOutputAddress = viewModel::setOutputAddress,
-        onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
-        onChoosePercentageAmount = viewModel::choosePercentageAmount,
-        onScanDstAddressRequest = viewModel::scanAddress,
-        onAddressBookClick = viewModel::openAddressBook,
-        onSend = viewModel::send,
-        onRefreshRequest = viewModel::refreshGasFee,
-        onGasSettingsClick = viewModel::openGasSettings,
-        onBackClick = viewModel::back,
-        onToogleAmountInputType = viewModel::toggleAmountInputType,
-        onExpandSection = viewModel::expandSection,
-    )
-
-    val selectedChain = state.selectedCoin?.model?.address?.chain
-    val specific = state.specific
-
-    if (state.showGasSettings && selectedChain != null && specific != null) {
-        GasSettingsScreen(
-            chain = selectedChain,
-            specific = specific,
-            onSaveGasSettings = viewModel::saveGasSettings,
-            onDismissGasSettings = viewModel::dismissGasSettings,
+        SendFormScreen(
+            state = state,
+            addressFieldState = viewModel.addressFieldState,
+            tokenAmountFieldState = viewModel.tokenAmountFieldState,
+            fiatAmountFieldState = viewModel.fiatAmountFieldState,
+            memoFieldState = viewModel.memoFieldState,
+            onDstAddressLostFocus = { /* no-op */ },
+            onTokenAmountLostFocus = viewModel::validateTokenAmount,
+            onDismissError = viewModel::dismissError,
+            onSelectNetworkRequest = viewModel::selectNetwork,
+            onSelectTokenRequest = viewModel::openTokenSelection,
+            onSetOutputAddress = viewModel::setOutputAddress,
+            onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
+            onChoosePercentageAmount = viewModel::choosePercentageAmount,
+            onScanDstAddressRequest = viewModel::scanAddress,
+            onAddressBookClick = viewModel::openAddressBook,
+            onSend = viewModel::send,
+            onRefreshRequest = viewModel::refreshGasFee,
+            onGasSettingsClick = viewModel::openGasSettings,
+            onBackClick = viewModel::back,
+            onToogleAmountInputType = viewModel::toggleAmountInputType,
+            onExpandSection = viewModel::expandSection,
+            onNetworkDragStart = onNetworkDragStart,
+            onNetworkDrag = onNetworkDrag,
+            onNetworkDragEnd = onNetworkDragEnd,
+            onNetworkDragCancel = onNetworkDragEnd,
+            onNetworkLongPressStarted = viewModel::onNetworkLongPressStarted,
+            onAssetDragStart = onNetworkDragStart,
+            onAssetDrag = onNetworkDrag,
+            onAssetDragEnd = onNetworkDragEnd,
+            onAssetDragCancel = onNetworkDragEnd,
+            onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
         )
+
+        val selectedChain = state.selectedCoin?.model?.address?.chain
+        val specific = state.specific
+
+        if (state.showGasSettings && selectedChain != null && specific != null) {
+            GasSettingsScreen(
+                chain = selectedChain,
+                specific = specific,
+                onSaveGasSettings = viewModel::saveGasSettings,
+                onDismissGasSettings = viewModel::dismissGasSettings,
+            )
+        }
     }
 }
+
 
 @Composable
 private fun SendFormScreen(
@@ -148,6 +172,18 @@ private fun SendFormScreen(
     onBackClick: () -> Unit = {},
     onToogleAmountInputType: (Boolean) -> Unit = {},
     onExpandSection: (SendSections) -> Unit = {},
+
+    onNetworkDragStart: (Offset) -> Unit,
+    onNetworkDrag: (Offset) -> Unit,
+    onNetworkDragEnd: () -> Unit,
+    onNetworkDragCancel: () -> Unit,
+    onNetworkLongPressStarted: (Offset) -> Unit,
+
+    onAssetDragStart: (Offset) -> Unit,
+    onAssetDrag: (Offset) -> Unit,
+    onAssetDragEnd: () -> Unit,
+    onAssetDragCancel: () -> Unit,
+    onAssetLongPressStarted: (Offset) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -238,12 +274,17 @@ private fun SendFormScreen(
                                 )
                         ) {
                             ChainSelector(
-                                title = "From",
+                                title = stringResource(R.string.send_from_address),
                                 // TODO selectedChain should not be nullable
                                 //  or default value should be something else
                                 chain = state.selectedCoin?.model?.address?.chain
                                     ?: Chain.ThorChain,
                                 onClick = onSelectNetworkRequest,
+                                onDragCancel = onNetworkDragCancel,
+                                onDrag = onNetworkDrag,
+                                onDragStart = onNetworkDragStart,
+                                onDragEnd = onNetworkDragEnd,
+                                onLongPressStarted = onNetworkLongPressStarted,
                             )
 
                             UiSpacer(12.dp)
@@ -255,7 +296,14 @@ private fun SendFormScreen(
                                 TokenChip(
                                     selectedToken = state.selectedCoin,
                                     onSelectTokenClick = onSelectTokenRequest,
-                                )
+
+                                    onDragCancel = onAssetDragCancel,
+                                    onDrag = onAssetDrag,
+                                    onDragStart = onAssetDragStart,
+                                    onDragEnd = onAssetDragEnd,
+                                    onLongPressStarted = onAssetLongPressStarted,
+
+                                    )
 
                                 Column(
                                     horizontalAlignment = Alignment.End,
@@ -294,7 +342,7 @@ private fun SendFormScreen(
                     FoldableSection(
                         expanded = state.expandedSection == SendSections.Address,
                         complete = state.isDstAddressComplete,
-                        title = "Address",
+                        title = stringResource(R.string.add_address_address_title),
                         onToggle = {
                             onExpandSection(SendSections.Address)
                         },
@@ -445,7 +493,7 @@ private fun SendFormScreen(
                                         .weight(1f),
                                 ) {
                                     UiIcon(
-                                        drawableResId = R.drawable.advance_gas_settings, // TODO different icon
+                                        drawableResId = R.drawable.advance_gas_settings,
                                         size = 16.dp,
                                         tint = Theme.colors.text.primary,
                                         onClick = onGasSettingsClick,
@@ -453,7 +501,7 @@ private fun SendFormScreen(
                                 }
                             }
                         },
-                        title = "Amount"
+                        title = stringResource(R.string.send_amount)
                     ) {
                         Column(
                             modifier = Modifier
@@ -565,7 +613,6 @@ private fun SendFormScreen(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                // TODO indicate selection
                                 PercentageChip(
                                     title = "25%",
                                     isSelected = false,
@@ -591,7 +638,7 @@ private fun SendFormScreen(
                                 )
 
                                 PercentageChip(
-                                    title = "Max",
+                                    title = stringResource(R.string.send_screen_max),
                                     isSelected = false,
                                     onClick = onChooseMaxTokenAmount,
                                     modifier = Modifier
@@ -613,7 +660,7 @@ private fun SendFormScreen(
                                     )
                             ) {
                                 Text(
-                                    text = "Balance available:",
+                                    text = stringResource(R.string.send_form_balance_available),
                                     style = Theme.brockmann.body.s.medium,
                                     color = Theme.colors.text.primary,
                                 )
@@ -652,7 +699,7 @@ private fun SendFormScreen(
                                         )
                                 ) {
                                     Text(
-                                        text = "Add MEMO",
+                                        text = stringResource(R.string.send_form_add_memo),
                                         style = Theme.brockmann.supplementary.caption,
                                         color = Theme.colors.text.extraLight,
                                         modifier = Modifier
@@ -676,12 +723,16 @@ private fun SendFormScreen(
                                     val clipboardData = VsClipboardService.getClipboardData()
                                     VsTextInputField(
                                         textFieldState = memoFieldState,
-                                        hint = "Enter Memo",
-                                        trailingIcon = R.drawable.ic_paste,
+                                        hint = stringResource(R.string.send_form_enter_memo),
+                                        trailingIcon = R.drawable.paste,
                                         onTrailingIconClick = {
                                             clipboardData.value
                                                 ?.takeIf { it.isNotEmpty() }
-                                                ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
+                                                ?.let {
+                                                    memoFieldState.setTextAndPlaceCursorAtEnd(
+                                                        text = it
+                                                    )
+                                                }
                                         },
                                         modifier = Modifier
                                             .fillMaxWidth(),
@@ -709,7 +760,6 @@ private fun SendFormScreen(
 
                     UiSpacer(24.dp)
 
-                    // TODO handle this (in a dialog maybe?)
                     AnimatedContent(
                         targetState = state.reapingError,
                         label = "error message"
@@ -731,9 +781,15 @@ private fun SendFormScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.send_continue_button),
+                state = if (state.isLoading)
+                    VsButtonState.Disabled
+                else
+                    VsButtonState.Enabled,
                 onClick = {
-                    focusManager.clearFocus()
-                    onSend()
+                    if (!state.isLoading) {
+                        focusManager.clearFocus()
+                        onSend()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -750,12 +806,13 @@ private fun SendFormScreen(
 internal fun EstimatedNetworkFee(
     tokenGas: String,
     fiatGas: String,
+    isLoading: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Est. network fee",
+            text = stringResource(R.string.send_form_est_network_fee),
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.extraLight,
         )
@@ -765,17 +822,33 @@ internal fun EstimatedNetworkFee(
             modifier = Modifier
                 .weight(1f),
         ) {
-            Text(
-                text = tokenGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
-            )
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
 
-            Text(
-                text = fiatGas,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.extraLight,
-            )
+                UiSpacer(6.dp)
+
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
+            } else {
+                Text(
+                    text = tokenGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = fiatGas,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
     }
 }
@@ -791,10 +864,9 @@ internal fun FadingHorizontalDivider(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Theme.colors.borders.normal.copy(alpha = 0f),
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal,
-                        Theme.colors.borders.normal.copy(alpha = 0f)
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
+                        Color(0xFF284570),
+                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
                     ),
                     startX = 0f,
                     endX = Float.POSITIVE_INFINITY,
@@ -950,7 +1022,7 @@ private fun FoldableSection(
                     completeTitleContent?.invoke(this)
 
                     UiIcon(
-                        drawableResId = R.drawable.ic_check, // TODO different icon
+                        drawableResId = R.drawable.ic_check,
                         size = 16.dp,
                         tint = Theme.colors.alerts.success,
                     )
@@ -958,7 +1030,7 @@ private fun FoldableSection(
                     UiSpacer(1.dp)
 
                     UiIcon(
-                        drawableResId = R.drawable.pencil, // TODO different icon
+                        drawableResId = R.drawable.pencil,
                         size = 16.dp,
                         tint = Theme.colors.text.primary,
                     )
@@ -995,5 +1067,17 @@ private fun SendScreenPreview() {
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),
         memoFieldState = TextFieldState(),
+
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
     )
 }

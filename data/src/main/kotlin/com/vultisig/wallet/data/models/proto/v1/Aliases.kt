@@ -18,6 +18,7 @@ typealias KeyShareProto = Vault.KeyShare
 fun LibType.toSigningLibType() = when (this) {
     LibType.LIB_TYPE_GG20 -> SigningLibType.GG20
     LibType.LIB_TYPE_DKLS -> SigningLibType.DKLS
+    LibType.LIB_TYPE_KEYIMPORT -> TODO()
 }
 
 fun SigningLibType.toProto() = when (this) {

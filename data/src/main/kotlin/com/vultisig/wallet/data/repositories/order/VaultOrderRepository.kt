@@ -4,7 +4,9 @@ import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import javax.inject.Inject
 
-class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
+class VaultOrderRepository @Inject constructor(
+    private val vaultOrderDao: VaultOrderDao
+) :
     OrderRepositoryImpl<VaultOrderEntity>(vaultOrderDao) {
 
     override fun defaultOrder(parentId: String?): VaultOrderEntity
@@ -15,4 +17,9 @@ class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
 
     override fun VaultOrderEntity.generateUpdatedOrder(order: Float): VaultOrderEntity =
         copy(order = order)
+
+    suspend fun getChildrenCountFor(parentId: String): Int {
+        return vaultOrderDao.getChildrenCountFor(parentId)
+    }
+
 }

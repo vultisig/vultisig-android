@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.models.quotes.tx
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -45,7 +45,7 @@ class SecurityScannerTransactionFactory(
 
     private fun createEVMSecurityScannerTransaction(transaction: SwapTransaction): SecurityScannerTransaction {
         return when (val payload = transaction.payload) {
-            is SwapPayload.OneInch ->
+            is SwapPayload.EVM ->
                 buildSwapSecurityScannerTransaction(
                     srcToken = transaction.srcToken,
                     from = payload.data.quote.tx.from,
@@ -54,15 +54,6 @@ class SecurityScannerTransactionFactory(
                     data = payload.data.quote.tx.data,
                     isApprovalRequired = transaction.isApprovalRequired
             )
-            is SwapPayload.Kyber ->
-                buildSwapSecurityScannerTransaction(
-                    srcToken = transaction.srcToken,
-                    from = payload.data.quote.tx.from,
-                    to = payload.data.quote.tx.to,
-                    amount = payload.data.quote.tx.value,
-                    data = payload.data.quote.tx.data,
-                    isApprovalRequired = transaction.isApprovalRequired
-                )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
@@ -154,6 +145,7 @@ class SecurityScannerTransactionFactory(
                     fromAddressPubKey = fromAddressPubKey,
                     toAddressPubKey = solanaBlockchainSpecific.toAddressPubKey,
                     programId = solanaBlockchainSpecific.programId,
+                    priorityLimit = solanaBlockchainSpecific.priorityLimit,
                 ) to SecurityTransactionType.TOKEN_TRANSFER
             }
 
@@ -193,6 +185,7 @@ class SecurityScannerTransactionFactory(
         val updatedSuiBlockChainSpecific = BlockChainSpecific.Sui(
             referenceGasPrice = suiBlockchainSpecific.referenceGasPrice,
             coins = coins,
+            gasBudget = SUI_DEFAULT_GAS_BUDGET,
         )
 
         val keySignPayload = KeysignPayload(
@@ -219,7 +212,6 @@ class SecurityScannerTransactionFactory(
         )
     }
 
-    // TODO: Review as it looks like it requires PSBT, which is not supported by WC legacy API
     private fun createBTCSecurityScannerTransaction(transaction: Transaction): SecurityScannerTransaction {
         val keySignPayload = KeysignPayload(
             coin = transaction.token,
@@ -234,9 +226,15 @@ class SecurityScannerTransactionFactory(
             wasmExecuteContractPayload = null,
         )
 
-        val btcHelper = UtxoHelper.getHelper(Vault("", ""), CoinType.BITCOIN)
-
-        val preHash = btcHelper.getPreSignedImageHash(keySignPayload)
+        val dummyVault = Vault(
+            id = "dummy",
+            name = "dummy",
+            pubKeyECDSA = "0000000000000000000000000000000000000000000000000000000000000000",
+            hexChainCode = "0000000000000000000000000000000000000000000000000000000000000000"
+        )
+        
+        val btcHelper = UtxoHelper.getHelper(dummyVault, CoinType.BITCOIN)
+        val zeroSignedTx = btcHelper.getZeroSignedTransaction(keySignPayload)
 
         return SecurityScannerTransaction(
             chain = transaction.token.chain,
@@ -244,7 +242,7 @@ class SecurityScannerTransactionFactory(
             from = transaction.srcAddress,
             to = transaction.dstAddress,
             amount = BigInteger.ZERO,
-            data = preHash[0],
+            data = zeroSignedTx,
         )
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -127,23 +128,23 @@ private fun ReferralBoxes() {
 
         VsPromoTag(
             icon = R.drawable.ic_cup,
-            text = "Referral Program"
+            text = stringResource(R.string.referral_create_info_title)
         )
 
         UiSpacer(32.dp)
 
         VsPromoBox(
             icon = R.drawable.ic_cup,
-            title = "Create your referral code",
-            description = "Pick a short code and set your reward payout."
+            title = stringResource(R.string.referral_create_code_title),
+            description = stringResource(R.string.referral_create_code_description)
         )
 
         UiSpacer(32.dp)
 
         VsPromoBox(
             icon = R.drawable.ic_cup,
-            title = "Share with friends",
-            description = "Invite friends to use your code while swapping."
+            title = stringResource(R.string.referral_share_title),
+            description = stringResource(R.string.referral_share_description)
         )
     }
 }

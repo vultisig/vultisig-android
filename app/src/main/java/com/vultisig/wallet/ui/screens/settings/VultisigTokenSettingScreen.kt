@@ -68,7 +68,7 @@ fun VultisigTokenScreen(navController: NavHostController) {
                 text = stringResource(R.string.feature_item_learn_more),
                 icon = R.drawable.share
             ) {
-                uriHandler.openUri(VsAuxiliaryLinks.VULT)
+                uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN)
             }
         }
 

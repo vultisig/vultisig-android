@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
@@ -285,7 +284,7 @@ class ChainHelpersTest {
                 pubKeyEDDSA = HEX_PUBLIC_KEY,
                 hexChainCode = HEX_CHAIN_CODE,
             ))
-            assertEquals(preImageHashes, transaction.expectedImageHash)
+            assertEquals(preImageHashes, transaction.expectedImageHash.sorted())
         }
     }
     @Test
@@ -303,7 +302,21 @@ class ChainHelpersTest {
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
     }
-
+    @Test
+    fun oneInchArbitrumSwapTest() {
+        val transactions: List<TransactionData> = loadTransactionData(ARB_SWAP_JSON_FILE)
+        transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val preImageHashes= SigningHelper.getKeysignMessages(payload, Vault(
+                id = "test-vault",
+                name = "Test Vault",
+                pubKeyECDSA = HEX_PUBLIC_KEY,
+                pubKeyEDDSA = HEX_PUBLIC_KEY,
+                hexChainCode = HEX_CHAIN_CODE,
+            ))
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data = JsonReader.readJsonFromAsset(appContext, jsonFile)
@@ -331,6 +344,8 @@ class ChainHelpersTest {
         private const val THORCHAIN_SWAP_JSON_FILE = "thorchainswap.json"
         private const val MAYA_SWAP_JSON_FILE = "mayaswap.json"
         private const val LIFI_SWAP_JSON_FILE = "lifiswap.json"
+
+        private const val ARB_SWAP_JSON_FILE = "arb.json"
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

@@ -110,4 +110,21 @@ internal interface UseCasesModule {
         impl: ResolveProviderUseCaseImpl
     ): ResolveProviderUseCase
 
+    @Binds
+    @Singleton
+    fun bindVaultAndBalanceUseCase(
+        impl: VaultAndBalanceUseCaseImpl
+    ): VaultAndBalanceUseCase
+
+    @Binds
+    @Singleton
+    fun bindConvertTokenToToken(
+        impl: ConvertTokenToTokenImpl
+    ): ConvertTokenToToken
+
+    @Binds
+    @Singleton
+    fun bindGetDiscountBpsUseCase(
+        impl: GetDiscountBpsUseCaseImpl
+    ): GetDiscountBpsUseCase
 }

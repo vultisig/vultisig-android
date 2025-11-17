@@ -84,7 +84,7 @@ class ThorChainHelper(
     }
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val tokenAddress = keysignPayload.coin.address
-        val fromAddress = if (hrp != null) {
+        val fromAddress = if (!hrp.isNullOrEmpty()) {
             AnyAddress(tokenAddress, coinType, hrp)
         } else {
             AnyAddress(tokenAddress, coinType)
@@ -290,7 +290,7 @@ class ThorChainHelper(
         keysignPayload: KeysignPayload,
         fromAddress: ByteArray?
     ): Cosmos.Message {
-        val toAddress = if (hrp != null) {
+        val toAddress = if (!hrp.isNullOrEmpty()) {
             AnyAddress(keysignPayload.toAddress, coinType, hrp)
         } else {
             AnyAddress(keysignPayload.toAddress, coinType)

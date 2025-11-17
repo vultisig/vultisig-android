@@ -1,18 +1,22 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.utils.shareVaultDetailName
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,15 +27,19 @@ internal data class VaultDetailUiModel(
     val vaultSize: String = "",
     val pubKeyECDSA: String = "",
     val pubKeyEDDSA: String = "",
-    val deviceList: List<String> = emptyList(),
+    val deviceList: List<DeviceMeta> = emptyList(),
     val libType: String? = "",
+)
+
+internal data class DeviceMeta(
+    val name: String,
+    val isThisDevice: Boolean,
 )
 
 @HiltViewModel
 internal class VaultDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
-    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -52,17 +60,44 @@ internal class VaultDetailViewModel @Inject constructor(
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
                         deviceList = vault.signers.map {
-                            if (it == vault.localPartyID) {
-                                context.getString(
-                                    R.string.vault_detail_this_device,
-                                    it
-                                )
-                            } else {
-                                it
-                            }
+                            DeviceMeta(
+                                name = it,
+                                isThisDevice = it == vault.localPartyID
+                            )
                         }
                     )
                 }
+            }
+        }
+    }
+
+    fun takeScreenShot(
+        graphicsLayer: GraphicsLayer,
+        context: Context,
+    ) {
+        viewModelScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.Default) {
+                    graphicsLayer.toImageBitmap().asAndroidBitmap()
+                }
+                try {
+                    withContext(Dispatchers.Main) {
+                        context.share(
+                            bitmap = bitmap,
+                            fileName = shareVaultDetailName(
+                                vaultName = uiModel.value.name,
+                                vaultPart = uiModel.value.vaultPart,
+                            )
+                        )
+                    }
+                } finally {
+                    bitmap.recycle()
+                }
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Failed to capture and share vault screenshot"
+                )
             }
         }
     }

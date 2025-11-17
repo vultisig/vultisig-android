@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -53,10 +54,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class JoinKeygenError(val message: UiText) {
-    data object DuplicateVaultName : JoinKeygenError("Vault with duplicate name exists".asUiText())
-    data object InvalidQr : JoinKeygenError("Invalid QR code".asUiText())
-    data object UnknownTss : JoinKeygenError("Unknown TssAction".asUiText())
-    data object WrongResharePrefix : JoinKeygenError("Wrong reshare prefix".asUiText())
+    data object DuplicateVaultName : JoinKeygenError(R.string.join_key_gen_vault_with_duplicate_name_exists.asUiText())
+    data object InvalidQr : JoinKeygenError(R.string.join_keysign_invalid_qr.asUiText())
+    data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
+    data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
 
@@ -339,10 +340,37 @@ class MediatorServiceDiscoveryListener(
         Timber.d("Service found: %s", service.serviceName)
         if (service.serviceName == serviceName) {
             Timber.d("Service found: %s", service.serviceName)
-            nsdManager.resolveService(
-                service,
-                MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
-            )
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                nsdManager.registerServiceInfoCallback(
+                    service,
+                    { it.run() },
+                    object : NsdManager.ServiceInfoCallback {
+                        override fun onServiceInfoCallbackRegistrationFailed(errorCode: Int) {
+                            Timber.d("Failed to resolve service: ${service.serviceName}, error: $errorCode")
+                        }
+
+                        override fun onServiceUpdated(serviceInfo: NsdServiceInfo) {
+                            onServiceResolved(serviceInfo)
+                            nsdManager.unregisterServiceInfoCallback(this)
+                        }
+
+                        override fun onServiceLost() {
+                            Timber.d("Service lost during resolution: ${service.serviceName}")
+                        }
+
+                        override fun onServiceInfoCallbackUnregistered() {
+                            // Cleanup if needed
+                        }
+                    }
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                nsdManager.resolveService(
+                    service,
+                    MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
+                )
+            }
         }
     }
 
@@ -369,15 +397,21 @@ class MediatorServiceDiscoveryListener(
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
         Timber.d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
 
-        serviceInfo?.let { it ->
-            val address = it.host
-            if (address !is Inet4Address) {
-                return
-            }
-            if (address.isLoopbackAddress) {
-                return
-            }
-            address.hostAddress?.let {
+        serviceInfo?.let { info ->
+            val address =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    val addresses = info.hostAddresses
+                    addresses.firstOrNull { it is Inet4Address && !it.isLoopbackAddress }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val address = info.host
+                    if (address !is Inet4Address || address.isLoopbackAddress) {
+                        null
+                    } else {
+                        address
+                    }
+                }
+            address?.hostAddress?.let {
                 onServerAddressDiscovered("http://${it}:${serviceInfo.port}")
             }
         }

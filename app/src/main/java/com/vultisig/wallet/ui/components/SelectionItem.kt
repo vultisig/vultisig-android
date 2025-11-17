@@ -46,7 +46,7 @@ internal fun SelectionItem(
                     style = Theme.montserrat.subtitle1,
                 )
             }
-            VaultSwitch(
+            VsSwitch(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Theme.colors.neutral0,
                     checkedBorderColor = Theme.colors.turquoise800,

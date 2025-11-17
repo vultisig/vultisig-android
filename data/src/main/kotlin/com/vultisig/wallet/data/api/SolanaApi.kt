@@ -1,11 +1,13 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.JupiterApiImpl.Companion.JUPITER_URL
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
 import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
+import com.vultisig.wallet.data.api.models.SolanaFeeForMessageResponse
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
 import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJson
@@ -17,6 +19,7 @@ import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -48,7 +51,12 @@ interface SolanaApi {
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
-    suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String):Pair<String?, Boolean>
+    suspend fun getTokenAssociatedAccountByOwner(
+        walletAddress: String,
+        mintAddress: String
+    ): Pair<String?, Boolean>
+
+    suspend fun getFeeForMessage(message: String): BigInteger
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -59,8 +67,8 @@ internal class SolanaApiImp @Inject constructor(
 
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
-    private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
-    private val jupiterTokensUrl = "https://tokens.jup.ag/tokens"
+    private val splTokensInfoEndpoint2 = "$JUPITER_URL/tokens/v2/search"
+    private val jupiterTokensUrl = "$JUPITER_URL/tokens/v2/tag"
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload = RpcPayload(
@@ -126,6 +134,7 @@ internal class SolanaApiImp @Inject constructor(
         return rpcResp.result?.value?.blockHash ?: error("getRecentBlockHash error")
     }
 
+    @Deprecated("Perform proper calculation in fee service once decouple from helper")
     override suspend fun getHighPriorityFee(account: String): String {
         try {
             val payload = RpcPayload(
@@ -201,6 +210,7 @@ internal class SolanaApiImp @Inject constructor(
                     )
                     return emptyList()
                 }
+
                 is SplTokenDeserialized.Result -> return result.result.values.toList()
             }
         } catch (e: Exception) {
@@ -213,7 +223,9 @@ internal class SolanaApiImp @Inject constructor(
         tokens.map { token ->
             async {
                 try {
-                    httpClient.get("$splTokensInfoEndpoint2/$token").body<SplTokenInfo>()
+                    httpClient.get(splTokensInfoEndpoint2) {
+                        parameter("query", token)
+                    }.body<List<SplTokenInfo>>().firstOrNull()
                 } catch (e: Exception) {
                     Timber.tag("SolanaApiImp")
                         .e("Error getting spl token for $token message : ${e.message}")
@@ -226,7 +238,7 @@ internal class SolanaApiImp @Inject constructor(
     override suspend fun getJupiterTokens(): List<JupiterTokenResponseJson> =
         httpClient.get(jupiterTokensUrl) {
             parameter(
-                "tags",
+                "query",
                 "verified"
             )
         }.body()
@@ -311,6 +323,9 @@ internal class SolanaApiImp @Inject constructor(
                 return null
             }
             val value = rpcResp.value ?: error("getSPLTokenBalance error")
+            if (value.value.isEmpty()) {
+                return null
+            }
             return value.value[0].account.data.parsed.info.tokenAmount.amount
         } catch (e: Exception) {
             Timber.e(e)
@@ -338,7 +353,7 @@ internal class SolanaApiImp @Inject constructor(
             )
             if (response.error != null) {
                 Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
-                return Pair(null,false)
+                return Pair(null, false)
             }
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
             return Pair(
@@ -347,10 +362,31 @@ internal class SolanaApiImp @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e)
-            return Pair(null,false)
+            return Pair(null, false)
         }
     }
 
+    override suspend fun getFeeForMessage(message: String): BigInteger {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "getFeeForMessage",
+            params = buildJsonArray {
+                add(message)
+                addJsonObject {
+                    put("commitment", "confirmed")
+                }
+            },
+            id = 1,
+        )
+
+        val response = httpClient.post(rpcEndpoint) {
+            setBody(payload)
+        }
+
+        val rpcResp = response.bodyOrThrow<SolanaFeeForMessageResponse>()
+
+        return rpcResp.result?.value ?: error("Error fetching getFeeForMessage")
+    }
 
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
@@ -360,5 +396,4 @@ internal class SolanaApiImp @Inject constructor(
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
     }
-
 }

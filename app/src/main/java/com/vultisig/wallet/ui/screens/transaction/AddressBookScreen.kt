@@ -2,9 +2,9 @@
 
 package com.vultisig.wallet.ui.screens.transaction
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,40 +13,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookViewModel
@@ -86,54 +85,49 @@ internal fun AddressBookScreen(
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
     Scaffold(
-        containerColor = Theme.colors.oxfordBlue800,
+        containerColor = Theme.colors.backgrounds.primary,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.address_book_toolbar_title),
-                        style = Theme.montserrat.heading5,
-                        fontWeight = FontWeight.Bold,
-                        color = Theme.colors.neutral0,
-                        textAlign = TextAlign.Center,
+            VsTopAppBar(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp),
+                title = if (isEditModeEnabled)
+                    stringResource(R.string.address_book_title_edit)
+                else
+                    stringResource(R.string.address_book_toolbar_title),
+                navigationContent = {
+                    UiIcon(
+                        drawableResId = R.drawable.ic_caret_left,
+                        onClick = { navController.popBackStack() },
+                        size = 24.dp,
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.colors.oxfordBlue800,
-                    titleContentColor = Theme.colors.neutral0,
-                ),
-                navigationIcon = {
-                    IconButton(onClick = clickOnce { navController.popBackStack() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_caret_left),
-                            contentDescription = null,
-                            tint = Theme.colors.neutral0,
-                        )
-                    }
                 },
                 actions = {
                     if (state.entries.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier.padding(
-                                horizontal = 8.dp,
+                        if (isEditModeEnabled) {
+                            Text(
+                                text = stringResource(R.string.address_book_edit_mode_done),
+                                style = Theme.brockmann.button.medium.medium,
+                                color = Theme.colors.primary.accent4,
+                                modifier = Modifier
+                                    .background(
+                                        color = Theme.colors.backgrounds.secondary,
+                                        shape = CircleShape
+                                    )
+                                    .padding(
+                                        all = 12.dp
+                                    )
+                                    .clickOnce(onClick = onToggleEditMode)
                             )
-                        ) {
-                            if (isEditModeEnabled) {
-                                Text(
-                                    text = stringResource(R.string.address_book_edit_mode_done),
-                                    style = Theme.menlo.subtitle1,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Theme.colors.neutral0,
-                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                                    contentDescription = "edit",
-                                    tint = Theme.colors.neutral0,
-                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
-                                )
-                            }
+
+                        } else {
+                            UiIcon(
+                                drawableResId = R.drawable.reame,
+                                contentDescription = "edit",
+                                tint = Theme.colors.text.button.light,
+                                onClick = onToggleEditMode,
+                                size = 16.dp,
+                            )
+
                         }
                     }
                 }
@@ -153,147 +147,201 @@ internal fun AddressBookScreen(
                     AddressItem(
                         image = entry.image,
                         name = entry.name,
-                        network = entry.network,
                         address = entry.address,
                         isEditModeEnabled = isEditModeEnabled,
                         onClick = { onAddressClick(entry) },
-                        onDeleteClick = { onDeleteAddressClick(entry) }
-                    )
+                        onDeleteClick = { onDeleteAddressClick(entry) })
                 }
             } else {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Text(
-                        text = "No saved addresses",
-                        style = Theme.menlo.body1,
-                        color = Theme.colors.alerts.warning,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                NoAddressView(onAddAddressClick = onAddAddressClick)
             }
-        },
-        bottomBar = {
-            VsButton(
-                label = stringResource(R.string.address_book_add_address_button),
-                onClick = onAddAddressClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        vertical = 16.dp,
-                        horizontal = 16.dp,
-                    ),
-            )
-        }
+        }, bottomBar = {
+            if (state.entries.isNotEmpty()) {
+                VsButton(
+                    label = stringResource(R.string.address_book_add_address_button),
+                    onClick = onAddAddressClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            vertical = 16.dp,
+                            horizontal = 16.dp,
+                        ),
+                )
+            }
+        })
+}
+
+@Composable
+private fun NoAddressView(
+    onAddAddressClick: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .shadeCircle()
+            .padding(48.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+
+        Text(
+            text = stringResource(R.string.address_book_empty_title),
+            style = Theme.brockmann.button.semibold.large,
+            color = Theme.colors.neutral0,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 12.dp
+        )
+
+        Text(
+            text = stringResource(R.string.address_book_empty_description),
+            style = Theme.brockmann.button.medium.medium,
+            color = Theme.colors.neutral300,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 30.dp
+        )
+
+        VsButton(
+            label = stringResource(R.string.address_book_add_address_button),
+            onClick = onAddAddressClick,
+            size = VsButtonSize.Medium,
+            variant = VsButtonVariant.Primary
+        )
+    }
+}
+
+fun Modifier.shadeCircle() = this.drawBehind {
+    drawCircle(
+        brush = Brush.vultiCircleShadeGradient(),
     )
+}
+
+@Preview
+@Composable
+private fun NoAddressPreview() {
+    NoAddressView(onAddAddressClick = {})
 }
 
 @Composable
 private fun AddressItem(
     image: ImageModel,
     name: String,
-    network: String,
     address: String,
     isEditModeEnabled: Boolean = true,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+
         if (isEditModeEnabled) {
             UiIcon(
                 drawableResId = R.drawable.ic_drag_handle,
                 size = 24.dp,
             )
-
-            UiSpacer(size = 8.dp)
+            UiSpacer(
+                size = 8.dp
+            )
         }
-
-        FormCard(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .clickable(onClick = onClick)
-                .weight(1f),
+                .fillMaxWidth()
+                .clickOnce(onClick = onClick)
+                .background(
+                    color = Theme.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(
+                        size = 12.dp
+                    ),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light,
+                    shape = RoundedCornerShape(
+                        size = 12.dp
+                    )
+                )
+                .padding(
+                    horizontal = 20.dp,
+                    vertical = 12.dp,
+                )
         ) {
-            Row(
+            TokenLogo(
+                logo = image,
+                title = name,
                 modifier = Modifier
-                    .padding(12.dp),
+                    .size(32.dp),
+                errorLogoModifier = Modifier
+                    .size(32.dp),
+            )
+            UiSpacer(
+                size = 12.dp,
+            )
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                AsyncImage(
-                    model = image,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape),
+                Text(
+                    text = name,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
                 )
 
-                UiSpacer(size = 12.dp)
+                UiSpacer(
+                    size = 4.dp
+                )
+                Text(
+                    text = address,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.light,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis
+                )
+            }
 
-                Column {
-                    Row {
-                        Text(
-                            text = name,
-                            color = Theme.colors.neutral100,
-                            style = Theme.montserrat.body1,
-                            modifier = Modifier.weight(1f),
-                        )
-
-                        UiSpacer(size = 12.dp)
-
-                        Text(
-                            text = network,
-                            color = Theme.colors.neutral300,
-                            style = Theme.menlo.body1,
-                        )
-                    }
-
-                    UiSpacer(size = 6.dp)
-
-                    Text(
-                        text = address,
-                        color = Theme.colors.neutral100,
-                        style = Theme.menlo.body1,
-                    )
-                }
+            if (isEditModeEnabled) {
+                UiSpacer(
+                    size = 16.dp
+                )
+                UiIcon(
+                    drawableResId = R.drawable.trash_outline,
+                    onClick = onDeleteClick,
+                    size = 20.dp,
+                )
             }
         }
 
-        if (isEditModeEnabled) {
-            UiSpacer(size = 8.dp)
-
-            UiIcon(
-                drawableResId = R.drawable.trash_outline,
-                onClick = onDeleteClick,
-                size = 24.dp,
-            )
-        }
     }
+}
+
+
+@Preview
+@Composable
+private fun AddressItemPreview() {
+    AddressItem(
+        image = Chain.Ethereum.logo,
+        name = "Online Wallet",
+        address = "0xF43jf9840fkfjn38fk0dk9Ac5F43jf9840fkfjn38fk0dk9Ac5",
+        isEditModeEnabled = true,
+        onClick = {},
+        onDeleteClick = {}
+    )
 }
 
 @Preview
 @Composable
-private fun AddressBookScreenPreview() {
-    AddressBookScreen(
-        navController = rememberNavController(),
-        state = AddressBookUiModel(
-            isEditModeEnabled = true,
-            entries = listOf(
-                AddressBookEntryUiModel(
-                    model = AddressBookEntry(
-                        chain = Chain.Ethereum,
-                        address = "123456abcdef",
-                        title = "",
-                    ),
-                    image = "",
-                    name = "Satoshi Nakamoto",
-                    network = "Bitcoin",
-                    address = "123456abcdef",
-                ),
-            ),
-        ),
-        onAddressClick = {},
-        onMove = { _, _ -> },
+private fun AddressItemPreview2() {
+    AddressItem(
+        image = Chain.Ethereum.logo,
+        name = "Online Wallet",
+        address = "0xF43jf9840fkfjn38fk0dk9Ac5F43jf9840fkfjn38fk0dk9Ac5",
+        isEditModeEnabled = false,
+        onClick = {},
+        onDeleteClick = {}
     )
 }

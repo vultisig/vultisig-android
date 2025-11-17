@@ -1,2171 +1,2894 @@
 package com.vultisig.wallet.data.models
 
 object Coins {
-    val coins = mapOf(
-        Chain.Akash to listOf(
-            Coin(
-                chain = Chain.Akash,
-                ticker = "AKT",
-                logo = "akash",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "akash-network",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
+    object Akash {
+        val AKT = Coin(
 
-        Chain.Arbitrum to listOf(
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "ARB",
-                logo = "arbitrum",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "arbitrum",
-                contractAddress = "0x912CE59144191C1204E64559FE8253a0e49E6548",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "DAI",
-                logo = "dai",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "DAI",
-                contractAddress = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "FOX",
-                logo = "fox",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "shapeshift-fox-token",
-                contractAddress = "0xf929de51D91C77E42f5090069E0AD7A09e513c73",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "GRT",
-                logo = "grt",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "GRT",
-                contractAddress = "0x9623063377AD1B27544C965cCd7342f7EA7e88C7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "LDO",
-                logo = "ldo",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "LDO",
-                contractAddress = "0x13Ad51ed4F1B7e9Dc168d8a00cB3f4dDD85EfA60",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "LINK",
-                logo = "link",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "LINK",
-                contractAddress = "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "PEPE",
-                logo = "pepe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "PEPE",
-                contractAddress = "0x25d887Ce7a35172C62FeBFD67a1856F20FaEbB00",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "PYTH",
-                logo = "pyth",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "pyth-network",
-                contractAddress = "0xE4D5c6aE46ADFAF04313081e8C0052A30b6Dd724",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "TGT",
-                logo = "tgt",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "thorwallet",
-                contractAddress = "0x429fEd88f10285E61b12BDF00848315fbDfCC341",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "UNI",
-                logo = "uni",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "UNI",
-                contractAddress = "0xFa7F8980b0f1E64A2062791cc3b0871572f1F7f0",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "USDC.e",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin-ethereum-bridged",
-                contractAddress = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tether",
-                contractAddress = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "WBTC",
-                logo = "wbtc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "WBTC",
-                contractAddress = "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Arbitrum,
-                ticker = "ezETH",
-                logo = "ezeth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ezETH",
-                contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
-                isNativeToken = false,
-            ),
-        ),
+            chain = Chain.Akash,
+            ticker = "AKT",
+            logo = "akash",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "akash-network",
+            contractAddress = "",
+            isNativeToken = true,
 
-        Chain.Avalanche to listOf(
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "AVAX",
-                logo = "avax",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "avalanche-2",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "BLS",
-                logo = "bls",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x46B9144771Cb3195D66e4EDA643a7493fADCAF9D",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "BTC.b",
-                logo = "btc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "COQ",
-                logo = "coq",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x420FcA0121DC28039145009570975747295f2329",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "JOE",
-                logo = "joe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "PNG",
-                logo = "png",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x60781C2586D68229fde47564546784ab3fACA982",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "WAVAX",
-                logo = "avax",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "aAvaUSDC",
-                logo = "aave",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Avalanche,
-                ticker = "sAVAX",
-                logo = "savax",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Base to listOf(
-            Coin(
-                chain = Chain.Base,
-                ticker = "AERO",
-                logo = "aero",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "aerodrome-finance",
-                contractAddress = "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "DAI",
-                logo = "dai",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "dai",
-                contractAddress = "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "OM",
-                logo = "om",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "mantra-dao",
-                contractAddress = "0x3992B27dA26848C2b19CeA6Fd25ad5568B68AB98",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "PYTH",
-                logo = "pyth",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "pyth-network",
-                contractAddress = "0x4c5d8A75F3762c1561D96f177694f67378705E98",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "SNX",
-                logo = "snx",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "SNX",
-                contractAddress = "0x22e6966B799c4D5B13BE962E1D117b56327FDa66",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "W",
-                logo = "w",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "w",
-                contractAddress = "0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "WEWE",
-                logo = "wewe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "cbETH",
-                logo = "cbeth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "cbETH",
-                contractAddress = "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "ezETH",
-                logo = "ezeth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ezETH",
-                contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Base,
-                ticker = "rETH",
-                logo = "reth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "reth",
-                contractAddress = "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Bitcoin to listOf(
-            Coin(
-                chain = Chain.Bitcoin,
-                ticker = "BTC",
-                logo = "btc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "bitcoin",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.BitcoinCash to listOf(
-            Coin(
-                chain = Chain.BitcoinCash,
-                ticker = "BCH",
-                logo = "bch",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "bitcoin-cash",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Blast to listOf(
-            Coin(
-                chain = Chain.Blast,
-                ticker = "AI",
-                logo = "anyinu",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x764933fbAd8f5D04Ccd088602096655c2ED9879F",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "BAG",
-                logo = "bag",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xb9dfCd4CF589bB8090569cb52FaC1b88Dbe4981F",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "BLAST",
-                logo = "blast",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xb1a5700fA2358173Fe465e6eA4Ff52E36e88E2ad",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "DACKIE",
-                logo = "dackie",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x47C337Bd5b9344a6F3D6f58C474D9D8cd419D8cA",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "JUICE",
-                logo = "juice",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x818a92bc81Aad0053d72ba753fb5Bc3d0C5C0923",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "MIM",
-                logo = "mim",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x76DA31D7C9CbEAE102aff34D3398bC450c8374c1",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "OMNI",
-                logo = "omni",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x9e20461bc2c4c980f62f1B279D71734207a6A356",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "USDB",
-                logo = "usdb",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x4300000000000000000000000000000000000003",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "WBTC",
-                logo = "wbtc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "WETH",
-                logo = "weth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "0x4300000000000000000000000000000000000004",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "ZERO",
-                logo = "zero",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x357f93E17FdabEcd3fEFc488a2d27dff8065d00f",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Blast,
-                ticker = "bLOOKS",
-                logo = "blooks",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x406F10d635be12ad33D6B133C6DA89180f5B999e",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.BscChain to listOf(
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "AAVE",
-                logo = "aave",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xfb6115445bff7b52feb98650c87f44907e58f802",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "BNB",
-                logo = "bsc",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "binancecoin",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "COMP",
-                logo = "comp",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x52ce071bd9b1c4b00a0b92d298c512478cad67e8",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "DAI",
-                logo = "dai",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "KNC",
-                logo = "knc",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xfe56d5892bdffc7bf58f2e84be1b2c32d21c308b",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "PEPE",
-                logo = "pepe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x25d887ce7a35172c62febfd67a1856f20faebb00",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "SUSHI",
-                logo = "sushi",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x947950bcc74888a40ffa2593c5798f11fc9124c4",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.BscChain,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "tether",
-                contractAddress = "0x55d398326f99059fF775485246999027B3197955",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.CronosChain to listOf(
-            Coin(
-                chain = Chain.CronosChain,
-                ticker = "CRO",
-                logo = "cro",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "crypto-com-chain",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Dash to listOf(
-            Coin(
-                chain = Chain.Dash,
-                ticker = "DASH",
-                logo = "dash",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "dash",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Dogecoin to listOf(
-            Coin(
-                chain = Chain.Dogecoin,
-                ticker = "DOGE",
-                logo = "doge",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "dogecoin",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Dydx to listOf(
-            Coin(
-                chain = Chain.Dydx,
-                ticker = "DYDX",
-                logo = "dydx",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "dydx-chain",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Ethereum to listOf(
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "AAVE",
-                logo = "aave",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "aave",
-                contractAddress = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "BAL",
-                logo = "bal",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "balancer",
-                contractAddress = "0xba100000625a3754423978a60c9317c58a424e3d",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "BAT",
-                logo = "bat",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "basic-attention-token",
-                contractAddress = "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "COMP",
-                logo = "comp",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "compound-governance-token",
-                contractAddress = "0xc00e94cb662c3520282e6f5717214004a7f26888",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "DAI",
-                logo = "dai",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "dai",
-                contractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "FLIP",
-                logo = "flip",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "chainflip",
-                contractAddress = "0x826180541412d574cf1336d22c0c0a287822678a",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "FOX",
-                logo = "fox",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "shapeshift-fox-token",
-                contractAddress = "0xc770eefad204b5180df6a14ee197d99d808ee52d",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "GRT",
-                logo = "grt",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "the-graph",
-                contractAddress = "0xc944e90c64b2c07662a292be6244bdf05cda44a7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "KNC",
-                logo = "knc",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "kyber-network-crystal",
-                contractAddress = "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "LINK",
-                logo = "link",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "chainlink",
-                contractAddress = "0x514910771af9ca656af840dff83e8264ecf986ca",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "MATIC",
-                logo = "matic",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "matic-network",
-                contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "MKR",
-                logo = "mkr",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "maker",
-                contractAddress = "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "PEPE",
-                logo = "pepe",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "pepe",
-                contractAddress = "0x6982508145454ce325ddbe47a25d4ec3d2311933",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "POL",
-                logo = "pol",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "matic-network",
-                contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "SNX",
-                logo = "snx",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "havven",
-                contractAddress = "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "SUSHI",
-                logo = "sushi",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "sushi",
-                contractAddress = "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "TGT",
-                logo = "tgt",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "thorwallet",
-                contractAddress = "0x108a850856Db3f85d0269a2693D896B394C80325",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "UNI",
-                logo = "uni",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "uniswap",
-                contractAddress = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tether",
-                contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "VULT",
-                logo = "vult",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xb788144DF611029C60b859DF47e79B7726C4DEBa",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "WBTC",
-                logo = "wbtc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "wrapped-bitcoin",
-                contractAddress = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "WETH",
-                logo = "weth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "weth",
-                contractAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Ethereum,
-                ticker = "YFI",
-                logo = "yfi",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "yearn-finance",
-                contractAddress = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.GaiaChain to listOf(
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "ATOM",
-                logo = "atom",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "cosmos",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "FUZN",
-                logo = "fuzn",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "fuzion",
-                contractAddress = "ibc/6BBBB4B63C51648E9B8567F34505A9D5D8BAAC4C31D768971998BE8C18431C26",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "KUJI",
-                logo = "kuji",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "ibc/4CC44260793F84006656DD868E017578F827A492978161DA31D7572BCB3F4289",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "LVN",
-                logo = "levana",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "levana-protocol",
-                contractAddress = "ibc/6C95083ADD352D5D47FB4BA427015796E5FEF17A829463AD05ECD392EB38D889",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "NAMI",
-                logo = "nami",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "nami-protocol",
-                contractAddress = "ibc/4622E82B845FFC6AA8B45C1EB2F507133A9E876A5FEA1BA64585D5F564405453",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "NSTK",
-                logo = "nstk",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "unstake-fi",
-                contractAddress = "ibc/0B99C4EFF1BD05E56DEDEE1D88286DB79680C893724E0E7573BC369D79B5DDF3",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "ibc/F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "USK",
-                logo = "usk",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usk",
-                contractAddress = "ibc/A47E814B0E8AE12D044637BCB4576FCA675EF66300864873FA712E1B28492B78",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "WINK",
-                logo = "wink",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "winkhub",
-                contractAddress = "ibc/4363FD2EF60A7090E405B79A6C4337C5E9447062972028F5A99FB041B9571942",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
-                ticker = "rKUJI",
-                logo = "rkuji",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "ibc/50A69DC508ACCADE2DAC4B8B09AA6D9C9062FCBFA72BB4C6334367DECD972B06",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Kujira to listOf(
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "ASTRO",
-                logo = "terra-astroport",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "astroport-fi",
-                contractAddress = "ibc/640E1C3E28FD45F611971DF891AE3DC90C825DF759DF8FAA8F33F7F72B35AD56",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "FUZN",
-                logo = "fuzion",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "fuzion",
-                contractAddress = "factory/kujira1sc6a0347cc5q3k890jj0pf3ylx2s38rh4sza4t/ufuzn",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "KUJI",
-                logo = "kuji",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "LUNC",
-                logo = "lunc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "terra-luna",
-                contractAddress = "ibc/119334C55720942481F458C9C462F5C0CD1F1E7EEAC4679D674AA67221916AEA",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "MNTA",
-                logo = "mnta",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "mantadao",
-                contractAddress = "factory/kujira1643jxg8wasy5cfcn7xm8rd742yeazcksqlg4d7/umnta",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "NAMI",
-                logo = "nami",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "nami-protocol",
-                contractAddress = "factory/kujira13x2l25mpkhwnwcwdzzd34cr8fyht9jlj7xu9g4uffe36g3fmln8qkvm3qn/unami",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "NSTK",
-                logo = "nstk",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "unstake-fi",
-                contractAddress = "factory/kujira1aaudpfr9y23lt9d45hrmskphpdfaq9ajxd3ukh/unstk",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "ibc/FE98AAD68F02F03565E9FA39A5E627946699B2B07115889ED812D8BA639576A9",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "USK",
-                logo = "usk",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usk",
-                contractAddress = "factory/kujira1qk00h5atutpsv900x202pxx42npjr9thg58dnqpa72f2p7m2luase444a7/uusk",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "WINK",
-                logo = "wink",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "winkhub",
-                contractAddress = "factory/kujira12cjjeytrqcj25uv349thltcygnp9k0kukpct0e/uwink",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "rKUJI",
-                logo = "rkuji",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "factory/kujira1tsekaqv9vmem0zwskmf90gpf0twl6k57e8vdnq/urkuji",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Kujira,
-                ticker = "LVN",
-                logo = "levana",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "levana-protocol",
-                contractAddress = "ibc/B64A07C006C0F5E260A8AD50BD53568F1FD4A0D75B7A9F8765C81BEAFDA62053",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Litecoin to listOf(
-            Coin(
-                chain = Chain.Litecoin,
-                ticker = "LTC",
-                logo = "ltc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "litecoin",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.MayaChain to listOf(
-            Coin(
-                chain = Chain.MayaChain,
-                ticker = "CACAO",
-                logo = "cacao",
-                address = "",
-                decimal = 10,
-                hexPublicKey = "",
-                priceProviderID = "cacao",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.MayaChain,
-                ticker = "MAYA",
-                logo = "maya",
-                address = "",
-                decimal = 4,
-                hexPublicKey = "",
-                priceProviderID = "maya",
-                contractAddress = "maya",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Noble to listOf(
-            Coin(
-                chain = Chain.Noble,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Optimism to listOf(
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "DAI",
-                logo = "dai",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "FOX",
-                logo = "fox",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "shapeshift-fox-token",
-                contractAddress = "0xf1a0da3367bc7aa04f8d94ba57b862ff37ced174",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "LDO",
-                logo = "ldo",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xFdb794692724153d1488CcdBE0C56c252596735F",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "LINK",
-                logo = "link",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "OP",
-                logo = "optimism",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "optimism",
-                contractAddress = "0x4200000000000000000000000000000000000042",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "PYTH",
-                logo = "pyth",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "pyth-network",
-                contractAddress = "0x99C59ACeBFEF3BBFB7129DC90D1a11DB0E91187f",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "USDC.e",
-                logo = "USDC.e",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "WBTC",
-                logo = "wbtc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Optimism,
-                ticker = "ezETH",
-                logo = "ezeth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Osmosis to listOf(
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "ION",
-                logo = "ion",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "ion",
-                contractAddress = "uion",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "LVN",
-                logo = "levana",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "levana-protocol",
-                contractAddress = "factory/osmo1mlng7pz4pnyxtpq0akfwall37czyk9lukaucsrn30ameplhhshtqdvfm5c/ulvn",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "OSMO",
-                logo = "osmo",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "osmosis",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "USDC.eth.axl",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Osmosis,
-                ticker = "allBTC",
-                logo = "btc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "osmosis-allbtc",
-                contractAddress = "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC",
-                isNativeToken = false,
             )
-        ),
 
-        Chain.Polkadot to listOf(
-            Coin(
-                chain = Chain.Polkadot,
-                ticker = "DOT",
-                logo = "dot",
-                address = "",
-                decimal = 10,
-                hexPublicKey = "",
-                priceProviderID = "polkadot",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
+        val all = listOf(AKT)
+    }
 
-        Chain.Polygon to listOf(
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "AVAX",
-                logo = "avax",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x2C89bbc92BD86F8075d1DEcc58C7F4E0107f286b",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "BNB",
-                logo = "bsc",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x3BA4c387f786bFEE076A58914F5Bd38d668B42c3",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "BUSD",
-                logo = "busd",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xdAb529f40E671A1D4bF91361c21bf9f0C9712ab7",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "FOX",
-                logo = "fox",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "shapeshift-fox-token",
-                contractAddress = "0x65a05db8322701724c197af82c9cae41195b0aa8",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "LINK",
-                logo = "link",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "POL",
-                logo = "matic",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "matic-network",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "SHIB",
-                logo = "shib",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x6f8a06447Ff6FcF75d803135a7de15CE88C1d4ec",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "SOL",
-                logo = "sol",
-                address = "",
-                decimal = 9,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xd93f7E271cB87c23AaA73edC008A79646d1F9912",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "USDC.e",
-                logo = "USDC.e",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "WBTC",
-                logo = "wbtc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "",
-                contractAddress = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Polygon,
-                ticker = "WETH",
-                logo = "weth",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-                isNativeToken = false,
-            ),
-        ),
+    object Arbitrum {
+        val ARB = Coin(
 
-        Chain.Ripple to listOf(
-            Coin(
-                chain = Chain.Ripple,
-                ticker = "XRP",
-                logo = "xrp",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "ripple",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
+            chain = Chain.Arbitrum,
+            ticker = "ARB",
+            logo = "arbitrum",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "arbitrum",
+            contractAddress = "0x912CE59144191C1204E64559FE8253a0e49E6548",
+            isNativeToken = false,
 
-        Chain.Solana to listOf(
-            Coin(
-                chain = Chain.Solana,
-                ticker = "JUP",
-                logo = "jupiter",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "jupiter-exchange-solana",
-                contractAddress = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "KWEEN",
-                logo = "kween",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "kween",
-                contractAddress = "DEf93bSt8dx58gDFCcz4CwbjYZzjwaRBYAciJYLfdCA9",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "PYTH",
-                logo = "pyth",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "pyth-network",
-                contractAddress = "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "RAY",
-                logo = "raydium-ray-seeklogo-2",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "raydium",
-                contractAddress = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "SOL",
-                logo = "solana",
-                address = "",
-                decimal = 9,
-                hexPublicKey = "",
-                priceProviderID = "solana",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tether",
-                contractAddress = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Solana,
-                ticker = "WIF",
-                logo = "dogwifhat-wif-logo",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "dogwifcoin",
-                contractAddress = "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.Sui to listOf(
-            Coin(
-                chain = Chain.Sui,
-                ticker = "ETH",
-                logo = "eth",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "0xd0e89b2af5e4910726fbcd8b8dd37bb79b29e5f83f7491bca830e94f7f226d29::eth::ETH",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Sui,
-                ticker = "SUI",
-                logo = "sui",
-                address = "",
-                decimal = 9,
-                hexPublicKey = "",
-                priceProviderID = "sui",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Terra to listOf(
-            Coin(
-                chain = Chain.Terra,
-                ticker = "ASTRO",
-                logo = "terra-astroport",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "astroport-fi",
-                contractAddress = "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Terra,
-                ticker = "ASTRO-IBC",
-                logo = "terra-astroport",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "astroport-fi",
-                contractAddress = "ibc/8D8A7F7253615E5F76CB6252A1E1BD921D5EDB7BBAAF8913FB1C77FF125D9995",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.Terra,
-                ticker = "LUNA",
-                logo = "luna",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "terra-luna-2",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Terra,
-                ticker = "TPT",
-                logo = "terra-poker-token",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tpt",
-                contractAddress = "terra13j2k5rfkg0qhk58vz63cze0uze4hwswlrfnm0fa4rnyggjyfrcnqcrs5z2",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.TerraClassic to listOf(
-            Coin(
-                chain = Chain.TerraClassic,
-                ticker = "ASTROC",
-                logo = "terra-astroport",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "astroport",
-                contractAddress = "terra1xj49zyqrwpv5k928jwfpfy2ha668nwdgkwlrg3",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.TerraClassic,
-                ticker = "LUNC",
-                logo = "lunc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "terra-luna",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.TerraClassic,
-                ticker = "USTC",
-                logo = "ustc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "terrausd",
-                contractAddress = "uusd",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.ThorChain to listOf(
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "RUNE",
-                logo = "rune",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "thorchain",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "TCY",
-                logo = "tcy",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "tcy",
-                contractAddress = "tcy",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "RUJI",
-                logo = "ruji",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "ruji",
-                contractAddress = "x/ruji",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "KUJI",
-                logo = "kuji",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "thor.kuji",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "FUZN",
-                logo = "fuzn",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "fuzion",
-                contractAddress = "thor.fuzn",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "NSTK",
-                logo = "nstk",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "unstake-fi",
-                contractAddress = "thor.nstk",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "WINK",
-                logo = "wink",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "winkhub",
-                contractAddress = "thor.wink",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "LVN",
-                logo = "levana",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "levana-protocol",
-                contractAddress = "thor.lvn",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "RKUJI",
-                logo = "rkuji",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "kujira",
-                contractAddress = "thor.rkuji",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                isNativeToken = false,
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "YRUNE",
-                logo = "yrune",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "thorchain",
-                contractAddress = "x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
-                isNativeToken = false
-            ),
-            Coin(
-                chain = Chain.ThorChain,
-                ticker = "YTCY",
-                logo = "ytcy",
-                address = "",
-                decimal = 8,
-                hexPublicKey = "",
-                priceProviderID = "tcy",
-                contractAddress = "x/nami-index-nav-thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px-rcpt",
-                isNativeToken = false
-            ),
-        ),
-
-        Chain.Ton to listOf(
-            Coin(
-                chain = Chain.Ton,
-                ticker = "TON",
-                logo = "ton",
-                address = "",
-                decimal = 9,
-                hexPublicKey = "",
-                priceProviderID = "the-open-network",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Tron to listOf(
-            Coin(
-                chain = Chain.Tron,
-                ticker = "TRX",
-                logo = "tron",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tron",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-            Coin(
-                chain = Chain.Tron,
-                ticker = "USDT",
-                logo = "usdt",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "tether",
-                contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-                isNativeToken = false,
-            ),
-        ),
-
-        Chain.ZkSync to listOf(
-            Coin(
-                chain = Chain.ZkSync,
-                ticker = "ETH",
-                logo = "zsync_era",
-                address = "",
-                decimal = 18,
-                hexPublicKey = "",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
-        ),
-
-        Chain.Zcash to listOf(
-            Coin(
-                chain = Chain.Zcash,
-                ticker = "ZEC",
-                logo = "zec",
-                decimal = 8,
-                address = "",
-                hexPublicKey = "",
-                priceProviderID = "zcash",
-                contractAddress = "",
-                isNativeToken = true,
             )
-        ),
-        Chain.Cardano to listOf(
-            Coin(
-                chain = Chain.Cardano,
-                ticker = "ADA",
-                logo = "ada",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "cardano",
-                contractAddress = "",
-                isNativeToken = true,
-            ),
+
+        val DAI = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "DAI",
+            logo = "dai",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "DAI",
+            contractAddress = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val FOX = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xf929de51D91C77E42f5090069E0AD7A09e513c73",
+            isNativeToken = false,
+
+            )
+
+        val GRT = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "GRT",
+            logo = "grt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "GRT",
+            contractAddress = "0x9623063377AD1B27544C965cCd7342f7EA7e88C7",
+            isNativeToken = false,
+
+            )
+
+        val LDO = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "LDO",
+            logo = "ldo",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "LDO",
+            contractAddress = "0x13Ad51ed4F1B7e9Dc168d8a00cB3f4dDD85EfA60",
+            isNativeToken = false,
+
+            )
+
+        val LINK = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "LINK",
+            logo = "link",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "LINK",
+            contractAddress = "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+            isNativeToken = false,
+
+            )
+
+        val PEPE = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "PEPE",
+            logo = "pepe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "PEPE",
+            contractAddress = "0x25d887Ce7a35172C62FeBFD67a1856F20FaEbB00",
+            isNativeToken = false,
+
+            )
+
+        val PYTH = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "PYTH",
+            logo = "pyth",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "pyth-network",
+            contractAddress = "0xE4D5c6aE46ADFAF04313081e8C0052A30b6Dd724",
+            isNativeToken = false,
+
+            )
+
+        val TGT = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "TGT",
+            logo = "tgt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "thorwallet",
+            contractAddress = "0x429fEd88f10285E61b12BDF00848315fbDfCC341",
+            isNativeToken = false,
+
+            )
+
+        val UNI = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "UNI",
+            logo = "uni",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "UNI",
+            contractAddress = "0xFa7F8980b0f1E64A2062791cc3b0871572f1F7f0",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+            isNativeToken = false,
+
+            )
+
+        val USDC_e = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "USDC.e",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin-ethereum-bridged",
+            contractAddress = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+            isNativeToken = false,
+
+            )
+
+        val WBTC = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "WBTC",
+            logo = "wbtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "WBTC",
+            contractAddress = "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+            isNativeToken = false,
+
+            )
+
+        val ezETH = Coin(
+
+            chain = Chain.Arbitrum,
+            ticker = "ezETH",
+            logo = "ezeth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ezETH",
+            contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ARB, DAI, ETH, FOX, GRT, LDO, LINK, PEPE, PYTH, TGT, UNI, USDC, USDC_e, USDT, WBTC, ezETH)
+    }
+
+    object Mantle {
+        val MNT = Coin(
+
+            chain = Chain.Mantle,
+            ticker = "MNT",
+            logo = "mantle",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "mantle",
+            contractAddress = "",
+            isNativeToken = true
+
         )
+
+        val USDT = Coin(
+
+            chain = Chain.Mantle,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE",
+            isNativeToken = false
+
+        )
+
+        val USDC = Coin(
+
+            chain = Chain.Mantle,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0x09bc4e0d864854c6afb6eb9a9cdf58ac190d0df9",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(MNT, USDT, USDC)
+    }
+
+    object Avalanche {
+        val AVAX = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "AVAX",
+            logo = "avax",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "avalanche-2",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val BLS = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "BLS",
+            logo = "bls",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x46B9144771Cb3195D66e4EDA643a7493fADCAF9D",
+            isNativeToken = false,
+
+            )
+
+        val BTC_b = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "BTC.b",
+            logo = "btc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
+            isNativeToken = false,
+
+            )
+
+        val COQ = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "COQ",
+            logo = "coq",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x420FcA0121DC28039145009570975747295f2329",
+            isNativeToken = false,
+
+            )
+
+        val JOE = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "JOE",
+            logo = "joe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd",
+            isNativeToken = false,
+
+            )
+
+        val PNG = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "PNG",
+            logo = "png",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x60781C2586D68229fde47564546784ab3fACA982",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+            isNativeToken = false,
+
+            )
+
+        val WAVAX = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "WAVAX",
+            logo = "avax",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+            isNativeToken = false,
+
+            )
+
+        val aAvaUSDC = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "aAvaUSDC",
+            logo = "aave",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x625E7708f30cA75bfd92586e17077590C60eb4cD",
+            isNativeToken = false,
+
+            )
+
+        val sAVAX = Coin(
+
+            chain = Chain.Avalanche,
+            ticker = "sAVAX",
+            logo = "savax",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AVAX, BLS, BTC_b, COQ, JOE, PNG, USDC, USDT, WAVAX, aAvaUSDC, sAVAX)
+    }
+
+    object Base {
+        val AERO = Coin(
+
+            chain = Chain.Base,
+            ticker = "AERO",
+            logo = "aero",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "aerodrome-finance",
+            contractAddress = "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+            isNativeToken = false,
+
+            )
+
+        val DAI = Coin(
+
+            chain = Chain.Base,
+            ticker = "DAI",
+            logo = "dai",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "dai",
+            contractAddress = "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.Base,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val OM = Coin(
+
+            chain = Chain.Base,
+            ticker = "OM",
+            logo = "om",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "mantra-dao",
+            contractAddress = "0x3992B27dA26848C2b19CeA6Fd25ad5568B68AB98",
+            isNativeToken = false,
+
+            )
+
+        val PYTH = Coin(
+
+            chain = Chain.Base,
+            ticker = "PYTH",
+            logo = "pyth",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "pyth-network",
+            contractAddress = "0x4c5d8A75F3762c1561D96f177694f67378705E98",
+            isNativeToken = false,
+
+            )
+
+        val SNX = Coin(
+
+            chain = Chain.Base,
+            ticker = "SNX",
+            logo = "snx",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "SNX",
+            contractAddress = "0x22e6966B799c4D5B13BE962E1D117b56327FDa66",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Base,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            isNativeToken = false,
+
+            )
+
+        val W = Coin(
+
+            chain = Chain.Base,
+            ticker = "W",
+            logo = "w",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "w",
+            contractAddress = "0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91",
+            isNativeToken = false,
+
+            )
+
+        val WEWE = Coin(
+
+            chain = Chain.Base,
+            ticker = "WEWE",
+            logo = "wewe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
+            isNativeToken = false,
+
+            )
+
+        val cbETH = Coin(
+
+            chain = Chain.Base,
+            ticker = "cbETH",
+            logo = "cbeth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "cbETH",
+            contractAddress = "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+            isNativeToken = false,
+
+            )
+
+        val ezETH = Coin(
+
+            chain = Chain.Base,
+            ticker = "ezETH",
+            logo = "ezeth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ezETH",
+            contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
+            isNativeToken = false,
+
+            )
+
+        val rETH = Coin(
+
+            chain = Chain.Base,
+            ticker = "rETH",
+            logo = "reth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "reth",
+            contractAddress = "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AERO, DAI, ETH, OM, PYTH, SNX, USDC, W, WEWE, cbETH, ezETH, rETH)
+    }
+
+    object Bitcoin {
+        val BTC = Coin(
+
+            chain = Chain.Bitcoin,
+            ticker = "BTC",
+            logo = "btc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "bitcoin",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(BTC)
+    }
+
+    object BitcoinCash {
+        val BCH = Coin(
+
+            chain = Chain.BitcoinCash,
+            ticker = "BCH",
+            logo = "bch",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "bitcoin-cash",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(BCH)
+    }
+
+    object Blast {
+        val AI = Coin(
+
+            chain = Chain.Blast,
+            ticker = "AI",
+            logo = "anyinu",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x764933fbAd8f5D04Ccd088602096655c2ED9879F",
+            isNativeToken = false,
+
+            )
+
+        val BAG = Coin(
+
+            chain = Chain.Blast,
+            ticker = "BAG",
+            logo = "bag",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xb9dfCd4CF589bB8090569cb52FaC1b88Dbe4981F",
+            isNativeToken = false,
+
+            )
+
+        val BLAST = Coin(
+
+            chain = Chain.Blast,
+            ticker = "BLAST",
+            logo = "blast",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xb1a5700fA2358173Fe465e6eA4Ff52E36e88E2ad",
+            isNativeToken = false,
+
+            )
+
+        val DACKIE = Coin(
+
+            chain = Chain.Blast,
+            ticker = "DACKIE",
+            logo = "dackie",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x47C337Bd5b9344a6F3D6f58C474D9D8cd419D8cA",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.Blast,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val JUICE = Coin(
+
+            chain = Chain.Blast,
+            ticker = "JUICE",
+            logo = "juice",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x818a92bc81Aad0053d72ba753fb5Bc3d0C5C0923",
+            isNativeToken = false,
+
+            )
+
+        val MIM = Coin(
+
+            chain = Chain.Blast,
+            ticker = "MIM",
+            logo = "mim",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x76DA31D7C9CbEAE102aff34D3398bC450c8374c1",
+            isNativeToken = false,
+
+            )
+
+        val OMNI = Coin(
+
+            chain = Chain.Blast,
+            ticker = "OMNI",
+            logo = "omni",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x9e20461bc2c4c980f62f1B279D71734207a6A356",
+            isNativeToken = false,
+
+            )
+
+        val USDB = Coin(
+
+            chain = Chain.Blast,
+            ticker = "USDB",
+            logo = "usdb",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x4300000000000000000000000000000000000003",
+            isNativeToken = false,
+
+            )
+
+        val WBTC = Coin(
+
+            chain = Chain.Blast,
+            ticker = "WBTC",
+            logo = "wbtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xF7bc58b8D8f97ADC129cfC4c9f45Ce3C0E1D2692",
+            isNativeToken = false,
+
+            )
+
+        val WETH = Coin(
+
+            chain = Chain.Blast,
+            ticker = "WETH",
+            logo = "weth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "0x4300000000000000000000000000000000000004",
+            isNativeToken = false,
+
+            )
+
+        val ZERO = Coin(
+
+            chain = Chain.Blast,
+            ticker = "ZERO",
+            logo = "zero",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x357f93E17FdabEcd3fEFc488a2d27dff8065d00f",
+            isNativeToken = false,
+
+            )
+
+        val bLOOKS = Coin(
+
+            chain = Chain.Blast,
+            ticker = "bLOOKS",
+            logo = "blooks",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x406F10d635be12ad33D6B133C6DA89180f5B999e",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AI, BAG, BLAST, DACKIE, ETH, JUICE, MIM, OMNI, USDB, WBTC, WETH, ZERO, bLOOKS)
+    }
+
+    object BscChain {
+        val AAVE = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "AAVE",
+            logo = "aave",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xfb6115445bff7b52feb98650c87f44907e58f802",
+            isNativeToken = false,
+
+            )
+
+        val BNB = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "BNB",
+            logo = "bsc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "binancecoin",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val COMP = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "COMP",
+            logo = "comp",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x52ce071bd9b1c4b00a0b92d298c512478cad67e8",
+            isNativeToken = false,
+
+            )
+
+        val DAI = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "DAI",
+            logo = "dai",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+            isNativeToken = false,
+
+            )
+
+        val KNC = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "KNC",
+            logo = "knc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xfe56d5892bdffc7bf58f2e84be1b2c32d21c308b",
+            isNativeToken = false,
+
+            )
+
+        val PEPE = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "PEPE",
+            logo = "pepe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x25d887ce7a35172c62febfd67a1856f20faebb00",
+            isNativeToken = false,
+
+            )
+
+        val SUSHI = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "SUSHI",
+            logo = "sushi",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x947950bcc74888a40ffa2593c5798f11fc9124c4",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.BscChain,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "0x55d398326f99059fF775485246999027B3197955",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AAVE, BNB, COMP, DAI, ETH, KNC, PEPE, SUSHI, USDC, USDT)
+    }
+
+    object CronosChain {
+        val CRO = Coin(
+
+            chain = Chain.CronosChain,
+            ticker = "CRO",
+            logo = "cro",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "crypto-com-chain",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(CRO)
+    }
+
+    object Dash {
+        val DASH = Coin(
+
+            chain = Chain.Dash,
+            ticker = "DASH",
+            logo = "dash",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "dash",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(DASH)
+    }
+
+    object Dogecoin {
+        val DOGE = Coin(
+
+            chain = Chain.Dogecoin,
+            ticker = "DOGE",
+            logo = "doge",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "dogecoin",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(DOGE)
+    }
+
+    object Dydx {
+        val DYDX = Coin(
+
+            chain = Chain.Dydx,
+            ticker = "DYDX",
+            logo = "dydx",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "dydx-chain",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(DYDX)
+    }
+
+    object Ethereum {
+        val AAVE = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "AAVE",
+            logo = "aave",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "aave",
+            contractAddress = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+            isNativeToken = false,
+
+            )
+
+        val BAL = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "BAL",
+            logo = "bal",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "balancer",
+            contractAddress = "0xba100000625a3754423978a60c9317c58a424e3d",
+            isNativeToken = false,
+
+            )
+
+        val BAT = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "BAT",
+            logo = "bat",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "basic-attention-token",
+            contractAddress = "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
+            isNativeToken = false,
+
+            )
+
+        val COMP = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "COMP",
+            logo = "comp",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "compound-governance-token",
+            contractAddress = "0xc00e94cb662c3520282e6f5717214004a7f26888",
+            isNativeToken = false,
+
+            )
+
+        val DAI = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "DAI",
+            logo = "dai",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "dai",
+            contractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val FLIP = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "FLIP",
+            logo = "flip",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "chainflip",
+            contractAddress = "0x826180541412d574cf1336d22c0c0a287822678a",
+            isNativeToken = false,
+
+            )
+
+        val FOX = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xc770eefad204b5180df6a14ee197d99d808ee52d",
+            isNativeToken = false,
+
+            )
+
+        val GRT = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "GRT",
+            logo = "grt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "the-graph",
+            contractAddress = "0xc944e90c64b2c07662a292be6244bdf05cda44a7",
+            isNativeToken = false,
+
+            )
+
+        val KNC = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "KNC",
+            logo = "knc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "kyber-network-crystal",
+            contractAddress = "0xdefa4e8a7bcba345f687a2f1456f5edd9ce97202",
+            isNativeToken = false,
+
+            )
+
+        val LINK = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "LINK",
+            logo = "link",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "chainlink",
+            contractAddress = "0x514910771af9ca656af840dff83e8264ecf986ca",
+            isNativeToken = false,
+
+            )
+
+        val MATIC = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "MATIC",
+            logo = "matic",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "matic-network",
+            contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+            isNativeToken = false,
+
+            )
+
+        val MKR = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "MKR",
+            logo = "mkr",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "maker",
+            contractAddress = "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+            isNativeToken = false,
+
+            )
+
+        val PEPE = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "PEPE",
+            logo = "pepe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "pepe",
+            contractAddress = "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+            isNativeToken = false,
+
+            )
+
+        val POL = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "POL",
+            logo = "pol",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "matic-network",
+            contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+            isNativeToken = false,
+
+            )
+
+        val SNX = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "SNX",
+            logo = "snx",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "havven",
+            contractAddress = "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+            isNativeToken = false,
+
+            )
+
+        val SUSHI = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "SUSHI",
+            logo = "sushi",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "sushi",
+            contractAddress = "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
+            isNativeToken = false,
+
+            )
+
+        val TGT = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "TGT",
+            logo = "tgt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "thorwallet",
+            contractAddress = "0x108a850856Db3f85d0269a2693D896B394C80325",
+            isNativeToken = false,
+
+            )
+
+        val UNI = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "UNI",
+            logo = "uni",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "uniswap",
+            contractAddress = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            isNativeToken = false,
+
+            )
+
+        val VULT = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "VULT",
+            logo = "vulti",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "vultisig",
+            contractAddress = "0xb788144DF611029C60b859DF47e79B7726C4DEBa",
+            isNativeToken = false,
+
+            )
+
+        val WBTC = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "WBTC",
+            logo = "wbtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "wrapped-bitcoin",
+            contractAddress = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            isNativeToken = false,
+
+            )
+
+        val WETH = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "WETH",
+            logo = "weth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "weth",
+            contractAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            isNativeToken = false,
+
+            )
+
+        val YFI = Coin(
+
+            chain = Chain.Ethereum,
+            ticker = "YFI",
+            logo = "yfi",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "yearn-finance",
+            contractAddress = "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AAVE, BAL, BAT, COMP, DAI, ETH, FLIP, FOX, GRT, KNC, LINK, MATIC, MKR, PEPE, POL, SNX, SUSHI, TGT, UNI, USDC, USDT, VULT, WBTC, WETH, YFI)
+    }
+
+    object GaiaChain {
+        val ATOM = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "ATOM",
+            logo = "atom",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "cosmos",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val FUZN = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "FUZN",
+            logo = "fuzn",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "fuzion",
+            contractAddress = "ibc/6BBBB4B63C51648E9B8567F34505A9D5D8BAAC4C31D768971998BE8C18431C26",
+            isNativeToken = false,
+
+            )
+
+        val KUJI = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "KUJI",
+            logo = "kuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "ibc/4CC44260793F84006656DD868E017578F827A492978161DA31D7572BCB3F4289",
+            isNativeToken = false,
+
+            )
+
+        val LVN = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "LVN",
+            logo = "levana",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "levana-protocol",
+            contractAddress = "ibc/6C95083ADD352D5D47FB4BA427015796E5FEF17A829463AD05ECD392EB38D889",
+            isNativeToken = false,
+
+            )
+
+        val NAMI = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "NAMI",
+            logo = "nami",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "nami-protocol",
+            contractAddress = "ibc/4622E82B845FFC6AA8B45C1EB2F507133A9E876A5FEA1BA64585D5F564405453",
+            isNativeToken = false,
+
+            )
+
+        val NSTK = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "NSTK",
+            logo = "nstk",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "unstake-fi",
+            contractAddress = "ibc/0B99C4EFF1BD05E56DEDEE1D88286DB79680C893724E0E7573BC369D79B5DDF3",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "ibc/F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013",
+            isNativeToken = false,
+
+            )
+
+        val USK = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "USK",
+            logo = "usk",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usk",
+            contractAddress = "ibc/A47E814B0E8AE12D044637BCB4576FCA675EF66300864873FA712E1B28492B78",
+            isNativeToken = false,
+
+            )
+
+        val WINK = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "WINK",
+            logo = "wink",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "winkhub",
+            contractAddress = "ibc/4363FD2EF60A7090E405B79A6C4337C5E9447062972028F5A99FB041B9571942",
+            isNativeToken = false,
+
+            )
+
+        val rKUJI = Coin(
+
+            chain = Chain.GaiaChain,
+            ticker = "rKUJI",
+            logo = "rkuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "ibc/50A69DC508ACCADE2DAC4B8B09AA6D9C9062FCBFA72BB4C6334367DECD972B06",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ATOM, FUZN, KUJI, LVN, NAMI, NSTK, USDC, USK, WINK, rKUJI)
+    }
+
+    object Kujira {
+        val ASTRO = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "ASTRO",
+            logo = "terra-astroport",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "astroport-fi",
+            contractAddress = "ibc/640E1C3E28FD45F611971DF891AE3DC90C825DF759DF8FAA8F33F7F72B35AD56",
+            isNativeToken = false,
+
+            )
+
+        val FUZN = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "FUZN",
+            logo = "fuzion",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "fuzion",
+            contractAddress = "factory/kujira1sc6a0347cc5q3k890jj0pf3ylx2s38rh4sza4t/ufuzn",
+            isNativeToken = false,
+
+            )
+
+        val KUJI = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "KUJI",
+            logo = "kuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val LUNC = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "LUNC",
+            logo = "lunc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna",
+            contractAddress = "ibc/119334C55720942481F458C9C462F5C0CD1F1E7EEAC4679D674AA67221916AEA",
+            isNativeToken = false,
+
+            )
+
+        val MNTA = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "MNTA",
+            logo = "mnta",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "mantadao",
+            contractAddress = "factory/kujira1643jxg8wasy5cfcn7xm8rd742yeazcksqlg4d7/umnta",
+            isNativeToken = false,
+
+            )
+
+        val NAMI = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "NAMI",
+            logo = "nami",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "nami-protocol",
+            contractAddress = "factory/kujira13x2l25mpkhwnwcwdzzd34cr8fyht9jlj7xu9g4uffe36g3fmln8qkvm3qn/unami",
+            isNativeToken = false,
+
+            )
+
+        val NSTK = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "NSTK",
+            logo = "nstk",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "unstake-fi",
+            contractAddress = "factory/kujira1aaudpfr9y23lt9d45hrmskphpdfaq9ajxd3ukh/unstk",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "ibc/FE98AAD68F02F03565E9FA39A5E627946699B2B07115889ED812D8BA639576A9",
+            isNativeToken = false,
+
+            )
+
+        val USK = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "USK",
+            logo = "usk",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usk",
+            contractAddress = "factory/kujira1qk00h5atutpsv900x202pxx42npjr9thg58dnqpa72f2p7m2luase444a7/uusk",
+            isNativeToken = false,
+
+            )
+
+        val WINK = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "WINK",
+            logo = "wink",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "winkhub",
+            contractAddress = "factory/kujira12cjjeytrqcj25uv349thltcygnp9k0kukpct0e/uwink",
+            isNativeToken = false,
+
+            )
+
+        val rKUJI = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "rKUJI",
+            logo = "rkuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "factory/kujira1tsekaqv9vmem0zwskmf90gpf0twl6k57e8vdnq/urkuji",
+            isNativeToken = false,
+
+            )
+
+        val LVN = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "LVN",
+            logo = "levana",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "levana-protocol",
+            contractAddress = "ibc/B64A07C006C0F5E260A8AD50BD53568F1FD4A0D75B7A9F8765C81BEAFDA62053",
+            isNativeToken = false,
+
+            )
+
+        val AUTO = Coin(
+
+            chain = Chain.Kujira,
+            ticker = "AUTO",
+            logo = "auto",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "auto-2",
+            contractAddress = "factory/kujira13x2l25mpkhwnwcwdzzd34cr8fyht9jlj7xu9g4uffe36g3fmln8qkvm3qn/uauto",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ASTRO, FUZN, KUJI, LUNC, MNTA, NAMI, NSTK, USDC, USK, WINK, rKUJI, LVN, AUTO)
+    }
+
+    object Litecoin {
+        val LTC = Coin(
+
+            chain = Chain.Litecoin,
+            ticker = "LTC",
+            logo = "ltc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "litecoin",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(LTC)
+    }
+
+    object MayaChain {
+        val CACAO = Coin(
+
+            chain = Chain.MayaChain,
+            ticker = "CACAO",
+            logo = "cacao",
+            address = "",
+            decimal = 10,
+            hexPublicKey = "",
+            priceProviderID = "cacao",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val MAYA = Coin(
+
+            chain = Chain.MayaChain,
+            ticker = "MAYA",
+            logo = "maya",
+            address = "",
+            decimal = 4,
+            hexPublicKey = "",
+            priceProviderID = "maya",
+            contractAddress = "maya",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(CACAO, MAYA)
+    }
+
+    object Noble {
+        val USDC = Coin(
+
+            chain = Chain.Noble,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(USDC)
+    }
+
+    object Optimism {
+        val DAI = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "DAI",
+            logo = "dai",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+            isNativeToken = false,
+
+            )
+
+        val ETH = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val FOX = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xf1a0da3367bc7aa04f8d94ba57b862ff37ced174",
+            isNativeToken = false,
+
+            )
+
+        val LDO = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "LDO",
+            logo = "ldo",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xFdb794692724153d1488CcdBE0C56c252596735F",
+            isNativeToken = false,
+
+            )
+
+        val LINK = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "LINK",
+            logo = "link",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6",
+            isNativeToken = false,
+
+            )
+
+        val OP = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "OP",
+            logo = "optimism",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "optimism",
+            contractAddress = "0x4200000000000000000000000000000000000042",
+            isNativeToken = false,
+
+            )
+
+        val PYTH = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "PYTH",
+            logo = "pyth",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "pyth-network",
+            contractAddress = "0x99C59ACeBFEF3BBFB7129DC90D1a11DB0E91187f",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+            isNativeToken = false,
+
+            )
+
+        val USDC_e = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "USDC.e",
+            logo = "USDC.e",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+            isNativeToken = false,
+
+            )
+
+        val WBTC = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "WBTC",
+            logo = "wbtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+            isNativeToken = false,
+
+            )
+
+        val ezETH = Coin(
+
+            chain = Chain.Optimism,
+            ticker = "ezETH",
+            logo = "ezeth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(DAI, ETH, FOX, LDO, LINK, OP, PYTH, USDC, USDC_e, USDT, WBTC, ezETH)
+    }
+
+    object Osmosis {
+        val ION = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "ION",
+            logo = "ion",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "ion",
+            contractAddress = "uion",
+            isNativeToken = false,
+
+            )
+
+        val LVN = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "LVN",
+            logo = "levana",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "levana-protocol",
+            contractAddress = "factory/osmo1mlng7pz4pnyxtpq0akfwall37czyk9lukaucsrn30ameplhhshtqdvfm5c/ulvn",
+            isNativeToken = false,
+
+            )
+
+        val OSMO = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "OSMO",
+            logo = "osmo",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "osmosis",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4",
+            isNativeToken = false,
+
+            )
+
+        val USDC_eth_axl = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "USDC.eth.axl",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+            isNativeToken = false,
+
+            )
+
+        val allBTC = Coin(
+
+            chain = Chain.Osmosis,
+            ticker = "allBTC",
+            logo = "btc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "osmosis-allbtc",
+            contractAddress = "factory/osmo1z6r6qdknhgsc0zeracktgpcxf43j6sekq07nw8sxduc9lg0qjjlqfu25e3/alloyed/allBTC",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ION, LVN, OSMO, USDC, USDC_eth_axl, allBTC)
+    }
+
+    object Polkadot {
+        val DOT = Coin(
+
+            chain = Chain.Polkadot,
+            ticker = "DOT",
+            logo = "dot",
+            address = "",
+            decimal = 10,
+            hexPublicKey = "",
+            priceProviderID = "polkadot",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(DOT)
+    }
+
+    object Polygon {
+        val AVAX = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "AVAX",
+            logo = "avax",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x2C89bbc92BD86F8075d1DEcc58C7F4E0107f286b",
+            isNativeToken = false,
+
+            )
+
+        val BNB = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "BNB",
+            logo = "bsc",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x3BA4c387f786bFEE076A58914F5Bd38d668B42c3",
+            isNativeToken = false,
+
+            )
+
+        val BUSD = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "BUSD",
+            logo = "busd",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xdAb529f40E671A1D4bF91361c21bf9f0C9712ab7",
+            isNativeToken = false,
+
+            )
+
+        val FOX = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0x65a05db8322701724c197af82c9cae41195b0aa8",
+            isNativeToken = false,
+
+            )
+
+        val LINK = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "LINK",
+            logo = "link",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1",
+            isNativeToken = false,
+
+            )
+
+        val POL = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "POL",
+            logo = "matic",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "matic-network",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val SHIB = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "SHIB",
+            logo = "shib",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x6f8a06447Ff6FcF75d803135a7de15CE88C1d4ec",
+            isNativeToken = false,
+
+            )
+
+        val SOL = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "SOL",
+            logo = "sol",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xd93f7E271cB87c23AaA73edC008A79646d1F9912",
+            isNativeToken = false,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+            isNativeToken = false,
+
+            )
+
+        val USDC_e = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "USDC.e",
+            logo = "USDC.e",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+            isNativeToken = false,
+
+            )
+
+        val WBTC = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "WBTC",
+            logo = "wbtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+            isNativeToken = false,
+
+            )
+
+        val WETH = Coin(
+
+            chain = Chain.Polygon,
+            ticker = "WETH",
+            logo = "weth",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(AVAX, BNB, BUSD, FOX, LINK, POL, SHIB, SOL, USDC, USDC_e, USDT, WBTC, WETH)
+    }
+
+    object Ripple {
+        val XRP = Coin(
+
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "xrp",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "ripple",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(XRP)
+    }
+
+    object Solana {
+        val JUP = Coin(
+
+            chain = Chain.Solana,
+            ticker = "JUP",
+            logo = "jupiter",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "jupiter-exchange-solana",
+            contractAddress = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+            isNativeToken = false,
+
+            )
+
+        val KWEEN = Coin(
+
+            chain = Chain.Solana,
+            ticker = "KWEEN",
+            logo = "kween",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kween",
+            contractAddress = "DEf93bSt8dx58gDFCcz4CwbjYZzjwaRBYAciJYLfdCA9",
+            isNativeToken = false,
+
+            )
+
+        val PYTH = Coin(
+
+            chain = Chain.Solana,
+            ticker = "PYTH",
+            logo = "pyth",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "pyth-network",
+            contractAddress = "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
+            isNativeToken = false,
+
+            )
+
+        val RAY = Coin(
+
+            chain = Chain.Solana,
+            ticker = "RAY",
+            logo = "raydium-ray-seeklogo-2",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "raydium",
+            contractAddress = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+            isNativeToken = false,
+
+            )
+
+        val SOL = Coin(
+
+            chain = Chain.Solana,
+            ticker = "SOL",
+            logo = "solana",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "solana",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val USDC = Coin(
+
+            chain = Chain.Solana,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            isNativeToken = false,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Solana,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+            isNativeToken = false,
+
+            )
+
+        val WIF = Coin(
+
+            chain = Chain.Solana,
+            ticker = "WIF",
+            logo = "dogwifhat-wif-logo",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "dogwifcoin",
+            contractAddress = "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(JUP, KWEEN, PYTH, RAY, SOL, USDC, USDT, WIF)
+    }
+
+    object Sei {
+        val Sei = Coin(
+            chain = Chain.Sei,
+            ticker = "SEI",
+            logo = "sei",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "sei-network",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(Sei)
+    }
+
+    object Sui {
+        val ETH = Coin(
+
+            chain = Chain.Sui,
+            ticker = "ETH",
+            logo = "eth",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "0xd0e89b2af5e4910726fbcd8b8dd37bb79b29e5f83f7491bca830e94f7f226d29::eth::ETH",
+            isNativeToken = false,
+
+            )
+
+        val SUI = Coin(
+
+            chain = Chain.Sui,
+            ticker = "SUI",
+            logo = "sui",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(ETH, SUI)
+    }
+
+    object Terra {
+        val ASTRO = Coin(
+
+            chain = Chain.Terra,
+            ticker = "ASTRO",
+            logo = "terra-astroport",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "astroport-fi",
+            contractAddress = "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26",
+            isNativeToken = false,
+
+            )
+
+        val ASTRO_IBC = Coin(
+
+            chain = Chain.Terra,
+            ticker = "ASTRO-IBC",
+            logo = "terra-astroport",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "astroport-fi",
+            contractAddress = "ibc/8D8A7F7253615E5F76CB6252A1E1BD921D5EDB7BBAAF8913FB1C77FF125D9995",
+            isNativeToken = false,
+
+            )
+
+        val LUNA = Coin(
+
+            chain = Chain.Terra,
+            ticker = "LUNA",
+            logo = "luna",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna-2",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val TPT = Coin(
+
+            chain = Chain.Terra,
+            ticker = "TPT",
+            logo = "terra-poker-token",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tpt",
+            contractAddress = "terra13j2k5rfkg0qhk58vz63cze0uze4hwswlrfnm0fa4rnyggjyfrcnqcrs5z2",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ASTRO, ASTRO_IBC, LUNA, TPT)
+    }
+
+    object TerraClassic {
+        val ASTROC = Coin(
+
+            chain = Chain.TerraClassic,
+            ticker = "ASTROC",
+            logo = "terra-astroport",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "astroport",
+            contractAddress = "terra1xj49zyqrwpv5k928jwfpfy2ha668nwdgkwlrg3",
+            isNativeToken = false,
+
+            )
+
+        val LUNC = Coin(
+
+            chain = Chain.TerraClassic,
+            ticker = "LUNC",
+            logo = "lunc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val USTC = Coin(
+
+            chain = Chain.TerraClassic,
+            ticker = "USTC",
+            logo = "ustc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terrausd",
+            contractAddress = "uusd",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(ASTROC, LUNC, USTC)
+    }
+
+    object ThorChain {
+        val RUNE = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "RUNE",
+            logo = "rune",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "thorchain",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val TCY = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "TCY",
+            logo = "tcy",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "tcy",
+            contractAddress = "tcy",
+            isNativeToken = false,
+
+            )
+
+        val RUJI = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "RUJI",
+            logo = "ruji",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "ruji",
+            contractAddress = "x/ruji",
+            isNativeToken = false,
+
+            )
+
+        val KUJI = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "KUJI",
+            logo = "kuji",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "thor.kuji",
+            isNativeToken = false,
+
+            )
+
+        val FUZN = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "FUZN",
+            logo = "fuzn",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "fuzion",
+            contractAddress = "thor.fuzn",
+            isNativeToken = false,
+
+            )
+
+        val NSTK = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "NSTK",
+            logo = "nstk",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "unstake-fi",
+            contractAddress = "thor.nstk",
+            isNativeToken = false,
+
+            )
+
+        val WINK = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "WINK",
+            logo = "wink",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "winkhub",
+            contractAddress = "thor.wink",
+            isNativeToken = false,
+
+            )
+
+        val LVN = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "LVN",
+            logo = "levana",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "levana-protocol",
+            contractAddress = "thor.lvn",
+            isNativeToken = false,
+
+            )
+
+        val RKUJI = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "RKUJI",
+            logo = "rkuji",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "thor.rkuji",
+            isNativeToken = false,
+
+            )
+
+        val sTCY = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "sTCY",
+            logo = "stcy",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "tcy",
+            contractAddress = "x/staking-tcy",
+            isNativeToken = false,
+
+            )
+
+        val yRUNE = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "yRUNE",
+            logo = "yrune",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
+            isNativeToken = false
+
+        )
+
+        val yTCY = Coin(
+
+            chain = Chain.ThorChain,
+            ticker = "yTCY",
+            logo = "ytcy",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "x/nami-index-nav-thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px-rcpt",
+            isNativeToken = false
+
+        )
+
+        val all = listOf(RUNE, TCY, RUJI, KUJI, FUZN, NSTK, WINK, LVN, RKUJI, sTCY, yRUNE, yTCY)
+    }
+
+    object Ton {
+        val TON = Coin(
+
+            chain = Chain.Ton,
+            ticker = "TON",
+            logo = "ton",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "the-open-network",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Ton,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(TON, USDT)
+    }
+
+    object Tron {
+        val TRX = Coin(
+
+            chain = Chain.Tron,
+            ticker = "TRX",
+            logo = "tron",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tron",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val USDT = Coin(
+
+            chain = Chain.Tron,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            isNativeToken = false,
+
+            )
+
+        val all = listOf(TRX, USDT)
+    }
+
+    object ZkSync {
+        val ETH = Coin(
+
+            chain = Chain.ZkSync,
+            ticker = "ETH",
+            logo = "zsync_era",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(ETH)
+    }
+
+    object Zcash {
+        val ZEC = Coin(
+
+            chain = Chain.Zcash,
+            ticker = "ZEC",
+            logo = "zec",
+            decimal = 8,
+            address = "",
+            hexPublicKey = "",
+            priceProviderID = "zcash",
+            contractAddress = "",
+            isNativeToken = true,
+
+            )
+
+        val all = listOf(ZEC)
+    }
+
+    object Cardano {
+        val ADA = Coin(
+            chain = Chain.Cardano,
+            ticker = "ADA",
+            logo = "ada",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "cardano",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+        val all = listOf(ADA)
+    }
+
+    val coins: Map<Chain, List<Coin>> = mapOf(
+        Chain.Akash to Akash.all,
+        Chain.Arbitrum to Arbitrum.all,
+        Chain.Mantle to Mantle.all,
+        Chain.Avalanche to Avalanche.all,
+        Chain.Base to Base.all,
+        Chain.Bitcoin to Bitcoin.all,
+        Chain.BitcoinCash to BitcoinCash.all,
+        Chain.Blast to Blast.all,
+        Chain.BscChain to BscChain.all,
+        Chain.CronosChain to CronosChain.all,
+        Chain.Dash to Dash.all,
+        Chain.Dogecoin to Dogecoin.all,
+        Chain.Dydx to Dydx.all,
+        Chain.Ethereum to Ethereum.all,
+        Chain.GaiaChain to GaiaChain.all,
+        Chain.Kujira to Kujira.all,
+        Chain.Litecoin to Litecoin.all,
+        Chain.MayaChain to MayaChain.all,
+        Chain.Noble to Noble.all,
+        Chain.Optimism to Optimism.all,
+        Chain.Osmosis to Osmosis.all,
+        Chain.Polkadot to Polkadot.all,
+        Chain.Polygon to Polygon.all,
+        Chain.Ripple to Ripple.all,
+        Chain.Solana to Solana.all,
+        Chain.Sui to Sui.all,
+        Chain.Terra to Terra.all,
+        Chain.TerraClassic to TerraClassic.all,
+        Chain.ThorChain to ThorChain.all,
+        Chain.Ton to Ton.all,
+        Chain.Tron to Tron.all,
+        Chain.ZkSync to ZkSync.all,
+        Chain.Zcash to Zcash.all,
+        Chain.Cardano to Cardano.all,
+        Chain.Sei to Sei.all
     )
+
+    val all: List<Coin> = coins.values.flatten()
+
 }

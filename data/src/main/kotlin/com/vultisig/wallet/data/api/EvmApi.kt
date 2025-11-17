@@ -58,12 +58,9 @@ interface EvmApi {
         recipientAddress: String,
         value: BigInteger,
     ): BigInteger
-
     suspend fun getBalances(
         address: String,
     ): VultisigBalanceJson
-
-
 }
 
 interface EvmApiFactory {
@@ -123,6 +120,14 @@ class EvmApiFactoryImp @Inject constructor(
             Chain.ZkSync -> EvmApiImp(
                 httpClient,
                 "https://api.vultisig.com/zksync/"
+            )
+            Chain.Mantle -> EvmApiImp(
+                httpClient,
+                "https://api.vultisig.com/mantle/"
+            )
+            Chain.Sei -> EvmApiImp(
+                httpClient,
+                "https://evm-rpc.sei-apis.com/"
             )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
@@ -350,7 +355,8 @@ class EvmApiImp(
                 message.contains("transaction already exists") ||
                 message.contains("nonce too low: address") || // this message happens on layer 2
                 message.contains("tx already in mempool") ||
-                message.contains("existing tx")
+                message.contains("existing tx") ||
+                message.contains("tx already exists in cache")
             ) {
                 // even the server returns an error , but this still consider as success
                 return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
@@ -380,6 +386,7 @@ class EvmApiImp(
                 )
             }
         } catch (e: Exception) {
+            Timber.d("find custom token error: ${e.message}")
             emptyList()
         }
     }
@@ -405,7 +412,7 @@ class EvmApiImp(
             method = "eth_getBlockByNumber",
             params = buildJsonArray {
                 add("latest")
-                add(true)
+                add(false)
             }
         )
         return response.result.baseFeePerGas.convertToBigIntegerOrZero()

@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,7 +44,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -184,7 +185,7 @@ private fun VerifySwapScreen(
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
-                    title = "Swap overview",
+                    title = stringResource(R.string.verify_swap_swap_overview),
                     onBackClick = onBackClick,
                 )
             }
@@ -261,7 +262,7 @@ private fun VerifySwapScreen(
                         }
 
                         Text(
-                            "To",
+                            stringResource(R.string.swap_form_dst_token_title),
                             style = Theme.brockmann.supplementary.captionSmall,
                             color = Theme.colors.text.extraLight,
                         )
@@ -360,7 +361,7 @@ private fun VerifySwapScreen(
 
                 if (hasFastSign) {
                     Text(
-                        text = "Hold for paired sign",
+                        text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
@@ -393,6 +394,7 @@ internal fun SwapToken(
     valuedToken: ValuedToken,
     isSwap: Boolean = false,
     isDestinationToken: Boolean = false,
+    isLoading: Boolean = false,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
@@ -404,10 +406,12 @@ internal fun SwapToken(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenLogo(
-            logo = Tokens.getCoinLogo(token.logo),
+            logo = getCoinLogo(token.ticker),
             title = token.ticker,
             errorLogoModifier = Modifier
-                .size(24.dp),
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(Theme.colors.neutral200),
             modifier = Modifier
                 .size(24.dp)
                 .border(
@@ -436,17 +440,31 @@ internal fun SwapToken(
                 )
             }
 
-            Text(
-                text = text,
-                style = Theme.brockmann.headings.title3,
-                color = Theme.colors.text.primary,
-            )
+            if (isLoading) {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
 
-            Text(
-                text = valuedToken.fiatValue,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
-            )
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .height(20.dp)
+                        .width(150.dp)
+                )
+            } else {
+                Text(
+                    text = text,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = valuedToken.fiatValue,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
         }
 
         if (shouldShowOnChainLogo) {
@@ -469,11 +487,19 @@ internal fun SwapToken(
 
                 UiSpacer(8.dp)
 
-                Text(
-                    text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.extraLight,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .width(150.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.colors.text.extraLight,
+                    )
+                }
             }
         }
     }

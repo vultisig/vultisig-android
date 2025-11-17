@@ -5,12 +5,14 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel.Companion.MAX_LENGTH_REFERRAL_CODE
-import com.vultisig.wallet.ui.models.referral.ReferralViewModel.Companion.MIN_LENGTH_REFERRAL_CODE
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +24,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal data class EditExternalReferralUiState(
-    val referralMessage: String? = null,
+    val referralMessage: UiText? = null,
     val referralMessageState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
 )
 
@@ -48,7 +50,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
                 .textAsFlow()
                 .onEach {
                     if (state.value.referralMessage != null) {
-                        if (it.length in MIN_LENGTH_REFERRAL_CODE..MAX_LENGTH_REFERRAL_CODE) {
+                        if (it.length <= MAX_LENGTH_REFERRAL_CODE) {
                             state.update { current ->
                                 current.copy(
                                     referralMessage = null,
@@ -75,7 +77,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
     fun onSaveReferral() {
         viewModelScope.launch {
             val referralCode = referralCodeTextFieldState.text.toString().trim()
-            validateReferralCode(referralCode)?.let { validationError ->
+            validateMaxReferral(referralCode)?.let { validationError ->
                 state.update {
                     it.copy(
                         referralMessage = validationError,
@@ -89,6 +91,19 @@ internal class EditExternalReferralViewModel @Inject constructor(
     }
 
     private suspend fun checkAndSaveReferredCode(referralCode: String) {
+        if (referralCode.isEmpty()) {
+            withContext(Dispatchers.IO) {
+                referralCodeRepository.saveExternalReferral(vaultId, null)
+            }
+            state.update {
+                it.copy(
+                    referralMessage = R.string.referral_code_removed_successfully.asUiText(),
+                    referralMessageState = VsTextInputFieldInnerState.Success,
+                )
+            }
+            return
+        }
+
         runCatching {
             withContext(Dispatchers.IO) {
                 thorChainApi.existsReferralCode(referralCode)
@@ -98,9 +113,9 @@ internal class EditExternalReferralViewModel @Inject constructor(
                 withContext(Dispatchers.IO) {
                     referralCodeRepository.saveExternalReferral(vaultId, referralCode)
                 }
-                "Referral code successfully linked" to VsTextInputFieldInnerState.Success
+                R.string.referral_code_linked_successfully.asUiText() to VsTextInputFieldInnerState.Success
             } else {
-                "Referral code does not exist" to VsTextInputFieldInnerState.Error
+                R.string.referral_external_not_linked.asUiText() to VsTextInputFieldInnerState.Error
             }
             state.update {
                 it.copy(
@@ -111,7 +126,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
         }.onFailure {
             state.update {
                 it.copy(
-                    referralMessage = "Failed to check referral code",
+                    referralMessage = R.string.referral_external_not_failed.asUiText(),
                     referralMessageState = VsTextInputFieldInnerState.Error,
                 )
             }

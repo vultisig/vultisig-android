@@ -1,11 +1,7 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -43,11 +37,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MoreInfoBox
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -65,6 +59,7 @@ import com.vultisig.wallet.ui.models.referral.FeesReferral
 import com.vultisig.wallet.ui.models.referral.ReferralError
 import com.vultisig.wallet.ui.models.referral.SearchStatusType
 import com.vultisig.wallet.ui.models.referral.isError
+import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -84,6 +79,8 @@ internal fun ReferralCreateScreen(
         onCreateReferral = model::onCreateReferralCode,
         onCleanReferralClick = model::onCleanReferralClick,
         onDismissError = model::onDismissError,
+        onToggleInfoBox = { model.setInfoBoxVisibility(!state.showInfoBox) },
+        onHideInfoBox = { model.setInfoBoxVisibility(false) },
     )
 }
 
@@ -98,9 +95,9 @@ private fun ReferralCreateScreen(
     onCreateReferral: () -> Unit,
     onCleanReferralClick: () -> Unit,
     onDismissError: () -> Unit,
+    onToggleInfoBox: () -> Unit,
+    onHideInfoBox: () -> Unit,
 ) {
-    val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
-    val statusBarHeightDp = with(LocalDensity.current) { statusBarHeightPx.toDp() }
 
     if (state.error != null) {
         val message = when (state.error) {
@@ -116,30 +113,17 @@ private fun ReferralCreateScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_create_create_referral),
-                onBackClick = onBackPressed,
-                iconRight = R.drawable.ic_info,
-            )
-            AnimatedVisibility(
-                visible = false,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                MoreInfoBox(
-                    text = stringResource(R.string.referral_create_info_content),
-                    title = stringResource(R.string.referral_create_info_title),
-                    modifier = Modifier
-                        .padding(start = 62.dp, end = 8.dp)
-                        .offset(y = statusBarHeightDp)
-                        .wrapContentSize()
-                        .clickable(onClick = {})
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Theme.colors.backgrounds.primary,
+            topBar = {
+                VsTopAppBar(
+                    title = stringResource(R.string.referral_create_create_referral),
+                    onBackClick = onBackPressed,
+                    iconRight = R.drawable.ic_info,
+                    onIconRightClick = onToggleInfoBox,
                 )
-            }
-        },
+            },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -206,7 +190,7 @@ private fun ReferralCreateScreen(
                         Text(
                             color = Theme.colors.text.extraLight,
                             style = Theme.brockmann.body.s.medium,
-                            text = "Status",
+                            text = stringResource(R.string.referral_create_status),
                             textAlign = TextAlign.Start,
                         )
 
@@ -311,9 +295,15 @@ private fun ReferralCreateScreen(
                     VsButtonState.Disabled
                 },
                 onClick = onCreateReferral,
-            )
-        }
-    )
+                )
+            }
+        )
+
+        ShowInfoDialog(
+            isVisible = state.showInfoBox,
+            onHideInfoBox = onHideInfoBox,
+        )
+    }
 }
 
 private fun CreateReferralUiState.getFees() =
@@ -336,6 +326,30 @@ private fun CreateReferralUiState.getInnerState() =
     }
 
 @Composable
+private fun ShowInfoDialog(
+    isVisible: Boolean,
+    onHideInfoBox: () -> Unit,
+) {
+    val statusBarHeightPx = WindowInsets.statusBars.getTop(LocalDensity.current)
+    HintBox(
+        isVisible = isVisible,
+        message = stringResource(R.string.referral_create_info_content),
+        title = stringResource(R.string.referral_create_info_title),
+        onDismissClick = onHideInfoBox,
+        offset = IntOffset(
+            x = 0, y = statusBarHeightPx,
+        ),
+        pointerAlignment = Alignment.End,
+        modifier = Modifier
+            .padding(
+                start = 62.dp,
+                end = 8.dp,
+                top = 8.dp
+            )
+    )
+}
+
+@Composable
 private fun SearchReferralTag(
     type: SearchStatusType,
 ) {
@@ -343,7 +357,7 @@ private fun SearchReferralTag(
         SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_invalid))
         SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, stringResource(R.string.referral_create_available))
         SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_taken))
-        else -> Pair(Theme.colors.alerts.error, "Unknown")
+        else -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_unknown))
     }
 
     Box(
@@ -371,6 +385,7 @@ private fun SearchReferralTag(
 @Composable
 fun CounterYearExpiration(
     count: Int,
+    defaultInitCounter: Int = 1,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
 ) {
@@ -379,9 +394,9 @@ fun CounterYearExpiration(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = { if (count != 1) onDecrement() },
+            onClick = { if (count != defaultInitCounter) onDecrement() },
             shape = RoundedCornerShape(12.dp),
-            enabled = count != 1,
+            enabled = count != defaultInitCounter,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Theme.colors.backgrounds.secondary,
                 contentColor = Theme.colors.text.primary,
@@ -482,11 +497,49 @@ internal fun EstimatedNetworkFee(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-internal fun SwapFormScreenPreview() {
+private fun ReferralCreateScreenPreview() {
+    val searchTextFieldState = TextFieldState("VULTISIG-REF")
+    
     ReferralCreateScreen(
-        state = CreateReferralUiState(),
+        state = CreateReferralUiState(
+            searchStatus = SearchStatusType.SUCCESS,
+            yearExpiration = 2,
+            formattedYearExpiration = "December 31, 2026",
+            fees = FeesReferral.Result(
+                registrationFeesToken = "0.02 RUNE",
+                registrationFeesPrice = "$1.50",
+                costFeesToken = "0.04 RUNE",
+                costFeesTokenAmount = "0.04",
+                costFeesPrice = "$3.00"
+            ),
+            error = null
+        ),
+        searchTextFieldState = searchTextFieldState,
+        onBackPressed = {},
+        onSearchClick = {},
+        onAddClick = {},
+        onSubtractClick = {},
+        onCreateReferral = {},
+        onCleanReferralClick = {},
+        onDismissError = {},
+        onToggleInfoBox = {},
+        onHideInfoBox = {},
+    )
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun ReferralCreateScreenLoadingPreview() {
+    ReferralCreateScreen(
+        state = CreateReferralUiState(
+            searchStatus = SearchStatusType.IS_SEARCHING,
+            yearExpiration = 1,
+            formattedYearExpiration = "December 31, 2025",
+            fees = FeesReferral.Loading,
+            error = null
+        ),
         searchTextFieldState = TextFieldState(),
         onBackPressed = {},
         onSearchClick = {},
@@ -495,6 +548,8 @@ internal fun SwapFormScreenPreview() {
         onCreateReferral = {},
         onCleanReferralClick = {},
         onDismissError = {},
+        onToggleInfoBox = {},
+        onHideInfoBox = {},
     )
 }
 

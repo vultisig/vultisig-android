@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.common.stripHexPrefix
@@ -10,7 +11,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
 import kotlinx.coroutines.async
@@ -92,17 +92,38 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
-                thorApi.getBalance(address)
-                    .mapNotNull {
-                        val denom = it.denom
-                        var symbol = ""
+                val balances = thorApi.getBalance(address)
+                val metaCache = mutableMapOf<String, DenomMetadata?>()
+                balances.mapNotNull {
 
+                    val metadata = metaCache.getOrPut(it.denom) {
+                        thorApi.getDenomMetaFromLCD(it.denom)
+                    }
+
+                    var decimal: Int = 8
+                    val denom = if (metadata != null) {
+                        decimal = decimalsFromMeta(metadata) ?: decimal
+                        var denom = deriveTicker(
+                            it.denom,
+                            metadata
+                        )
+                        denom
+                    } else {
+                        it.denom
+                    }
+                    var symbol = ""
+
+                    if (denom == it.denom) {
                         if (denom.contains(".")) {
                             val parts = denom.split(".")
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
                             }
-                        } else if (denom.startsWith("x/nami-index-nav", true)) {
+                        } else if (denom.startsWith(
+                                "x/nami-index-nav",
+                                true
+                            )
+                        ) {
                             // Unfortunately, there is no "yrune" or "tcy" in the denom,
                             // so the only option is to map it manually with actual contract address
                             symbol = when {
@@ -110,13 +131,16 @@ internal class TokenRepositoryImpl @Inject constructor(
                                 denom.lowercase().contains(YTCY_CONTRACT.lowercase()) -> "YTCY"
                                 else -> denom
                             }
-                        } else if (denom.startsWith("x/",true)) {
+                        } else if (denom.startsWith(
+                                "x/",
+                                true
+                            )
+                        ) {
                             val parts = denom.split("/")
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
                             }
-                        }
-                        else if (denom.contains("-")) {
+                        } else if (denom.contains("-")) {
                             val parts = denom.split("-")
                             if (parts.size >= 2) {
                                 symbol = parts[1].uppercase()
@@ -124,24 +148,27 @@ internal class TokenRepositoryImpl @Inject constructor(
                         } else {
                             symbol = denom.uppercase()
                         }
-
-                        if (denom == "rune") {
-                            null
-                        } else {
-                            Coin(
-                                contractAddress = it.denom,
-                                chain = chain,
-                                ticker = symbol,
-                                logo = symbol,
-                                decimal = 8,
-                                isNativeToken = false,
-                                priceProviderID = "",
-
-                                address = "",
-                                hexPublicKey = "",
-                            )
-                        }
+                    }else{
+                        symbol=denom.uppercase()
                     }
+
+                    if (denom == "rune") {
+                        null
+                    } else {
+                        Coin(
+                            contractAddress = it.denom,
+                            chain = chain,
+                            ticker = symbol,
+                            logo = symbol,
+                            decimal = decimal,
+                            isNativeToken = false,
+                            priceProviderID = "",
+                            address = "",
+                            hexPublicKey = "",
+                        )
+                    }
+                }
+
             }
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
@@ -159,12 +186,48 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
                 if (contractsWithBalance.isEmpty()) return emptyList()
 
-                delay(1000) //TODO remove when we will use api without rate limit
+                delay(1000) //should be removed when we use api without rate limit
 
                 val oneInchTokensWithBalance =
                     oneInchApi.getTokensByContracts(chain, contractsWithBalance)
                 return oneInchToCoins(oneInchTokensWithBalance,chain)
             }
+        }
+    }
+
+    private fun decimalsFromMeta(metadata: DenomMetadata): Int? {
+        val denomUnits = metadata.denomUnits ?: return null
+        metadata.symbol?.let { symbol ->
+            denomUnits.firstOrNull { it.denom == symbol && it.exponent != 0 }?.let { return it.exponent }
+        }
+        metadata.display?.let { display ->
+            denomUnits.firstOrNull { it.denom == display && it.exponent != 0 }?.let { return it.exponent }
+        }
+        return denomUnits.maxByOrNull { it.exponent ?: 0 }?.exponent
+    }
+
+    private fun deriveTicker(denom: String, metadata: DenomMetadata): String {
+        metadata.symbol?.takeIf { it.isNotEmpty() }?.let { return it }
+
+        metadata.display?.takeIf { it.isNotEmpty() }?.let { return it }
+
+        return when {
+            denom.startsWith("x/staking-") -> {
+                val withoutPrefix = denom.removePrefix("x/staking-")
+                "S${withoutPrefix.uppercase()}"
+            }
+            denom.startsWith("x/") -> {
+                denom.split("/").lastOrNull() ?: denom
+            }
+            denom.startsWith("factory/") -> {
+                val lastComponent = denom.split("/").lastOrNull() ?: denom
+                if (lastComponent.startsWith("u") && lastComponent.length > 1) {
+                    lastComponent.drop(1)
+                } else {
+                    lastComponent
+                }
+            }
+            else -> denom
         }
     }
 
@@ -294,7 +357,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
 
-    private val enabledByDefaultTokens = listOf(Tokens.tcy)
+    private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY)
         .groupBy { it.chain }
 
     companion object {

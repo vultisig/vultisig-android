@@ -15,6 +15,8 @@ interface AddressBookRepository {
     suspend fun add(entry: AddressBookEntry)
 
     suspend fun delete(chainId: String, address: String)
+
+    suspend fun entryExists(chainId: String, address: String): Boolean
 }
 
 internal class AddressBookRepositoryImpl @Inject constructor(
@@ -35,6 +37,11 @@ internal class AddressBookRepositoryImpl @Inject constructor(
     override suspend fun delete(chainId: String, address: String) {
         addressBookEntryDao.delete(chainId, address)
     }
+
+    override suspend fun entryExists(chainId: String, address: String): Boolean {
+        return addressBookEntryDao.entryExists(chainId, address)
+    }
+
 
     private fun AddressBookEntryEntity.toAddressBookEntry() =
         AddressBookEntry(

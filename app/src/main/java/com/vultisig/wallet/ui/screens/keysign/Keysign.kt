@@ -26,10 +26,12 @@ internal fun KeysignView(
     transactionLink: String,
     approveTransactionLink: String,
     onComplete: () -> Unit,
+    onAddToAddressBook: () -> Unit,
     onBack: () -> Unit = {},
     progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean = false,
+    showSaveToAddressBook: Boolean,
 ) {
     val text = when (state) {
         is KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
@@ -71,6 +73,8 @@ internal fun KeysignView(
                             onBack = onBack,
                             tx = transactionTypeUiModel.toUiTransactionInfo(),
                             showToolbar = showToolbar,
+                            onAddToAddressBook = onAddToAddressBook,
+                            showSaveToAddressBook = showSaveToAddressBook,
                         )
                     }
                     else -> {
@@ -124,5 +128,7 @@ private fun KeysignPreview() {
             )
         ),
         onComplete = {},
+        onAddToAddressBook = {},
+        showSaveToAddressBook = true,
     )
 }

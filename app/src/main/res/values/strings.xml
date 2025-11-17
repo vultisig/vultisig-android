@@ -1,6 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="deposit_option_bond">Bond</string>
     <string name="deposit_option_unbond">Unbond</string>
+    <string name="total_bonded_rune">Total Bonded Rune</string>
+    <string name="bonded_label">Bonded: </string>
+    <string name="bonded_amount">Bonded: %s</string>
+    <string name="bond_to_node">Bond to Node</string>
+    <string name="node_address">Address</string>
+    <string name="node_address_formatted">Address: %s</string>
+    <string name="apy">APY</string>
+    <string name="unbond">Unbond</string>
+    <string name="bond">Bond</string>
+    <string name="active_nodes">Active Nodes</string>
+    <string name="next_churn">Next Churn</string>
+    <string name="next_award">Next award</string>
+    <string name="next_payout">Next Payout</string>
+    <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>
     <string name="deposit_option_stake">Stake</string>
     <string name="deposit_option_unstake">Unstake</string>
@@ -9,6 +23,7 @@
     <string name="deposit_option_switch">Switch</string>
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_withdraw_ruji">Withdraw RUJI</string>
+    <string name="withdraw_amount">Withdraw %s</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
     <string name="deposit_option_stake_ruji">Stake RUJI</string>
@@ -42,6 +57,47 @@
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
     <string name="vault_settings_security_title">On-chain Security</string>
     <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
+    <string name="vault_settings_discounts">$VULT Discount Tiers</string>
+    <string name="vault_tier_bronze">Bronze</string>
+    <string name="vault_tier_silver">Silver</string>
+    <string name="vault_tier_gold">Gold</string>
+    <string name="vault_tier_platinum">Platinum</string>
+    <string name="vault_tier_bronze_discount">Discount: 10bps</string>
+    <string name="vault_tier_silver_discount">Discount: 20bps</string>
+    <string name="vault_tier_gold_discount">Discount: 30bps</string>
+    <string name="vault_tier_platinum_discount">Discount: 35bps</string>
+    <string name="vault_tier_hold">Hold</string>
+    <string name="vault_tier_unlock">Unlock Tier</string>
+    <string name="vault_tier_active">Active</string>
+    <string name="vault_tier_unlock_bronze_part1">Unlock </string>
+    <string name="vault_tier_unlock_bronze_part2">Bronze</string>
+    <string name="vault_tier_unlock_bronze_part3"> Tier</string>
+    <string name="vault_tier_unlock_silver_part1">Unlock </string>
+    <string name="vault_tier_unlock_silver_part2">Silver</string>
+    <string name="vault_tier_unlock_silver_part3"> Tier</string>
+    <string name="vault_tier_unlock_gold_part1">Unlock </string>
+    <string name="vault_tier_unlock_gold_part2">Gold</string>
+    <string name="vault_tier_unlock_gold_part3"> Tier</string>
+    <string name="vault_tier_unlock_platinum_part1">Unlock </string>
+    <string name="vault_tier_unlock_platinum_part2">Platinum</string>
+    <string name="vault_tier_unlock_platinum_part3"> Tier</string>
+    <string name="vault_tier_description">Hold $VULT to unlock lower trading fees.</string>
+    <string name="vault_tier_bronze_description">By holding 1,000 $VULT, you\'ll unlock the Bronze Tier and receive a 10 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_silver_description">By holding 2,500 $VULT, you\'ll unlock the Silver Tier and receive a 20 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_gold_description">By holding 5,000 $VULT, you\'ll unlock the Gold Tier and receive a 30 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_platinum_description">By holding 10,000 $VULT, you\'ll unlock the Platinum Tier and receive a 35 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_bronze_description_part1">By holding 1,000 $VULT, you\'ll unlock the Bronze Tier and receive a </string>
+    <string name="vault_tier_bronze_description_part2">10 bps trading fee discount</string>
+    <string name="vault_tier_bronze_description_part3"> on all swaps.</string>
+    <string name="vault_tier_silver_description_part1">By holding 2,500 $VULT, you\'ll unlock the Silver Tier and receive a </string>
+    <string name="vault_tier_silver_description_part2">20 bps trading fee discount</string>
+    <string name="vault_tier_silver_description_part3"> on all swaps.</string>
+    <string name="vault_tier_gold_description_part1">By holding 5,000 $VULT, you\'ll unlock the Gold Tier and receive a </string>
+    <string name="vault_tier_gold_description_part2">30 bps trading fee discount</string>
+    <string name="vault_tier_gold_description_part3"> on all swaps.</string>
+    <string name="vault_tier_platinum_description_part1">By holding 10,000 $VULT, you\'ll unlock the Platinum Tier and receive a </string>
+    <string name="vault_tier_platinum_description_part2">35 bps trading fee discount</string>
+    <string name="vault_tier_platinum_description_part3"> on all swaps.</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
@@ -104,7 +160,7 @@
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_complete">Complete</string>
     <string name="transaction_done_form_title">Transaction</string>
-    <string name="home_screen_title">Vaults</string>
+    <string name="vault_list_vaults_list">Vaults</string>
     <string name="home_screen_add_new_vault">+ Add New Vault</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
@@ -119,7 +175,9 @@
     <string name="feature_item_learn_more">Learn more</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
-    <string name="vault_detail_screen_eddsa">EDDSA Key</string>
+    <string name="vault_detail_screen_eddsa">EdDSA Key</string>
+    <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
+    <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
@@ -143,32 +201,32 @@
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
-    <string name="s_of_s_vault">%1$s of %2$s Vault Setup</string>
+    <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_edit_your_vault_name">Edit your vault name</string>
     <string name="rename_vault_screen_vault_name">Vault name</string>
     <string name="rename_vault_screen_continue">Continue</string>
-    <string name="faq_settings_q1">Do I need register?</string>
-    <string name="faq_settings_q2">Can I recover my assets if I lose a device?</string>
-    <string name="faq_settings_q3">How does Vultisig make money?</string>
-    <string name="faq_settings_q4">How does the crypto vault app secure my cryptocurrencies?</string>
-    <string name="faq_settings_q5">What cryptocurrencies are supported by Vultisig?</string>
-    <string name="faq_settings_q6">How do I set up my crypto vault?</string>
-    <string name="faq_settings_a1">No, there are no registration requirements.</string>
-    <string name="faq_settings_a2">You can back-up your vault by exporting the vault shares.</string>
-    <string name="faq_settings_a3">Vultisig only charges a flat fee on swap and bridging. There are no other hidden fees.</string>
-    <string name="faq_settings_a4">Vultisig is audited, open-source and uses a very well-proven TSS library.</string>
-    <string name="faq_settings_a5">All assets supported by Trust Wallet Core are supported in Vultisig.</string>
-    <string name="faq_settings_a6">Get 2 or more of your devices together and connected to your local WiFi, Hotspot or internet. Then simply pair them via QR code and create a new vault. You can then send funds in.</string>
+    <string name="faq_settings_q1">What is Vultisig?</string>
+    <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
+    <string name="faq_settings_q3">Can I recover my assets if I lose a device?</string>
+    <string name="faq_settings_q4">How is Vultisig used?</string>
+    <string name="faq_settings_q5">What are the fees and costs?</string>
+    <string name="faq_settings_q6">What cryptocurrencies are supported by Vultisig?</string>
+    <string name="faq_settings_a1">It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices.</string>
+    <string name="faq_settings_a2">Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking.</string>
+    <string name="faq_settings_a3">Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets.</string>
+    <string name="faq_settings_a4">Vultisig securely stores and manages digital assets. All actions, such as sending or swapping, require the threshold of devices to sign transactions.</string>
+    <string name="faq_settings_a5">Vultisig is free to use. Only standard network fees apply to sending. And for swaps and bridges, there\'s a 0.5% (50 bps) fee.</string>
+    <string name="faq_settings_a6">Vultisig supports major cryptocurrencies and tokens, with over 30 chains and their tokens, currently available.</string>
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_src_amount_hint">Enter Amount</string>
     <string name="swap_form_estimated_fees_title">Swap fees</string>
     <string name="swap_form_dst_token_title">To</string>
-    <string name="swap_screen_title">Swap</string>
+    <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
-    <string name="swap_form_vault" translatable="false">Vault</string>
+    <string name="swap_form_vault">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
     <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
@@ -198,6 +256,7 @@
     <string name="vault_name_too_long_error">Vault name is too long</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
+    <string name="insufficient_utxos_error">Not enough available UTXOs to cover the selected amount. Please add more funds or reduce the amount you\'re sending</string>
     <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
     <string name="peer_discovery_hint_connect_to_internet">Connect all devices to the same Network with Vultisig open</string>
@@ -219,7 +278,7 @@
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_screen_password_error">Password is not correct.</string>
     <string name="backup_password_optional_password_protection">Optional password protection of your Vault</string>
-    <string name="backup_password_screen_save">Save</string>
+    <string name="add_vault_save">Save</string>
     <string name="backup_password_screen_enter_password">Enter Password</string>
     <string name="import_file_screen_enter_password">Enter Password</string>
     <string name="backup_password_screen_verify_password">Verify password</string>
@@ -236,7 +295,7 @@
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
-    <string name="verify_deposit_gas_title" translatable="false">Gas</string>
+    <string name="verify_deposit_gas_title">Gas</string>
     <string name="token_selection_screen_custom_token">Custom Token</string>
     <string name="custom_token_find_your_custom_token">Find Your Custom Token</string>
     <string name="custom_token_enter_contract_address">Enter Contract Address</string>
@@ -245,7 +304,7 @@
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
     <string name="deposit_form_shares_title">Shares (Balance: %1$s)</string>
     <string name="deposit_form_rewards_title">Pending Rewards (Balance: %1$s)</string>
-    <string name="deposit_form_amount_title_without_balance" translatable="false">Amount</string>
+    <string name="deposit_form_amount_title_without_balance">Amount</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
     <string name="vault_settings_enable_biometrics_save">Save</string>
@@ -296,13 +355,13 @@
     <string name="reshare_start_screen_start_reshare">Start Reshare</string>
     <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
     <string name="create_folder_title">Create Folder</string>
-    <string name="create_folder_name">Folder Name</string>
+    <string name="add_folder_folder_name_title">Folder Name</string>
     <string name="create_folder_create">Create</string>
 
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
-    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security</string>
+    <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security provided by Blockaid.</string>
     <string name="vault_settings_security_screen_title">Security</string>
     <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
     <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>
@@ -318,17 +377,7 @@
     <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
-    <string name="folders_list_title">Folders</string>
-
-    <!--    fast&active vaults are temporarily disabled -->
-    <!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
-    <!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
-    <!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
-    <!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
-    <!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
-    <!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
-    <!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
-
+    <string name="vault_list_folders_list">Folders</string>
     <string name="keygen_email_continue_button">Continue</string>
     <string name="keygen_email_caption">Enter your email to receive your backup</string>
     <string name="create_folder">Create Folder</string>
@@ -341,7 +390,7 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t">Share %1$dof%2$d</string>
+    <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">Share %1$d of %2$d</string>
     <string name="vault_list_fast_badge">Fast</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
@@ -351,10 +400,9 @@
     <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
-
     <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
     <string name="naming_vault_placeholder_secure_vault">Secure Vault</string>
-    <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
+    <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="scan_qr_upload_from_gallery">Upload QR</string>
@@ -377,20 +425,20 @@
     <string name="vault_password_hint_to_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
-    <string name="settings_screen_register_your_vaults">Register your Vaults</string>
+    <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
     <string name="register_vault_screen_title">Register Vault</string>
-    <string name="register_vault_screen_step_3">3. Upload your Vault QR Code</string>
-    <string name="register_vault_screen_step_4">4. Track your VULTIES (Vault Points) !</string>
-    <string name="register_vault_screen_step_2_go_to">2. Go to</string>
-    <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1">"1. Save your Vault QR"</string>
+    <string name="register_vault_screen_step_3">Upload your Vault QR Code</string>
+    <string name="register_vault_screen_step_4">Track your VULTIES (Vault Points) !</string>
+    <string name="register_vault_screen_step_2_go_to">Go to</string>
+    <string name="register_vault_screen_step_2_vultisig_web">Vultisig Web</string>
+    <string name="register_vault_screen_step_1">"Save your Vault QR"</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
     <string name="send_form_gas_token_balance">Gas token balance</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
-    <string name="register_vault_screen_save_qr_code">Save QR Code</string>
+    <string name="register_vault_screen_save_qr_code">Save Vault QR</string>
     <string name="verify_swap_screen_total_fees">Max. Total Fees</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
@@ -416,195 +464,194 @@
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
 
-    <!-- TODO needs translation-->
-    <string name="verify_sign_message_method_field_title" translatable="false">Method</string>
-    <string name="signing_error_blockhash_not_found" translatable="false">Transaction time out due to slow signing.\nPlease try again.</string>
-    <string name="verify_sign_message_message_field_title" translatable="false">Message</string>
-    <string name="sign_message_form_method_field_title" translatable="false">Method</string>
-    <string name="sign_message_form_method_field_hint" translatable="false">Signing method</string>
-    <string name="sign_message_for_message_field_title" translatable="false">Message</string>
-    <string name="sign_message_form_message_field_hint" translatable="false">Message to sign</string>
-    <string name="sign_message_sign_screen_title" translatable="false">Sign message</string>
-    <string name="vault_settings_sign_message_title" translatable="false">Sign</string>
-    <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
-    <string name="swap_screen_invalid_specific_and_utxo" translatable="false">Specific calculation failed</string>
-    <string name="verify_sign_message_message_field_signature" translatable="false">Signature</string>
-    <string name="secret_enable_dkls" translatable="false">Enable DKLS</string>
-    <string name="dialog_default_error_body" translatable="false">Something went wrong</string>
-    <string name="address_bookmark_error_invalid_address" translatable="false">This address is not valid for %s</string>
-    <string name="send_form_ripple_reaping_warning" translatable="false">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
-    <string name="error_invalid_chain" translatable="false">Chain is invalid</string>
-    <string name="send_error_invalid_plan_fee" translatable="false">Invalid Plan Fee</string>
-    <string name="send_error_same_address" translatable="false">The to address must be different from the from address</string>
-    <string name="select_vault_type_secure" translatable="false">Secure</string>
-    <string name="select_vault_type_fast" translatable="false">Fast</string>
+    <string name="verify_sign_message_method_field_title">Method</string>
+    <string name="signing_error_transaction_timeout">Transaction time out due to slow signing. Please try again.</string>
+    <string name="verify_sign_message_message_field_title">Message</string>
+    <string name="sign_message_form_method_field_title">Method</string>
+    <string name="hint_signing_method" >Signing method</string>
+    <string name="verify_sign_message_signing_method" >Signing method</string>
+    <string name="hint_message_to_sign" >Message to sign</string>
+    <string name="verify_sign_message_message_sign" >Message to sign</string>
+    <string name="sign_message_sign_screen_title">Sign message</string>
+    <string name="vault_settings_sign_message_title">Sign</string>
+    <string name="vault_settings_sign_message_description">Sign custom message</string>
+    <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>
+    <string name="verify_sign_message_message_field_signature">Signature</string>
+    <string name="secret_enable_dkls">Enable DKLS</string>
+    <string name="dialog_default_error_body">Something went wrong</string>
+    <string name="address_bookmark_error_invalid_address">This address is not valid for %s</string>
+    <string name="send_form_ripple_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="error_invalid_chain">Chain is invalid</string>
+    <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>
+    <string name="send_error_same_address">The to address must be different from the from address</string>
+    <string name="select_vault_type_secure">Secure</string>
+    <string name="select_vault_type_fast">Fast</string>
 
-    <string name="onboarding_intro_preview_part_1" translatable="false">Say goodbye to</string>
-    <string name="onboarding_intro_preview_part_2" translatable="false">seed phrases</string>
-    <string name="onboarding_intro_back" translatable="false">Back</string>
-    <string name="onboarding_desc_page_1_part_1" translatable="false">Say hello to</string>
-    <string name="onboarding_desc_page_1_part_2" translatable="false">vault shares,</string>
-    <string name="onboarding_desc_page_1_part_3" translatable="false">your new</string>
-    <string name="onboarding_desc_page_1_part_4" translatable="false">recovery method</string>
-    <string name="onboarding_desc_page_2_part_1" translatable="false">They’re</string>
-    <string name="onboarding_desc_page_2_part_2" translatable="false">split into parts</string>
-    <string name="onboarding_desc_page_2_part_3" translatable="false">to increase security and</string>
-    <string name="onboarding_desc_page_2_part_4" translatable="false">remove the single point-of-failure</string>
-    <string name="onboarding_desc_page_3_part_1" translatable="false">Each device</string>
-    <string name="onboarding_desc_page_3_part_2" translatable="false">in your vault holds</string>
-    <string name="onboarding_desc_page_3_part_3" translatable="false">one vault share</string>
-    <string name="onboarding_desc_page_4_part_1" translatable="false">Recover your vault even </string>
-    <string name="onboarding_desc_page_4_part_2" translatable="false">if a device is lost or damaged</string>
-    <string name="onboarding_desc_page_5_part_1" translatable="false">Always back up each vault share</string>
-    <string name="onboarding_desc_page_5_part_2" translatable="false">separately in a</string>
-    <string name="onboarding_desc_page_5_part_3" translatable="false">different location</string>
-    <string name="onboarding_desc_page_6_part_1" translatable="false">These shares collaborate to</string>
-    <string name="onboarding_desc_page_6_part_2" translatable="false">unlock your vault</string>
-    <string name="onboarding_summary_button" translatable="false">Create your vault</string>
-    <string name="onboarding_summary_check" translatable="false">I have read and understand what to do</string>
-    <string name="onboarding_security_backup_title" translatable="false">Vault Overview</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds %s shares,</string>
-    <string name="onboarding_security_backup_desc_page_1_part_2" translatable="false">each device needs its own backup.</string>
-    <string name="onboarding_security_backup_desc_page_2_part_1" translatable="false">Back up</string>
-    <string name="onboarding_security_backup_desc_page_2_part_2" translatable="false">this vault share</string>
-    <string name="onboarding_security_backup_desc_page_2_part_3" translatable="false">to ensure access, preferably</string>
-    <string name="onboarding_security_backup_desc_page_2_part_4" translatable="false">online.</string>
+    <string name="onboarding_intro_preview_part_1">Say goodbye to</string>
+    <string name="onboarding_intro_preview_part_2">seed phrases</string>
+    <string name="onboarding_intro_back">Back</string>
+    <string name="onboarding_desc_page_1_part_1">Say hello to</string>
+    <string name="onboarding_desc_page_1_part_2">vault shares,</string>
+    <string name="onboarding_desc_page_1_part_3">your new</string>
+    <string name="onboarding_desc_page_1_part_4">recovery method</string>
+    <string name="onboarding_desc_page_2_part_1">They’re</string>
+    <string name="onboarding_desc_page_2_part_2">split into parts</string>
+    <string name="onboarding_desc_page_2_part_3">to increase security and</string>
+    <string name="onboarding_desc_page_2_part_4">remove the single point-of-failure</string>
+    <string name="onboarding_desc_page_3_part_1">Each device</string>
+    <string name="onboarding_desc_page_3_part_2">in your vault holds</string>
+    <string name="onboarding_desc_page_3_part_3">one vault share</string>
+    <string name="onboarding_desc_page_4_part_1">Recover your vault even </string>
+    <string name="onboarding_desc_page_4_part_2">if a device is lost or damaged</string>
+    <string name="onboarding_desc_page_5_part_1">Always back up each vault share</string>
+    <string name="onboarding_desc_page_5_part_2">separately in a</string>
+    <string name="onboarding_desc_page_5_part_3">different location</string>
+    <string name="onboarding_desc_page_6_part_1">These shares collaborate to</string>
+    <string name="onboarding_desc_page_6_part_2">unlock your vault</string>
+    <string name="onboarding_summary_button">Create your vault</string>
+    <string name="onboarding_summary_check">I have read and understand what to do</string>
+    <string name="onboarding_security_backup_title">Vault Overview</string>
+    <string name="onboarding_security_backup_desc_page_1_part_1">Your vault holds %s shares,</string>
+    <string name="onboarding_security_backup_desc_page_1_part_2">each device needs its own backup.</string>
+    <string name="onboarding_security_backup_desc_page_2_part_1">Back up</string>
+    <string name="onboarding_security_backup_desc_page_2_part_2">this vault share</string>
+    <string name="onboarding_security_backup_desc_page_2_part_3">to ensure access, preferably</string>
+    <string name="onboarding_security_backup_desc_page_2_part_4">online.</string>
 
-    <string name="onboarding_fast_backup_desc_page_1_part_1" translatable="false">Your vault holds 2 shares,</string>
-    <string name="onboarding_fast_backup_desc_page_1_part_2" translatable="false">back them up  now</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_1" translatable="false">Part 1 of the vault shares will be</string>
-    <string name="onboarding_fast_backup_desc_page_2_part_2" translatable="false">held by the server.</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_1" translatable="false">It is sent to you for complete self-custody!</string>
-    <string name="onboarding_fast_backup_desc_page_3_part_2" translatable="false">Check your e-mail to verify</string>
+    <string name="onboarding_fast_backup_desc_page_1_part_1">Your vault holds 2 shares,</string>
+    <string name="onboarding_fast_backup_desc_page_1_part_2">back them up  now</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_1">Part 1 of the vault shares will be</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_2">held by the server.</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_1">It is sent to you for complete self-custody!</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2">Check your e-mail to verify</string>
 
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_1" translatable="false">We’ve sent you your new server share!</string>
-    <string name="onboarding_fast_backup_migration_desc_page_1_part_2" translatable="false">Check your e-mail to verify</string>
-
-
-    <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
-    <string name="select_vault_type_secure_desc_1" translatable="false">Maximum security with multiple devices</string>
-    <string name="select_vault_type_secure_desc_2" translatable="false">Always accessible with device backups</string>
-    <string name="select_vault_type_secure_desc_3" translatable="false">Secure any amount of assets</string>
-
-    <string name="select_vault_type_fast_title" translatable="false">Quick, 1 device setup</string>
-    <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
-    <string name="select_vault_type_fast_desc_2" translatable="false">Store smaller funds for daily use</string>
-    <string name="select_vault_type_fast_desc_3" translatable="false">Vultiserver co-signs instantly</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_1">We’ve sent you your new server share!</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2">Check your e-mail to verify</string>
 
 
-    <string name="peer_discovery_topbar_title" translatable="false">Scan QR</string>
-    <string name="peer_discovery_action_next_title" translatable="false">Next</string>
-    <string name="peer_discovery_this_device" translatable="false">This Device</string>
-    <string name="peer_discovery_scan_with_n_device" translatable="false">Scan with %1$s device</string>
-    <string name="peer_discovery_waiting_for_devices_action" translatable="false">Waiting on devices...</string>
-    <string name="peer_discovery_devices_n_of_n" translatable="false">Devices (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation" translatable="false">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_code_modal_next" translatable="false">Next</string>
-    <string name="scan_qr_code_modal_scan_the" translatable="false">Scan the</string>
-    <string name="scan_qr_code_modal_qr_code" translatable="false">QR code</string>
-    <string name="create_new_vault_screen_or" translatable="false">OR</string>
-    <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
-    <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
-    <string name="select_vault_type_next" translatable="false">Next</string>
-    <string name="select_vault_type_choose_setup" translatable="false">Choose Setup</string>
+    <string name="select_vault_type_secure_title">Ultimate security</string>
+    <string name="select_vault_type_secure_desc_1">Maximum security with multiple devices</string>
+    <string name="select_vault_type_secure_desc_2">Always accessible with device backups</string>
+    <string name="select_vault_type_secure_desc_3">Secure any amount of assets</string>
+
+    <string name="select_vault_type_fast_title">Quick, 1 device setup</string>
+    <string name="select_vault_type_fast_desc_1">Only 1 device needed</string>
+    <string name="select_vault_type_fast_desc_2">Store smaller funds for daily use</string>
+    <string name="select_vault_type_fast_desc_3">Vultiserver co-signs instantly</string>
 
 
-    <string name="keygen_benefit_1_template" translatable="false">Removing the single-point of failure</string>
-    <string name="keygen_benefit_1_emphasized" translatable="false">Multi-factor security,</string>
-    <string name="keygen_benefit_2_template" translatable="false">giving complete control over your assets</string>
-    <string name="keygen_benefit_2_emphasized" translatable="false">Self-custodial,</string>
-    <string name="keygen_benefit_3_template" translatable="false">Swap your favorite tokens all in one vault</string>
-    <string name="keygen_benefit_3_emphasized" translatable="false">Cross-chain,</string>
-    <string name="keygen_benefit_4_template" translatable="false">on Android, iOS, macOS and Windows</string>
-    <string name="keygen_benefit_4_emphasized" translatable="false">Available</string>
-    <string name="keygen_benefit_5_template" translatable="false">do not get scammed again</string>
-    <string name="keygen_benefit_5_emphasized" translatable="false">A seedless wallet,</string>
+    <string name="peer_discovery_topbar_title">Scan QR</string>
+    <string name="peer_discovery_action_next_title">Next</string>
+    <string name="peer_discovery_this_device">This Device</string>
+    <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
+    <string name="peer_discovery_waiting_for_devices_action">Waiting on devices…</string>
+    <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
+    <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
+    <string name="scan_qr_code_modal_next">Next</string>
+    <string name="scan_qr_code_modal_scan_the">Scan the</string>
+    <string name="scan_qr_code_modal_qr_code">QR code</string>
+    <string name="create_new_vault_screen_or">OR</string>
+    <string name="home_screen_scan_qr_code">Scan QR</string>
+    <string name="create_new_vault_screen_create_new_vault">Create new vault</string>
+    <string name="select_vault_type_next">Next</string>
+    <string name="select_vault_type_choose_setup">Choose Setup</string>
 
-    <string name="keygen_while_you_wait_title" translatable="false">While you wait, Vultisig is...</string>
-    <string name="keygen_top_bar_title" translatable="false">Creating Vault</string>
-    <string name="keygen_step_preparing_vault" translatable="false">Preparing Vault</string>
+
+    <string name="keygen_benefit_1_template">Removing the single-point of failure</string>
+    <string name="keygen_benefit_1_emphasized">Multi-factor security,</string>
+    <string name="keygen_benefit_2_template">giving complete control over your assets</string>
+    <string name="keygen_benefit_2_emphasized">Self-custodial,</string>
+    <string name="keygen_benefit_3_template">Swap your favorite tokens all in one vault</string>
+    <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
+    <string name="keygen_benefit_4_template">on Android, iOS, macOS and Windows</string>
+    <string name="keygen_benefit_4_emphasized">Available</string>
+    <string name="keygen_benefit_5_template">do not get scammed again</string>
+    <string name="keygen_benefit_5_emphasized">A seedless wallet,</string>
+
+    <string name="keygen_while_you_wait_title">While you wait, Vultisig is...</string>
+    <string name="keygen_top_bar_title">Creating Vault</string>
+    <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
-    <string name="keygen_step_generating_eddsa">Generating EDDSA Key</string>
+    <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="reshare_step_generating_ecdsa">Generating ECDSA Key</string>
-    <string name="reshare_step_generating_eddsa">Generating EDDSA Key</string>
+    <string name="reshare_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server">Connecting with server...</string>
-    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a second</string>
-    <string name="peer_discovery_switch_network_mode_want_to_sign_privately" translatable="false">Want to create vault privately?</string>
-    <string name="peer_discovery_switch_network_mode_switch_to_local" translatable="false">Switch to local mode</string>
-    <string name="peer_discovery_switch_network_mode_switch_to_internet" translatable="false">Switch back to internet mode</string>
-    <string name="peer_discovery_local_mode_hint" translatable="false">You’re in local mode</string>
-    <string name="peer_discovery_recommended_devices_hint" translatable="false">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
-    <string name="fast_vault_name_screen_title" translatable="false">Name your vault</string>
-    <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
-    <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>
-    <string name="enter_email_screen_hint" translatable="false">Email</string>
-    <string name="enter_email_screen_desc" translatable="false">This email is only used to send the server backup</string>
-    <string name="fast_vault_password_screen_title" translatable="false">Vultiserver Password</string>
-    <string name="fast_vault_password_screen_hint" translatable="false">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
-    <string name="fast_vault_password_screen_hint_title" translatable="false">More Info</string>
-    <string name="fast_vault_password_screen_warning" translatable="false">Password cannot be reset or recovered</string>
-    <string name="fast_vault_password_screen_error" translatable="false">Passwords do not match</string>
-    <string name="fast_vault_password_screen_next" translatable="false">Next</string>
-    <string name="fast_vault_password_hint_screen_title" translatable="false">Add a optional hint</string>
-    <string name="fast_vault_password_hint_screen_desc" translatable="false">This will be shown in case you forget your password</string>
-    <string name="fast_vault_password_hint_skip" translatable="false">Skip</string>
-    <string name="fast_vault_password_hint_next" translatable="false">Next</string>
-    <string name="fast_vault_password_hint_screen_hint" translatable="false">Enter hint</string>
-    <string name="fast_vault_password_screen_password_hint" translatable="false">Enter password</string>
-    <string name="fast_vault_password_screen_reenter_password_hint" translatable="false">Re-enter password</string>
-    <string name="fast_vault_name_screen_next" translatable="false">Next</string>
-    <string name="enter_email_screen_next" translatable="false">Next</string>
-    <string name="error_view_try_again_button" translatable="false">Try again</string>
-    <string name="error_view_default_title" translatable="false">Something went wrong</string>
-    <string name="error_view_default_description" translatable="false">An error occurred</string>
-    <string name="keygen_vault_created_success_part_1" translatable="false">Vault created</string>
-    <string name="vault_created_success_part_2" translatable="false">successfully</string>
-    <string name="backup_vault_backup_now_button" translatable="false">Backup now</string>
-    <string name="backup_vault_backup_vault_share_title" translatable="false">Backup your vault share online</string>
-    <string name="backup_vault_topbar_title" translatable="false">Backup Vault</string>
-    <string name="vault_backup_screen_paste" translatable="false">Paste</string>
-    <string name="enter_backup_screen_title" translatable="false">Enter the 4 digit code\nwe emailed you</string>
-    <string name="enter_backup_screen_desc" translatable="false">This code will confirm that you’ve received your vault share 1 via email</string>
-    <string name="vault_backup_error_pin" translatable="false">Error verifying code, please re-try</string>
-    <string name="vault_backup_verifying_pin" translatable="false">Verifying code, please wait</string>
-    <string name="vault_backup_screen_change_email" translatable="false">Change email and restart keygen</string>
-    <string name="vault_backup_screen_email_sent_to" translatable="false">Sent to %s.</string>
-    <string name="vault_backup_screen_donot_recieve_email" translatable="false">Didn’t receive an email?</string>
-    <string name="vault_backup_screen_restart_keygen" translatable="false">Restart keygen</string>
-    <string name="vault_backup_summary_start_using_vault" translatable="false">Start using your Vault</string>
-    <string name="transaction_done_form_approve" translatable="false">Approve</string>
-    <string name="vault_settings_migration_title" translatable="false">Migrate</string>
-    <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
-    <string name="swap_swap_button" translatable="false">Swap</string>
-    <string name="swap_swap_button_fill_in_amount" translatable="false">Fill in amount</string>
-    <string name="select_asset_title" translatable="false">Select asset</string>
-    <string name="select_asset_chain_title" translatable="false">Chain</string>
+    <string name="keygen_connecting_with_server_take_a_second">This should only take a second</string>
+    <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Want to create vault privately?</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_internet">Switch back to internet mode</string>
+    <string name="peer_discovery_local_mode_hint">You’re in local mode</string>
+    <string name="peer_discovery_recommended_devices_hint">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
+    <string name="fast_vault_name_screen_title">Name your vault</string>
+    <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
+    <string name="enter_email_screen_title">Enter your e-mail</string>
+    <string name="enter_email_screen_hint">Email</string>
+    <string name="enter_email_screen_desc">This email is only used to send the server backup</string>
+    <string name="fast_vault_password_screen_title">Vultiserver Password</string>
+    <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
+    <string name="fast_vault_password_screen_hint_title">More Info</string>
+    <string name="fast_vault_password_screen_warning">Password cannot be reset or recovered</string>
+    <string name="fast_vault_password_screen_error">Passwords do not match</string>
+    <string name="fast_vault_password_screen_next">Next</string>
+    <string name="fast_vault_password_hint_screen_title">Add a optional hint</string>
+    <string name="fast_vault_password_hint_screen_desc">This will be shown in case you forget your password</string>
+    <string name="fast_vault_password_hint_skip">Skip</string>
+    <string name="fast_vault_password_hint_next">Next</string>
+    <string name="fast_vault_password_hint_screen_hint">Enter hint</string>
+    <string name="fast_vault_password_screen_password_hint">Enter password</string>
+    <string name="fast_vault_password_screen_reenter_password_hint">Re-enter password</string>
+    <string name="fast_vault_name_screen_next">Next</string>
+    <string name="enter_email_screen_next">Next</string>
+    <string name="error_view_try_again_button">Try again</string>
+    <string name="error_view_default_title">Something went wrong</string>
+    <string name="error_view_default_description">An error occurred</string>
+    <string name="keygen_vault_created_success_part_1">Vault created</string>
+    <string name="vault_created_success_part_2">successfully</string>
+    <string name="backup_vault_backup_now_button">Backup now</string>
+    <string name="backup_vault_backup_vault_share_title">Backup your vault share online</string>
+    <string name="backup_vault_topbar_title">Backup Vault</string>
+    <string name="vault_backup_screen_paste">Paste</string>
+    <string name="enter_backup_screen_title">Enter the 4 digit code we emailed you</string>
+    <string name="enter_backup_screen_desc">This code will confirm that you’ve received your vault share 1 via email</string>
+    <string name="vault_backup_error_pin">Error verifying code, please re-try</string>
+    <string name="vault_backup_verifying_pin">Verifying code, please wait</string>
+    <string name="vault_backup_screen_change_email">Change email and restart keygen</string>
+    <string name="vault_backup_screen_email_sent_to">Sent to %s.</string>
+    <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
+    <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
+    <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
+    <string name="transaction_done_form_approve">Approve</string>
+    <string name="vault_settings_migration_title" >Migrate</string>
+    <string name="vault_settings_migration_subtitle">Migrate GG20 vault to DKLS</string>
+    <string name="swap_swap_button">Swap</string>
+    <string name="swap_swap_button_fill_in_amount">Fill in amount</string>
+    <string name="select_asset_title">Select asset</string>
+    <string name="select_asset_chain_title">Chain</string>
     <string name="select_chain_chain_title">Chain</string>
     <string name="select_chain_balance_title">Balance</string>
-    <string name="select_chain_title" translatable="false">Select Chain</string>
-    <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
-    <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
-    <string name="backup_password_request_title" translatable="false">Do you want to add a password to your device vault shares?</string>
-    <string name="backup_password_request_description" translatable="false">We recommend that you do not set a backup password for device vault shares-your data is safe if the backups are properly stored in different locations, which is already a significant protection. Remember, backup passwords can\'t be recovered if you forget them. Your choice!</string>
-    <string name="backup_password_request_no_password_action" translatable="false">Backup without password</string>
-    <string name="backup_password_request_with_password_action" translatable="false">Use password</string>
-    <string name="backup_password_topbar_title" translatable="false">Password</string>
-    <string name="function_transfer_ibc_dst_address_input_title" translatable="false">Destination Address</string>
-    <string name="function_switch_thorchain_address" translatable="false">THORChain Address</string>
-    <string name="migration_onboarding_step_1_text_start" translatable="false">Upgrade this vault to the</string>
-    <string name="migration_onboarding_step_1_text_emphasized" translatable="false">world’s fastest MPC protocol</string>
-    <string name="migration_onboarding_step_1_text_end" translatable="false">and sign faster than ever before</string>
-    <string name="migration_onboarding_step_2_text_start" translatable="false">You’ll create new Vault Share backups,</string>
-    <string name="migration_onboarding_step_2_text_end" translatable="false">store them as you did before</string>
-    <string name="migration_onboarding_step_3_text_start" translatable="false">Make sure that</string>
-    <string name="migration_onboarding_step_3_text_emphasize" translatable="false">all initial devices are present</string>
-    <string name="migration_onboarding_step_3_text_end" translatable="false">when upgrading</string>
-    <string name="migration_onboarding_upgrade_your_vault" translatable="false">Upgrade your vault</string>
-    <string name="migration_onboarding_upgrade_now" translatable="false">Upgrade now</string>
-    <string name="upgrade_banner_title" translatable="false">Upgrade your vault now</string>
-    <string name="deposit_form_custom_memo_optional_title" translatable="false">Custom Memo (optional)</string>
-    <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
-    <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
+    <string name="select_chain_title">Select Chain</string>
+    <string name="verify_swap_youre_swapping_title">You\'re swapping</string>
+    <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
+    <string name="backup_password_request_description">We recommend that you do not set a backup password for device vault shares-your data is safe if the backups are properly stored in different locations, which is already a significant protection. Remember, backup passwords can\'t be recovered if you forget them. Your choice!</string>
+    <string name="backup_password_request_no_password_action">Backup without password</string>
+    <string name="backup_password_request_with_password_action">Use password</string>
+    <string name="backup_password_topbar_title">Password</string>
+    <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
+    <string name="function_switch_thorchain_address">THORChain Address</string>
+    <string name="migration_onboarding_step_1_text_start">Upgrade this vault to the</string>
+    <string name="migration_onboarding_step_1_text_emphasized">world’s fastest MPC protocol</string>
+    <string name="migration_onboarding_step_1_text_end">and sign faster than ever before</string>
+    <string name="migration_onboarding_step_2_text_start">You’ll create new Vault Share backups,</string>
+    <string name="migration_onboarding_step_2_text_end">store them as you did before</string>
+    <string name="migration_onboarding_step_3_text_start">Make sure that</string>
+    <string name="migration_onboarding_step_3_text_emphasize">all initial devices are present</string>
+    <string name="migration_onboarding_step_3_text_end">when upgrading</string>
+    <string name="migration_onboarding_upgrade_your_vault">Upgrade your vault</string>
+    <string name="migration_onboarding_upgrade_now">Upgrade now</string>
+    <string name="upgrade_banner_title">Upgrade your vault now</string>
+    <string name="deposit_form_custom_memo_optional_title">Custom Memo (optional)</string>
+    <string name="transfer_ibc_function_memo_title">Memo</string>
+    <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect e-mail, please check</string>
     <string name="scan_qr_screen_title">Scan QR Code</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
@@ -624,16 +671,16 @@
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
-    <string name="tx_overview_screen_title" translatable="false">Overview</string>
-    <string name="tx_transaction_successful_screen_title" translatable="false">Transaction successful</string>
-    <string name="tx_overview_screen_tx_successful" translatable="false">Transaction successful</string>
-    <string name="tx_overview_screen_tx_hash" translatable="false">Transaction Hash</string>
-    <string name="tx_overview_screen_tx_from" translatable="false">From</string>
-    <string name="tx_overview_screen_tx_to" translatable="false">To</string>
-    <string name="tx_overview_screen_tx_memo" translatable="false">Memo</string>
-    <string name="tx_overview_screen_tx_network" translatable="false">Network</string>
-    <string name="tx_overview_screen_tx_send" translatable="false">Send</string>
-    <string name="tx_overview_screen_tx_deposit" translatable="false">Deposit</string>
+    <string name="tx_overview_screen_title">Overview</string>
+    <string name="tx_transaction_successful_screen_title">Transaction successful</string>
+    <string name="tx_overview_screen_tx_successful">Transaction successful</string>
+    <string name="tx_overview_screen_tx_hash">Transaction Hash</string>
+    <string name="tx_overview_screen_tx_from">From</string>
+    <string name="tx_overview_screen_tx_to">To</string>
+    <string name="tx_overview_screen_tx_memo">Memo</string>
+    <string name="tx_overview_screen_tx_network">Network</string>
+    <string name="tx_overview_screen_tx_send">Send</string>
+    <string name="tx_overview_screen_tx_deposit">Deposit</string>
     <string name="swap_error_small_insufficient_funds">Insufficient funds</string>
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
@@ -646,10 +693,10 @@
     <string name="referral_invite_sheet_description">Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault</string>
     <string name="referral_invite_next">Next</string>
 
-    <string name="referral_invite_onboarding_1" translatable="false">Invite friends.</string>
-    <string name="referral_invite_onboarding_2" translatable="false">Earn rewards.</string>
-    <string name="referral_invite_onboarding_3" translatable="false">Save on fees.</string>
-    <string name="referral_screen_title" translatable="false">Vultisig - Referral</string>
+    <string name="referral_invite_onboarding_1">Invite friends.</string>
+    <string name="referral_invite_onboarding_2">Earn rewards.</string>
+    <string name="referral_invite_onboarding_3">Save on fees.</string>
+    <string name="referral_screen_title">Vultisig - Referral</string>
     <string name="referral_screen_code_hint">Enter Up to 4 characters</string>
     <string name="referral_create_referral">Create referral</string>
     <string name="referral_save_referral_code">Save referral code</string>
@@ -678,7 +725,7 @@
     <string name="referral_create_unknown_error">Unknown Error</string>
     <string name="referral_create_create_referral">Create Referral</string>
     <string name="referral_create_pick_referral_code">Pick Referral Code</string>
-    <string name="referral_create_search" translatable="false">Search</string>
+    <string name="referral_create_search">Search</string>
     <string name="referral_create_expiration_date">Expiration date</string>
     <string name="referral_create_set_expiration_years">Set Expiration (in years)</string>
     <string name="referral_create_registration_fees">Registration Fees</string>
@@ -701,8 +748,232 @@
     <string name="referral_earn_description">Get paid in your preferred asset every time they trade.</string>
     <string name="referral_use_code_title">Use Referral code - Save 5bps</string>
     <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
+    <string name="referral_not_found">No referral yet</string>
+    <string name="referral_cta">Turn your vault into a rewards machine. Create your referral now and start earning</string>
+    <string name="referral_top_bar_list">Referral</string>
+    <string name="referral_top_bar_list_vaults">Vaults</string>
+
     <string name="tcy_auto_compound_enable_title">Enable Auto-Compounding</string>
     <string name="tcy_auto_compound_enable_subtitle">Automatically compound your TCY rewards</string>
     <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
+
+    <string name="referral_view_title">Your Referral</string>
+    <string name="referral_view_selected_vault">Vault Selected</string>
+    <string name="referral_view_your_referral_code">Your referral code</string>
+    <string name="referral_view_edit_referral">Edit referral</string>
+    <string name="referral_view_your_friend_referral">Your Friend Referral Code</string>
+    <string name="referral_view_collected_rewards">Collected Rewards</string>
+    <string name="referral_view_add_friend">Add a Friends Referral</string>
+    <string name="referral_view_save">Save</string>
+    <string name="referral_view_on_swaps">on swaps now</string>
+    <string name="register_vault_screen_guide_title">Register guide</string>
+    <string name="faq_settings_q7">Is Vultisig open source and audited?</string>
+    <string name="faq_settings_q8">How does Vultisig handle privacy and data protection?</string>
+    <string name="faq_settings_q9">How does Vultisig compare to other multisig wallets?</string>
+    <string name="faq_settings_a7">Yes, Vultisig is open source and has undergone security audits. Both the audit reports and the source code are accessible.</string>
+    <string name="faq_settings_a8">Vultisig does not store any user information from its mobile apps.</string>
+    <string name="faq_settings_a9">It is built on MPC technology, which eliminates the need for seed phrases and supports multiple blockchains, making Vultisig flexible and chain-agnostic.</string>
+    <string name="vault_settings_advanced_title">Advanced</string>
+    <string name="sign_message_continue">Continue</string>
+    <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
+    <string name="address_book_empty_title">Your Address Book is empty</string>
+    <string name="education_settings_title">Vultisig Education</string>
+    <string name="check_updates_settings_title">Check for Updates</string>
+    <string name="discord" translatable="false">Discord</string>
+    <string name="github" translatable="false">Github</string>
+    <string name="vult_website_settings_title">Vultisig Website</string>
+    <string name="vault">Vault</string>
+    <string name="general">General</string>
+    <string name="support">Support</string>
+    <string name="vultisig_community">Vultisig Community</string>
+    <string name="vault_management">Vault Management</string>
+    <string name="other">Other</string>
+    <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
+    
+    <string name="defi_action_stake" translatable="false">Stake</string>
+    <string name="defi_action_unstake" translatable="false">Unstake</string>
+    <string name="defi_action_mint" translatable="false">Mint</string>
+    <string name="defi_action_redeem" translatable="false">Redeem</string>
+    
+    <plurals name="seconds_format">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+    <plurals name="minutes_format">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="hours_format">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <string name="never">never</string>
+    <string name="check_updates_title">Check Updates</string>
+    <string name="update_available">Update is available</string>
+    <string name="app_up_to_date">Application is up to date</string>
+    <string name="update">Update</string>
+    <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
+    <string name="lock_time_title">Lock Time</string>
+    <string name="lock_time_subtitle">Lock Vultisig automatically after...</string>
+    <string name="add_address_title_label">Label</string>
+    <string name="address_book_title_edit">Edit Address Book</string>
+    <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
+    <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, this  will be used to encrypt the backup file.</string>
+    <string name="backup_password_request_highlight_encrypt">encrypt</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Remember: If you forget your vault password, it cannot be reset or recovered.</string>
+    <string name="backup_password_request_highlight_cannot">cannot</string>
+    <string name="backup_password_request_caution_secure_without_desc">By default, your backup is secure without an extra password, since you store Vault shares in different locations.</string>
+    <string name="backup_password_request_highlight_secure_without">secure without</string>
+    <string name="backup_select_vaults_title">Select vaults to backup</string>
+    <string name="backup_select_vaults_subtitle">Choose whether to back up just this vault or all vaults in your app.</string>
+    <string name="backup_this_vault_only">This Vault Only</string>
+    <string name="backup_all_vaults">All Vaults</string>
+    <string name="more">+%1$d more</string>
+    <string name="backup_choose_method_title">Choose Backup Method</string>
+    <string name="backup_device_desc">Store the vault share of this device.</string>
+    <string name="backup_device_title">Device Backup</string>
+    <string name="backup_server_title">Server Backup</string>
+    <string name="backup_server_desc">Request Server Vault Share again.</string>
+    <string name="share_sheet_more">More</string>
+    <string name="x_twitter" translatable="false">X (Twitter)</string>
+    <string name="vult" translatable="false">$VULT</string>
+    <string name="error_saving_qr_code">Failed to save QR code . %1$s</string>
+    <string name="transaction_type_button_buy">Buy</string>
+    <string name="transaction_type_button_receive">Receive</string>
+    <string name="vault_settings_view_vault">View vault name, part and type</string>
+    <string name="vault_settings_biometric_fast">Biometrics fast sign</string>
+    <string name="vault_settings_enable_biometric">Enable biometric for fast sign</string>
+    <string name="vault_settings_password_hint">Password hint</string>
+    <string name="vault_settings_set_a_password">Set a password hint to protect your vault</string>
+    <string name="vault_settings_backup_vault">Backup Vault Share</string>
+    <string name="vault_settings_back_up_your">Back up your Vault Share to device or server.</string>
+    <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
+    <string name="vault_settings_reshare_change">Reshare, change TSS, or sign messages.</string>
+
+    <string name="transaction_buy">Buy</string>
+    <string name="transaction_receive">Receive</string>
+    <string name="search_bar_portfolio">Portfolio</string>
+    <string name="search_bar_nfts">NFTs</string>
+    <string name="search_bar_soon">Soon</string>
+    <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
+    <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
+    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
+    <string name="home_portfolio_balance">Portfolio Balance</string>
+    <string name="wallet">Wallet</string>
+    <string name="earn">Earn</string>
+    <string name="hide_balance">Hide balance</string>
+    <string name="show_balance">Show balance</string>
+    <string name="no_chains_found">No chains found</string>
+    <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
+    <string name="no_chain_customize_chains">Customize chains</string>
+    <string name="search_bar_search">Search</string>
+    <string name="search_bar_cancel">Cancel</string>
+    <string name="chain_selection_select_chains">Select chains</string>
+    <string name="chain_selection_no_chains_found">No chains found</string>
+    <string name="transaction_type_button_send" >Send</string>
+    <string name="transaction_type_button_functions">Functions</string>
+    <string name="copy_address">Copy Address</string>
+    <string name="chain_tokens_tab_hidden">Hidden</string>
+    <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
+    <string name="address_copied">%1$s address copied</string>
+    <string name="add_folder_title">Add Folder</string>
+    <string name="add_folder_list_title">Select Vaults</string>
+    <string name="add_folder_active_vaults">Active Vaults</string>
+    <string name="add_folder_available_vaults">Available</string>
+    <string name="add_folder_edit_folder_title">Edit Folder</string>
+    <string name="vault_list_add_folder">Add folder</string>
+    <string name="vault_list_edit_vaults_header">Edit Vaults</string>
+    <string name="token_details_bottom_sheet_price">Price</string>
+    <string name="token_details_bottom_sheet_network">Network</string>
+    <string name="defi" translatable="false">DeFi</string>
+    <string name="vault_ceil_active">Active</string>
+    <string name="send_tx_overview_add_to_address_book">Add to Address Book</string>
+    <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
+    <string name="invite_to_x_banner_desc">Follow us on X</string>
+    <string name="invite_to_x_banner_button">Follow %s</string>
+    <string name="home_defi_portfolio">DeFi Portfolio</string>
+    <string name="home_page_no_chains_enabled">No chains enabled</string>
+    <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
+    <string name="address_book_saved_addresses">Saved Addresses</string>
+    <string name="address_book_my_vaults">My Vaults</string>
+    <string name="address_entry_select">Select</string>
+    <string name="backup_vault_online_storage_is_recommended">Online storage is recommended and safe - vault shares are designed for this.</string>
+    <string name="deposit_form_enter_asset_hint">Enter Assets</string>
+    <string name="share_balance_loading">Loading...</string>
+    <string name="must_be_enabled_before_proceeding">%1$s must be enabled before proceeding.</string>
+    <string name="referral_code_removed_successfully">Referral code removed successfully</string>
+    <string name="referral_code_linked_successfully">Referral code linked successfully</string>
+    <string name="fast_vault_invalid_password">Invalid password</string>
+    <string name="folder">folder</string>
+    <string name="gas_settings_advanced_gas_fee">Advanced gas fee</string>
+    <string name="gas_settings_max_base_fee_gwei">Max base fee (GWEI)</string>
+    <string name="gas_settings_priority_fee_gwei">Priority fee (GWEI)</string>
+    <string name="import_file_import_your_vault_share">Import your vault share</string>
+    <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
+    <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
+    <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
+    <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
+    <string name="join_key_gen_your_vault_will_start_generating">Your vault will start generating from the moment you finalize setting up your vault on your main device</string>
+    <string name="join_key_sign_wrong_signing_library_type">Wrong signing library type</string>
+    <string name="key_gen_discovery_no_connection_available">No Connection available</string>
+    <string name="key_gen_discovery_enable_wifi">Please enable WiFi or mobile to sign transaction</string>
+    <string name="keygen_screen_upgrading_vault">Upgrading vault</string>
+    <string name="keysign_password_enter_your_password">Enter your password</string>
+    <string name="migration_password_enter_your_password_to_unlock">Enter your password to unlock your Server Share and start the upgrade</string>
+    <string name="name_vault_vault_with_this_name_already_exists">Vault with this name already exists</string>
+    <string name="referral_create_status">Status</string>
+    <string name="referral_create_unknown">Unknown</string>
+    <string name="referral_code_cannot_be_empty">Referral code cannot be empty</string>
+    <string name="referral_code_can_be_up_to_characters">Referral code can be up to %1$d characters</string>
+    <string name="error_loading_information">Error Loading Information</string>
+    <string name="referral_view_expires_on">Expires on</string>
+    <string name="send_form_balance_available">Balance available:</string>
+    <string name="send_form_add_memo">Add MEMO</string>
+    <string name="send_form_enter_memo">Enter Memo</string>
+    <string name="send_form_est_network_fee">Est. network fee</string>
+    <string name="send_form_minimum_send_amount_is_requires_this">Minimum send amount is %1$s %2$s. %3$s requires this to prevent spam.</string>
+    <string name="minimum_send_amount_is_ada">Minimum send amount is %1$s ADA. Cardano requires this to prevent spam.</string>
+    <string name="insufficient_balance_try_send">Insufficient balance.  Try \'Send Max\' to send %1$s ADA instead.</string>
+    <string name="insufficient_balance_ada">Insufficient balance (%1$s ADA). You need more ADA to complete this transaction.</string>
+    <string name="this_amount_would_leave_too_little_change">This amount would leave too little change. 💡 Try \'Send Max\' (%1$s ADA) to avoid this issue.</string>
+    <string name="swap_form_native">Native</string>
+    <string name="swap_transaction_overview_approval_tx_hash">Approval Tx Hash</string>
+    <string name="swap_transaction_overview_track">Track</string>
+    <string name="token_selection_screen_select_tokens">Select Tokens</string>
+    <string name="token_selecton_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
+    <string name="transfer_ibc_destination_chain">Destination Chain</string>
+    <string name="tx_done_transaction_details">Transaction Details</string>
+    <string name="vault_confirmation_vault_upgraded">"Vault upgraded "</string>
+    <string name="vault_confirmation_well_done">Well done.</string>
+    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
+    <string name="vault_detail_vault_info">Vault Info</string>
+    <string name="vault_details_keys">keys</string>
+    <string name="vault_password_biometeric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
+    <string name="verify_send_send_overview">Send overview</string>
+    <string name="verify_swap_swap_overview">Swap overview</string>
+    <string name="rename_vault_screen_rename_vault">Rename Vault</string>
+    <string name="custom_token_not_found_desc">Possible reasons: wrong contract, unsupported chain, or token removed from registries.</string>
+    <string name="custom_token_screen_finding_token">Finding token</string>
+    <string name="retry">Retry</string>
+    <string name="custom_token_screen_title">Find custom token</string>
+    <string name="banxa_buy_or_transfer">Buy or transfer with Banxa</string>
+    <string name="banxa_continue">Continue to Banxa</string>
+    <string name="defi_no_positions_selected">No positions selected</string>
+    <string name="defi_no_positions_selected_desc">You\'ve disabled all positions for this chain. Enable at least one position to view balances and manage actions.</string>
+    <string name="manage_positions">Manage Positions</string>
+    <string name="bond_node_state_whitelisted">Whitelisted</string>
+    <string name="bond_node_state_standby">StandBy</string>
+    <string name="bond_node_state_ready">Ready</string>
+    <string name="bond_node_state_active">Active</string>
+    <string name="bond_node_state_disabled">Disabled</string>
+    <string name="bond_node_state_unknown">Unknown</string>
+    <string name="defi_balance">Balance</string>
+    <string name="lp_position">Position</string>
+    <string name="add">Add</string>
+    <string name="remove">Remove</string>
+    <string name="no_positions_found">No positions found</string>
+    <string name="select_positions">Select positions</string>
+    <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
+
 </resources>

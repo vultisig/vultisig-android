@@ -4,16 +4,18 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.IsSwapSupported
-import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -35,7 +37,9 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
+    val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
+    val explorerUrl: String = "",
 )
 
 @HiltViewModel
@@ -43,18 +47,17 @@ internal class TokenDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
-    private val tokenId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_TOKEN_ID))
-    private val mergedBalance: String =
-        savedStateHandle.get<String>(Destination.ARG_MERGE_ID) ?: "0"
+
+    private val tokenDetail = savedStateHandle.toRoute<Route.TokenDetail>()
+    private val chainRaw: String = tokenDetail.chainId
+    private val vaultId: String = tokenDetail.vaultId
+    private val tokenId: String = tokenDetail.tokenId
+    private val mergedBalance: String = tokenDetail.mergeId
 
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
@@ -110,6 +113,23 @@ internal class TokenDetailViewModel @Inject constructor(
         }
     }
 
+    fun back() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun buy() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.OnRamp(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
+        }
+    }
+
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
@@ -121,40 +141,50 @@ internal class TokenDetailViewModel @Inject constructor(
                 vaultId = vaultId,
                 chain = chain,
             ).catch {
-                // TODO handle error
                 updateRefreshing(false)
                 Timber.e(it)
             }.onEach { address ->
-                val token = address.accounts
-                    .first { it.token.id == tokenId }
-                    .let { account ->
+                address.accounts
+                    .firstOrNull { it.token.id == tokenId }
+                    ?.let { account ->
                         val token = account.token
-                        ChainTokenUiModel(
+                        val tokenUiModel = ChainTokenUiModel(
                             id = token.id,
                             name = token.ticker,
                             balance = account.tokenValue
-                                ?.let(mapTokenValueToDecimalUiString)
+                                ?.let(mapTokenValueToStringWithUnitMapper)
                                 ?: "",
                             fiatBalance = account.fiatValue
                                 ?.let { fiatValueToStringMapper(it) },
-                            tokenLogo = Tokens.getCoinLogo(token.logo),
+                            tokenLogo = getCoinLogo(token.ticker),
                             chainLogo = chain.logo,
                             mergeBalance = mergedBalance,
+                            price = account.price?.let { fiatValueToStringMapper(it) },
+                            network = token.chain.raw,
                         )
-                    }
 
-                uiState.update {
-                    it.copy(
-                        token = token,
-                        canDeposit = chain.isDepositSupported,
-                        canSwap = chain.IsSwapSupported,
-                    )
+                        val accountAddress = address.address
+                        val explorerUrl = explorerLinkRepository
+                            .getAddressLink(chain, accountAddress)
+
+                        uiState.update {
+                            it.copy(
+                                token = tokenUiModel,
+                                canDeposit = chain.isDepositSupported,
+                                canSwap = chain.isSwapSupported,
+                                canBuy = chain.isBuySupported,
+                                explorerUrl = explorerUrl
+                            )
+                        }
+                    } ?: run {
+                    updateRefreshing(false)
                 }
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
         }
     }
+
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }

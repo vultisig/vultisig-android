@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,14 +32,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
 @Composable
 internal fun StartScreen(
-    model: StartViewModel = hiltViewModel()
+    model: StartViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
@@ -75,31 +74,20 @@ private fun StartScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            if (hasBackButton) {
-                VsTopAppBar(
-                    onBackClick = onBackClick,
-                )
-            }
-        }
+    V2Scaffold(
+        onBackClick = if (hasBackButton) onBackClick else null
     ) {
         Column(
             modifier = Modifier
-                .padding(it)
                 .fillMaxSize()
                 .background(Theme.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = CenterHorizontally
             ) {
-
-
                 Image(
                     painter = painterResource(id = R.drawable.vultisig),
                     contentDescription = "vultisig",
@@ -114,12 +102,12 @@ private fun StartScreen(
                     style = Theme.brockmann.headings.largeTitle
                 )
             }
+
             Column(
                 horizontalAlignment = CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(
-                    vertical = 24.dp,
-                    horizontal = 25.dp
+                    all = 8.dp
                 )
             ) {
 
@@ -145,7 +133,7 @@ private fun StartScreen(
 
                 VsButton(
                     label = stringResource(R.string.home_screen_scan_qr_code),
-                    variant = VsButtonVariant.Secondary,
+                    variant = VsButtonVariant.Tertiary,
                     onClick = onScanQrCodeClick,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -157,7 +145,7 @@ private fun StartScreen(
 
                 VsButton(
                     label = stringResource(R.string.home_screen_import_vault),
-                    variant = VsButtonVariant.Secondary,
+                    variant = VsButtonVariant.Tertiary,
                     onClick = onImportVaultClick,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -195,7 +183,6 @@ private fun SeparatorWithText(
         )
     }
 }
-
 
 @Preview
 @Composable

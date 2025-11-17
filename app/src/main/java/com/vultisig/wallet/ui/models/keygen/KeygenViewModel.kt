@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -200,7 +201,7 @@ internal class KeygenViewModel @Inject constructor(
                 val ecdsaShare = vault.getKeyshare(vault.pubKeyECDSA)
                 val eddsaShare = vault.getKeyshare(vault.pubKeyEDDSA)
 
-                if (ecdsaShare == null || eddsaShare == null) {
+                if (ecdsaShare.isNullOrBlank() || eddsaShare.isNullOrBlank()) {
                     throw RuntimeException("Missing key shares required for migration")
                 }
 
@@ -419,7 +420,7 @@ internal class KeygenViewModel @Inject constructor(
         val vaultId = vault.id
 
         val password = args.password
-        if (args.email != null && password != null) {
+        if (!args.email.isNullOrBlank() && !password.isNullOrBlank()) {
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,
@@ -479,6 +480,7 @@ internal class KeygenViewModel @Inject constructor(
                         vaultId = vaultId,
                         vaultType = vaultType,
                         action = args.action,
+                        passwordType = BackupPasswordType.UserSelectionPassword
                     )
                 }
             },
@@ -531,7 +533,7 @@ internal class KeygenViewModel @Inject constructor(
                     is KeygenState.ReshareEdDSA -> 0.75f
                     is KeygenState.Success -> 1f
 
-                    else -> 0.75f // TODO remove VerifyBackup state when it's unusable
+                    else -> 0.75f
                 },
                 steps = it.steps.map { it.copy(isLoading = false) } + listOfNotNull(
                     when (step) {

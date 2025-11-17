@@ -119,11 +119,11 @@ private fun getPages(
                     coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                 ),
             ),
-            buttonText = "Next"
+            buttonText = stringResource(R.string.peer_discovery_action_next_title)
         )
     } else null,
     MigrationOnboardingPage(
-        animation = R.raw.riv_choose_vault, // TODO different animation here
+        animation = R.raw.riv_choose_vault,
         text = listOf(
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_2_text_start,
@@ -134,7 +134,7 @@ private fun getPages(
                 coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
         ),
-        buttonText = "Next"
+        buttonText = stringResource(R.string.peer_discovery_action_next_title)
     ),
 )
 

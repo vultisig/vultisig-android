@@ -1,14 +1,17 @@
 package com.vultisig.wallet.ui.screens.sign
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,10 +28,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
-import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
-import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -44,7 +45,7 @@ internal fun VerifySignMessageScreen(
         {
             context.launchBiometricPrompt(
                 promptTitle = promptTitle,
-                onAuthorizationSuccess =  viewModel::authFastSign,
+                onAuthorizationSuccess = viewModel::authFastSign,
             )
         }
     }
@@ -99,7 +100,6 @@ private fun VerifySignMessageScreen(
 ) {
     Scaffold(
         modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
         bottomBar = {
             Column(
@@ -136,47 +136,69 @@ private fun VerifySignMessageScreen(
         }
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .padding(it)
-                .padding(all = 16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            SignMessageDetail(
-                method = method,
-                message = message,
-            )
-        }
-    }
-}
-
-@Composable
-internal fun SignMessageDetail(
-    method: String,
-    message: String,
-) {
-    FormCard {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
                 .padding(
                     horizontal = 16.dp,
                     vertical = 12.dp
                 )
+                .verticalScroll(rememberScrollState()),
         ) {
-            AddressField(
-                title = stringResource(R.string.verify_sign_message_method_field_title),
-                address = method,
+
+            SignMessageBox(
+                title = stringResource(R.string.verify_sign_message_signing_method),
+                value = method,
             )
 
-            AddressField(
-                title = stringResource(R.string.verify_sign_message_message_field_title),
-                address = message,
-                divider = false,
+
+            SignMessageBox(
+                title = stringResource(R.string.verify_sign_message_message_sign),
+                value = message,
             )
         }
     }
 }
+
+
+@Composable
+private fun SignMessageBox(
+    title: String,
+    value: String,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption
+        )
+
+        Text(
+            text = value,
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .background(
+                    Theme.colors.backgrounds.disabled,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(
+                    horizontal = 24.dp,
+                    vertical = 20.dp,
+                ),
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.body.s.medium
+        )
+    }
+}
+
 
 @Preview
 @Composable

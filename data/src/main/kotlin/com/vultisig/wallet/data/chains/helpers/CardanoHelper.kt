@@ -12,17 +12,19 @@ import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.hexStringToByteArray
 import timber.log.Timber
+import wallet.core.java.AnySigner
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
+import wallet.core.jni.proto.Cardano.TransactionPlan
+import wallet.core.jni.proto.Common.SigningError
 
 @OptIn(ExperimentalStdlibApi::class)
 object CardanoHelper {
 
     private const val ESTIMATE_TRANSACTION_FEE: Long = 180_000
-
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
@@ -139,4 +141,16 @@ object CardanoHelper {
         )
     }
 
+    // TODO: Switch to plan calculation method
+    fun getCardanoTransactionPlan(keysignPayload: KeysignPayload): TransactionPlan {
+        val signingInput = Cardano.SigningInput.parseFrom(getPreSignedInputData(keysignPayload))
+        val plan = AnySigner.plan(signingInput, CoinType.CARDANO, TransactionPlan.parser())
+        if (plan.error == SigningError.OK) {
+            return plan
+        }
+
+        Timber.e("Cardano Plan Error: ${plan.error.name}")
+
+        throw RuntimeException("Signing Error During Plan calculation")
+    }
 }

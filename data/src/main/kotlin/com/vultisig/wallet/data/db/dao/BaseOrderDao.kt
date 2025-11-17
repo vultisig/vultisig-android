@@ -18,6 +18,17 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
         return findQuery(query)
     }
 
+    suspend fun safeFind(value: String): T? {
+        val query = SimpleSQLiteQuery(
+            "SELECT * FROM $tableName WHERE `value` = '$value'"
+        )
+        return try {
+            safeFindQuery(query)
+        } catch (_ : Exception) {
+            null
+        }
+    }
+
 
     suspend fun getMaxOrder(parentId: String?): T? {
         val query = SimpleSQLiteQuery(
@@ -68,6 +79,9 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
 
     @RawQuery
     protected abstract suspend fun findQuery(query: SupportSQLiteQuery): T
+
+    @RawQuery
+    protected abstract suspend fun safeFindQuery(query: SupportSQLiteQuery): T?
 
     @RawQuery
     protected abstract suspend fun getMaxQuery(query: SupportSQLiteQuery): T?

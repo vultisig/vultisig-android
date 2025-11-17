@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
@@ -15,9 +16,12 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class DepositTransactionUiModel(
@@ -35,6 +39,7 @@ internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -45,7 +50,7 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
-    ) : ViewModel() {
+) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
     private val password = MutableStateFlow<String?>(null)
@@ -61,12 +66,43 @@ internal class VerifyDepositViewModel @Inject constructor(
         requireNotNull(vaultId) { "vaultId is null" }
 
         viewModelScope.launch {
-            val transaction = depositTransactionRepository.getTransaction(transactionId!!)
-            val depositTransactionUiModel = mapTransactionToUiModel(transaction)
-            state.update {
-                it.copy(
-                    depositTransactionUiModel = depositTransactionUiModel
+            try {
+                val transaction = depositTransactionRepository.getTransaction(transactionId!!)
+                var initialTransaction = DepositTransactionUiModel(
+                    srcAddress = transaction.srcAddress,
+                    dstAddress = transaction.dstAddress,
+                    token = ValuedToken(
+                        token = transaction.srcToken,
+                        value = "",
+                        fiatValue = "",
+                    ),
+                    networkFeeFiatValue = transaction.estimateFeesFiat,
+                    networkFeeTokenValue = "",
+                    memo = transaction.memo,
                 )
+
+                state.update {
+                    it.copy(
+                        isLoading = true,
+                        depositTransactionUiModel = initialTransaction
+                    )
+                }
+
+                val depositTransactionUiModel = mapTransactionToUiModel(transaction)
+                state.update {
+                    it.copy(
+                        depositTransactionUiModel = depositTransactionUiModel,
+                        isLoading = false,
+                    )
+                }
+            } catch (t: Throwable) {
+                Timber.e(t)
+                state.update {
+                    it.copy(
+                        errorText = UiText.StringResource(R.string.try_again),
+                        isLoading = false
+                    )
+                }
             }
         }
 
@@ -106,13 +142,17 @@ internal class VerifyDepositViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = vaultPasswordRepository.getPassword(vaultId!!)
+            password.value = withContext(Dispatchers.IO) {
+                vaultPasswordRepository.getPassword(vaultId!!)
+            }
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            val hasFastSign = isVaultHasFastSignById(vaultId!!)
+            val hasFastSign = withContext(Dispatchers.IO){
+                isVaultHasFastSignById(vaultId!!)
+            }
             state.update {
                 it.copy(
                     hasFastSign = hasFastSign

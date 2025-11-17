@@ -1,183 +1,134 @@
 package com.vultisig.wallet.ui.screens.folder
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
-import com.vultisig.wallet.ui.components.SelectionItem
-import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.data.usecases.VaultAndBalance
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
-import com.vultisig.wallet.ui.components.VaultSwitch
-import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.models.folder.FolderUiModel
 import com.vultisig.wallet.ui.models.folder.FolderViewModel
-import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.components.VaultInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FolderScreen(
+    folderId: String,
+    vaultId: VaultId,
+    navController: VsBottomSheetNavController,
     viewModel: FolderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    val nameFieldState = viewModel.nameFieldState
 
-    Scaffold(
-        bottomBar = {
-            if (state.isEditMode) {
-                Box(Modifier.imePadding()) {
-                    VsButton(
-                        label = stringResource(id = R.string.save_changes),
-                        state = if (state.nameError == null)
-                            VsButtonState.Enabled
-                        else VsButtonState.Disabled,
-                        onClick = viewModel::edit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                bottom = 16.dp,
-                            ),
-                    )
-                }
-            }
-        },
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = state.folder?.name ?: "",
-                        style = Theme.montserrat.subtitle1,
-                        fontWeight = FontWeight.Bold,
-                        color = Theme.colors.neutral0,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.colors.oxfordBlue800,
-                    titleContentColor = Theme.colors.neutral0,
-                ),
-                navigationIcon = {
-                    IconButton(onClick = clickOnce(viewModel::back)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_caret_left),
-                            contentDescription = "",
-                        )
-                    }
-                },
-                actions = {
-                    val modifier = remember { Modifier.padding(horizontal = 16.dp) }
-                    if (state.isEditMode) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.trash_outline),
-                            contentDescription = "edit",
-                            tint = Theme.colors.miamiMarmalade,
-                            modifier = modifier
-                                .clickOnce(onClick = viewModel::deleteFolder)
-                                .size(24.dp)
-                        )
-                    }
-                    else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                            contentDescription = "edit",
-                            tint = Theme.colors.neutral0,
-                            modifier = modifier.clickOnce(onClick = viewModel::edit)
-                        )
-                    }
-                }
-            )
-        },
-    ) { contentPadding ->
-        val errorText = state.error
-        if (errorText != null) {
-            UiAlertDialog(
-                title = stringResource(R.string.dialog_default_error_title),
-                text = errorText.asString(),
-                confirmTitle = stringResource(R.string.try_again),
-                onDismiss = viewModel::hideError,
+    LaunchedEffect(folderId) {
+        viewModel.init(folderId)
+    }
+
+
+    FolderScreen(
+        vaultId = vaultId,
+        state = state,
+        onMove = viewModel::onMoveVaults,
+        onSelectVault = viewModel::selectVault,
+        onBackClick = navController::popBackStack,
+        onEditClick = {
+            navController.navigate(
+                Route.CreateFolder(
+                    folderId = folderId
+                )
             )
         }
+    )
+}
+
+@Composable
+internal fun FolderScreen(
+    vaultId: VaultId,
+    state: FolderUiModel,
+    onMove: (Int, Int) -> Unit,
+    onSelectVault: (VaultId) -> Unit,
+    onBackClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
+) {
+    Column(
+        modifier = Modifier
+            .padding(
+                all = 16.dp,
+            )
+    ) {
+
+        UiSpacer(
+            size = 12.dp
+        )
+
+        Row {
+            VsCircleButton(
+                icon = R.drawable.ic_caret_left,
+                onClick = onBackClick,
+                type = VsCircleButtonType.Secondary,
+                size = VsCircleButtonSize.Small,
+                hasBorder = true,
+            )
+
+            UiSpacer(
+                size = 16.dp
+            )
+
+            VaultInfo(
+                vaultName = state.folder?.name?: stringResource(R.string.folder),
+                vaultCounts = state.vaults.size,
+                totalBalance = state.totalBalance,
+            )
+
+            UiSpacer(
+                weight = 1f
+            )
+
+            VsCircleButton(
+                icon = R.drawable.pen_v2,
+                onClick = onEditClick,
+                type = VsCircleButtonType.Secondary,
+                size = VsCircleButtonSize.Small,
+                designType = DesignType.Shined,
+                hasBorder = true,
+            )
+
+        }
+
+        UiSpacer(
+            size = 20.dp
+        )
+
 
         VerticalReorderList(
-            onMove = viewModel::onMoveVaults,
+            onMove = onMove,
             data = state.vaults,
-            isReorderEnabled = state.isEditMode,
-            key = { it.id },
-            contentPadding = PaddingValues(
-                vertical = 16.dp,
-                horizontal = 16.dp,
-            ),
-            modifier = Modifier
-                .padding(contentPadding),
-            beforeContents =
-            if (state.isEditMode)
-                listOf<@Composable LazyItemScope.() -> Unit> @Composable {
-                    TopFolderScreenContent(state, nameFieldState)
-                }
-            else
-                null,
-            afterContents =
-            if (state.isEditMode && state.availableVaults.isNotEmpty())
-                listOf<@Composable LazyItemScope.() -> Unit> @Composable {
-                    BottomFolderScreenContent (state, viewModel::tryToCheckVault)
-                }
-            else
-                null,
-        ) { vault ->
-            val check = remember { mutableStateOf(true) }
-            val trailingContent = @Composable {
-                VaultSwitch(
-                    modifier = Modifier.height(20.dp),
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Theme.colors.neutral0,
-                        checkedBorderColor = Theme.colors.turquoise800,
-                        checkedTrackColor = Theme.colors.turquoise800,
-                        uncheckedThumbColor = Theme.colors.neutral0,
-                        uncheckedBorderColor = Theme.colors.oxfordBlue400,
-                        uncheckedTrackColor = Theme.colors.oxfordBlue400
-                    ),
-                    checked = check.value,
-                    onCheckedChange = {
-                        check.value = viewModel.tryToCheckVault(it, vault.id)
-                    },
-                )
-            }
+            isReorderEnabled = false,
+            key = { it.vault.id },
+        ) { vaultAndBalance ->
+            val (vault, balance) = vaultAndBalance
 
             VaultCeil(
                 model = VaultCeilUiModel(
@@ -187,58 +138,43 @@ internal fun FolderScreen(
                     isFastVault = vault.isFastVault(),
                     vaultPart = vault.getVaultPart(),
                     signersSize = vault.signers.size,
+                    balance = balance,
                 ),
-                isInEditMode = state.isEditMode,
-                onSelect = viewModel::selectVault,
-                trailingIcon = if (state.isEditMode) trailingContent else null,
+                isInEditMode = false,
+                onSelect = onSelectVault,
+                isSelected = vault.id == vaultId,
+                activeVaultName = null,
+                vaultCounts = null,
             )
         }
-    }
-}
 
-@Composable
-private fun BottomFolderScreenContent(
-    state: FolderUiModel,
-    tryToCheckVault: (Boolean, String) -> Boolean,
-) {
-    UiSpacer(size = 20.dp)
-    Text(
-        text = stringResource(id = R.string.select_vaults_to_add_to_the_folder),
-        color = Theme.colors.neutral200,
-        style = Theme.montserrat.body1,
-    )
-    UiSpacer(size = 16.dp)
-
-    state.availableVaults.forEach { vault ->
-        val check = remember { mutableStateOf(false) }
-        SelectionItem(
-            title = vault.name,
-            isChecked = check.value,
-            onCheckedChange = {
-                check.value = tryToCheckVault(it, vault.id)
-            },
+        UiSpacer(
+            size = 12.dp
         )
-        UiSpacer(size = 16.dp)
     }
+
 }
 
+@Preview
 @Composable
-private fun TopFolderScreenContent(
-    state: FolderUiModel,
-    nameFieldState: TextFieldState
-) {
-    FormTextFieldCard(
-        title = stringResource(id = R.string.create_folder_name),
-        hint = state.folder?.name ?: "",
-        error = state.nameError,
-        keyboardType = KeyboardType.Text,
-        textFieldState = nameFieldState,
+fun FolderScreenPreview() {
+    FolderScreen(
+        vaultId = "2",
+        state = FolderUiModel(
+            vaults = listOf(
+                VaultAndBalance(
+                    vault = generateFakeVault(),
+                    balance = "$2",
+                    balanceFiatValue = null,
+                ),
+                VaultAndBalance(
+                    vault = generateFakeVault(),
+                    balance = "$2",
+                    balanceFiatValue = null,
+                )
+            )
+        ),
+        onMove = { _, _ -> },
+        onSelectVault = {},
     )
-    UiSpacer(size = 16.dp)
-    Text(
-        text = stringResource(id = R.string.current_vaults),
-        color = Theme.colors.neutral200,
-        style = Theme.montserrat.body1,
-    )
-    UiSpacer(size = 16.dp)
 }

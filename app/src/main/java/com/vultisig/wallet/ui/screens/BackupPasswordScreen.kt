@@ -1,12 +1,13 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.usecases.MIME_TYPE_VAULT
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
@@ -28,7 +29,7 @@ internal fun BackupPasswordScreen(
     )
 
     RequestCreateDocument(
-        mimeType = MIME_TYPE_VAULT,
+        mimeType = state.mimeType.value,
         onDocumentCreated = model::saveContentToUriResult,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
     )
@@ -63,5 +64,32 @@ internal fun BackupPasswordScreen(
         onHideMoreInfo = model::hideMoreInfo,
         onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
         onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility
+    )
+}
+
+@Composable
+@Preview
+private fun BackupPasswordScreenPreview() {
+    val passwordTextFieldState = rememberTextFieldState()
+    val confirmPasswordTextFieldState = rememberTextFieldState()
+    
+    FastVaultPasswordScreen(
+        title = "Backup Password",
+        state = FastVaultPasswordUiModel(
+            isMoreInfoVisible = false,
+            isPasswordVisible = false,
+            isConfirmPasswordVisible = false,
+            isNextButtonEnabled = false,
+            errorMessage = null,
+            innerState = VsTextInputFieldInnerState.Default
+        ),
+        passwordTextFieldState = passwordTextFieldState,
+        confirmPasswordTextFieldState = confirmPasswordTextFieldState,
+        onBackClick = {},
+        onNextClick = {},
+        onShowMoreInfo = {},
+        onHideMoreInfo = {},
+        onTogglePasswordVisibilityClick = {},
+        onToggleConfirmPasswordVisibilityClick = {}
     )
 }

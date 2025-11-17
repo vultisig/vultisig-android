@@ -16,10 +16,10 @@ import androidx.compose.ui.text.withStyle
 
 @Composable
 internal fun SequenceOfGradientText(
+    modifier: Modifier = Modifier,
     listTextItems: List<PartiallyGradientTextItem>,
     style: TextStyle = LocalTextStyle.current,
-    textAlign: TextAlign = TextAlign.Center,
-    modifier: Modifier = Modifier,
+    textAlign: TextAlign = TextAlign.Center
 ) {
     val annotatedText = buildAnnotatedString {
         listTextItems.forEachIndexed{ index, textItem ->

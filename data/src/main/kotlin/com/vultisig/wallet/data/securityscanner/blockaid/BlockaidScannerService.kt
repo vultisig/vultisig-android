@@ -20,6 +20,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.BscChain,
             Chain.Ethereum,
             Chain.Optimism,
+            Chain.Sei,
             Chain.Polygon -> scanEvmTransaction(transaction)
 
             Chain.Bitcoin -> scanBitcoinTransaction(transaction)
@@ -94,7 +95,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             Chain.Base,
             Chain.Blast,
             Chain.BscChain,
-            // Chain.Bitcoin,
+            Chain.Bitcoin,
             Chain.Ethereum,
             Chain.Optimism,
             Chain.Polygon,

@@ -1,174 +1,334 @@
 package com.vultisig.wallet.ui.screens.vault_settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.SettingsItem
-import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.components.canAuthenticateBiometric
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.screens.settings.SettingItem
+import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun VaultSettingsScreen(
-    navController: NavController,
-) {
+internal fun VaultSettingsScreen() {
     val viewModel = hiltViewModel<VaultSettingsViewModel>()
     val uiModel by viewModel.uiModel.collectAsState()
-    val snackBarHostState = remember { SnackbarHostState() }
+
+    BackHandler(onBack = viewModel::onBackClick)
 
     VaultSettingsScreen(
         uiModel = uiModel,
-        snackBarHostState = snackBarHostState,
-        navController = navController,
-        onDetailsClick = viewModel::openDetails,
-        onRenameClick = viewModel::openRename,
-        onBackupClick = viewModel::navigateToBackupPasswordScreen,
-        onReshareClick = viewModel::navigateToReshareStartScreen,
-        onSignMessageClick = viewModel::signMessage,
-        onBiometricsClick = viewModel::navigateToBiometricsScreen,
-        onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
-        onMigrateClick = viewModel::migrate,
-        onOnChainSecurity = viewModel::navigateToOnChainSecurityScreen,
+        onSettingsClick = viewModel::onSettingsItemClick,
+        onBackClick = viewModel::onBackClick,
+        onLocalBackupClick = viewModel::onLocalBackupClick,
+        onServerBackupClick = viewModel::onServerBackupClick,
+        onDismissBackupVaultBottomSheet = viewModel::onDismissBackupVaultBottomSheet,
+        onDismissBiometricsBottomSheet = viewModel::onDismissBiometricFastSignBottomSheet,
+        biometricTextFieldState = viewModel.passwordTextFieldState,
+        onSaveBiometricsClick = viewModel::onSaveEnableBiometricFastSign,
+        onToggleVisibilityClick = viewModel::togglePasswordVisibility,
     )
 }
 
 @Composable
 private fun VaultSettingsScreen(
     uiModel: VaultSettingsState,
-    snackBarHostState: SnackbarHostState,
-    navController: NavController,
-    onDetailsClick: () -> Unit = {},
-    onRenameClick: () -> Unit = {},
-    onBackupClick: () -> Unit = {},
-    onReshareClick: () -> Unit = {},
-    onSignMessageClick: () -> Unit = {},
-    onBiometricsClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {},
-    onMigrateClick: () -> Unit = {},
-    onOnChainSecurity: () -> Unit = {},
+    onSaveBiometricsClick: () -> Unit = {},
+    onDismissBiometricsBottomSheet: () -> Unit = {},
+    biometricTextFieldState: TextFieldState,
+    onSettingsClick: (VaultSettingsItem) -> Unit,
+    onBackClick: () -> Unit = {},
+    onLocalBackupClick: () -> Unit = {},
+    onServerBackupClick: () -> Unit = {},
+    onDismissBackupVaultBottomSheet: () -> Unit = {},
+    onToggleVisibilityClick: () -> Unit = {},
 ) {
-    val context = LocalContext.current
-    val canAuthenticateBiometric = remember { context.canAuthenticateBiometric() }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackBarHostState)
-        },
-        topBar = {
-            TopBar(
-                navController = navController,
-                startIcon = R.drawable.ic_caret_left,
-                centerText = stringResource(R.string.vault_settings_title)
-            )
-        }
-    ) { padding ->
+    val settingGroups = uiModel.settingGroups
 
+    V2Scaffold(
+        title = if (uiModel.isAdvanceSetting)
+            stringResource(R.string.vault_settings_advanced_title)
+        else
+            stringResource(R.string.vault_settings_title),
+        onBackClick =  onBackClick,
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .background(Theme.colors.oxfordBlue800)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier
+                .verticalScroll(rememberScrollState())
         ) {
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_details_title),
-                subtitle = stringResource(R.string.vault_settings_details_subtitle),
-                icon = android.R.drawable.ic_menu_info_details,
-                onClick = onDetailsClick,
-            )
-
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_backup_title),
-                subtitle = stringResource(R.string.vault_settings_backup_subtitle),
-                icon = R.drawable.download_simple,
-                onClick = onBackupClick
-            )
-
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_rename_title),
-                subtitle = stringResource(R.string.vault_settings_rename_subtitle),
-                icon = R.drawable.pencil,
-                onClick = onRenameClick,
-            )
-            if (uiModel.hasReshare) {
-                SettingsItem(
-                    title = stringResource(R.string.vault_settings_reshare_title),
-                    subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
-                    icon = R.drawable.share,
-                    onClick = onReshareClick
-                )
+            settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
+                SettingsBox(title = group.title?.asString()) {
+                    val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
+                    enabledSettings.forEachIndexed { index, item ->
+                        SettingItem(
+                            item = item.value,
+                            onClick = { onSettingsClick(item) },
+                            isLastItem = index == enabledSettings.lastIndex,
+                            tint = if (item is VaultSettingsItem.Delete)
+                                Theme.colors.alerts.error else null
+                        )
+                    }
+                }
+                UiSpacer(14.dp)
             }
-            if (uiModel.hasMigration) {
-                SettingsItem(
-                    title = stringResource(R.string.vault_settings_migration_title),
-                    subtitle = stringResource(R.string.vault_settings_migration_subtitle),
-                    icon = R.drawable.ic_swap_arrows,
-                    onClick = onMigrateClick,
+
+
+            if (uiModel.isBackupVaultBottomSheetVisible) {
+                BackupVaultBottomSheet(
+                    onDismissRequest = onDismissBackupVaultBottomSheet,
+                    onLocalBackupClick = onLocalBackupClick,
+                    onServerBackupClick = onServerBackupClick
                 )
             }
 
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_sign_message_title),
-                subtitle = stringResource(R.string.vault_settings_sign_message_description),
-                icon = R.drawable.baseline_edit_square_24,
-                onClick = onSignMessageClick,
-            )
-
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_security_title),
-                subtitle = stringResource(R.string.vault_settings_security_subtitle),
-                icon = R.drawable.ic_on_chain_security,
-                onClick = onOnChainSecurity
-            )
-
-            if (uiModel.hasFastSign && canAuthenticateBiometric) {
-                SettingsItem(
-                    title = stringResource(R.string.vault_settings_biometrics_title),
-                    subtitle = stringResource(R.string.vault_settings_biometrics_description),
-                    icon = R.drawable.ic_biometric,
-                    onClick = onBiometricsClick,
+            if (uiModel.isBiometricFastSignBottomSheetVisible) {
+                BiometricFastSignBottomSheet(
+                    onDismissBiometricsBottomSheet,
+                    biometricTextFieldState,
+                    onToggleVisibilityClick,
+                    onSaveBiometricsClick,
+                    uiModel
                 )
             }
-
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_delete_title),
-                subtitle = stringResource(R.string.vault_settings_delete_subtitle),
-                icon = R.drawable.trash_outline,
-                colorTint = Theme.colors.red,
-                onClick = onDeleteClick
-            )
         }
+    }
+
+
+}
+
+@Composable
+private fun BiometricFastSignBottomSheet(
+    onDismissBiometricsBottomSheet: () -> Unit,
+    biometricTextFieldState: TextFieldState,
+    onToggleVisibilityClick: () -> Unit,
+    onSaveBiometricsClick: () -> Unit,
+    uiModel: VaultSettingsState
+) {
+    VsModalBottomSheet(
+        onDismissRequest = onDismissBiometricsBottomSheet,
+    ) {
+        BiometricFastSignBottomSheetContent(
+            passwordTextFieldState = biometricTextFieldState,
+            onToggleVisibilityClick = onToggleVisibilityClick,
+            onSaveClick = onSaveBiometricsClick,
+            hint = uiModel.biometricsEnableUiModel.passwordHint?.asString() ?: stringResource(R.string.import_file_screen_hint_password),
+            errorMessage = uiModel.biometricsEnableUiModel.passwordErrorMessage?.asString(),
+            isSaveEnabled = uiModel.biometricsEnableUiModel.isSaveEnabled,
+            isPasswordVisible = uiModel.biometricsEnableUiModel.isPasswordVisible,
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BackupVaultBottomSheet(
+    onDismissRequest: () -> Unit = {},
+    onLocalBackupClick: () -> Unit = {},
+    onServerBackupClick: () -> Unit = {},
+) {
+    VsModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+    ) {
+        BackupVaultBottomSheetContent(
+            onLocalBackupClick = onLocalBackupClick,
+            onServerBackupClick = onServerBackupClick
+        )
     }
 }
 
 @Preview
 @Composable
-private fun VaultSettingsScreenPreview() {
-    VaultSettingsScreen(
-        uiModel = VaultSettingsState(),
-        snackBarHostState = SnackbarHostState(),
-        navController = rememberNavController()
-    )
+private fun BiometricFastSignBottomSheetContent(
+    passwordTextFieldState: TextFieldState = rememberTextFieldState(),
+    onToggleVisibilityClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
+    hint: String? = null,
+    errorMessage: String? = null,
+    isSaveEnabled: Boolean = true,
+    isPasswordVisible: Boolean = true,
+) {
+    Column(
+        Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
+            style = Theme.brockmann.headings.subtitle,
+            color = Theme.colors.text.primary,
+        )
+
+        FadingHorizontalDivider(
+            modifier = Modifier.padding(
+                vertical = 24.dp
+            )
+        )
+
+        VsTextInputField(
+            textFieldState = passwordTextFieldState,
+            type = VsTextInputFieldType.Password(
+                isVisible = isPasswordVisible,
+                onVisibilityClick = onToggleVisibilityClick
+            ),
+            hint = hint,
+            footNote = errorMessage,
+            innerState = if (errorMessage != null)
+                VsTextInputFieldInnerState.Error
+            else VsTextInputFieldInnerState.Default,
+        )
+
+
+        UiSpacer(14.dp)
+
+        VsButton(
+            state = if (isSaveEnabled)
+                VsButtonState.Enabled
+            else
+                VsButtonState.Disabled,
+            label = stringResource(R.string.add_vault_save),
+            onClick = onSaveClick,
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun BackupVaultBottomSheetContent(
+    onLocalBackupClick: () -> Unit = {},
+    onServerBackupClick: () -> Unit = {},
+) {
+    Column(
+        Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.backup_choose_method_title),
+            style = Theme.brockmann.headings.subtitle,
+            color = Theme.colors.text.primary,
+        )
+
+        FadingHorizontalDivider(
+            modifier = Modifier
+                .padding(
+                    vertical = 24.dp
+                )
+        )
+
+        BackupOption(
+            title = stringResource(R.string.backup_device_title),
+            description = stringResource(R.string.backup_device_desc),
+            icon = R.drawable.device_backup,
+            onClick = onLocalBackupClick
+        )
+
+        UiSpacer(
+            size = 14.dp
+        )
+        BackupOption(
+            title = stringResource(R.string.backup_server_title),
+            description = stringResource(R.string.backup_server_desc),
+            icon = R.drawable.server_backup,
+            onClick = onServerBackupClick
+        )
+        UiSpacer(14.dp)
+    }
+}
+
+@Composable
+private fun BackupOption(
+    title: String,
+    description: String,
+    @DrawableRes icon: Int,
+    onClick: () -> Unit,
+
+    ) {
+    V2Container(
+        modifier = Modifier.clickOnce(onClick = onClick),
+        type = ContainerType.PRIMARY,
+        borderType = ContainerBorderType.Bordered(color = Theme.colors.borders.normal),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(
+                    all = 16.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            UiIcon(
+                drawableResId = icon,
+                size = 20.dp,
+                tint = Theme.colors.primary.accent4,
+            )
+
+            UiSpacer(
+                size = 12.dp,
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.headings.subtitle,
+                    color = Theme.colors.text.primary,
+                )
+
+                UiSpacer(
+                    size = 4.dp
+                )
+
+                Text(
+                    text = description,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.light,
+                )
+            }
+
+            UiIcon(
+                drawableResId = R.drawable.ic_caret_right,
+                size = 20.dp,
+                tint = Theme.colors.text.light,
+            )
+        }
+    }
 }

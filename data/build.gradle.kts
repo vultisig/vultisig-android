@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vultisig.wallet"
+    namespace = "com.vultisig.wallet.data"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
@@ -48,7 +48,7 @@ protobuf {
 
     plugins {
         id("kotlinx-protobuf-gen") {
-            artifact = "io.github.dogacel:kotlinx-protobuf-gen:0.0.1:jvm8@jar"
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen.get()}:jvm8@jar"
         }
     }
 
@@ -58,6 +58,15 @@ protobuf {
                 id("kotlinx-protobuf-gen") {}
             }
         }
+    }
+}
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            listOf(
+                "-opt-in=kotlinx.serialization.ExperimentalSerializationApi"
+            )
+        )
     }
 }
 

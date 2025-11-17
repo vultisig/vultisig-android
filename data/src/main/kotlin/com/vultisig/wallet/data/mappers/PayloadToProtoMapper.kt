@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.models.quotes.dstAmount
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -14,9 +12,6 @@ import vultisig.keysign.v1.CardanoChainSpecific
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
-import vultisig.keysign.v1.KyberSwapPayload
-import vultisig.keysign.v1.KyberSwapQuote
-import vultisig.keysign.v1.KyberSwapTransaction
 import vultisig.keysign.v1.MAYAChainSpecific
 import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload
@@ -102,6 +97,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     toTokenAssociatedAddress = specific.toAddressPubKey,
                     fromTokenAssociatedAddress = specific.fromAddressPubKey,
                     programId = specific.programId,
+                    computeLimit =specific.priorityLimit.toString()
                 )
             } else null,
             polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {
@@ -118,6 +114,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                 SuiSpecific(
                     referenceGasPrice = specific.referenceGasPrice.toString(),
                     coins = specific.coins,
+                    gasBudget = specific.gasBudget.toString(),
                 )
             } else null,
             rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
@@ -133,6 +130,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     expireAt = specific.expireAt,
                     bounceable = specific.bounceable,
                     sendMaxAmount = specific.sendMaxAmount,
+                    jettonAddress = specific.jettonAddress,
+                    isActiveDestination = specific.isActiveDestination,
                 )
             } else null,
             tronSpecific = if (specific is BlockChainSpecific.Tron) {
@@ -189,7 +188,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     isAffiliate = from.isAffiliate,
                 )
             } else null,
-            oneinchSwapPayload = if (swapPayload is SwapPayload.OneInch) {
+            oneinchSwapPayload = if (swapPayload is SwapPayload.EVM) {
                 val from = swapPayload.data
                 OneInchSwapPayload(
                     fromCoin = from.fromCoin.toCoinProto(),
@@ -211,34 +210,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                 )
                             }
                         )
-                    }
-                )
-            } else null,
-            kyberswapSwapPayload = if(swapPayload is SwapPayload.Kyber) {
-                val from = swapPayload.data
-                KyberSwapPayload(
-                    fromCoin = from.fromCoin.toCoinProto(),
-                    toCoin = from.toCoin.toCoinProto(),
-                    fromAmount = from.fromAmount.toString(),
-                    toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                    quote =
-                        from.quote.let { it ->
-
-                        KyberSwapQuote(
-                            dstAmount = it.dstAmount,
-                            tx = it.tx.let {
-                                KyberSwapTransaction(
-                                    from = it.from,
-                                    to = it.to,
-                                    `data` = it.data,
-                                    `value` = it.value,
-                                    gasPrice = it.gasPrice,
-                                    gas = it.gas,
-                                    fee = it.fee,
-                                )
-                            },
-                        )
-                    }
+                    },
+                    provider = from.provider,
                 )
             } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
@@ -264,5 +237,4 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
         hexPublicKey = hexPublicKey,
         logo = logo,
     )
-
 }

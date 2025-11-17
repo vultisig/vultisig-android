@@ -10,7 +10,9 @@ interface ReferralCodeSettingsRepositoryContract {
     fun getReferralCreatedBy(vaultId: String): String?
     fun saveReferralCreated(vaultId: String, referralCode: String)
     fun getExternalReferralBy(vaultId: String): String?
-    fun saveExternalReferral(vaultId: String, referralCode: String)
+    fun saveExternalReferral(vaultId: String, referralCode: String?)
+    fun getCurrentVaultId(): String?
+    fun setCurrentVaultId(vaultId: String)
 }
 
 class ReferralCodeSettingsRepository @Inject constructor(
@@ -42,15 +44,24 @@ class ReferralCodeSettingsRepository @Inject constructor(
         return encryptedSharedPreferences.getString(key, null)
     }
 
-    override fun saveExternalReferral(vaultId: String, referralCode: String) {
+    override fun saveExternalReferral(vaultId: String, referralCode: String?) {
         val key = EXTERNAL_REFERRAL_CODE_KEY + vaultId
 
         encryptedSharedPreferences.edit { putString(key, referralCode) }
+    }
+
+    override fun getCurrentVaultId(): String? {
+        return encryptedSharedPreferences.getString(CURRENT_VAULT_CODE_KEY, null)
+    }
+
+    override fun setCurrentVaultId(vaultId: String) {
+        encryptedSharedPreferences.edit { putString(CURRENT_VAULT_CODE_KEY, vaultId) }
     }
 
     private companion object {
         const val HAS_VISIT_REFERRAL_CODE_KEY = "has_visit_referral_code"
         const val VAULT_REFERRAL_CODE_KEY = "referral_code_"
         const val EXTERNAL_REFERRAL_CODE_KEY = "external_referral_code_"
+        const val CURRENT_VAULT_CODE_KEY = "current_vault_key"
     }
 }

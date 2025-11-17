@@ -1,27 +1,35 @@
 package com.vultisig.wallet.ui.screens.select
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -31,7 +39,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -40,11 +47,14 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.collections.map
+
 
 internal data class SelectNetworkUiModel(
     val selectedNetwork: Chain = Chain.ThorChain,
     val networks: List<NetworkUiModel> = emptyList(),
 )
+
 
 data class NetworkUiModel(
     val chain: Chain,
@@ -106,7 +116,7 @@ internal class SelectNetworkViewModel @Inject constructor(
                     val matchesQuery = chain.raw.contains(query, ignoreCase = true) ||
                             chain.coinType.symbol.contains(query, ignoreCase = true)
                     val matchesFilter = when (args.filters) {
-                        Filters.SwapAvailable -> chain.IsSwapSupported
+                        Filters.SwapAvailable -> chain.isSwapSupported
                         Filters.DisableNetworkSelection -> chain.id == selectedNetwork.id
                         Filters.None -> true
                     }

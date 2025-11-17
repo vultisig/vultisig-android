@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.referral
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -27,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,6 +48,8 @@ import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
+import com.vultisig.wallet.ui.utils.asString
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 internal fun ReferralScreen(
@@ -54,11 +60,17 @@ internal fun ReferralScreen(
     val state by model.state.collectAsState()
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-    LaunchedEffect(savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE)) {
-        val code = savedStateHandle?.get<String>(NEW_EXTERNAL_REFERRAL_CODE).orEmpty()
-        if (code.isNotEmpty()) {
-            model.onNewEditedReferral(code)
-            savedStateHandle?.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
+
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.let { handle ->
+            snapshotFlow { handle.get<String>(NEW_EXTERNAL_REFERRAL_CODE) }
+                .distinctUntilChanged()
+                .collect { code ->
+                    if (code != null) {
+                        model.onNewEditedReferral(code)
+                        handle.remove<String>(NEW_EXTERNAL_REFERRAL_CODE)
+                    }
+                }
         }
     }
 
@@ -97,27 +109,25 @@ private fun ReferralScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
-                    .navigationBarsPadding()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.crypto_natives),
+                        painter = painterResource(id = R.drawable.crypto_natives_v2),
                         contentDescription = "ReferralImage",
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                UiSpacer(16.dp)
+                UiSpacer(1f)
 
                 StyledText(
                     parts = listOf(
@@ -130,7 +140,7 @@ private fun ReferralScreen(
                     fontWeight = Theme.brockmann.body.m.medium.fontWeight,
                 )
 
-                UiSpacer(1f)
+                UiSpacer(16.dp)
 
                 VsTextInputField(
                     textFieldState = referralState,
@@ -142,7 +152,7 @@ private fun ReferralScreen(
                         if (content.isNullOrEmpty()) return@VsTextInputField
                         onPasteIcon(content)
                     },
-                    footNote = state.referralMessage,
+                    footNote = state.referralMessage?.asString(),
                     focusRequester = null, //focusRequester,
                     imeAction = ImeAction.Go,
                     keyboardType = KeyboardType.Text,
@@ -214,8 +224,49 @@ private fun ReferralScreen(
                 )
             }
         },
-        bottomBar = {
-            UiSpacer(32.dp)
-        }
+    )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Preview(showBackground = true)
+@Composable
+private fun ReferralScreenPreview() {
+    val referralState = TextFieldState("FRIEND-REF-2024")
+    val clipboardData = mutableStateOf<String?>(null)
+
+    ReferralScreen(
+        onBackPressed = {},
+        onPasteIcon = {},
+        onSavedOrEditExternalReferral = {},
+        onCreateOrEditReferral = {},
+        state = ReferralUiState(
+            referralMessage = null,
+            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+            isCreateEnabled = true,
+        ),
+        clipboardData = clipboardData,
+        referralState = referralState,
+    )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Preview(showBackground = true, name = "With Existing Referral")
+@Composable
+private fun ReferralScreenWithReferralPreview() {
+    val referralState = TextFieldState("EXISTING-CODE")
+    val clipboardData = mutableStateOf<String?>(null)
+
+    ReferralScreen(
+        onBackPressed = {},
+        onPasteIcon = {},
+        onSavedOrEditExternalReferral = {},
+        onCreateOrEditReferral = {},
+        state = ReferralUiState(
+            referralMessage = null,
+            referralMessageState = com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState.Default,
+            isCreateEnabled = false,
+        ),
+        clipboardData = clipboardData,
+        referralState = referralState,
     )
 }

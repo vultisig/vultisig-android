@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,6 +49,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     private val requestId: String? = savedStateHandle[Destination.ARG_REQUEST_ID]
     private val chainId: String? = savedStateHandle[Destination.ARG_CHAIN_ID]
+    private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
 
     private var reIndexJob: Job? = null
 
@@ -123,7 +125,11 @@ internal class AddressBookViewModel @Inject constructor(
     }
 
     private suspend fun editAddress(model: AddressBookEntry) {
-        navigator.navigate(Destination.AddressEntry(model.chain.id, model.address))
+        navigator.route(Route.AddressEntry(
+            chainId = model.chain.id,
+            address = model.address,
+            vaultId = vaultId
+        ))
     }
 
     fun deleteAddress(model: AddressBookEntryUiModel) {
@@ -140,7 +146,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     fun addAddress() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddressEntry())
+            navigator.route(Route.AddressEntry(vaultId = vaultId))
         }
     }
 

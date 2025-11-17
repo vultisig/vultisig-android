@@ -16,7 +16,7 @@ internal fun KeysignErrorScreen(
     val infoText: String?
     when {
         errorMessage.contains("Blockhash not found") -> {
-            errorLabel = stringResource(R.string.signing_error_blockhash_not_found)
+            errorLabel = stringResource(R.string.signing_error_transaction_timeout)
             infoText = null
         }
         errorMessage.contains("insufficient funds") -> {

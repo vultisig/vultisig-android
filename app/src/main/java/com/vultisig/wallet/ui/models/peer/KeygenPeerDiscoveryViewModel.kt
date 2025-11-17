@@ -162,8 +162,8 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         state.update {
             it.copy(
                 warning = ErrorUiModel(
-                    title = "No Connection available".asUiText(),
-                    description = "Please enable WiFi or mobile to sign transaction".asUiText()
+                    title = R.string.key_gen_discovery_no_connection_available.asUiText(),
+                    description = R.string.key_gen_discovery_enable_wifi.asUiText()
                 )
             )
         }
@@ -315,7 +315,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 )
             }
 
-            if (email != null && password != null) {
+            if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
                 // For active vault , we should present PeerDiscovery screen, so the other device can join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
@@ -497,7 +497,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         }
 
     private suspend fun requestVultiServerConnection() {
-        if (email != null && password != null) {
+        if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {
                     vultiSignerRepository.joinReshare(

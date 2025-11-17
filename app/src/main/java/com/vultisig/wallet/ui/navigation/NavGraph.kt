@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -8,38 +10,65 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_MERGE_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_BOND_ADDRESS
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_DEPOSIT_TYPE
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
-import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
-import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
-import com.vultisig.wallet.ui.navigation.Route.*
-import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Route.AddressBook
+import com.vultisig.wallet.ui.navigation.Route.AddressEntry
+import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
+import com.vultisig.wallet.ui.navigation.Route.BackupVault
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
+import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
+import com.vultisig.wallet.ui.navigation.Route.FastVaultPasswordReminder
+import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
+import com.vultisig.wallet.ui.navigation.Route.ImportVault
+import com.vultisig.wallet.ui.navigation.Route.Keygen
+import com.vultisig.wallet.ui.navigation.Route.Keysign
+import com.vultisig.wallet.ui.navigation.Route.Migration
+import com.vultisig.wallet.ui.navigation.Route.Onboarding
+import com.vultisig.wallet.ui.navigation.Route.ScanError
+import com.vultisig.wallet.ui.navigation.Route.ScanQr
+import com.vultisig.wallet.ui.navigation.Route.Secret
+import com.vultisig.wallet.ui.navigation.Route.SelectAsset
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
+import com.vultisig.wallet.ui.navigation.Route.Send
+import com.vultisig.wallet.ui.navigation.Route.Swap
+import com.vultisig.wallet.ui.navigation.Route.TokenDetail
+import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
+import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VaultList
+import com.vultisig.wallet.ui.navigation.Route.VerifyDeposit
+import com.vultisig.wallet.ui.navigation.Route.VerifySend
+import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
+import com.vultisig.wallet.ui.screens.OnRampScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
-import com.vultisig.wallet.ui.screens.CustomTokenScreen
+import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
-import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
+import com.vultisig.wallet.ui.screens.v2.defi.DefiPositionsScreen
+import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
-import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
-import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.FastVaultPasswordReminderDialog
-import com.vultisig.wallet.ui.screens.home.HomeScreen
+import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
@@ -62,29 +91,35 @@ import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
-import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralVaultListScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
-import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.send.sendScreen
+import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
-import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
+import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreen
+import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
-import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
+import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
@@ -94,6 +129,7 @@ import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import kotlin.reflect.typeOf
 
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @ExperimentalAnimationApi
@@ -123,32 +159,15 @@ internal fun SetupNavGraph(
                 }
             )
         ) {
-            HomeScreen(navController)
+            VaultAccountsScreen()
         }
 
         composable<ImportVault> {
-            ImportFileScreen(navController)
+            ImportFileScreen()
         }
-        composable(route = Destination.CreateFolder.route) {
-            CreateFolderScreen(navController)
-        }
-        composable(
-            route = Destination.Folder.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
-            )
-        ) {
-            FolderScreen()
-        }
-        composable(
-            route = AddChainAccount.route,
-            arguments = listOf(
-                navArgument(AddChainAccount.ARG_VAULT_ID) { type = NavType.StringType }
-            )
-        ) {
-            ChainSelectionScreen(
-                navController = navController
-            )
+
+        dialog<AddChainAccount> {
+            ChainSelectionScreen()
         }
         composable(
             route = Destination.VaultSettings.STATIC_ROUTE,
@@ -156,9 +175,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            VaultSettingsScreen(
-                navController = navController
-            )
+            VaultSettingsScreen()
         }
         composable(
             route = Destination.Details.STATIC_ROUTE,
@@ -169,13 +186,8 @@ internal fun SetupNavGraph(
             VaultDetailScreen(navController)
         }
 
-        composable(
-            route = Destination.Rename.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
-            )
-        ) {
-            VaultRenameScreen(navController)
+        composable<Route.Rename> {
+            VaultRenameScreen()
         }
 
         composable(
@@ -192,40 +204,21 @@ internal fun SetupNavGraph(
         ) {
             ChainTokensScreen(navController)
         }
-        composable(
-            route = Destination.TokenDetail.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
-                navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
-                navArgument(ARG_MERGE_ID) { type = NavType.StringType }
-            )
-        ) {
-            TokenDetailScreen(navController)
-        }
-        composable(
-            route = Destination.SelectTokens.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
-            )
-        ) {
-            TokenSelectionScreen(
-                navController = navController
-            )
-        }
 
         composable(
-            route = Destination.SelectToken.STATIC_ROUTE,
+            route = Destination.PositionTokens.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_TARGET_ARG) { type = NavType.StringType },
-                navArgument(ARG_SWAP_SELECT) { type = NavType.BoolType }
             )
         ) {
-            SelectTokenScreen(
-                navController = navController
-            )
+            DefiPositionsScreen()
+        }
+
+        dialog<TokenDetail> {
+            TokenDetailScreen()
+        }
+        dialog<Route.SelectTokens> {
+            TokenSelectionScreen()
         }
 
         composable(
@@ -252,25 +245,17 @@ internal fun SetupNavGraph(
                 navArgument(ARG_CHAIN_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
                 }
             )
         ) {
             AddressBookScreen(navController = navController)
         }
 
-        composable(
-            route = Destination.AddressEntry.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_CHAIN_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument(ARG_ADDRESS) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) {
+        composable<AddressEntry> {
             AddAddressEntryScreen(
                 navController = navController,
             )
@@ -281,6 +266,8 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_DEPOSIT_TYPE) { type = NavType.StringType },
+                navArgument(ARG_BOND_ADDRESS) { type = NavType.StringType },
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
@@ -289,6 +276,8 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = requireNotNull(args.getString(ARG_CHAIN_ID)),
+                depositType = args.getString(ARG_DEPOSIT_TYPE),
+                bondAddress = args.getString(ARG_BOND_ADDRESS),
             )
         }
 
@@ -298,7 +287,7 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            SettingsScreen(navController = navController)
+            SettingsScreen()
         }
 
         composable(
@@ -310,13 +299,29 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.FAQSetting.route,
         ) {
-            FAQSettingScreen(navController = navController)
+            FaqSettingScreen(navController = navController)
         }
 
         composable(
             route = Destination.VultisigToken.route,
         ) {
             VultisigTokenScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.DiscountTiers.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) {
+            val vaultId = it.arguments?.getString(ARG_VAULT_ID) ?: ""
+            DiscountTiersScreen(
+                navController = navController,
+                vaultId = vaultId
+            )
         }
 
         composable(
@@ -357,10 +362,8 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable(
-            route = Destination.CustomToken.STATIC_ROUTE,
-        ) {
-            CustomTokenScreen(navController)
+        dialog<Route.CustomToken>{
+            CustomTokenScreen()
         }
 
         composable(
@@ -478,18 +481,28 @@ internal fun SetupNavGraph(
             FastVaultVerificationScreen()
         }
 
-        composable<BackupVault> {
+        composable<BackupVault>(
+            typeMap = mapOf(
+                typeOf<BackupPasswordType>() to BackupPasswordTypeNavType
+            )
+        ) {
             BackupVaultScreen()
         }
 
-        composable<BackupPasswordRequest> {
+        composable<BackupPasswordRequest>(
+            typeMap = mapOf(
+                typeOf<BackupType>() to BackupTypeNavType
+            )
+        ) {
             BackupPasswordRequestScreen()
         }
-
-        composable<BackupPassword> {
+        composable<Route.BackupPassword>(
+            typeMap = mapOf(
+                typeOf<BackupType>() to BackupTypeNavType
+            )
+        ) {
             BackupPasswordScreen()
         }
-
         composable<VaultBackupSummary> {
             VaultBackupSummaryScreen()
         }
@@ -510,8 +523,12 @@ internal fun SetupNavGraph(
         }
 
         // send
-        composable<Send> {
-            SendScreen()
+        navigation<Send>(
+            startDestination = Send.SendMain
+        ) {
+            sendScreen(
+                navController = navController
+            )
         }
 
         composable<VerifySend> {
@@ -519,8 +536,12 @@ internal fun SetupNavGraph(
         }
 
         // swap
-        composable<Swap> {
-            SwapScreen()
+        navigation<Swap>(
+            startDestination = Swap.SwapMain
+        ) {
+            swapScreen(
+                navController = navController
+            )
         }
 
         composable<VerifySwap> {
@@ -593,6 +614,20 @@ internal fun SetupNavGraph(
                 navController = navController,
             )
         }
+
+        composable(
+            route = Destination.ReferralListVault.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralVaultListScreen(
+                navController = navController,
+            )
+        }
+
         composable(
             route = Destination.ReferralCode.STATIC_ROUTE,
             arguments = listOf(
@@ -643,6 +678,79 @@ internal fun SetupNavGraph(
             ReferralCreateScreen(
                 navController = navController,
             )
+        }
+
+        composable(
+            route = Destination.ReferralView.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_REFERRAL_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralViewScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.ReferralVaultEdition.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_REFERRAL_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_EXPIRATION_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ReferralEditVaultScreen(
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = Destination.CheckForUpdateSetting.route,
+        ) {
+            CheckForUpdateScreen()
+        }
+
+        composable(
+            route = Destination.OnRamp.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                },
+            )
+        ) {
+            OnRampScreen(
+                navController = navController
+            )
+        }
+
+
+        dialog<VaultList>(
+            typeMap = mapOf(
+                typeOf<VaultList.OpenType>() to  VaultListOpenTypeNavType
+            )
+        ) { backStackEntry ->
+            VaultListBottomSheet(
+                vaultList = backStackEntry.toRoute<VaultList>(),
+                onDismiss = navController::popBackStack
+            )
+        }
+
+        composable<Route.VaultsToBackup> {
+            VaultsToBackupScreen()
         }
     }
 }

@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -224,7 +225,11 @@ class DKLSKeysign(
                 } else {
                     delay(100)
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: CancellationException) {
+                throw e
+            }
+            catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
             }
 
@@ -286,7 +291,7 @@ class DKLSKeysign(
         try {
             val keysignSetupMsg: ByteArray
 
-            if (isInitiateDevice) {
+            if (isInitiateDevice && attempt == 0) {
                 keysignSetupMsg = getDKLSKeysignSetupMessage(messageToSign)
 
                 sessionApi.uploadSetupMessage(

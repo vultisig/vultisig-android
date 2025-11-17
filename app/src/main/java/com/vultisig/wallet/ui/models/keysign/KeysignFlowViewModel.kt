@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -112,6 +113,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val payloadToProtoMapper: PayloadToProtoMapper,
     private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
+    private val addressBookRepository: AddressBookRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -138,7 +140,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val transactionId = args.transactionId
 
     val isFastSign: Boolean
-        get() = password != null
+        get() = !password.isNullOrBlank()
 
     private val isRelayEnabled by derivedStateOf {
         networkOption.value == NetworkOption.Internet || isFastSign
@@ -176,6 +178,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             transactionTypeUiModel = transactionTypeUiModel,
             pullTssMessages = pullTssMessages,
             isInitiatingDevice = true,
+            addressBookRepository = addressBookRepository,
         )
 
     init {
@@ -353,7 +356,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             mapTransactionToUiModel(
                                 transactionRepository.getTransaction(
                                     transactionId
-                                ).first()
+                                )
                             )
                         )
                     }
@@ -404,7 +407,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
-            //Todo Handle older Android versions if needed
             context.registerReceiver(serviceStartedReceiver, filter)
         }
 
@@ -422,7 +424,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
             Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
-            if (password != null) {
+            if (!password.isNullOrBlank()) {
                 val vault = _currentVault!!
                 vultiSignerRepository.joinKeysign(
                     JoinKeysignRequestJson(

@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.data.models.Tokens
-import com.vultisig.wallet.ui.components.ChainSelectionScreen
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
+import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.theme.Theme
@@ -128,7 +128,7 @@ private fun SelectAssetScreen(
             }
         },
         bottomBar = {
-            ChainSelectionScreen(
+            VsCenterHighlightCarousel(
                 onSelectChain = { onSelectChain(it) },
                 chains = state.chains,
                 selectedChain = state.selectedChain,
@@ -171,6 +171,7 @@ private fun AssetItem(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
+            modifier = Modifier.weight(2f)
         )
 
         Text(
@@ -219,7 +220,7 @@ private fun SelectAssetScreenPreview() {
         state = SelectAssetUiModel(
             assets = listOf(
                 AssetUiModel(
-                    token = Tokens.wewe,
+                    token = Coins.Base.WEWE,
                     logo = "btc",
                     title = "BTC",
                     subtitle = "Bitcoin",
@@ -227,10 +228,18 @@ private fun SelectAssetScreenPreview() {
                     value = "$0.00",
                 ),
                 AssetUiModel(
-                    token = Tokens.wewe,
+                    token = Coins.Base.WEWE,
                     logo = "eth",
                     title = "ETH",
                     subtitle = "Ethereum",
+                    amount = "0.00",
+                    value = "$0.00",
+                ),
+                AssetUiModel(
+                    token = Coins.Base.WEWE,
+                    logo = "thor",
+                    title = "LP-GAIA.ATOM/ETH.USDC-XYK",
+                    subtitle = "Thorchain",
                     amount = "0.00",
                     value = "$0.00",
                 ),

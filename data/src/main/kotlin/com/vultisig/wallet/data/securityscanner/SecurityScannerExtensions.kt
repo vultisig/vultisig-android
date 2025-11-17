@@ -1,10 +1,7 @@
 package com.vultisig.wallet.data.securityscanner
 
-import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Transaction
 import timber.log.Timber
-import java.math.BigInteger
 
 internal suspend fun <T> runSecurityScan(
     transaction: SecurityScannerTransaction,

@@ -10,49 +10,25 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.io.FileWriter
-import java.io.IOException
 import java.io.OutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 private const val DIRECTORY_NAME = "Vultisig"
 private const val QRCODE_DIRECTORY_NAME = "QRCodes"
-private const val BACKUPS_DIRECTORY_NAME = "Backups"
 const val QRCODE_DIRECTORY_NAME_FULL = "$DIRECTORY_NAME/$QRCODE_DIRECTORY_NAME"
-internal const val BACKUPS_DIRECTORY_NAME_FULL = "$DIRECTORY_NAME/$BACKUPS_DIRECTORY_NAME"
 
-
-@RequiresApi(Build.VERSION_CODES.Q)
-internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileName: String): Boolean {
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, backupFileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-        put(
-            MediaStore.MediaColumns.RELATIVE_PATH,
-            Environment.DIRECTORY_DOWNLOADS + "/$BACKUPS_DIRECTORY_NAME_FULL"
-        )
-    }
-
-    val resolver = contentResolver
-
-    val downloadUri: Uri =
-        resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
-
-    try {
-        resolver.openOutputStream(downloadUri).use { output ->
-            json.byteInputStream()
-                .use {
-                    it.copyTo(output!!, DEFAULT_BUFFER_SIZE)
-                }
-            return true
-        }
-    } catch (e: Exception) {
-        return false
-    }
-}
-
-fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
+suspend fun Context.saveContentToUri(uri: Uri, content: String) = doFileOperation {
     try {
         contentResolver.openOutputStream(uri).use { output ->
             content.byteInputStream()
@@ -62,50 +38,56 @@ fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
                         DEFAULT_BUFFER_SIZE
                     )
                 }
-            return true
+            return@doFileOperation true
         }
     } catch (e: Exception) {
-        return false
+        Timber.e(e, message = "error in saveContentToUri")
+        return@doFileOperation false
     }
 }
 
-internal fun backupVaultToDownloadsDir(json: String, backupFileName: String): Boolean {
-    if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
-        val downloadsDirectory = File(
-            Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS
-            ).absolutePath + "/$BACKUPS_DIRECTORY_NAME_FULL"
-        )
-
-        try {
-            if (!downloadsDirectory.exists()) {
-                downloadsDirectory.mkdirs()
+suspend fun Context.saveContentToUri(uri: Uri, contentList: List<AppZipEntry>): Boolean = doFileOperation {
+    try {
+        contentResolver.openOutputStream(uri).use { outputStream ->
+            ZipOutputStream(outputStream).use { zipOutputStream ->
+                contentList.forEach { content ->
+                    val zipEntry = ZipEntry(content.name)
+                    zipOutputStream.putNextEntry(zipEntry)
+                    content.content.byteInputStream().use { input ->
+                        input.copyTo(zipOutputStream, DEFAULT_BUFFER_SIZE)
+                    }
+                    zipOutputStream.closeEntry()
+                }
             }
-            val jsonFile = File(downloadsDirectory, backupFileName)
-            FileWriter(jsonFile).use { fileWriter ->
-                fileWriter.write(json)
-                return true
-            }
-        } catch (e: IOException) {
-            return false
         }
+        return@doFileOperation true
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to save ZIP content to URI")
+        return@doFileOperation false
     }
-    return false
 }
 
-fun Context.saveBitmapToDownloads(bitmap: Bitmap, fileName: String): Uri?{
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        saveBitmapToDownloadsDirAtLeastQ(bitmap, fileName)
-    } else {
-        saveBitmapToDownloadsDirLegacy(bitmap, fileName)
+suspend fun Context.saveBitmapToDownloads(bitmap: Bitmap, fileName: String): Uri?{
+    return doFileOperation {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            saveBitmapToDownloadsDirAtLeastQ(bitmap, fileName)
+        } else {
+            saveBitmapToDownloadsDirLegacy(bitmap, fileName)
+        }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
-internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: String): Uri? {
+internal suspend fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: String): Uri? = doFileOperation {
     val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+        put(
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            fileName
+        )
+        put(
+            MediaStore.MediaColumns.MIME_TYPE,
+            "image/png"
+        )
         put(
             MediaStore.MediaColumns.RELATIVE_PATH,
             Environment.DIRECTORY_DOWNLOADS + "/$QRCODE_DIRECTORY_NAME_FULL"
@@ -115,30 +97,30 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
     val resolver = contentResolver
 
     val downloadUri: Uri =
-        resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return null
-    return try {
-        resolver.openOutputStream(downloadUri).use { bitmapStream ->
-            if (bitmapStream != null) {
-                bitmap.compressPng(bitmapStream)
-                bitmap.recycle()
-                downloadUri
-            } else {
-                null
-            }
+        resolver.insert(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            contentValues
+        ) ?: return@doFileOperation null
+
+    return@doFileOperation resolver.openOutputStream(downloadUri).use { bitmapStream ->
+        if (bitmapStream != null) {
+            bitmap.compressPng(bitmapStream)
+            bitmap.recycle()
+            downloadUri
+        } else {
+            return@doFileOperation null
         }
-    } catch (e: Exception) {
-        null
     }
 }
 
-internal fun Context.saveBitmapToDownloadsDirLegacy(bitmap: Bitmap, fileName: String): Uri? {
+internal suspend fun Context.saveBitmapToDownloadsDirLegacy(bitmap: Bitmap, fileName: String): Uri? = doFileOperation {
     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
         val downloadsDirectory = File(
             Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             ).absolutePath + "/$QRCODE_DIRECTORY_NAME_FULL"
         )
-        return try {
+        return@doFileOperation try {
             if (!downloadsDirectory.exists()) {
                 downloadsDirectory.mkdirs()
             }
@@ -149,34 +131,96 @@ internal fun Context.saveBitmapToDownloadsDirLegacy(bitmap: Bitmap, fileName: St
             bitmap.recycle()
             provideFileUri(file)
         } catch (e: Exception) {
+            Timber.e(e, message = "error in saveBitmapToDownloadsDirLegacy")
             null
         }
     }
-    return null
+    return@doFileOperation null
 }
 
-fun Context.provideFileUri(file: File): Uri = FileProvider.getUriForFile(
-    this,
-    "$packageName.provider",
-    file
-)
+suspend fun Context.provideFileUri(file: File): Uri = doFileOperation {
+    FileProvider.getUriForFile(
+        this@provideFileUri,
+        "$packageName.provider",
+        file
+    )
+}
 
 
-fun Uri.fileContent(context: Context): String? {
-    val item = context.contentResolver.openInputStream(this)
+suspend fun Uri.fileContent(context: Context): String? = doFileOperation {
+    val item = context.contentResolver.openInputStream(this@fileContent)
     val bytes = item?.readBytes()
-    return bytes?.toString(Charsets.UTF_8)
+    bytes?.toString(Charsets.UTF_8)
 }
 
 
-fun Uri.fileName(context: Context): String {
-    val cursor = context.contentResolver.query(this, null, null, null, null)
-    return cursor?.use {
+suspend fun Uri.fileName(context: Context): String = doFileOperation {
+    val cursor = context.contentResolver.query(this@fileName, null, null, null, null)
+    cursor?.use {
         val nameColumnIndex = it.getColumnIndex(DISPLAY_NAME)
         it.moveToFirst()
         it.getString(nameColumnIndex)
     } ?: ""
 }
 
-internal fun Bitmap.compressPng(stream: OutputStream) =
+internal suspend fun Bitmap.compressPng(stream: OutputStream) = doFileOperation {
     compress(Bitmap.CompressFormat.PNG, 100, stream)
+}
+
+
+suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperation {
+    val entries = mutableListOf<AppZipEntry>()
+    context.contentResolver.openInputStream(this@processZip)?.use { inputStream ->
+        ZipInputStream(inputStream).use { zipInputStream ->
+            var zipEntry = zipInputStream.nextEntry
+            while (zipEntry != null) {
+                if (!zipEntry.isDirectory) {
+                    val entryName = zipEntry.name
+                    val ext = File(entryName).extension.lowercase()
+                    if (FILE_ALLOWED_EXTENSIONS.contains(ext)) {
+                        try {
+                            val buffer = ByteArrayOutputStream()
+                            val data = ByteArray(8192)
+                            var count: Int
+                            while (zipInputStream.read(data).also { count = it } != -1) {
+                                buffer.write(data, 0, count)
+                            }
+                            val fileContent = buffer.toString(Charsets.UTF_8.name())
+                            coroutineContext.ensureActive()
+                            entries.add(AppZipEntry(entryName, fileContent))
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing file: $entryName")
+                        }
+                    }
+                }
+
+                zipInputStream.closeEntry()
+                zipEntry = zipInputStream.nextEntry
+            }
+        }
+    } ?: run {
+        Timber.w("Failed to open input stream for URI: $this")
+    }
+    return@doFileOperation entries
+}
+
+
+suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {
+    try {
+        context.contentResolver.openInputStream(this@isValidZipFile)?.use { inputStream ->
+            ZipInputStream(inputStream).use { zipStream ->
+                zipStream.nextEntry != null
+            }
+        } ?: false
+    } catch (_: Exception) {
+        false
+    }
+}
+
+
+suspend fun <T> doFileOperation(
+    block: suspend CoroutineScope.() -> T,
+) = withContext(
+    context = Dispatchers.IO,
+    block = block
+)

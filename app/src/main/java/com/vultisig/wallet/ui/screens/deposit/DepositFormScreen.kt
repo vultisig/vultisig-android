@@ -51,11 +51,13 @@ internal fun DepositFormScreen(
     model: DepositFormViewModel = hiltViewModel(),
     vaultId: String,
     chainId: String,
+    depositType: String? = null,
+    bondAddress: String? = null,
 ) {
     val state by model.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        model.loadData(vaultId, chainId)
+        model.loadData(vaultId, chainId, depositType, bondAddress)
     }
 
     DepositFormScreen(
@@ -307,8 +309,8 @@ internal fun DepositFormScreen(
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE,)||
-                            !( depositOption == DepositOption.AddCacaoPool || depositOption == DepositOption.RemoveCacaoPool)
+                            DepositOption.RedeemYRUNE)
+                        && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
                             SelectionCard(
@@ -416,7 +418,7 @@ internal fun DepositFormScreen(
                         if (depositChain == Chain.MayaChain) {
                             FormTextFieldCard(
                                 title = stringResource(R.string.deposit_form_screen_assets),
-                                hint = "Enter Assets",
+                                hint = stringResource(R.string.deposit_form_enter_asset_hint),
                                 keyboardType = KeyboardType.Text,
                                 textFieldState = assetsFieldState,
                                 onLostFocus = onAssetsLostFocus,

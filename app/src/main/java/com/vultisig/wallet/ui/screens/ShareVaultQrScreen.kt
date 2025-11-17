@@ -8,15 +8,18 @@ import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,26 +29,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
@@ -85,178 +86,28 @@ internal fun ShareVaultQrScreen(
     }
 
     ShareVaultQrScreen(
-        navController = navController,
         uid = state.shareVaultQrModel.uid,
         name = state.shareVaultQrModel.name,
         qrBitmapPainter = qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
+        onBackClick = navController::popBackStack,
         saveShareQrBitmap = viewModel::saveShareQrBitmap,
-        onShareButtonClicked = {
+        onShareClick = {
             if (state.fileUri == null) {
                 viewModel.share()
             } else {
                 shareQr(requireNotNull(state.fileUri), context)
             }
         },
-        onSaveButtonClicked = {
+        onSaveClick = {
             if (state.fileUri == null) {
                 viewModel.save()
             } else {
                 viewModel.showSnackbarSavedMessage()
                 navController.popBackStack()
             }
-        },
+        }
     )
-}
-
-@Composable
-internal fun ShareVaultQrScreen(
-    navController: NavController,
-    uid: String,
-    name: String,
-    qrBitmapPainter: BitmapPainter?,
-    shareVaultQrString: String?,
-    saveShareQrBitmap: (Bitmap) -> Unit,
-    onShareButtonClicked: () -> Unit,
-    onSaveButtonClicked: () -> Unit,
-) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-
-            Column(
-                horizontalAlignment = CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 12.dp,
-                    ),
-            ) {
-                
-                VsButton(
-                    label = stringResource(R.string.share_vault_qr_share),
-                    iconLeft = R.drawable.share,
-                    onClick = onShareButtonClicked,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                UiSpacer(size = 12.dp)
-
-                VsButton(
-                    label = stringResource(R.string.share_vault_qr_save),
-                    onClick = onSaveButtonClicked,
-                    variant = VsButtonVariant.Secondary,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(id = R.string.share_vault_qr_title),
-                startIcon = R.drawable.ic_caret_left,
-            )
-        },
-    ) {
-
-        val modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 32.dp, vertical = 4.dp
-            )
-            .extractBitmap { bitmap ->
-                if (qrBitmapPainter != null) {
-                    saveShareQrBitmap(bitmap)
-                } else {
-                    bitmap.recycle()
-                }
-            }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(it),
-            contentAlignment = Alignment.Center,
-        ) {
-            QrCard(shareVaultQrString, qrBitmapPainter, name, uid, modifier)
-        }
-    }
-}
-
-@Composable
-private fun QrCard(
-    shareVaultQrString: String?,
-    qrBitmapPainter: BitmapPainter?,
-    name: String,
-    uid: String,
-    modifier: Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(25.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Theme.colors.aquamarine,
-                            Theme.colors.sapphireGlitter,
-                        ),
-                    ),
-                )
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = name,
-                style = Theme.menlo.heading5.copy(
-                    fontWeight = FontWeight.Bold,
-                ),
-                color = Theme.colors.neutral0,
-            )
-            UiSpacer(4.dp)
-            Text(
-                text = stringResource(R.string.share_vault_qr_uid, uid),
-                style = Theme.menlo.subtitle1.copy(
-                    fontWeight = FontWeight.Medium,
-                ),
-                textAlign = TextAlign.Center,
-                color = Theme.colors.neutral0,
-            )
-            UiSpacer(8.dp)
-
-            if (shareVaultQrString == null || qrBitmapPainter == null) {
-                Box(
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .fillMaxWidth()
-                        .background(Theme.colors.neutral0),
-                ) {}
-            } else {
-                Image(
-                    painter = qrBitmapPainter,
-                    contentDescription = "qr",
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .fillMaxWidth(),
-                )
-            }
-            UiSpacer(8.dp)
-            Text(
-                text = stringResource(R.string.share_vault_qr_address),
-                style = Theme.menlo.subtitle3.copy(
-                    fontSize = 18.sp,
-                ),
-                color = Theme.colors.neutral0,
-            )
-            UiSpacer(8.dp)
-        }
-    }
 }
 
 
@@ -266,24 +117,241 @@ private fun shareQr(
     val intent = Intent(Intent.ACTION_SEND)
     intent.putExtra(Intent.EXTRA_STREAM, fileUri)
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    intent.setType("image/png")
+    intent.type = "image/png"
     val shareIntent = Intent.createChooser(intent, null)
     context.startActivity(shareIntent)
 }
 
+
+@Composable
+internal fun ShareVaultQrScreen(
+    uid: String,
+    name: String,
+    qrBitmapPainter: BitmapPainter?,
+    shareVaultQrString: String?,
+    saveShareQrBitmap: (Bitmap) -> Unit,
+    onBackClick: () -> Unit = {},
+    onShareClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
+) {
+    Scaffold(
+        topBar = {
+            V2Topbar(
+                title = stringResource(R.string.share_vault_qr_title),
+                onBackClick = onBackClick,
+            )
+        },
+        containerColor = Theme.colors.backgrounds.primary,
+        bottomBar = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(
+                        vertical = 16.dp,
+                        horizontal = 12.dp,
+                    )
+            ) {
+                Info()
+
+                UiSpacer(8.dp)
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_share),
+                    onClick = onShareClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    size = VsButtonSize.Small,
+                    variant = VsButtonVariant.Primary
+                )
+
+                UiSpacer(12.dp)
+
+                VsButton(
+                    label = stringResource(R.string.share_vault_qr_save),
+                    onClick = onSaveClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    size = VsButtonSize.Medium,
+                    variant = VsButtonVariant.Secondary
+                )
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                ),
+        ) {
+
+            UiSpacer(
+                size = 48.dp
+            )
+
+            // `verticalScroll(rememberScrollState())` is required to preserve share and save functionality
+            QrContainer(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .padding(
+                        all = 32.dp,
+                    )
+                    .extractBitmap { bitmap ->
+                        if (qrBitmapPainter != null) {
+                            saveShareQrBitmap(bitmap)
+                        } else {
+                            bitmap.recycle()
+                        }
+                    },
+                uid = uid,
+                name = name,
+                qrBitmapPainter = qrBitmapPainter,
+                shareVaultQrString = shareVaultQrString,
+            )
+
+        }
+    }
+}
+
+@Composable
+private fun QrContainer(
+    modifier: Modifier = Modifier,
+    uid: String,
+    name: String,
+    qrBitmapPainter: BitmapPainter?,
+    shareVaultQrString: String?,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = Theme.colors.backgrounds.secondary,
+                shape = RoundedCornerShape(
+                    size = 24.dp
+                )
+            )
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(
+                    size = 24.dp
+                )
+            )
+            .padding(
+                horizontal = 36.dp,
+                vertical = 24.dp
+            ),
+        horizontalAlignment = CenterHorizontally,
+
+        ) {
+
+        Text(
+            text = name,
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.colors.text.primary,
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 8.dp
+        )
+
+        Text(
+            text = stringResource(
+                R.string.share_vault_qr_uid,
+                uid.takeLast(10)
+            ), /*Should we display the full text, or only the last 10 items, based on the UI design??*/
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.light,
+        )
+
+        UiSpacer(
+            size = 12.dp
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .border(
+                    width = 1.dp,
+                    color = Theme.colors.borders.light,
+                    shape = RoundedCornerShape(
+                        size = 28.dp,
+                    )
+                )
+                .padding(30.dp)
+        ) {
+            if (qrBitmapPainter != null && !shareVaultQrString.isNullOrBlank()) {
+                Image(
+                    painter = qrBitmapPainter,
+                    contentDescription = "qr",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+            }
+        }
+
+        UiSpacer(
+            size = 12.dp
+        )
+
+        Text(
+            text = stringResource(R.string.share_vault_qr_address),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.light,
+        )
+
+    }
+}
+
+@Composable
+private fun Info() {
+    Row(
+        modifier = Modifier
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = RoundedCornerShape(
+                    size = 12.dp
+                )
+            )
+            .background(
+                shape = RoundedCornerShape(
+                    size = 12.dp
+                ),
+                color = Theme.colors.backgrounds.neutral
+            )
+            .padding(
+                all = 16.dp
+            ),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_info,
+            size = 16.dp,
+            tint = Theme.colors.text.light,
+        )
+        Text(
+            text = stringResource(R.string.share_vault_qr_info),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.light,
+        )
+    }
+}
+
+
 @Preview
 @Composable
-internal fun ShareVaultQrScreenPreview() {
+private fun ShareVaultQrCardPreview() {
     ShareVaultQrScreen(
-        navController = rememberNavController(),
         uid = "8273647823saresfgaerfgsbgsetbgsetgbsgtbsbvsrvaev",
         name = "Main Vault",
-        shareVaultQrString = "placeholder",
         qrBitmapPainter = BitmapPainter(
             createBitmap(1, 1).asImageBitmap()
         ),
-        saveShareQrBitmap = {},
-        onShareButtonClicked = {},
-        onSaveButtonClicked = {},
+        shareVaultQrString = null,
+        saveShareQrBitmap = {}
     )
 }

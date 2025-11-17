@@ -1,7 +1,16 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.models.TokenStandard.*
+import com.vultisig.wallet.data.models.TokenStandard.COSMOS
+import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
+import com.vultisig.wallet.data.models.TokenStandard.SOL
+import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
+import com.vultisig.wallet.data.models.TokenStandard.SUI
+import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
+import com.vultisig.wallet.data.models.TokenStandard.TON
+import com.vultisig.wallet.data.models.TokenStandard.TRC20
+import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.utils.getDustThreshold
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -30,6 +39,8 @@ enum class Chain(
     Optimism("Optimism", EVM, "Gwei"),
     Polygon("Polygon", EVM, "Gwei"),
     ZkSync("Zksync", EVM, "Gwei"),
+    Mantle("Mantle", EVM, "Gwei"),
+    Sei("Sei", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -64,7 +75,12 @@ enum class Chain(
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw == raw }
+            Chain.entries.first {
+                it.raw.equals(
+                    other = raw,
+                    ignoreCase = true
+                )
+            }
     }
 }
 
@@ -103,6 +119,14 @@ val Chain.coinType: CoinType
         Chain.Tron -> CoinType.TRON
         Chain.Zcash -> CoinType.ZCASH
         Chain.Cardano -> CoinType.CARDANO
+        Chain.Mantle -> CoinType.MANTLE
+        Chain.Sei -> CoinType.SEI
+    }
+
+val Chain.supportsLegacyGas: Boolean
+    get() = when (this) {
+        Chain.BscChain -> true
+        else -> false
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -120,7 +144,7 @@ val Chain.canSelectTokens: Boolean
         Chain.Sui,
         Chain.Kujira,
         Chain.GaiaChain,
-        Chain.Osmosis, Chain.Tron -> true
+        Chain.Osmosis, Chain.Tron, Chain.Ton -> true
         Chain.ThorChain -> true
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {
@@ -129,16 +153,17 @@ val Chain.canSelectTokens: Boolean
         }
     }
 
-val Chain.IsSwapSupported: Boolean
+val Chain.isSwapSupported: Boolean
     get() = this in arrayOf(
         Chain.ThorChain, Chain.MayaChain, Chain.GaiaChain, Chain.Kujira,
 
         Chain.Bitcoin, Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dash, Chain.Ripple,
 
-        Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon,
+        Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon, Chain.Mantle,
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
+        Chain.Tron,
     )
 
 val Chain.isDepositSupported: Boolean
@@ -146,6 +171,67 @@ val Chain.isDepositSupported: Boolean
         Chain.ThorChain, Chain.MayaChain, Chain.Ton,
         Chain.Kujira, Chain.GaiaChain, Chain.Osmosis -> true
         else -> false
+    }
+
+val Chain.isBuySupported: Boolean
+    get() = when (this) {
+        Chain.ThorChain,
+        Chain.Solana,
+        Chain.Ethereum,
+        Chain.Avalanche,
+        Chain.Base,
+        Chain.Arbitrum,
+        Chain.Polygon,
+        Chain.Optimism,
+        Chain.BscChain,
+        Chain.Bitcoin,
+        Chain.BitcoinCash,
+        Chain.Litecoin,
+        Chain.Dogecoin,
+        Chain.Dash,
+        Chain.Cardano,
+        Chain.GaiaChain,
+        Chain.CronosChain,
+        Chain.Sui,
+        Chain.ZkSync,
+        Chain.Ton,
+        Chain.Tron,
+        Chain.Mantle,
+        Chain.Ripple,
+        Chain.Dydx,
+        Chain.Polkadot -> true
+        else -> false
+    }
+
+val Chain.banxaAssetName: String?
+    get() = when (this) {
+        Chain.ThorChain -> "THORCHAIN"
+        Chain.Solana -> "SOL"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX-C"
+        Chain.Base -> "BASE"
+        Chain.Arbitrum -> "ARB"
+        Chain.Polygon -> "MATIC"
+        Chain.Optimism -> "OPTIMISM"
+        Chain.BscChain -> "BSC"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.Dash -> "DASH"
+        Chain.Cardano -> "ADA"
+        Chain.GaiaChain -> "ATOM"
+        Chain.CronosChain -> "CRO"
+        Chain.Sui -> "SUI"
+        Chain.ZkSync -> "ZKSYNC"
+        Chain.Ton -> "TON"
+        Chain.Tron -> "TRON"
+        Chain.Mantle -> "MNT"
+        Chain.Ripple -> "XRP"
+        Chain.Dydx -> "DYDX"
+        Chain.Polkadot -> "DOT"
+        Chain.Sei -> "SEI"
+        else -> null
     }
 
 val Chain.isLayer2: Boolean
@@ -167,6 +253,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.BscChain -> 56
         Chain.CronosChain -> 25
         Chain.ZkSync -> 324
+        Chain.Mantle -> 5000
         else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
@@ -202,9 +289,11 @@ fun Chain.swapAssetName(): String {
         Chain.Noble -> "USDC"
         Chain.Ripple -> "XRP"
         Chain.Akash -> "AKT"
-        Chain.Tron -> "TRX"
+        Chain.Tron -> "TRON"
         Chain.Zcash -> "ZEC"
         Chain.Cardano -> "ADA"
+        Chain.Mantle -> "MNT"
+        Chain.Sei -> "SEI"
     }
 }
 

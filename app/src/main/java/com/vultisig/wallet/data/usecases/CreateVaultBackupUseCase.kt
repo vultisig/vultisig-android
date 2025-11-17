@@ -8,6 +8,7 @@ import io.ktor.util.encodeBase64
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
+import timber.log.Timber
 import javax.inject.Inject
 
 const val MIME_TYPE_VAULT = "application/octet-stream"
@@ -25,10 +26,11 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
     ): String? {
         val vaultBytes = protoBuf.encodeToByteArray(vault)
 
-        val contentBytes = if (password != null) {
+        val contentBytes = if (!password.isNullOrBlank()) {
             try {
                 encryption.encrypt(vaultBytes, password.toByteArray())
             } catch (e: Exception) {
+                Timber.e(e)
                 return null
             }
         } else {
@@ -39,7 +41,7 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
             VaultContainerProto(
                 version = VAULT_BACKUP_VERSION,
                 vault = contentBytes,
-                isEncrypted = password != null
+                isEncrypted = !password.isNullOrBlank()
             )
         ).encodeBase64()
     }
@@ -47,5 +49,4 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
     companion object {
         private const val VAULT_BACKUP_VERSION = 1uL
     }
-
 }

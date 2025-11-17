@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -18,7 +20,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
-
 interface PolkadotApi {
     suspend fun getBalance(address: String): BigInteger
     suspend fun getNonce(address: String): BigInteger
@@ -27,14 +28,14 @@ interface PolkadotApi {
     suspend fun getRuntimeVersion(): Pair<BigInteger, BigInteger>
     suspend fun getBlockHeader(): BigInteger
     suspend fun broadcastTransaction(tx: String): String?
+    suspend fun getPartialFee(tx: String): BigInteger
 }
 
 internal class PolkadotApiImp @Inject constructor(
     private val httpClient: HttpClient
 ) : PolkadotApi {
-    private val polkadotApiUrl = "https://polkadot-rpc.publicnode.com"
-    private val polkadotBalanceApiUrl = "https://polkadot.api.subscan.io/api/v2/scan/search"
-
+    private val polkadotApiUrl = "https://api.vultisig.com/dot/"
+    private val polkadotBalanceApiUrl = "https://assethub-polkadot.api.subscan.io/api/v2/scan/search"
 
     override suspend fun getBalance(address: String): BigInteger {
         try {
@@ -144,5 +145,25 @@ internal class PolkadotApiImp @Inject constructor(
             throw Exception("Error broadcasting transaction: $responseContent")
         }
         return responseContent.result
+    }
+
+    override suspend fun getPartialFee(tx: String): BigInteger {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "payment_queryInfo",
+            params = buildJsonArray {
+                add(if (tx.startsWith("0x")) tx else "0x${tx}")
+            },
+            id = 1,
+        )
+
+        val response = httpClient.post(polkadotApiUrl) {
+            setBody(payload)
+        }
+
+        return response.bodyOrThrow<PolkadotQueryInfoResponseJson>().result
+            ?.partialFee
+            ?.toBigIntegerOrNull()
+            ?: throw Exception("Can't obtained Partial Fee")
     }
 }

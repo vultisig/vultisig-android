@@ -5,6 +5,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.PasswordCheckResult
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -64,11 +66,26 @@ internal class FastVaultPasswordReminderViewModel @Inject constructor(
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
 
-            if (vultiSignerRepository.isPasswordValid(vault.pubKeyECDSA, password)) {
-                back()
-            } else {
-                state.update {
-                    it.copy(error = UiText.DynamicString("Invalid password"))
+            val result = vultiSignerRepository.checkPassword(vault.pubKeyECDSA, password)
+            
+            when (result) {
+                is PasswordCheckResult.Valid -> {
+                    back()
+                }
+                is PasswordCheckResult.Invalid -> {
+                    state.update {
+                        it.copy(error = UiText.StringResource(R.string.fast_vault_invalid_password))
+                    }
+                }
+                is PasswordCheckResult.NetworkError -> {
+                    state.update {
+                        it.copy(error = UiText.StringResource(R.string.network_connection_lost))
+                    }
+                }
+                is PasswordCheckResult.Error -> {
+                    state.update {
+                        it.copy(error = UiText.DynamicString(result.message))
+                    }
                 }
             }
         }

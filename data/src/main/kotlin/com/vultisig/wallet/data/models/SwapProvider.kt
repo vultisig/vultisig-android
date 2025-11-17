@@ -8,3 +8,14 @@ enum class SwapProvider {
     ONEINCH,
     THORCHAIN,
 }
+
+fun SwapProvider.getSwapProviderId(): String {
+    return when(this) {
+        SwapProvider.JUPITER -> "Jupiter"
+        SwapProvider.KYBER -> "KyberSwap"
+        SwapProvider.LIFI -> "LI.FI"
+        SwapProvider.MAYA -> "Maya"
+        SwapProvider.ONEINCH -> "1Inch"
+        SwapProvider.THORCHAIN -> "Thorchain"
+    }
+}

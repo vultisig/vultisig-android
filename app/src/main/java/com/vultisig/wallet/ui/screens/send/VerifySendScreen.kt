@@ -120,7 +120,7 @@ internal fun VerifySendScreen(
         topBar = {
             if (hasToolbar) {
                 VsTopAppBar(
-                    title = "Send overview",
+                    title = stringResource(R.string.verify_send_send_overview),
                     onBackClick = onBackClick,
                 )
             }
@@ -154,7 +154,7 @@ internal fun VerifySendScreen(
                         )
                 ) {
                     Text(
-                        text = "You're sending",
+                        text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
                         color = Theme.colors.text.light,
                     )
@@ -218,7 +218,7 @@ internal fun VerifySendScreen(
                             )
                     ) {
                         Text(
-                            text = "Network",
+                            text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
                             color = Theme.colors.text.extraLight,
                             maxLines = 1,
@@ -256,6 +256,7 @@ internal fun VerifySendScreen(
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeTokenValue,
                         fiatGas = tx.networkFeeFiatValue,
+                        isLoading = state.isLoadingFees,
                     )
                 }
 
@@ -303,13 +304,13 @@ internal fun VerifySendScreen(
                 }
                 if (state.hasFastSign) {
                     Text(
-                        text = "Hold for paired sign",
+                        text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
-                        label = "Sign transaction",
+                        label = stringResource(R.string.verify_swap_sign_button),
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
