@@ -54,6 +54,7 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -62,6 +63,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -91,6 +93,11 @@ interface BalanceRepository {
         address: String,
         coin: Coin,
     ): Flow<TokenValue>
+    
+    fun getDefiTokenBalanceAndPrice(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenBalanceAndPrice>
 
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
 
@@ -114,6 +121,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
+    private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
 ) : BalanceRepository {
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
@@ -230,33 +238,50 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getDefiTokenBalanceAndPrice(
+    override fun getDefiTokenBalanceAndPrice(
         address: String,
         coin: Coin,
-    ) {
-        appCurrencyRepository
-            .currency
-            .flatMapConcat { currency ->
-                tokenPriceRepository
-                    .getPrice(coin, currency)
-                    .zip(getTokenValue(address, coin)) { price, balance ->
-                        TokenBalanceAndPrice(
-                            tokenBalance =TokenBalance(
-                                tokenValue = balance,
-                                fiatValue = FiatValue(
-                                    value = balance.decimal
-                                        .multiply(price)
-                                        .setScale(2, RoundingMode.HALF_UP),
-                                    currency = currency.ticker,
-                                )
-                            ),
-                            price = FiatValue(
-                                value = price.setScale(2, RoundingMode.HALF_UP),
-                                currency = currency.ticker,
-                            )
-                        )
-                    }
-            }
+    ): Flow<TokenBalanceAndPrice> = flow {
+        val defiBalances = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+        
+        val defiBalance = defiBalances
+            .flatMap { it.balances }
+            .find { it.coin.id == coin.id }
+        
+        val tokenValue = if (defiBalance != null) {
+            TokenValue(
+                value = defiBalance.amount,
+                unit = coin.ticker,
+                decimals = coin.decimal,
+            )
+        } else {
+            TokenValue(
+                value = BigInteger.ZERO,
+                unit = coin.ticker,
+                decimals = coin.decimal,
+            )
+        }
+        
+        val currency = appCurrencyRepository.currency.first()
+        val price = tokenPriceRepository.getPrice(coin, currency).first()
+        
+        val fiatValue = FiatValue(
+            value = tokenValue.decimal
+                .multiply(price)
+                .setScale(2, RoundingMode.HALF_UP),
+            currency = currency.ticker,
+        )
+        
+        emit(TokenBalanceAndPrice(
+            tokenBalance = TokenBalance(
+                tokenValue = tokenValue,
+                fiatValue = fiatValue
+            ),
+            price = FiatValue(
+                value = price.setScale(2, RoundingMode.HALF_UP),
+                currency = currency.ticker,
+            )
+        ))
     }
 
     private suspend fun getCachedTokenValue(
