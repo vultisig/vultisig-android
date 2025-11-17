@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Route.AddressBook
 import com.vultisig.wallet.ui.navigation.Route.AddressEntry
 import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
 import com.vultisig.wallet.ui.navigation.Route.BackupVault
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
 import com.vultisig.wallet.ui.navigation.Route.FastVaultPasswordReminder
 import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
@@ -480,7 +481,11 @@ internal fun SetupNavGraph(
             FastVaultVerificationScreen()
         }
 
-        composable<BackupVault> {
+        composable<BackupVault>(
+            typeMap = mapOf(
+                typeOf<BackupPasswordType>() to BackupPasswordTypeNavType
+            )
+        ) {
             BackupVaultScreen()
         }
 
