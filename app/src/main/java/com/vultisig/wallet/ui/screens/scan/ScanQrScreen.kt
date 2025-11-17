@@ -354,18 +354,28 @@ fun createScanner() = BarcodeScanning.getClient(
         .build()
 )
 
-private suspend fun scanImage(inputImage: InputImage, onError: (String)-> Unit) = suspendCoroutine { continuation ->
-    createScanner()
-        .process(inputImage)
-        .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
-        .addOnFailureListener { error->
-            Timber.e(error ,"Failed to scan image for barcodes")
-            var errorMessage =when(error){
-                is IllegalArgumentException -> "Unsupported image format"
-                is IllegalStateException -> "ML Kit scanner not initialized"
-                else -> error.message ?: error.toString()
-            }
-            onError(errorMessage)
+private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit) =
+    suspendCoroutine { continuation ->
+        try {
+            createScanner()
+                .process(inputImage)
+                .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
+                .addOnFailureListener { error ->
+                    Timber.e(
+                        error,
+                        "Failed to scan image for barcodes"
+                    )
+                    var errorMessage = when (error) {
+                        is IllegalArgumentException -> "Unsupported image format"
+                        is IllegalStateException -> "ML Kit scanner not initialized"
+                        else -> error.message ?: error.toString()
+                    }
+                    onError(errorMessage)
+                    continuation.resume(emptyList())
+                }
+
+        } catch (e: Exception) {
+            onError("Barcode scanner unavailable: ${e.message}")
             continuation.resume(emptyList())
         }
-}
+    }
