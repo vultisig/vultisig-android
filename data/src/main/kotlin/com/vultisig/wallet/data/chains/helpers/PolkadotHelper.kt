@@ -17,6 +17,7 @@ import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
+import wallet.core.jni.proto.Polkadot
 
 class PolkadotHelper(
     private val vaultHexPublicKey: String,
@@ -27,16 +28,34 @@ class PolkadotHelper(
         val polkadotSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
-        val transfer = wallet.core.jni.proto.Polkadot.Balance.Transfer.newBuilder()
+
+        // After Asset Hub update, even native DOT transfers use assetTransfer
+        // with assetID 0 and feeAssetID 0 for native DOT
+        // When asset_id is 0, WalletCore encodes it as TransferAllowDeath (Balances.transfer)
+        // So we need Balances pallet call indices, not Assets pallet
+        // For Asset Hub, Balances pallet is typically module 10, method 0 (transfer_allow_death)
+        val assetTransfer = Polkadot.Balance.AssetTransfer.newBuilder()
+            .setAssetId(0)
+            .setFeeAssetId(0)
             .setToAddress(toAddress.description())
             .setValue(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
-        if (keysignPayload.memo != null) {
-            transfer.setMemo(keysignPayload.memo)
-        }
-        val balanceTransfer = wallet.core.jni.proto.Polkadot.Balance.newBuilder()
-            .setTransfer(transfer.build()).build()
+            .setCallIndices(
+                Polkadot.CallIndices
+                    .newBuilder()
+                    .setCustom(
+                        Polkadot.CustomCallIndices.newBuilder()
+                            .setMethodIndex(0)
+                            .setModuleIndex(10)
+                            .build()
+                    )
+                    .build()
+            ).build()
 
-        val input = wallet.core.jni.proto.Polkadot.SigningInput.newBuilder()
+        val balanceTransfer = Polkadot.Balance.newBuilder()
+            .setAssetTransfer(assetTransfer)
+            .build()
+
+        val input = Polkadot.SigningInput.newBuilder()
             .setGenesisHash(polkadotSpecific.genesisHash.toHexBytesInByteString())
             .setBlockHash(polkadotSpecific.recentBlockHash.toHexBytesInByteString())
             .setNonce(polkadotSpecific.nonce.toLong())
@@ -44,7 +63,7 @@ class PolkadotHelper(
             .setNetwork(coinType.ss58Prefix())
             .setTransactionVersion(polkadotSpecific.transactionVersion.toInt())
             .setEra(
-                wallet.core.jni.proto.Polkadot.Era.newBuilder()
+                Polkadot.Era.newBuilder()
                     .setBlockNumber(polkadotSpecific.currentBlockNumber.toLong())
                     .setPeriod(64)
                     .build()
@@ -66,22 +85,26 @@ class PolkadotHelper(
     }
 
     fun getZeroSignedTransaction(keysignPayload: KeysignPayload): String {
-        val dummyPublicKey = PrivateKey().publicKeyEd25519
-        
         val inputData = getPreSignedInputData(keysignPayload)
+        val dummyPublicKey = PrivateKey().publicKeyEd25519
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-        
-        // Add a dummy ED25519 signature (64 bytes of zeros) - we still use zeros for the signature
-        // but use the dummy public key so the transaction structure is valid
-        allSignatures.add("0".repeat(128).toHexByteArray())
+
+        // Exact match: 64 bytes of zero, not hex string
+        val zeroSignature = ByteArray(64) { 0 }
+        allSignatures.add(zeroSignature)
         publicKeys.add(dummyPublicKey.data())
-        
+
         // Compile with the dummy signature
         val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(coinType, inputData, allSignatures, publicKeys)
-        val output = wallet.core.jni.proto.Polkadot.SigningOutput.parseFrom(compiledWithSignature)
+            TransactionCompiler.compileWithSignatures(
+                coinType,
+                inputData,
+                allSignatures,
+                publicKeys
+            )
+        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature)
             .checkError()
 
         return Numeric.toHexStringNoPrefix(output.encoded.toByteArray())
@@ -108,7 +131,7 @@ class PolkadotHelper(
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
-        val output = wallet.core.jni.proto.Polkadot.SigningOutput.parseFrom(compiledWithSignature)
+        val output = Polkadot.SigningOutput.parseFrom(compiledWithSignature)
             .checkError()
 
         return SignedTransactionResult(

@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Solana
+import com.vultisig.wallet.data.models.Chain.Sei
 import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
@@ -271,7 +272,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
             Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism, Mantle,
-            Blast, CronosChain, ZkSync -> {
+            Blast, CronosChain, ZkSync, Sei -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 

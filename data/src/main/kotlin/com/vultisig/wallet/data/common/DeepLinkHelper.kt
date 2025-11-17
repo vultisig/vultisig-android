@@ -1,8 +1,12 @@
 package com.vultisig.wallet.data.common
 
+import android.net.Uri
 import com.vultisig.wallet.data.models.TssAction
 
 class DeepLinkHelper(input: String) {
+
+    constructor(url: Uri) : this(url.toString())
+
     private val scheme: String
     private val parameters: Map<String, String>
 
@@ -11,11 +15,18 @@ class DeepLinkHelper(input: String) {
     }
 
     init {
-        val parts = input.split("?")
+        val parts = runCatching {
+            input.split("?")
+        }.getOrElse { listOf(input) }
+
         scheme = parts[0]
-        parameters = parts[1].split("&").associate {
-            val (key, value) = it.split("=")
-            key to value
+        parameters = runCatching { parts[1].split("&") }.getOrElse { emptyList() }.associate {
+            val pair = it.split("=", limit = 2)
+            if (pair.size == 2) {
+                pair[0] to Uri.decode(pair[1])
+            } else {
+                pair[0] to ""
+            }
         }
     }
 
@@ -25,6 +36,30 @@ class DeepLinkHelper(input: String) {
 
     fun getResharePrefix(): String? {
         return parameters["resharePrefix"]
+    }
+
+    fun getAssetChain(): String? {
+        return parameters["assetChain"]
+    }
+
+    fun getAssetTicker(): String? {
+        return parameters["assetTicker"]
+    }
+
+    fun getToAddress(): String? {
+        return parameters["toAddress"]
+    }
+
+    fun getAmount(): String? {
+        return parameters["amount"]
+    }
+
+    fun getMemo(): String? {
+        return parameters["memo"]
+    }
+
+    fun isSendDeeplink(): Boolean {
+        return scheme.equals("vultisig://send", ignoreCase = true)
     }
 
     fun hasResharePrefix(): Boolean {
@@ -45,6 +80,33 @@ class DeepLinkHelper(input: String) {
             }
         }
         return null
+    }
+
+    companion object {
+
+        fun createSendDeeplink(
+            assetChain: String,
+            assetTicker: String,
+            toAddress: String,
+            amount: String? = null,
+            memo: String? = null,
+        ): String {
+            return StringBuilder().apply {
+                append("vultisig://send?")
+                append("assetChain=").append(Uri.encode(assetChain))
+                append("&assetTicker=").append(Uri.encode(assetTicker))
+                append("&toAddress=").append(Uri.encode(toAddress))
+
+                amount?.let {
+                    append("&amount=").append(Uri.encode(it))
+                }
+
+                memo?.let {
+                    append("&memo=").append(Uri.encode(it))
+                }
+            }.toString()
+        }
+
     }
 
 }

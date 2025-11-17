@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.navigation.NavType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
+import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.*
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -77,14 +79,29 @@ internal sealed class Destination(
     data class Deposit(
         val vaultId: String,
         val chainId: String,
+        val depositType: String? = null,
+        val bondAddress: String? = null,
     ) : Destination(
-        route = buildRoute(vaultId, chainId)
+        route = buildRoute(vaultId, chainId, depositType, bondAddress)
     ) {
         companion object {
-            val staticRoute = buildRoute("{$ARG_VAULT_ID}", "{$ARG_CHAIN_ID}")
+            const val ARG_DEPOSIT_TYPE = "deposit_type"
+            const val ARG_BOND_ADDRESS = "bond_address"
 
-            fun buildRoute(vaultId: String, chainId: String?) =
-                "vault_detail/$vaultId/account/$chainId/deposit"
+            val staticRoute = "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/deposit?deposit_type={$ARG_DEPOSIT_TYPE}&bond_address={$ARG_BOND_ADDRESS}"
+
+            fun buildRoute(
+                vaultId: String,
+                chainId: String?,
+                depositType: String? = null,
+                bondAddress: String? = null
+            ): String {
+                val type = depositType ?: ""
+                val address = bondAddress ?: ""
+
+                return "vault_detail/$vaultId/account/$chainId/deposit" +
+                        "?$ARG_DEPOSIT_TYPE=$type&$ARG_BOND_ADDRESS=$address"
+            }
         }
     }
 
@@ -352,7 +369,7 @@ internal sealed class Route {
     data class SelectAsset(
         val vaultId: VaultId,
         val preselectedNetworkId: ChainId,
-        val networkFilters: SelectNetwork.Filters,
+        val networkFilters: Filters,
         val requestId: String,
     )
 
@@ -378,6 +395,33 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val tokenId: TokenId? = null,
         val address: String? = null,
+        val amount: String? = null,
+        val memo: String? = null,
+    ) {
+
+        @Serializable
+        object SendMain
+    }
+
+    @Serializable
+    data class SelectNetworkPopup(
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
+        val vaultId: VaultId,
+        val selectedNetworkId: ChainId,
+        val requestId: String,
+        val filters: Filters,
+    )
+
+    @Serializable
+    data class SelectAssetPopup(
+        val vaultId: VaultId,
+        val preselectedNetworkId: ChainId,
+        val selectedAssetId: String,
+        val networkFilters: Filters,
+        val requestId: String,
+        val pressX: Float = 0f,
+        val pressY: Float = 0f,
     )
 
     @Serializable
@@ -394,7 +438,10 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val srcTokenId: TokenId? = null,
         val dstTokenId: TokenId? = null,
-    )
+    ) {
+        @Serializable
+        object SwapMain
+    }
 
     @Serializable
     data class VerifySwap(
@@ -617,8 +664,19 @@ internal sealed class Route {
 
     @Serializable
     data class VaultList(
-        val vaultId: VaultId,
-    )
+        val openType: OpenType,
+    ){
+        @Serializable
+        sealed interface OpenType {
+            @Serializable
+            data class DeepLink(
+                val sendDeepLinkData: SendDeeplinkData,
+            ): OpenType
+
+            @Serializable
+            data class Home (val vaultId: VaultId): OpenType
+        }
+    }
 
 
     @Serializable
@@ -687,6 +745,27 @@ internal val BackupTypeNavType = object : NavType<BackupType>(
     }
 
     override fun serializeAsValue(value: BackupType): String {
+        return Json.encodeToString(value)
+    }
+}
+
+
+internal val VaultListOpenTypeNavType = object : NavType<VaultList.OpenType>(
+    isNullableAllowed = false
+) {
+    override fun put(bundle: Bundle, key: String, value: VaultList.OpenType) {
+        bundle.putString(key, Json.encodeToString(value))
+    }
+
+    override fun get(bundle: Bundle, key: String): VaultList.OpenType {
+        return Json.decodeFromString(bundle.getString(key)!!)
+    }
+
+    override fun parseValue(value: String): VaultList.OpenType {
+        return Json.decodeFromString(value)
+    }
+
+    override fun serializeAsValue(value: VaultList.OpenType): String {
         return Json.encodeToString(value)
     }
 }

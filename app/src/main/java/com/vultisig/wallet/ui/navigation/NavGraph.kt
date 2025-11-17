@@ -10,12 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_BOND_ADDRESS
+import com.vultisig.wallet.ui.navigation.Destination.Deposit.Companion.ARG_DEPOSIT_TYPE
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Route.AddressBook
@@ -98,8 +101,8 @@ import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
-import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.send.sendScreen
 import com.vultisig.wallet.ui.screens.settings.CheckForUpdateScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
@@ -110,8 +113,8 @@ import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
-import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -262,6 +265,8 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_DEPOSIT_TYPE) { type = NavType.StringType },
+                navArgument(ARG_BOND_ADDRESS) { type = NavType.StringType },
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
@@ -270,6 +275,8 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = requireNotNull(args.getString(ARG_CHAIN_ID)),
+                depositType = args.getString(ARG_DEPOSIT_TYPE),
+                bondAddress = args.getString(ARG_BOND_ADDRESS),
             )
         }
 
@@ -511,8 +518,12 @@ internal fun SetupNavGraph(
         }
 
         // send
-        composable<Send> {
-            SendScreen()
+        navigation<Send>(
+            startDestination = Send.SendMain
+        ) {
+            sendScreen(
+                navController = navController
+            )
         }
 
         composable<VerifySend> {
@@ -520,8 +531,12 @@ internal fun SetupNavGraph(
         }
 
         // swap
-        composable<Swap> {
-            SwapScreen()
+        navigation<Swap>(
+            startDestination = Swap.SwapMain
+        ) {
+            swapScreen(
+                navController = navController
+            )
         }
 
         composable<VerifySwap> {
@@ -718,9 +733,13 @@ internal fun SetupNavGraph(
         }
 
 
-        dialog<VaultList> { backStackEntry ->
+        dialog<VaultList>(
+            typeMap = mapOf(
+                typeOf<VaultList.OpenType>() to  VaultListOpenTypeNavType
+            )
+        ) { backStackEntry ->
             VaultListBottomSheet(
-                vaultId = backStackEntry.toRoute<VaultList>().vaultId,
+                vaultList = backStackEntry.toRoute<VaultList>(),
                 onDismiss = navController::popBackStack
             )
         }

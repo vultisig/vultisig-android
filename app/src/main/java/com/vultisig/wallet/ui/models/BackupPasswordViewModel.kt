@@ -217,7 +217,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                 snackbarFlow.showMessage(
                     context.getString(R.string.backup_password_screen_permission_required)
                 )
-                
+
                 if (vaultId != null) {
                     navigator.navigate(
                         Destination.VaultSettings(vaultId),
@@ -231,23 +231,23 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun saveContentToUriResult(uri: Uri, mimeType: String) {
-        val password = passwordTextFieldState.text.toString()
+        viewModelScope.launch {
+            val password = passwordTextFieldState.text.toString()
 
-        if (isFileExtensionValid(uri, mimeType.toMimeType())) {
-            val isSuccess = when (backupType) {
-                BackupType.AllVaults -> {
-                    backupAllVaults(password, uri)
+            if (isFileExtensionValid(uri, mimeType.toMimeType())) {
+                val isSuccess = when (backupType) {
+                    BackupType.AllVaults -> {
+                        backupAllVaults(password, uri)
+                    }
+
+                    is BackupType.CurrentVault -> {
+                        backupCurrentVault(password, uri)
+                    }
+
+                    null -> false
                 }
-
-                is BackupType.CurrentVault -> {
-                    backupCurrentVault(password, uri)
-                }
-
-                null -> false
-            }
-            completeBackupVault(isSuccess)
-        } else {
-            viewModelScope.launch {
+                completeBackupVault(isSuccess)
+            } else {
                 DocumentsContract.deleteDocument(context.contentResolver, uri)
 
                 state.update {
@@ -262,7 +262,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
     }
 
-    private fun backupCurrentVault(password: String, uri: Uri): Boolean {
+    private suspend fun backupCurrentVault(password: String, uri: Uri): Boolean {
 
         val vault = vault.value
         if (vault == null) {
@@ -286,7 +286,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         return context.saveContentToUri(uri, backup)
     }
 
-    private fun backupAllVaults(password: String, uri: Uri): Boolean {
+    private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
         val content = vaults.map { vault ->
             val vaultBackupData = createVaultBackup(
                 mapVaultToProto(vault),

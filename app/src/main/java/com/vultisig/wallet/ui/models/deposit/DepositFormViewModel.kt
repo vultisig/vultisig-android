@@ -48,6 +48,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -210,14 +212,20 @@ internal class DepositFormViewModel @Inject constructor(
 
     private val address = MutableStateFlow<Address?>(null)
     private var addressJob: Job? = null
+    private var depositTypeAction: String? = null
+    private var bondAddress: String? = null
 
     fun loadData(
         vaultId: String,
         chainId: String,
+        depositType: String?,
+        bondAddress: String?,
     ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
+        this.depositTypeAction = depositType
+        this.bondAddress = bondAddress
 
         val depositOptions = when (chain) {
             Chain.ThorChain -> listOf(
@@ -379,6 +387,42 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         collectTcyStakeAutoCompound()
+
+        setMetadataInfo()
+    }
+
+    private fun setMetadataInfo() {
+        if (!depositTypeAction.isNullOrEmpty()) {
+            val action = parseDepositType(depositTypeAction)
+
+            if (action != null) {
+                val depositOption = when (action) {
+                    DeFiNavActions.UNBOND -> DepositOption.Unbond
+                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
+                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
+                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
+                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
+                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
+                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
+                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
+                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+                    DeFiNavActions.STAKE_STCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_STCY -> DepositOption.UnstakeTcy
+                    else -> DepositOption.Bond
+                }
+                selectDepositOption(depositOption)
+
+                if (action == DeFiNavActions.STAKE_STCY) {
+                    onAutoCompoundTcyStake(true)
+                }
+                if (action == DeFiNavActions.UNSTAKE_STCY) {
+                    onAutoCompoundTcyUnStake(true)
+                }
+            } else {
+                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+            }
+        }
     }
 
     private suspend fun updateTokenAmount(
@@ -538,6 +582,11 @@ internal class DepositFormViewModel @Inject constructor(
                 }
 
                 else -> Unit
+            }
+
+
+            if (!bondAddress.isNullOrEmpty()) {
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
     }
@@ -1770,7 +1819,7 @@ internal class DepositFormViewModel @Inject constructor(
             } else {
                 unstakableAmountCache?.toBigIntegerOrNull()
             } ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
-            
+
             if (totalUnits < BigInteger.ONE) {
                 throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
             }
