@@ -60,12 +60,13 @@ internal fun Context.setupCamera(
             .build()
         imageAnalysis.setAnalyzer(
             executor,
-            BarcodeAnalyzer {
-                this.unbindCameraListener(
-                    cameraProviderFuture
-                )
-                onSuccess(it)
-            }
+            BarcodeAnalyzer(
+                onSuccess = {
+                    this.unbindCameraListener(cameraProviderFuture)
+                    onSuccess(it)
+                },
+                onError = onError
+            )
         )
 
         val cameraProvider = cameraProviderFuture.get()
@@ -110,7 +111,14 @@ internal fun Context.unbindCameraListener(
 ) {
     cameraProviderFuture.addListener(
         {
-            cameraProviderFuture.get().unbindAll()
+            try {
+                cameraProviderFuture.get().unbindAll()
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Failed to unbind camera"
+                )
+            }
         },
         ContextCompat.getMainExecutor(this)
     )
@@ -118,24 +126,44 @@ internal fun Context.unbindCameraListener(
 
 private class BarcodeAnalyzer(
     private val onSuccess: (List<Barcode>) -> Unit,
+    private val onError: (String) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
-    private val scanner = createScanner()
+    private val scanner =
+        try {
+            createScanner()
+        } catch (t: Throwable) {
+            onError(t.message ?: t.toString())
+            null
+        }
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
-        imageProxy.image?.let { image ->
-            scanner.process(
+        val currentScanner = scanner
+        val mediaImage = imageProxy.image
+        if (currentScanner == null || mediaImage == null) {
+            imageProxy.close()
+            return
+        }
+        try {
+            currentScanner.process(
                 InputImage.fromMediaImage(
-                    image,
+                    mediaImage,
                     imageProxy.imageInfo.rotationDegrees
                 )
             ).addOnSuccessListener { barcode ->
                 barcode?.takeIf { it.isNotEmpty() }
                     ?.let(onSuccess)
+            }.addOnFailureListener { e ->
+                onError(e.message ?: e.toString())
+                imageProxy.close()
             }.addOnCompleteListener {
                 imageProxy.close()
             }
+        } catch (e: Exception) {
+            onError(e.message ?: e.toString())
+            imageProxy.close()
+
         }
     }
 }

@@ -144,7 +144,8 @@ internal fun ScanQrScreen(
                         InputImage.fromFilePath(
                             context,
                             uri
-                        )
+                        ),
+                        onError
                     )
                     val barcodes = if (result.isEmpty()) {
                         val bitmap = requireNotNull(
@@ -158,7 +159,10 @@ internal fun ScanQrScreen(
                             bitmap,
                             0
                         )
-                        val resultBarcodes = scanImage(inputImage)
+                        val resultBarcodes = scanImage(
+                            inputImage,
+                            onError
+                        )
                         bitmap.recycle()
                         resultBarcodes
                     } else result
@@ -342,29 +346,7 @@ private fun QrCameraScreen(
     }
 }
 
-private class BarcodeAnalyzer(
-    private val onSuccess: (List<Barcode>) -> Unit,
-) : ImageAnalysis.Analyzer {
 
-    private val scanner = createScanner()
-
-    @ExperimentalGetImage
-    override fun analyze(imageProxy: ImageProxy) {
-        imageProxy.image?.let { image ->
-            scanner.process(
-                InputImage.fromMediaImage(
-                    image,
-                    imageProxy.imageInfo.rotationDegrees
-                )
-            ).addOnSuccessListener { barcode ->
-                barcode?.takeIf { it.isNotEmpty() }
-                    ?.let(onSuccess)
-            }.addOnCompleteListener {
-                imageProxy.close()
-            }
-        }
-    }
-}
 
 fun createScanner() = BarcodeScanning.getClient(
     BarcodeScannerOptions.Builder()
@@ -372,8 +354,18 @@ fun createScanner() = BarcodeScanning.getClient(
         .build()
 )
 
-private suspend fun scanImage(inputImage: InputImage) = suspendCoroutine { cont ->
+private suspend fun scanImage(inputImage: InputImage, onError: (String)-> Unit) = suspendCoroutine { continuation ->
     createScanner()
         .process(inputImage)
-        .addOnSuccessListener { cont.resume(it) }
+        .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
+        .addOnFailureListener { error->
+            Timber.e(error ,"Failed to scan image for barcodes")
+            var errorMessage =when(error){
+                is IllegalArgumentException -> "Unsupported image format"
+                is IllegalStateException -> "ML Kit scanner not initialized"
+                else -> error.message ?: error.toString()
+            }
+            onError(errorMessage)
+            continuation.resume(emptyList())
+        }
 }
