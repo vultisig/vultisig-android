@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -479,6 +480,7 @@ internal class KeygenViewModel @Inject constructor(
                         vaultId = vaultId,
                         vaultType = vaultType,
                         action = args.action,
+                        passwordType = BackupPasswordType.UserSelectionPassword
                     )
                 }
             },

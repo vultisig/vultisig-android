@@ -67,10 +67,27 @@ internal class VerifyDepositViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                state.update {
-                    it.copy(isLoading = true)
-                }
                 val transaction = depositTransactionRepository.getTransaction(transactionId!!)
+                var initialTransaction = DepositTransactionUiModel(
+                    srcAddress = transaction.srcAddress,
+                    dstAddress = transaction.dstAddress,
+                    token = ValuedToken(
+                        token = transaction.srcToken,
+                        value = "",
+                        fiatValue = "",
+                    ),
+                    networkFeeFiatValue = transaction.estimateFeesFiat,
+                    networkFeeTokenValue = "",
+                    memo = transaction.memo,
+                )
+
+                state.update {
+                    it.copy(
+                        isLoading = true,
+                        depositTransactionUiModel = initialTransaction
+                    )
+                }
+
                 val depositTransactionUiModel = mapTransactionToUiModel(transaction)
                 state.update {
                     it.copy(
