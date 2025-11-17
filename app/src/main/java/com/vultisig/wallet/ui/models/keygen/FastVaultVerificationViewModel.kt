@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -141,6 +142,9 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                                 vaultId = args.vaultId,
                                 vaultType = VaultType.Fast,
                                 action = args.tssAction,
+                                passwordType = BackupPasswordType.VultiServerPassword(
+                                    password = args.password,
+                                )
                             )
                         )
 
