@@ -81,8 +81,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "jupiter" -> R.drawable.jup
         "luna" -> R.drawable.luna
         "lunc" -> R.drawable.lunc
-        "astro" -> R.drawable.astro
-        "terra-astroport" -> R.drawable.astro
+        "astro", "terra-astroport" -> R.drawable.astro
         "mnta" -> R.drawable.mnta
         "nstk" -> R.drawable.nstk
         "usk" -> R.drawable.usk
