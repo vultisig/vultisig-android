@@ -1266,7 +1266,7 @@ object Coins {
             address = "",
             decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "matic-network",
+            priceProviderID = "polygon-ecosystem-token",
             contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
             isNativeToken = false,
 
