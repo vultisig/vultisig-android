@@ -5,9 +5,10 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -55,6 +56,20 @@ internal interface BlockchainServicesModule {
         ): DefaultStakingPositionService = DefaultStakingPositionService(
             thorChainApi,
             stakingDetailsRepository,
+        )
+        
+        @Provides
+        @Singleton
+        fun provideThorchainDeFiBalanceService(
+            rujiStakingService: RujiStakingService,
+            tcyStakingService: TCYStakingService,
+            defaultStakingPositionService: DefaultStakingPositionService,
+            bondUseCase: ThorchainBondUseCase,
+        ): ThorchainDeFiBalanceService = ThorchainDeFiBalanceService(
+            rujiStakingService = rujiStakingService,
+            tcyStakingService = tcyStakingService,
+            defaultStakingPositionService = defaultStakingPositionService,
+            bondUseCase = bondUseCase,
         )
     }
 }

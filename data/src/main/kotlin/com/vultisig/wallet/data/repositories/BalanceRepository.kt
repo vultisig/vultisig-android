@@ -229,6 +229,36 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     }
             }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getDefiTokenBalanceAndPrice(
+        address: String,
+        coin: Coin,
+    ) {
+        appCurrencyRepository
+            .currency
+            .flatMapConcat { currency ->
+                tokenPriceRepository
+                    .getPrice(coin, currency)
+                    .zip(getTokenValue(address, coin)) { price, balance ->
+                        TokenBalanceAndPrice(
+                            tokenBalance =TokenBalance(
+                                tokenValue = balance,
+                                fiatValue = FiatValue(
+                                    value = balance.decimal
+                                        .multiply(price)
+                                        .setScale(2, RoundingMode.HALF_UP),
+                                    currency = currency.ticker,
+                                )
+                            ),
+                            price = FiatValue(
+                                value = price.setScale(2, RoundingMode.HALF_UP),
+                                currency = currency.ticker,
+                            )
+                        )
+                    }
+            }
+    }
+
     private suspend fun getCachedTokenValue(
         address: String,
         coin: Coin,
