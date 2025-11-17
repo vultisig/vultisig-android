@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +21,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -31,12 +36,14 @@ import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun TokenDetailScreen(
     viewModel: TokenDetailViewModel = hiltViewModel<TokenDetailViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
+    val uriHandler = VsUriHandler()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -49,17 +56,21 @@ internal fun TokenDetailScreen(
         onDeposit = viewModel::deposit,
         onDismiss = viewModel::back,
         onBuy = viewModel::buy,
+        onExplorer = {
+            uriHandler.openUri(uiModel.explorerUrl)
+        },
     )
 }
 
 @Composable
 private fun TokenDetailScreen(
     uiModel: TokenDetailUiModel,
-    onSend: () -> Unit = {},
-    onSwap: () -> Unit = {},
-    onDeposit: () -> Unit = {},
-    onDismiss: () -> Unit = {},
-    onBuy: () -> Unit = {},
+    onSend: () -> Unit,
+    onSwap: () -> Unit,
+    onDeposit: () -> Unit,
+    onDismiss: () -> Unit,
+    onBuy: () -> Unit,
+    onExplorer: () -> Unit,
 ) {
     DottyBottomSheet(
         onDismiss = onDismiss
@@ -70,6 +81,7 @@ private fun TokenDetailScreen(
             onSwap = onSwap,
             onDeposit = onDeposit,
             onBuy = onBuy,
+            onExplorer = onExplorer,
         )
     }
 }
@@ -77,10 +89,11 @@ private fun TokenDetailScreen(
 @Composable
 private fun TokenDetailsContent(
     uiModel: TokenDetailUiModel,
-    onSend: () -> Unit = {},
-    onSwap: () -> Unit = {},
-    onDeposit: () -> Unit = {},
-    onBuy: () -> Unit = {},
+    onSend: () -> Unit,
+    onSwap: () -> Unit,
+    onDeposit: () -> Unit,
+    onBuy: () -> Unit,
+    onExplorer: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -91,8 +104,18 @@ private fun TokenDetailsContent(
     )
     {
 
-        UiSpacer(
-            size = 24.dp
+        VsCircleButton(
+            onClick = onExplorer,
+            size = VsCircleButtonSize.Small,
+            icon = R.drawable.explor,
+            type = VsCircleButtonType.Secondary,
+            designType = DesignType.Shined,
+            modifier = Modifier
+                .align(Alignment.End)
+                .offset(
+                    x = 8.dp,
+                    y = (-8).dp
+                )
         )
 
         Row(
@@ -150,7 +173,7 @@ private fun TokenDetailsContent(
                     onClick = onSwap
                 )
             }
-            
+
             TransactionTypeButton(
                 txType = TransactionType.SEND,
                 isSelected = false,
@@ -260,6 +283,11 @@ private fun TokenDetailsScreenPreview() {
             ),
             canSwap = true,
             canDeposit = true,
-        )
+        ),
+        onSend = {},
+        onSwap = {},
+        onDeposit = {},
+        onBuy = {},
+        onExplorer = {},
     )
 }
