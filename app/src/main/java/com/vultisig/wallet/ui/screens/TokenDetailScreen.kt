@@ -104,19 +104,21 @@ private fun TokenDetailsContent(
     )
     {
 
-        VsCircleButton(
-            onClick = onExplorer,
-            size = VsCircleButtonSize.Small,
-            icon = R.drawable.explor,
-            type = VsCircleButtonType.Secondary,
-            designType = DesignType.Shined,
-            modifier = Modifier
-                .align(Alignment.End)
-                .offset(
-                    x = 8.dp,
-                    y = (-8).dp
-                )
-        )
+        if (uiModel.explorerUrl.isNotEmpty()) {
+            VsCircleButton(
+                onClick = onExplorer,
+                size = VsCircleButtonSize.Small,
+                icon = R.drawable.explor,
+                type = VsCircleButtonType.Secondary,
+                designType = DesignType.Shined,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .offset(
+                        x = 8.dp,
+                        y = (-8).dp
+                    )
+            )
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
