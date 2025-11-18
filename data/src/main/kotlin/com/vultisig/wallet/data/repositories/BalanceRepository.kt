@@ -65,6 +65,8 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -128,6 +130,9 @@ internal class BalanceRepositoryImpl @Inject constructor(
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
+
+    private val defiLocks = mutableMapOf<String, Mutex>()
+    private fun lockFor(address: String) = defiLocks.getOrPut(address) { Mutex() }
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return thorChainApi.getUnstakableTcyAmount(address)
@@ -247,8 +252,19 @@ internal class BalanceRepositoryImpl @Inject constructor(
         address: String,
         coin: Coin,
     ): Flow<TokenBalanceAndPrice> = flow {
-        val defiBalances = defiBalanceCache.get(address)
-            ?: thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+        val cacheValue = defiBalanceCache.get(address)
+        val defiBalances = if (cacheValue != null) {
+            cacheValue
+        } else {
+            val mutex = lockFor(address)
+            mutex.withLock {
+                defiBalanceCache.get(address) ?: run {
+                    val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+                    defiBalanceCache.put(address, remote)
+                    remote
+                }
+            }
+        }
         
         val defiBalance = defiBalances
             .flatMap { it.balances }
