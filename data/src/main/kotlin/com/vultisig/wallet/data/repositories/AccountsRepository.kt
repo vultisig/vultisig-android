@@ -262,7 +262,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                             account.accounts.map {
                                 async {
                                     val balance =
-                                        balanceRepository.getTokenBalanceAndPrice(address, it.token)
+                                        balanceRepository.getDefiTokenBalanceAndPrice(address, it.token)
                                             .first()
 
                                     it.applyBalance(balance.tokenBalance, balance.price)

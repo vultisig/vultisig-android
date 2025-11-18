@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
@@ -56,6 +57,7 @@ import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.utils.SimpleCache
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -124,6 +126,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
 ) : BalanceRepository {
+
+    private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return thorChainApi.getUnstakableTcyAmount(address)
@@ -243,7 +247,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
         address: String,
         coin: Coin,
     ): Flow<TokenBalanceAndPrice> = flow {
-        val defiBalances = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+        val defiBalances = defiBalanceCache.get(address)
+            ?: thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
         
         val defiBalance = defiBalances
             .flatMap { it.balances }
