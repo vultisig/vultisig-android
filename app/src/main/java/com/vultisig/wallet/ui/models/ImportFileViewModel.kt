@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerializationException
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -111,9 +110,7 @@ internal class ImportFileViewModel @Inject constructor(
         val fileContent = uiModel.value.fileContent ?: return
         try {
             saveToDb(fileContent, null)
-        } catch (_: SerializationException) {
-            snackBarChannel.send(UiText.StringResource(R.string.import_file_not_supported))
-        } catch (e: Exception) {
+        }  catch (e: Exception) {
             Timber.e(e)
             uiModel.update {
                 it.copy(

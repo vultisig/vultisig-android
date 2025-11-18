@@ -6,13 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -38,6 +39,7 @@ internal data class TokenDetailUiModel(
     val canSwap: Boolean = false,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
+    val explorerUrl: String = "",
 )
 
 @HiltViewModel
@@ -48,6 +50,7 @@ internal class TokenDetailViewModel @Inject constructor(
     private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
 
     private val tokenDetail = savedStateHandle.toRoute<Route.TokenDetail>()
@@ -153,12 +156,16 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?: "",
                             fiatBalance = account.fiatValue
                                 ?.let { fiatValueToStringMapper(it) },
-                            tokenLogo = getCoinLogo(token.ticker),
+                            tokenLogo = getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                             mergeBalance = mergedBalance,
                             price = account.price?.let { fiatValueToStringMapper(it) },
                             network = token.chain.raw,
                         )
+
+                        val accountAddress = address.address
+                        val explorerUrl = explorerLinkRepository
+                            .getAddressLink(chain, accountAddress)
 
                         uiState.update {
                             it.copy(
@@ -166,6 +173,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 canDeposit = chain.isDepositSupported,
                                 canSwap = chain.isSwapSupported,
                                 canBuy = chain.isBuySupported,
+                                explorerUrl = explorerUrl
                             )
                         }
                     } ?: run {
