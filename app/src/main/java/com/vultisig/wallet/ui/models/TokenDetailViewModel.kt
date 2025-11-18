@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -156,7 +156,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?: "",
                             fiatBalance = account.fiatValue
                                 ?.let { fiatValueToStringMapper(it) },
-                            tokenLogo = getCoinLogo(token.ticker),
+                            tokenLogo = getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                             mergeBalance = mergedBalance,
                             price = account.price?.let { fiatValueToStringMapper(it) },
