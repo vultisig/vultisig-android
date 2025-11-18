@@ -165,7 +165,7 @@ val Chain.isSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
-        Chain.Tron,
+        Chain.Tron, Chain.Hyperliquid
     )
 
 val Chain.isDepositSupported: Boolean
@@ -257,6 +257,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.CronosChain -> 25
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
+        Chain.Hyperliquid -> 999
         else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
