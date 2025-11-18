@@ -33,7 +33,10 @@ enum class TransactionType {
 fun TransactionTypeButton(
     modifier: Modifier = Modifier,
     txType: TransactionType,
-    isSelected: Boolean = false,
+    isSelected: Boolean = when (txType) {
+        TransactionType.SWAP -> true
+        else -> false
+    },
     onClick: () -> Unit = {}
 ) {
 

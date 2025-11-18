@@ -2,13 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.scan
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
 import android.view.MotionEvent
+import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.FocusMeteringAction
@@ -52,6 +55,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -68,7 +72,10 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.addWhiteBorder
+import com.vultisig.wallet.ui.utils.setupCamera
+import com.vultisig.wallet.ui.utils.unbindCameraListener
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -85,6 +92,7 @@ internal fun ScanQrScreen(
     ScanQrScreen(
         onDismiss = viewModel::back,
         onScanSuccess = viewModel::process,
+        onError = viewModel::handleError
     )
 }
 
@@ -93,10 +101,11 @@ internal fun ScanQrScreen(
 internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
+    onError: (String) -> Unit = {}
 ) {
     var isFrameHighlighted by remember { mutableStateOf(false) }
 
-    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -107,7 +116,12 @@ internal fun ScanQrScreen(
             isScanned = true
             val barcode = barcodes.first()
             val barcodeValue = barcode.rawValue
-            Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
+            Timber.d(
+                context.getString(
+                    R.string.successfully_scanned_barcode,
+                    barcodeValue
+                )
+            )
             if (barcodeValue != null) {
                 onScanSuccess(barcodeValue)
             }
@@ -126,12 +140,29 @@ internal fun ScanQrScreen(
         coroutineScope.launch {
             if (uri != null) {
                 try {
-                    val result = scanImage(InputImage.fromFilePath(context, uri))
+                    val result = scanImage(
+                        InputImage.fromFilePath(
+                            context,
+                            uri
+                        ),
+                        onError
+                    )
                     val barcodes = if (result.isEmpty()) {
-                        val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+                        val bitmap = requireNotNull(
+                            uriToBitmap(
+                                context.contentResolver,
+                                uri
+                            )
+                        )
                             .addWhiteBorder(2F)
-                        val inputImage = InputImage.fromBitmap(bitmap, 0)
-                        val resultBarcodes = scanImage(inputImage)
+                        val inputImage = InputImage.fromBitmap(
+                            bitmap,
+                            0
+                        )
+                        val resultBarcodes = scanImage(
+                            inputImage,
+                            onError
+                        )
                         bitmap.recycle()
                         resultBarcodes
                     } else result
@@ -173,8 +204,9 @@ internal fun ScanQrScreen(
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
                     onSuccess = onSuccess,
+                    onError = onError,
                     executor = executor,
-                    onAutoFocusTriggered =  {
+                    onAutoFocusTriggered = {
                         isFrameHighlighted = true
                         coroutineScope.launch {
                             delay(300)
@@ -182,6 +214,7 @@ internal fun ScanQrScreen(
                         }
                     }
                 )
+
 
                 Image(
                     modifier = Modifier
@@ -253,11 +286,13 @@ internal fun ScanQrScreen(
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
+    onError: (String) -> Unit,
     executor: Executor,
     onAutoFocusTriggered: () -> Unit,
 ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
     val cameraProviderFuture = remember {
         ProcessCameraProvider.getInstance(localContext)
     }
@@ -280,6 +315,7 @@ private fun QrCameraScreen(
                         Timber.e(e)
                     }
                 }
+
                 else -> {}
             }
         }
@@ -287,7 +323,9 @@ private fun QrCameraScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            unbindCameraListener(cameraProviderFuture, localContext)
+            localContext.unbindCameraListener(
+                cameraProviderFuture,
+            )
         }
     }
 
@@ -295,118 +333,49 @@ private fun QrCameraScreen(
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
-                val previewView = PreviewView(context)
-                val resolutionStrategy = ResolutionStrategy(
-                    Size(1920, 1080),
-                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
-                )
-                val resolutionSelector = ResolutionSelector.Builder()
-                    .setResolutionStrategy(resolutionStrategy)
-                    .build()
-
-                val preview = Preview.Builder()
-                    .setResolutionSelector(resolutionSelector)
-                    .build()
-                val selector = CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                    .build()
-
-                preview.surfaceProvider = previewView.surfaceProvider
-
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setResolutionSelector(resolutionSelector)
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                imageAnalysis.setAnalyzer(
+                context.setupCamera(
+                    lifecycleOwner,
                     executor,
-                    BarcodeAnalyzer {
-                        unbindCameraListener(cameraProviderFuture, localContext)
-                        onSuccess(it)
-                    }
+                    cameraProviderFuture,
+                    onSuccess,
+                    onError,
+                    onAutoFocusTriggered,
                 )
-
-                try {
-                    val cameraProvider = cameraProviderFuture.get()
-                    cameraProvider.unbindAll()
-
-                    val camera = cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        selector,
-                        preview,
-                        imageAnalysis,
-                    )
-
-                    // In some devices auto-focus does not work very well
-                    // We should allow user to touch and perform focus,
-                    // the autofocus initiated by a tap will "stick" at that point until
-                    // another tap occurs
-                    previewView.setOnTouchListener { _, event ->
-                        if (event.action == MotionEvent.ACTION_UP) {
-                            Timber.d("Auto-focus requested : ${event.x} ${event.y}")
-                            val factory = previewView.meteringPointFactory
-                            val point = factory.createPoint(event.x, event.y)
-                            val action = FocusMeteringAction.Builder(point)
-                                .disableAutoCancel()
-                                .build()
-                            camera.cameraControl.startFocusAndMetering(action)
-                            onAutoFocusTriggered()
-                        }
-                        true
-                    }
-
-                } catch (e: Throwable) {
-                    Timber.e(e)
-                }
-
-                previewView
             }
         )
     }
 }
 
-private fun unbindCameraListener(
-    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
-    context: Context,
-) {
-    cameraProviderFuture.addListener(
-        {
-            cameraProviderFuture.get().unbindAll()
-        },
-        ContextCompat.getMainExecutor(context)
-    )
-}
 
-private class BarcodeAnalyzer(
-    private val onSuccess: (List<Barcode>) -> Unit,
-) : ImageAnalysis.Analyzer {
 
-    private val scanner = createScanner()
-
-    @ExperimentalGetImage
-    override fun analyze(imageProxy: ImageProxy) {
-        imageProxy.image?.let { image ->
-            scanner.process(
-                InputImage.fromMediaImage(
-                    image, imageProxy.imageInfo.rotationDegrees
-                )
-            ).addOnSuccessListener { barcode ->
-                barcode?.takeIf { it.isNotEmpty() }
-                    ?.let(onSuccess)
-            }.addOnCompleteListener {
-                imageProxy.close()
-            }
-        }
-    }
-}
-
-private fun createScanner() = BarcodeScanning.getClient(
+fun createScanner() = BarcodeScanning.getClient(
     BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         .build()
 )
 
-private suspend fun scanImage(inputImage: InputImage) = suspendCoroutine { cont ->
-    createScanner()
-        .process(inputImage)
-        .addOnSuccessListener { cont.resume(it) }
-}
+private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit) =
+    suspendCoroutine { continuation ->
+        try {
+            createScanner()
+                .process(inputImage)
+                .addOnSuccessListener { barcodes -> continuation.resume(barcodes) }
+                .addOnFailureListener { error ->
+                    Timber.e(
+                        error,
+                        "Failed to scan image for barcodes"
+                    )
+                    var errorMessage = when (error) {
+                        is IllegalArgumentException -> "Unsupported image format"
+                        is IllegalStateException -> "ML Kit scanner not initialized"
+                        else -> error.message ?: error.toString()
+                    }
+                    onError(errorMessage)
+                    continuation.resume(emptyList())
+                }
+
+        } catch (e: Exception) {
+            onError("Barcode scanner unavailable: ${e.message}")
+            continuation.resume(emptyList())
+        }
+    }
