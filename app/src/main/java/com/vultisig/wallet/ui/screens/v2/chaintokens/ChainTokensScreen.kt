@@ -188,7 +188,7 @@ internal fun ChainTokensScreen(
                     if (uiModel.canSwap) {
                         TransactionTypeButton(
                             txType = TransactionType.SWAP,
-                            isSelected = false,
+                            isSelected = true,
                             onClick = onSwap
                         )
                     }

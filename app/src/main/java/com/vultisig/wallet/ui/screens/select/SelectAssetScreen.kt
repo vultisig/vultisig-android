@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -196,13 +197,13 @@ private fun AssetItem(
             modifier = Modifier.weight(1f),
         ) {
             if (!isDisabled) {
-                Text(
+                AutoSizingText(
                     text = amount,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.colors.text.primary,
                 )
 
-                Text(
+                AutoSizingText(
                     text = value,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.colors.text.extraLight,
