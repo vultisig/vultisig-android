@@ -81,8 +81,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "jupiter" -> R.drawable.jup
         "luna" -> R.drawable.luna
         "lunc" -> R.drawable.lunc
-        "astro" -> R.drawable.astro
-        "terra-astroport" -> R.drawable.astro
+        "astro", "terra-astroport" -> R.drawable.astro
         "mnta" -> R.drawable.mnta
         "nstk" -> R.drawable.nstk
         "usk" -> R.drawable.usk
@@ -96,7 +95,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "tron" -> R.drawable.tron
         "lvn", "levana" -> R.drawable.lvn
         "fuzion" -> R.drawable.fuzion
-        "vulti" -> R.drawable.vulti
+        "vult", "vulti" -> R.drawable.vulti
         "tcy" -> R.drawable.tcy
         "zec" -> R.drawable.zcash
         "ruji" -> R.drawable.ruji
@@ -106,6 +105,14 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "stcy" -> R.drawable.stcy
         "auto" -> R.drawable.auto_token_kujira
         "sei" -> R.drawable.sei
+        "hype", "whype" -> R.drawable.hyperliquid
+        "khype" -> R.drawable.khype
+        "ubtc" -> R.drawable.bitcoin
+        "ufart" -> R.drawable.ufart
+        "usdt0" -> R.drawable.usdt0
+        "vhype" -> R.drawable.vhype
+        "vkhype" -> R.drawable.vkhype
+        "wsthype" -> R.drawable.wsthype
         else -> logoName
     }
 }

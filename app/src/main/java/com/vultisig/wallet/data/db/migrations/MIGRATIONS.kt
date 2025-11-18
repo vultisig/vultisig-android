@@ -480,3 +480,16 @@ internal val MIGRATION_23_24 = object : Migration(23, 24) {
         )
     }
 }
+
+internal val MIGRATION_24_25 = object : Migration(24, 25) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // Update price provider ID from matic-network to polygon-ecosystem-token
+        database.execSQL(
+            """
+            UPDATE coin 
+            SET priceProviderId = 'polygon-ecosystem-token'
+            WHERE priceProviderId = 'matic-network'
+            """.trimIndent()
+        )
+    }
+}

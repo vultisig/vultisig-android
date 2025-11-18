@@ -638,7 +638,7 @@
     <string name="vault_details_screen_vault_type">金库类型</string>
     <string name="vault_settings_delete_vault_part">金库份额：</string>
     <string name="vault_password_hint_to_long">提示太长</string>
-    <string name="vault_details_screen_vault_part_desc">份额 %1$s of %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
     <string name="vault_details_screen_signer">签名者 %1$s：%2$s</string>
     
     <!-- Settings Screen -->

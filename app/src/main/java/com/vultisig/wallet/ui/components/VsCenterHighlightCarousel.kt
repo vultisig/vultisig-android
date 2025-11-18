@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.screens.select.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.Theme
@@ -239,7 +240,7 @@ private fun CarouselChainItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
+        AutoSizingText(
             text = chain.raw,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,

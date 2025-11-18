@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tipo di caveau</string>
     <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
-    <string name="vault_details_screen_vault_part_desc">Condividi %1$s di %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Condividi %1$s-di-%2$s</string>
     <string name="vault_details_screen_signer">Cantante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registra i tuoi Vault!</string>
     <string name="register_vault_screen_title">Registra Vault</string>
