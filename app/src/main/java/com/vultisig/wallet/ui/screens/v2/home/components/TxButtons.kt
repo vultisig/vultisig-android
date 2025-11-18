@@ -15,6 +15,7 @@ internal fun TxButtons(
     onSend: () -> Unit,
     onSwap: () -> Unit,
     onBuy: () -> Unit,
+    onReceive: () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -40,6 +41,11 @@ internal fun TxButtons(
         TransactionTypeButton(
             txType = TransactionType.BUY,
             onClick = onBuy
+        )
+
+        TransactionTypeButton(
+            txType = TransactionType.RECEIVE,
+            onClick = onReceive
         )
     }
 }

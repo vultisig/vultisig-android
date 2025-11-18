@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.UiText
@@ -400,6 +401,12 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
+    private fun routeTo(route: Any) {
+        viewModelScope.launch {
+            navigator.route(route)
+        }
+    }
+
     private fun sendEvent(event: SettingsUiEvent) {
         viewModelScope.launch {
             _uiEvents.send(event)
@@ -445,7 +452,7 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onShareVaultQrClick(){
-        navigateTo(Destination.ShareVaultQr(vaultId))
+        routeTo(Route.ShareVaultQr(vaultId))
     }
 
     fun onDismissShareLinkBottomSheet(){

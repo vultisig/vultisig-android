@@ -279,21 +279,6 @@ internal sealed class Destination(
         }
     }
 
-    data class JoinKeygen(
-        val qr: String,
-        val isReshare: Boolean,
-    ) : Destination(route = "join_keygen?qr=$qr")
-
-    data class ShareVaultQr(val vaultId: String) :
-        Destination(route = "share_vault_qr/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "share_vault_qr/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data object CreateFolder : Destination(route = "create_folder")
-
     data class ReshareStartScreen(val vaultId: String) :
         Destination(route = "reshare_start_screen/$vaultId") {
         companion object {
@@ -724,6 +709,11 @@ internal sealed class Route {
 
     @Serializable
     data class Rename(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class ShareVaultQr(
         val vaultId: String,
     )
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -36,87 +37,89 @@ internal fun TokenAddressQrBottomSheet(
 ) {
 
     DottyBottomSheet(onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .padding(30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        TokenAddressQrContent(
+            chainName = chainName,
+            chainAddress = chainAddress,
+            qrBitmapPainter = qrBitmapPainter,
+            onShareQrClick = onShareQrClick,
+            onCopyAddressClick = onCopyAddressClick,
+        )
+    }
+}
 
-            QrContainer(
-                chainName = chainName,
-                qrCode = qrBitmapPainter
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun TokenAddressQrContent(
+    chainName: String,
+    chainAddress: String,
+    qrBitmapPainter: BitmapPainter?,
+    onShareQrClick: () -> Unit = {},
+    onCopyAddressClick: () -> Unit = {},
+) {
+
+    Column(
+        modifier = Modifier
+            .padding(30.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+
+        QrContainer(
+            chainName = chainName,
+            qrCode = qrBitmapPainter
+        )
+
+        UiSpacer(
+            size = 24.dp
+        )
+
+        Text(
+            text = chainAddress,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.colors.text.primary,
+            modifier = Modifier.width(232.dp),
+            textAlign = TextAlign.Center
+        )
+
+        UiSpacer(
+            size = 32.dp
+        )
+
+        Row {
+            VsButton(
+                variant = VsButtonVariant.Tertiary,
+                size = VsButtonSize.Small,
+                label = stringResource(R.string.share_vault_qr_share),
+                onClick = onShareQrClick,
+                modifier = Modifier
+                    .weight(1f)
             )
-
             UiSpacer(
-                size = 24.dp
+                size = 4.dp
+            )
+            VsButton(
+                variant = VsButtonVariant.Primary,
+                size = VsButtonSize.Small,
+                label = stringResource(R.string.copy_address),
+                onClick = onCopyAddressClick,
+                modifier = Modifier
+                    .weight(1f)
             )
 
-            Text(
-                text = chainAddress,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary,
-                modifier = Modifier.width(232.dp),
-                textAlign = TextAlign.Center
-            )
-
-            UiSpacer(
-                size = 32.dp
-            )
-
-            Row {
-                VsButton(
-                    variant = VsButtonVariant.Tertiary,
-                    size = VsButtonSize.Small,
-                    label = stringResource(R.string.share_vault_qr_share),
-                    onClick = onShareQrClick,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-                UiSpacer(
-                    size = 4.dp
-                )
-                VsButton(
-                    variant = VsButtonVariant.Primary,
-                    size = VsButtonSize.Small,
-                    label = stringResource(R.string.copy_address),
-                    onClick = onCopyAddressClick,
-                    modifier = Modifier
-                        .weight(1f)
-                )
-
-            }
-
-            UiSpacer(
-                size = 12.dp
-            )
         }
+
+        UiSpacer(
+            size = 12.dp
+        )
     }
 
 }
 
 @Preview
 @Composable
-private fun TokenAddressQrBottomSheetPreview() {
-    Row {
-        VsButton(
-            variant = VsButtonVariant.Tertiary,
-            size = VsButtonSize.Small,
-            label = stringResource(R.string.share_vault_qr_share),
-            onClick = {},
-            modifier = Modifier
-                .weight(1f)
-        )
-        UiSpacer(
-            size = 8.dp
-        )
-        VsButton(
-            variant = VsButtonVariant.Primary,
-            size = VsButtonSize.Medium,
-            label = stringResource(R.string.copy_address),
-            onClick = {  },
-            modifier = Modifier
-                .weight(1f)
-        )
-
-    }
+private fun TokenAddressQrContentPreview() {
+    TokenAddressQrContent(
+        chainName = "Ethereum",
+        chainAddress = LoremIpsum(8).values.first(),
+        qrBitmapPainter = null,
+    )
 }

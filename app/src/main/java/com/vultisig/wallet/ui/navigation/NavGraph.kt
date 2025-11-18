@@ -351,12 +351,7 @@ internal fun SetupNavGraph(
             ConfirmDeleteScreen(navController)
         }
 
-        composable(
-            route = Destination.ShareVaultQr.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-            )
-        ) {
+        composable<Route.ShareVaultQr> {
             ShareVaultQrScreen(
                 navController = navController
             )

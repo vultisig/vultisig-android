@@ -12,6 +12,7 @@ internal fun WalletExpandedTopbarContent(
     onSend: () -> Unit,
     onSwap: () -> Unit,
     onBuy: () -> Unit,
+    onReceive: () -> Unit,
 ) {
     UiSpacer(
         40.dp
@@ -28,6 +29,7 @@ internal fun WalletExpandedTopbarContent(
         isSwapEnabled = state.isSwapEnabled,
         onSend = onSend,
         onSwap = onSwap,
-        onBuy = onBuy
+        onBuy = onBuy,
+        onReceive = onReceive,
     )
 }

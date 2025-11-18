@@ -156,17 +156,17 @@ internal class VaultAccountsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
-                
+
                 // Check if vault has Ethereum chain enabled
                 val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
                 if (!hasEthereum) {
                     Timber.d("Ethereum chain not enabled, skipping VULT token auto-enable")
                     return@launch
                 }
-                
+
                 // Check if VULT token is already enabled
                 val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
-                
+
                 if (vultCoin == null) {
                     // Enable VULT token in background
                     Timber.d("VULT token not enabled, enabling it now for vault: $vaultId")
@@ -461,8 +461,16 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun onReceive(){
+        viewModelScope.launch {
+            navigator.route(
+                Route.ShareVaultQr(vaultId = vaultId!!)
+            )
+        }
+    }
+
     companion object {
-         internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
+        internal const val REFRESH_CHAIN_DATA  = "refresh_chain_data"
     }
 }
 

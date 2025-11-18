@@ -63,6 +63,7 @@ internal fun HomePage(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onBuy: () -> Unit = {},
+    onReceive: () -> Unit = {},
     onRefresh: () -> Unit = {},
     openCamera: () -> Unit = {},
     onToggleVaultListClick: () -> Unit = {},
@@ -170,6 +171,7 @@ internal fun HomePage(
                                 onSend = onSend,
                                 onSwap = onSwap,
                                 onBuy = onBuy,
+                                onReceive = onReceive,
                             )
                         } else {
                             DefiExpandedTopbarContent(
@@ -269,7 +271,7 @@ internal fun HomePage(
                                         content = stringResource(R.string.home_page_no_chain_enabled_desc),
                                     )
                                 }
-                                 else {
+                                else {
                                     AccountList(
                                         onAccountClick = onAccountClick,
                                         snackbarState = snackbarState,
