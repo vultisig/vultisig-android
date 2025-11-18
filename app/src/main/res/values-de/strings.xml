@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
-    <string name="vault_details_screen_vault_part_desc">Teilen %1$s von %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Teilen %1$s-von-%2$s</string>
     <string name="vault_details_screen_signer">Unterzeichner %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore!</string>
     <string name="register_vault_screen_title">Tresor registrieren</string>

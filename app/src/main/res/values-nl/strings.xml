@@ -371,7 +371,7 @@
     <string name="vault_details_screen_vault_type">Kluistype</string>
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
     <string name="vault_password_hint_to_long">De hint is te lang</string>
-    <string name="vault_details_screen_vault_part_desc">Delen %1$s van %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Delen %1$s-van-%2$s</string>
     <string name="vault_details_screen_signer">Ondertekenaar %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registreer uw kluizen!</string>
     <string name="register_vault_screen_title">Registreer kluis</string>
