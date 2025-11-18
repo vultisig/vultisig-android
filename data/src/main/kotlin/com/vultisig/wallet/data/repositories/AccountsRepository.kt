@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isDeFiSupported
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -20,8 +21,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
-import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 interface AccountsRepository {
     fun loadAddresses(
@@ -44,6 +46,8 @@ interface AccountsRepository {
     ): Account
 
     suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount>
+
+    suspend fun loadDeFiAddresses(vaultId: String): Flow<List<Address>>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -124,7 +128,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb(){
-
         val balances = balanceRepository.getCachedTokenBalances(
             this.map { adr -> adr.address },
             this.map { adr -> adr.accounts.map { it.token } }.flatten()
@@ -231,6 +234,54 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 ?: emptyList()
         }
         return emptyList()
+    }
+
+    override suspend fun loadDeFiAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+        supervisorScope {
+            val vault = getVault(vaultId)
+            val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
+
+            val loadPrices =
+                async { tokenPriceRepository.refresh(defiCoins) }
+
+            val coins = defiCoins.groupBy { it.chain }
+            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+            }
+
+            // emit cached
+
+            // emit network
+            addresses.mapIndexed { index, account ->
+                async {
+                    try {
+                        val address = account.address
+                        loadPrices.await()
+
+                        val newAccounts = supervisorScope {
+                            account.accounts.map {
+                                async {
+                                    val balance =
+                                        balanceRepository.getTokenBalanceAndPrice(address, it.token)
+                                            .first()
+
+                                    it.applyBalance(balance.tokenBalance, balance.price)
+                                }
+                            }.awaitAll()
+                        }
+
+                        addresses[index] = account.copy(accounts = newAccounts)
+
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
+                }
+            }.awaitAll()
+
+            send(addresses)
+
+        }
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
