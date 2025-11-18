@@ -131,7 +131,7 @@ class EvmApiFactoryImp @Inject constructor(
             )
             Chain.Hyperliquid -> EvmApiImp(
                 httpClient,
-                "https://rpc.hyperliquid.xyz/evm"
+                "https://api.vultisig.com/hyperevm/"
             )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
