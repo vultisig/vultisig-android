@@ -161,9 +161,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
-        if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
-            loadDeFiBalances(vaultId)
-        }
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -227,9 +224,6 @@ internal class VaultAccountsViewModel @Inject constructor(
         val vaultId = vaultId ?: return
         updateRefreshing(true)
         loadAccounts(vaultId, true)
-        if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
-            loadDeFiBalances(vaultId)
-        }
     }
 
     fun send() {
@@ -313,16 +307,25 @@ internal class VaultAccountsViewModel @Inject constructor(
                         it.sortByAccountsTotalFiatValue()
                     }
                     .catch {
-                        updateRefreshing(false)
+                        updateRefreshing(false) // TODO: Fix this
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
-                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery ->
+                uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
+            ) { accounts, searchQuery, cryptoConnectionType ->
                 accounts
+                    .filter {
+                        when (cryptoConnectionType) {
+                            CryptoConnectionType.Wallet -> true
+                            CryptoConnectionType.Defi -> cryptoConnectionTypeRepository.isDefi(it.chain)
+                        }
+                    }
                     .updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                     )
+                if (cryptoConnectionType == CryptoConnectionType.Defi) {
+                    loadDeFiBalances(vaultId)
+                }
             }
                 .launchIn(this)
         }
@@ -346,6 +349,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             ) { accounts, searchQuery,  ->
                 accounts.updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
+                        isDefi = true,
                     )
             }
             .launchIn(this)
@@ -504,6 +508,12 @@ internal class VaultAccountsViewModel @Inject constructor(
                 cryptoConnectionType = type,
             )
         }
+
+        val vaultId = vaultId ?: return
+
+        //if (type == CryptoConnectionType.Defi) {
+        //    loadDeFiBalances(vaultId)
+        //}
     }
 
     companion object {
