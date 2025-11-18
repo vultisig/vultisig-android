@@ -105,7 +105,14 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "stcy" -> R.drawable.stcy
         "auto" -> R.drawable.auto_token_kujira
         "sei" -> R.drawable.sei
-        "hype" -> R.drawable.hyperliquid
+        "hype", "whype" -> R.drawable.hyperliquid
+        "khype" -> R.drawable.khype
+        "ubtc" -> R.drawable.bitcoin
+        "ufart" -> R.drawable.ufart
+        "usdt0" -> R.drawable.usdt0
+        "vhype" -> R.drawable.vhype
+        "vkhype" -> R.drawable.vkhype
+        "wsthype" -> R.drawable.wsthype
         else -> logoName
     }
 }

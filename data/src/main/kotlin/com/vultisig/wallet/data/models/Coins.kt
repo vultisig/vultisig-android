@@ -2438,7 +2438,116 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         )
-        val all = listOf(HYPE)
+
+        val kHYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "kHYPE",
+            logo = "khype",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "kinetic-staked-hype",
+            contractAddress = "0xfD739d4e423301CE9385c1fb8850539D657C296D",
+            isNativeToken = false,
+        )
+
+        val wstHYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "wstHYPE",
+            logo = "wsthype",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "staked-hype-shares",
+            contractAddress = "0x94e8396e0869c9F2200760aF0621aFd240E1CF38",
+            isNativeToken = false,
+        )
+
+        val WHYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "WHYPE",
+            logo = "whype",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "wrapped-hype",
+            contractAddress = "0x5555555555555555555555555555555555555555",
+            isNativeToken = false,
+        )
+
+        val UFART = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "UFART",
+            logo = "ufart",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "unit-fartcoin",
+            contractAddress = "0x3B4575E689DEd21CAAD31d64C4df1f10F3B2CedF",
+            isNativeToken = false,
+        )
+
+        val USDT0 = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "USDT0",
+            logo = "usdt0",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usdt0",
+            contractAddress = "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb",
+            isNativeToken = false,
+        )
+
+        val vkHYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "vkHYPE",
+            logo = "vkhype",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "kinetiq-earn-vault",
+            contractAddress = "0x9BA2EDc44E0A4632EB4723E81d4142353e1bB160",
+            isNativeToken = false,
+        )
+
+        val UBTC = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "UBTC",
+            logo = "ubtc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "unit-bitcoin",
+            contractAddress = "0x9FDBdA0A5e284c32744D2f17Ee5c74B284993463",
+            isNativeToken = false,
+        )
+
+        val vHYPE = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "vHYPE",
+            logo = "vhype",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ventuals-vhype",
+            contractAddress = "0x8888888FdAAc0E7CF8C6523c8955bF7954c216fa",
+            isNativeToken = false,
+        )
+
+        val USDC = Coin(
+            chain = Chain.Hyperliquid,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xb88339CB7199b77E23DB6E890353E22632Ba630f",
+            isNativeToken = false,
+        )
+
+        val all = listOf(HYPE, kHYPE, wstHYPE, WHYPE, UFART, USDT0, vkHYPE, UBTC, vHYPE, USDC)
     }
 
     object Sui {
