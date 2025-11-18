@@ -605,8 +605,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
             Chain.Tron -> setOf(SwapProvider.THORCHAIN)
 
+            Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
+
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
-            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Cardano, Chain.Sei
+            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Akash, Chain.Cardano, Chain.Sei,
                 -> emptySet()
         }
 
