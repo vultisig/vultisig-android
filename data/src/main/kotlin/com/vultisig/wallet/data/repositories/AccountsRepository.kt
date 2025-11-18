@@ -280,7 +280,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
             }.awaitAll()
 
             send(addresses)
-
         }
     }
 
