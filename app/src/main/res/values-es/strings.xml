@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tipo de bóveda</string>
     <string name="vault_settings_delete_vault_part">Compartir de la bóveda:</string>
     <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
-    <string name="vault_details_screen_vault_part_desc">Compartir %1$s de %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Compartir %1$s-de-%2$s</string>
     <string name="vault_details_screen_signer">Firmante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">¡Registra tus bóvedas!</string>
     <string name="register_vault_screen_title">Registra tus bóvedas</string>

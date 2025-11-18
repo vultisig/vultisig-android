@@ -423,7 +423,7 @@
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
-    <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Share %1$s-of-%2$s</string>
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
     <string name="register_vault_screen_title">Register Vault</string>

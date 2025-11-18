@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tipo de cofre</string>
     <string name="vault_settings_delete_vault_part">Compartilhar do cofre:</string>
     <string name="vault_password_hint_to_long">A dica é demasiado longa</string>
-    <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s de %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s-de-%2$s</string>
     <string name="vault_details_screen_signer">Cantor %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registe os seus cofres!</string>
     <string name="register_vault_screen_title">Registar cofre</string>
