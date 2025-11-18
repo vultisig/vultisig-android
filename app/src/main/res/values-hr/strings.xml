@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
-    <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Podijeli %1$s-od-%2$s</string>
     <string name="vault_details_screen_signer">Potpisnik %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore!</string>
     <string name="register_vault_screen_title">Registrirajte sef</string>
