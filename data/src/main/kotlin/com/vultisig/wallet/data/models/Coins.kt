@@ -2430,7 +2430,7 @@ object Coins {
         val HYPE = Coin(
             chain = Chain.Hyperliquid,
             ticker = "HYPE",
-            logo = "hyperliquid",
+            logo = "hype",
             address = "",
             decimal = 18,
             hexPublicKey = "",
