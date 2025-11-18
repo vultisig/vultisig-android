@@ -79,5 +79,5 @@ internal val Chain.monoToneLogo: Int
         Chain.Cardano -> R.drawable.cardano_mono
         Chain.Mantle -> R.drawable.mantl_mono
         Chain.Sei -> R.drawable.sei_mono
-        Chain.Hyperliquid -> R.drawable.hyperliquid
+        Chain.Hyperliquid -> R.drawable.hyperliquid_mono
     }
