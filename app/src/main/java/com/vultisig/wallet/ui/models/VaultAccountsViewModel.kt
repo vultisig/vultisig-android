@@ -71,7 +71,15 @@ internal data class VaultAccountsUiModel(
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
         get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
-}
+
+    val getAccounts: List<AccountUiModel>
+        get() = if (cryptoConnectionType == CryptoConnectionType.Wallet) {
+            accounts
+        } else {
+            defiAccounts
+        }
+    }
+
 
 @Immutable
 internal data class AccountUiModel(
@@ -309,15 +317,9 @@ internal class VaultAccountsViewModel @Inject constructor(
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
-                uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery, cryptoConnectionType ->
+                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
+            ) { accounts, searchQuery ->
                 accounts
-                    .filter {
-                        when (cryptoConnectionType) {
-                            CryptoConnectionType.Wallet -> true
-                            CryptoConnectionType.Defi -> cryptoConnectionTypeRepository.isDefi(it.chain)
-                        }
-                    }
                     .updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                     )
@@ -340,8 +342,8 @@ internal class VaultAccountsViewModel @Inject constructor(
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
-                uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery, cryptoConnectionType ->
+                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
+            ) { accounts, searchQuery,  ->
                 accounts.updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                     )
@@ -501,12 +503,6 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.copy(
                 cryptoConnectionType = type,
             )
-        }
-        
-        if (type == CryptoConnectionType.Defi) {
-            vaultId?.let { id ->
-                loadDeFiBalances(id)
-            }
         }
     }
 
