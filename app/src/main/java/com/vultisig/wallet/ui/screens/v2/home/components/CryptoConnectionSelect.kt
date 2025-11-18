@@ -31,9 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.animatePlacementInScope
-import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -176,4 +176,4 @@ private fun PreviewWalletEarnSelect() {
     )
 }
 
-private const val IS_DEFI_ENABLED = true
+private const val IS_DEFI_ENABLED = false
