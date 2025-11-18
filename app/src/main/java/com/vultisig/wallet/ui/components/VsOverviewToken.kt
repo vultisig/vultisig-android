@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,24 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.getCoinLogo
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
-import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.swap.ValuedToken
-import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -78,7 +72,7 @@ internal fun VsOverviewToken(
 
         Box {
             TokenLogo(
-                logo = getCoinLogo(token.ticker),
+                logo = getCoinLogo(token.logo),
                 title = token.ticker,
                 modifier = Modifier
                     .size(36.dp)
@@ -94,7 +88,7 @@ internal fun VsOverviewToken(
                     .background(Theme.colors.neutral200),
             )
 
-            chainLogo.takeIf { it != getCoinLogo(token.ticker) }?.let {
+            chainLogo.takeIf { it != getCoinLogo(token.logo) }?.let {
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = null,
