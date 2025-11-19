@@ -15,11 +15,11 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.quotes.tx
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
@@ -394,7 +394,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         val model = SignMessageTransactionUiModel(
             method = customMessage.method,
-            message = customMessage.message,
+            message = customMessage.message.normalizeMessageFormat(),
         )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
