@@ -202,13 +202,16 @@ internal class BalanceRepositoryImpl @Inject constructor(
             
             val fiatValue = if (price != null) {
                 FiatValue(
-                    tokenValue.decimal
+                    value = tokenValue.decimal
                         .multiply(price)
                         .setScale(2, RoundingMode.HALF_UP),
-                    currency.ticker
+                    currency = currency.ticker
                 )
             } else {
-                null
+                FiatValue(
+                    value = BigDecimal.ZERO,
+                    currency = currency.ticker
+                )
             }
             
             TokenBalanceAndPrice(
@@ -310,7 +313,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
         
         val defiBalance = defiBalances
             .flatMap { it.balances }
-            .find { it.coin.id == coin.id }
+            .find { it.coin.id.equals(coin.id, ignoreCase = true) }
         
         val tokenValue = if (defiBalance != null) {
             TokenValue(

@@ -9,8 +9,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isDeFiSupported
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -21,6 +23,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -255,25 +259,36 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
                 if (thorchainAddress != null) {
                     val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        thorchainAddress.address,
-                        vaultId
+                        address = thorchainAddress.address,
+                        vaultId = vaultId,
                     )
 
                     if (cachedDeFiBalances.isNotEmpty()) {
                         val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
-                            balance.tokenBalance.tokenValue?.unit
+                            balance.tokenBalance.tokenValue?.unit?.lowercase()
                         }
 
                         val cachedAddresses = addresses.map { address ->
                             val updatedAccounts = address.accounts.map { account ->
-                                val cachedBalance = balancesByTicker[account.token.ticker]
+                                val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
                                 if (cachedBalance != null) {
                                     account.applyBalance(
                                         cachedBalance.tokenBalance,
                                         cachedBalance.price
                                     )
                                 } else {
-                                    account
+                                    account.copy(
+                                        tokenValue = TokenValue(
+                                            value = BigInteger.ZERO,
+                                            unit = account.token.ticker,
+                                            decimals = account.token.decimal
+                                        ),
+                                        fiatValue = FiatValue(
+                                            value = BigDecimal.ZERO,
+                                            currency = AppCurrency.USD.ticker,
+                                        ),
+                                        price = null
+                                    )
                                 }
                             }
                             address.copy(accounts = updatedAccounts)
@@ -297,10 +312,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
                                 async {
                                     val balance =
                                         balanceRepository.getDefiTokenBalanceAndPrice(
-                                            address,
-                                            it.token
-                                        )
-                                            .first()
+                                            address = address,
+                                            coin = it.token,
+                                        ).first()
 
                                     it.applyBalance(balance.tokenBalance, balance.price)
                                 }
