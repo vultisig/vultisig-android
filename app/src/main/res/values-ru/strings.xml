@@ -340,8 +340,8 @@
     <string name="keysign_password_title">Пароль</string>
     <string name="home_screen_import_vault">Импортировать хранилище</string>
     <string name="keysign_password_incorrect_password">Пароль неверный</string>
-    <string name="vault_list_part_n_of_t">Поделиться %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Поделиться %1$d из %2$d</string>
+    <string name="vault_list_part_n_of_t">Поделиться %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Поделиться %1$d-из-%2$d</string>
     <string name="vault_list_fast_badge">Быстрый</string>
     <string name="qr_title_join_keygen">Присоединяйтесь к кейгену</string>
     <string name="qr_title_join_keysign">Присоединяйтесь к Keysign</string>

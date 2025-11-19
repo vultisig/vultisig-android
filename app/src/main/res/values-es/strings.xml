@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Contraseña</string>
     <string name="home_screen_import_vault">Importar bóveda</string>
     <string name="keysign_password_incorrect_password">La contraseña es incorrecta</string>
-    <string name="vault_list_part_n_of_t">Compartir %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Compartir %1$d de %2$d</string>
+    <string name="vault_list_part_n_of_t">Compartir %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Compartir %1$d-de-%2$d</string>
     <string name="vault_list_fast_badge">Rápida</string>
     <string name="qr_title_join_keygen">Únase a Keygen</string>
     <string name="qr_title_join_keysign">Únase a Keysign</string>

@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Lozinka</string>
     <string name="home_screen_import_vault">Uvoz trezora</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
-    <string name="vault_list_part_n_of_t">Podijeli %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Podijeli %1$d od %2$d</string>
+    <string name="vault_list_part_n_of_t">Podijeli %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Podijeli %1$d-od-%2$d</string>
     <string name="vault_list_fast_badge">Brzo</string>
     <string name="qr_title_join_keygen">Pridružite se Keygenu</string>
     <string name="qr_title_join_keysign">Pridružite se Keysignu</string>
