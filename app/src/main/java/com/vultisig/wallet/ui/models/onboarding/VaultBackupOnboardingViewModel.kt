@@ -43,19 +43,6 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     )
     private val vaultId = args.vaultId
 
-    init {
-        viewModelScope.launch {
-            vaultRepository.get(vaultId)?.let { vault ->
-                state.update {
-                    it.copy(
-                        deviceIndex = vault.signers.indexOf(vault.localPartyID),
-                        vaultShares = vault.signers.size,
-                    )
-                }
-            }
-        }
-    }
-
     // TODO refactor this into actually configurable model
     private val pages = when (args.vaultType) {
         Route.VaultInfo.VaultType.Fast -> {
@@ -88,6 +75,19 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             action = args.action,
         )
     )
+
+    init {
+        viewModelScope.launch {
+            vaultRepository.get(vaultId)?.let { vault ->
+                state.update {
+                    it.copy(
+                        deviceIndex = vault.signers.indexOf(vault.localPartyID),
+                        vaultShares = vault.signers.size,
+                    )
+                }
+            }
+        }
+    }
 
     fun next() {
         viewModelScope.launch {
