@@ -307,7 +307,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                         it.sortByAccountsTotalFiatValue()
                     }
                     .catch {
-                        updateRefreshing(false) // TODO: Fix this
+                        updateRefreshing(false)
                         Timber.e(it)
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
@@ -323,9 +323,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     .updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                     )
-                if (cryptoConnectionType == CryptoConnectionType.Defi) {
-                    loadDeFiBalances(vaultId)
-                }
             }
                 .launchIn(this)
         }
@@ -511,9 +508,9 @@ internal class VaultAccountsViewModel @Inject constructor(
 
         val vaultId = vaultId ?: return
 
-        //if (type == CryptoConnectionType.Defi) {
-        //    loadDeFiBalances(vaultId)
-        //}
+        if (type == CryptoConnectionType.Defi) {
+            loadDeFiBalances(vaultId)
+        }
     }
 
     companion object {
