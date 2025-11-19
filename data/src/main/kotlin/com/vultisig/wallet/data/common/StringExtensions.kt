@@ -38,9 +38,7 @@ fun String.normalizeMessageFormat(): String {
             if (hex.length % 2 != 0) {
                 return this
             }
-            val bytes = hex.chunked(2)
-                .map { it.toInt(16).toByte() }
-                .toByteArray()
+            val bytes = this.toHexBytes()
             String(
                 bytes,
                 Charsets.UTF_8
