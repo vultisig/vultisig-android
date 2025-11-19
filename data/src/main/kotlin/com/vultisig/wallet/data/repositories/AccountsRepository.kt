@@ -51,7 +51,7 @@ interface AccountsRepository {
 
     suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount>
 
-    suspend fun loadDeFiAddresses(vaultId: String): Flow<List<Address>>
+    suspend fun loadDeFiAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>>
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
@@ -241,13 +241,16 @@ internal class AccountsRepositoryImpl @Inject constructor(
         return emptyList()
     }
 
-    override suspend fun loadDeFiAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+    override suspend fun loadDeFiAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
         supervisorScope {
             val vault = getVault(vaultId)
             val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
 
-            val loadPrices =
+            val loadPrices = if (isRefresh) {
                 async { tokenPriceRepository.refresh(defiCoins) }
+            } else {
+                null
+            }
 
             val coins = defiCoins.groupBy { it.chain }
             val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
@@ -301,7 +304,11 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 Timber.e(e, "Failed to load cached DeFi balances")
             }
 
-            loadPrices.await()
+            if (!isRefresh) {
+                return@supervisorScope
+            }
+
+            loadPrices?.await()
             // emit network
             addresses.mapIndexed { index, account ->
                 async {

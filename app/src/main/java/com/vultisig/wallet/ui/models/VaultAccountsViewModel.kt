@@ -161,6 +161,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
+        loadDeFiBalances(vaultId, false)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -328,12 +329,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
     
-    private fun loadDeFiBalances(vaultId: String) {
+    private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob = viewModelScope.launch {
             combine(
                 accountsRepository
-                    .loadDeFiAddresses(vaultId)
+                    .loadDeFiAddresses(vaultId, isRefresh)
                     .map { it ->
                         it.sortByAccountsTotalFiatValue()
                     }
@@ -344,6 +345,8 @@ internal class VaultAccountsViewModel @Inject constructor(
                 uiState.value.searchTextFieldState.textAsFlow(),
                 //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
             ) { accounts, searchQuery,  ->
+                Timber.d("Defi Accounts Loaded: $accounts")
+
                 accounts.updateUiStateFromList(
                         searchQuery = searchQuery.toString(),
                         isDefi = true,
@@ -509,7 +512,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         val vaultId = vaultId ?: return
 
         if (type == CryptoConnectionType.Defi) {
-            loadDeFiBalances(vaultId)
+            loadDeFiBalances(vaultId, true)
         }
     }
 
