@@ -340,8 +340,8 @@
     <string name="keysign_password_title">Пароль</string>
     <string name="home_screen_import_vault">Импортировать хранилище</string>
     <string name="keysign_password_incorrect_password">Пароль неверный</string>
-    <string name="vault_list_part_n_of_t">Поделиться %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Поделиться %1$d из %2$d</string>
+    <string name="vault_list_part_n_of_t">Поделиться %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Поделиться %1$d-из-%2$d</string>
     <string name="vault_list_fast_badge">Быстрый</string>
     <string name="qr_title_join_keygen">Присоединяйтесь к кейгену</string>
     <string name="qr_title_join_keysign">Присоединяйтесь к Keysign</string>
@@ -371,7 +371,7 @@
     <string name="vault_details_screen_vault_type">Тип хранилища</string>
     <string name="vault_settings_delete_vault_part">Поделиться хранилища:</string>
     <string name="vault_password_hint_to_long">Подсказка слишком длинная</string>
-    <string name="vault_details_screen_vault_part_desc">Поделиться %1$s из %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Поделиться %1$s-из-%2$s</string>
     <string name="vault_details_screen_signer">Подписавший %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Зарегистрируйте свои хранилища!</string>
     <string name="register_vault_screen_title">Регистрация хранилища</string>

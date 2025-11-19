@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Importa Vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
-    <string name="vault_list_part_n_of_t">Condividi %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Condividi %1$d di %2$d</string>
+    <string name="vault_list_part_n_of_t">Condividi %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Condividi %1$d-di-%2$d</string>
     <string name="vault_list_fast_badge">Veloce</string>
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>
@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tipo di caveau</string>
     <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
-    <string name="vault_details_screen_vault_part_desc">Condividi %1$s di %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Condividi %1$s-di-%2$s</string>
     <string name="vault_details_screen_signer">Cantante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registra i tuoi Vault!</string>
     <string name="register_vault_screen_title">Registra Vault</string>

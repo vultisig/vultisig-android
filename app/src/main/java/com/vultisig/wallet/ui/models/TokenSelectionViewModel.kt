@@ -106,14 +106,16 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun onCommitChanges() {
         val toEnableAccounts = uiState.value.tokens.filter { it.isEnabled }
-        val toDisableAccounts = uiState.value.tokens - toEnableAccounts
 
         viewModelScope.launch {
             toEnableAccounts.forEach {
                 enableTokenUseCase(vaultId, it.coin)
             }
-            toDisableAccounts.forEach {
-                vaultRepository.disableTokenFromVault(vaultId, it.coin)
+            val toEnableIds = toEnableAccounts.map { it.coin.id }.toSet()
+            val currentEnabled = vaultRepository.getEnabledTokens(vaultId).first()
+            val toRemoveFromVault = currentEnabled.filter { it.chain.id == chainId && it.id !in toEnableIds && !it.isNativeToken }
+            toRemoveFromVault.forEach {
+                vaultRepository.disableTokenFromVault(vaultId, it)
             }
             requestResultRepository.respond(REFRESH_TOKEN_DATA, Unit)
             navigator.back()

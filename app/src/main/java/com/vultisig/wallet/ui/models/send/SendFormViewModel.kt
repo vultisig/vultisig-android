@@ -34,8 +34,8 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.getDustThreshold
+import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -1061,7 +1061,7 @@ internal class SendFormViewModel @Inject constructor(
                 // if we find token by id, return it asap
                 return accountToken
             }
-            if (searchByChainResult == null && preSelectedChainIds.contains(accountToken.chain.id)) {
+            if (searchByChainResult == null && preSelectedChainIds.contains(accountToken.chain.id) && accountToken.isNativeToken) {
                 // if we find token by chain, remember it and return later if nothing else found
                 searchByChainResult = accountToken
             }

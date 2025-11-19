@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Palavra-passe</string>
     <string name="home_screen_import_vault">Importar cofre</string>
     <string name="keysign_password_incorrect_password">A palavra-passe está incorreta</string>
-    <string name="vault_list_part_n_of_t">Compartilhar %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Compartilhar %1$d de %2$d</string>
+    <string name="vault_list_part_n_of_t">Compartilhar %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Compartilhar %1$d-de-%2$d</string>
     <string name="vault_list_fast_badge">Rápida</string>
     <string name="qr_title_join_keygen">Junte-se à Keygen</string>
     <string name="qr_title_join_keysign">Junte-se ao Keysign</string>
@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Tipo de cofre</string>
     <string name="vault_settings_delete_vault_part">Compartilhar do cofre:</string>
     <string name="vault_password_hint_to_long">A dica é demasiado longa</string>
-    <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s de %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Compartilhar %1$s-de-%2$s</string>
     <string name="vault_details_screen_signer">Cantor %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registe os seus cofres!</string>
     <string name="register_vault_screen_title">Registar cofre</string>

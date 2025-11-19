@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Lozinka</string>
     <string name="home_screen_import_vault">Uvoz trezora</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
-    <string name="vault_list_part_n_of_t">Podijeli %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Podijeli %1$d od %2$d</string>
+    <string name="vault_list_part_n_of_t">Podijeli %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Podijeli %1$d-od-%2$d</string>
     <string name="vault_list_fast_badge">Brzo</string>
     <string name="qr_title_join_keygen">Pridružite se Keygenu</string>
     <string name="qr_title_join_keysign">Pridružite se Keysignu</string>
@@ -360,7 +360,7 @@
     <string name="vault_details_screen_vault_type">Vrsta trezora</string>
     <string name="vault_settings_delete_vault_part">Podijeli trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
-    <string name="vault_details_screen_vault_part_desc">Podijeli %1$s od %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Podijeli %1$s-od-%2$s</string>
     <string name="vault_details_screen_signer">Potpisnik %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrirajte svoje trezore!</string>
     <string name="register_vault_screen_title">Registrirajte sef</string>

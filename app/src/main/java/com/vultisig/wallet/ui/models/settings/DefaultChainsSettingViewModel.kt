@@ -100,5 +100,6 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Cardano -> "ADA"
             Chain.Mantle -> "MNT"
             Chain.Sei -> "SEI"
+            Chain.Hyperliquid -> "HYPE"
         }
 }

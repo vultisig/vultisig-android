@@ -340,8 +340,8 @@
     <string name="keysign_password_title">Wachtwoord</string>
     <string name="home_screen_import_vault">Kluis importeren</string>
     <string name="keysign_password_incorrect_password">Wachtwoord is onjuist</string>
-    <string name="vault_list_part_n_of_t">Delen %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Delen %1$d van %2$d</string>
+    <string name="vault_list_part_n_of_t">Delen %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Delen %1$d-van-%2$d</string>
     <string name="vault_list_fast_badge">Snel</string>
     <string name="qr_title_join_keygen">Word lid van Keygen</string>
     <string name="qr_title_join_keysign">Word lid van Keysign</string>
@@ -371,7 +371,7 @@
     <string name="vault_details_screen_vault_type">Kluistype</string>
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
     <string name="vault_password_hint_to_long">De hint is te lang</string>
-    <string name="vault_details_screen_vault_part_desc">Delen %1$s van %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Delen %1$s-van-%2$s</string>
     <string name="vault_details_screen_signer">Ondertekenaar %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registreer uw kluizen!</string>
     <string name="register_vault_screen_title">Registreer kluis</string>
