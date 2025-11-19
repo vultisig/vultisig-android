@@ -65,11 +65,13 @@ internal interface BlockchainServicesModule {
             tcyStakingService: TCYStakingService,
             defaultStakingPositionService: DefaultStakingPositionService,
             bondUseCase: ThorchainBondUseCase,
+            stakingDetailsRepository: StakingDetailsRepository,
         ): ThorchainDeFiBalanceService = ThorchainDeFiBalanceService(
             rujiStakingService = rujiStakingService,
             tcyStakingService = tcyStakingService,
             defaultStakingPositionService = defaultStakingPositionService,
             bondUseCase = bondUseCase,
+            stakingDetailsRepository = stakingDetailsRepository,
         )
     }
 }

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -15,6 +16,7 @@ class ThorchainDeFiBalanceService(
     private val tcyStakingService: TCYStakingService,
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val bondUseCase: ThorchainBondUseCase,
+    private val stakingDetailsRepository: StakingDetailsRepository,
 ): DeFiService {
 
     override suspend fun getRemoteDeFiBalance(address: String): List<DeFiBalance> = supervisorScope {
@@ -44,6 +46,25 @@ class ThorchainDeFiBalanceService(
         Timber.d("ThorchainDeFiBalanceService: Total DeFi positions found: $totalPositions")
         
         return@supervisorScope results
+    }
+
+    override suspend fun getCacheDeFiBalance(
+        address: String,
+        vaultId: String
+    ): List<DeFiBalance> = supervisorScope{
+        val rujiDetails =
+            async { stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id) }
+        val tcyDetails =
+            async { stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id) }
+        val defaultDetails = async {
+            stakingDetailsRepository.getStakingDetails(vaultId)
+        }
+        //val bonDetails = async {
+        //    bondUseCase.
+        //}
+
+
+        error("")
     }
 
     private suspend fun getRujiDeFiBalance(address: String): DeFiBalance {

@@ -253,18 +253,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
         coin: Coin,
     ): Flow<TokenBalanceAndPrice> = flow {
         val cacheValue = defiBalanceCache.get(address)
-        val defiBalances = if (cacheValue != null) {
-            cacheValue
-        } else {
-            val mutex = lockFor(address)
-            mutex.withLock {
-                defiBalanceCache.get(address) ?: run {
-                    val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
-                    defiBalanceCache.put(address, remote)
-                    remote
-                }
-            }
-        }
+        val defiBalances = cacheValue ?: getDeFiTokenValue(address, coin)
         
         val defiBalance = defiBalances
             .flatMap { it.balances }
@@ -304,6 +293,22 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 currency = currency.ticker,
             )
         ))
+    }
+
+    private suspend fun getDeFiTokenValue(address: String, coin: Coin): List<DeFiBalance> {
+        return when (coin.chain) {
+            ThorChain -> {
+                val mutex = lockFor(address)
+                mutex.withLock {
+                    defiBalanceCache.get(address) ?: run {
+                        val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+                        defiBalanceCache.put(address, remote)
+                        remote
+                    }
+                }
+            }
+            else -> error("Not supported")
+        }
     }
 
     private suspend fun getCachedTokenValue(
