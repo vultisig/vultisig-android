@@ -328,6 +328,8 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         return freeBandwidth + stakingBandwidth
     }
 
+
+
     private suspend fun getDefaultEVMFee(
         chain: Chain,
         isSwap: Boolean,
@@ -354,3 +356,5 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         private const val BYTES_PER_CONTRACT_TX = 345L
     }
 }
+
+

@@ -1,19 +1,28 @@
 package com.vultisig.wallet.ui.screens.v2.chaintokens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,9 +31,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -42,6 +59,9 @@ import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.ChainTokensViewModel
+import com.vultisig.wallet.ui.screens.FoldedCornerProgressBar
+import com.vultisig.wallet.ui.screens.TronBandwidthCard
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
@@ -50,9 +70,42 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.Colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.showReviewPopUp
 
+
+@Composable
+internal fun ChainTokensScreen(
+    navController: NavHostController,
+    viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
+) {
+    val uiModel by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val reviewManager = remember { ReviewManagerFactory.create(context) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
+    ChainTokensScreen(
+        uiModel = uiModel,
+        onRefresh = viewModel::refresh,
+        onSend = viewModel::send,
+        onSwap = viewModel::swap,
+        onDeposit = viewModel::deposit,
+        onBuy = viewModel::buy,
+        onSelectTokens = viewModel::selectTokens,
+        onTokenClick = viewModel::openToken,
+        onBackClick = navController::popBackStack,
+        onShareQrClick = { viewModel.shareQRCode(context) },
+        onShowReviewPopUp = {
+            reviewManager.showReviewPopUp(context)
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,7 +207,8 @@ internal fun ChainTokensScreen(
                             context.getString(
                                 R.string.address_copied,
                                 uiModel.chainName
-                            ))
+                            )
+                        )
                         onShowReviewPopUp()
                     },
                     modifier = Modifier
@@ -225,8 +279,32 @@ internal fun ChainTokensScreen(
                 }
 
                 UiSpacer(
-                    size = 16.dp
+                    size = 7.dp
                 )
+                uiModel.tronResourceStats?.let { resourceUsage ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(
+                            space = 12.dp,
+                            alignment = Alignment.CenterHorizontally
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TronBandwidthCard(
+                            icon = R.drawable.bandwidth,
+                            backgroundColor = Theme.colors.backgrounds.success,
+                            text = "Bandwidth",
+                            unUsed = resourceUsage.unUsedBandwidth,
+                            total = resourceUsage.totalBandwidth
+                        )
+                        TronBandwidthCard(
+                            icon = R.drawable.energy,
+                            backgroundColor = Theme.colors.backgrounds.darkSlate,
+                            text = "energy",
+                            unUsed = resourceUsage.unUsedEnergy,
+                            total = resourceUsage.totalEnergy,
+                        )
+                    }
+                }
             }
         },
         content = { paddingValues ->
@@ -331,7 +409,7 @@ internal fun ChainTokensScreen(
 private fun PreviewChainCoinScreen1() {
     ChainTokensScreen(
         uiModel = ChainTokensUiModel(
-            chainName = "Ethereum",
+            chainName = "Tron",
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",
             explorerURL = "https://etherscan.io/",

@@ -183,3 +183,27 @@ data class TronContractInfoJson(
         val energyFactor: Long = 0L,
     )
 }
+
+fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
+    val totalBandwidth = freeNetLimit + netLimit
+    val usedBandwidth = freeNetUsed + netUsed
+    val unUsedBandwidth = totalBandwidth - usedBandwidth
+
+    val totalEnergy = energyLimit
+    val usedEnergy = energyUsed
+    val unUsedEnergy = totalEnergy - usedEnergy
+
+    return ResourceUsage(
+        unUsedBandwidth = unUsedBandwidth,
+        totalBandwidth = totalBandwidth,
+        totalEnergy = totalEnergy,
+        unUsedEnergy = unUsedEnergy
+    )
+}
+
+data class ResourceUsage(
+    val unUsedBandwidth: Long,
+    val totalBandwidth: Long,
+    val totalEnergy: Long,
+    val unUsedEnergy: Long
+)
