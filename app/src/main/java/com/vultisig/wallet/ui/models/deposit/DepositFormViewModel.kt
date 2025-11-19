@@ -1864,7 +1864,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = STAKING_TCY_COMPOUND_CONTRACT,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
