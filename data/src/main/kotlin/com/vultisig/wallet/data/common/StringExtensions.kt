@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.common
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.utils.Numeric
+import timber.log.Timber
 import java.math.BigInteger
 
 fun String.toHexBytes(): ByteArray {
@@ -29,6 +30,35 @@ fun String.toByteStringOrHex(): ByteString {
         this.toByteString()
     }
 }
+
+fun String.normalizeMessageFormat(): String {
+    return try {
+        if (this.isHex()) {
+            val hex = this.remove0x()
+            if (hex.length % 2 != 0) {
+                return this
+            }
+            val bytes = this.toHexBytes()
+            String(
+                bytes,
+                Charsets.UTF_8
+            ).replace(
+                // Remove leading/trailing control characters
+                "^\\p{C}+|\\p{C}+$".toRegex(),
+                ""
+            )
+        } else {
+            this
+        }
+    } catch (e: Exception) {
+        Timber.e(
+            e,
+            "failed to decode"
+        )
+        this
+    }
+}
+
 internal fun String.stripHexPrefix(): String {
     return if (startsWith("0x")) {
         substring(2)
