@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.vault_settings.components.delete
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
@@ -15,6 +16,7 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -41,9 +43,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
 
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ConfirmDelete.ARG_VAULT_ID))
-
+    private val vaultId: String = savedStateHandle.toRoute<Route.ConfirmDelete>().vaultId
     val uiModel = MutableStateFlow(
         ConfirmDeleteVaultState(
             cautionsBeforeDelete = listOf(
@@ -117,15 +117,15 @@ internal class ConfirmDeleteViewModel @Inject constructor(
             vaultRepository.delete(vaultId)
             vaultOrderRepository.delete(parentId = null, name = vaultId)
             if (vaultRepository.hasVaults()) {
-                navigator.navigate(
-                    Destination.Home(),
+                navigator.route(
+                    Route.Home(),
                     NavigationOptions(
                         clearBackStack = true
                     )
                 )
             } else {
-                navigator.navigate(
-                    Destination.AddVault, NavigationOptions(
+                navigator.route(
+                    Route.AddVault, NavigationOptions(
                         clearBackStack = true
                     )
                 )

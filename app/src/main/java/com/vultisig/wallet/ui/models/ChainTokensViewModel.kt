@@ -16,6 +16,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -120,10 +121,10 @@ internal class ChainTokensViewModel @Inject constructor(
         private const val LOGO_SIZE_DP = 32
     }
     private val tokens = MutableStateFlow(emptyList<Coin>())
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
+
+    val args = savedStateHandle.toRoute<Route.ChainTokens>()
+    private val chainRaw: String = args.chainId
+    private val vaultId: String = args.vaultId
     private var currentVault: Vault? = null
     private var qrBitmap: Bitmap? = null
 
@@ -168,8 +169,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun deposit() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Deposit(
+            navigator.route(
+                Route.Deposit(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
@@ -179,7 +180,7 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buy() {
         viewModelScope.launch {
-            navigator.navigate(Destination.OnRamp(
+            navigator.route(Route.OnRamp(
                 vaultId = vaultId,
                 chainId = chainRaw,
             ))

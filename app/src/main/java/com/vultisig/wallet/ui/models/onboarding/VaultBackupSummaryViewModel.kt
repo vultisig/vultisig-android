@@ -51,8 +51,8 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
     fun next() {
         if (state.value.isConsentChecked) {
             viewModelScope.launch {
-                navigator.navigate(
-                    dst = Destination.Home(),
+                navigator.route(
+                    route = Route.Home(),
                     opts = NavigationOptions(
                         clearBackStack = true,
                     ),

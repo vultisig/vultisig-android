@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
@@ -140,7 +141,7 @@ internal fun JoinKeysignView(
                     approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
                     progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
                     onComplete = {
-                        navController.navigate(Destination.Home().route)
+                        navController.navigate(Route.Home())
                     },
                     onBack = keysignViewModel::navigateToHome,
                     transactionTypeUiModel = keysignViewModel.transactionTypeUiModel,

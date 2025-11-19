@@ -211,8 +211,8 @@ internal class AddressEntryViewModel @Inject constructor(
                 )
             )
             if (!addressBookEntryChainId.isNullOrBlank() && !addressBookEntryAddress.isNullOrBlank() && addressExist.not()) {
-                navigator.navigate(
-                    dst = Destination.Home(),
+                navigator.route(
+                    route = Route.Home(),
                     opts = NavigationOptions(
                         clearBackStack = true
                     )

@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -21,8 +22,8 @@ import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
@@ -150,7 +151,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
 
-    private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private var vaultId: String = savedStateHandle.toRoute<Route.PositionTokens>().vaultId
 
     val state = MutableStateFlow(DefiPositionsUiModel())
 
@@ -828,8 +829,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         bondAddress = nodeAddress,
@@ -848,8 +849,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         bondAddress = nodeAddress,
@@ -868,8 +869,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id
                     )
@@ -886,8 +887,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         depositType = defiNavAction.type,

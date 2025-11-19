@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
@@ -106,7 +107,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
 ) : ViewModel() {
 
-    private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
     private var vaultId: String? = null
 
     val uiState = MutableStateFlow(VaultAccountsUiModel())
@@ -232,7 +233,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun buy() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.navigate(Destination.OnRamp(
+            navigator.route(Route.OnRamp(
                 vaultId = vaultId,
                 chainId = Chain.ThorChain.raw,
             ))
@@ -250,16 +251,16 @@ internal class VaultAccountsViewModel @Inject constructor(
         viewModelScope.launch {
             when (uiState.value.cryptoConnectionType) {
                 CryptoConnectionType.Wallet -> {
-                    navigator.navigate(
-                        Destination.ChainTokens(
+                    navigator.route(
+                        Route.ChainTokens(
                             vaultId = vaultId,
                             chainId = chainId,
                         )
                     )
                 }
                 CryptoConnectionType.Defi -> {
-                    navigator.navigate(
-                        Destination.PositionTokens(
+                    navigator.route(
+                        Route.PositionTokens(
                             vaultId = vaultId,
                         )
                     )
@@ -414,7 +415,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         vaultId?.let { vaultId ->
             viewModelScope.launch {
                 Timber.d("openSettings($vaultId)")
-                navigator.navigate(Destination.Settings(vaultId = vaultId))
+                navigator.route(Route.Settings(vaultId = vaultId))
             }
         }
     }

@@ -11,11 +11,12 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
@@ -29,13 +30,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class QrAddressViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
-    val address = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_COIN_ADDRESS)
-    val chainName = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_CHAIN_NAME)
+    private val args = savedStateHandle.toRoute<Route.QrAddressScreen>()
+    val address = args.address
+    val chainName = args.chainName
     private val currentVault: MutableState<Vault?> = mutableStateOf(null)
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
@@ -44,7 +46,7 @@ internal class QrAddressViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             loadQrPainter()
-            vaultRepository.get(requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID)))
+            vaultRepository.get(requireNotNull(args.vaultId))
                 ?.let {
                     currentVault.value = it
                 }
@@ -53,7 +55,7 @@ internal class QrAddressViewModel @Inject constructor(
 
     private suspend fun loadQrPainter() {
         withContext(Dispatchers.IO) {
-            val qrBitmap = generateQrBitmap(address ?: "", Color.Black, Color.White, null)
+            val qrBitmap = generateQrBitmap(address, Color.Black, Color.White, null)
             val bitmapPainter = BitmapPainter(
                 qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
             )

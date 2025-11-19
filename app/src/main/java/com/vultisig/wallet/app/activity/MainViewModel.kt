@@ -51,8 +51,8 @@ internal class MainViewModel @Inject constructor(
     private val _isOffline: MutableState<Boolean> = mutableStateOf(false)
     val isOffline: State<Boolean> = _isOffline
 
-    private val _startDestination: MutableState<String> = mutableStateOf(Destination.Home().route)
-    val startDestination: State<String> = _startDestination
+    private val _startDestination: MutableState<Any> = mutableStateOf(Route.Home())
+    val startDestination: State<Any> = _startDestination
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
@@ -64,9 +64,9 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch {
 
             if (vaultRepository.hasVaults())
-                _startDestination.value = Destination.Home().route
+                _startDestination.value = Route.Home()
             else
-                _startDestination.value = Destination.AddVault.route
+                _startDestination.value = Route.AddVault
 
             _isLoading.value = false
 

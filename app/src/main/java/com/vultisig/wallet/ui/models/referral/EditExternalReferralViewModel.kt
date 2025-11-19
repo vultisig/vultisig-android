@@ -5,12 +5,13 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel.Companion.MAX_LENGTH_REFERRAL_CODE
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -34,7 +35,7 @@ internal class EditExternalReferralViewModel @Inject constructor(
     private val referralCodeRepository: ReferralCodeSettingsRepository,
     private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
-    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private val vaultId: String = savedStateHandle.toRoute<Route.ReferralExternalEdition>().vaultId
 
     val referralCodeTextFieldState = TextFieldState()
     val state = MutableStateFlow(EditExternalReferralUiState())

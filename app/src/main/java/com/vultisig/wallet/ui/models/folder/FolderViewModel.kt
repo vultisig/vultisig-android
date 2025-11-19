@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -75,8 +76,8 @@ internal class FolderViewModel @Inject constructor(
 
     fun selectVault(vaultId: String) = viewModelScope.launch {
         lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
-        navigator.navigate(
-            Destination.Home(vaultId),
+        navigator.route(
+            Route.Home(vaultId),
             opts = NavigationOptions(clearBackStack = true)
         )
     }
