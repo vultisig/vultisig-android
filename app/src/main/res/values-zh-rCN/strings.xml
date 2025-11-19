@@ -584,7 +584,7 @@
     
     <!-- Vault List -->
     <string name="vault_list_part_n_of_t">部分 %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">份额 %1$d of %2$d</string>
+    <string name="vault_part_n_of_t">份额 %1$d-of-%2$d</string>
     <string name="vault_list_fast_badge">快速</string>
     
     <!-- QR Titles -->
