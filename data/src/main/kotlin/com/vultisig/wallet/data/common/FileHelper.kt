@@ -207,7 +207,8 @@ suspend fun Uri.processZip(context: Context): List<AppZipEntry> = doFileOperatio
 
 suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {
     try {
-        context.contentResolver.openInputStream(this@isValidZipFile)?.use { inputStream ->
+        val hasZipExtension = File(fileName(context)).extension.equals("zip", ignoreCase = true)
+        hasZipExtension && context.contentResolver.openInputStream(this@isValidZipFile)?.use { inputStream ->
             ZipInputStream(inputStream).use { zipStream ->
                 zipStream.nextEntry != null
             }
