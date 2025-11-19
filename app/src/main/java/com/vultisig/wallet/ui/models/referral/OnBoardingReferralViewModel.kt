@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +20,7 @@ internal class OnBoardingReferralViewModel @Inject constructor(
 
     fun onClickGetStarted() {
         viewModelScope.launch {
-            navigator.route(Destination.ReferralCode(vaultId))
+            navigator.navigate(Destination.ReferralCode(vaultId))
         }
     }
 }
