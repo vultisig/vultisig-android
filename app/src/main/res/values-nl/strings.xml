@@ -928,4 +928,6 @@
     <string name="no_positions_found">Geen posities gevonden</string>
     <string name="select_positions">Selecteer posities</string>
     <string name="enable_at_least_one_position">Schakel ten minste één positie in om saldi te bekijken en posities te beheren.</string>
+    <string name="bandwidth">Bandbreedte</string>
+    <string name="energy">Energie</string>
 </resources>

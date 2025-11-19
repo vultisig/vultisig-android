@@ -17,6 +17,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.MergeAccount
+import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -45,6 +48,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
 import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -52,6 +56,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -82,6 +87,7 @@ internal data class ChainTokensUiModel(
     val isBalanceVisible: Boolean = true,
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val qrCode: BitmapPainter? = null,
+    val tronResourceStats : ResourceUsage? = null,
 )
 
 @Immutable
@@ -114,6 +120,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val tronApi: TronApi
 ) : ViewModel() {
     companion object {
         private const val LOGO_RADIUS_DIVISOR = 2.3f
@@ -134,6 +141,7 @@ internal class ChainTokensViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+
             uiState.update {
                 it.copy(isBalanceVisible = isBalanceVisible)
             }
@@ -218,9 +226,25 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
-            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
+            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+
+            if (chain == Chain.Tron) {
+                val address = currentVault?.coins
+                    ?.firstOrNull { it.chain == chain }
+                    ?.address
+                    ?: error("No address for chain $chainRaw in vault $vaultId")
+                withContext(Dispatchers.IO) {
+                    uiState.update {
+                        it.copy(
+                            tronResourceStats =
+                                tronApi.getAccountResource(address).calculateResourceStats()
+                        )
+                    }
+                }
+            }
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
@@ -331,6 +355,8 @@ internal class ChainTokensViewModel @Inject constructor(
             }.collect()
         }
     }
+
+
 
     private suspend fun generateQr(address: String, logo: Bitmap?): BitmapPainter {
         val qrBitmap = withContext(Dispatchers.IO) {

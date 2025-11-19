@@ -931,4 +931,6 @@
     <string name="no_positions_found">Позиции не найдены</string>
     <string name="select_positions">Выбрать позиции</string>
     <string name="enable_at_least_one_position">Включите хотя бы одну позицию для просмотра балансов и управления позициями.</string>
+    <string name="bandwidth">пропускная способность</string>
+    <string name="energy">энергия</string>
 </resources>

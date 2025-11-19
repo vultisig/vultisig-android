@@ -24,15 +24,17 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
+import com.vultisig.wallet.ui.components.buttons.VsButtonState.Default
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.*
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 enum class VsButtonVariant {
     Primary, Secondary, Error, Tertiary,
 }
 
 enum class VsButtonState {
-    Enabled, Disabled
+    Enabled, Disabled, Default
 }
 
 enum class VsButtonSize {
@@ -59,10 +61,17 @@ fun VsButton(
                 Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
-            Disabled ->  when (variant) {
+            Disabled -> when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttons.disabledSecondary
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
+            }
+
+            Default -> when (variant) {
+                Primary -> colors.buttons.tertiary
+                Secondary -> colors.backgrounds.transparent
+                Error -> colors.alerts.error
                 Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
@@ -71,18 +80,25 @@ fun VsButton(
 
 
     val borderColor by animateColorAsState(
-        when(state){
+        when (state) {
             Enabled -> when (variant) {
-                Primary ->  Theme.colors.buttons.primary
+                Primary -> Theme.colors.buttons.primary
                 Secondary -> Theme.colors.buttonBorders.default
                 Error -> Theme.colors.alerts.error
                 Tertiary -> Theme.colors.backgrounds.tertiary
             }
 
-            Disabled ->  when (variant) {
+            Disabled -> when (variant) {
                 Primary -> Theme.colors.buttons.disabledPrimary
                 Secondary -> Theme.colors.buttonBorders.disabled
                 Error -> Theme.colors.alerts.error
+                Tertiary -> Theme.colors.backgrounds.tertiary
+            }
+
+            Default -> when (variant) {
+                Primary -> colors.buttons.tertiary
+                Secondary -> colors.buttons.tertiary
+                Error -> colors.alerts.error
                 Tertiary -> Theme.colors.backgrounds.tertiary
             }
         },
@@ -91,7 +107,10 @@ fun VsButton(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(
+            8.dp,
+            Alignment.CenterHorizontally
+        ),
         modifier = modifier
             .background(
                 color = backgroundColor,
@@ -102,7 +121,10 @@ fun VsButton(
                 color = borderColor,
                 shape = shape ?: RoundedCornerShape(percent = 100),
             )
-            .clickable(enabled = state == Enabled || forceClickable, onClick = onClick)
+            .clickable(
+                enabled = state == Enabled || forceClickable,
+                onClick = onClick
+            )
             .then(
                 when (size) {
                     Medium -> Modifier.padding(
@@ -151,6 +173,7 @@ fun VsButton(
             when (state) {
                 Enabled -> Theme.colors.text.button.light
                 Disabled -> Theme.colors.text.button.disabled
+                Default -> colors.text.button.light
             },
             label = "VsButton.contentColor"
         )
