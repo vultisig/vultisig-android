@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Importa Vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
-    <string name="vault_list_part_n_of_t">Condividi %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Condividi %1$d di %2$d</string>
+    <string name="vault_list_part_n_of_t">Condividi %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Condividi %1$d-di-%2$d</string>
     <string name="vault_list_fast_badge">Veloce</string>
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>

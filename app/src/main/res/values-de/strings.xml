@@ -329,8 +329,8 @@
     <string name="keysign_password_title">Passwort</string>
     <string name="home_screen_import_vault">Tresor importieren</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
-    <string name="vault_list_part_n_of_t">Teilen %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Teilen %1$d von %2$d</string>
+    <string name="vault_list_part_n_of_t">Teilen %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">Teilen %1$d-von-%2$d</string>
     <string name="vault_list_fast_badge">Schnell</string>
     <string name="qr_title_join_keygen">Keygen beitreten</string>
     <string name="qr_title_join_keysign">Keysign beitreten</string>
