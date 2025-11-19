@@ -84,6 +84,11 @@ interface BalanceRepository {
         coin: Coin,
     ): TokenBalanceAndPrice
 
+    suspend fun getDeFiCachedTokeBalanceAndPrice(
+        address: String,
+        vaultId: String,
+    ):  List<TokenBalanceAndPrice>
+
     suspend fun getCachedTokenBalances(
         addresses: List<String>,
         coins: List<Coin>
@@ -173,6 +178,54 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 currency.ticker
             ) else null
         )
+    }
+
+    override suspend fun getDeFiCachedTokeBalanceAndPrice(
+        address: String,
+        vaultId: String,
+    ): List<TokenBalanceAndPrice> {
+        val currency = appCurrencyRepository.currency.first()
+
+        val defiCachedBalances =
+            thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+
+        val allBalances = defiCachedBalances.flatMap { it.balances }
+        
+        return allBalances.map { balance ->
+            val tokenValue = TokenValue(
+                value = balance.amount,
+                unit = balance.coin.ticker,
+                decimals = balance.coin.decimal
+            )
+            
+            val price = tokenPriceRepository.getCachedPrice(balance.coin.id, currency)
+            
+            val fiatValue = if (price != null) {
+                FiatValue(
+                    tokenValue.decimal
+                        .multiply(price)
+                        .setScale(2, RoundingMode.HALF_UP),
+                    currency.ticker
+                )
+            } else {
+                null
+            }
+            
+            TokenBalanceAndPrice(
+                tokenBalance = TokenBalance(
+                    tokenValue = tokenValue,
+                    fiatValue = fiatValue,
+                ),
+                price = if (price != null) {
+                    FiatValue(
+                        price.setScale(2, RoundingMode.HALF_UP),
+                        currency.ticker
+                    )
+                } else {
+                    null
+                }
+            )
+        }
     }
 
     override suspend fun getCachedTokenBalances(

@@ -127,7 +127,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         )
     }
 
-    private suspend fun MutableList<Address>.fetchAccountFromDb(){
+    private suspend fun MutableList<Address>.fetchAccountFromDb() {
         val balances = balanceRepository.getCachedTokenBalances(
             this.map { adr -> adr.address },
             this.map { adr -> adr.accounts.map { it.token } }.flatten()
@@ -148,6 +148,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         }
 
     }
+
     private suspend fun getSPLCoins(
         solanaCoins: List<Coin>,
         vault: Vault
@@ -250,19 +251,55 @@ internal class AccountsRepositoryImpl @Inject constructor(
             }
 
             // emit cached
+            try {
+                val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
+                if (thorchainAddress != null) {
+                    val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                        thorchainAddress.address,
+                        vaultId
+                    )
 
+                    if (cachedDeFiBalances.isNotEmpty()) {
+                        val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
+                            balance.tokenBalance.tokenValue?.unit
+                        }
+
+                        val cachedAddresses = addresses.map { address ->
+                            val updatedAccounts = address.accounts.map { account ->
+                                val cachedBalance = balancesByTicker[account.token.ticker]
+                                if (cachedBalance != null) {
+                                    account.applyBalance(
+                                        cachedBalance.tokenBalance,
+                                        cachedBalance.price
+                                    )
+                                } else {
+                                    account
+                                }
+                            }
+                            address.copy(accounts = updatedAccounts)
+                        }
+
+                        send(cachedAddresses)
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load cached DeFi balances")
+            }
+
+            loadPrices.await()
             // emit network
             addresses.mapIndexed { index, account ->
                 async {
                     try {
                         val address = account.address
-                        loadPrices.await()
-
                         val newAccounts = supervisorScope {
                             account.accounts.map {
                                 async {
                                     val balance =
-                                        balanceRepository.getDefiTokenBalanceAndPrice(address, it.token)
+                                        balanceRepository.getDefiTokenBalanceAndPrice(
+                                            address,
+                                            it.token
+                                        )
                                             .first()
 
                                     it.applyBalance(balance.tokenBalance, balance.price)

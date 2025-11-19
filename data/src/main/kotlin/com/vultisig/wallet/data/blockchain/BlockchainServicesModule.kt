@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionServi
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
@@ -66,12 +67,14 @@ internal interface BlockchainServicesModule {
             defaultStakingPositionService: DefaultStakingPositionService,
             bondUseCase: ThorchainBondUseCase,
             stakingDetailsRepository: StakingDetailsRepository,
+            activeBondedNodeRepository: ActiveBondedNodeRepository
         ): ThorchainDeFiBalanceService = ThorchainDeFiBalanceService(
             rujiStakingService = rujiStakingService,
             tcyStakingService = tcyStakingService,
             defaultStakingPositionService = defaultStakingPositionService,
             bondUseCase = bondUseCase,
             stakingDetailsRepository = stakingDetailsRepository,
+            activeBondedNodeRepository = activeBondedNodeRepository,
         )
     }
 }
