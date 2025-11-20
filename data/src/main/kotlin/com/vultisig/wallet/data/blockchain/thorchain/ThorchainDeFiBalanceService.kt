@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigInteger
@@ -21,13 +22,13 @@ class ThorchainDeFiBalanceService(
     private val activeBondedNodeRepository: ActiveBondedNodeRepository,
 ): DeFiService {
 
-    override suspend fun getRemoteDeFiBalance(address: String): List<DeFiBalance> = supervisorScope {
+    override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> = supervisorScope {
         Timber.d("ThorchainDeFiBalanceService: Fetching DeFi balances for address: $address")
         
-        val rujiDeFiBalance = async { getRujiDeFiBalance(address) }
-        val tcyStakingBalance = async { getTcyDeFiBalance(address) }
-        val defaultStakingPositionsBalance = async { getDefaultStakingPositionsDeFiBalance(address) }
-        val bondStakingBalance = async { getBondStakingPositionsDeFiBalance(address) }
+        val rujiDeFiBalance = async { getRemoteRujiDeFiBalance(address, vaultId) }
+        val tcyStakingBalance = async { getRemoteTcyDeFiBalance(address, vaultId) }
+        val defaultStakingPositionsBalance = async { getRemoteDefaultStakingPositionsDeFiBalance(address, vaultId) }
+        val bondStakingBalance = async { getRemoteBondStakingPositionsDeFiBalance(address, vaultId) }
 
         val results = listOf(
             rujiDeFiBalance.await(),
@@ -134,9 +135,9 @@ class ThorchainDeFiBalanceService(
         defiBalances
     }
 
-    private suspend fun getRujiDeFiBalance(address: String): DeFiBalance {
+    private suspend fun getRemoteRujiDeFiBalance(address: String, vaultId: String): DeFiBalance {
         val amount = runCatching {
-            rujiStakingService.getStakingDetailsFromNetwork(address).stakeAmount
+            rujiStakingService.getStakingDetails(address, vaultId).last()?.stakeAmount ?: BigInteger.ZERO
         }.getOrElse { exception ->
             Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch RUJI balance")
             BigInteger.ZERO
@@ -155,9 +156,9 @@ class ThorchainDeFiBalanceService(
         )
     }
 
-    private suspend fun getTcyDeFiBalance(address: String): DeFiBalance {
+    private suspend fun getRemoteTcyDeFiBalance(address: String, vaultId: String): DeFiBalance {
         val amount = runCatching {
-            tcyStakingService.getStakingDetailsFromNetwork(address).stakeAmount
+            tcyStakingService.getStakingDetails(address, vaultId).last()?.stakeAmount ?: BigInteger.ZERO
         }.getOrElse { exception ->
             Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch TCY balance")
             BigInteger.ZERO
@@ -176,11 +177,12 @@ class ThorchainDeFiBalanceService(
         )
     }
 
-    private suspend fun getBondStakingPositionsDeFiBalance(
-        address: String
+    private suspend fun getRemoteBondStakingPositionsDeFiBalance(
+        address: String,
+        vaultId: String,
     ): DeFiBalance {
         val bondedNodes = runCatching {
-            bondUseCase.getActiveNodesRemote(address)
+            bondUseCase.getActiveNodes(address, vaultId).last()
         }.getOrElse { exception ->
             Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch bonded nodes")
             emptyList()
@@ -207,9 +209,12 @@ class ThorchainDeFiBalanceService(
         )
     }
 
-    private suspend fun getDefaultStakingPositionsDeFiBalance(address: String): DeFiBalance {
+    private suspend fun getRemoteDefaultStakingPositionsDeFiBalance(
+        address: String,
+        vaultId: String,
+    ): DeFiBalance {
         val defiBalances = runCatching {
-            val stakingDetails = defaultStakingPositionService.getStakingDetailsFromNetwork(address)
+            val stakingDetails = defaultStakingPositionService.getStakingDetails(address, vaultId).last()
             Timber.d("ThorchainDeFiBalanceService: Found ${stakingDetails.size} default staking positions")
             
             stakingDetails.map { detail ->
