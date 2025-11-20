@@ -1057,7 +1057,7 @@ internal class SendFormViewModel @Inject constructor(
 
         for (account in accounts) {
             val accountToken = account.token
-            if (accountToken.id == preSelectedTokenId) {
+            if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
                 // if we find token by id, return it asap
                 return accountToken
             }
