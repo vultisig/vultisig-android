@@ -277,7 +277,6 @@ internal fun ChainTokensScreen(
                         ResourceUsageCard(
                             modifier = Modifier.weight(1f),
                             resourceIconResId = R.drawable.bandwidth,
-                            cardBackgroundColor = Theme.colors.backgrounds.success,
                             resourceName = stringResource(R.string.bandwidth),
                             availableResourceAmount = resourceUsage.availableBandwidth,
                             totalResourceAmount = resourceUsage.totalBandwidth
@@ -285,7 +284,6 @@ internal fun ChainTokensScreen(
                         ResourceUsageCard(
                             modifier = Modifier.weight(1f),
                             resourceIconResId = R.drawable.energy,
-                            cardBackgroundColor = Theme.colors.backgrounds.darkSlate,
                             resourceName = stringResource(R.string.energy),
                             availableResourceAmount = resourceUsage.availableEnergy,
                             totalResourceAmount = resourceUsage.totalEnergy,

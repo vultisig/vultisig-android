@@ -38,6 +38,9 @@ data class Backgrounds(
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
     val neutral: Color = Color(0xFF061B3A),
+    val secondaryNeutral: Color = Color(0xFF1B2430),
+    val darkSlate: Color = Color(0xFF1B2430),
+
 )
 
 data class Primary(
