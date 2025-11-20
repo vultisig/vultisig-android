@@ -18,11 +18,12 @@ import javax.inject.Inject
 class RujiStakingService @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val stakingDetailsRepository: StakingDetailsRepository,
-){
+) {
 
     fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails?> = flow {
         try {
-            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+            val cachedDetails =
+                stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
             if (cachedDetails != null) {
                 Timber.d("RujiStakingService: Emitting cached RUJI staking position for vault $vaultId")
                 emit(cachedDetails)
@@ -48,10 +49,14 @@ class RujiStakingService @Inject constructor(
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "RujiStakingService: Error fetching RUJI staking details for vault $vaultId")
+            Timber.e(
+                e,
+                "RujiStakingService: Error fetching RUJI staking details for vault $vaultId"
+            )
 
             // If network fails, try to emit cached data
-            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+            val cachedDetails =
+                stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
             if (cachedDetails != null) {
                 Timber.d("RujiStakingService: Network error, using cached RUJI position")
                 emit(cachedDetails)
@@ -62,7 +67,7 @@ class RujiStakingService @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
+    suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
         return try {
             val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
 

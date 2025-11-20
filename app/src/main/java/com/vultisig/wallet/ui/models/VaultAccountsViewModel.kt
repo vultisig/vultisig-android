@@ -60,9 +60,11 @@ internal data class VaultAccountsUiModel(
     val showMigration: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
+    val totalDeFiValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
     val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
+    val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
@@ -70,7 +72,15 @@ internal data class VaultAccountsUiModel(
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
         get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
-}
+
+    val getAccounts: List<AccountUiModel>
+        get() = if (cryptoConnectionType == CryptoConnectionType.Wallet) {
+            accounts
+        } else {
+            defiAccounts
+        }
+    }
+
 
 @Immutable
 internal data class AccountUiModel(
@@ -114,6 +124,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
+    private var loadDeFiBalancesJob: Job? = null
 
     init {
         collectLastOpenedVault()
@@ -151,6 +162,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
+        loadDeFiBalances(vaultId, false)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -317,6 +329,33 @@ internal class VaultAccountsViewModel @Inject constructor(
                 .launchIn(this)
         }
     }
+    
+    private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
+        loadDeFiBalancesJob?.cancel()
+        loadDeFiBalancesJob = viewModelScope.launch {
+            combine(
+                accountsRepository
+                    .loadDeFiAddresses(vaultId, isRefresh)
+                    .map { it ->
+                        it.sortByAccountsTotalFiatValue()
+                    }
+                    .catch {
+                        updateRefreshing(false)
+                        Timber.e(it)
+                    },
+                uiState.value.searchTextFieldState.textAsFlow(),
+                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
+            ) { accounts, searchQuery,  ->
+                Timber.d("Defi Accounts Loaded: $accounts")
+
+                accounts.updateUiStateFromList(
+                        searchQuery = searchQuery.toString(),
+                        isDefi = true,
+                    )
+            }
+            .launchIn(this)
+        }
+    }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
         sortedWith(compareBy({
@@ -327,6 +366,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private suspend fun List<Address>.updateUiStateFromList(
         searchQuery: String,
+        isDefi: Boolean = false,
     ) {
         val totalFiatValue = this.calculateAddressesTotalFiatValue()
             ?.let { fiatValueToStringMapper(it) }
@@ -334,11 +374,20 @@ internal class VaultAccountsViewModel @Inject constructor(
             addressToUiModelMapper(it)
         }
 
-        uiState.update {
-            it.copy(
-                totalFiatValue = totalFiatValue,
-                accounts = accountsUiModel.filteredAccounts(searchQuery),
-            )
+        if (!isDefi) {
+            uiState.update {
+                it.copy(
+                    totalFiatValue = totalFiatValue,
+                    accounts = accountsUiModel.filteredAccounts(searchQuery),
+                )
+            }
+        } else {
+            uiState.update {
+                it.copy(
+                    totalDeFiValue = totalFiatValue,
+                    defiAccounts = accountsUiModel.filteredAccounts(searchQuery),
+                )
+            }
         }
         updateRefreshing(false)
     }
@@ -459,6 +508,12 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.copy(
                 cryptoConnectionType = type,
             )
+        }
+
+        val vaultId = vaultId ?: return
+
+        if (type == CryptoConnectionType.Defi) {
+            loadDeFiBalances(vaultId, true)
         }
     }
 

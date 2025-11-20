@@ -203,13 +203,16 @@ internal class ImportFileViewModel @Inject constructor(
                 }
             } else if (isZipFile) {
                 val zipOutput = uri.processZip(context = context)
+                val error = UiText.StringResource(R.string.import_file_not_supported).takeIf {
+                    zipOutput.isEmpty()
+                }
                 uiModel.update {
                     it.copy(
                         fileUri = uri,
                         fileName = fileName,
                         isZip = true,
                         zipOutputs = zipOutput,
-                        error = null,
+                        error = error,
                     )
                 }
             } else {

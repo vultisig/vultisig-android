@@ -97,7 +97,7 @@ class TCYStakingService @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getStakingDetailsFromNetwork(
+    suspend fun getStakingDetailsFromNetwork(
         address: String,
     ): StakingDetails = supervisorScope {
         try {
