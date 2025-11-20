@@ -107,6 +107,7 @@ interface BalanceRepository {
     fun getDefiTokenBalanceAndPrice(
         address: String,
         coin: Coin,
+        vaultId: String,
     ): Flow<TokenBalanceAndPrice>
 
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
@@ -307,9 +308,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
     override fun getDefiTokenBalanceAndPrice(
         address: String,
         coin: Coin,
+        vaultId: String,
     ): Flow<TokenBalanceAndPrice> = flow {
         val cacheValue = defiBalanceCache.get(address)
-        val defiBalances = cacheValue ?: getDeFiTokenValue(address, coin)
+        val defiBalances = cacheValue ?: getDeFiTokenValue(address, coin, vaultId)
         
         val defiBalance = defiBalances
             .flatMap { it.balances }
@@ -351,13 +353,13 @@ internal class BalanceRepositoryImpl @Inject constructor(
         ))
     }
 
-    private suspend fun getDeFiTokenValue(address: String, coin: Coin): List<DeFiBalance> {
+    private suspend fun getDeFiTokenValue(address: String, coin: Coin, vaultId: String): List<DeFiBalance> {
         return when (coin.chain) {
             ThorChain -> {
                 val mutex = lockFor(address)
                 mutex.withLock {
                     defiBalanceCache.get(address) ?: run {
-                        val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+                        val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
                         defiBalanceCache.put(address, remote)
                         remote
                     }
