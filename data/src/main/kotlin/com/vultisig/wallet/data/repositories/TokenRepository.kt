@@ -55,7 +55,7 @@ internal class TokenRepositoryImpl @Inject constructor(
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
-        builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
+        builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id.equals(tokenId, ignoreCase = true) } }.firstOrNull()
 
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
