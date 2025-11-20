@@ -54,11 +54,7 @@ fun TronBandwidthCard(
             .width(170.dp)
             .height(84.dp)
             .clip(RoundedCornerShape(8.dp))
-            .shadow(
-                1.dp,
-                RoundedCornerShape(8.dp)
-            )
-            .padding(12.dp)
+            .padding(9.dp)
     ) {
 
 
@@ -87,7 +83,7 @@ fun TronBandwidthCard(
                             .align(Alignment.Center)
                     )
                 }
-                UiSpacer(8.dp)
+                UiSpacer(6.dp)
                 Column {
                     Text(
                         text = text,
@@ -95,7 +91,7 @@ fun TronBandwidthCard(
                         style = Theme.brockmann.body.s.medium,
                         textAlign = TextAlign.Center
                     )
-                    UiSpacer(2.dp)
+                    UiSpacer(1.dp)
                     Text(
                         text = "${unUsed.toInt()}/${total.toInt()}",
                         style = Theme.brockmann.supplementary.caption,
