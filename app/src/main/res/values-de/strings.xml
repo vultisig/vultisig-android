@@ -921,4 +921,6 @@
     <string name="no_positions_found">Keine Positionen gefunden</string>
     <string name="select_positions">Positionen auswählen</string>
     <string name="enable_at_least_one_position">Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Positionen zu verwalten.</string>
+    <string name="bandwidth">Bandbreite</string>
+    <string name="energy">Energie</string>
 </resources>

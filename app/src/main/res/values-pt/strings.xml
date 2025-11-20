@@ -918,4 +918,6 @@
     <string name="no_positions_found">Nenhuma posição encontrada</string>
     <string name="select_positions">Selecionar posições</string>
     <string name="enable_at_least_one_position">Ative pelo menos uma posição para visualizar saldos e gerenciar posições.</string>
+    <string name="bandwidth">Largura de banda</string>
+    <string name="energy">Energia</string>
 </resources>

@@ -919,4 +919,6 @@
     <string name="no_positions_found">Nessuna posizione trovata</string>
     <string name="select_positions">Seleziona posizioni</string>
     <string name="enable_at_least_one_position">Abilita almeno una posizione per visualizzare i saldi e gestire le posizioni.</string>
+    <string name="bandwidth">Larghezza di banda</string>
+    <string name="energy">Energia</string>
 </resources>
