@@ -11,7 +11,7 @@ interface TokenPriceDao {
 
     @Query(
         "SELECT price FROM tokenPrice WHERE " +
-                "tokenId = :tokenId AND currency = :currency"
+                "tokenId COLLATE NOCASE = :tokenId AND currency = :currency"
     )
     suspend fun getTokenPrice(
         tokenId: String,

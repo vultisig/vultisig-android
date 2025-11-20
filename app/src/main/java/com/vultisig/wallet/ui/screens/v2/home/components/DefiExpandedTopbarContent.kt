@@ -67,7 +67,7 @@ internal fun DefiExpandedTopbarContent(
             )
             BalanceBanner(
                 isVisible = state.isBalanceValueVisible,
-                balance = state.totalFiatValue,
+                balance = state.totalDeFiValue,
                 onToggleVisibility = onToggleBalanceVisibility
             )
         }

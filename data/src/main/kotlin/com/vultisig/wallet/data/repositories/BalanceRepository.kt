@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
@@ -55,6 +56,8 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.utils.SimpleCache
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -62,7 +65,10 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -78,6 +84,11 @@ interface BalanceRepository {
         coin: Coin,
     ): TokenBalanceAndPrice
 
+    suspend fun getDeFiCachedTokeBalanceAndPrice(
+        address: String,
+        vaultId: String,
+    ):  List<TokenBalanceAndPrice>
+
     suspend fun getCachedTokenBalances(
         addresses: List<String>,
         coins: List<Coin>
@@ -92,6 +103,11 @@ interface BalanceRepository {
         address: String,
         coin: Coin,
     ): Flow<TokenValue>
+    
+    fun getDefiTokenBalanceAndPrice(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenBalanceAndPrice>
 
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
 
@@ -115,7 +131,13 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
+    private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
 ) : BalanceRepository {
+
+    private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
+
+    private val defiLocks = mutableMapOf<String, Mutex>()
+    private fun lockFor(address: String) = defiLocks.getOrPut(address) { Mutex() }
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return thorChainApi.getUnstakableTcyAmount(address)
@@ -156,6 +178,57 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 currency.ticker
             ) else null
         )
+    }
+
+    override suspend fun getDeFiCachedTokeBalanceAndPrice(
+        address: String,
+        vaultId: String,
+    ): List<TokenBalanceAndPrice> {
+        val currency = appCurrencyRepository.currency.first()
+
+        val defiCachedBalances =
+            thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+
+        val allBalances = defiCachedBalances.flatMap { it.balances }
+        
+        return allBalances.map { balance ->
+            val tokenValue = TokenValue(
+                value = balance.amount,
+                unit = balance.coin.ticker,
+                decimals = balance.coin.decimal
+            )
+            
+            val price = tokenPriceRepository.getCachedPrice(balance.coin.id, currency)
+            
+            val fiatValue = if (price != null) {
+                FiatValue(
+                    value = tokenValue.decimal
+                        .multiply(price)
+                        .setScale(2, RoundingMode.HALF_UP),
+                    currency = currency.ticker
+                )
+            } else {
+                FiatValue(
+                    value = BigDecimal.ZERO,
+                    currency = currency.ticker
+                )
+            }
+            
+            TokenBalanceAndPrice(
+                tokenBalance = TokenBalance(
+                    tokenValue = tokenValue,
+                    fiatValue = fiatValue,
+                ),
+                price = if (price != null) {
+                    FiatValue(
+                        price.setScale(2, RoundingMode.HALF_UP),
+                        currency.ticker
+                    )
+                } else {
+                    null
+                }
+            )
+        }
     }
 
     override suspend fun getCachedTokenBalances(
@@ -229,6 +302,70 @@ internal class BalanceRepositoryImpl @Inject constructor(
                         )
                     }
             }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getDefiTokenBalanceAndPrice(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenBalanceAndPrice> = flow {
+        val cacheValue = defiBalanceCache.get(address)
+        val defiBalances = cacheValue ?: getDeFiTokenValue(address, coin)
+        
+        val defiBalance = defiBalances
+            .flatMap { it.balances }
+            .find { it.coin.id.equals(coin.id, ignoreCase = true) }
+        
+        val tokenValue = if (defiBalance != null) {
+            TokenValue(
+                value = defiBalance.amount,
+                unit = coin.ticker,
+                decimals = coin.decimal,
+            )
+        } else {
+            TokenValue(
+                value = BigInteger.ZERO,
+                unit = coin.ticker,
+                decimals = coin.decimal,
+            )
+        }
+        
+        val currency = appCurrencyRepository.currency.first()
+        val price = tokenPriceRepository.getPrice(coin, currency).first()
+        
+        val fiatValue = FiatValue(
+            value = tokenValue.decimal
+                .multiply(price)
+                .setScale(2, RoundingMode.HALF_UP),
+            currency = currency.ticker,
+        )
+        
+        emit(TokenBalanceAndPrice(
+            tokenBalance = TokenBalance(
+                tokenValue = tokenValue,
+                fiatValue = fiatValue
+            ),
+            price = FiatValue(
+                value = price.setScale(2, RoundingMode.HALF_UP),
+                currency = currency.ticker,
+            )
+        ))
+    }
+
+    private suspend fun getDeFiTokenValue(address: String, coin: Coin): List<DeFiBalance> {
+        return when (coin.chain) {
+            ThorChain -> {
+                val mutex = lockFor(address)
+                mutex.withLock {
+                    defiBalanceCache.get(address) ?: run {
+                        val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address)
+                        defiBalanceCache.put(address, remote)
+                        remote
+                    }
+                }
+            }
+            else -> error("Not supported")
+        }
+    }
 
     private suspend fun getCachedTokenValue(
         address: String,
