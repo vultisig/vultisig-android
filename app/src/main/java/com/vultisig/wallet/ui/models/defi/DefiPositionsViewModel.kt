@@ -594,8 +594,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             staking = it.staking.copy(
                                 positions = it.staking.positions.map { position ->
                                     if (position.coin.id == Coins.ThorChain.yRUNE.id
-                                        || position.coin.id == Coins.ThorChain.yTCY.id
-                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
+                                        || position.coin.id == Coins.ThorChain.yTCY.id) {
                                         position.copy(isLoading = false)
                                     } else {
                                         position
@@ -965,18 +964,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextReward = null,
                     nextPayout = null
                 ),
-                StakePositionUiModel(
-                    coin = stcy,
-                    stakeAssetHeader = "Staked ${stcy.ticker}",
-                    stakeAmount = stcy.ticker,
-                    apy = null,
-                    canWithdraw = false,
-                    canStake = true,
-                    canUnstake = false,
-                    rewards = null,
-                    nextReward = null,
-                    nextPayout = null
-                )
             )
         }
     }
