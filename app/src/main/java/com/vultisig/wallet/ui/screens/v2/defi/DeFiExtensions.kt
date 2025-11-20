@@ -34,7 +34,6 @@ internal val supportStakingDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUJI,
         Coins.ThorChain.TCY,
-        Coins.ThorChain.sTCY,
         Coins.ThorChain.yRUNE,
         Coins.ThorChain.yTCY,
     )
