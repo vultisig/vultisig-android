@@ -177,7 +177,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 val nonce = evmApi.getNonce(address)
 
                 val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                val fees = feeServiceComposite.calculateFees(chain, estimateGasLimit, isSwap)
+                val fees = feeServiceComposite.calculateFees(chain, gasLimitFee, isSwap)
 
                 val (maxFeePerGas, priorityFeeWei) = when (fees) {
                     is Eip1559 -> fees.maxFeePerGas to fees.maxPriorityFeePerGas
