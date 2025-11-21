@@ -63,6 +63,7 @@ internal fun HomePage(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onBuy: () -> Unit = {},
+    onReceive: () -> Unit = {},
     onRefresh: () -> Unit = {},
     openCamera: () -> Unit = {},
     onToggleVaultListClick: () -> Unit = {},
@@ -170,6 +171,7 @@ internal fun HomePage(
                                 onSend = onSend,
                                 onSwap = onSwap,
                                 onBuy = onBuy,
+                                onReceive = onReceive,
                             )
                         } else {
                             DefiExpandedTopbarContent(

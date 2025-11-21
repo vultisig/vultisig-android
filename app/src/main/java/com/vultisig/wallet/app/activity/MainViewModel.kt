@@ -2,7 +2,6 @@ package com.vultisig.wallet.app.activity
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +14,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
+import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -23,6 +23,8 @@ import com.vultisig.wallet.ui.utils.NetworkUtils.observeConnectivityAsFlow
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -58,7 +60,10 @@ internal class MainViewModel @Inject constructor(
 
     val route: Flow<NavigateAction<Any>> = navigator.route
 
-    val snakeBarHostState = SnackbarHostState()
+    val snakeBarHostState = VSSnackbarState(
+        duration = 1.seconds,
+        coroutineScope = CoroutineScope(Dispatchers.Default)
+    )
 
     init {
         viewModelScope.launch {
@@ -71,7 +76,7 @@ internal class MainViewModel @Inject constructor(
             _isLoading.value = false
 
             snackbarFlow.collectMessage {
-                snakeBarHostState.showSnackbar(it)
+                snakeBarHostState.show(it)
             }
         }
 
