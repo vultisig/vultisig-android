@@ -1,24 +1,17 @@
-package com.vultisig.wallet.ui.screens// kotlin
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,186 +20,193 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.AutoSizingText
-import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 
+data class ResourceState(
+    val title: String,
+    val used: String,
+    val usedValue: Float, // 0f..1f
+    val iconRes: Int,
+    val accent: Color,
+    val iconBg: Color,
+    val showInfo: Boolean = false
+)
 
 @Composable
-fun ResourceUsageCard(
-    modifier: Modifier = Modifier, availableResourceAmount: Long,
-    totalResourceAmount: Long, resourceIconResId: Int, resourceName: String
+fun ResourceTwoCardsRow(
+    left: ResourceState,
+    right: ResourceState,
+    modifier: Modifier = Modifier,
+    containerBg: Color = Color(0xFF071220),
+    borderColor: Color = Color(0xFF102235)
 ) {
-
-
-    Box(
+    Surface(
         modifier = modifier
+            .fillMaxWidth()
+            .height(96.dp)
+            .clip(RoundedCornerShape(12.dp))
             .border(
-                width = 1.dp,
-                color = colors.backgrounds.tertiary,
-                shape = RoundedCornerShape(size = 8.dp)
-            )
-            .width(360.dp)
-            .height(80.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .padding(9.dp)
+                1.dp,
+                borderColor,
+                RoundedCornerShape(12.dp)
+            ),
+        color = containerBg
     ) {
-
-            Column(
-                modifier = Modifier
-                    .width(171.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                AutoSizingText(
-                    text = resourceName,
-                    color = colors.alerts.success,
-                    style = Theme.brockmann.body.s.medium,
-
-                    )
-
-                UiSpacer(8.dp)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(color = colors.backgrounds.secondary)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.bandwidth),
-                            contentDescription = "Bandwidth Icon",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-                    Column {
-                        AutoSizingText(
-                            text = "${availableResourceAmount.toInt()}/${totalResourceAmount.toInt()}",
-                            style = Theme.brockmann.supplementary.caption,
-                            color = colors.text.light,
-                        )
-                        UiSpacer(8.dp)
-                        FoldedCornerProgressBar(
-                            targetValue = if (totalResourceAmount > 0) availableResourceAmount.toFloat() / totalResourceAmount.toFloat() else 0f,
-                            color = colors.alerts.success,
-                        )
-                    }
-                }
-            }
-
-            Spacer(
-                modifier = Modifier
-                    .size(1.dp)
-                    .background(colors.backgrounds.tertiary)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ResourceCard(
+                left,
+                Modifier.weight(1f),
+                padEnd = 4.dp
             )
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .width(171.dp)
-                    .align(Alignment.TopEnd),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                AutoSizingText(
-                    text = stringResource(R.string.energy),
-                    color = colors.alerts.warning,
-                    style = Theme.brockmann.body.s.medium,
-
-                    )
-
-                UiSpacer(8.dp)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(color = colors.backgrounds.secondaryNeutral)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.energy),
-                            contentDescription = "Bandwidth Icon",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-                    Column {
-                        AutoSizingText(
-                            text = "${availableResourceAmount.toInt()}/${totalResourceAmount.toInt()}",
-                            style = Theme.brockmann.supplementary.caption,
-                            color = colors.text.light,
-                        )
-                        UiSpacer(8.dp)
-                        FoldedCornerProgressBar(
-                            targetValue = if (totalResourceAmount > 0) availableResourceAmount.toFloat() / totalResourceAmount.toFloat() else 0f,
-                            color = colors.alerts.warning,
-                        )
-                    }
-                }
-            }
-
+                    .width(1.dp)
+                    .fillMaxHeight()
+                    .background(borderColor)
+            )
+            ResourceCard(
+                right,
+                Modifier.weight(1f),
+                padStart = 4.dp
+            )
+        }
     }
 }
 
+@Composable
+fun ResourceCard(
+    state: ResourceState, modifier: Modifier = Modifier, padStart: Dp = 0.dp, padEnd: Dp = 0.dp
+) {
+    Row(
+        modifier = modifier
+            .padding(
+                start = padStart,
+                end = padEnd,
+                top = 12.dp,
+                bottom = 12.dp
+            ),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(modifier = Modifier.fillMaxHeight()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = state.title,
+                    color = state.accent,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (state.showInfo) {
+                    IconButton(
+                        onClick = { /* info action */ },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = "info",
+                            tint = Color(0xFF9FB1C9)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(state.iconBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(state.iconRes),
+                        contentDescription = "${state.title} icon",
+                        modifier = Modifier.size(18.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = state.used,
+                        color = Color(0xFFB8DDE6),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    AnimatedProgressBar(
+                        value = state.usedValue,
+                        accent = state.accent
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
-fun FoldedCornerProgressBar(
-    targetValue: Float = 0.6f,
-    color: Color = colors.alerts.success,
-
-    ) {
-
-    val size by animateFloatAsState(
-        targetValue = targetValue,
-        tween(
-            durationMillis = 1000,
-            delayMillis = 200,
+fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
+    val animated by animateFloatAsState(
+        targetValue = value.coerceIn(
+            0f,
+            1f
+        ),
+        animationSpec = tween(
+            durationMillis = 700,
             easing = LinearOutSlowInEasing
         )
     )
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(8.dp)
+            .height(height)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF123041))
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(9.dp))
-                .background(color = colors.backgrounds.surface2)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(size)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(9.dp))
-                .background(color)
-                .animateContentSize()
+                .fillMaxWidth(animated)
+                .clip(RoundedCornerShape(8.dp))
+                .background(accent)
         )
     }
-
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun TronBandwidthCardPreview() {
-    ResourceUsageCard(
-        resourceIconResId = R.drawable.bandwidth,
-        resourceName = "Bandwidth",
-        availableResourceAmount = 240,
-        totalResourceAmount = 400
+fun PreviewResourceTwoCards() {
+    ResourceTwoCardsRow(
+        left = ResourceState(
+            title = "Bandwidth",
+            used = "1.46 / 1.46kb",
+            usedValue = 0.98f,
+            iconRes = android.R.drawable.presence_online, // replace with R.drawable.bandwidth
+            accent = Color(0xFF00E5B8),
+            iconBg = Color(0xFF00373A)
+        ),
+        right = ResourceState(
+            title = "Energy",
+            used = "1 / 2",
+            usedValue = 0.5f,
+            iconRes = android.R.drawable.star_on, // replace with R.drawable.energy
+            accent = Color(0xFFFFC257),
+            iconBg = Color(0xFF2A1F10),
+            showInfo = true
+        ),
+        modifier = Modifier.padding(16.dp)
     )
 }
