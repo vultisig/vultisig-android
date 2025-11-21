@@ -1,3 +1,4 @@
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -20,29 +21,34 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.theme.Theme.v2
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 data class ResourceState(
-    val title: String,
-    val used: String,
-    val usedValue: Float, // 0f..1f
-    val iconRes: Int,
-    val accent: Color,
-    val iconBg: Color,
-    val showInfo: Boolean = false
+    val available: Long, val total: Long,
+    val title :  String,
+    val accentColor: Color,
+    val  showInfo: Boolean = false,
+    val icon : Int,
+
+    // 0f..1f
 )
 
 @Composable
 fun ResourceTwoCardsRow(
-    left: ResourceState,
-    right: ResourceState,
+    resourceUsage: ResourceUsage,
     modifier: Modifier = Modifier,
-    containerBg: Color = Color(0xFF071220),
-    borderColor: Color = Color(0xFF102235)
 ) {
     Surface(
         modifier = modifier
@@ -51,17 +57,23 @@ fun ResourceTwoCardsRow(
             .clip(RoundedCornerShape(12.dp))
             .border(
                 1.dp,
-                borderColor,
+                colors.variables.BordersLight,
                 RoundedCornerShape(12.dp)
             ),
-        color = containerBg
+        color = colors.variables.BackgroundsSurface1
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             ResourceCard(
-                left,
+                ResourceState(
+                    available = resourceUsage.availableBandwidth,
+                    total = resourceUsage.totalBandwidth,
+                    title = stringResource(R.string.bandwidth),
+                    accentColor = colors.alerts.success,
+                    icon = R.drawable.bandwidth
+                ),
                 Modifier.weight(1f),
                 padEnd = 4.dp
             )
@@ -69,12 +81,17 @@ fun ResourceTwoCardsRow(
                 modifier = Modifier
                     .width(1.dp)
                     .fillMaxHeight()
-                    .background(borderColor)
+                    .background(colors.variables.BordersLight)
             )
             ResourceCard(
-                right,
+                ResourceState(
+                    available = resourceUsage.availableEnergy,
+                    total = resourceUsage.totalEnergy,
+                    title = stringResource(R.string.energy),
+                    accentColor = colors.alerts.warning,
+                    icon = R.drawable.energy
+                ),
                 Modifier.weight(1f),
-                padStart = 4.dp
             )
         }
     }
@@ -82,15 +99,11 @@ fun ResourceTwoCardsRow(
 
 @Composable
 fun ResourceCard(
-    state: ResourceState, modifier: Modifier = Modifier, padStart: Dp = 0.dp, padEnd: Dp = 0.dp
+    state: ResourceState, modifier: Modifier = Modifier, padEnd: Dp = 0.dp
 ) {
     Row(
-        modifier = modifier
-            .padding(
-                start = padStart,
-                end = padEnd,
-                top = 12.dp,
-                bottom = 12.dp
+        modifier = modifier.padding(
+                16.dp
             ),
         verticalAlignment = Alignment.Top
     ) {
@@ -102,7 +115,7 @@ fun ResourceCard(
             ) {
                 Text(
                     text = state.title,
-                    color = state.accent,
+                    color = state.accentColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -127,11 +140,12 @@ fun ResourceCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(state.iconBg),
+//                        .background(state.iconBg)
+                    ,
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(state.iconRes),
+                        painter = painterResource(state.icon),
                         contentDescription = "${state.title} icon",
                         modifier = Modifier.size(18.dp),
                         contentScale = ContentScale.Fit
@@ -141,15 +155,15 @@ fun ResourceCard(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = state.used,
-                        color = Color(0xFFB8DDE6),
-                        fontSize = 13.sp
+                    AutoSizingText(
+                        text = "${state.available.toInt()}/${state.total.toInt()}",
+                        style = Theme.brockmann.supplementary.caption,
+                        color = colors.text.light,
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     AnimatedProgressBar(
-                        value = state.usedValue,
-                        accent = state.accent
+                        value = if (state.total > 0) state.available.toFloat()/state.total.toFloat() else 0f,
+                        accent = state.accentColor
                     )
                 }
             }
@@ -190,23 +204,13 @@ fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
 @Composable
 fun PreviewResourceTwoCards() {
     ResourceTwoCardsRow(
-        left = ResourceState(
-            title = "Bandwidth",
-            used = "1.46 / 1.46kb",
-            usedValue = 0.98f,
-            iconRes = android.R.drawable.presence_online, // replace with R.drawable.bandwidth
-            accent = Color(0xFF00E5B8),
-            iconBg = Color(0xFF00373A)
-        ),
-        right = ResourceState(
-            title = "Energy",
-            used = "1 / 2",
-            usedValue = 0.5f,
-            iconRes = android.R.drawable.star_on, // replace with R.drawable.energy
-            accent = Color(0xFFFFC257),
-            iconBg = Color(0xFF2A1F10),
-            showInfo = true
+        resourceUsage = ResourceUsage(
+            availableBandwidth = 1500,
+            totalBandwidth = 3000,
+            availableEnergy = 800,
+            totalEnergy = 2000
         ),
         modifier = Modifier.padding(16.dp)
     )
+
 }

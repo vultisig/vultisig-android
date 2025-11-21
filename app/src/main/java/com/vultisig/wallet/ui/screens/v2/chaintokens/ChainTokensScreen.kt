@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.chaintokens
 
+import ResourceTwoCardsRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +49,6 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
-import com.vultisig.wallet.ui.screens.ResourceUsageCard
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
@@ -274,20 +274,11 @@ internal fun ChainTokensScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        ResourceUsageCard(
+                        ResourceTwoCardsRow(
                             modifier = Modifier.weight(1f),
-                            resourceIconResId = R.drawable.bandwidth,
-                            resourceName = stringResource(R.string.bandwidth),
-                            availableResourceAmount = resourceUsage.availableBandwidth,
-                            totalResourceAmount = resourceUsage.totalBandwidth
+                            resourceUsage = resourceUsage
                         )
-                        ResourceUsageCard(
-                            modifier = Modifier.weight(1f),
-                            resourceIconResId = R.drawable.energy,
-                            resourceName = stringResource(R.string.energy),
-                            availableResourceAmount = resourceUsage.availableEnergy,
-                            totalResourceAmount = resourceUsage.totalEnergy,
-                        )
+
                     }
                 }
             }

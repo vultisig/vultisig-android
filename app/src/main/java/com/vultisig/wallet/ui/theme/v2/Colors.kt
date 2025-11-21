@@ -10,7 +10,8 @@ data class Colors(
     val text: Text = Text(),
     val border: Border = Border(),
     val alerts: Alerts = Alerts(),
-    val neutrals: Neutrals = Neutrals()
+    val neutrals: Neutrals = Neutrals(),
+    val variables: Variables = Variables()
 )
 
 data class Gradients(
@@ -37,10 +38,6 @@ data class Backgrounds(
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
-    val neutral: Color = Color(0xFF061B3A),
-    val secondaryNeutral: Color = Color(0xFF1B2430),
-    val darkSlate: Color = Color(0xFF1B2430),
-
 )
 
 data class Primary(
@@ -81,14 +78,19 @@ data class Alerts(
 
 data class Neutrals(
     val n50: Color = Color(0xFFFFFFFF),
-    val n100 : Color = Color (0xFFEFF2F6),
-    val n200 : Color = Color (0xFFCBD7E9),
-    val n300 : Color = Color (0xFF97ACBF),
-    val n400 : Color = Color (0xFF849CB2),
-    val n500 : Color = Color (0xFF7D909E),
-    val n600 : Color = Color (0xFF626C77),
-    val n700 : Color = Color (0xFF383A40),
-    val n800 : Color = Color (0xFF0F1011),
-    val n900 : Color = Color (0xFF000000),
+    val n100: Color = Color(0xFFEFF2F6),
+    val n200: Color = Color(0xFFCBD7E9),
+    val n300: Color = Color(0xFF97ACBF),
+    val n400: Color = Color(0xFF849CB2),
+    val n500: Color = Color(0xFF7D909E),
+    val n600: Color = Color(0xFF626C77),
+    val n700: Color = Color(0xFF383A40),
+    val n800: Color = Color(0xFF0F1011),
+    val n900: Color = Color(0xFF000000),
+)
+
+data class Variables(
+    val BackgroundsSurface1: Color = Color(0xFF061B3A),
+    val BordersLight: Color = Color(0xFF11284A)
 )
 
