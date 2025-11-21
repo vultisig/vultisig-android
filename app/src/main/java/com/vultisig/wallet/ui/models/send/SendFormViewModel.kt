@@ -810,8 +810,9 @@ internal class SendFormViewModel @Inject constructor(
                     )?.value ?: BigInteger.ZERO
 
                     if (tokenAmountInt > availableTokenBalance) {
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        UiText.FormattedText(
+                            R.string.insufficient_native_token,
+                            listOf(selectedToken.ticker)
                         )
                     }
 
@@ -834,13 +835,11 @@ internal class SendFormViewModel @Inject constructor(
                             UiText.StringResource(R.string.send_error_no_token)
                         )
 
-                    if (selectedTokenValue.value < tokenAmountInt
-                    ) {
+                    if (selectedTokenValue.value < tokenAmountInt) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
                         )
-                    } else if (nativeTokenValue < gasFee.value
-                    ) {
+                    } else if (nativeTokenValue < gasFee.value) {
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(
                                 R.string.insufficient_native_token,
