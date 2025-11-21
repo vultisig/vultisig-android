@@ -37,12 +37,10 @@ import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 data class ResourceState(
     val available: Long, val total: Long,
-    val title :  String,
+    val title: String,
     val accentColor: Color,
-    val  showInfo: Boolean = false,
-    val icon : Int,
-
-    // 0f..1f
+    val showInfo: Boolean = false,
+    val icon: Int,
 )
 
 @Composable
@@ -75,7 +73,8 @@ fun ResourceTwoCardsRow(
                     icon = R.drawable.bandwidth
                 ),
                 Modifier.weight(1f),
-                padEnd = 4.dp
+                padEnd = 4.dp,
+                containerBg = Color(0xFF1B2430)
             )
             Box(
                 modifier = Modifier
@@ -89,9 +88,11 @@ fun ResourceTwoCardsRow(
                     total = resourceUsage.totalEnergy,
                     title = stringResource(R.string.energy),
                     accentColor = colors.alerts.warning,
-                    icon = R.drawable.energy
+                    icon = R.drawable.energy,
+                    showInfo = true
                 ),
                 Modifier.weight(1f),
+                containerBg = Color(0xFF1B2430)
             )
         }
     }
@@ -99,12 +100,13 @@ fun ResourceTwoCardsRow(
 
 @Composable
 fun ResourceCard(
-    state: ResourceState, modifier: Modifier = Modifier, padEnd: Dp = 0.dp
-) {
+    state: ResourceState, modifier: Modifier = Modifier, padEnd: Dp = 0.dp, containerBg: Color,
+
+    ) {
     Row(
         modifier = modifier.padding(
-                16.dp
-            ),
+            16.dp
+        ),
         verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.fillMaxHeight()) {
@@ -116,8 +118,7 @@ fun ResourceCard(
                 Text(
                     text = state.title,
                     color = state.accentColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    style = Theme.brockmann.body.s.medium,
                 )
                 if (state.showInfo) {
                     IconButton(
@@ -138,21 +139,20 @@ fun ResourceCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(32.dp)
                         .clip(RoundedCornerShape(8.dp))
-//                        .background(state.iconBg)
-                    ,
+                        .background(containerBg),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(state.icon),
                         contentDescription = "${state.title} icon",
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     AutoSizingText(
@@ -160,9 +160,9 @@ fun ResourceCard(
                         style = Theme.brockmann.supplementary.caption,
                         color = colors.text.light,
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(7.dp))
                     AnimatedProgressBar(
-                        value = if (state.total > 0) state.available.toFloat()/state.total.toFloat() else 0f,
+                        value = if (state.total > 0) state.available.toFloat() / state.total.toFloat() else 0f,
                         accent = state.accentColor
                     )
                 }
