@@ -245,6 +245,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         supervisorScope {
             val vault = getVault(vaultId)
             val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
+                .distinctBy { it.id.lowercase() }
 
             val loadPrices = if (isRefresh) {
                 async { tokenPriceRepository.refresh(defiCoins) }
@@ -321,6 +322,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                                         balanceRepository.getDefiTokenBalanceAndPrice(
                                             address = address,
                                             coin = it.token,
+                                            vaultId = vaultId,
                                         ).first()
 
                                     it.applyBalance(balance.tokenBalance, balance.price)
