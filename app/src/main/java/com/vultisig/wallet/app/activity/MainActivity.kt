@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,6 +27,7 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
+import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
@@ -118,9 +118,9 @@ class MainActivity : AppCompatActivity() {
 
                     BiometryAuthScreen()
 
-                    SnackbarHost(
+                    VsSnackBar(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        hostState = mainViewModel.snakeBarHostState
+                        snackbarState = mainViewModel.snakeBarHostState
                     )
                 }
             }

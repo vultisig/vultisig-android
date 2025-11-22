@@ -127,4 +127,10 @@ internal interface UseCasesModule {
     fun bindGetDiscountBpsUseCase(
         impl: GetDiscountBpsUseCaseImpl
     ): GetDiscountBpsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGenerateAccountQrUseCase(
+        impl: GenerateAccountQrUseCaseImpl
+    ): GenerateAccountQrUseCase
 }
