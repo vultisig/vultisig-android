@@ -7,13 +7,21 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -31,24 +39,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import coil.compose.rememberAsyncImagePainter
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
-import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.theme.Theme.v2
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
@@ -236,26 +240,37 @@ fun PreviewResourceTwoCards() {
 internal fun BandwidthEnergyBottomSheet(
     onDismissRequest: () -> Unit,
 ) {
-    VsModalBottomSheet(onDismissRequest = onDismissRequest) {
-    }
+    VsModalBottomSheet(onDismissRequest = onDismissRequest) {}
 }
 
 @Composable
 fun BandwidthEnergyContent(
 ) {
-
     Column(
-        modifier = Modifier
-            .padding(8.dp),
+        modifier = Modifier.padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row {
-            Image(
-                painter = painterResource(R.drawable.tron),
-                contentDescription = "Tron Logo",
-                modifier = Modifier.size(24.dp),
-                contentScale = ContentScale.FillBounds
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(
+                space = 8.dp,
+                alignment = Alignment.CenterHorizontally
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFFC070C)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.tron_mono),
+                    contentDescription = "Tron Logo",
+                    modifier = Modifier.size(20.dp),
+                    tint = colors.neutrals.n50,
+                )
+            }
             Text(
                 text = "Tron",
                 style = Theme.brockmann.supplementary.footnote,
@@ -271,7 +286,24 @@ fun BandwidthEnergyContent(
             textAlign = TextAlign.Center
         )
 
+        UiSpacer(24.dp)
 
+        BandwidthEnergyItem(
+            title = R.string.bandwidth,
+            description = R.string.bandwidth_dec,
+            accentColor = colors.alerts.success,
+            containerBg = Color(0xFF072C44),
+            icon = R.drawable.bandwidth
+        )
+        UiSpacer(12.dp)
+
+        BandwidthEnergyItem(
+            title = R.string.energy,
+            description = R.string.energy_dec,
+            accentColor = colors.alerts.warning,
+            containerBg = Color(0xFF1B2430),
+            icon = R.drawable.energy
+        )
     }
 
 }
@@ -293,6 +325,7 @@ fun BandwidthEnergyItem(
     )
     V2Container(
         type = ContainerType.SECONDARY,
+        borderType = ContainerBorderType.Bordered()
     ) {
         LazyColumn(
             contentPadding = PaddingValues(
@@ -343,7 +376,11 @@ fun BandwidthEnergyItem(
                         )
                     }
                     if (isExpanded) {
-                        FadingHorizontalDivider(Modifier.padding(vertical = 20.dp))
+                        FadingHorizontalDivider(
+                            Modifier
+                                .padding(vertical = 20.dp)
+                                .background(color = colors.variables.BordersLight)
+                        )
                         Text(
                             text = stringResource(description),
                             color = colors.variables.TextPrimary,
@@ -360,13 +397,9 @@ fun BandwidthEnergyItem(
 
 @Composable
 @Preview
-fun BandwidthEnergyItemPreview() {
-    BandwidthEnergyItem(
-        title = R.string.bandwidth,
-        description = R.string.bandwidth,
-        accentColor = colors.alerts.success,
-        containerBg = Color(0xFF072C44),
-        icon = R.drawable.bandwidth
+fun BandwidthEnergyContentPreview() {
+    BandwidthEnergyContent(
+
     )
 }
 
