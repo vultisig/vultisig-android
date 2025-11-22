@@ -91,6 +91,8 @@ data class Neutrals(
 
 data class Variables(
     val BackgroundsSurface1: Color = Color(0xFF061B3A),
-    val BordersLight: Color = Color(0xFF11284A)
+    val BordersLight: Color = Color(0xFF11284A),
+    val TextPrimary: Color = Color(0xFFF0F4FC)
+
 )
 
