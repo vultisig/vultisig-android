@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.graphics.Bitmap
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
@@ -99,7 +98,6 @@ internal class ChainTokensViewModel @Inject constructor(
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
     private var currentVault: Vault? = null
-    private var qrBitmap: Bitmap? = null
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
 

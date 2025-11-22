@@ -1,114 +1,40 @@
 package com.vultisig.wallet.ui.screens.v2.receive
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
-import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
-import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.models.ChainToReceiveUiModel
+import com.vultisig.wallet.ui.models.ReceiveUiModel
+import com.vultisig.wallet.ui.models.ReceiveViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.textAsFlow
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-@Immutable
-data class ReceiveUiModel(
-    val chains: List<ChainToReceiveUiModel> = emptyList(),
-)
-
-data class ChainToReceiveUiModel(
-    val name: String,
-    val logo: Int,
-    val ticker: String,
-    val address: String,
-)
-
-
-@HiltViewModel
-internal class ReceiveViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val accountsRepository: AccountsRepository,
-    private val navigator: Navigator<Destination>,
-) : ViewModel() {
-    val args = savedStateHandle.toRoute<Route.Receive>()
-    val vaultId = args.vaultId
-    val uiState = MutableStateFlow(ReceiveUiModel())
-    val searchFieldState = TextFieldState()
-
-    init {
-        viewModelScope.launch {
-            accountsRepository.loadCachedAddresses(vaultId).combine(
-                searchFieldState.textAsFlow().map { it.toString() }) { addresses, searchTerm ->
-                val chains = addresses.map {
-                    ChainToReceiveUiModel(
-                        name = it.chain.raw,
-                        logo = it.chain.logo,
-                        address = it.address,
-                        ticker = it.accounts.first { account -> account.token.isNativeToken }.token.ticker
-                    )
-                }.filter {
-                    val containsTicker = it.ticker.contains(
-                        other = searchTerm, ignoreCase = true
-                    )
-                    val containsChainName = it.name.contains(
-                        other = searchTerm, ignoreCase = true
-                    )
-                    searchTerm.isBlank() || containsTicker || containsChainName
-                }
-                uiState.update {
-                    it.copy(
-                        chains = chains
-                    )
-                }
-            }.launchIn(this)
-
-        }
-    }
-
-    fun onChainClick(chain: ChainToReceiveUiModel) {
-        viewModelScope.launch {
-            navigator.route(
-                Route.AddressQr(
-                    vaultId = vaultId,
-                    address = chain.address,
-                    name = chain.name,
-                    logo = chain.logo
-                )
-            )
-        }
-    }
-
-    fun back() {
-        viewModelScope.launch {
-            navigator.back()
-        }
-    }
-}
 
 @Composable
 internal fun ReceiveBottomSheet(
@@ -116,7 +42,7 @@ internal fun ReceiveBottomSheet(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    V2BottomSheet (
+    V2BottomSheet(
         onDismissRequest = viewModel::back
     ) {
         ReceiveContent(
@@ -133,28 +59,129 @@ internal fun ReceiveBottomSheet(
 private fun ReceiveContent(
     uiState: ReceiveUiModel,
     searchFieldState: TextFieldState,
-    onChainClick: (ChainToReceiveUiModel)-> Unit
+    onChainClick: (ChainToReceiveUiModel) -> Unit,
 ) {
     Column(
-        Modifier.fillMaxSize()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = 16.dp
+                )
     ) {
+        UiSpacer(
+            size = 32.dp
+        )
+        Text(
+            text = stringResource(R.string.select_chain_title),
+            style = Theme.brockmann.body.l.medium,
+            color = Theme.colors.text.primary,
+        )
+        UiSpacer(16.dp)
+
         SearchBar(
             isInitiallyFocused = false,
             state = searchFieldState,
             onCancelClick = {},
         )
-        LazyColumn() {
-            items(uiState.chains) {
-                Text(
-                    text = it.name,
-                    modifier = Modifier.clickable {
-                        onChainClick(it)
-                    },
-                    color = Theme.colors.text.primary
+
+        UiSpacer(
+            size = 16.dp
+        )
+
+        V2Container(
+            type = ContainerType.SECONDARY
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(
+
                 )
+            ) {
+                itemsIndexed(uiState.chains) { index, chain ->
+
+                    Column() {
+                        Row(
+                            modifier = Modifier
+                                .clickOnce(onClick = {
+                                    onChainClick(chain)
+                                })
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(chain.logo),
+                                contentDescription = chain.name,
+                                modifier = Modifier.size(
+                                    22.dp
+                                )
+                            )
+
+                            UiSpacer(
+                                size = 24.dp
+                            )
+
+                            Text(
+                                text = chain.ticker.uppercase(),
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.colors.text.primary
+                            )
+
+                            UiSpacer(
+                                size = 24.dp
+                            )
+
+                            V2Container(
+                                cornerType = CornerType.Circular,
+                                borderType = ContainerBorderType.Bordered(),
+                                type = ContainerType.SECONDARY,
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(
+                                        vertical = 4.dp,
+                                        horizontal = 16.dp
+                                    ),
+                                    text = chain.name,
+                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.colors.text.primary
+                                )
+                            }
+                        }
+                        if (index != uiState.chains.lastIndex) {
+                            UiHorizontalDivider()
+                        }
+                    }
+                }
             }
         }
+
     }
+}
 
-
+@Preview
+@Composable
+private fun ReceiveContentPreview() {
+    ReceiveContent(
+        uiState = ReceiveUiModel(
+            listOf(
+                ChainToReceiveUiModel(
+                    name = "Ethereum",
+                    logo = R.drawable.ethereum,
+                    ticker = "ETH",
+                    address = "0x1234",
+                ),
+                ChainToReceiveUiModel(
+                    name = "Bitcoin",
+                    logo = R.drawable.bitcoin,
+                    ticker = "BTC",
+                    address = "0x1234",
+                )
+            )
+        ),
+        searchFieldState = TextFieldState(),
+        onChainClick = {}
+    )
 }
