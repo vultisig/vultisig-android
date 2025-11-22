@@ -407,18 +407,10 @@ internal class DepositFormViewModel @Inject constructor(
                     DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
                     DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
                     DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
-                    DeFiNavActions.STAKE_STCY -> DepositOption.StakeTcy
-                    DeFiNavActions.UNSTAKE_STCY -> DepositOption.UnstakeTcy
                     else -> DepositOption.Bond
                 }
                 selectDepositOption(depositOption)
 
-                if (action == DeFiNavActions.STAKE_STCY) {
-                    onAutoCompoundTcyStake(true)
-                }
-                if (action == DeFiNavActions.UNSTAKE_STCY) {
-                    onAutoCompoundTcyUnStake(true)
-                }
             } else {
                 Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
             }
@@ -1864,7 +1856,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = STAKING_TCY_COMPOUND_CONTRACT,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,

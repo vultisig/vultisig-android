@@ -237,6 +237,12 @@ val Chain.banxaAssetName: String?
         else -> null
     }
 
+val Chain.isDeFiSupported: Boolean
+    get() = when (this) {
+        Chain.ThorChain -> true
+        else -> false
+    }
+
 val Chain.isLayer2: Boolean
     get() = when (this) {
         Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.Optimism, Chain.ZkSync -> true
