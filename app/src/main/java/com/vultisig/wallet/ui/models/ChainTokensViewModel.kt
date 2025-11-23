@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -72,7 +74,6 @@ internal data class ChainTokensUiModel(
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    val qrCode: BitmapPainter? = null,
     val tronResourceStats : ResourceUsage? = null,
 )
 
@@ -119,7 +120,6 @@ internal class ChainTokensViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
-
             uiState.update {
                 it.copy(isBalanceVisible = isBalanceVisible)
             }
@@ -204,10 +204,9 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
-
+            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
-            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
 
             if (chain == Chain.Tron) {
                 val address = currentVault?.coins
@@ -292,13 +291,6 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-
-
-    private suspend fun generateQr(address: String, logo: Bitmap?): BitmapPainter {
-        val qrBitmap = withContext(Dispatchers.IO) {
-            generateQrBitmap(address, NeutralsColors.Default.n50, Color.Transparent, logo)
-        }
-        this.qrBitmap = qrBitmap
 
     fun openAddressQr(){
         viewModelScope.launch {
