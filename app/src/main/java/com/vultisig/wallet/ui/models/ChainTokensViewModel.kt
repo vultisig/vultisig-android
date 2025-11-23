@@ -74,7 +74,7 @@ internal data class ChainTokensUiModel(
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    val tronResourceStats : ResourceUsage? = null,
+    val tronResourceStats: ResourceUsage? = null,
 )
 
 @Immutable
@@ -165,10 +165,12 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buy() {
         viewModelScope.launch {
-            navigator.navigate(Destination.OnRamp(
-                vaultId = vaultId,
-                chainId = chainRaw,
-            ))
+            navigator.navigate(
+                Destination.OnRamp(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
         }
     }
 
@@ -199,7 +201,10 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        discoverTokenUseCase(vaultId, chainRaw)
+        discoverTokenUseCase(
+            vaultId,
+            chainRaw
+        )
 
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
@@ -213,19 +218,29 @@ internal class ChainTokensViewModel @Inject constructor(
                     ?.firstOrNull { it.chain == chain }
                     ?.address
                     ?: error("No address for chain $chainRaw in vault $vaultId")
-                withContext(Dispatchers.IO) {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+
+                        tronApi.getAccountResource(address).calculateResourceStats()
+                    }
+
+                }.onSuccess { stats ->
                     uiState.update {
                         it.copy(
-                            tronResourceStats =
-                                tronApi.getAccountResource(address).calculateResourceStats()
+                            tronResourceStats = stats
                         )
                     }
+                }.onFailure { e ->
+                    Timber.w(
+                        e,
+                        "Failed to load Tron resources for $address"
+                    )
                 }
             }
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).combine(fetchMergeBalanceFlow(chain)){ address, mergeBalance ->
+            ).combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
                 address to mergeBalance
             }.catch {
                 updateRefreshing(false)
@@ -240,7 +255,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
                 val accounts = address.accounts
                     .sortedWith(
-                        compareBy({ !it.token.isNativeToken },
+                        compareBy(
+                            { !it.token.isNativeToken },
                             { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
                     )
 
@@ -267,7 +283,10 @@ internal class ChainTokensViewModel @Inject constructor(
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository
-                    .getAddressLink(chain, accountAddress)
+                    .getAddressLink(
+                        chain,
+                        accountAddress
+                    )
                 val totalBalance = totalFiatValue
                     ?.let { fiatValueToStringMapper(it) }
 
@@ -276,7 +295,12 @@ internal class ChainTokensViewModel @Inject constructor(
                         chainName = chainRaw,
                         chainAddress = accountAddress,
                         chainLogo = chain.logo,
-                        tokens = uiTokens.filter { uiToken -> searchQuery.isBlank() || uiToken.name.contains(searchQuery, ignoreCase = true) },
+                        tokens = uiTokens.filter { uiToken ->
+                            searchQuery.isBlank() || uiToken.name.contains(
+                                searchQuery,
+                                ignoreCase = true
+                            )
+                        },
                         explorerURL = explorerUrl,
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
@@ -292,7 +316,7 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
 
-    fun openAddressQr(){
+    fun openAddressQr() {
         viewModelScope.launch {
             navigator.route(
                 Route.AddressQr(
@@ -309,7 +333,12 @@ internal class ChainTokensViewModel @Inject constructor(
         chain: Chain,
     ): Flow<List<MergeAccount>> = flow {
         emit(emptyList())
-        emit(accountsRepository.fetchMergeBalance(chain, vaultId))
+        emit(
+            accountsRepository.fetchMergeBalance(
+                chain,
+                vaultId
+            )
+        )
     }
 
     private fun updateRefreshing(isRefreshing: Boolean) {
@@ -320,7 +349,10 @@ internal class ChainTokensViewModel @Inject constructor(
         val ticker = coin.ticker.lowercase()
 
         val mergeBalance = this.firstOrNull {
-            it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true)
+            it.pool?.mergeAsset?.metadata?.symbol.equals(
+                ticker,
+                true
+            )
         }?.shares?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
         return mergeBalance

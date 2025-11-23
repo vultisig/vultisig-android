@@ -1,3 +1,5 @@
+package com.vultisig.wallet.ui.screens
+
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -53,7 +55,6 @@ import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -75,7 +76,6 @@ fun ResourceTwoCardsRow(
     resourceUsage: ResourceUsage,
     modifier: Modifier = Modifier,
 ) {
-
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -83,10 +83,10 @@ fun ResourceTwoCardsRow(
             .clip(RoundedCornerShape(12.dp))
             .border(
                 1.dp,
-                colors.variables.BordersLight,
+                colors.variables.bordersLight,
                 RoundedCornerShape(12.dp)
             ),
-        color = colors.variables.BackgroundsSurface1
+        color = colors.variables.backgroundsSurface1
     ) {
         var display by remember { mutableStateOf(false) }
         Row(
@@ -108,7 +108,7 @@ fun ResourceTwoCardsRow(
                 modifier = Modifier
                     .width(1.dp)
                     .fillMaxHeight()
-                    .background(colors.variables.BordersLight)
+                    .background(colors.variables.bordersLight)
             )
             ResourceCard(
                 ResourceState(
@@ -197,7 +197,7 @@ fun ResourceCard(
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     AutoSizingText(
-                        text = "${state.available.toInt()}/${state.total.toInt()}",
+                        text = "${state.available}/${state.total}",
                         style = Theme.brockmann.supplementary.caption,
                         color = colors.text.light,
                     )
@@ -253,7 +253,6 @@ fun PreviewResourceTwoCards() {
         ),
         modifier = Modifier.padding(16.dp)
     )
-
 }
 
 @Composable
@@ -268,9 +267,7 @@ internal fun BandwidthEnergyBottomSheet(
 @Composable
 fun BandwidthEnergyContent(
 ) {
-
     var expandByItem by remember { mutableStateOf<Int?>(null) }
-
     Scaffold(
         modifier = Modifier.padding(24.dp),
         containerColor = Theme.colors.backgrounds.primary,
@@ -310,7 +307,7 @@ fun BandwidthEnergyContent(
                 Text(
                     text = stringResource(R.string.tron_bandwidth_energy_title),
                     style = Theme.brockmann.headings.title2,
-                    color = colors.variables.TextPrimary,
+                    color = colors.variables.textPrimary,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -362,8 +359,6 @@ fun BandwidthEnergyContent(
             )
         }
     )
-
-
 }
 
 @Composable
@@ -436,20 +431,16 @@ fun BandwidthEnergyItem(
                         FadingHorizontalDivider(
                             Modifier
                                 .padding(vertical = 20.dp)
-                                .background(color = colors.variables.BordersLight)
+                                .background(color = colors.variables.bordersLight)
                         )
                         Text(
                             text = stringResource(description),
-                            color = colors.variables.TextPrimary,
+                            color = colors.variables.textPrimary,
                             style = Theme.brockmann.body.s.regular,
                             lineHeight = 20.sp,
                         )
                     }
-
-
                 }
-
-
             }
         }
     }

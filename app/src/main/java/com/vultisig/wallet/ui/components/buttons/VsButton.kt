@@ -99,7 +99,7 @@ fun VsButton(
                 Primary -> colors.buttons.tertiary
                 Secondary -> colors.buttons.tertiary
                 Error -> colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Tertiary -> colors.backgrounds.tertiary
             }
         },
         label = "VsButton.borderColor"
