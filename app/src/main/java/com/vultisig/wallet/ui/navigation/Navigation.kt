@@ -726,6 +726,19 @@ internal sealed class Route {
     data class Rename(
         val vaultId: String,
     )
+
+    @Serializable
+    data class AddressQr(
+        val vaultId: VaultId,
+        val address: String,
+        val name: String,
+        val logo: Int?,
+    )
+
+    @Serializable
+    data class Receive(
+        val vaultId: String,
+    )
 }
 
 @Serializable
