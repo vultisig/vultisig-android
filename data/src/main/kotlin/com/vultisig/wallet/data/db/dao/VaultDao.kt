@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
 import com.vultisig.wallet.data.models.VaultId
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VaultDao {
@@ -20,6 +21,10 @@ interface VaultDao {
     @Transaction
     @Query("SELECT * FROM vault WHERE id = :vaultId")
     suspend fun loadById(vaultId: String): VaultWithKeySharesAndTokens?
+
+    @Transaction
+    @Query("SELECT * FROM vault WHERE id = :vaultId")
+    fun loadByIdAsFlow(vaultId: String): Flow<VaultWithKeySharesAndTokens?>
 
     @Transaction
     @Query("SELECT * FROM vault WHERE pubKeyEcdsa = :pubKeyEcdsa")
