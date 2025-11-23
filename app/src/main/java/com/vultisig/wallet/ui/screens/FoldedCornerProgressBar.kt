@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +53,7 @@ import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -65,7 +67,7 @@ data class ResourceState(
     val accentColor: Color,
     val showInfo: Boolean = false,
     val icon: Int,
-    val dispalyTronLegacy: Boolean = false,
+    val dispalyTronLegacy: Boolean = true,
 )
 
 @Composable
@@ -73,7 +75,7 @@ fun ResourceTwoCardsRow(
     resourceUsage: ResourceUsage,
     modifier: Modifier = Modifier,
 ) {
-    var display by remember { mutableStateOf(false) }
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -86,6 +88,7 @@ fun ResourceTwoCardsRow(
             ),
         color = colors.variables.BackgroundsSurface1
     ) {
+        var display by remember { mutableStateOf(false) }
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
@@ -119,13 +122,16 @@ fun ResourceTwoCardsRow(
                 ),
                 Modifier.weight(1f),
                 containerBg = Color(0xFF1B2430),
-                onDisplayTronLegacy = { newDisplay -> { display = newDisplay } }
+                onDisplayTronLegacy = { newDisplay ->
+
+                    display = newDisplay
+                }
             )
-            if (display) {
-                BandwidthEnergyBottomSheet(
-                    onDismissRequest = { display = false }
-                )
-            }
+        }
+
+        if (display) {
+            BandwidthEnergyBottomSheet(
+                onDismissRequest = { display = false })
         }
     }
 }
@@ -261,77 +267,101 @@ internal fun BandwidthEnergyBottomSheet(
 @Composable
 fun BandwidthEnergyContent(
 ) {
-    Column(
-        modifier = Modifier.padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                space = 8.dp,
-                alignment = Alignment.CenterHorizontally
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFFC070C)),
-                contentAlignment = Alignment.Center
+
+    var expandByItem by remember { mutableStateOf<Int?>(null) }
+
+    Scaffold(
+        modifier = Modifier.padding(24.dp),
+        containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.tron_mono),
-                    contentDescription = "Tron Logo",
-                    modifier = Modifier.size(20.dp),
-                    tint = colors.neutrals.n50,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 8.dp,
+                        alignment = Alignment.CenterHorizontally
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFFC070C)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.tron_mono),
+                            contentDescription = "Tron Logo",
+                            modifier = Modifier.size(20.dp),
+                            tint = colors.neutrals.n50,
+                        )
+                    }
+                    Text(
+                        text = "Tron",
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = colors.neutrals.n50,
+                    )
+                }
+                UiSpacer(15.dp)
+                Text(
+                    text = "Bandwidth & Energy ",
+                    style = Theme.brockmann.headings.title2,
+                    color = colors.variables.TextPrimary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
-            Text(
-                text = "Tron",
-                style = Theme.brockmann.supplementary.footnote,
-                color = colors.neutrals.n50,
+        },
+        content = { contentPadding ->
+            Column(
+                modifier = Modifier.padding(contentPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                UiSpacer(20.dp)
+
+
+                BandwidthEnergyItem(
+                    title = R.string.bandwidth,
+                    description = R.string.bandwidth_dec,
+                    accentColor = colors.alerts.success,
+                    containerBg = Color(0xFF072C44),
+                    icon = R.drawable.bandwidth,
+                    isExpanded = expandByItem == 0,
+                    onExpandedChange = { isExpanded ->
+                        expandByItem = if (isExpanded) 0 else null
+                    }
+                )
+                UiSpacer(12.dp)
+
+                BandwidthEnergyItem(
+                    title = R.string.energy,
+                    description = R.string.energy_dec,
+                    accentColor = colors.alerts.warning,
+                    containerBg = Color(0xFF1B2430),
+                    icon = R.drawable.energy,
+                    isExpanded = expandByItem == 1,
+                    onExpandedChange = { isExpanded ->
+                        expandByItem = if (isExpanded) 1 else null
+                    }
+                )
+            }
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.feature_item_learn_more),
+                variant = VsButtonVariant.Secondary,
+                state = VsButtonState.Default,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 5.dp),
+                onClick = {}
             )
         }
-        UiSpacer(27.dp)
-        Text(
-            text = "Bandwidth & Energy ",
-            style = Theme.brockmann.headings.title2,
-            color = colors.variables.TextPrimary,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
+    )
 
-        UiSpacer(24.dp)
-
-        BandwidthEnergyItem(
-            title = R.string.bandwidth,
-            description = R.string.bandwidth_dec,
-            accentColor = colors.alerts.success,
-            containerBg = Color(0xFF072C44),
-            icon = R.drawable.bandwidth
-        )
-        UiSpacer(12.dp)
-
-        BandwidthEnergyItem(
-            title = R.string.energy,
-            description = R.string.energy_dec,
-            accentColor = colors.alerts.warning,
-            containerBg = Color(0xFF1B2430),
-            icon = R.drawable.energy
-        )
-
-        VsButton(
-            label = stringResource(R.string.feature_item_learn_more),
-            variant = VsButtonVariant.Secondary,
-            state = VsButtonState.Default,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 12.dp,
-                    horizontal = 24.dp,
-                )
-        ) { }
-    }
 
 }
 
@@ -341,12 +371,11 @@ fun BandwidthEnergyItem(
     @StringRes description: Int,
     accentColor: Color,
     containerBg: Color,
+    isExpanded: Boolean,
     icon: Int,
+    onExpandedChange: (Boolean) -> Unit,
 ) {
     val colors = colors
-    var isExpanded by remember {
-        mutableStateOf(false)
-    }
     val rotation = animateFloatAsState(
         targetValue = if (isExpanded) 90f else 0f
     )
@@ -368,7 +397,7 @@ fun BandwidthEnergyItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                isExpanded = !isExpanded
+                                onExpandedChange(!isExpanded)
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -416,7 +445,10 @@ fun BandwidthEnergyItem(
                         )
                     }
 
+
                 }
+
+
             }
         }
     }

@@ -1328,5 +1328,7 @@
     <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
     <string name="bandwidth">带宽</string>
     <string name="energy">能量</string>
+    <string name="bandwidth_dec">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
+    <string name="energy_dec">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
 
 </resources>
