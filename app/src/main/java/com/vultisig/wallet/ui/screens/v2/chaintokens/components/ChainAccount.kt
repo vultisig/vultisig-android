@@ -117,7 +117,7 @@ internal fun ChainAccount(
             ) {
                 LoadableValue(
                     value = price,
-                    isVisible = isBalanceVisible,
+                    isVisible = true,
                     style = Theme.satoshi.price.caption,
                     color = Theme.colors.text.light,
                     modifier = Modifier

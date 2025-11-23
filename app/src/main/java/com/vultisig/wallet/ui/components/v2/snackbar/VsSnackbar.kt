@@ -1,13 +1,7 @@
 package com.vultisig.wallet.ui.components.v2.snackbar
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.EaseInCubic
-import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import android.view.Gravity
+import android.view.WindowManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +12,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
@@ -33,25 +31,23 @@ internal fun VsSnackBar(
     modifier: Modifier = Modifier,
     snackbarState: VSSnackbarState,
 ) {
-
-    val durationMillis = 300
     val snackbarState by snackbarState.progressState.collectAsState()
-    AnimatedVisibility(
-        visible = snackbarState.isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it },
-            animationSpec = tween(durationMillis, easing = EaseOutCubic)
-        ) + fadeIn(
-            animationSpec = tween(durationMillis)
-        ),
-        exit = slideOutVertically(
-            targetOffsetY = { it },
-            animationSpec = tween(durationMillis, easing = EaseInCubic)
-        ) + fadeOut(
-            animationSpec = tween(durationMillis)
-        ),
-        modifier = modifier
+    if (snackbarState.isVisible.not())
+        return
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnClickOutside = false,
+            dismissOnBackPress = false,
+            usePlatformDefaultWidth = false
+        )
     ) {
+        (LocalView.current.parent as DialogWindowProvider).window.apply {
+            setGravity(Gravity.BOTTOM)
+            addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
         V2Container(
             modifier = modifier
                 .fillMaxWidth()

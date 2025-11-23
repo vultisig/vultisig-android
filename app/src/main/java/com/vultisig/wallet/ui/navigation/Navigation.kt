@@ -460,6 +460,19 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class AddressQr(
+        val vaultId: VaultId,
+        val address: String,
+        val name: String,
+        val logo: Int?,
+    )
+
+    @Serializable
+    data class Receive(
+        val vaultId: String,
+    )
+
+    @Serializable
     data class Home(
         val openVaultId: String? = null,
         val showVaultList: Boolean = false,

@@ -252,6 +252,14 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+
+    fun receive(){
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.route(Route.Receive(vaultId = vaultId))
+        }
+    }
+
     fun openCamera() {
         uiState.update { it.copy(showCameraBottomSheet = true) }
     }

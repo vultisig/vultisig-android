@@ -111,9 +111,11 @@ import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
+import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.defi.DefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
+import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
@@ -544,6 +546,14 @@ internal fun SetupNavGraph(
 
         composable<Route.VaultsToBackup> {
             VaultsToBackupScreen()
+        }
+
+        dialog<Route.Receive> {
+            ReceiveBottomSheet()
+        }
+
+        dialog<Route.AddressQr> {
+            TokenAddressQrBottomSheet()
         }
     }
 }
