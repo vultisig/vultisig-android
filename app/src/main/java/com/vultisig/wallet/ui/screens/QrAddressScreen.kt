@@ -39,8 +39,8 @@ import com.vultisig.wallet.ui.utils.extractBitmap
 @Composable
 internal fun QrAddressScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<QrAddressViewModel>()
-    val address = viewModel.address?: ""
-    val chainName = viewModel.chainName?: ""
+    val address = viewModel.address
+    val chainName = viewModel.chainName
     val context = LocalContext.current
     val bitmapPainter by viewModel.qrBitmapPainter.collectAsState()
     val background = Theme.colors.oxfordBlue800

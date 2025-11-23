@@ -5,6 +5,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
@@ -47,9 +48,10 @@ internal class AddressBookViewModel @Inject constructor(
     private val orderRepository: OrderRepository<AddressBookOrderEntity>,
 ) : ViewModel() {
 
-    private val requestId: String? = savedStateHandle[Destination.ARG_REQUEST_ID]
-    private val chainId: String? = savedStateHandle[Destination.ARG_CHAIN_ID]
-    private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
+    private val args = savedStateHandle.toRoute<Route.AddressBookScreen>()
+    private val requestId: String? = args.requestId
+    private val chainId: String? = args.chainId
+    private val vaultId: String = args.vaultId
 
     private var reIndexJob: Job? = null
 

@@ -164,8 +164,8 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
     private suspend fun navigateToHome(vault: Vault) {
-        navigator.navigate(
-            Destination.Home(
+        navigator.route(
+            Route.Home(
                 openVaultId = vault.id,
             ),
             opts = NavigationOptions(clearBackStack = true)

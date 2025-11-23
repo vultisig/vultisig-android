@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.navigation
 
 import android.os.Bundle
 import androidx.navigation.NavType
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.models.SigningLibType
@@ -24,198 +23,14 @@ internal sealed class Destination(
 ) : Dst(route) {
 
     companion object {
-        const val ARG_EXPIRATION_ID = "expiration_id"
         const val ARG_REFERRAL_ID = "referral_id"
         const val ARG_VAULT_ID = "vault_id"
-        const val ARG_CHAIN_ID = "chain_id"
-        const val ARG_ADDRESS = "address"
-        const val ARG_TOKEN_ID = "token_id"
-        const val ARG_MERGE_ID = "merge_id"
-        const val ARG_REQUEST_ID = "request_id"
-        const val ARG_QR = "qr"
     }
-
-    data object AddVault : Destination(
-        route = "vault/new"
-    )
-
-    data class ChainTokens(
-        val vaultId: String,
-        val chainId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
-        }
-    }
-
-    data class PositionTokens(
-        val vaultId: String,
-    ) : Destination(
-        route = "position_detail/${vaultId}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "position_detail/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class Send(
-        val vaultId: String,
-        val chainId: String? = null,
-        val tokenId: String? = null,
-        val address: String? = null,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}&$ARG_TOKEN_ID=${tokenId}"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}&$ARG_TOKEN_ID={$ARG_TOKEN_ID}"
-        }
-    }
-
-    data class Deposit(
-        val vaultId: String,
-        val chainId: String,
-        val depositType: String? = null,
-        val bondAddress: String? = null,
-    ) : Destination(
-        route = buildRoute(vaultId, chainId, depositType, bondAddress)
-    ) {
-        companion object {
-            const val ARG_DEPOSIT_TYPE = "deposit_type"
-            const val ARG_BOND_ADDRESS = "bond_address"
-
-            val staticRoute = "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/deposit?deposit_type={$ARG_DEPOSIT_TYPE}&bond_address={$ARG_BOND_ADDRESS}"
-
-            fun buildRoute(
-                vaultId: String,
-                chainId: String?,
-                depositType: String? = null,
-                bondAddress: String? = null
-            ): String {
-                val type = depositType ?: ""
-                val address = bondAddress ?: ""
-
-                return "vault_detail/$vaultId/account/$chainId/deposit" +
-                        "?$ARG_DEPOSIT_TYPE=$type&$ARG_BOND_ADDRESS=$address"
-            }
-        }
-    }
-
-    data class SignMessage(
-        val vaultId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/sign_message"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "vault_detail/{$ARG_VAULT_ID}/sign_message"
-        }
-    }
-
-    data class AddressBook(
-        val chain: Chain? = null,
-        val requestId: String? = null,
-        val vaultId: String,
-    ) : Destination(
-        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}&$ARG_VAULT_ID=$vaultId"
-    ) {
-        companion object {
-            const val STATIC_ROUTE =
-                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_VAULT_ID={$ARG_VAULT_ID}"
-        }
-    }
-
 
     data object Back : Destination(
         route = "back"
     )
 
-    data class Home(
-        val openVaultId: String? = null,
-        val showVaultList: Boolean = false,
-    ) : Destination(
-        route = "home?vault_id=$openVaultId&show_vault_list=$showVaultList"
-    ) {
-        companion object {
-            const val ARG_SHOW_VAULT_LIST = "show_vault_list"
-            const val STATIC_ROUTE =
-                "home?vault_id={$ARG_VAULT_ID}&show_vault_list={$ARG_SHOW_VAULT_LIST}"
-        }
-    }
-
-    data class VaultSettings(val vaultId: String) :
-        Destination(route = "vault_detail/$vaultId/settings") {
-
-        companion object {
-            const val STATIC_ROUTE = "vault_detail/{vault_id}/settings"
-        }
-    }
-
-    data class ConfirmDelete(val vaultId: String) :
-        Destination(route = "vault_detail/confirm_delete/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "vault_detail/confirm_delete/{vault_id}"
-        }
-    }
-
-    data class Details(val vaultId: String) :
-        Destination(route = "vault_detail/$vaultId/settings/details") {
-        companion object {
-            const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/details"
-        }
-    }
-
-    data class Settings(val vaultId: String) : Destination(route = "settings/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "settings/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class RegisterVault(
-        val vaultId: String,
-    ) : Destination(route = "settings/register_vault/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "settings/register_vault/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data object DefaultChainSetting : Destination(route = "settings/default_chains")
-    data object FAQSetting : Destination(route = "settings/faq")
-    data object VultisigToken : Destination(route = "settings/vultisig_token")
-    data class DiscountTiers(
-        val vaultId: String,
-    ) : Destination(route = "settings/discount_tiers/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "settings/discount_tiers/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data object LanguageSetting : Destination(route = "settings/language")
-    data object CurrencyUnitSetting : Destination(route = "settings/currency")
-
-    data object CheckForUpdateSetting : Destination(route = "settings/check_for_update")
-
-    data class ReferralListVault(
-        val vaultId: String,
-    ) : Destination(route = "referral/vaultlist/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "referral/vaultlist/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class ReferralOnboarding(
-        val vaultId: String,
-    ) : Destination(route = "referral/onboarding/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "referral/onboarding/{$ARG_VAULT_ID}"
-        }
-    }
 
     data class ReferralCode(
         val vaultId: String,
@@ -225,95 +40,12 @@ internal sealed class Destination(
         }
     }
 
-    data class ReferralCreation(
-        val vaultId: String,
-    ) : Destination(route = "referral/referral_creation/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "referral/referral_creation/{$ARG_VAULT_ID}"
-        }
-    }
-
     data class ReferralView(
         val vaultId: String,
         val code: String,
     ) : Destination(route = "referral/referral_view/$vaultId/$code") {
         companion object {
             const val STATIC_ROUTE = "referral/referral_view/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}"
-        }
-    }
-
-    data class ReferralVaultEdition(
-        val vaultId: String,
-        val code: String,
-        val expiration: String,
-    ) : Destination(route = "referral/referral_edition/$vaultId/$code/$expiration") {
-        companion object {
-            const val STATIC_ROUTE =
-                "referral/referral_edition/{$ARG_VAULT_ID}/{$ARG_REFERRAL_ID}/{$ARG_EXPIRATION_ID}"
-        }
-    }
-
-    data class ReferralExternalEdition(
-        val vaultId: String,
-    ) : Destination(route = "referral/referral_external_edition/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "referral/referral_external_edition/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class QrAddressScreen(
-        val vaultId: String? = null,
-        val address: String,
-        val chainName: String,
-    ) :
-        Destination(
-            route = "vault_details/${vaultId}/qr_address_screen/$address" +
-                    "?${ARG_CHAIN_NAME}=${chainName}"
-        ) {
-        companion object {
-            const val ARG_COIN_ADDRESS = "coin_address"
-            const val ARG_CHAIN_NAME = "chain_name"
-            const val STATIC_ROUTE =
-                "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}" +
-                        "?${ARG_CHAIN_NAME}={$ARG_CHAIN_NAME}"
-        }
-    }
-
-    data class JoinKeygen(
-        val qr: String,
-        val isReshare: Boolean,
-    ) : Destination(route = "join_keygen?qr=$qr")
-
-    data class ShareVaultQr(val vaultId: String) :
-        Destination(route = "share_vault_qr/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "share_vault_qr/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data object CreateFolder : Destination(route = "create_folder")
-
-    data class ReshareStartScreen(val vaultId: String) :
-        Destination(route = "reshare_start_screen/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "reshare_start_screen/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class BiometricsEnable(val vaultId: String) :
-        Destination(route = "biometrics/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "biometrics/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data object OnChainSecurity : Destination(route = "onchain_security")
-
-    data class OnRamp(val vaultId: String, val chainId: String) :
-        Destination(route = "onramp/$vaultId/$chainId") {
-        companion object {
-            const val STATIC_ROUTE = "onramp/{$ARG_VAULT_ID}/{$ARG_CHAIN_ID}"
         }
     }
 }
@@ -739,6 +471,136 @@ internal sealed class Route {
     data class Receive(
         val vaultId: String,
     )
+
+    @Serializable
+    data class Home(
+        val openVaultId: String? = null,
+        val showVaultList: Boolean = false,
+    )
+
+    @Serializable
+    data object AddVault
+
+    @Serializable
+    data class VaultSettings(val vaultId: String)
+
+    @Serializable
+    data class Details(val vaultId: String)
+
+    @Serializable
+    data class ChainTokens(
+        val vaultId: String,
+        val chainId: String,
+    )
+
+    @Serializable
+    data class PositionTokens(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class SignMessage(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class Deposit(
+        val vaultId: String,
+        val chainId: String,
+        val depositType: String? = null,
+        val bondAddress: String? = null,
+    )
+
+    @Serializable
+    data class Settings(val vaultId: String)
+
+    @Serializable
+    data object DefaultChainSetting
+
+    @Serializable
+    data object FAQSetting
+
+    @Serializable
+    data object VultisigToken
+
+    @Serializable
+    data class DiscountTiers(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data object LanguageSetting
+
+    @Serializable
+    data object CurrencyUnitSetting
+
+    @Serializable
+    data class QrAddressScreen(
+        val vaultId: String? = null,
+        val address: String,
+        val chainName: String,
+    )
+
+    @Serializable
+    data class ConfirmDelete(val vaultId: String)
+
+    @Serializable
+    data class ShareVaultQr(val vaultId: String)
+
+    @Serializable
+    data class ReshareStartScreen(val vaultId: String)
+
+    @Serializable
+    data class BiometricsEnable(val vaultId: String)
+
+    @Serializable
+    data object OnChainSecurity
+
+    @Serializable
+    data class RegisterVault(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class ReferralOnboarding(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data object CheckForUpdateSetting
+
+    @Serializable
+    data class ReferralVaultEdition(
+        val vaultId: String,
+        val code: String,
+        val expiration: String,
+    )
+
+    @Serializable
+    data class ReferralCreation(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class ReferralExternalEdition(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class ReferralListVault(
+        val vaultId: String,
+    )
+
+    @Serializable
+    data class OnRamp(val vaultId: String, val chainId: String)
+
+    @Serializable
+    data class AddressBookScreen(
+        val chainId: String? = null,
+        val requestId: String? = null,
+        val vaultId: String,
+    )
+
 }
 
 @Serializable

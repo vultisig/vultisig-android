@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.data.common.saveBitmapToDownloads
@@ -20,6 +21,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.ui.models.ShareVaultQrModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -46,7 +48,7 @@ internal class RegisterVaultViewModel @Inject constructor(
     private val json: Json,
     private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
-    val vaultId = requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
+    val vaultId = savedStateHandle.toRoute<Route.RegisterVault>().vaultId
     val permissionChannel = Channel<Boolean>()
     val uiModel = MutableStateFlow(RegisterVaultUiModel())
     private var hasWritePermission by mutableStateOf(

@@ -532,8 +532,8 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     fun complete() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Home(),
+            navigator.route(
+                Route.Home(),
                 NavigationOptions(
                     clearBackStack = true
                 )

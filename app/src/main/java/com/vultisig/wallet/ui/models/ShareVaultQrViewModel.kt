@@ -17,6 +17,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
@@ -26,6 +27,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -66,7 +68,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private val json: Json,
     private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
-    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private val vaultId: String = savedStateHandle.toRoute<Route.ShareVaultQr>().vaultId
 
     val state = MutableStateFlow(ShareVaultQrState())
 

@@ -176,7 +176,7 @@ internal class VaultListViewModel @Inject constructor(
 
     fun addVault() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddVault)
+            navigator.route(Route.AddVault)
         }
     }
 
