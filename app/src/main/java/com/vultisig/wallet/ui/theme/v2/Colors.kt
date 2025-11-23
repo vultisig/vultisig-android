@@ -38,7 +38,7 @@ data class Backgrounds(
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
-    val transparent: Color = Color(0x00000000),
+    val transparent: Color = Color.Transparent,
 )
 
 data class Primary(

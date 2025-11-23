@@ -62,12 +62,12 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 data class ResourceState(
-    val available: Long, val total: Long,
+    val available: Long,
+    val total: Long,
     val title: String,
     val accentColor: Color,
     val showInfo: Boolean = false,
     val icon: Int,
-    val dispalyTronLegacy: Boolean = true,
 )
 
 @Composable
@@ -102,7 +102,6 @@ fun ResourceTwoCardsRow(
                     icon = R.drawable.bandwidth
                 ),
                 Modifier.weight(1f),
-                padEnd = 4.dp,
                 containerBg = Color(0xFF1B2430)
             )
             Box(
@@ -138,7 +137,9 @@ fun ResourceTwoCardsRow(
 
 @Composable
 fun ResourceCard(
-    state: ResourceState, modifier: Modifier = Modifier, padEnd: Dp = 0.dp, containerBg: Color,
+    state: ResourceState,
+    modifier: Modifier = Modifier,
+    containerBg: Color,
     onDisplayTronLegacy: (Boolean) -> Unit = { },
 
 
@@ -300,14 +301,14 @@ fun BandwidthEnergyContent(
                         )
                     }
                     Text(
-                        text = "Tron",
+                        text = stringResource(R.string.tron),
                         style = Theme.brockmann.supplementary.footnote,
                         color = colors.neutrals.n50,
                     )
                 }
                 UiSpacer(15.dp)
                 Text(
-                    text = "Bandwidth & Energy ",
+                    text = stringResource(R.string.tron_bandwidth_energy_title),
                     style = Theme.brockmann.headings.title2,
                     color = colors.variables.TextPrimary,
                     modifier = Modifier.fillMaxWidth(),
@@ -411,7 +412,7 @@ fun BandwidthEnergyItem(
                         ) {
                             Image(
                                 painter = painterResource(icon),
-                                contentDescription = "${title} icon",
+                                contentDescription = stringResource(title),
                                 modifier = Modifier.size(16.dp),
                                 contentScale = ContentScale.Fit
                             )

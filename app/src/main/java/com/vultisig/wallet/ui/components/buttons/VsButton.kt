@@ -72,7 +72,7 @@ fun VsButton(
                 Primary -> colors.buttons.tertiary
                 Secondary -> colors.backgrounds.transparent
                 Error -> colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Tertiary -> colors.backgrounds.tertiary
             }
         },
         label = "VsButton.backgroundColor"
@@ -147,6 +147,7 @@ fun VsButton(
         content()
     }
 }
+
 @Composable
 fun VsButton(
     modifier: Modifier = Modifier,
@@ -222,6 +223,21 @@ private fun VsButtonPreview() {
             size = Medium,
             iconLeft = R.drawable.ic_caret_left,
             iconRight = R.drawable.ic_caret_right,
+            onClick = {}
+        )
+        VsButton(
+            label = "Primary Default",
+            variant = Primary,
+            state = Default,
+            size = Medium,
+            onClick = {}
+        )
+
+        VsButton(
+            label = "Secondary Default",
+            variant = Secondary,
+            state = Default,
+            size = Medium,
             onClick = {}
         )
 

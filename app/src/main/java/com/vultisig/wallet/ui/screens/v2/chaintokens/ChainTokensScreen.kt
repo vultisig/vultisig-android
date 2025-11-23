@@ -83,8 +83,7 @@ internal fun ChainTokensScreen(
         onBuy = viewModel::buy,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBackClick = navController::popBackStack,
-        onShareQrClick = { viewModel.shareQRCode(context) },
+        onBackClick = { navController.popBackStack() },
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
         }
