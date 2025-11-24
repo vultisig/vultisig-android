@@ -12,9 +12,13 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.DIAMOND_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.DIAMOND_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -138,6 +142,8 @@ internal class DiscountTiersViewModel @Inject constructor(
 
     private fun BigInteger.determineTier(): TierType? {
         return when {
+            this >= ULTIMATE_TIER_THRESHOLD -> TierType.ULTIMATE
+            this >= DIAMOND_TIER_THRESHOLD -> TierType.DIAMOND
             this >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINUM
             this >= GOLD_TIER_THRESHOLD -> TierType.GOLD
             this >= SILVER_TIER_THRESHOLD -> TierType.SILVER
