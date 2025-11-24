@@ -58,6 +58,12 @@
     <string name="vault_tier_platinum_description_part1">Držanjem 15.000 $VULT, otključat ćete Platinsku razinu i dobiti </string>
     <string name="vault_tier_platinum_description_part2">popust od 25 baznih bodova na naknade za trgovanje</string>
     <string name="vault_tier_platinum_description_part3"> na svim swapovima.</string>
+    <string name="vault_tier_diamond_description_part1">Držanjem 100.000 $VULT, otključat ćete Dijamantnu razinu i dobiti </string>
+    <string name="vault_tier_diamond_description_part2">popust od 35 baznih bodova na naknade za trgovanje</string>
+    <string name="vault_tier_diamond_description_part3"> na svim swapovima.</string>
+    <string name="vault_tier_ultimate_description_part1">Držanjem 1.000.000 $VULT, otključat ćete Ultimativnu razinu i dobiti </string>
+    <string name="vault_tier_ultimate_description_part2">potpuno oslobađanje od Vultisig naknada</string>
+    <string name="vault_tier_ultimate_description_part3"> na svim swapovima.</string>
     <string name="join_keysign_missing_required_vault">Nemate potreban trezor za Keysign</string>
     <string name="vault_settings_security_screen_title">Sigurnost</string>
     <string name="swap_form_on_chain">na</string>

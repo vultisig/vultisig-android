@@ -111,7 +111,12 @@
     <string name="vault_tier_platinum_description_part1">持有 15,000 $VULT，您将解锁铂金等级并获得</string>
     <string name="vault_tier_platinum_description_part2">25 基点交易费折扣</string>
     <string name="vault_tier_platinum_description_part3">在所有交换中。</string>
-    
+    <string name="vault_tier_diamond_description_part1">持有 100,000 $VULT，您将解锁钻石等级并获得</string>
+    <string name="vault_tier_diamond_description_part2">35 基点交易费折扣</string>
+    <string name="vault_tier_diamond_description_part3">在所有交换中。</string>
+    <string name="vault_tier_ultimate_description_part1">持有 1,000,000 $VULT，您将解锁终极等级并获得</string>
+    <string name="vault_tier_ultimate_description_part2">完全免除 Vultisig 费用</string>
+    <string name="vault_tier_ultimate_description_part3">在所有交换中。</string>
     <!-- Keysign & Join -->
     <string name="join_keysign_missing_required_vault">您没有密钥签名所需的金库</string>
     <string name="join_keysign_discovery_service">发现服务中</string>

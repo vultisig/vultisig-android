@@ -58,6 +58,12 @@
     <string name="vault_tier_platinum_description_part1">Mantenendo 15.000 $VULT, sbloccherai il Livello Platino e riceverai uno </string>
     <string name="vault_tier_platinum_description_part2">sconto di 25 punti base sulle commissioni di trading</string>
     <string name="vault_tier_platinum_description_part3"> su tutti gli swap.</string>
+    <string name="vault_tier_diamond_description_part1">Mantenendo 100.000 $VULT, sbloccherai il Livello Diamante e riceverai uno </string>
+    <string name="vault_tier_diamond_description_part2">sconto di 35 punti base sulle commissioni di trading</string>
+    <string name="vault_tier_diamond_description_part3"> su tutti gli swap.</string>
+    <string name="vault_tier_ultimate_description_part1">Mantenendo 1.000.000 $VULT, sbloccherai il Livello Definitivo e riceverai </string>
+    <string name="vault_tier_ultimate_description_part2">un\'esenzione completa dalle commissioni Vultisig</string>
+    <string name="vault_tier_ultimate_description_part3"> su tutti gli swap.</string>
     <string name="join_keysign_missing_required_vault">Non hai il vault richiesto per Keysign</string>
     <string name="vault_settings_security_screen_title">Sicurezza</string>
     <string name="swap_form_on_chain">su</string>

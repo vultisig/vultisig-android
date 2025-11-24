@@ -73,6 +73,12 @@
     <string name="vault_tier_platinum_description_part1">Door 15.000 $VULT vast te houden, ontgrendelt u het Platina niveau en ontvangt u een </string>
     <string name="vault_tier_platinum_description_part2">korting van 25 basispunten op handelskosten</string>
     <string name="vault_tier_platinum_description_part3"> bij alle swaps.</string>
+    <string name="vault_tier_diamond_description_part1">Door 100.000 $VULT vast te houden, ontgrendelt u het Diamant niveau en ontvangt u een </string>
+    <string name="vault_tier_diamond_description_part2">korting van 35 basispunten op handelskosten</string>
+    <string name="vault_tier_diamond_description_part3"> bij alle swaps.</string>
+    <string name="vault_tier_ultimate_description_part1">Door 1.000.000 $VULT vast te houden, ontgrendelt u het Ultiem niveau en ontvangt u </string>
+    <string name="vault_tier_ultimate_description_part2">een volledige vrijstelling van Vultisig-kosten</string>
+    <string name="vault_tier_ultimate_description_part3"> bij alle swaps.</string>
     <string name="join_keysign_missing_required_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
     <string name="vault_settings_security_screen_title_switch">Beheer uw on-chain beveiliging</string>
     <string name="vault_settings_security_screen_title_content">U kunt uw realtime on-chain beveiliging uitschakelen</string>

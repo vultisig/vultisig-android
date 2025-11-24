@@ -71,6 +71,12 @@
     <string name="vault_tier_platinum_description_part1">Al mantener 15,000 $VULT, desbloquearás el Nivel Platino y recibirás un </string>
     <string name="vault_tier_platinum_description_part2">descuento de 25 bps en las tarifas de trading</string>
     <string name="vault_tier_platinum_description_part3"> en todos los intercambios.</string>
+    <string name="vault_tier_diamond_description_part1">Al mantener 100,000 $VULT, desbloquearás el Nivel Diamante y recibirás un </string>
+    <string name="vault_tier_diamond_description_part2">descuento de 35 bps en las tarifas de trading</string>
+    <string name="vault_tier_diamond_description_part3"> en todos los intercambios.</string>
+    <string name="vault_tier_ultimate_description_part1">Al mantener 1,000,000 $VULT, desbloquearás el Nivel Definitivo y recibirás </string>
+    <string name="vault_tier_ultimate_description_part2">una exención completa de las tarifas de Vultisig</string>
+    <string name="vault_tier_ultimate_description_part3"> en todos los intercambios.</string>
     <string name="vault_settings_security_screen_title_switch">Gestiona tu seguridad en cadena</string>
     <string name="vault_settings_security_screen_title_content">Puedes desactivar la seguridad en cadena en tiempo real proporcionada por Blockaid.</string>
     <string name="vault_settings_security_screen_title">Seguridad</string>

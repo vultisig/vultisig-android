@@ -61,6 +61,12 @@
     <string name="vault_tier_platinum_description_part1">Ao manter 15.000 $VULT, você desbloqueará o Nível Platina e receberá um </string>
     <string name="vault_tier_platinum_description_part2">desconto de 25 pontos base nas taxas de negociação</string>
     <string name="vault_tier_platinum_description_part3"> em todas as trocas.</string>
+    <string name="vault_tier_diamond_description_part1">Ao manter 100.000 $VULT, você desbloqueará o Nível Diamante e receberá um </string>
+    <string name="vault_tier_diamond_description_part2">desconto de 35 pontos base nas taxas de negociação</string>
+    <string name="vault_tier_diamond_description_part3"> em todas as trocas.</string>
+    <string name="vault_tier_ultimate_description_part1">Ao manter 1.000.000 $VULT, você desbloqueará o Nível Definitivo e receberá </string>
+    <string name="vault_tier_ultimate_description_part2">uma isenção completa das taxas Vultisig</string>
+    <string name="vault_tier_ultimate_description_part3"> em todas as trocas.</string>
     <string name="join_keysign_missing_required_vault">Não tem o cofre necessário para o Keysign</string>
     <string name="vault_settings_security_screen_title">Segurança</string>
     <string name="vault_settings_security_screen_title_switch">Gerencie sua segurança on-chain</string>

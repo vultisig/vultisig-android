@@ -78,6 +78,12 @@
     <string name="vault_tier_platinum_description_part1">Удерживая 15 000 $VULT, вы разблокируете Платиновый уровень и получите </string>
     <string name="vault_tier_platinum_description_part2">скидку 25 базисных пунктов на торговые комиссии</string>
     <string name="vault_tier_platinum_description_part3"> при всех обменах.</string>
+    <string name="vault_tier_diamond_description_part1">Удерживая 100 000 $VULT, вы разблокируете Алмазный уровень и получите </string>
+    <string name="vault_tier_diamond_description_part2">скидку 35 базисных пунктов на торговые комиссии</string>
+    <string name="vault_tier_diamond_description_part3"> при всех обменах.</string>
+    <string name="vault_tier_ultimate_description_part1">Удерживая 1 000 000 $VULT, вы разблокируете Ультимативный уровень и получите </string>
+    <string name="vault_tier_ultimate_description_part2">полное освобождение от комиссий Vultisig</string>
+    <string name="vault_tier_ultimate_description_part3"> при всех обменах.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="join_keysign_discovery_service">Обнаружение службы</string>
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>

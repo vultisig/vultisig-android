@@ -210,8 +210,26 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
             descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
         )
 
-        TierType.DIAMOND -> error("Not implemented yet")
-        TierType.ULTIMATE -> error("Not implemented yet")
+        TierType.DIAMOND -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_diamond_bottomsheet,
+            titlePart1 = stringResource(R.string.vault_tier_unlock_diamond_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_diamond_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_diamond_part3),
+            tierColor = Color(0xFF9747FF),
+            descriptionPart1 = stringResource(R.string.vault_tier_diamond_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_diamond_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_diamond_description_part3),
+        )
+        TierType.ULTIMATE -> BottomSheetTierStyle(
+            logoTier = R.drawable.tier_ultimate_bottomsheet,
+            titlePart1 = stringResource(R.string.vault_tier_unlock_ultimate_part1),
+            titlePart2 = stringResource(R.string.vault_tier_unlock_ultimate_part2),
+            titlePart3 = stringResource(R.string.vault_tier_unlock_ultimate_part3),
+            tierColor = Color(0xFFFFC25C),
+            descriptionPart1 = stringResource(R.string.vault_tier_ultimate_description_part1),
+            descriptionPart2 = stringResource(R.string.vault_tier_ultimate_description_part2),
+            descriptionPart3 = stringResource(R.string.vault_tier_ultimate_description_part3),
+        )
     }
 }
 
@@ -249,6 +267,15 @@ private fun TierDiscountBottomSheetBronzePreview() {
 private fun TierDiscountBottomSheetPlatinumPreview() {
     TierDiscountBottomSheetContent(
         tier = TierType.PLATINUM,
+        onContinue = {}
+    )
+}
+
+@Preview(showBackground = true, name = "Platinum Tier")
+@Composable
+private fun TierDiscountBottomSheetDiamondPreview() {
+    TierDiscountBottomSheetContent(
+        tier = TierType.DIAMOND,
         onContinue = {}
     )
 }

@@ -63,6 +63,12 @@
     <string name="vault_tier_platinum_description_part1">Durch das Halten von 15.000 $VULT schalten Sie die Platin-Stufe frei und erhalten einen </string>
     <string name="vault_tier_platinum_description_part2">Rabatt von 25 Basispunkten auf die Handelsgebühren</string>
     <string name="vault_tier_platinum_description_part3"> bei allen Swaps.</string>
+    <string name="vault_tier_diamond_description_part1">Durch das Halten von 100.000 $VULT schalten Sie die Diamant-Stufe frei und erhalten einen </string>
+    <string name="vault_tier_diamond_description_part2">Rabatt von 35 Basispunkten auf die Handelsgebühren</string>
+    <string name="vault_tier_diamond_description_part3"> bei allen Swaps.</string>
+    <string name="vault_tier_ultimate_description_part1">Durch das Halten von 1.000.000 $VULT schalten Sie die Ultimativ-Stufe frei und erhalten </string>
+    <string name="vault_tier_ultimate_description_part2">einen vollständigen Erlass der Vultisig-Gebühren</string>
+    <string name="vault_tier_ultimate_description_part3"> bei allen Swaps.</string>
     <string name="vault_settings_security_screen_title">Sicherheit</string>
     <string name="vault_settings_security_screen_title_switch">Ihre On-Chain-Sicherheit verwalten</string>
     <string name="vault_settings_security_screen_title_content">Sie können Ihre von Blockaid bereitgestellte Echtzeit-On-Chain-Sicherheit deaktivieren.</string>
