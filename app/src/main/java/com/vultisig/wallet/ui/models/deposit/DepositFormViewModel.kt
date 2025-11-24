@@ -80,7 +80,6 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.roundToInt
 import kotlin.collections.first
 
 internal enum class DepositOption {
@@ -347,7 +346,9 @@ internal class DepositFormViewModel @Inject constructor(
 
                 updateTokenAmount(account, chain, tickerToActivate, vaultId)
 
-            }.collect {}
+            }.collect {
+                setMetadataInfo()
+            }
         }
 
         viewModelScope.launch {
@@ -387,32 +388,35 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         collectTcyStakeAutoCompound()
-
-        setMetadataInfo()
     }
 
     private fun setMetadataInfo() {
-        if (!depositTypeAction.isNullOrEmpty()) {
-            val action = parseDepositType(depositTypeAction)
+        viewModelScope.launch {
+            //withContext(Dispatchers.IO) {
+            //    delay(3000)
+            //}
+            if (!depositTypeAction.isNullOrEmpty()) {
+                val action = parseDepositType(depositTypeAction)
 
-            if (action != null) {
-                val depositOption = when (action) {
-                    DeFiNavActions.UNBOND -> DepositOption.Unbond
-                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
-                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
-                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
-                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
-                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
-                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
-                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
-                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
-                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
-                    else -> DepositOption.Bond
+                if (action != null) {
+                    val depositOption = when (action) {
+                        DeFiNavActions.UNBOND -> DepositOption.Unbond
+                        DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
+                        DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
+                        DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
+                        DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
+                        DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
+                        DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
+                        DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
+                        DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
+                        DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+                        else -> DepositOption.Bond
+                    }
+                    selectDepositOption(depositOption)
+
+                } else {
+                    Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
                 }
-                selectDepositOption(depositOption)
-
-            } else {
-                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
             }
         }
     }
