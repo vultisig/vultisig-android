@@ -225,15 +225,50 @@ private fun TierCard(
         modifier = Modifier
             .padding(vertical = 8.dp)
             .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                brush = styleTier.gradient,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.colors.backgrounds.neutral)
-            .clickable { onClickCard.invoke() }
     ) {
+        if (styleTier.borderBackground != null) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                Image(
+                    painter = painterResource(id = styleTier.borderBackground),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+            }
+        }
+        
+        Box(
+            modifier = Modifier
+                .then(
+                    when {
+                        styleTier.borderBackground != null -> {
+                            Modifier.padding(1.dp)
+                        }
+                        styleTier.gradient != null -> {
+                            Modifier.border(
+                                width = 1.dp,
+                                brush = styleTier.gradient,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                        else -> {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.normal,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                    }
+                )
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.colors.backgrounds.neutral)
+                .clickable { onClickCard.invoke() }
+        ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -333,6 +368,7 @@ private fun TierCard(
                 )
             }
         }
+        }
     }
 }
 
@@ -419,16 +455,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             titleText = stringResource(R.string.vault_tier_ultimate),
             discountText = stringResource(R.string.vault_tier_ultimate_discount),
             amountText = formatVultAmount(1000000),
-            gradient = Brush.linearGradient(
-                colors = listOf(
-                    Color(0xFFFFC700), // yellow
-                    Color(0xFFFF6B00), // orange
-                    Color(0xFFFF00E5), // magenta
-                    Color(0xFF6A00FF), // purple
-                    Color(0xFF00C2FF), // cyan
-                    Color(0xFF00FF85), // green
-                ),
-            )
+            borderBackground = R.drawable.ultimate_background
         )
     }
 }
@@ -438,8 +465,8 @@ internal data class TierStyle(
     val titleText: String,
     val discountText: String,
     val amountText: String,
-    val gradient: Brush,
-    val backgroundBorder: Int? = null,
+    val gradient: Brush? = null,
+    val borderBackground: Int? = null,
 )
 
 
