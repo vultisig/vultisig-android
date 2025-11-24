@@ -80,7 +80,6 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.roundToInt
 import kotlin.collections.first
 
 internal enum class DepositOption {
@@ -347,7 +346,9 @@ internal class DepositFormViewModel @Inject constructor(
 
                 updateTokenAmount(account, chain, tickerToActivate, vaultId)
 
-            }.collect {}
+            }.collect {
+                setMetadataInfo()
+            }
         }
 
         viewModelScope.launch {
@@ -387,8 +388,6 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         collectTcyStakeAutoCompound()
-
-        setMetadataInfo()
     }
 
     private fun setMetadataInfo() {
@@ -806,6 +805,7 @@ internal class DepositFormViewModel @Inject constructor(
                         isUnStake = false,
                         percentage = null
                     )
+
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
                         val percentageText = tokenAmountFieldState.text.toString()
@@ -894,9 +894,11 @@ internal class DepositFormViewModel @Inject constructor(
             DepositOption.RedeemYTCY -> {
                 YTCY_CONTRACT
             }
+
             DepositOption.RedeemYRUNE -> {
                 YRUNE_CONTRACT
             }
+
             else -> {
                 throw RuntimeException("Invalid Deposit Parameter ")
             }
@@ -1810,7 +1812,8 @@ internal class DepositFormViewModel @Inject constructor(
                 tcyAutoCompoundAmount?.toBigIntegerOrNull()
             } else {
                 unstakableAmountCache?.toBigIntegerOrNull()
-            } ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            }
+                ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
 
             if (totalUnits < BigInteger.ONE) {
                 throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
@@ -1824,7 +1827,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = stakeMemo
 
-        val isAutoCompound = if (isUnStake){
+        val isAutoCompound = if (isUnStake) {
             isAutoCompoundTcyUnStake
         } else {
             isAutoCompoundTcyStake
@@ -1848,7 +1851,13 @@ internal class DepositFormViewModel @Inject constructor(
 
 
         val wasmExecuteContractPayload = if (isAutoCompound)
-            getWasmExecuteContractPayload(isUnStake, percentage, srcAddress, selectedToken, tokenAmountInt)
+            getWasmExecuteContractPayload(
+                isUnStake,
+                percentage,
+                srcAddress,
+                selectedToken,
+                tokenAmountInt
+            )
         else null
 
         return DepositTransaction(
