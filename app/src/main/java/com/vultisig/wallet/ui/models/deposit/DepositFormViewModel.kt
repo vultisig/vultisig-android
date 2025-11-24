@@ -392,9 +392,6 @@ internal class DepositFormViewModel @Inject constructor(
 
     private fun setMetadataInfo() {
         viewModelScope.launch {
-            //withContext(Dispatchers.IO) {
-            //    delay(3000)
-            //}
             if (!depositTypeAction.isNullOrEmpty()) {
                 val action = parseDepositType(depositTypeAction)
 
