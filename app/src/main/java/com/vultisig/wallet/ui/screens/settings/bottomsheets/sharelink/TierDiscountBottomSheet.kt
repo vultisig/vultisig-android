@@ -279,3 +279,12 @@ private fun TierDiscountBottomSheetDiamondPreview() {
         onContinue = {}
     )
 }
+
+@Preview(showBackground = true, name = "Ultimate Tier")
+@Composable
+private fun TierDiscountBottomSheetUltimatePreview() {
+    TierDiscountBottomSheetContent(
+        tier = TierType.ULTIMATE,
+        onContinue = {}
+    )
+}

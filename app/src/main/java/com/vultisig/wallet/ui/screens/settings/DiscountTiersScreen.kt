@@ -400,7 +400,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
         )
 
         TierType.DIAMOND -> TierStyle(
-            icon = R.drawable.tier_platinum,
+            icon = R.drawable.tier_diamond,
             titleText = stringResource(R.string.vault_tier_diamond),
             discountText = stringResource(R.string.vault_tier_diamond_discount),
             amountText = formatVultAmount(100000),
@@ -415,7 +415,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
         )
 
         TierType.ULTIMATE -> TierStyle(
-            icon = R.drawable.tier_platinum,
+            icon = R.drawable.tier_ultimate,
             titleText = stringResource(R.string.vault_tier_ultimate),
             discountText = stringResource(R.string.vault_tier_ultimate_discount),
             amountText = formatVultAmount(1000000),
@@ -438,7 +438,8 @@ internal data class TierStyle(
     val titleText: String,
     val discountText: String,
     val amountText: String,
-    val gradient: Brush
+    val gradient: Brush,
+    val backgroundBorder: Int? = null,
 )
 
 
