@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.MergeAccount
@@ -13,14 +15,18 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigDecimal
@@ -66,69 +72,76 @@ internal class AccountsRepositoryImpl @Inject constructor(
         checkNotNull(vaultRepository.get(vaultId)) {
             "No vault with id $vaultId"
         }
+    private fun getVaultAsFlow(vaultId: String): Flow<Vault> =
+       vaultRepository.getAsFlow(vaultId).filterNotNull()
 
-    override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
-        supervisorScope {
-            val (vaultCoins, addresses) = buildCacheAddresses(vaultId)
+    override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses )->
+       channelFlow {
+           supervisorScope {
+               val loadPrices =
+                   async { tokenPriceRepository.refresh(vaultCoins) }
 
-            val loadPrices =
-                async { tokenPriceRepository.refresh(vaultCoins) }
+               if (!isRefresh) {
+                   addresses.fetchAccountFromDb()
+                   send(addresses)
+               }
 
-            if (!isRefresh) {
+               addresses.mapIndexed { index, account ->
+                   async {
+                       try {
+                           val address = account.address
+                           loadPrices.await()
+
+                           val newAccounts = supervisorScope {
+                               account.accounts.map {
+                                   async {
+                                       val balance =
+                                           balanceRepository.getTokenBalanceAndPrice(address, it.token)
+                                               .first()
+
+                                       it.applyBalance(balance.tokenBalance, balance.price)
+                                   }
+                               }.awaitAll()
+                           }
+
+                           addresses[index] = account.copy(accounts = newAccounts)
+
+                       } catch (e: Exception) {
+                           Timber.e(e)
+                           // ignore
+                       }
+                   }
+               }.awaitAll()
+               send(addresses)
+           }
+           awaitClose()
+       }
+    }
+
+    override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> =  buildCacheAddresses(vaultId)
+        .flatMapLatest { cachedAddress ->
+            flow {
+                val addresses = cachedAddress.addresses
                 addresses.fetchAccountFromDb()
-                send(addresses)
+                emit(addresses)
+            }
+        }
+
+
+    private fun buildCacheAddresses(vaultId: String): Flow<CachedAddresses> {
+        return getVaultAsFlow(vaultId).map { vault ->
+            val vaultCoins = vault.coins
+
+            val coins = vaultCoins.groupBy { it.chain }
+            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
             }
 
-            addresses.mapIndexed { index, account ->
-                async {
-                    try {
-                        val address = account.address
-                        loadPrices.await()
-
-                        val newAccounts = supervisorScope {
-                            account.accounts.map {
-                                async {
-                                    val balance =
-                                        balanceRepository.getTokenBalanceAndPrice(address, it.token)
-                                            .first()
-
-                                    it.applyBalance(balance.tokenBalance, balance.price)
-                                }
-                            }.awaitAll()
-                        }
-
-                        addresses[index] = account.copy(accounts = newAccounts)
-
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        // ignore
-                    }
-                }
-            }.awaitAll()
-            send(addresses)
+            CachedAddresses(
+                vaultCoins = vaultCoins,
+                addresses = addresses
+            )
         }
-        awaitClose()
-    }
-
-    override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
-        val addresses = buildCacheAddresses(vaultId).addresses
-        addresses.fetchAccountFromDb()
-        send(addresses)
-    }
-
-    private suspend fun buildCacheAddresses(vaultId: String): CachedAddresses {
-        val vault = getVault(vaultId)
-        val vaultCoins = vault.coins
-
-        val coins = vaultCoins.groupBy { it.chain }
-        val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
-            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
-        }
-
-        return CachedAddresses(
-            vaultCoins = vaultCoins,
-            addresses = addresses
-        )
     }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb() {
