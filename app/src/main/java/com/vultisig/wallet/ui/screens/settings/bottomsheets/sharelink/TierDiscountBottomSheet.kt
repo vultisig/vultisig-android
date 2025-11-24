@@ -209,6 +209,9 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
             descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
         )
+
+        TierType.DIAMOND -> error("Not implemented yet")
+        TierType.ULTIMATE -> error("Not implemented yet")
     }
 }
 

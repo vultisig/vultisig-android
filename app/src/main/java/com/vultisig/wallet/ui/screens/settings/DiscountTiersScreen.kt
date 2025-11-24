@@ -169,6 +169,30 @@ internal fun DiscountTiersScreen(
                 }
             )
 
+            TierCard(
+                tierType = TierType.DIAMOND,
+                isActive = state.activeTier == TierType.DIAMOND,
+                isExpanded = state.expandedTiers.contains(TierType.DIAMOND),
+                onClickUnlock = {
+                    model.onTierUnlockClick(TierType.DIAMOND)
+                },
+                onClickCard = {
+                    model.expandOrCollapseTierInfo(TierType.DIAMOND)
+                }
+            )
+
+            TierCard(
+                tierType = TierType.ULTIMATE,
+                isActive = state.activeTier == TierType.ULTIMATE,
+                isExpanded = state.expandedTiers.contains(TierType.ULTIMATE),
+                onClickUnlock = {
+                    model.onTierUnlockClick(TierType.ULTIMATE)
+                },
+                onClickCard = {
+                    model.expandOrCollapseTierInfo(TierType.ULTIMATE)
+                }
+            )
+
             UiSpacer(size = 16.dp)
         }
     }
@@ -319,7 +343,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_bronze,
             titleText = stringResource(R.string.vault_tier_bronze),
             discountText = stringResource(R.string.vault_tier_bronze_discount),
-            amountText = formatVultAmount(1000),
+            amountText = formatVultAmount(1500),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFDB5727).copy(alpha = 0.5f),
@@ -334,7 +358,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_silver,
             titleText = stringResource(R.string.vault_tier_silver),
             discountText = stringResource(R.string.vault_tier_silver_discount),
-            amountText = formatVultAmount(2500),
+            amountText = formatVultAmount(3000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFC9D6E8).copy(alpha = 0.5f),
@@ -349,7 +373,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_gold,
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = formatVultAmount(5000),
+            amountText = formatVultAmount(75000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFFFC25C).copy(alpha = 0.5f),
@@ -364,7 +388,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_platinum,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
-            amountText = formatVultAmount(10000),
+            amountText = formatVultAmount(15000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF33E6BF).copy(alpha = 0.5f),
@@ -372,6 +396,38 @@ internal fun getStyleByTier(type: TierType): TierStyle {
                 ),
                 startY = 0f,
                 endY = 400f
+            )
+        )
+
+        TierType.DIAMOND -> TierStyle(
+            icon = R.drawable.tier_platinum,
+            titleText = stringResource(R.string.vault_tier_diamond),
+            discountText = stringResource(R.string.vault_tier_diamond_discount),
+            amountText = formatVultAmount(100000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF9747FF).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.normal,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
+        )
+
+        TierType.ULTIMATE -> TierStyle(
+            icon = R.drawable.tier_platinum,
+            titleText = stringResource(R.string.vault_tier_ultimate),
+            discountText = stringResource(R.string.vault_tier_ultimate_discount),
+            amountText = formatVultAmount(1000000),
+            gradient = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFFC700), // yellow
+                    Color(0xFFFF6B00), // orange
+                    Color(0xFFFF00E5), // magenta
+                    Color(0xFF6A00FF), // purple
+                    Color(0xFF00C2FF), // cyan
+                    Color(0xFF00FF85), // green
+                ),
             )
         )
     }
@@ -386,7 +442,7 @@ internal data class TierStyle(
 )
 
 
-internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM }
+internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, ULTIMATE }
 
 private fun formatVultAmount(vultAmount: Int): String {
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
@@ -409,6 +465,8 @@ private fun DiscountTiersScreenPreview() {
             TierCard(tierType = TierType.SILVER, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.GOLD, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.PLATINUM, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.DIAMOND, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.ULTIMATE, onClickUnlock = {}, onClickCard = {})
         }
     }
 }
