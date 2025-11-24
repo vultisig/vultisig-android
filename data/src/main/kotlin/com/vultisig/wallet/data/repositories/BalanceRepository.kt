@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
@@ -103,12 +105,14 @@ interface BalanceRepository {
         address: String,
         coin: Coin,
     ): Flow<TokenValue>
-    
+
     fun getDefiTokenBalanceAndPrice(
         address: String,
         coin: Coin,
         vaultId: String,
     ): Flow<TokenBalanceAndPrice>
+
+    fun getTronResourceDataSource(address: String ):Flow<ResourceUsage>
 
     suspend fun getMergeTokenValue(address: String, chain: Chain): List<MergeAccount>
 
@@ -125,6 +129,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val splTokenRepository: SplTokenRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val tronResourceReository: TronResourceDataSource,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
@@ -351,6 +356,20 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 currency = currency.ticker,
             )
         ))
+    }
+
+    override fun getTronResourceDataSource(
+        address: String
+    ): Flow<ResourceUsage> = flow {
+        tronResourceReository.readTronResourceLimit(address)?.let {
+            emit(it)
+        }
+        val tronReource = tronApi.getAccountResource(address).calculateResourceStats()
+        emit(tronReource)
+        tronResourceReository.setTronResourceLimit(
+            address,
+            tronReource
+        )
     }
 
     private suspend fun getDeFiTokenValue(address: String, coin: Coin, vaultId: String): List<DeFiBalance> {

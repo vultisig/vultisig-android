@@ -7,9 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.MergeAccount
-import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
-import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
@@ -34,27 +32,21 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.theme.NeutralsColors
-import com.vultisig.wallet.ui.theme.v2.V2
-import com.vultisig.wallet.ui.utils.ShareType
-import com.vultisig.wallet.data.api.models.calculateResourceStats
-import com.vultisig.wallet.ui.utils.share
-import com.vultisig.wallet.ui.utils.shareFileName
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -104,7 +96,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
-    private val tronApi: TronApi
+    private val balanceRepository: BalanceRepository,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
@@ -218,23 +210,14 @@ internal class ChainTokensViewModel @Inject constructor(
                     ?.firstOrNull { it.chain == chain }
                     ?.address
                     ?: error("No address for chain $chainRaw in vault $vaultId")
-                runCatching {
-                    withContext(Dispatchers.IO) {
 
-                        tronApi.getAccountResource(address).calculateResourceStats()
-                    }
 
-                }.onSuccess { stats ->
-                    uiState.update {
-                        it.copy(
-                            tronResourceStats = stats
+                balanceRepository.getTronResourceDataSource(address).flowOn(Dispatchers.IO).collect {
+                    uiState.update { uiState ->
+                        uiState.copy(
+                            tronResourceStats = it
                         )
                     }
-                }.onFailure { e ->
-                    Timber.w(
-                        e,
-                        "Failed to load Tron resources for $address"
-                    )
                 }
             }
             accountsRepository.loadAddress(

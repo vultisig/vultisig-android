@@ -201,6 +201,7 @@ fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
     )
 }
 
+@Serializable
 data class ResourceUsage(
     val availableBandwidth: Long,
     val totalBandwidth: Long,

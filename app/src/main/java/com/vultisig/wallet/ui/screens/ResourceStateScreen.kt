@@ -102,7 +102,7 @@ fun ResourceTwoCardsRow(
                     icon = R.drawable.bandwidth
                 ),
                 Modifier.weight(1f),
-                containerBg = Color(0xFF1B2430)
+                containerBg = colors.backgrounds.surface4
             )
             Box(
                 modifier = Modifier
@@ -120,7 +120,7 @@ fun ResourceTwoCardsRow(
                     showInfo = true
                 ),
                 Modifier.weight(1f),
-                containerBg = Color(0xFF1B2430),
+                containerBg = colors.backgrounds.surface3,
                 onDisplayTronLegacy = { newDisplay ->
 
                     display = newDisplay
@@ -169,7 +169,7 @@ fun ResourceCard(
                         Icon(
                             painter = painterResource(R.drawable.circleinfo),
                             contentDescription = "info",
-                            tint = Color(0xFF9FB1C9)
+                            tint = colors.text.extraLight
                         )
                     }
                 }
@@ -229,7 +229,7 @@ fun AnimatedProgressBar(value: Float, accent: Color, height: Dp = 8.dp) {
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF123041))
+            .background(colors.backgrounds.light)
     ) {
         Box(
             modifier = Modifier
@@ -287,7 +287,7 @@ fun BandwidthEnergyContent(
                         modifier = Modifier
                             .size(24.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFFC070C)),
+                            .background(colors.backgrounds.red),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -325,7 +325,7 @@ fun BandwidthEnergyContent(
                     title = R.string.bandwidth,
                     description = R.string.bandwidth_dec,
                     accentColor = colors.alerts.success,
-                    containerBg = Color(0xFF072C44),
+                    containerBg = colors.backgrounds.surface4,
                     icon = R.drawable.bandwidth,
                     isExpanded = expandByItem == 0,
                     onExpandedChange = { isExpanded ->
@@ -338,7 +338,7 @@ fun BandwidthEnergyContent(
                     title = R.string.energy,
                     description = R.string.energy_dec,
                     accentColor = colors.alerts.warning,
-                    containerBg = Color(0xFF1B2430),
+                    containerBg = colors.backgrounds.surface3,
                     icon = R.drawable.energy,
                     isExpanded = expandByItem == 1,
                     onExpandedChange = { isExpanded ->

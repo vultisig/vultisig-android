@@ -287,6 +287,12 @@ internal interface RepositoriesModule {
     fun bindCryptoConnectionTypeRepository(
         impl: CryptoConnectionTypeRepositoryImpl
     ): CryptoConnectionTypeRepository
+
+    @Binds
+    @Singleton
+    fun bindTronResourceReository(
+        impl: TronResourceDataSourceImpl
+    ): TronResourceDataSource
 }
 
 @Qualifier

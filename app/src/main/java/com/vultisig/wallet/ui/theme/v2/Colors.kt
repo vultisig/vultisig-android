@@ -39,7 +39,12 @@ data class Backgrounds(
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
     val neutral: Color = Color(0xFF061B3A),
+    val surface3: Color = Color(0xFF1B2430),
+    val surface4: Color = Color(0xFF072C44),
+    val light: Color = Color(0xFF11284B),
     val transparent: Color = Color.Transparent,
+    val red: Color = Color(0xFFFC070C),
+
 )
 
 data class Primary(
