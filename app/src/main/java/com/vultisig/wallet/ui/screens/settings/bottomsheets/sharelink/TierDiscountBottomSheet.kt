@@ -4,10 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -16,10 +20,13 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -123,18 +130,22 @@ internal fun TierDiscountBottomSheetContent(
 
             UiSpacer(32.dp)
 
-            Text(
-                text = buildAnnotatedString {
-                    append(tierStyle.titlePart1 + " ")
-                    pushStyle(Theme.brockmann.headings.title1.copy(color = tierStyle.tierColor).toSpanStyle())
-                    append(tierStyle.titlePart2)
-                    pop()
-                    append(" "+ tierStyle.titlePart3)
-                },
-                style = Theme.brockmann.headings.title1,
-                textAlign = TextAlign.Center,
-                color = Theme.colors.text.primary,
-            )
+            if (tierStyle.tierBackgroundImage != null) {
+                TierTitleWithBackgroundImage(tierStyle)
+            } else {
+                Text(
+                    text = buildAnnotatedString {
+                        append(tierStyle.titlePart1 + " ")
+                        pushStyle(Theme.brockmann.headings.title1.copy(color = tierStyle.tierColor ?: Theme.colors.text.primary).toSpanStyle())
+                        append(tierStyle.titlePart2)
+                        pop()
+                        append(" " + tierStyle.titlePart3)
+                    },
+                    style = Theme.brockmann.headings.title1,
+                    textAlign = TextAlign.Center,
+                    color = Theme.colors.text.primary,
+                )
+            }
 
             UiSpacer(32.dp)
 
@@ -161,6 +172,57 @@ internal fun TierDiscountBottomSheetContent(
                 onClick = onContinue,
                 modifier = Modifier
                     .fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = tierStyle.titlePart1 + " ",
+                style = Theme.brockmann.headings.title1,
+                textAlign = TextAlign.Center,
+                color = Theme.colors.text.primary,
+            )
+            
+            Box {
+                Image(
+                    painter = painterResource(id = tierStyle.tierBackgroundImage!!),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .alpha(0f)
+                )
+                
+                Text(
+                    text = tierStyle.titlePart2,
+                    style = Theme.brockmann.headings.title1.copy(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFD8BA7B),
+                                Color(0xFF794D76),
+                            )
+                        )
+                    ),
+                    textAlign = TextAlign.Center,
+                )
+            }
+            
+            Text(
+                text = " " + tierStyle.titlePart3,
+                style = Theme.brockmann.headings.title1,
+                textAlign = TextAlign.Center,
+                color = Theme.colors.text.primary,
             )
         }
     }
@@ -225,7 +287,7 @@ private fun getStyleByTier(tier: TierType) : BottomSheetTierStyle {
             titlePart1 = stringResource(R.string.vault_tier_unlock_ultimate_part1),
             titlePart2 = stringResource(R.string.vault_tier_unlock_ultimate_part2),
             titlePart3 = stringResource(R.string.vault_tier_unlock_ultimate_part3),
-            tierColor = Color(0xFFFFC25C),
+            tierBackgroundImage = R.drawable.ultimate_background,
             descriptionPart1 = stringResource(R.string.vault_tier_ultimate_description_part1),
             descriptionPart2 = stringResource(R.string.vault_tier_ultimate_description_part2),
             descriptionPart3 = stringResource(R.string.vault_tier_ultimate_description_part3),
@@ -238,7 +300,8 @@ internal data class BottomSheetTierStyle(
     val titlePart1: String,
     val titlePart2: String,
     val titlePart3: String,
-    val tierColor: Color,
+    val tierColor: Color? = null,
+    val tierBackgroundImage: Int? = null,
     val descriptionPart1: String,
     val descriptionPart2: String,
     val descriptionPart3: String,
