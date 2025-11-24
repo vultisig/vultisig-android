@@ -63,6 +63,8 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
 
     fun getDiscountForBalance(vultBalance: BigInteger): Int {
         return when {
+            vultBalance >= ULTIMATE_TIER_THRESHOLD -> ULTIMATE_DISCOUNT_BPS
+            vultBalance >= DIAMOND_TIER_THRESHOLD -> DIAMOND_DISCOUNT_BPS
             vultBalance >= PLATINUM_TIER_THRESHOLD -> PLATINUM_DISCOUNT_BPS
             vultBalance >= GOLD_TIER_THRESHOLD -> GOLD_DISCOUNT_BPS
             vultBalance >= SILVER_TIER_THRESHOLD -> SILVER_DISCOUNT_BPS
@@ -74,15 +76,20 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
     companion object {
         // Discount amounts in basis points
         const val NO_DISCOUNT_BPS = 0
-        const val BRONZE_DISCOUNT_BPS = 10
-        const val SILVER_DISCOUNT_BPS = 20
-        const val GOLD_DISCOUNT_BPS = 30
-        const val PLATINUM_DISCOUNT_BPS = 35
+        const val BRONZE_DISCOUNT_BPS = 5
+        const val SILVER_DISCOUNT_BPS = 10
+        const val GOLD_DISCOUNT_BPS = 20
+        const val PLATINUM_DISCOUNT_BPS = 25
+
+        const val DIAMOND_DISCOUNT_BPS = 35
+        const val ULTIMATE_DISCOUNT_BPS = 50
         
-        val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000".toBigInteger())
-        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("2500".toBigInteger())
-        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("5000".toBigInteger())
-        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("10000".toBigInteger())
+        val BRONZE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1500".toBigInteger())
+        val SILVER_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("3000".toBigInteger())
+        val GOLD_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("7500".toBigInteger())
+        val PLATINUM_TIER_THRESHOLD =  CoinType.ETHEREUM.toUnit("15000".toBigInteger())
+        val DIAMOND_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("100000".toBigInteger())
+        val ULTIMATE_TIER_THRESHOLD = CoinType.ETHEREUM.toUnit("1000000".toBigInteger())
 
         private val supportedProviders = setOf(
             SwapProvider.THORCHAIN,

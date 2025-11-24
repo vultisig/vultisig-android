@@ -69,7 +69,7 @@
     <string name="vault_tier_gold_discount">Discount: 20bps</string>
     <string name="vault_tier_platinum_discount">Discount: 25bps</string>
     <string name="vault_tier_diamond_discount">Discount: 35bps</string>
-    <string name="vault_tier_ultimate_discount">No Fee</string>
+    <string name="vault_tier_ultimate_discount">Complete Fee Waive</string>
     <string name="vault_tier_hold">Hold</string>
     <string name="vault_tier_unlock">Unlock Tier</string>
     <string name="vault_tier_active">Active</string>
