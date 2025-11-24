@@ -391,29 +391,27 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     private fun setMetadataInfo() {
-        viewModelScope.launch {
-            if (!depositTypeAction.isNullOrEmpty()) {
-                val action = parseDepositType(depositTypeAction)
+        if (!depositTypeAction.isNullOrEmpty()) {
+            val action = parseDepositType(depositTypeAction)
 
-                if (action != null) {
-                    val depositOption = when (action) {
-                        DeFiNavActions.UNBOND -> DepositOption.Unbond
-                        DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
-                        DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
-                        DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
-                        DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
-                        DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
-                        DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
-                        DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
-                        DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
-                        DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
-                        else -> DepositOption.Bond
-                    }
-                    selectDepositOption(depositOption)
-
-                } else {
-                    Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
+            if (action != null) {
+                val depositOption = when (action) {
+                    DeFiNavActions.UNBOND -> DepositOption.Unbond
+                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
+                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
+                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
+                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
+                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
+                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
+                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
+                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
+                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+                    else -> DepositOption.Bond
                 }
+                selectDepositOption(depositOption)
+
+            } else {
+                Timber.w("Unknown deposit type action: $depositTypeAction, using default flow")
             }
         }
     }
@@ -807,6 +805,7 @@ internal class DepositFormViewModel @Inject constructor(
                         isUnStake = false,
                         percentage = null
                     )
+
                     DepositOption.UnstakeTcy -> {
                         // Get percentage from user input
                         val percentageText = tokenAmountFieldState.text.toString()
@@ -895,9 +894,11 @@ internal class DepositFormViewModel @Inject constructor(
             DepositOption.RedeemYTCY -> {
                 YTCY_CONTRACT
             }
+
             DepositOption.RedeemYRUNE -> {
                 YRUNE_CONTRACT
             }
+
             else -> {
                 throw RuntimeException("Invalid Deposit Parameter ")
             }
@@ -1811,7 +1812,8 @@ internal class DepositFormViewModel @Inject constructor(
                 tcyAutoCompoundAmount?.toBigIntegerOrNull()
             } else {
                 unstakableAmountCache?.toBigIntegerOrNull()
-            } ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
+            }
+                ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
 
             if (totalUnits < BigInteger.ONE) {
                 throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
@@ -1825,7 +1827,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = stakeMemo
 
-        val isAutoCompound = if (isUnStake){
+        val isAutoCompound = if (isUnStake) {
             isAutoCompoundTcyUnStake
         } else {
             isAutoCompoundTcyStake
@@ -1849,7 +1851,13 @@ internal class DepositFormViewModel @Inject constructor(
 
 
         val wasmExecuteContractPayload = if (isAutoCompound)
-            getWasmExecuteContractPayload(isUnStake, percentage, srcAddress, selectedToken, tokenAmountInt)
+            getWasmExecuteContractPayload(
+                isUnStake,
+                percentage,
+                srcAddress,
+                selectedToken,
+                tokenAmountInt
+            )
         else null
 
         return DepositTransaction(
