@@ -373,7 +373,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_gold,
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = formatVultAmount(75000),
+            amountText = formatVultAmount(7500),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFFFC25C).copy(alpha = 0.5f),
