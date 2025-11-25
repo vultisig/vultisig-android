@@ -472,6 +472,22 @@ internal data class TierStyle(
 
 internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, ULTIMATE }
 
+internal fun TierType.applyExtraDiscount(hasNFT: Boolean): TierType {
+    if (!hasNFT) {
+        return this
+    }
+
+    return when (this) {
+        TierType.BRONZE -> TierType.SILVER
+        TierType.SILVER -> TierType.GOLD
+        TierType.GOLD -> TierType.PLATINUM
+        // starting from PLATINUM NFT has no effect
+        TierType.PLATINUM -> TierType.PLATINUM
+        TierType.DIAMOND -> TierType.DIAMOND
+        TierType.ULTIMATE -> TierType.ULTIMATE
+    }
+}
+
 private fun formatVultAmount(vultAmount: Int): String {
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
     val formattedVult = numberFormat.format(vultAmount)

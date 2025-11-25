@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain
 
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -27,6 +28,12 @@ internal interface BlockchainServicesModule {
     ): FeeService
     
     companion object {
+        @Provides
+        @Singleton
+        fun bindTierRemoteNFTService(
+            factory: EvmApiFactory
+        ): TierRemoteNFTService = TierRemoteRemoteNFTServiceImpl(factory)
+
         @Provides
         @Singleton
         fun provideRujiStakingService(

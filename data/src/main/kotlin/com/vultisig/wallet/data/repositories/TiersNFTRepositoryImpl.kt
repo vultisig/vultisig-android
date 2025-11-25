@@ -8,19 +8,27 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "tiers_nft_preferences")
 
-class TiersNFTRepository @Inject constructor(
+interface TiersNFTRepository {
+    suspend fun hasTierNFT(vaultId: String): Boolean
+
+    suspend fun saveTierNFT(vaultId: String, hasNFT: Boolean)
+}
+
+@Singleton
+class TiersNFTRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
-) {
-    suspend fun hasTierNFT(vaultId: String): Boolean {
+): TiersNFTRepository {
+    override suspend fun hasTierNFT(vaultId: String): Boolean {
         return context.dataStore.data.map { preferences ->
             preferences[tierNFTKey(vaultId)] ?: false
         }.first()
     }
 
-    suspend fun saveTierNFT(vaultId: String, hasNFT: Boolean) {
+    override suspend fun saveTierNFT(vaultId: String, hasNFT: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[tierNFTKey(vaultId)] = hasNFT
         }

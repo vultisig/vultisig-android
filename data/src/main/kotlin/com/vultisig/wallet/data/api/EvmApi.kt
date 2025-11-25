@@ -61,6 +61,8 @@ interface EvmApi {
     suspend fun getBalances(
         address: String,
     ): VultisigBalanceJson
+
+    suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger
 }
 
 interface EvmApiFactory {
@@ -156,7 +158,7 @@ class EvmApiImp(
         }
     }
 
-    private suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
+    override suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_call",
             buildJsonArray {
