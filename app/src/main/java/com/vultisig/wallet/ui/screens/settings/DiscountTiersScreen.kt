@@ -472,19 +472,20 @@ internal data class TierStyle(
 
 internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, ULTIMATE }
 
-internal fun TierType.applyExtraDiscount(hasNFT: Boolean): TierType {
+internal fun TierType?.applyExtraDiscount(hasNFT: Boolean): TierType? {
     if (!hasNFT) {
         return this
     }
 
-    return when (this) {
-        TierType.BRONZE -> TierType.SILVER
-        TierType.SILVER -> TierType.GOLD
-        TierType.GOLD -> TierType.PLATINUM
+    return when {
+        this == null -> TierType.BRONZE
+        this == TierType.SILVER -> TierType.GOLD
+        this == TierType.GOLD -> TierType.PLATINUM
         // starting from PLATINUM NFT has no effect
-        TierType.PLATINUM -> TierType.PLATINUM
-        TierType.DIAMOND -> TierType.DIAMOND
-        TierType.ULTIMATE -> TierType.ULTIMATE
+        this == TierType.PLATINUM -> TierType.PLATINUM
+        this == TierType.DIAMOND -> TierType.DIAMOND
+        this == TierType.ULTIMATE -> TierType.ULTIMATE
+        else -> null
     }
 }
 

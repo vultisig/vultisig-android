@@ -85,6 +85,7 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
 
     private fun Int.getNextDiscount(): Int {
         return when (this) {
+            NO_DISCOUNT_BPS -> BRONZE_DISCOUNT_BPS
             BRONZE_DISCOUNT_BPS -> SILVER_DISCOUNT_BPS
             SILVER_DISCOUNT_BPS -> GOLD_DISCOUNT_BPS
             GOLD_DISCOUNT_BPS -> PLATINUM_DISCOUNT_BPS
