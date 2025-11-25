@@ -88,6 +88,7 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
             BRONZE_DISCOUNT_BPS -> SILVER_DISCOUNT_BPS
             SILVER_DISCOUNT_BPS -> GOLD_DISCOUNT_BPS
             GOLD_DISCOUNT_BPS -> PLATINUM_DISCOUNT_BPS
+            // starting from PLATINUM NFT has no effect
             else -> this
         }
     }
