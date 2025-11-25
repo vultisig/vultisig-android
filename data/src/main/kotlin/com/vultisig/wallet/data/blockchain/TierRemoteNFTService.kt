@@ -10,7 +10,7 @@ interface TierRemoteNFTService {
     suspend fun checkNFTBalance(address: String): Boolean
 }
 
-class TierRemoteRemoteNFTServiceImpl @Inject constructor(
+class TierRemoteNFTServiceImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : TierRemoteNFTService {
 

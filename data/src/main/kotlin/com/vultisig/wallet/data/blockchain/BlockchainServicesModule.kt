@@ -32,7 +32,7 @@ internal interface BlockchainServicesModule {
         @Singleton
         fun bindTierRemoteNFTService(
             factory: EvmApiFactory
-        ): TierRemoteNFTService = TierRemoteRemoteNFTServiceImpl(factory)
+        ): TierRemoteNFTService = TierRemoteNFTServiceImpl(factory)
 
         @Provides
         @Singleton
