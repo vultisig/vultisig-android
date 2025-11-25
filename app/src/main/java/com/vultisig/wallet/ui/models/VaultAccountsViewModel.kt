@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.SigningLibType
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -114,7 +116,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
-    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
+    private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
+    private val tiersNFTRepository: TiersNFTRepository,
+    private val remoteNFTService: TierRemoteNFTService,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -188,6 +192,16 @@ internal class VaultAccountsViewModel @Inject constructor(
                     }
                     Timber.d("VULT token enabled successfully")
                 }
+
+                // fetch NFT
+                val ethAddress = vault.coins.find { it.id == Coins.Ethereum.VULT.id }?.address
+                if (ethAddress != null) {
+                    withContext(Dispatchers.IO) {
+                        val balance = remoteNFTService.checkNFTBalance(ethAddress)
+                        tiersNFTRepository.saveTierNFT(vaultId, balance)
+                    }
+                }
+
             } catch (e: Exception) {
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
