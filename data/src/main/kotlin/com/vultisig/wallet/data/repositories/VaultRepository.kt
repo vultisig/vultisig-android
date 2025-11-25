@@ -26,6 +26,8 @@ interface VaultRepository {
 
     suspend fun get(vaultId: VaultId): Vault?
 
+    fun getAsFlow(vaultId: VaultId): Flow<Vault?>
+
     suspend fun getByEcdsa(pubKeyEcdsa: String): Vault?
 
     suspend fun getAll(): List<Vault>
@@ -73,6 +75,9 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun get(vaultId: String): Vault? =
         vaultDao.loadById(vaultId)?.toVault()
+
+    override fun getAsFlow(vaultId: String): Flow<Vault?> =
+        vaultDao.loadByIdAsFlow(vaultId).map { it?.toVault() }
 
     override suspend fun getByEcdsa(pubKeyEcdsa: String): Vault? =
         vaultDao.loadByEcdsa(pubKeyEcdsa)?.toVault()
