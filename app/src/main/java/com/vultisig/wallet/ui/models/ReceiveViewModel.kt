@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
@@ -82,6 +83,10 @@ internal class ReceiveViewModel @Inject constructor(
                     address = chain.address,
                     name = chain.name,
                     logo = chain.logo
+                ),
+                opts = NavigationOptions(
+                    popUpToRoute = Route.Receive::class,
+                    inclusive = true,
                 )
             )
         }
