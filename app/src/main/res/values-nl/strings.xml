@@ -63,7 +63,7 @@
     <string name="vault_tier_unlock_platinum_part2">Platina</string>
     <string name="vault_tier_unlock_platinum_part3"> niveau ontgrendelen</string>
     <string name="vault_tier_description">Hold $VULT om lagere handelskosten te ontgrendelen.</string>
-    <string name="vault_tier_bronze_description">Door 1.500 $VULT vast te houden, ontgrendelt u het Bronzen niveau en ontvangt u een korting van 50 basispunten op handelskosten bij alle swaps.</string>
+    <string name="vault_tier_bronze_description">Door 1.500 $VULT vast te houden, ontgrendelt u het Bronzen niveau en ontvangt u een korting van 5 basispunten op handelskosten bij alle swaps.</string>
     <string name="vault_tier_silver_description">Door 3.000 $VULT vast te houden, ontgrendelt u het Zilveren niveau en ontvangt u een korting van 10 basispunten op handelskosten bij alle swaps.</string>
     <string name="vault_tier_gold_description">Door 7.500 $VULT vast te houden, ontgrendelt u het Gouden niveau en ontvangt u een korting van 20 basispunten op handelskosten bij alle swaps.</string>
     <string name="vault_tier_platinum_description">Door 15.000 $VULT vast te houden, ontgrendelt u het Platina niveau en ontvangt u een korting van 25 basispunten op handelskosten bij alle swaps.</string>
