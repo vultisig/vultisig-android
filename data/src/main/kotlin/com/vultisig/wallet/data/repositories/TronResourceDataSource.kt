@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.repositories
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.sources.AppDataStore
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
@@ -16,7 +16,7 @@ interface TronResourceDataSource {
 
     suspend fun setTronResourceLimit(
         tronAddress: String,
-        tronResourceReository: ResourceUsage
+        resourceUsage: ResourceUsage
     )
 }
 
@@ -34,12 +34,12 @@ internal class TronResourceDataSourceImpl @Inject constructor(
 
     override suspend fun setTronResourceLimit(
         tronAddress: String,
-        tronResourceReository: ResourceUsage
+        resourceUsage: ResourceUsage
     ) {
         appDataSource.set(
             stringPreferencesKey(tronAddress),
             json.encodeToString(
-                tronResourceReository
+                resourceUsage
             )
         )
     }

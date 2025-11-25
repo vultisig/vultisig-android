@@ -290,7 +290,7 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindTronResourceReository(
+    fun bindTronResourceRepository(
         impl: TronResourceDataSourceImpl
     ): TronResourceDataSource
 }

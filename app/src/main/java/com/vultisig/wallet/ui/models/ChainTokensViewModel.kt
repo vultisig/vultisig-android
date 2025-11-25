@@ -203,24 +203,9 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+            collectTronResourceStats(chain)
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
-
-            if (chain == Chain.Tron) {
-                val address = currentVault?.coins
-                    ?.firstOrNull { it.chain == chain }
-                    ?.address
-                    ?: error("No address for chain $chainRaw in vault $vaultId")
-
-
-                balanceRepository.getTronResourceDataSource(address).flowOn(Dispatchers.IO).collect {
-                    uiState.update { uiState ->
-                        uiState.copy(
-                            tronResourceStats = it
-                        )
-                    }
-                }
-            }
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
@@ -296,6 +281,41 @@ internal class ChainTokensViewModel @Inject constructor(
             }.onCompletion {
                 updateRefreshing(false)
             }.collect()
+        }
+    }
+
+    private fun collectTronResourceStats(chain: Chain) {
+        viewModelScope.launch {
+            if (chain == Chain.Tron) {
+                val address = currentVault?.coins
+                    ?.firstOrNull { it.chain == chain }
+                    ?.address
+
+                if (address == null) {
+                    Timber.w(
+                        "No TRON address for chain %s in vault %s",
+                        chainRaw,
+                        vaultId
+                    )
+                    return@launch
+                }
+                balanceRepository
+                    .getTronResourceDataSource(address)
+                    .flowOn(Dispatchers.IO)
+                    .catch {
+                        Timber.e(
+                            it,
+                            "Error fetching tron resource data for address $address"
+                        )
+                    }
+                    .collect {
+                        uiState.update { uiState ->
+                            uiState.copy(
+                                tronResourceStats = it
+                            )
+                        }
+                    }
+            }
         }
     }
 

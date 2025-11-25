@@ -129,7 +129,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val splTokenRepository: SplTokenRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val tronResourceReository: TronResourceDataSource,
+    private val tronResourceDataSource: TronResourceDataSource,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
@@ -361,12 +361,12 @@ internal class BalanceRepositoryImpl @Inject constructor(
     override fun getTronResourceDataSource(
         address: String
     ): Flow<ResourceUsage> = flow {
-        tronResourceReository.readTronResourceLimit(address)?.let {
+        tronResourceDataSource.readTronResourceLimit(address)?.let {
             emit(it)
         }
         val tronReource = tronApi.getAccountResource(address).calculateResourceStats()
         emit(tronReource)
-        tronResourceReository.setTronResourceLimit(
+        tronResourceDataSource.setTronResourceLimit(
             address,
             tronReource
         )
