@@ -194,7 +194,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 }
 
                 // fetch NFT
-                val ethAddress = vault.coins.find { it.id == Coins.Ethereum.VULT.id }?.address
+                val ethAddress = vault.coins.find { it.id == Coins.Ethereum.ETH.id }?.address
                 if (ethAddress != null) {
                     withContext(Dispatchers.IO) {
                         val balance = remoteNFTService.checkNFTBalance(ethAddress)
