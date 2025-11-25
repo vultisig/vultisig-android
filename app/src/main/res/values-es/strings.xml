@@ -56,10 +56,10 @@
     <string name="vault_tier_unlock_platinum_part2">Platino</string>
     <string name="vault_tier_unlock_platinum_part3"></string>
     <string name="vault_tier_description">Hold $VULT para desbloquear tarifas de trading más bajas.</string>
-    <string name="vault_tier_bronze_description">Al mantener 1,000 $VULT, desbloquearás el Nivel Bronce y recibirás un descuento de 10 bps en las tarifas de trading en todos los intercambios.</string>
-    <string name="vault_tier_silver_description">Al mantener 2,500 $VULT, desbloquearás el Nivel Plata y recibirás un descuento de 20 bps en las tarifas de trading en todos los intercambios.</string>
-    <string name="vault_tier_gold_description">Al mantener 5,000 $VULT, desbloquearás el Nivel Oro y recibirás un descuento de 30 bps en las tarifas de trading en todos los intercambios.</string>
-    <string name="vault_tier_platinum_description">Al mantener 10,000 $VULT, desbloquearás el Nivel Platino y recibirás un descuento de 35 bps en las tarifas de trading en todos los intercambios.</string>
+    <string name="vault_tier_bronze_description">Al mantener 1,500 $VULT, desbloquearás el Nivel Bronce y recibirás un descuento de 5 bps en las tarifas de trading en todos los intercambios.</string>
+    <string name="vault_tier_silver_description">Al mantener 3,000 $VULT, desbloquearás el Nivel Plata y recibirás un descuento de 10 bps en las tarifas de trading en todos los intercambios.</string>
+    <string name="vault_tier_gold_description">Al mantener 7,500 $VULT, desbloquearás el Nivel Oro y recibirás un descuento de 20 bps en las tarifas de trading en todos los intercambios.</string>
+    <string name="vault_tier_platinum_description">Al mantener 15,000 $VULT, desbloquearás el Nivel Platino y recibirás un descuento de 25 bps en las tarifas de trading en todos los intercambios.</string>
     <string name="vault_tier_bronze_description_part1">Al mantener 1,500 $VULT, desbloquearás el Nivel Bronce y recibirás un </string>
     <string name="vault_tier_bronze_description_part2">descuento de 5 bps en las tarifas de trading</string>
     <string name="vault_tier_bronze_description_part3"> en todos los intercambios.</string>
