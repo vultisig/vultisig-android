@@ -34,6 +34,7 @@
     <string name="vault_tier_gold">Goud</string>
     <string name="vault_tier_platinum">Platina</string>
     <string name="vault_tier_diamond">Diamant</string>
+    <string name="vault_tier_unlock_diamond_part1">Ontgrendel </string>
     <string name="vault_tier_ultimate">Ultiem</string>
     <string name="vault_tier_bronze_discount">Korting: 5bps</string>
     <string name="vault_tier_silver_discount">Korting: 10bps</string>
