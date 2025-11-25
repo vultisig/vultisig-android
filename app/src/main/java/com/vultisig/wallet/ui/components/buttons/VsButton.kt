@@ -122,7 +122,7 @@ fun VsButton(
                 shape = shape ?: RoundedCornerShape(percent = 100),
             )
             .clickable(
-                enabled = state == Enabled || forceClickable,
+                enabled = state != Disabled || forceClickable,
                 onClick = onClick
             )
             .then(

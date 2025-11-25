@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +62,7 @@ import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 data class ResourceState(
     val available: Long,
@@ -348,6 +350,7 @@ fun BandwidthEnergyContent(
             }
         },
         bottomBar = {
+            val vsUriHandler: UriHandler = VsUriHandler()
             VsButton(
                 label = stringResource(R.string.feature_item_learn_more),
                 variant = VsButtonVariant.Secondary,
@@ -355,7 +358,9 @@ fun BandwidthEnergyContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 5.dp),
-                onClick = {}
+                onClick = {
+                    vsUriHandler.openUri("https://developers.tron.network/docs/resource-model")
+                }
             )
         }
     )
