@@ -111,7 +111,9 @@ internal class DiscountTiersViewModel @Inject constructor(
                                 vultCoin
                             ).first() // Collect first emission from the Flow
 
-                            val hasNFTValue = remoteNFTService.checkNFTBalance(address)
+                            val hasNFTValue = withContext(Dispatchers.IO) {
+                                remoteNFTService.checkNFTBalance(address)
+                            }
                             val vultBalance = freshTokenValue.value
                             val tier = vultBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
 
@@ -126,7 +128,9 @@ internal class DiscountTiersViewModel @Inject constructor(
 
                             Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
 
-                            tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
+                            withContext(Dispatchers.IO) {
+                                tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
+                            }
                         } catch (e: Exception) {
                             Timber.e(e)
                             if (cachedVultBalance == null) {
