@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -14,7 +15,6 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRO
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +46,7 @@ internal class DiscountTiersViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val vaultId: String = requireNotNull(savedStateHandle.get<String>(ARG_VAULT_ID))
+    private val vaultId: String = savedStateHandle.toRoute<Route.DiscountTiers>().vaultId
 
     private val _state = MutableStateFlow(DiscountTiersUiModel())
     val state: StateFlow<DiscountTiersUiModel> = _state.asStateFlow()

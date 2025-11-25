@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.models.Address
@@ -89,7 +90,7 @@ internal class CreateReferralViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val transactionRepository: DepositTransactionRepository,
 ) : ViewModel() {
-    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private val vaultId: String = savedStateHandle.toRoute<Route.ReferralCreation>().vaultId
     private var nativeRuneFees: NativeTxFeeRune? = null
     private var address: Address? = null
 

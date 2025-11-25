@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -48,7 +50,7 @@ internal class BiometricsEnableViewModel @Inject constructor(
     val uiModel = MutableStateFlow(BiometricsEnableUiModel())
 
     private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(ARG_VAULT_ID))
+        savedStateHandle.toRoute<Route.BiometricsEnable>().vaultId
 
     val passwordTextFieldState = TextFieldState()
 

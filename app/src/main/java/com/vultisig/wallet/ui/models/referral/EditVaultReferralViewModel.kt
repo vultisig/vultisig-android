@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.models.Address
@@ -24,9 +25,6 @@ import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.DATE_FORMAT
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.DEFAULT_BLOCK_FEES
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_EXPIRATION_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,10 +63,11 @@ internal class EditVaultReferralViewModel @Inject constructor(
     private val transactionRepository: DepositTransactionRepository,
     private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
-    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
-    private val vaultReferralCode: String = requireNotNull(savedStateHandle[ARG_REFERRAL_ID])
-    private val vaultReferralExpiration: String =
-        requireNotNull(savedStateHandle[ARG_EXPIRATION_ID])
+
+    private val args = savedStateHandle.toRoute<Route.ReferralVaultEdition>()
+    private val vaultId: String = args.vaultId
+    private val vaultReferralCode: String = args.code
+    private val vaultReferralExpiration: String = args.expiration
     private var nativeRuneFees: NativeTxFeeRune? = null
 
     val referralTextFieldState = TextFieldState()

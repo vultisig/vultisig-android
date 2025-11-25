@@ -219,8 +219,8 @@ internal class BackupPasswordViewModel @Inject constructor(
                 )
 
                 if (vaultId != null) {
-                    navigator.navigate(
-                        Destination.VaultSettings(vaultId),
+                    navigator.route(
+                        Route.VaultSettings(vaultId),
                         NavigationOptions(clearBackStack = true)
                     )
                 } else {
@@ -346,8 +346,8 @@ internal class BackupPasswordViewModel @Inject constructor(
                         )
                     )
                 } else {
-                    navigator.navigate(
-                        Destination.Home(vaultId),
+                    navigator.route(
+                        Route.Home(vaultId),
                         NavigationOptions(clearBackStack = true)
                     )
                 }

@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -140,7 +141,7 @@ internal class ReferralViewModel @Inject constructor(
     fun onCreateOrEditReferral() {
         viewModelScope.launch {
             if (state.value.isCreateEnabled) {
-                navigator.navigate(Destination.ReferralCreation(vaultId))
+                navigator.route(Route.ReferralCreation(vaultId))
             } else {
                 navigator.navigate(Destination.ReferralView(vaultId, remoteReferral ?: ""))
             }
@@ -168,7 +169,7 @@ internal class ReferralViewModel @Inject constructor(
                 }
                 checkAndSaveReferredCode(referralCode)
             } else {
-                navigator.navigate(Destination.ReferralExternalEdition(vaultId))
+                navigator.route(Route.ReferralExternalEdition(vaultId))
             }
         }
     }

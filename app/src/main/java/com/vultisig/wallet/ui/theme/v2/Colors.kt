@@ -26,6 +26,7 @@ data class Buttons(
     val secondary: Color = Color(0xFF061B3A),
     val tertiary: Color = Color(0xFF2155DF),
     val disabled: Color = Color(0xFF0B1A3A),
+    val disabledError: Color = Color(0xFF501E1E)
 )
 
 
@@ -35,6 +36,7 @@ data class Backgrounds(
     val secondary: Color = Color(0xFF061B3A),
     val surface2: Color = Color(0xFF12284A),
     val tertiary: Color = Color(0xFF0B1A3A),
+    val tertiary_2: Color = Color(0xFF11284A),
     val success: Color = Color(0xFF042436),
     val alert: Color = Color(0xFF362B17),
     val error: Color = Color(0xFF2B1111),
@@ -74,7 +76,8 @@ data class Border(
     val light: Color = Color(0xFF12284A),
     val extraLight: Color = Color(0xFF02122B),
     val primaryAccent4: Color = Color(0xFF4879FD),
-)
+    val disabled: Color = Color(0x992155DF),
+    )
 
 data class Alerts(
     val success: Color = Color(0xFF13C89D),

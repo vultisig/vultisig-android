@@ -108,8 +108,8 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
                 snackbarFlow.showMessage(
                     context.getString(R.string.backup_password_screen_permission_required)
                 )
-                navigator.navigate(
-                    Destination.VaultSettings(vaultId),
+                navigator.route(
+                    Route.VaultSettings(vaultId),
                     NavigationOptions(clearBackStack = true)
                 )
             }
@@ -194,8 +194,8 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
                         )
                     )
                 } else {
-                    navigator.navigate(
-                        Destination.Home(vaultId),
+                    navigator.route(
+                        Route.Home(vaultId),
                         NavigationOptions(clearBackStack = true)
                     )
                 }

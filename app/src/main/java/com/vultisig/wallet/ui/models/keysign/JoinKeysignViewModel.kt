@@ -910,8 +910,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             when (keysignError.errorType) {
                 JoinKeysignError.MissingRequiredVault,
                 JoinKeysignError.WrongVault,
-                JoinKeysignError.WrongVaultShare -> navigator.navigate(
-                    Destination.Home(showVaultList = true),
+                JoinKeysignError.WrongVaultShare -> navigator.route(
+                    Route.Home(showVaultList = true),
                     opts = NavigationOptions(clearBackStack = true)
                 )
 
@@ -975,8 +975,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {
-                navigator.navigate(
-                    Destination.Home(),
+                navigator.route(
+                    Route.Home(),
                     NavigationOptions(
                         clearBackStack = true
                     )

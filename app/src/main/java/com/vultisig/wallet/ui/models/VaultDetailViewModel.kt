@@ -6,9 +6,10 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareVaultDetailName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,7 +44,7 @@ internal class VaultDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String =
-        requireNotNull(savedStateHandle[ARG_VAULT_ID])
+        savedStateHandle.toRoute<Route.Details>().vaultId
 
     val uiModel = MutableStateFlow(VaultDetailUiModel())
 

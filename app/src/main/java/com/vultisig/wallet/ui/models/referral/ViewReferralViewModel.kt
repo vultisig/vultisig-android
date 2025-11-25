@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -142,7 +143,7 @@ internal class ViewReferralViewModel @Inject constructor(
 
     fun navigateToStoreFriendReferralBanner() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ReferralExternalEdition(vaultId))
+            navigator.route(Route.ReferralExternalEdition(vaultId))
         }
     }
 
@@ -157,19 +158,19 @@ internal class ViewReferralViewModel @Inject constructor(
     fun onClickedEditReferral() {
         viewModelScope.launch {
             val expiration = state.value.referralVaultExpiration
-            navigator.navigate(Destination.ReferralVaultEdition(vaultId, vaultReferralCode, expiration))
+            navigator.route(Route.ReferralVaultEdition(vaultId, vaultReferralCode, expiration))
         }
     }
 
     fun onVaultClicked() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ReferralListVault(vaultId))
+            navigator.route(Route.ReferralListVault(vaultId))
         }
     }
 
     fun onCreateReferralClicked() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ReferralCreation(vaultId))
+            navigator.route(Route.ReferralCreation(vaultId))
         }
     }
 

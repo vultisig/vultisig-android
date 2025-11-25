@@ -55,17 +55,17 @@ fun VsButton(
     val backgroundColor by animateColorAsState(
         when (state) {
             Enabled -> when (variant) {
-                Primary -> Theme.colors.buttons.primary
-                Secondary -> Theme.colors.buttons.secondary
-                Error -> Theme.colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Primary -> colors.buttons.tertiary
+                Secondary -> colors.backgrounds.primary
+                Error -> colors.alerts.error
+                Tertiary -> colors.backgrounds.tertiary_2
             }
 
             Disabled -> when (variant) {
-                Primary -> Theme.colors.buttons.disabledPrimary
-                Secondary -> Theme.colors.buttons.disabledSecondary
-                Error -> Theme.colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Primary -> colors.buttons.disabled
+                Secondary -> colors.backgrounds.primary
+                Error -> colors.buttons.disabledError
+                Tertiary -> colors.backgrounds.tertiary_2
             }
 
             Default -> when (variant) {
@@ -82,17 +82,17 @@ fun VsButton(
     val borderColor by animateColorAsState(
         when (state) {
             Enabled -> when (variant) {
-                Primary -> Theme.colors.buttons.primary
-                Secondary -> Theme.colors.buttonBorders.default
-                Error -> Theme.colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Primary -> colors.buttons.tertiary
+                Secondary -> colors.primary.accent3
+                Error -> colors.alerts.error
+                Tertiary -> colors.backgrounds.tertiary_2
             }
 
             Disabled -> when (variant) {
-                Primary -> Theme.colors.buttons.disabledPrimary
-                Secondary -> Theme.colors.buttonBorders.disabled
-                Error -> Theme.colors.alerts.error
-                Tertiary -> Theme.colors.backgrounds.tertiary
+                Primary -> colors.buttons.disabled
+                Secondary -> colors.border.disabled
+                Error -> colors.buttons.disabledError
+                Tertiary -> colors.backgrounds.tertiary_2
             }
 
             Default -> when (variant) {
@@ -172,8 +172,8 @@ fun VsButton(
     ) {
         val contentColor by animateColorAsState(
             when (state) {
-                Enabled -> Theme.colors.text.button.light
-                Disabled -> Theme.colors.text.button.disabled
+                Enabled -> colors.text.button.light
+                Disabled -> colors.text.button.disabled
                 Default -> colors.text.button.light
             },
             label = "VsButton.contentColor"

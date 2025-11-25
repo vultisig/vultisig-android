@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.Chain
@@ -99,10 +100,10 @@ internal class ChainTokensViewModel @Inject constructor(
     private val balanceRepository: BalanceRepository,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
+
+    val args = savedStateHandle.toRoute<Route.ChainTokens>()
+    private val chainRaw: String = args.chainId
+    private val vaultId: String = args.vaultId
     private var currentVault: Vault? = null
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
@@ -146,8 +147,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun deposit() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Deposit(
+            navigator.route(
+                Route.Deposit(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
@@ -157,8 +158,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buy() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.OnRamp(
+            navigator.route(
+                Route.OnRamp(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )

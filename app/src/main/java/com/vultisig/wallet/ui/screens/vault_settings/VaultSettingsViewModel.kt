@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -15,7 +16,6 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
@@ -257,7 +257,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
 
     private val vaultId: String =
-        savedStateHandle.get<String>(ARG_VAULT_ID)!!
+        savedStateHandle.toRoute<Route.VaultSettings>().vaultId
 
     init {
         viewModelScope.launch {
@@ -394,7 +394,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun openDetails() {
         viewModelScope.launch {
-            navigator.navigate(Destination.Details(vaultId))
+            navigator.route(Route.Details(vaultId))
         }
     }
 
@@ -412,31 +412,31 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun navigateToConfirmDeleteScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ConfirmDelete(vaultId))
+            navigator.route(Route.ConfirmDelete(vaultId))
         }
     }
 
     fun navigateToReshareStartScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ReshareStartScreen(vaultId))
+            navigator.route(Route.ReshareStartScreen(vaultId))
         }
     }
 
     fun navigateToBiometricsScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.BiometricsEnable(vaultId))
+            navigator.route(Route.BiometricsEnable(vaultId))
         }
     }
 
     fun navigateToOnChainSecurityScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.OnChainSecurity)
+            navigator.route(Route.OnChainSecurity)
         }
     }
 
     fun signMessage() {
         viewModelScope.launch {
-            navigator.navigate(Destination.SignMessage(vaultId))
+            navigator.route(Route.SignMessage(vaultId))
         }
     }
 
