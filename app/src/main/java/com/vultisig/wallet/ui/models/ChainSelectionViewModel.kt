@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -41,7 +40,6 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val discoverToken: DiscoverTokenUseCase,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
@@ -121,8 +119,6 @@ internal class ChainSelectionViewModel @Inject constructor(
         )
 
         vaultRepository.addTokenToVault(vaultId, updatedCoin)
-
-        discoverToken(vaultId, nativeToken.chain.id)
     }
 
     private suspend fun disableAccount(coin: Coin) {
