@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.toUnit
 import timber.log.Timber
@@ -25,6 +26,7 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val balanceRepository: BalanceRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val tiersNFTRepository: TiersNFTRepository,
 ) : GetDiscountBpsUseCase {
     
     override suspend fun invoke(vaultId: String, swapProvider: SwapProvider): Int {
@@ -33,7 +35,15 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
         }
 
         val balance = getVultBalance(vaultId) ?: return NO_DISCOUNT_BPS
-        return getDiscountForBalance(balance)
+        val hasNFT = tiersNFTRepository.hasTierNFT(vaultId)
+
+        val discount = getDiscountForBalance(balance)
+
+        return if (!hasNFT) {
+            discount
+        } else {
+            discount.getNextDiscount()
+        }
     }
     
     suspend fun getVultBalance(vaultId: String): BigInteger? {
@@ -72,7 +82,16 @@ internal class GetDiscountBpsUseCaseImpl @Inject constructor(
             else -> NO_DISCOUNT_BPS
         }
     }
-    
+
+    private fun Int.getNextDiscount(): Int {
+        return when (this) {
+            BRONZE_DISCOUNT_BPS -> SILVER_DISCOUNT_BPS
+            SILVER_DISCOUNT_BPS -> GOLD_DISCOUNT_BPS
+            GOLD_DISCOUNT_BPS -> PLATINUM_DISCOUNT_BPS
+            else -> this
+        }
+    }
+
     companion object {
         // Discount amounts in basis points
         const val NO_DISCOUNT_BPS = 0
