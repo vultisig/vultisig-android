@@ -20,6 +20,11 @@
     <string name="vault_tier_platinum">Platina</string>
     <string name="vault_tier_diamond">Dijamant</string>
     <string name="vault_tier_unlock_diamond_part1">Otključaj </string>
+    <string name="vault_tier_unlock_diamond_part2">Dijamantnu</string>
+    <string name="vault_tier_unlock_diamond_part3"> razinu</string>
+    <string name="vault_tier_unlock_ultimate_part1">Otključaj </string>
+    <string name="vault_tier_unlock_ultimate_part2">Ultimativnu</string>
+    <string name="vault_tier_unlock_ultimate_part3"> razinu</string>
     <string name="vault_tier_ultimate">Ultimativni</string>
     <string name="vault_tier_bronze_discount">Popust: 5bps</string>
     <string name="vault_tier_silver_discount">Popust: 10bps</string>

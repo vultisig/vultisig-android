@@ -40,6 +40,11 @@
     <string name="vault_tier_platinum">Платина</string>
     <string name="vault_tier_diamond">Алмаз</string>
     <string name="vault_tier_unlock_diamond_part1">Разблокировать </string>
+    <string name="vault_tier_unlock_diamond_part2">Алмазный</string>
+    <string name="vault_tier_unlock_diamond_part3"> уровень</string>
+    <string name="vault_tier_unlock_ultimate_part1">Разблокировать </string>
+    <string name="vault_tier_unlock_ultimate_part2">Ультимативный</string>
+    <string name="vault_tier_unlock_ultimate_part3"> уровень</string>
     <string name="vault_tier_ultimate">Ультимативный</string>
     <string name="vault_tier_bronze_discount">Скидка: 5bps</string>
     <string name="vault_tier_silver_discount">Скидка: 10bps</string>

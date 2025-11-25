@@ -22,7 +22,12 @@
     <string name="vault_tier_gold">Ouro</string>
     <string name="vault_tier_platinum">Platina</string>
     <string name="vault_tier_diamond">Diamante</string>
-    <string name="vault_tier_unlock_diamond_part1">Desbloquear </string>
+    <string name="vault_tier_unlock_diamond_part1">Desbloquear Nível </string>
+    <string name="vault_tier_unlock_diamond_part2">Diamante</string>
+    <string name="vault_tier_unlock_diamond_part3"></string>
+    <string name="vault_tier_unlock_ultimate_part1">Desbloquear Nível </string>
+    <string name="vault_tier_unlock_ultimate_part2">Definitivo</string>
+    <string name="vault_tier_unlock_ultimate_part3"></string>
     <string name="vault_tier_ultimate">Definitivo</string>
     <string name="vault_tier_bronze_discount">Desconto: 5bps</string>
     <string name="vault_tier_silver_discount">Desconto: 10bps</string>

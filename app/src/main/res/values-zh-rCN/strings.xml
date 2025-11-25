@@ -72,7 +72,12 @@
     <string name="vault_tier_gold">黄金</string>
     <string name="vault_tier_platinum">铂金</string>
     <string name="vault_tier_diamond">钻石</string>
-    <string name="vault_tier_unlock_diamond_part1">解锁 </string>
+    <string name="vault_tier_unlock_diamond_part1">解锁</string>
+    <string name="vault_tier_unlock_diamond_part2">钻石</string>
+    <string name="vault_tier_unlock_diamond_part3">等级</string>
+    <string name="vault_tier_unlock_ultimate_part1">解锁</string>
+    <string name="vault_tier_unlock_ultimate_part2">终极</string>
+    <string name="vault_tier_unlock_ultimate_part3">等级</string>
     <string name="vault_tier_ultimate">终极</string>
     <string name="vault_tier_bronze_discount">折扣：5基点</string>
     <string name="vault_tier_silver_discount">折扣：10基点</string>

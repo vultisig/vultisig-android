@@ -24,7 +24,12 @@
     <string name="vault_tier_gold">Gold</string>
     <string name="vault_tier_platinum">Platin</string>
     <string name="vault_tier_diamond">Diamant</string>
-    <string name="vault_tier_unlock_diamond_part1">Freischalten </string>
+    <string name="vault_tier_unlock_diamond_part1"></string>
+    <string name="vault_tier_unlock_diamond_part2">Diamant</string>
+    <string name="vault_tier_unlock_diamond_part3">-Stufe freischalten</string>
+    <string name="vault_tier_unlock_ultimate_part1"></string>
+    <string name="vault_tier_unlock_ultimate_part2">Ultimativ</string>
+    <string name="vault_tier_unlock_ultimate_part3">-Stufe freischalten</string>
     <string name="vault_tier_ultimate">Ultimativ</string>
     <string name="vault_tier_bronze_discount">Rabatt: 5bps</string>
     <string name="vault_tier_silver_discount">Rabatt: 10bps</string>
