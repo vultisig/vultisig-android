@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -33,6 +34,9 @@ import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -104,15 +108,21 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    LaunchedEffect(Unit) {
-                        mainViewModel.destination.collect {
-                            navController.route(it.dst.route, it.opts)
-                        }
-                    }
+                    LaunchedEffect(navController) {
+                        snapshotFlow { navController.currentBackStackEntry }
+                            .filterNotNull()
+                            .first()
 
-                    LaunchedEffect(Unit) {
-                        mainViewModel.route.collect {
-                            navController.route(it)
+                        launch {
+                            mainViewModel.destination.collect {
+                                navController.route(it.dst.route, it.opts)
+                            }
+                        }
+
+                        launch {
+                            mainViewModel.route.collect {
+                                navController.route(it)
+                            }
                         }
                     }
 

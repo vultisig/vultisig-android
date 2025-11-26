@@ -38,6 +38,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindTiersRemoteNFTRepository(
+        impl: TiersNFTRepositoryImpl
+    ): TiersNFTRepository
+
+    @Binds
+    @Singleton
     fun bindTokenRepository(
         impl: TokenRepositoryImpl,
     ): TokenRepository
@@ -287,6 +293,12 @@ internal interface RepositoriesModule {
     fun bindCryptoConnectionTypeRepository(
         impl: CryptoConnectionTypeRepositoryImpl
     ): CryptoConnectionTypeRepository
+
+    @Binds
+    @Singleton
+    fun bindTronResourceRepository(
+        impl: TronResourceDataSourceImpl
+    ): TronResourceDataSource
 }
 
 @Qualifier
