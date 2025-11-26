@@ -919,4 +919,8 @@
     <string name="no_positions_found">Nessuna posizione trovata</string>
     <string name="select_positions">Seleziona posizioni</string>
     <string name="enable_at_least_one_position">Abilita almeno una posizione per visualizzare i saldi e gestire le posizioni.</string>
+    <string name="bandwidth">Larghezza di banda</string>
+    <string name="energy">Energia</string>
+    <string name="bandwidth_dec">I Punti di Larghezza di Banda sono necessari per ogni transazione su TRON, inclusi sia gli invii di token standard che le interazioni con gli smart contract. Ogni utente TRON riceve 600 Punti di Larghezza di Banda gratuiti al giorno, che possono coprire circa due invii base. Inoltre, puoi guadagnare Punti di Larghezza di Banda extra facendo staking di TRX, aumentando il tuo saldo giornaliero per supportare più transazioni. Se hai abbastanza Punti di Larghezza di Banda, puoi inviare token, fare staking di TRX o interagire con gli smart contract senza pagare TRX in commissioni del gas.</string>
+    <string name="energy_dec">Necessari per azioni più complesse, come l\'interazione con gli smart contract (ad esempio, swap o transazioni dApp). A differenza della Larghezza di Banda, l\'Energia non viene fornita gratuitamente: è necessario fare staking di TRX per guadagnarla. (Gli utenti più esperti possono anche acquisire Energia tramite meccanismi di leasing come JustLend o i mercati di noleggio dell\'energia di Tronify). Tuttavia, avere Energia può ridurre significativamente o addirittura eliminare le commissioni del gas per le interazioni con gli smart contract, rendendo l\'Energia preziosa per coloro che utilizzano frequentemente le dApp TRON.</string>
 </resources>

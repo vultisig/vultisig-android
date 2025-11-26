@@ -920,4 +920,8 @@
     <string name="no_positions_found">Nema pronađenih pozicija</string>
     <string name="select_positions">Odaberite pozicije</string>
     <string name="enable_at_least_one_position">Omogućite barem jednu poziciju za pregled stanja i upravljanje pozicijama.</string>
+    <string name="bandwidth">Propusnost</string>
+    <string name="energy">Energija</string>
+    <string name="bandwidth_dec">Za svaku transakciju na TRON-u, uključujući i standardna slanja tokena i interakcije pametnih ugovora, potrebni su bodovi propusnosti. Svaki korisnik TRON-a dobiva 600 besplatnih bodova propusnosti dnevno, što može pokriti otprilike dva osnovna slanja. Osim toga, možete zaraditi dodatne bodove propusnosti ulaganjem TRX-a, povećavajući svoj dnevni saldo kako biste podržali više transakcija. Ako imate dovoljno bodova propusnosti, možete slati tokene, ulagati TRX ili komunicirati s pametnim ugovorima bez plaćanja TRX-a u naknadama za gorivo.</string>
+    <string name="energy_dec">Potrebno za složenije radnje, kao što je interakcija s pametnim ugovorima (npr. zamjene ili transakcije dApp-ova). Za razliku od propusnosti, energija se ne daje besplatno - morate ulagati TRX da biste zaradili energiju. (Napredniji korisnici također mogu steći energiju putem mehanizama najma kao što su JustLend ili Tronifyjeva tržišta najma energije). Međutim, posjedovanje energije može značajno smanjiti ili čak eliminirati naknade za gorivo za interakcije pametnih ugovora, što energiju čini vrijednom za one koji često koriste TRON dApp-ove.</string>
 </resources>
