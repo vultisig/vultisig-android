@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
+import com.vultisig.wallet.app.WalletCoreLoader
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
             .setKeepOnScreenCondition {
+                WalletCoreLoader
                 mainViewModel.isLoading.value
             }
 

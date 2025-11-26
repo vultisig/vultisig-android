@@ -10,14 +10,13 @@ import timber.log.Timber
 internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        WalletCoreLoader
         SharedPrefsMasterKeyInitializer
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
 
-        lazy { Rive.init(this) }
+        Rive.init(this)
     }
 }
 
