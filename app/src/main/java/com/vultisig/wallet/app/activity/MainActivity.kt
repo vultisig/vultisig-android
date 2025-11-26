@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -28,11 +28,15 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
+import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -104,23 +108,29 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    LaunchedEffect(Unit) {
-                        mainViewModel.destination.collect {
-                            navController.route(it.dst.route, it.opts)
-                        }
-                    }
+                    LaunchedEffect(navController) {
+                        snapshotFlow { navController.currentBackStackEntry }
+                            .filterNotNull()
+                            .first()
 
-                    LaunchedEffect(Unit) {
-                        mainViewModel.route.collect {
-                            navController.route(it)
+                        launch {
+                            mainViewModel.destination.collect {
+                                navController.route(it.dst.route, it.opts)
+                            }
+                        }
+
+                        launch {
+                            mainViewModel.route.collect {
+                                navController.route(it)
+                            }
                         }
                     }
 
                     BiometryAuthScreen()
 
-                    SnackbarHost(
+                    VsSnackBar(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        hostState = mainViewModel.snakeBarHostState
+                        snackbarState = mainViewModel.snakeBarHostState
                     )
                 }
             }

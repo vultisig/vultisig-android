@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
@@ -13,6 +14,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.models.settings.SettingsItem.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.utils.UiText
@@ -279,39 +281,71 @@ internal class SettingsViewModel @Inject constructor(
     )
 
     val state = MutableStateFlow(settingsMenu)
-    val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
+    val vaultId = savedStateHandle.toRoute<Route.Settings>().vaultId
     private var hasUsedReferral = false
 
 
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
             AddressBook -> {
-                navigateTo(Destination.AddressBook(vaultId = vaultId))
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.AddressBookScreen(vaultId = vaultId)
+                    )
+                }
             }
 
             CheckForUpdates -> {
-                navigateTo(Destination.CheckForUpdateSetting)
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.CheckForUpdateSetting
+                    )
+                }
             }
             is Currency -> {
-                navigateTo(Destination.CurrencyUnitSetting)
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.CurrencyUnitSetting
+                    )
+                }
             }
 
             Discord -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD))
             Vult -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_TOKEN))
-            Faq -> navigateTo(Destination.FAQSetting)
+            Faq -> {
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.FAQSetting
+                    )
+                }
+            }
             Github -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.GITHUB))
             is Language -> {
-                navigateTo(Destination.LanguageSetting)
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.LanguageSetting
+                    )
+                }
             }
 
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
             ReferralCode -> onClickReferralCode()
-            RegisterVault -> navigateTo(Destination.RegisterVault(vaultId))
+            RegisterVault -> {
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.RegisterVault(vaultId)
+                    )
+                }
+            }
             ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
             VaultSetting -> {
-                navigateTo(Destination.VaultSettings(vaultId))
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.VaultSettings(vaultId)
+                    )
+                }
             }
 
             VultisigEducation -> {
@@ -319,7 +353,11 @@ internal class SettingsViewModel @Inject constructor(
             }
 
             DiscountTiers -> {
-                navigateTo(Destination.DiscountTiers(vaultId))
+                viewModelScope.launch {
+                    navigator.route(
+                        Route.DiscountTiers(vaultId)
+                    )
+                }
             }
 
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))
@@ -420,7 +458,11 @@ internal class SettingsViewModel @Inject constructor(
             state.update {
                 it.copy(hasToShowReferralCodeSheet = false)
             }
-            navigateTo(Destination.ReferralOnboarding(vaultId))
+            viewModelScope.launch {
+                navigator.route(
+                    Route.ReferralOnboarding(vaultId)
+                )
+            }
         }
     }
 
@@ -445,7 +487,11 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun onShareVaultQrClick(){
-        navigateTo(Destination.ShareVaultQr(vaultId))
+        viewModelScope.launch {
+            navigator.route(
+                Route.ShareVaultQr(vaultId)
+            )
+        }
     }
 
     fun onDismissShareLinkBottomSheet(){

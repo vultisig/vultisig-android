@@ -63,6 +63,7 @@ internal fun HomePage(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onBuy: () -> Unit = {},
+    onReceive: () -> Unit = {},
     onRefresh: () -> Unit = {},
     openCamera: () -> Unit = {},
     onToggleVaultListClick: () -> Unit = {},
@@ -170,6 +171,7 @@ internal fun HomePage(
                                 onSend = onSend,
                                 onSwap = onSwap,
                                 onBuy = onBuy,
+                                onReceive = onReceive,
                             )
                         } else {
                             DefiExpandedTopbarContent(
@@ -263,7 +265,7 @@ internal fun HomePage(
                                     onChooseChains = onChooseChains
                                 )
                             } else {
-                                if (state.accounts.isEmpty()){
+                                if (state.getAccounts.isEmpty()){
                                     NotEnabledContainer(
                                         title = stringResource(R.string.home_page_no_chains_enabled),
                                         content = stringResource(R.string.home_page_no_chain_enabled_desc),
@@ -274,7 +276,7 @@ internal fun HomePage(
                                         onAccountClick = onAccountClick,
                                         snackbarState = snackbarState,
                                         isBalanceVisible = state.isBalanceValueVisible,
-                                        accounts = state.accounts,
+                                        accounts = state.getAccounts,
                                     )
                                 }
                             }

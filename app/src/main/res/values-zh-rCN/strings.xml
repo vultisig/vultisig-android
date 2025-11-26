@@ -71,10 +71,20 @@
     <string name="vault_tier_silver">白银</string>
     <string name="vault_tier_gold">黄金</string>
     <string name="vault_tier_platinum">铂金</string>
-    <string name="vault_tier_bronze_discount">折扣：10基点</string>
-    <string name="vault_tier_silver_discount">折扣：20基点</string>
-    <string name="vault_tier_gold_discount">折扣：30基点</string>
-    <string name="vault_tier_platinum_discount">折扣：35基点</string>
+    <string name="vault_tier_diamond">钻石</string>
+    <string name="vault_tier_unlock_diamond_part1">解锁</string>
+    <string name="vault_tier_unlock_diamond_part2">钻石</string>
+    <string name="vault_tier_unlock_diamond_part3">等级</string>
+    <string name="vault_tier_unlock_ultimate_part1">解锁</string>
+    <string name="vault_tier_unlock_ultimate_part2">终极</string>
+    <string name="vault_tier_unlock_ultimate_part3">等级</string>
+    <string name="vault_tier_ultimate">终极</string>
+    <string name="vault_tier_bronze_discount">折扣：5基点</string>
+    <string name="vault_tier_silver_discount">折扣：10基点</string>
+    <string name="vault_tier_gold_discount">折扣：20基点</string>
+    <string name="vault_tier_platinum_discount">折扣：25基点</string>
+    <string name="vault_tier_diamond_discount">折扣：35基点</string>
+    <string name="vault_tier_ultimate_discount">免费</string>
     <string name="vault_tier_hold">持有</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
@@ -91,23 +101,28 @@
     <string name="vault_tier_unlock_platinum_part2">铂金</string>
     <string name="vault_tier_unlock_platinum_part3">等级</string>
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
-    <string name="vault_tier_bronze_description">持有 1,000 $VULT，您将解锁青铜等级并在所有交换中获得 10 基点的交易费折扣。</string>
-    <string name="vault_tier_silver_description">持有 2,500 $VULT，您将解锁白银等级并在所有交换中获得 20 基点的交易费折扣。</string>
-    <string name="vault_tier_gold_description">持有 5,000 $VULT，您将解锁黄金等级并在所有交换中获得 30 基点的交易费折扣。</string>
-    <string name="vault_tier_platinum_description">持有 10,000 $VULT，您将解锁铂金等级并在所有交换中获得 35 基点的交易费折扣。</string>
-    <string name="vault_tier_bronze_description_part1">持有 1,000 $VULT，您将解锁青铜等级并获得</string>
-    <string name="vault_tier_bronze_description_part2">10 基点交易费折扣</string>
+    <string name="vault_tier_bronze_description">持有 1,500 $VULT，您将解锁青铜等级并在所有交换中获得 5 基点的交易费折扣。</string>
+    <string name="vault_tier_silver_description">持有 3,000 $VULT，您将解锁白银等级并在所有交换中获得 10 基点的交易费折扣。</string>
+    <string name="vault_tier_gold_description">持有 7,500 $VULT，您将解锁黄金等级并在所有交换中获得 20 基点的交易费折扣。</string>
+    <string name="vault_tier_platinum_description">持有 15,000 $VULT，您将解锁铂金等级并在所有交换中获得 25 基点的交易费折扣。</string>
+    <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
+    <string name="vault_tier_bronze_description_part2">5 基点交易费折扣</string>
     <string name="vault_tier_bronze_description_part3">在所有交换中。</string>
-    <string name="vault_tier_silver_description_part1">持有 2,500 $VULT，您将解锁白银等级并获得</string>
-    <string name="vault_tier_silver_description_part2">20 基点交易费折扣</string>
+    <string name="vault_tier_silver_description_part1">持有 3,000 $VULT，您将解锁白银等级并获得</string>
+    <string name="vault_tier_silver_description_part2">10 基点交易费折扣</string>
     <string name="vault_tier_silver_description_part3">在所有交换中。</string>
-    <string name="vault_tier_gold_description_part1">持有 5,000 $VULT，您将解锁黄金等级并获得</string>
-    <string name="vault_tier_gold_description_part2">30 基点交易费折扣</string>
+    <string name="vault_tier_gold_description_part1">持有 7,500 $VULT，您将解锁黄金等级并获得</string>
+    <string name="vault_tier_gold_description_part2">20 基点交易费折扣</string>
     <string name="vault_tier_gold_description_part3">在所有交换中。</string>
-    <string name="vault_tier_platinum_description_part1">持有 10,000 $VULT，您将解锁铂金等级并获得</string>
-    <string name="vault_tier_platinum_description_part2">35 基点交易费折扣</string>
+    <string name="vault_tier_platinum_description_part1">持有 15,000 $VULT，您将解锁铂金等级并获得</string>
+    <string name="vault_tier_platinum_description_part2">25 基点交易费折扣</string>
     <string name="vault_tier_platinum_description_part3">在所有交换中。</string>
-    
+    <string name="vault_tier_diamond_description_part1">持有 100,000 $VULT，您将解锁钻石等级并获得</string>
+    <string name="vault_tier_diamond_description_part2">35 基点交易费折扣</string>
+    <string name="vault_tier_diamond_description_part3">在所有交换中。</string>
+    <string name="vault_tier_ultimate_description_part1">持有 1,000,000 $VULT，您将解锁终极等级并获得</string>
+    <string name="vault_tier_ultimate_description_part2">完全免除 Vultisig 费用</string>
+    <string name="vault_tier_ultimate_description_part3">在所有交换中。</string>
     <!-- Keysign & Join -->
     <string name="join_keysign_missing_required_vault">您没有密钥签名所需的金库</string>
     <string name="join_keysign_discovery_service">发现服务中</string>
@@ -584,7 +599,7 @@
     
     <!-- Vault List -->
     <string name="vault_list_part_n_of_t">部分 %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">份额 %1$d of %2$d</string>
+    <string name="vault_part_n_of_t">份额 %1$d-of-%2$d</string>
     <string name="vault_list_fast_badge">快速</string>
     
     <!-- QR Titles -->
@@ -638,7 +653,7 @@
     <string name="vault_details_screen_vault_type">金库类型</string>
     <string name="vault_settings_delete_vault_part">金库份额：</string>
     <string name="vault_password_hint_to_long">提示太长</string>
-    <string name="vault_details_screen_vault_part_desc">份额 %1$s of %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
     <string name="vault_details_screen_signer">签名者 %1$s：%2$s</string>
     
     <!-- Settings Screen -->
@@ -1326,5 +1341,9 @@
     <string name="no_positions_found">未找到仓位</string>
     <string name="select_positions">选择仓位</string>
     <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
+    <string name="bandwidth">带宽</string>
+    <string name="energy">能量</string>
+    <string name="bandwidth_dec">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
+    <string name="energy_dec">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
 
 </resources>

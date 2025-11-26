@@ -3,12 +3,14 @@ package com.vultisig.wallet.ui.models.referral
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +41,7 @@ internal class ReferralVaultListViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val referralCodeRepository: ReferralCodeSettingsRepository,
 ) : ViewModel() {
-    private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private val vaultId: String = savedStateHandle.toRoute<Route.ReferralListVault>().vaultId
 
     private val _state = MutableStateFlow(ReferralVaultListUiState())
     val state: StateFlow<ReferralVaultListUiState> = _state.asStateFlow()

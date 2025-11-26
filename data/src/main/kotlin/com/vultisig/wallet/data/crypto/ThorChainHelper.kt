@@ -133,7 +133,7 @@ class ThorChainHelper(
                     this.signingMode = Cosmos.SigningMode.Protobuf
                     this.accountNumber = accountNumber.toLong()
                     this.chainId = networkId
-                    this.memo = keysignPayload.memo
+                    keysignPayload.memo?.let { this.memo = it }
                     this.sequence = sequence.toLong()
                     this.addMessages(message)
                     this.fee = fee
@@ -159,7 +159,7 @@ class ThorChainHelper(
                     this.signingMode = Cosmos.SigningMode.Protobuf
                     this.accountNumber = accountNumber.toLong()
                     this.chainId = networkId
-                    this.memo = keysignPayload.memo
+                    keysignPayload.memo?.let { this.memo = it }
                     this.sequence = sequence.toLong()
                     this.addMessages(message)
                     this.fee = fee

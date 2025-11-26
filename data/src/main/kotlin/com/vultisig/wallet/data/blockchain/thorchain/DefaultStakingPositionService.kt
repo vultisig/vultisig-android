@@ -18,8 +18,7 @@ class DefaultStakingPositionService @Inject constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
 
-    private val supportedStakingCoins = listOf(
-        Coins.ThorChain.sTCY,
+    val supportedStakingCoins = listOf(
         Coins.ThorChain.yRUNE,
         Coins.ThorChain.yTCY,
     )
@@ -54,7 +53,7 @@ class DefaultStakingPositionService @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getStakingDetailsFromNetwork(address: String): List<StakingDetails> {
+    suspend fun getStakingDetailsFromNetwork(address: String): List<StakingDetails> {
         val balances = try {
             thorChainApi.getBalance(address)
         } catch (e: Exception) {

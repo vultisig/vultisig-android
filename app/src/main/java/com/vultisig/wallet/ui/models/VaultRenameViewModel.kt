@@ -90,8 +90,8 @@ internal class VaultRenameViewModel @Inject constructor(
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
-                navigator.navigate(
-                    Destination.Home(),
+                navigator.route(
+                    Route.Home(),
                     NavigationOptions(clearBackStack = true)
                 )
                 isLoading = false

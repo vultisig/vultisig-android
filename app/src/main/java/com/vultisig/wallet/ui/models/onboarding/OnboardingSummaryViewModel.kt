@@ -30,7 +30,7 @@ internal class OnboardingSummaryViewModel @Inject constructor(
         navigator.route(
             route = Route.ChooseVaultType,
             opts = NavigationOptions(
-                popUpTo = Destination.AddVault.route,
+                popUpToRoute = Route.AddVault::class,
             )
         )
     }

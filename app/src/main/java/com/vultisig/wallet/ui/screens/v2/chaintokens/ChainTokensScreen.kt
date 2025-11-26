@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,10 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -42,17 +47,48 @@ import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
+import com.vultisig.wallet.ui.models.ChainTokensViewModel
+import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
-import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import com.vultisig.wallet.ui.utils.showReviewPopUp
 
+
+@Composable
+internal fun ChainTokensScreen(
+    navController: NavHostController,
+    viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
+) {
+    val uiModel by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val reviewManager = remember { ReviewManagerFactory.create(context) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
+    ChainTokensScreen(
+        uiModel = uiModel,
+        onRefresh = viewModel::refresh,
+        onSend = viewModel::send,
+        onSwap = viewModel::swap,
+        onDeposit = viewModel::deposit,
+        onBuy = viewModel::buy,
+        onSelectTokens = viewModel::selectTokens,
+        onTokenClick = viewModel::openToken,
+        onBackClick = { navController.popBackStack() },
+        onShowReviewPopUp = {
+            reviewManager.showReviewPopUp(context)
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,11 +99,11 @@ internal fun ChainTokensScreen(
     onSwap: () -> Unit = {},
     onBuy: () -> Unit = {},
     onDeposit: () -> Unit = {},
+    onReceive: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
     onBackClick: () -> Unit = {},
     onShowReviewPopUp: () -> Unit = {},
-    onShareQrClick: () -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
@@ -107,7 +143,7 @@ internal fun ChainTokensScreen(
                             uriHandler.openUri(uiModel.explorerURL)
                         },
                         size = VsCircleButtonSize.Small,
-                        icon = com.vultisig.wallet.R.drawable.explor,
+                        icon = R.drawable.explor,
                         type = VsCircleButtonType.Secondary,
                         designType = DesignType.Shined
                     )
@@ -154,7 +190,8 @@ internal fun ChainTokensScreen(
                             context.getString(
                                 R.string.address_copied,
                                 uiModel.chainName
-                            ))
+                            )
+                        )
                         onShowReviewPopUp()
                     },
                     modifier = Modifier
@@ -188,7 +225,7 @@ internal fun ChainTokensScreen(
                     if (uiModel.canSwap) {
                         TransactionTypeButton(
                             txType = TransactionType.SWAP,
-                            isSelected = false,
+                            isSelected = true,
                             onClick = onSwap
                         )
                     }
@@ -218,15 +255,28 @@ internal fun ChainTokensScreen(
                     TransactionTypeButton(
                         txType = TransactionType.RECEIVE,
                         isSelected = false,
-                        onClick = {
-                            isAddressBottomSheetVisible = true
-                        }
+                        onClick = onReceive
                     )
                 }
 
                 UiSpacer(
-                    size = 16.dp
+                    size = 10.dp
                 )
+                uiModel.tronResourceStats?.let { resourceUsage ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(
+                            space = 6.dp,
+                            alignment = Alignment.CenterHorizontally
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ResourceTwoCardsRow(
+                            modifier = Modifier.weight(1f),
+                            resourceUsage = resourceUsage
+                        )
+
+                    }
+                }
             }
         },
         content = { paddingValues ->
@@ -294,33 +344,6 @@ internal fun ChainTokensScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                 )
-
-                if (isAddressBottomSheetVisible)
-                    TokenAddressQrBottomSheet(
-                        chainName = uiModel.chainName,
-                        chainAddress = uiModel.chainAddress,
-                        qrBitmapPainter = uiModel.qrCode,
-                        onShareQrClick = {
-                            isAddressBottomSheetVisible = false
-                            onShareQrClick()
-                        },
-                        onDismiss = {
-                            isAddressBottomSheetVisible = false
-                        },
-                        onCopyAddressClick = {
-                            isAddressBottomSheetVisible = false
-                            VsClipboardService.copy(
-                                context,
-                                uiModel.chainAddress
-                            )
-                            snackbarState.show(
-                                context.getString(
-                                    R.string.chain_token_screen_address_copied,
-                                    uiModel.chainName
-                                )
-                            )
-                        }
-                    )
             }
         },
     )
@@ -331,7 +354,7 @@ internal fun ChainTokensScreen(
 private fun PreviewChainCoinScreen1() {
     ChainTokensScreen(
         uiModel = ChainTokensUiModel(
-            chainName = "Ethereum",
+            chainName = "Tron",
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",
             explorerURL = "https://etherscan.io/",

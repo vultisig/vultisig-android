@@ -80,22 +80,22 @@ internal class VaultListViewModel @Inject constructor(
         collectVaultsJob = viewModelScope.launch {
             getOrderedVaults(null)
                 .collect { orderedVaults ->
-                val vaultAndBalances = orderedVaults.map {
-                    vaultAndBalanceUseCase(it)
+                    val vaultAndBalances = orderedVaults.map {
+                        vaultAndBalanceUseCase(it)
+                    }
+                    state.update {
+                        it.copy(
+                            vaults = vaultAndBalances,
+                        )
+                    }
                 }
-                state.update {
-                    it.copy(
-                        vaults = vaultAndBalances,
-                    )
-                }
-            }
         }
     }
 
     private fun collectTotalVaultAndBalance() {
 
         viewModelScope.launch {
-           val vaults = vaultRepository.getAll()
+            val vaults = vaultRepository.getAll()
             val fiatValues = vaults.mapNotNull {
                 vaultAndBalanceUseCase(it).balanceFiatValue
             }
@@ -159,7 +159,7 @@ internal class VaultListViewModel @Inject constructor(
                         Route.Send(
                             vaultId = vaultId,
                             chainId = sendDeepLinkData.assetChain,
-                            tokenId = sendDeepLinkData.assetTicker,
+                            tokenId = "${sendDeepLinkData.assetTicker}-${sendDeepLinkData.assetChain}",
                             address = sendDeepLinkData.toAddress,
                             amount = sendDeepLinkData.amount,
                             memo = sendDeepLinkData.memo,
@@ -176,7 +176,7 @@ internal class VaultListViewModel @Inject constructor(
 
     fun addVault() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddVault)
+            navigator.route(Route.AddVault)
         }
     }
 

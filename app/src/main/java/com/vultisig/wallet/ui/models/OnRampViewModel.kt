@@ -4,10 +4,11 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.banxaAssetName
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,9 +21,9 @@ class OnRampViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {
-    
-    private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
-    private val chainId: String = requireNotNull(savedStateHandle[Destination.ARG_CHAIN_ID])
+    private val args = savedStateHandle.toRoute<Route.OnRamp>()
+    private val vaultId: String = args.vaultId
+    private val chainId: String = args.chainId
     
     private val _banxaUrl = MutableStateFlow<String?>(null)
     val banxaUrl = _banxaUrl.asStateFlow()

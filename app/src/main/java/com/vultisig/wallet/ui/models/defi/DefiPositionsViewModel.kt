@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -11,7 +12,9 @@ import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
@@ -21,8 +24,8 @@ import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
@@ -150,7 +153,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
 
-    private var vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
+    private var vaultId: String = savedStateHandle.toRoute<Route.PositionTokens>().vaultId
 
     val state = MutableStateFlow(DefiPositionsUiModel())
 
@@ -216,16 +219,22 @@ internal class DefiPositionsViewModel @Inject constructor(
             val totalInTCY = CoinType.THORCHAIN.toValue(totalValue.tcyStakeAmount)
 
             try {
-                val runeFiat = calculateTotalValue(totalInRune, Coins.ThorChain.RUNE)
-                val rujiFiat = calculateTotalValue(totalInRuji, Coins.ThorChain.RUJI)
-                val tcyFiat = calculateTotalValue(totalInTCY, Coins.ThorChain.TCY)
-                val defaultStakingFiat =
-                    totalValue.defaultStakeValues.stakeElements.sumOf { position ->
-                        val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
-                        calculateTotalValue(decimalAmount, position.coin)
+                val currency = appCurrencyRepository.currency.first()
+                
+                val runeFiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
+                val rujiFiatValue = createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
+                val tcyFiatValue = createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
+                
+                val defaultStakingFiatValues = totalValue.defaultStakeValues.stakeElements.map { position ->
+                    val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
+                    createFiatValue(decimalAmount, position.coin, currency)
+                }
+                
+                val totalFiatValue = listOf(runeFiatValue, rujiFiatValue, tcyFiatValue)
+                    .plus(defaultStakingFiatValues)
+                    .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
+                        acc + fiatValue
                     }
-
-                val totalValueFiat = runeFiat + rujiFiat + tcyFiat + defaultStakingFiat
 
                 val currencyFormat = withContext(Dispatchers.IO) {
                     appCurrencyRepository.getCurrencyFormat()
@@ -233,7 +242,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
                 state.update {
                     it.copy(
-                        totalAmountPrice = currencyFormat.format(totalValueFiat.toDouble()),
+                        totalAmountPrice = currencyFormat.format(totalFiatValue.value),
                         isTotalAmountLoading = false,
                     )
                 }
@@ -246,6 +255,38 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+    
+    private suspend fun createFiatValue(
+        amount: BigDecimal, 
+        coin: Coin, 
+        currency: AppCurrency
+    ): FiatValue {
+        try {
+            if (amount == BigDecimal.ZERO) {
+                return FiatValue(BigDecimal.ZERO, currency.ticker)
+            }
+
+            val price = tokenPriceRepository.getCachedPrice(
+                tokenId = coin.id,
+                appCurrency = currency
+            ) ?: return FiatValue(
+                value = BigDecimal.ZERO,
+                currency = currency.ticker
+            )
+
+            return FiatValue(
+                value = amount.multiply(price).setScale(2, RoundingMode.HALF_UP),
+                currency = currency.ticker
+            )
+        } catch (t: Throwable) {
+            Timber.e(t)
+
+            return FiatValue(
+                value = BigDecimal.ZERO,
+                currency = currency.ticker
+            )
         }
     }
 
@@ -370,28 +411,6 @@ internal class DefiPositionsViewModel @Inject constructor(
             acc + node.amount
         }
         return total.formatAmount(CoinType.THORCHAIN)
-    }
-
-    private suspend fun calculateTotalValue(totalTokenAmount: BigDecimal, coin: Coin): BigDecimal {
-        try {
-            if (totalTokenAmount == BigDecimal.ZERO) {
-                return BigDecimal.ZERO
-            }
-
-            val currency = appCurrencyRepository.currency.first()
-
-            val tokenPrice = tokenPriceRepository.getCachedPrice(
-                tokenId = coin.id,
-                appCurrency = currency
-            ) ?: BigDecimal.ZERO
-
-            Timber.d("${coin.id} price: $tokenPrice, amount: $totalTokenAmount")
-
-            return totalTokenAmount * tokenPrice
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to calculate total value")
-            return BigDecimal.ZERO
-        }
     }
 
     private fun loadStakingPositions() {
@@ -594,8 +613,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             staking = it.staking.copy(
                                 positions = it.staking.positions.map { position ->
                                     if (position.coin.id == Coins.ThorChain.yRUNE.id
-                                        || position.coin.id == Coins.ThorChain.yTCY.id
-                                        || position.coin.id == Coins.ThorChain.sTCY.id) {
+                                        || position.coin.id == Coins.ThorChain.yTCY.id) {
                                         position.copy(isLoading = false)
                                     } else {
                                         position
@@ -828,8 +846,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         bondAddress = nodeAddress,
@@ -848,8 +866,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         bondAddress = nodeAddress,
@@ -868,8 +886,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id
                     )
@@ -886,8 +904,8 @@ internal class DefiPositionsViewModel @Inject constructor(
             val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
             if (runeCoin != null) {
-                navigator.navigate(
-                    Destination.Deposit(
+                navigator.route(
+                    Route.Deposit(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
                         depositType = defiNavAction.type,
@@ -965,18 +983,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                     nextReward = null,
                     nextPayout = null
                 ),
-                StakePositionUiModel(
-                    coin = stcy,
-                    stakeAssetHeader = "Staked ${stcy.ticker}",
-                    stakeAmount = stcy.ticker,
-                    apy = null,
-                    canWithdraw = false,
-                    canStake = true,
-                    canUnstake = false,
-                    rewards = null,
-                    nextReward = null,
-                    nextPayout = null
-                )
             )
         }
     }

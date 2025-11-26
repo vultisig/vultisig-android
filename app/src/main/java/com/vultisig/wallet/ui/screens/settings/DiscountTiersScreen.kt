@@ -169,6 +169,30 @@ internal fun DiscountTiersScreen(
                 }
             )
 
+            TierCard(
+                tierType = TierType.DIAMOND,
+                isActive = state.activeTier == TierType.DIAMOND,
+                isExpanded = state.expandedTiers.contains(TierType.DIAMOND),
+                onClickUnlock = {
+                    model.onTierUnlockClick(TierType.DIAMOND)
+                },
+                onClickCard = {
+                    model.expandOrCollapseTierInfo(TierType.DIAMOND)
+                }
+            )
+
+            TierCard(
+                tierType = TierType.ULTIMATE,
+                isActive = state.activeTier == TierType.ULTIMATE,
+                isExpanded = state.expandedTiers.contains(TierType.ULTIMATE),
+                onClickUnlock = {
+                    model.onTierUnlockClick(TierType.ULTIMATE)
+                },
+                onClickCard = {
+                    model.expandOrCollapseTierInfo(TierType.ULTIMATE)
+                }
+            )
+
             UiSpacer(size = 16.dp)
         }
     }
@@ -201,15 +225,50 @@ private fun TierCard(
         modifier = Modifier
             .padding(vertical = 8.dp)
             .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                brush = styleTier.gradient,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.colors.backgrounds.neutral)
-            .clickable { onClickCard.invoke() }
     ) {
+        if (styleTier.borderBackground != null) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                Image(
+                    painter = painterResource(id = styleTier.borderBackground),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+            }
+        }
+        
+        Box(
+            modifier = Modifier
+                .then(
+                    when {
+                        styleTier.borderBackground != null -> {
+                            Modifier.padding(1.dp)
+                        }
+                        styleTier.gradient != null -> {
+                            Modifier.border(
+                                width = 1.dp,
+                                brush = styleTier.gradient,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                        else -> {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.normal,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                    }
+                )
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.colors.backgrounds.neutral)
+                .clickable { onClickCard.invoke() }
+        ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -309,6 +368,7 @@ private fun TierCard(
                 )
             }
         }
+        }
     }
 }
 
@@ -319,7 +379,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_bronze,
             titleText = stringResource(R.string.vault_tier_bronze),
             discountText = stringResource(R.string.vault_tier_bronze_discount),
-            amountText = formatVultAmount(1000),
+            amountText = formatVultAmount(1500),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFDB5727).copy(alpha = 0.5f),
@@ -334,7 +394,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_silver,
             titleText = stringResource(R.string.vault_tier_silver),
             discountText = stringResource(R.string.vault_tier_silver_discount),
-            amountText = formatVultAmount(2500),
+            amountText = formatVultAmount(3000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFC9D6E8).copy(alpha = 0.5f),
@@ -349,7 +409,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_gold,
             titleText = stringResource(R.string.vault_tier_gold),
             discountText = stringResource(R.string.vault_tier_gold_discount),
-            amountText = formatVultAmount(5000),
+            amountText = formatVultAmount(7500),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFFFC25C).copy(alpha = 0.5f),
@@ -364,7 +424,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             icon = R.drawable.tier_platinum,
             titleText = stringResource(R.string.vault_tier_platinum),
             discountText = stringResource(R.string.vault_tier_platinum_discount),
-            amountText = formatVultAmount(10000),
+            amountText = formatVultAmount(15000),
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF33E6BF).copy(alpha = 0.5f),
@@ -374,6 +434,29 @@ internal fun getStyleByTier(type: TierType): TierStyle {
                 endY = 400f
             )
         )
+
+        TierType.DIAMOND -> TierStyle(
+            icon = R.drawable.tier_diamond,
+            titleText = stringResource(R.string.vault_tier_diamond),
+            discountText = stringResource(R.string.vault_tier_diamond_discount),
+            amountText = formatVultAmount(100000),
+            gradient = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF9747FF).copy(alpha = 0.5f),
+                    Theme.v2.colors.border.normal,
+                ),
+                startY = 0f,
+                endY = 400f
+            )
+        )
+
+        TierType.ULTIMATE -> TierStyle(
+            icon = R.drawable.tier_ultimate,
+            titleText = stringResource(R.string.vault_tier_ultimate),
+            discountText = stringResource(R.string.vault_tier_ultimate_discount),
+            amountText = formatVultAmount(1000000),
+            borderBackground = R.drawable.ultimate_background
+        )
     }
 }
 
@@ -382,11 +465,29 @@ internal data class TierStyle(
     val titleText: String,
     val discountText: String,
     val amountText: String,
-    val gradient: Brush
+    val gradient: Brush? = null,
+    val borderBackground: Int? = null,
 )
 
 
-internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM }
+internal enum class TierType { BRONZE, SILVER, GOLD, PLATINUM, DIAMOND, ULTIMATE }
+
+internal fun TierType?.applyExtraDiscount(hasNFT: Boolean): TierType? {
+    if (!hasNFT) {
+        return this
+    }
+
+    return when {
+        this == null -> TierType.BRONZE
+        this == TierType.SILVER -> TierType.GOLD
+        this == TierType.GOLD -> TierType.PLATINUM
+        // starting from PLATINUM NFT has no effect
+        this == TierType.PLATINUM -> TierType.PLATINUM
+        this == TierType.DIAMOND -> TierType.DIAMOND
+        this == TierType.ULTIMATE -> TierType.ULTIMATE
+        else -> null
+    }
+}
 
 private fun formatVultAmount(vultAmount: Int): String {
     val numberFormat = NumberFormat.getNumberInstance(Locale.getDefault())
@@ -409,6 +510,8 @@ private fun DiscountTiersScreenPreview() {
             TierCard(tierType = TierType.SILVER, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.GOLD, onClickUnlock = {}, onClickCard = {})
             TierCard(tierType = TierType.PLATINUM, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.DIAMOND, onClickUnlock = {}, onClickCard = {})
+            TierCard(tierType = TierType.ULTIMATE, onClickUnlock = {}, onClickCard = {})
         }
     }
 }

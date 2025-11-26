@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.models.Chain
 import wallet.core.jni.CoinType
 import wallet.core.jni.CoinTypeConfiguration
 import java.math.BigDecimal
@@ -44,9 +45,13 @@ val CoinType.compatibleType: CoinType
         else -> this
     }
 
-fun CoinType.compatibleChainId(): String =
+fun CoinType.compatibleChainId(chain: Chain? = null): String =
     when (this) {
         CoinType.SEI -> "1329"
+        CoinType.ETHEREUM -> when (chain) {
+            Chain.Hyperliquid -> "999" // override when WC has no cointype
+            else -> this.chainId()
+        }
         else -> this.chainId()
     }
 

@@ -104,8 +104,8 @@ internal class TokenDetailViewModel @Inject constructor(
 
     fun deposit() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Deposit(
+            navigator.route(
+                Route.Deposit(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
@@ -121,8 +121,8 @@ internal class TokenDetailViewModel @Inject constructor(
 
     fun buy() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.OnRamp(
+            navigator.route(
+                Route.OnRamp(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )

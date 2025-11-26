@@ -42,8 +42,8 @@ internal class VaultConfirmationViewModel @Inject constructor(
 
             when (args.action) {
                 TssAction.Migrate -> {
-                    navigator.navigate(
-                        dst = Destination.Home(),
+                    navigator.route(
+                        route = Route.Home(),
                         opts = NavigationOptions(
                             clearBackStack = true,
                         )

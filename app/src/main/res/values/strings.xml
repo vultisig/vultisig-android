@@ -62,10 +62,14 @@
     <string name="vault_tier_silver">Silver</string>
     <string name="vault_tier_gold">Gold</string>
     <string name="vault_tier_platinum">Platinum</string>
-    <string name="vault_tier_bronze_discount">Discount: 10bps</string>
-    <string name="vault_tier_silver_discount">Discount: 20bps</string>
-    <string name="vault_tier_gold_discount">Discount: 30bps</string>
-    <string name="vault_tier_platinum_discount">Discount: 35bps</string>
+    <string name="vault_tier_diamond">Diamond</string>
+    <string name="vault_tier_ultimate">Ultimate</string>
+    <string name="vault_tier_bronze_discount">Discount: 5bps</string>
+    <string name="vault_tier_silver_discount">Discount: 10bps</string>
+    <string name="vault_tier_gold_discount">Discount: 20bps</string>
+    <string name="vault_tier_platinum_discount">Discount: 25bps</string>
+    <string name="vault_tier_diamond_discount">Discount: 35bps</string>
+    <string name="vault_tier_ultimate_discount">No Fee</string>
     <string name="vault_tier_hold">Hold</string>
     <string name="vault_tier_unlock">Unlock Tier</string>
     <string name="vault_tier_active">Active</string>
@@ -81,23 +85,37 @@
     <string name="vault_tier_unlock_platinum_part1">Unlock </string>
     <string name="vault_tier_unlock_platinum_part2">Platinum</string>
     <string name="vault_tier_unlock_platinum_part3"> Tier</string>
+
+    <string name="vault_tier_unlock_diamond_part1">Unlock </string>
+    <string name="vault_tier_unlock_diamond_part2">Diamond</string>
+    <string name="vault_tier_unlock_diamond_part3"> Tier</string>
+    <string name="vault_tier_unlock_ultimate_part1">Unlock </string>
+    <string name="vault_tier_unlock_ultimate_part2">Ultimate</string>
+    <string name="vault_tier_unlock_ultimate_part3"> Tier</string>
+
     <string name="vault_tier_description">Hold $VULT to unlock lower trading fees.</string>
-    <string name="vault_tier_bronze_description">By holding 1,000 $VULT, you\'ll unlock the Bronze Tier and receive a 10 bps trading fee discount on all swaps.</string>
-    <string name="vault_tier_silver_description">By holding 2,500 $VULT, you\'ll unlock the Silver Tier and receive a 20 bps trading fee discount on all swaps.</string>
-    <string name="vault_tier_gold_description">By holding 5,000 $VULT, you\'ll unlock the Gold Tier and receive a 30 bps trading fee discount on all swaps.</string>
-    <string name="vault_tier_platinum_description">By holding 10,000 $VULT, you\'ll unlock the Platinum Tier and receive a 35 bps trading fee discount on all swaps.</string>
-    <string name="vault_tier_bronze_description_part1">By holding 1,000 $VULT, you\'ll unlock the Bronze Tier and receive a </string>
-    <string name="vault_tier_bronze_description_part2">10 bps trading fee discount</string>
+    <string name="vault_tier_bronze_description">By holding 1,500 $VULT, you\'ll unlock the Bronze Tier and receive a 5 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_silver_description">By holding 3,000 $VULT, you\'ll unlock the Silver Tier and receive a 10 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_gold_description">By holding 7,500 $VULT, you\'ll unlock the Gold Tier and receive a 20 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_platinum_description">By holding 15,000 $VULT, you\'ll unlock the Platinum Tier and receive a 25 bps trading fee discount on all swaps.</string>
+    <string name="vault_tier_bronze_description_part1">By holding 1,500 $VULT, you\'ll unlock the Bronze Tier and receive a </string>
+    <string name="vault_tier_bronze_description_part2">5 bps trading fee discount</string>
     <string name="vault_tier_bronze_description_part3"> on all swaps.</string>
-    <string name="vault_tier_silver_description_part1">By holding 2,500 $VULT, you\'ll unlock the Silver Tier and receive a </string>
-    <string name="vault_tier_silver_description_part2">20 bps trading fee discount</string>
+    <string name="vault_tier_silver_description_part1">By holding 3,000 $VULT, you\'ll unlock the Silver Tier and receive a </string>
+    <string name="vault_tier_silver_description_part2">10 bps trading fee discount</string>
     <string name="vault_tier_silver_description_part3"> on all swaps.</string>
-    <string name="vault_tier_gold_description_part1">By holding 5,000 $VULT, you\'ll unlock the Gold Tier and receive a </string>
-    <string name="vault_tier_gold_description_part2">30 bps trading fee discount</string>
+    <string name="vault_tier_gold_description_part1">By holding 7,500 $VULT, you\'ll unlock the Gold Tier and receive a </string>
+    <string name="vault_tier_gold_description_part2">20 bps trading fee discount</string>
     <string name="vault_tier_gold_description_part3"> on all swaps.</string>
-    <string name="vault_tier_platinum_description_part1">By holding 10,000 $VULT, you\'ll unlock the Platinum Tier and receive a </string>
-    <string name="vault_tier_platinum_description_part2">35 bps trading fee discount</string>
+    <string name="vault_tier_platinum_description_part1">By holding 15,000 $VULT, you\'ll unlock the Platinum Tier and receive a </string>
+    <string name="vault_tier_platinum_description_part2">25 bps trading fee discount</string>
     <string name="vault_tier_platinum_description_part3"> on all swaps.</string>
+    <string name="vault_tier_diamond_description_part1">By holding 100,000 $VULT, you\'ll unlock the Diamond Tier and receive a </string>
+    <string name="vault_tier_diamond_description_part2">35 bps trading fee discount</string>
+    <string name="vault_tier_diamond_description_part3"> on all swaps.</string>
+    <string name="vault_tier_ultimate_description_part1">By holding 1,000,000 $VULT, you\'ll unlock the Ultimate Tier and receive a </string>
+    <string name="vault_tier_ultimate_description_part2">a complete Vultisig fee waiver</string>
+    <string name="vault_tier_ultimate_description_part3"> on all swaps.</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
@@ -391,7 +409,7 @@
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
     <string name="vault_list_part_n_of_t">part %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Share %1$d of %2$d</string>
+    <string name="vault_part_n_of_t">Share %1$d-of-%2$d</string>
     <string name="vault_list_fast_badge">Fast</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
     <string name="qr_title_join_keysign">Join Keysign</string>
@@ -423,7 +441,7 @@
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Share:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
-    <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Share %1$s-of-%2$s</string>
     <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Register your Vaults!</string>
     <string name="register_vault_screen_title">Register Vault</string>
@@ -468,10 +486,10 @@
     <string name="signing_error_transaction_timeout">Transaction time out due to slow signing. Please try again.</string>
     <string name="verify_sign_message_message_field_title">Message</string>
     <string name="sign_message_form_method_field_title">Method</string>
-    <string name="hint_signing_method" >Signing method</string>
-    <string name="verify_sign_message_signing_method" >Signing method</string>
-    <string name="hint_message_to_sign" >Message to sign</string>
-    <string name="verify_sign_message_message_sign" >Message to sign</string>
+    <string name="hint_signing_method">Signing method</string>
+    <string name="verify_sign_message_signing_method">Signing method</string>
+    <string name="hint_message_to_sign">Message to sign</string>
+    <string name="verify_sign_message_message_sign">Message to sign</string>
     <string name="sign_message_sign_screen_title">Sign message</string>
     <string name="vault_settings_sign_message_title">Sign</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
@@ -621,7 +639,7 @@
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
     <string name="transaction_done_form_approve">Approve</string>
-    <string name="vault_settings_migration_title" >Migrate</string>
+    <string name="vault_settings_migration_title">Migrate</string>
     <string name="vault_settings_migration_subtitle">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button">Swap</string>
     <string name="swap_swap_button_fill_in_amount">Fill in amount</string>
@@ -685,7 +703,7 @@
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
     <string name="verify_deposit_function_overview">Function overview</string>
-    <string name="verify_deposit_sending" >You\'re sending</string>
+    <string name="verify_deposit_sending">You\'re sending</string>
     <string name="verify_deposit_network">Network</string>
     <string name="verify_deposit_hold_paired">Hold for paired sign</string>
     <string name="verify_deposit_sign_transaction">Sign transaction</string>
@@ -790,12 +808,12 @@
     <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
     <string name="unstake_tcy_zero_error">Unstaking cannot be performed if balance is below 1</string>
-    
+
     <string name="defi_action_stake" translatable="false">Stake</string>
     <string name="defi_action_unstake" translatable="false">Unstake</string>
     <string name="defi_action_mint" translatable="false">Mint</string>
     <string name="defi_action_redeem" translatable="false">Redeem</string>
-    
+
     <plurals name="seconds_format">
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>
@@ -871,7 +889,7 @@
     <string name="search_bar_cancel">Cancel</string>
     <string name="chain_selection_select_chains">Select chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
-    <string name="transaction_type_button_send" >Send</string>
+    <string name="transaction_type_button_send">Send</string>
     <string name="transaction_type_button_functions">Functions</string>
     <string name="copy_address">Copy Address</string>
     <string name="chain_tokens_tab_hidden">Hidden</string>
@@ -975,5 +993,11 @@
     <string name="no_positions_found">No positions found</string>
     <string name="select_positions">Select positions</string>
     <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
+    <string name="bandwidth">Bandwidth</string>
+    <string name="energy">Energy</string>
+    <string name="bandwidth_dec">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
+    <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
+    <string name="tron" translatable="false">Tron</string>
+    <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
 </resources>

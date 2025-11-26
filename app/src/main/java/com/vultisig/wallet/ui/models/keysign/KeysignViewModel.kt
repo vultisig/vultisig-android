@@ -391,8 +391,8 @@ internal class KeysignViewModel(
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {
-                navigator.navigate(
-                    Destination.Home(),
+                navigator.route(
+                    Route.Home(),
                     NavigationOptions(
                         clearBackStack = true
                     )

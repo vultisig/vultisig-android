@@ -41,6 +41,7 @@ enum class Chain(
     ZkSync("Zksync", EVM, "Gwei"),
     Mantle("Mantle", EVM, "Gwei"),
     Sei("Sei", EVM, "Gwei"),
+    Hyperliquid("Hyperliquid", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -121,6 +122,7 @@ val Chain.coinType: CoinType
         Chain.Cardano -> CoinType.CARDANO
         Chain.Mantle -> CoinType.MANTLE
         Chain.Sei -> CoinType.SEI
+        Chain.Hyperliquid -> CoinType.ETHEREUM
     }
 
 val Chain.supportsLegacyGas: Boolean
@@ -163,7 +165,7 @@ val Chain.isSwapSupported: Boolean
 
         Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync, Chain.Zcash,
 
-        Chain.Tron,
+        Chain.Tron, Chain.Hyperliquid
     )
 
 val Chain.isDepositSupported: Boolean
@@ -231,7 +233,14 @@ val Chain.banxaAssetName: String?
         Chain.Dydx -> "DYDX"
         Chain.Polkadot -> "DOT"
         Chain.Sei -> "SEI"
+        Chain.Hyperliquid -> "HYPE"
         else -> null
+    }
+
+val Chain.isDeFiSupported: Boolean
+    get() = when (this) {
+        Chain.ThorChain -> true
+        else -> false
     }
 
 val Chain.isLayer2: Boolean
@@ -254,6 +263,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.CronosChain -> 25
         Chain.ZkSync -> 324
         Chain.Mantle -> 5000
+        Chain.Hyperliquid -> 999
         else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
@@ -294,6 +304,7 @@ fun Chain.swapAssetName(): String {
         Chain.Cardano -> "ADA"
         Chain.Mantle -> "MNT"
         Chain.Sei -> "SEI"
+        Chain.Hyperliquid -> "HYPE"
     }
 }
 
