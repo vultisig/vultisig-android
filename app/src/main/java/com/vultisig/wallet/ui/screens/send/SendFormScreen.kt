@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -230,551 +231,36 @@ private fun SendFormScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(all = 16.dp)
                 ) {
-                    // select asset
-                    FoldableSection(
-                        expanded = state.expandedSection == SendSections.Asset,
-                        onToggle = {
-                            onExpandSection(SendSections.Asset)
-                        },
-                        complete = true,
-                        title = stringResource(R.string.form_token_selection_asset),
-                        completeTitleContent = {
-                            Row(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                val selectedToken = state.selectedCoin
-
-                                TokenLogo(
-                                    errorLogoModifier = Modifier
-                                        .size(16.dp)
-                                        .background(Theme.colors.neutral100),
-                                    logo = selectedToken?.tokenLogo ?: "",
-                                    title = selectedToken?.title ?: "",
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                )
-
-                                UiSpacer(4.dp)
-
-                                Text(
-                                    text = selectedToken?.title ?: "",
-                                    style = Theme.brockmann.supplementary.caption,
-                                    color = Theme.colors.text.extraLight,
-                                )
-                            }
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    start = 12.dp,
-                                    top = 16.dp,
-                                    end = 12.dp,
-                                    bottom = 12.dp,
-                                )
-                        ) {
-                            ChainSelector(
-                                title = stringResource(R.string.send_from_address),
-                                // TODO selectedChain should not be nullable
-                                //  or default value should be something else
-                                chain = state.selectedCoin?.model?.address?.chain
-                                    ?: Chain.ThorChain,
-                                onClick = onSelectNetworkRequest,
-                                onDragCancel = onNetworkDragCancel,
-                                onDrag = onNetworkDrag,
-                                onDragStart = onNetworkDragStart,
-                                onDragEnd = onNetworkDragEnd,
-                                onLongPressStarted = onNetworkLongPressStarted,
-                            )
-
-                            UiSpacer(12.dp)
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                            ) {
-                                TokenChip(
-                                    selectedToken = state.selectedCoin,
-                                    onSelectTokenClick = onSelectTokenRequest,
-
-                                    onDragCancel = onAssetDragCancel,
-                                    onDrag = onAssetDrag,
-                                    onDragStart = onAssetDragStart,
-                                    onDragEnd = onAssetDragEnd,
-                                    onLongPressStarted = onAssetLongPressStarted,
-
-                                    )
-
-                                Column(
-                                    horizontalAlignment = Alignment.End,
-                                    verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier
-                                        .weight(1f),
-                                ) {
-                                    state.selectedCoin?.let { token ->
-                                        Text(
-                                            text = stringResource(
-                                                R.string.form_token_selection_balance,
-                                                token.balance ?: ""
-                                            ),
-                                            color = Theme.colors.text.light,
-                                            style = Theme.brockmann.body.s.medium,
-                                            textAlign = TextAlign.End,
-                                        )
-
-                                        UiSpacer(2.dp)
-
-                                        token.fiatValue?.let { fiatValue ->
-                                            Text(
-                                                text = fiatValue,
-                                                textAlign = TextAlign.End,
-                                                color = Theme.colors.text.extraLight,
-                                                style = Theme.brockmann.supplementary.caption,
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // input dst address
-                    FoldableSection(
-                        expanded = state.expandedSection == SendSections.Address,
-                        complete = state.isDstAddressComplete,
-                        title = stringResource(R.string.add_address_address_title),
-                        onToggle = {
-                            onExpandSection(SendSections.Address)
-                        },
-                        completeTitleContent = {
-                            Text(
-                                text = addressFieldState.text.toString(),
-                                color = Theme.colors.text.extraLight,
-                                style = Theme.brockmann.body.s.medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.MiddleEllipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    start = 12.dp,
-                                    top = 16.dp,
-                                    end = 12.dp,
-                                    bottom = 12.dp,
-                                )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.send_from_address),
-                                color = Theme.colors.text.extraLight,
-                                style = Theme.brockmann.supplementary.caption,
-                            )
-
-                            UiSpacer(12.dp)
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(
-                                        border = BorderStroke(
-                                            width = 1.dp,
-                                            color = Theme.colors.borders.light,
-                                        ),
-                                        shape = RoundedCornerShape(12.dp),
-                                    )
-                                    .background(
-                                        color = Theme.colors.backgrounds.secondary,
-                                        shape = RoundedCornerShape(12.dp),
-                                    )
-                                    .padding(
-                                        horizontal = 16.dp,
-                                        vertical = 8.dp,
-                                    ),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    text = state.srcVaultName,
-                                    color = Theme.colors.text.primary,
-                                    style = Theme.brockmann.supplementary.caption,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.MiddleEllipsis,
-                                )
-
-                                Text(
-                                    text = state.srcAddress,
-                                    color = Theme.colors.text.extraLight,
-                                    style = Theme.brockmann.supplementary.caption,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.MiddleEllipsis,
-                                )
-                            }
-
-                            UiSpacer(16.dp)
-
-                            Text(
-                                text = stringResource(R.string.send_to_address),
-                                color = Theme.colors.text.extraLight,
-                                style = Theme.brockmann.supplementary.caption,
-                            )
-
-                            UiSpacer(12.dp)
-
-                            VsTextInputField(
-                                textFieldState = addressFieldState,
-                                hint = stringResource(R.string.send_to_address_hint),
-                                onFocusChanged = {
-                                    if (!it) {
-                                        onDstAddressLostFocus()
-                                    }
-                                },
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Next,
-                                innerState = if (state.dstAddressError != null)
-                                    VsTextInputFieldInnerState.Error
-                                else VsTextInputFieldInnerState.Default,
-                                footNote = state.dstAddressError?.asString(),
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                            )
-
-                            UiSpacer(16.dp)
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                PasteIcon(
-                                    modifier = Modifier
-                                        .vsClickableBackground()
-                                        .padding(all = 12.dp)
-                                        .weight(1f),
-                                    onPaste = onSetOutputAddress
-                                )
-
-                                UiIcon(
-                                    drawableResId = R.drawable.camera,
-                                    size = 20.dp,
-                                    modifier = Modifier
-                                        .vsClickableBackground()
-                                        .padding(all = 12.dp)
-                                        .weight(1f),
-                                    onClick = onScanDstAddressRequest,
-                                )
-
-                                UiIcon(
-                                    drawableResId = R.drawable.ic_bookmark,
-                                    size = 20.dp,
-                                    modifier = Modifier
-                                        .vsClickableBackground()
-                                        .padding(all = 12.dp)
-                                        .weight(1f),
-                                    onClick = onAddressBookClick,
-                                )
-                            }
-                        }
-                    }
-
-
-                    FoldableSection(
-                        expanded = state.expandedSection == SendSections.Amount,
-                        onToggle = {
-                            if (state.isDstAddressComplete &&
-                                addressFieldState.text.isNotEmpty()
-                            ) {
-                                onExpandSection(SendSections.Amount)
-                            }
-                        },
-                        expandedTitleActions = {
-                            if (state.hasGasSettings) {
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .weight(1f),
-                                ) {
-                                    UiIcon(
-                                        drawableResId = R.drawable.advance_gas_settings,
-                                        size = 16.dp,
-                                        tint = Theme.colors.text.primary,
-                                        onClick = onGasSettingsClick,
-                                    )
-                                }
-                            }
-                        },
-                        title = stringResource(R.string.send_amount)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(
-                                    start = 12.dp,
-                                    top = 16.dp,
-                                    end = 12.dp,
-                                    bottom = 12.dp,
-                                )
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .height(211.dp)
-                                    .fillMaxWidth(),
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(
-                                            horizontal = 54.dp,
-                                        )
-                                        .align(Alignment.Center),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    val primaryAmountText: String
-                                    val secondaryAmountText: String
-                                    val primaryFieldState: TextFieldState
-                                    val secondaryFieldState: TextFieldState
-
-                                    if (state.usingTokenAmountInput) {
-                                        primaryAmountText = state.selectedCoin?.title ?: ""
-                                        secondaryAmountText = state.fiatCurrency
-                                        primaryFieldState = tokenAmountFieldState
-                                        secondaryFieldState = fiatAmountFieldState
-                                    } else {
-                                        primaryAmountText = state.fiatCurrency
-                                        secondaryAmountText = state.selectedCoin?.title ?: ""
-                                        primaryFieldState = fiatAmountFieldState
-                                        secondaryFieldState = tokenAmountFieldState
-                                    }
-
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.Center,
-                                    ) {
-                                        BasicTextField(
-                                            state = primaryFieldState,
-                                            lineLimits = TextFieldLineLimits.MultiLine(
-                                                maxHeightInLines = 3,
-                                            ),
-                                            textStyle = Theme.brockmann.headings.largeTitle
-                                                .copy(
-                                                    color = Theme.colors.text.primary,
-                                                    textAlign = TextAlign.Center,
-                                                ),
-                                            cursorBrush = Theme.cursorBrush,
-                                            keyboardOptions = KeyboardOptions(
-                                                keyboardType = KeyboardType.Decimal,
-                                                imeAction = ImeAction.Send,
-                                            ),
-                                            onKeyboardAction = {
-                                                focusManager.clearFocus()
-                                                onSend()
-                                            },
-                                            modifier = Modifier
-                                                .width(IntrinsicSize.Min),
-                                            decorator = { textField ->
-                                                if (primaryFieldState.text.isEmpty()) {
-                                                    Text(
-                                                        text = "0",
-                                                        color = Theme.colors.text.light,
-                                                        style = Theme.brockmann.headings.largeTitle,
-                                                        textAlign = TextAlign.Center,
-                                                        modifier = Modifier
-                                                            .wrapContentWidth()
-                                                    )
-                                                }
-                                                textField()
-                                            }
-                                        )
-
-                                        Text(
-                                            text = " $primaryAmountText",
-                                            color = Theme.colors.text.primary,
-                                            style = Theme.brockmann.headings.largeTitle,
-                                            textAlign = TextAlign.Center,
-                                        )
-                                    }
-
-                                    Text(
-                                        text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
-                                        color = Theme.colors.text.extraLight,
-                                        style = Theme.brockmann.body.s.medium,
-                                        textAlign = TextAlign.Center,
-                                    )
-                                }
-
-                                TokenFiatToggle(
-                                    isTokenSelected = state.usingTokenAmountInput,
-                                    onTokenSelected = {
-                                        onToogleAmountInputType(it)
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.CenterEnd),
-                                )
-                            }
-
-                            UiSpacer(12.dp)
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                PercentageChip(
-                                    title = "25%",
-                                    isSelected = false,
-                                    onClick = { onChoosePercentageAmount(0.25f) },
-                                    modifier = Modifier
-                                        .weight(1f),
-                                )
-
-                                PercentageChip(
-                                    title = "50%",
-                                    isSelected = false,
-                                    onClick = { onChoosePercentageAmount(0.5f) },
-                                    modifier = Modifier
-                                        .weight(1f),
-                                )
-
-                                PercentageChip(
-                                    title = "75%",
-                                    isSelected = false,
-                                    onClick = { onChoosePercentageAmount(0.75f) },
-                                    modifier = Modifier
-                                        .weight(1f),
-                                )
-
-                                PercentageChip(
-                                    title = stringResource(R.string.send_screen_max),
-                                    isSelected = false,
-                                    onClick = onChooseMaxTokenAmount,
-                                    modifier = Modifier
-                                        .weight(1f),
-                                )
-                            }
-
-                            UiSpacer(12.dp)
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier
-                                    .background(
-                                        color = Theme.colors.backgrounds.secondary,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .padding(
-                                        all = 16.dp,
-                                    )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.send_form_balance_available),
-                                    style = Theme.brockmann.body.s.medium,
-                                    color = Theme.colors.text.primary,
-                                )
-
-                                Text(
-                                    text = state.selectedCoin?.balance ?: "",
-                                    style = Theme.brockmann.body.s.medium,
-                                    color = Theme.colors.text.light,
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier
-                                        .weight(1f),
-                                )
-                            }
-
-                            UiSpacer(12.dp)
-
-                            // memo
-                            if (state.hasMemo) {
-                                var isMemoExpanded by remember { mutableStateOf(false) }
-
-                                val rotationAngle by animateFloatAsState(
-                                    targetValue = if (isMemoExpanded) 180f else 0f,
-                                    animationSpec = tween(durationMillis = 200),
-                                    label = "caretRotation"
-                                )
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .clickable {
-                                            isMemoExpanded = !isMemoExpanded
-                                        }
-                                        .padding(
-                                            vertical = 2.dp,
-                                        )
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.send_form_add_memo),
-                                        style = Theme.brockmann.supplementary.caption,
-                                        color = Theme.colors.text.extraLight,
-                                        modifier = Modifier
-                                            .weight(1f),
-                                    )
-
-                                    UiIcon(
-                                        drawableResId = R.drawable.ic_caret_down,
-                                        tint = Theme.colors.text.primary,
-                                        size = 16.dp,
-                                        modifier = Modifier
-                                            .rotate(rotationAngle)
-                                    )
-                                }
-
-                                UiSpacer(12.dp)
-
-                                AnimatedVisibility(
-                                    visible = isMemoExpanded,
-                                ) {
-                                    val clipboardData = VsClipboardService.getClipboardData()
-                                    VsTextInputField(
-                                        textFieldState = memoFieldState,
-                                        hint = stringResource(R.string.send_form_enter_memo),
-                                        trailingIcon = R.drawable.paste,
-                                        onTrailingIconClick = {
-                                            clipboardData.value
-                                                ?.takeIf { it.isNotEmpty() }
-                                                ?.let {
-                                                    memoFieldState.setTextAndPlaceCursorAtEnd(
-                                                        text = it
-                                                    )
-                                                }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                    )
-
-                                    UiSpacer(12.dp)
-                                }
-                            }
-
-                            if (state.showGasFee) {
-                                FadingHorizontalDivider(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                )
-
-                                UiSpacer(12.dp)
-
-                                EstimatedNetworkFee(
-                                    tokenGas = state.totalGas.asString(),
-                                    fiatGas = state.estimatedFee.asString(),
-                                )
-                            }
-                        }
-                    }
-
-                    UiSpacer(24.dp)
-
-                    AnimatedContent(
-                        targetState = state.reapingError,
-                        label = "error message"
-                    ) { errorMessage ->
-                        if (errorMessage != null) {
-                            Column {
-                                UiSpacer(size = 8.dp)
-                                Text(
-                                    text = errorMessage.asString(),
-                                    color = Theme.colors.error,
-                                    style = Theme.menlo.body1
-                                )
-                            }
-                        }
-                    }
+                    sendFormContent(
+                        state = state,
+                        onExpandSection = onExpandSection,
+                        onSelectNetworkRequest = onSelectNetworkRequest,
+                        onNetworkDragCancel = onNetworkDragCancel,
+                        onNetworkDrag = onNetworkDrag,
+                        onNetworkDragStart = onNetworkDragStart,
+                        onNetworkDragEnd = onNetworkDragEnd,
+                        onNetworkLongPressStarted = onNetworkLongPressStarted,
+                        onSelectTokenRequest = onSelectTokenRequest,
+                        onAssetDragCancel = onAssetDragCancel,
+                        onAssetDrag = onAssetDrag,
+                        onAssetDragStart = onAssetDragStart,
+                        onAssetDragEnd = onAssetDragEnd,
+                        onAssetLongPressStarted = onAssetLongPressStarted,
+                        addressFieldState = addressFieldState,
+                        onDstAddressLostFocus = onDstAddressLostFocus,
+                        onSetOutputAddress = onSetOutputAddress,
+                        onScanDstAddressRequest = onScanDstAddressRequest,
+                        onAddressBookClick = onAddressBookClick,
+                        onGasSettingsClick = onGasSettingsClick,
+                        tokenAmountFieldState = tokenAmountFieldState,
+                        fiatAmountFieldState = fiatAmountFieldState,
+                        focusManager = focusManager,
+                        onSend = onSend,
+                        onToogleAmountInputType = onToogleAmountInputType,
+                        onChoosePercentageAmount = onChoosePercentageAmount,
+                        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                        memoFieldState = memoFieldState
+                    )
                 }
             }
         },
@@ -800,6 +286,584 @@ private fun SendFormScreen(
             )
         }
     )
+}
+
+@Composable
+private fun sendFormContent(
+    state: SendFormUiModel,
+    onExpandSection: (SendSections) -> Unit,
+    onSelectNetworkRequest: () -> Unit,
+    onNetworkDragCancel: () -> Unit,
+    onNetworkDrag: (Offset) -> Unit,
+    onNetworkDragStart: (Offset) -> Unit,
+    onNetworkDragEnd: () -> Unit,
+    onNetworkLongPressStarted: (Offset) -> Unit,
+    onSelectTokenRequest: () -> Unit,
+    onAssetDragCancel: () -> Unit,
+    onAssetDrag: (Offset) -> Unit,
+    onAssetDragStart: (Offset) -> Unit,
+    onAssetDragEnd: () -> Unit,
+    onAssetLongPressStarted: (Offset) -> Unit,
+    addressFieldState: TextFieldState,
+    onDstAddressLostFocus: () -> Unit,
+    onSetOutputAddress: (String) -> Unit,
+    onScanDstAddressRequest: () -> Unit,
+    onAddressBookClick: () -> Unit,
+    onGasSettingsClick: () -> Unit,
+    tokenAmountFieldState: TextFieldState,
+    fiatAmountFieldState: TextFieldState,
+    focusManager: FocusManager,
+    onSend: () -> Unit,
+    onToogleAmountInputType: (Boolean) -> Unit,
+    onChoosePercentageAmount: (Float) -> Unit,
+    onChooseMaxTokenAmount: () -> Unit,
+    memoFieldState: TextFieldState
+) {
+    // select asset
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Asset,
+        onToggle = {
+            onExpandSection(SendSections.Asset)
+        },
+        complete = true,
+        title = stringResource(R.string.form_token_selection_asset),
+        completeTitleContent = {
+            Row(
+                modifier = Modifier.weight(1f)
+            ) {
+                val selectedToken = state.selectedCoin
+
+                TokenLogo(
+                    errorLogoModifier = Modifier
+                        .size(16.dp)
+                        .background(Theme.colors.neutral100),
+                    logo = selectedToken?.tokenLogo ?: "",
+                    title = selectedToken?.title ?: "",
+                    modifier = Modifier
+                        .size(16.dp)
+                )
+
+                UiSpacer(4.dp)
+
+                Text(
+                    text = selectedToken?.title ?: "",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
+                )
+        ) {
+            ChainSelector(
+                title = stringResource(R.string.send_from_address),
+                // TODO selectedChain should not be nullable
+                //  or default value should be something else
+                chain = state.selectedCoin?.model?.address?.chain
+                    ?: Chain.ThorChain,
+                onClick = onSelectNetworkRequest,
+                onDragCancel = onNetworkDragCancel,
+                onDrag = onNetworkDrag,
+                onDragStart = onNetworkDragStart,
+                onDragEnd = onNetworkDragEnd,
+                onLongPressStarted = onNetworkLongPressStarted,
+            )
+
+            UiSpacer(12.dp)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+            ) {
+                TokenChip(
+                    selectedToken = state.selectedCoin,
+                    onSelectTokenClick = onSelectTokenRequest,
+
+                    onDragCancel = onAssetDragCancel,
+                    onDrag = onAssetDrag,
+                    onDragStart = onAssetDragStart,
+                    onDragEnd = onAssetDragEnd,
+                    onLongPressStarted = onAssetLongPressStarted,
+
+                    )
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .weight(1f),
+                ) {
+                    state.selectedCoin?.let { token ->
+                        Text(
+                            text = stringResource(
+                                R.string.form_token_selection_balance,
+                                token.balance ?: ""
+                            ),
+                            color = Theme.colors.text.light,
+                            style = Theme.brockmann.body.s.medium,
+                            textAlign = TextAlign.End,
+                        )
+
+                        UiSpacer(2.dp)
+
+                        token.fiatValue?.let { fiatValue ->
+                            Text(
+                                text = fiatValue,
+                                textAlign = TextAlign.End,
+                                color = Theme.colors.text.extraLight,
+                                style = Theme.brockmann.supplementary.caption,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // input dst address
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Address,
+        complete = state.isDstAddressComplete,
+        title = stringResource(R.string.add_address_address_title),
+        onToggle = {
+            onExpandSection(SendSections.Address)
+        },
+        completeTitleContent = {
+            Text(
+                text = addressFieldState.text.toString(),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.body.s.medium,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
+                )
+        ) {
+            Text(
+                text = stringResource(R.string.send_from_address),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = Theme.colors.borders.light,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .background(
+                        color = Theme.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 8.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = state.srcVaultName,
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.supplementary.caption,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+
+                Text(
+                    text = state.srcAddress,
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.supplementary.caption,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+            }
+
+            UiSpacer(16.dp)
+
+            Text(
+                text = stringResource(R.string.send_to_address),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = addressFieldState,
+                hint = stringResource(R.string.send_to_address_hint),
+                onFocusChanged = {
+                    if (!it) {
+                        onDstAddressLostFocus()
+                    }
+                },
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                innerState = if (state.dstAddressError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
+                footNote = state.dstAddressError?.asString(),
+                modifier = Modifier
+                    .fillMaxWidth(),
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PasteIcon(
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onPaste = onSetOutputAddress
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onScanDstAddressRequest,
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_bookmark,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onAddressBookClick,
+                )
+            }
+        }
+    }
+
+
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Amount,
+        onToggle = {
+            if (state.isDstAddressComplete &&
+                addressFieldState.text.isNotEmpty()
+            ) {
+                onExpandSection(SendSections.Amount)
+            }
+        },
+        expandedTitleActions = {
+            if (state.hasGasSettings) {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .weight(1f),
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.advance_gas_settings,
+                        size = 16.dp,
+                        tint = Theme.colors.text.primary,
+                        onClick = onGasSettingsClick,
+                    )
+                }
+            }
+        },
+        title = stringResource(R.string.send_amount)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .height(211.dp)
+                    .fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 54.dp,
+                        )
+                        .align(Alignment.Center),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val primaryAmountText: String
+                    val secondaryAmountText: String
+                    val primaryFieldState: TextFieldState
+                    val secondaryFieldState: TextFieldState
+
+                    if (state.usingTokenAmountInput) {
+                        primaryAmountText = state.selectedCoin?.title ?: ""
+                        secondaryAmountText = state.fiatCurrency
+                        primaryFieldState = tokenAmountFieldState
+                        secondaryFieldState = fiatAmountFieldState
+                    } else {
+                        primaryAmountText = state.fiatCurrency
+                        secondaryAmountText = state.selectedCoin?.title ?: ""
+                        primaryFieldState = fiatAmountFieldState
+                        secondaryFieldState = tokenAmountFieldState
+                    }
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        BasicTextField(
+                            state = primaryFieldState,
+                            lineLimits = TextFieldLineLimits.MultiLine(
+                                maxHeightInLines = 3,
+                            ),
+                            textStyle = Theme.brockmann.headings.largeTitle
+                                .copy(
+                                    color = Theme.colors.text.primary,
+                                    textAlign = TextAlign.Center,
+                                ),
+                            cursorBrush = Theme.cursorBrush,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Send,
+                            ),
+                            onKeyboardAction = {
+                                focusManager.clearFocus()
+                                onSend()
+                            },
+                            modifier = Modifier
+                                .width(IntrinsicSize.Min),
+                            decorator = { textField ->
+                                if (primaryFieldState.text.isEmpty()) {
+                                    Text(
+                                        text = "0",
+                                        color = Theme.colors.text.light,
+                                        style = Theme.brockmann.headings.largeTitle,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .wrapContentWidth()
+                                    )
+                                }
+                                textField()
+                            }
+                        )
+
+                        Text(
+                            text = " $primaryAmountText",
+                            color = Theme.colors.text.primary,
+                            style = Theme.brockmann.headings.largeTitle,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+
+                    Text(
+                        text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
+                        color = Theme.colors.text.extraLight,
+                        style = Theme.brockmann.body.s.medium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                TokenFiatToggle(
+                    isTokenSelected = state.usingTokenAmountInput,
+                    onTokenSelected = {
+                        onToogleAmountInputType(it)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd),
+                )
+            }
+
+            UiSpacer(12.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PercentageChip(
+                    title = "25%",
+                    isSelected = false,
+                    onClick = { onChoosePercentageAmount(0.25f) },
+                    modifier = Modifier
+                        .weight(1f),
+                )
+
+                PercentageChip(
+                    title = "50%",
+                    isSelected = false,
+                    onClick = { onChoosePercentageAmount(0.5f) },
+                    modifier = Modifier
+                        .weight(1f),
+                )
+
+                PercentageChip(
+                    title = "75%",
+                    isSelected = false,
+                    onClick = { onChoosePercentageAmount(0.75f) },
+                    modifier = Modifier
+                        .weight(1f),
+                )
+
+                PercentageChip(
+                    title = stringResource(R.string.send_screen_max),
+                    isSelected = false,
+                    onClick = onChooseMaxTokenAmount,
+                    modifier = Modifier
+                        .weight(1f),
+                )
+            }
+
+            UiSpacer(12.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .background(
+                        color = Theme.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(
+                        all = 16.dp,
+                    )
+            ) {
+                Text(
+                    text = stringResource(R.string.send_form_balance_available),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.primary,
+                )
+
+                Text(
+                    text = state.selectedCoin?.balance ?: "",
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.light,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .weight(1f),
+                )
+            }
+
+            UiSpacer(12.dp)
+
+            // memo
+            if (state.hasMemo) {
+                var isMemoExpanded by remember { mutableStateOf(false) }
+
+                val rotationAngle by animateFloatAsState(
+                    targetValue = if (isMemoExpanded) 180f else 0f,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "caretRotation"
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable {
+                            isMemoExpanded = !isMemoExpanded
+                        }
+                        .padding(
+                            vertical = 2.dp,
+                        )
+                ) {
+                    Text(
+                        text = stringResource(R.string.send_form_add_memo),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.colors.text.extraLight,
+                        modifier = Modifier
+                            .weight(1f),
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_caret_down,
+                        tint = Theme.colors.text.primary,
+                        size = 16.dp,
+                        modifier = Modifier
+                            .rotate(rotationAngle)
+                    )
+                }
+
+                UiSpacer(12.dp)
+
+                AnimatedVisibility(
+                    visible = isMemoExpanded,
+                ) {
+                    val clipboardData = VsClipboardService.getClipboardData()
+                    VsTextInputField(
+                        textFieldState = memoFieldState,
+                        hint = stringResource(R.string.send_form_enter_memo),
+                        trailingIcon = R.drawable.paste,
+                        onTrailingIconClick = {
+                            clipboardData.value
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    memoFieldState.setTextAndPlaceCursorAtEnd(
+                                        text = it
+                                    )
+                                }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (state.showGasFee) {
+                FadingHorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
+
+                UiSpacer(12.dp)
+
+                EstimatedNetworkFee(
+                    tokenGas = state.totalGas.asString(),
+                    fiatGas = state.estimatedFee.asString(),
+                )
+            }
+        }
+    }
+
+    UiSpacer(24.dp)
+
+    AnimatedContent(
+        targetState = state.reapingError,
+        label = "error message"
+    ) { errorMessage ->
+        if (errorMessage != null) {
+            Column {
+                UiSpacer(size = 8.dp)
+                Text(
+                    text = errorMessage.asString(),
+                    color = Theme.colors.error,
+                    style = Theme.menlo.body1
+                )
+            }
+        }
+    }
 }
 
 @Composable
