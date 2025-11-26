@@ -42,9 +42,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -159,10 +161,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadData(vaultId: VaultId) {
-        val vaultChanged = this.vaultId != vaultId
-        if (vaultChanged) {
-            uiState.update { it.copy(defiAccounts = emptyList(), totalDeFiValue = null) }
-        }
+        val vaultChanged = this.vaultId != null && this.vaultId != vaultId
+
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
