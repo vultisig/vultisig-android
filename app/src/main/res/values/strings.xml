@@ -114,7 +114,7 @@
     <string name="vault_tier_diamond_description_part2">35 bps trading fee discount</string>
     <string name="vault_tier_diamond_description_part3"> on all swaps.</string>
     <string name="vault_tier_ultimate_description_part1">By holding 1,000,000 $VULT, you\'ll unlock the Ultimate Tier and receive a </string>
-    <string name="vault_tier_ultimate_description_part2">a complete Vultisig fee waiver on all swaps</string>
+    <string name="vault_tier_ultimate_description_part2">a complete Vultisig fee waiver</string>
     <string name="vault_tier_ultimate_description_part3"> on all swaps.</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="join_keysign_discovery_service">Discovering Service</string>
