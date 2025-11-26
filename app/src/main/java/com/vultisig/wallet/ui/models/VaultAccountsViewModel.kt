@@ -353,7 +353,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 .launchIn(this)
         }
     }
-    
+
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob = viewModelScope.launch {
@@ -367,7 +367,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                         updateRefreshing(false)
                         Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
                     },
-                uiState.value.searchTextFieldState.textAsFlow(),
+                uiState.map { it.searchTextFieldState.text }.distinctUntilChanged(),
             ) { accounts, searchQuery ->
                 Timber.d("DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts")
                 
@@ -413,6 +413,8 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
         }
         updateRefreshing(false)
+
+        Timber.d("Update updateUiStateFromList", "$this")
     }
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
@@ -433,6 +435,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
 
     private fun updateRefreshing(isRefreshing: Boolean) {
+        Timber.d("UpdateRefresh $isRefreshing")
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
