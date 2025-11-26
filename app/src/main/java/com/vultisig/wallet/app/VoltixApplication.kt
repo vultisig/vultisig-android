@@ -17,7 +17,7 @@ internal open class VsBaseApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
 
-        Rive.init(this)
+        lazy { Rive.init(this) }
     }
 }
 
