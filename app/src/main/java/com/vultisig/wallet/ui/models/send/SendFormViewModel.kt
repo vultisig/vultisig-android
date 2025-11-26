@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx..material3.TextField
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
@@ -128,6 +129,13 @@ internal data class SendFormUiModel(
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
 
+    // type
+    val type: SendFormType = SendFormType.Send,
+
+    // bond node
+    val nodeAddress: String = "",
+    val isDstNodeAddressComplete: Boolean = false,
+
     // errors
     val errorText: UiText? = null,
     val dstAddressError: UiText? = null,
@@ -155,6 +163,14 @@ internal enum class SendSections {
     Asset,
     Address,
     Amount,
+
+    BondAddress,
+}
+
+enum class SendFormType {
+    Send,
+    Bond,
+    UnBond,
 }
 
 internal sealed class GasSettings {
@@ -206,6 +222,10 @@ internal class SendFormViewModel @Inject constructor(
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
     val memoFieldState = TextFieldState()
+
+    // bond node
+    val bondNodeAddressFieldState = TextFieldState()
+    val operatorFeesBondState = TextFieldState()
 
     private var vaultId: String? = null
 
