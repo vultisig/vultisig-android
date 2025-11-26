@@ -159,6 +159,10 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadData(vaultId: VaultId) {
+        val vaultChanged = this.vaultId != vaultId
+        if (vaultChanged) {
+            uiState.update { it.copy(defiAccounts = emptyList(), totalDeFiValue = null) }
+        }
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
@@ -166,7 +170,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
-        loadDeFiBalances(vaultId, false)
+        loadDeFiBalances(vaultId, vaultChanged)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -358,24 +362,23 @@ internal class VaultAccountsViewModel @Inject constructor(
             combine(
                 accountsRepository
                     .loadDeFiAddresses(vaultId, isRefresh)
-                    .map { it ->
-                        it.sortByAccountsTotalFiatValue()
+                    .map { addresses ->
+                        addresses.sortByAccountsTotalFiatValue()
                     }
-                    .catch {
+                    .catch { error ->
                         updateRefreshing(false)
-                        Timber.e(it)
+                        Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
-                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery,  ->
-                Timber.d("Defi Accounts Loaded: $accounts")
-
+            ) { accounts, searchQuery ->
+                Timber.d("DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts")
+                
                 accounts.updateUiStateFromList(
-                        searchQuery = searchQuery.toString(),
-                        isDefi = true,
-                    )
+                    searchQuery = searchQuery.toString(),
+                    isDefi = true,
+                )
             }
-            .launchIn(this)
+                .launchIn(this)
         }
     }
 
