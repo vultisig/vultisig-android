@@ -1,4 +1,7 @@
-@file:OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(
+    ExperimentalSerializationApi::class,
+    ExperimentalStdlibApi::class
+)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -101,13 +104,16 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import com.vultisig.wallet.data.common.decodeFunctionArgs
 
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
-    data object MissingRequiredVault : JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
+    data object MissingRequiredVault :
+        JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
+
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
     data object WrongVaultShare :
         JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
@@ -115,8 +121,11 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
-    data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
-    data object WrongLibType : JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
+    data object FailedConnectToServer :
+        JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
+
+    data object WrongLibType :
+        JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
 }
 
 sealed interface JoinKeysignState {
@@ -190,10 +199,14 @@ internal class JoinKeysignViewModel @Inject constructor(
     companion object {
         private const val VAULT_PARAMETER = "vault"
     }
+
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
-    private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
+    private var _currentVault: Vault = Vault(
+        id = UUID.randomUUID().toString(),
+        "temp vault"
+    )
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
@@ -304,7 +317,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     // when Payload is not in the QRCode
                     if (payloadProto.payloadId.isNotEmpty()) {
-                        routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                        routerApi.getPayload(
+                            _serverAddress,
+                            payloadId
+                        ).let { payload ->
                             if (payload.isNotEmpty()) {
                                 val rawPayload = decompressQr(payload.decodeBase64Bytes())
                                 val payloadProto =
@@ -329,10 +345,16 @@ internal class JoinKeysignViewModel @Inject constructor(
                     currentState.value = JoinKeysignState.DiscoverService
                 }
             } catch (e: UnknownHostException) {
-                Timber.d(e, "Failed to resolve request")
+                Timber.d(
+                    e,
+                    "Failed to resolve request"
+                )
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                Timber.d(e, "Failed to parse QR code")
+                Timber.d(
+                    e,
+                    "Failed to parse QR code"
+                )
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }
@@ -456,9 +478,14 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val chain = srcToken.chain
                 val (nativeTokenAddress, _) = chainAccountAddressRepository.getAddress(
-                    nativeToken, _currentVault
+                    nativeToken,
+                    _currentVault
                 )
-                val gasFee = gasFeeRepository.getGasFee(chain = chain, address = nativeTokenAddress, isSwap = true)
+                val gasFee = gasFeeRepository.getGasFee(
+                    chain = chain,
+                    address = nativeTokenAddress,
+                    isSwap = true
+                )
                 val estimatedNetworkGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -535,7 +562,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
                                 fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
-                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)+
+                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                     " ${estimatedNetworkGasFee.tokenValue.unit}",
                             totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
@@ -560,7 +587,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             tokenValue = srcTokenValue,
                         )
 
-                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val estimatedFee = convertTokenValueToFiat(
+                            dstToken,
+                            quote.fees,
+                            currency
+                        )
                         val swapTransactionUiModel = SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
@@ -613,7 +644,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     is SwapPayload.MayaChain -> {
                         val srcUsdFiatValue = convertTokenValueToFiat(
-                            srcToken, srcTokenValue, AppCurrency.USD,
+                            srcToken,
+                            srcTokenValue,
+                            AppCurrency.USD,
                         )
 
                         val isAffiliate =
@@ -629,7 +662,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
 
                         val estimatedFee =
-                            convertTokenValueToFiat(dstToken, quote.fees, currency)
+                            convertTokenValueToFiat(
+                                dstToken,
+                                quote.fees,
+                                currency
+                            )
                         val swapTransactionUiModel = SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
@@ -715,7 +752,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         srcAddress = payload.coin.address,
                         dstAddress = payload.toAddress,
 
-                        networkFeeTokenValue  = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        networkFeeTokenValue = mapTokenValueToStringWithUnit(estimatedTokenFees),
                         networkFeeFiatValue = fiatValueToStringMapper(
                             convertTokenValueToFiat(
                                 feeCurrency,
@@ -743,7 +780,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                         decimals = payloadToken.decimal,
                     )
                     val isNativeToken = payload.coin.isNativeToken
-                    val gasFee = gasFeeRepository.getGasFee(chain = chain, address = address, isNativeToken = isNativeToken)
+                    val gasFee = gasFeeRepository.getGasFee(
+                        chain = chain,
+                        address = address,
+                        isNativeToken = isNativeToken
+                    )
                     val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = BigInteger.valueOf(1),
@@ -751,7 +792,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                             selectedToken = payload.coin,
                         )
                     )
-                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
+                    val functionInfo = getTransactionFunctionInfo(
+                        payload.memo,
+                        chain
+                    )
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -820,7 +864,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
                         txScanStatus = TransactionScanStatus.Error(
-                            e.message ?: "Security Scanner Failed", BLOCKAID_PROVIDER
+                            e.message ?: "Security Scanner Failed",
+                            BLOCKAID_PROVIDER
                         )
                     )
                 }
@@ -850,7 +895,10 @@ internal class JoinKeysignViewModel @Inject constructor(
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.launch {
                 // when Payload is not in the QRCode
-                routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                routerApi.getPayload(
+                    _serverAddress,
+                    payloadId
+                ).let { payload ->
                     if (payload.isNotEmpty()) {
                         val rawPayload = decompressQr(payload.decodeBase64Bytes())
                         val payloadProto =
@@ -880,10 +928,16 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     fun discoveryMediator(nsdManager: NsdManager) {
         _discoveryListener =
-            MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
+            MediatorServiceDiscoveryListener(
+                nsdManager,
+                _serviceName,
+                ::onServerAddressDiscovered
+            )
         _nsdManager = nsdManager
         nsdManager.discoverServices(
-            "_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener
+            "_http._tcp.",
+            NsdManager.PROTOCOL_DNS_SD,
+            _discoveryListener
         )
     }
 
@@ -892,12 +946,19 @@ internal class JoinKeysignViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
-                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+                    sessionApi.startSession(
+                        _serverAddress,
+                        _sessionID,
+                        listOf(_localPartyID)
+                    )
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
-                        .e("Failed to join keysign: %s", e.stackTraceToString())
+                        .e(
+                            "Failed to join keysign: %s",
+                            e.stackTraceToString()
+                        )
                     currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart)
                 }
             }
@@ -942,7 +1003,10 @@ internal class JoinKeysignViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
+            this._keysignCommittee = sessionApi.checkCommittee(
+                _serverAddress,
+                _sessionID
+            )
             Timber.d("Keysign committee: $_keysignCommittee")
             Timber.d("local party: $_localPartyID")
             if (this._keysignCommittee.contains(_localPartyID)) {
@@ -953,6 +1017,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             vault = _currentVault,
                         )
                     }
+
                     customMessagePayload != null -> {
                         messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
                     }
@@ -961,7 +1026,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                 return true
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to check keysign start")
+            Timber.e(
+                e,
+                "Failed to check keysign start"
+            )
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
@@ -1001,8 +1069,11 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         val functionSignature = fourByteRepository.decodeFunction(memo)
         val functionInputs = if (functionSignature != null) {
-            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
+            functionSignature.decodeFunctionArgs(memo) ?: return null
         } else return null
-        return FunctionInfo(functionSignature, functionInputs)
+        return FunctionInfo(
+            functionSignature,
+            functionInputs
+        )
     }
 }

@@ -1,7 +1,6 @@
 [versions]
 browser = "1.8.0"
 compileSdk = "35"
-ethersBom = "1.3.2"
 web3 = "4.9.4"
 ktorClientMock = "3.0.3"
 minSdk = "26"
@@ -65,8 +64,6 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 androidx-material3-window = { group = "androidx.compose.material3", name = "material3-window-size-class-android" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
-ethers-abi = { module = "io.kriptal.ethers:ethers-abi" }
-ethers-bom = { module = "io.kriptal.ethers:ethers-bom", version.ref = "ethersBom" }
 web3 = { module = "org.web3j:core", version.ref = "web3" }
 core-zxing = { module = "com.google.zxing:core", version.ref = "core" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "dagger" }
