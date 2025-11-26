@@ -867,6 +867,27 @@ private fun sendFormContent(
 }
 
 @Composable
+private fun bondNodeFormContent(
+    state: SendFormUiModel,
+    onExpandSection: (SendSections) -> Unit,
+    nodeAddressFieldState: TextFieldState,
+    onDstAddressLostFocus: () -> Unit,
+    onSetOutputAddress: (String) -> Unit,
+    onScanDstAddressRequest: () -> Unit,
+    onAddressBookClick: () -> Unit,
+    onGasSettingsClick: () -> Unit,
+    tokenAmountFieldState: TextFieldState,
+    fiatAmountFieldState: TextFieldState,
+    focusManager: FocusManager,
+    onSend: () -> Unit,
+    onToogleAmountInputType: (Boolean) -> Unit,
+    onChoosePercentageAmount: (Float) -> Unit,
+    onChooseMaxTokenAmount: () -> Unit,
+) {
+
+}
+
+@Composable
 internal fun EstimatedNetworkFee(
     tokenGas: String,
     fiatGas: String,
