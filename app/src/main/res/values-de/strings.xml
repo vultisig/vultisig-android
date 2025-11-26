@@ -937,4 +937,8 @@
     <string name="no_positions_found">Keine Positionen gefunden</string>
     <string name="select_positions">Positionen auswählen</string>
     <string name="enable_at_least_one_position">Aktivieren Sie mindestens eine Position, um Salden anzuzeigen und Positionen zu verwalten.</string>
+    <string name="bandwidth">Bandbreite</string>
+    <string name="energy">Energie</string>
+    <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
+    <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
 </resources>

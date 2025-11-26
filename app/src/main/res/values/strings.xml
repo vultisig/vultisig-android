@@ -486,10 +486,10 @@
     <string name="signing_error_transaction_timeout">Transaction time out due to slow signing. Please try again.</string>
     <string name="verify_sign_message_message_field_title">Message</string>
     <string name="sign_message_form_method_field_title">Method</string>
-    <string name="hint_signing_method" >Signing method</string>
-    <string name="verify_sign_message_signing_method" >Signing method</string>
-    <string name="hint_message_to_sign" >Message to sign</string>
-    <string name="verify_sign_message_message_sign" >Message to sign</string>
+    <string name="hint_signing_method">Signing method</string>
+    <string name="verify_sign_message_signing_method">Signing method</string>
+    <string name="hint_message_to_sign">Message to sign</string>
+    <string name="verify_sign_message_message_sign">Message to sign</string>
     <string name="sign_message_sign_screen_title">Sign message</string>
     <string name="vault_settings_sign_message_title">Sign</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
@@ -639,7 +639,7 @@
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
     <string name="transaction_done_form_approve">Approve</string>
-    <string name="vault_settings_migration_title" >Migrate</string>
+    <string name="vault_settings_migration_title">Migrate</string>
     <string name="vault_settings_migration_subtitle">Migrate GG20 vault to DKLS</string>
     <string name="swap_swap_button">Swap</string>
     <string name="swap_swap_button_fill_in_amount">Fill in amount</string>
@@ -703,7 +703,7 @@
 
     <string name="deposit_error_max_amount" formatted="false">Only up to 100% can be unstaked</string>
     <string name="verify_deposit_function_overview">Function overview</string>
-    <string name="verify_deposit_sending" >You\'re sending</string>
+    <string name="verify_deposit_sending">You\'re sending</string>
     <string name="verify_deposit_network">Network</string>
     <string name="verify_deposit_hold_paired">Hold for paired sign</string>
     <string name="verify_deposit_sign_transaction">Sign transaction</string>
@@ -889,7 +889,7 @@
     <string name="search_bar_cancel">Cancel</string>
     <string name="chain_selection_select_chains">Select chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
-    <string name="transaction_type_button_send" >Send</string>
+    <string name="transaction_type_button_send">Send</string>
     <string name="transaction_type_button_functions">Functions</string>
     <string name="copy_address">Copy Address</string>
     <string name="chain_tokens_tab_hidden">Hidden</string>
@@ -993,5 +993,11 @@
     <string name="no_positions_found">No positions found</string>
     <string name="select_positions">Select positions</string>
     <string name="enable_at_least_one_position">Enable at least one position to view balances and manage positions.</string>
+    <string name="bandwidth">Bandwidth</string>
+    <string name="energy">Energy</string>
+    <string name="bandwidth_dec">Bandwidth Points are required for every transaction on TRON, including both standard token sends and smart contract interactions. Every TRON user receives 600 free Bandwidth Points per day, which can cover approximately two basic sends. Additionally, you can earn extra Bandwidth Points by staking TRX, increasing your daily balance to support more transactions. If you have enough Bandwidth Points, you can send tokens, stake TRX, or interact with smart contracts without paying TRX in gas fees.</string>
+    <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
+    <string name="tron" translatable="false">Tron</string>
+    <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
 
 </resources>
