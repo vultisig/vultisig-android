@@ -38,6 +38,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindTiersRemoteNFTRepository(
+        impl: TiersNFTRepositoryImpl
+    ): TiersNFTRepository
+
+    @Binds
+    @Singleton
     fun bindTokenRepository(
         impl: TokenRepositoryImpl,
     ): TokenRepository

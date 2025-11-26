@@ -5,16 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.TiersNFTRepository
+import com.vultisig.wallet.data.repositories.TiersNFTRepositoryImpl
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.DIAMOND_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_TIER_THRESHOLD
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_TIER_THRESHOLD
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +47,8 @@ internal class DiscountTiersViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val balanceRepository: BalanceRepository,
+    private val tiersNFTRepository: TiersNFTRepository,
+    private val remoteNFTService: TierRemoteNFTService,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -79,11 +86,14 @@ internal class DiscountTiersViewModel @Inject constructor(
                             listOf(vultCoin)
                         ).find { it.coinId == Coins.Ethereum.VULT.id }
 
+                        val hasNFTCache = tiersNFTRepository.hasTierNFT(vaultId)
+
                         val cachedVultBalance = vultBalanceCache?.tokenBalance?.tokenValue?.value
                         
                         // Update UI with cached value if available
                         if (cachedVultBalance != null) {
-                            val cachedTier = cachedVultBalance.determineTier()
+                            val cachedTier =
+                                cachedVultBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
                             _state.value = DiscountTiersUiModel(
                                 activeTier = cachedTier,
                                 isLoading = false
@@ -100,9 +110,12 @@ internal class DiscountTiersViewModel @Inject constructor(
                                 address,
                                 vultCoin
                             ).first() // Collect first emission from the Flow
-                            
+
+                            val hasNFTValue = withContext(Dispatchers.IO) {
+                                remoteNFTService.checkNFTBalance(address)
+                            }
                             val vultBalance = freshTokenValue.value
-                            val tier = vultBalance.determineTier()
+                            val tier = vultBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
 
                             _state.value = DiscountTiersUiModel(
                                 activeTier = tier,
@@ -114,6 +127,10 @@ internal class DiscountTiersViewModel @Inject constructor(
                             }
 
                             Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
+
+                            withContext(Dispatchers.IO) {
+                                tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
+                            }
                         } catch (e: Exception) {
                             Timber.e(e)
                             if (cachedVultBalance == null) {
@@ -138,6 +155,8 @@ internal class DiscountTiersViewModel @Inject constructor(
 
     private fun BigInteger.determineTier(): TierType? {
         return when {
+            this >= ULTIMATE_TIER_THRESHOLD -> TierType.ULTIMATE
+            this >= DIAMOND_TIER_THRESHOLD -> TierType.DIAMOND
             this >= PLATINUM_TIER_THRESHOLD -> TierType.PLATINUM
             this >= GOLD_TIER_THRESHOLD -> TierType.GOLD
             this >= SILVER_TIER_THRESHOLD -> TierType.SILVER
