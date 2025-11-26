@@ -159,6 +159,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadData(vaultId: VaultId) {
+        val vaultChanged = this.vaultId != null && this.vaultId != vaultId
+
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
@@ -166,7 +168,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
-        loadDeFiBalances(vaultId, false)
+        loadDeFiBalances(vaultId, vaultChanged)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -351,31 +353,30 @@ internal class VaultAccountsViewModel @Inject constructor(
                 .launchIn(this)
         }
     }
-    
+
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob = viewModelScope.launch {
             combine(
                 accountsRepository
                     .loadDeFiAddresses(vaultId, isRefresh)
-                    .map { it ->
-                        it.sortByAccountsTotalFiatValue()
+                    .map { addresses ->
+                        addresses.sortByAccountsTotalFiatValue()
                     }
-                    .catch {
+                    .catch { error ->
                         updateRefreshing(false)
-                        Timber.e(it)
+                        Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
                     },
-                uiState.value.searchTextFieldState.textAsFlow(),
-                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery,  ->
-                Timber.d("Defi Accounts Loaded: $accounts")
-
+                uiState.map { it.searchTextFieldState.text }.distinctUntilChanged(),
+            ) { accounts, searchQuery ->
+                Timber.d("DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts")
+                
                 accounts.updateUiStateFromList(
-                        searchQuery = searchQuery.toString(),
-                        isDefi = true,
-                    )
+                    searchQuery = searchQuery.toString(),
+                    isDefi = true,
+                )
             }
-            .launchIn(this)
+                .launchIn(this)
         }
     }
 
@@ -412,6 +413,8 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
         }
         updateRefreshing(false)
+
+        Timber.d("Update updateUiStateFromList", "$this")
     }
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
@@ -432,6 +435,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
 
     private fun updateRefreshing(isRefreshing: Boolean) {
+        Timber.d("UpdateRefresh $isRefreshing")
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
