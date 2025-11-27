@@ -795,6 +795,8 @@
     <string name="backup_password_request_description">Recomendamos que não defina uma palavra-passe de cópia de segurança para as partilhas do cofre de dispositivos. Os seus dados estarão seguros se os backups forem armazenados corretamente em locais diferentes, o que já representa uma proteção significativa. Lembre-se: as palavras-passe de cópia de segurança não podem ser recuperadas caso se esqueça delas. A escolha é sua!</string>
     <string name="backup_password_request_no_password_action">Fazer backup sem palavra-passe</string>
     <string name="address_bookmark_error_invalid_address">Este endereço não é válido para %s</string>
+    <string name="address_bookmark_error_empty_label">A etiqueta não pode estar vazia</string>
+    <string name="address_bookmark_error_invalid_label">A etiqueta deve ter entre 1 e %d caracteres</string>
     <string name="send_form_ripple_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta descer abaixo de 1 XRP (Depósito Existente), a conta será desativada (esgotada) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="error_invalid_chain">A cadeia é inválida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, aguarde</string>
