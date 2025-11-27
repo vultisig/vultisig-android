@@ -29,31 +29,31 @@ internal fun ChainSelectionScreen(
     val state = viewModel.uiState.collectAsState().value
 
     ChainSelectionScreen(
+        title = stringResource(R.string.chain_selection_select_chains),
         state = state,
         searchTextFieldState = viewModel.searchTextFieldState,
         onEnableAccount = viewModel::enableAccountTemp,
         onDisableAccount = viewModel::disableAccountTemp,
-        onDoneClick = viewModel::onCommitChanges,
-        onCancelClick = viewModel::cancelChanges,
-        onSetSearchText = viewModel::setSearchText,
+        onCommitChanges = viewModel::onCommitChanges,
+        onBackClick = viewModel::onBackClick,
     )
 }
 
 @Composable
-private fun ChainSelectionScreen(
+internal fun ChainSelectionScreen(
+    title: String,
     state: ChainSelectionUiModel,
     searchTextFieldState: TextFieldState,
     onEnableAccount: (Coin) -> Unit,
     onDisableAccount: (Coin) -> Unit,
-    onDoneClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    onSetSearchText: (String) -> Unit = {},
+    onCommitChanges: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
 
     TokenSelectionList(
         titleContent = {
             Text(
-                text = stringResource(R.string.chain_selection_select_chains),
+                text = title,
                 style = Theme.brockmann.headings.title2,
                 color = Theme.colors.neutrals.n100,
             )
@@ -73,8 +73,8 @@ private fun ChainSelectionScreen(
             )
         },
         searchTextFieldState = searchTextFieldState,
-        onDoneClick = onDoneClick,
-        onCancelClick = onCancelClick,
+        onDoneClick = onCommitChanges,
+        onCancelClick = onBackClick,
         notFoundContent = {
             NoFoundContent(
                 message = stringResource(R.string.chain_selection_no_chains_found)
@@ -87,7 +87,7 @@ private fun ChainSelectionScreen(
                 onDisableAccount(chain.coin)
             }
         },
-        onSetSearchText = onSetSearchText,
+        onSetSearchText = { /* handled by text field state */ },
     )
 }
 
@@ -95,6 +95,7 @@ private fun ChainSelectionScreen(
 @Composable
 fun ChainSelectionViewPreview() {
     ChainSelectionScreen(
+        title = "Select Chains",
         state = ChainSelectionUiModel(
             chains = listOf(
                 ChainUiModel(
@@ -118,7 +119,7 @@ fun ChainSelectionViewPreview() {
         searchTextFieldState = rememberTextFieldState(),
         onEnableAccount = {},
         onDisableAccount = {},
-        onDoneClick = {},
-        onCancelClick = {},
+        onCommitChanges = {},
+        onBackClick = {},
     )
 }
