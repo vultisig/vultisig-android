@@ -675,6 +675,7 @@
     <string name="search_bar_search">Zoeken</string>
     <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
+    <string name="chain_selection_select_defi_chains">Selecteer DeFi ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
     <string name="transaction_type_button_functions">Functies</string>
     <string name="copy_address">Kopieer adres</string>
