@@ -796,6 +796,7 @@
     <string name="backup_password_request_description">Ti consigliamo di non impostare una password di backup per le condivisioni del vault dei dispositivi: i tuoi dati sono al sicuro se i backup sono archiviati correttamente in posizioni diverse, il che rappresenta già una protezione significativa. Ricorda che le password di backup non possono essere recuperate se le dimentichi. A te la scelta!</string>
     <string name="backup_password_request_no_password_action">Backup senza password</string>
     <string name="address_bookmark_error_invalid_address">Questo indirizzo non è valido per %s</string>
+    <string name="address_bookmark_error_empty_label">L\'etichetta non può essere vuota</string>
     <string name="send_form_ripple_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un conto scende al di sotto di 1 XRP (Deposito Esistenziale), il conto verrà disattivato (rimosso) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
     <string name="vault_backup_verifying_pin">Verifica del PIN in corso, attendere</string>

@@ -1202,6 +1202,7 @@
     <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
     <string name="keygen_benefit_5_emphasized">无种子钱包</string>
     <string name="address_bookmark_error_invalid_address">此地址对 %s 无效</string>
+    <string name="address_bookmark_error_empty_label">标签不能为空</string>
     <string name="send_form_ripple_reaping_warning">请确保账户中留有足够的资金以支付手续费。如果账户余额低于 1 XRP（存量保证金），账户将被停用（清算），剩余资金也将丢失。您可以随时通过存入高于存量保证金的金额来重新激活账户。但是，这无法找回已丢失的资金。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>

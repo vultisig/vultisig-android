@@ -41,6 +41,7 @@ internal data class AddAddressEntryUiModel(
     val selectedChain: Chain = Chain.Ethereum,
     val chains: List<Chain> = Chain.entries,
     val addressError: UiText? = null,
+    val titleError: UiText? = null,
 )
 
 @HiltViewModel
@@ -104,6 +105,15 @@ internal class AddressEntryViewModel @Inject constructor(
                 )
             }
         }
+            .launchIn(viewModelScope)
+        
+        titleTextFieldState.textAsFlow()
+            .filter { it.isNotEmpty() }
+            .map {
+                state.update {
+                    it.copy(titleError = null)
+                }
+            }
             .launchIn(viewModelScope)
 
     }
@@ -183,6 +193,16 @@ internal class AddressEntryViewModel @Inject constructor(
         val chain = state.value.selectedChain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
+        
+        if (title.isBlank()) {
+            state.update {
+                it.copy(
+                    titleError = UiText.StringResource(R.string.address_bookmark_error_empty_label)
+                )
+            }
+            return
+        }
+        
         validateAddress(chain, address)?.let {
             state.update {
                 it.copy(
