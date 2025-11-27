@@ -499,6 +499,7 @@
     <string name="dialog_default_error_body">Something went wrong</string>
     <string name="address_bookmark_error_invalid_address">This address is not valid for %s</string>
     <string name="address_bookmark_error_empty_label">Label cannot be empty</string>
+    <string name="address_bookmark_error_invalid_label">Label must be between 1 and %d characters</string>
     <string name="send_form_ripple_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="send_error_invalid_plan_fee">Invalid Plan Fee</string>

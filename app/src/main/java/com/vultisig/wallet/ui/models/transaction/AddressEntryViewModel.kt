@@ -55,6 +55,10 @@ internal class AddressEntryViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
+    companion object {
+        private const val LABEL_MAX_LENGTH = 100
+    }
+
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
     private val addressBookEntryChainId = savedStateHandle.toRoute<Route.AddressEntry>().chainId
@@ -194,13 +198,26 @@ internal class AddressEntryViewModel @Inject constructor(
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
         
-        if (title.isBlank()) {
-            state.update {
-                it.copy(
-                    titleError = UiText.StringResource(R.string.address_bookmark_error_empty_label)
-                )
+        when {
+            title.isBlank() -> {
+                state.update {
+                    it.copy(
+                        titleError = UiText.StringResource(R.string.address_bookmark_error_empty_label)
+                    )
+                }
+                return
             }
-            return
+            title.length > LABEL_MAX_LENGTH -> {
+                state.update {
+                    it.copy(
+                        titleError = UiText.FormattedText(
+                            R.string.address_bookmark_error_invalid_label,
+                            listOf(LABEL_MAX_LENGTH)
+                        )
+                    )
+                }
+                return
+            }
         }
         
         validateAddress(chain, address)?.let {

@@ -799,6 +799,7 @@
     <string name="backup_password_request_no_password_action">Backup ohne Passwort</string>
     <string name="address_bookmark_error_invalid_address">Diese Adresse ist für %s ungültig.</string>
     <string name="address_bookmark_error_empty_label">Das Label darf nicht leer sein</string>
+    <string name="address_bookmark_error_invalid_label">Das Label muss zwischen 1 und %d Zeichen haben</string>
     <string name="send_form_ripple_reaping_warning">Stellen Sie sicher, dass Ihr Konto ausreichend Guthaben zur Deckung der Gebühren aufweist. Fällt Ihr Kontostand unter 1 XRP (Einzahlung), wird das Konto deaktiviert (eingezogen) und das verbleibende Guthaben geht verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung, die höher als die Mindesteinzahlung ist, reaktivieren. Dadurch werden die verlorenen Guthaben jedoch nicht wiederhergestellt.</string>
     <string name="error_invalid_chain">Die Kette ist ungültig</string>
     <string name="vault_backup_verifying_pin">Code wird überprüft, bitte warten</string>
