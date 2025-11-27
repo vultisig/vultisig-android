@@ -44,6 +44,9 @@ internal fun DeFiChainSelectionScreen(
         onBackClick = {
             viewModel.navigateBack()
         },
+        onSetSearchText = {
+            viewModel.onSearch(it)
+        }
     )
 }
 

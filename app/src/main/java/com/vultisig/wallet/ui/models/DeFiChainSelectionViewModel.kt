@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,15 +14,18 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class DeFiChainSelectionUiModel(
+    val allChains: List<Chain> = emptyList(),
     val chains: List<Chain> = emptyList(),
     val selectedChains: Set<Chain> = emptySet(),
     val isLoading: Boolean = true,
@@ -45,6 +49,7 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
 
     init {
         loadChains()
+        observeSearchQuery()
     }
 
     private fun loadChains() {
@@ -55,10 +60,32 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
             
             _uiState.update {
                 it.copy(
+                    allChains = availableChains,
                     chains = availableChains,
                     selectedChains = savedDeFiChains.intersect(availableChains.toSet()),
                     isLoading = false
                 )
+            }
+        }
+    }
+
+    private fun observeSearchQuery() {
+        viewModelScope.launch {
+            combine(
+                _uiState,
+                searchTextFieldState.textAsFlow()
+            ) { state, query ->
+                val queryStr = query.toString()
+                val filtered = if (queryStr.isBlank()) {
+                    state.allChains
+                } else {
+                    state.allChains.filter { chain ->
+                        chain.raw.contains(queryStr, ignoreCase = true)
+                    }
+                }
+                state.copy(chains = filtered)
+            }.collect { newState ->
+                _uiState.value = newState
             }
         }
     }
@@ -85,5 +112,9 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.back()
         }
+    }
+
+    fun onSearch(text: String) {
+        searchTextFieldState.setTextAndPlaceCursorAtEnd(text)
     }
 }

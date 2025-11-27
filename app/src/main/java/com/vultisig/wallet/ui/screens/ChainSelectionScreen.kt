@@ -34,6 +34,7 @@ internal fun ChainSelectionScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         onEnableAccount = viewModel::enableAccountTemp,
         onDisableAccount = viewModel::disableAccountTemp,
+        onSetSearchText = viewModel::setSearchText,
         onCommitChanges = viewModel::onCommitChanges,
         onBackClick = viewModel::onBackClick,
     )
@@ -46,6 +47,7 @@ internal fun ChainSelectionScreen(
     searchTextFieldState: TextFieldState,
     onEnableAccount: (Coin) -> Unit,
     onDisableAccount: (Coin) -> Unit,
+    onSetSearchText: (String) -> Unit = {},
     onCommitChanges: () -> Unit,
     onBackClick: () -> Unit,
 ) {
@@ -87,7 +89,7 @@ internal fun ChainSelectionScreen(
                 onDisableAccount(chain.coin)
             }
         },
-        onSetSearchText = { /* handled by text field state */ },
+        onSetSearchText = onSetSearchText,
     )
 }
 
