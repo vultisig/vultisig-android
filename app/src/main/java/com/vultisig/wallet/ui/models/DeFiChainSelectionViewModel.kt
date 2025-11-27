@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -49,7 +50,7 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
     private fun loadChains() {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
-            val availableChains = vault.coins.map { it.chain }.distinct()
+            val availableChains = vault.coins.map { it.chain }.distinct().filter { it.isDeFiSupported }
             val savedDeFiChains = defaultDeFiChainsRepository.getDefaultChains(vaultId).first()
             
             _uiState.update {
