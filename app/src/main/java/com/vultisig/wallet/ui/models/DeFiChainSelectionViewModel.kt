@@ -19,7 +19,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -80,23 +82,24 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
     private fun observeSearchQuery() {
         viewModelScope.launch {
             combine(
-                _uiState,
-                searchTextFieldState.textAsFlow()
-            ) { state, query ->
-                val queryStr = query.toString()
-                val filtered = if (queryStr.isBlank()) {
-                    state.allChains
+                _uiState.map { it.allChains }.distinctUntilChanged(),
+                searchTextFieldState.textAsFlow().map { it.toString() }.distinctUntilChanged(),
+            ) { allChains, queryStr ->
+                if (queryStr.isBlank()) {
+                    allChains
                 } else {
-                    state.allChains.filter { chain ->
+                    allChains.filter { chain ->
                         chain.raw.contains(queryStr, ignoreCase = true)
                     }
                 }
-                state.copy(chains = filtered)
-            }.collect { newState ->
-                _uiState.value = newState
+            }.collect { filtered ->
+                _uiState.update { state ->
+                    state.copy(chains = filtered)
+                }
             }
         }
     }
+
 
     fun toggleChain(chain: Chain) {
         _uiState.update { state ->
