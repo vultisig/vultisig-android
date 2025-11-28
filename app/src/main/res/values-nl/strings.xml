@@ -948,4 +948,11 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreedtepunten zijn vereist voor elke transactie op TRON, inclusief zowel standaard tokenverzendingen als interacties met smart contracts. Elke TRON-gebruiker ontvangt 600 gratis bandbreedtepunten per dag, goed voor ongeveer twee basisverzendingen. Daarnaast kunt u extra bandbreedtepunten verdienen door TRX te staken, waardoor uw dagelijkse saldo toeneemt en u meer transacties kunt ondersteunen. Als u voldoende bandbreedtepunten heeft, kunt u tokens verzenden, TRX staken of met smart contracts werken zonder TRX aan gaskosten te betalen.</string>
     <string name="energy_dec">Vereist voor complexere acties, zoals interactie met smart contracts (bijv. swaps of dApp-transacties). In tegenstelling tot bandbreedte wordt energie niet gratis verstrekt: u moet TRX staken om energie te verdienen. (Meer gevorderde gebruikers kunnen ook energie verkrijgen via leasemechanismen zoals JustLend of de Energy Rental Markets van Tronify). Met Energy kunt u de gaskosten voor interacties met slimme contracten echter aanzienlijk verlagen of zelfs elimineren. Dit maakt Energy waardevol voor mensen die regelmatig TRON dApps gebruiken.</string>
+    
+    <!-- Bond Form -->
+    <string name="bond_node_address">Node-adres</string>
+    <string name="bond_node_address_hint">Voer THORChain node-adres in</string>
+    <string name="bond_amount">Bond Bedrag</string>
+    <string name="bond_amount_hint">Voer bedrag in %s in</string>
+    <string name="bond_button_label">Bonden</string>
 </resources>

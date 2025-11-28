@@ -999,5 +999,12 @@
     <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
+    
+    <!-- Bond Form -->
+    <string name="bond_node_address">Node Address</string>
+    <string name="bond_node_address_hint">Enter THORChain node address</string>
+    <string name="bond_amount">Bond Amount</string>
+    <string name="bond_amount_hint">Enter amount in %s</string>
+    <string name="bond_button_label">Bond</string>
 
 </resources>

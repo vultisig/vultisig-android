@@ -224,7 +224,8 @@ internal class SendFormViewModel @Inject constructor(
 
     // bond node
     val bondNodeAddressFieldState = TextFieldState()
-    val operatorFeesBondState = TextFieldState()
+    val operatorFeesBondFieldState = TextFieldState()
+    val bondTokenAmountFieldState = TextFieldState()
 
     private var vaultId: String? = null
 

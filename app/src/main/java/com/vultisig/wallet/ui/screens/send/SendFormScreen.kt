@@ -80,6 +80,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -133,6 +134,9 @@ internal fun NavGraphBuilder.sendScreen(
             onAssetDragEnd = onNetworkDragEnd,
             onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
+            nodeAddressFieldState = viewModel.bondNodeAddressFieldState,
+            operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
+            amountBondFieldState = viewModel.bondTokenAmountFieldState,
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -185,6 +189,11 @@ private fun SendFormScreen(
     onAssetDragEnd: () -> Unit,
     onAssetDragCancel: () -> Unit,
     onAssetLongPressStarted: (Offset) -> Unit,
+
+    // bond fields
+    nodeAddressFieldState: TextFieldState,
+    operatorFeeFieldState: TextFieldState,
+    amountBondFieldState: TextFieldState,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -231,36 +240,44 @@ private fun SendFormScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(all = 16.dp)
                 ) {
-                    sendFormContent(
-                        state = state,
-                        onExpandSection = onExpandSection,
-                        onSelectNetworkRequest = onSelectNetworkRequest,
-                        onNetworkDragCancel = onNetworkDragCancel,
-                        onNetworkDrag = onNetworkDrag,
-                        onNetworkDragStart = onNetworkDragStart,
-                        onNetworkDragEnd = onNetworkDragEnd,
-                        onNetworkLongPressStarted = onNetworkLongPressStarted,
-                        onSelectTokenRequest = onSelectTokenRequest,
-                        onAssetDragCancel = onAssetDragCancel,
-                        onAssetDrag = onAssetDrag,
-                        onAssetDragStart = onAssetDragStart,
-                        onAssetDragEnd = onAssetDragEnd,
-                        onAssetLongPressStarted = onAssetLongPressStarted,
-                        addressFieldState = addressFieldState,
-                        onDstAddressLostFocus = onDstAddressLostFocus,
-                        onSetOutputAddress = onSetOutputAddress,
-                        onScanDstAddressRequest = onScanDstAddressRequest,
-                        onAddressBookClick = onAddressBookClick,
-                        onGasSettingsClick = onGasSettingsClick,
-                        tokenAmountFieldState = tokenAmountFieldState,
-                        fiatAmountFieldState = fiatAmountFieldState,
-                        focusManager = focusManager,
-                        onSend = onSend,
-                        onToogleAmountInputType = onToogleAmountInputType,
-                        onChoosePercentageAmount = onChoosePercentageAmount,
-                        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                        memoFieldState = memoFieldState
-                    )
+                    if (state.type == SendFormType.Send) {
+                        SendFormContent(
+                            state = state,
+                            onExpandSection = onExpandSection,
+                            onSelectNetworkRequest = onSelectNetworkRequest,
+                            onNetworkDragCancel = onNetworkDragCancel,
+                            onNetworkDrag = onNetworkDrag,
+                            onNetworkDragStart = onNetworkDragStart,
+                            onNetworkDragEnd = onNetworkDragEnd,
+                            onNetworkLongPressStarted = onNetworkLongPressStarted,
+                            onSelectTokenRequest = onSelectTokenRequest,
+                            onAssetDragCancel = onAssetDragCancel,
+                            onAssetDrag = onAssetDrag,
+                            onAssetDragStart = onAssetDragStart,
+                            onAssetDragEnd = onAssetDragEnd,
+                            onAssetLongPressStarted = onAssetLongPressStarted,
+                            addressFieldState = addressFieldState,
+                            onDstAddressLostFocus = onDstAddressLostFocus,
+                            onSetOutputAddress = onSetOutputAddress,
+                            onScanDstAddressRequest = onScanDstAddressRequest,
+                            onAddressBookClick = onAddressBookClick,
+                            onGasSettingsClick = onGasSettingsClick,
+                            tokenAmountFieldState = tokenAmountFieldState,
+                            fiatAmountFieldState = fiatAmountFieldState,
+                            focusManager = focusManager,
+                            onSend = onSend,
+                            onToogleAmountInputType = onToogleAmountInputType,
+                            onChoosePercentageAmount = onChoosePercentageAmount,
+                            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                            memoFieldState = memoFieldState
+                        )
+                    } else {
+                        BondFormContent(
+                            nodeAddressFieldState = nodeAddressFieldState,
+                            operatorFeeFieldState = operatorFeeFieldState,
+                            amountFieldState = amountBondFieldState,
+                        )
+                    }
                 }
             }
         },
@@ -289,7 +306,7 @@ private fun SendFormScreen(
 }
 
 @Composable
-private fun sendFormContent(
+private fun SendFormContent(
     state: SendFormUiModel,
     onExpandSection: (SendSections) -> Unit,
     onSelectNetworkRequest: () -> Unit,
@@ -867,24 +884,123 @@ private fun sendFormContent(
 }
 
 @Composable
-private fun bondNodeFormContent(
-    state: SendFormUiModel,
-    onExpandSection: (SendSections) -> Unit,
+fun BondFormContent(
     nodeAddressFieldState: TextFieldState,
-    onDstAddressLostFocus: () -> Unit,
-    onSetOutputAddress: (String) -> Unit,
-    onScanDstAddressRequest: () -> Unit,
-    onAddressBookClick: () -> Unit,
-    onGasSettingsClick: () -> Unit,
-    tokenAmountFieldState: TextFieldState,
-    fiatAmountFieldState: TextFieldState,
-    focusManager: FocusManager,
-    onSend: () -> Unit,
-    onToogleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (Float) -> Unit,
-    onChooseMaxTokenAmount: () -> Unit,
+    operatorFeeFieldState: TextFieldState,
+    amountFieldState: TextFieldState,
+    onNodeAddressLostFocus: () -> Unit = {},
+    onAmountLostFocus: () -> Unit = {},
+    onSetNodeAddress: (String) -> Unit = {},
+    onScanNodeAddressRequest: () -> Unit = {},
+    onBond: () -> Unit = {},
+    nodeAddressError: UiText? = null,
+    amountError: UiText? = null,
+    tokenSymbol: String = "RUNE",
+    isLoading: Boolean = false,
 ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
 
+        // Node Address Section
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.bond_node_address),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = nodeAddressFieldState,
+                hint = stringResource(R.string.bond_node_address_hint),
+                onFocusChanged = {
+                    if (!it) {
+                        onNodeAddressLostFocus()
+                    }
+                },
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                innerState = if (nodeAddressError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
+                footNote = nodeAddressError?.asString(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PasteIcon(
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onPaste = onSetNodeAddress
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onScanNodeAddressRequest,
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.bond_amount),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = amountFieldState,
+                hint = stringResource(R.string.bond_amount_hint, tokenSymbol),
+                onFocusChanged = {
+                    if (!it) {
+                        onAmountLostFocus()
+                    }
+                },
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+                innerState = if (amountError != null){
+                    VsTextInputFieldInnerState.Error
+                } else {
+                    VsTextInputFieldInnerState.Default
+                },
+                footNote = amountError?.asString(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        VsButton(
+            label = stringResource(R.string.bond_button_label),
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onBond,
+            state = if (isLoading) {
+                VsButtonState.Disabled
+            } else {
+                VsButtonState.Enabled
+            },
+        )
+    }
 }
 
 @Composable
@@ -1164,5 +1280,8 @@ private fun SendScreenPreview() {
         onAssetDragEnd = {},
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
+        nodeAddressFieldState = TextFieldState(),
+        operatorFeeFieldState = TextFieldState(),
+        amountBondFieldState = TextFieldState(),
     )
 }

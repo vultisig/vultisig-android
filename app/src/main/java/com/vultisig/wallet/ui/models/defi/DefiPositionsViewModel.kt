@@ -847,11 +847,12 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             if (runeCoin != null) {
                 navigator.route(
-                    Route.Deposit(
+                    Route.Send(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
-                        bondAddress = nodeAddress,
-                        depositType = "bond",
+                        tokenId = runeCoin.id,
+                        address = nodeAddress,
+                        memo = "BOND:${nodeAddress}",
                     )
                 )
             } else {
@@ -867,11 +868,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             if (runeCoin != null) {
                 navigator.route(
-                    Route.Deposit(
+                    Route.Send(
                         vaultId = vaultId,
                         chainId = Chain.ThorChain.id,
-                        bondAddress = nodeAddress,
-                        depositType = "unbond",
+                        tokenId = runeCoin.id,
                     )
                 )
             } else {
@@ -887,9 +887,11 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             if (runeCoin != null) {
                 navigator.route(
-                    Route.Deposit(
+                    Route.Send(
                         vaultId = vaultId,
-                        chainId = Chain.ThorChain.id
+                        chainId = Chain.ThorChain.id,
+                        tokenId = runeCoin.id,
+                        memo = "BOND:", // User will need to add node address
                     )
                 )
             } else {
