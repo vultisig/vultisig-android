@@ -54,7 +54,15 @@ internal class DeFiChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val vault = vaultRepository.get(vaultId)
+
+            if (vault == null) {
+                _uiState.update {
+                    it.copy(allChains = emptyList(), chains = emptyList(), selectedChains = emptySet(), isLoading = false)
+                }
+                return@launch
+            }
+
             val availableChains = vault.coins.map { it.chain }.distinct().filter { it.isDeFiSupported }
             val savedDeFiChains = defaultDeFiChainsRepository.getDefaultChains(vaultId).first()
             
