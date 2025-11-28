@@ -10,8 +10,6 @@ data class OgmiosTransactionResponse(
     val jsonrpc: String? = null,
     @SerialName("method")
     val method: String? = null,
-    @SerialName("id")
-    val id: Int? = null,
     @SerialName("result")
     val result: OgmiosTransactionResult? = null,
     @SerialName("error")
