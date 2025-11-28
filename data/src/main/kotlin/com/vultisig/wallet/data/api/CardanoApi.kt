@@ -1,11 +1,10 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.cardano.CardanoBalanceResponseJson
-import com.vultisig.wallet.data.api.models.cardano.CardanoBroadcastResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoSlotResponseJson
-import com.vultisig.wallet.data.api.models.cardano.CardanoTransactionHashRequestBodyJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoRequestJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoResponseJson
+import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import io.ktor.client.HttpClient
@@ -16,6 +15,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -33,6 +34,7 @@ internal class CardanoApiImpl @Inject constructor(
     private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val url2 = "https://api.vultisig.com"
+    private val ogmiosUrl = "https://api.vultisig.com/ada/"
 
     override suspend fun getBalance(coin: Coin): BigInteger {
 
@@ -84,7 +86,45 @@ internal class CardanoApiImpl @Inject constructor(
         )
     }
 
-    override suspend fun broadcastTransaction(
+    override suspend fun broadcastTransaction(chain: String, signedTransaction: String): String? {
+        return try {
+            val payload = buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("method", "submitTransaction")
+                put("params", buildJsonObject {
+                    put("transaction", buildJsonObject {
+                        put("cbor", signedTransaction)
+                    })
+                })
+                put("id", 1)
+            }
+            
+            val response = httpClient.post(ogmiosUrl) {
+                setBody(payload)
+            }
+
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    val ogmiosResponse = response.body<OgmiosTransactionResponse>()
+                    
+                    ogmiosResponse.result?.transaction?.id ?: run {
+                        val errorMessage = ogmiosResponse.error?.message ?: "Unknown error"
+                        Timber.e("Cardano transaction submission failed: $errorMessage")
+                        null
+                    }
+                }
+                else -> {
+                    Timber.e("Failed to broadcast Cardano transaction: ${response.status}")
+                    null
+                }
+            }
+        } catch (t: Throwable) {
+            Timber.e(t, "Failed to broadcast Cardano transaction")
+            null
+        }
+    }
+
+    /* override suspend fun broadcastTransaction(
         chain: String, signedTransaction: String,
     ): String? {
         return try {
@@ -115,8 +155,7 @@ internal class CardanoApiImpl @Inject constructor(
         } catch (e: Exception) {
             error("Failed to broadcast transaction: ${e.message}")
         }
-
-    }
+    } */
 
     private suspend fun getCurrentSlot(): ULong {
         val response = httpClient.get(url) {
