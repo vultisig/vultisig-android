@@ -20,6 +20,7 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -119,6 +120,7 @@ internal class CardanoApiImpl @Inject constructor(
                 }
             }
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             Timber.e(t, "Failed to broadcast Cardano transaction")
             error("Failed to broadcast transaction : ${t.message}")
         }
