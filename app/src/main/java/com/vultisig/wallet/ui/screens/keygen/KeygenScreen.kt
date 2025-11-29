@@ -100,7 +100,7 @@ private fun KeygenScreen(
     onTryAgainClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.keygen_top_bar_title),
@@ -128,7 +128,7 @@ private fun KeygenScreen(
                         Text(
                             text = stringResource(R.string.keygen_while_you_wait_title),
                             style = Theme.brockmann.headings.subtitle,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                         )
 
@@ -154,7 +154,7 @@ private fun KeygenScreen(
                         val annotatedString = buildAnnotatedString {
                             withStyle(
                                 style = SpanStyle(
-                                    brush = Theme.colors.gradients.primary,
+                                    brush = Theme.v2.colors.gradients.primary,
                                 ),
                             ) {
                                 append(stringResource(currentBenefit.emphasized))
@@ -173,7 +173,7 @@ private fun KeygenScreen(
                             Text(
                                 text = text,
                                 style = Theme.brockmann.headings.title2,
-                                color = Theme.colors.text.primary,
+                                color = Theme.v2.colors.text.primary,
                                 textAlign = TextAlign.Center,
                             )
                         }
@@ -193,12 +193,12 @@ private fun KeygenScreen(
                                 .fillMaxWidth()
                                 .wrapContentHeight()
                                 .background(
-                                    color = Theme.colors.backgrounds.secondary,
+                                    color = Theme.v2.colors.backgrounds.secondary,
                                     shape = shape,
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = Theme.colors.borders.light,
+                                    color = Theme.v2.colors.border.light,
                                     shape = shape,
                                 )
                                 .padding(
@@ -269,7 +269,7 @@ private fun LoadingStageItem(
         if (isLoading) {
             CircularProgressIndicator(
                 strokeWidth = 2.dp,
-                color = Theme.colors.alerts.success,
+                color = Theme.v2.colors.alerts.success,
                 modifier = Modifier
                     .size(20.dp)
             )
@@ -277,7 +277,7 @@ private fun LoadingStageItem(
             UiIcon(
                 drawableResId = R.drawable.check,
                 size = 20.dp,
-                tint = Theme.colors.alerts.success,
+                tint = Theme.v2.colors.alerts.success,
             )
         }
 
@@ -286,8 +286,8 @@ private fun LoadingStageItem(
         Text(
             text = text,
             style = Theme.brockmann.body.m.medium,
-            color = if (isLoading) Theme.colors.text.primary
-            else Theme.colors.text.extraLight,
+            color = if (isLoading) Theme.v2.colors.text.primary
+            else Theme.v2.colors.text.extraLight,
             textAlign = TextAlign.Center,
         )
     }
@@ -299,7 +299,7 @@ private fun Success() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.colors.backgrounds.primary),
+            .background(Theme.v2.colors.backgrounds.primary),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -333,7 +333,7 @@ private fun Success() {
                         append(stringResource(R.string.keygen_vault_created_success_part_1))
                         appendLine(" ")
                         withStyle(
-                            SpanStyle(brush = Theme.colors.gradients.primary)
+                            SpanStyle(brush = Theme.v2.colors.gradients.primary)
                         ) {
                             append(stringResource(R.string.vault_created_success_part_2))
                         }
@@ -342,7 +342,7 @@ private fun Success() {
                     Text(
                         text = successText,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         textAlign = TextAlign.Center,
                     )
 

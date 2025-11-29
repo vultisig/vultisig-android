@@ -54,7 +54,7 @@ fun OnRampScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Theme.colors.backgrounds.primary)
+                .background(Theme.v2.colors.backgrounds.primary)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -68,7 +68,7 @@ fun OnRampScreen(
 
             Text(
                 text = stringResource(R.string.banxa_buy_or_transfer),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.headings.title3,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()

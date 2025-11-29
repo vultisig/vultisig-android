@@ -45,7 +45,7 @@ internal fun CheckField(
 
         Text(
             text = title,
-            color = Theme.colors.neutral100,
+            color = Theme.v2.colors.neutrals.n100,
             style = textStyle,
         )
     }

@@ -34,7 +34,7 @@ internal fun KeysignLoadingScreen(
     ) {
         Text(
             text = text,
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             style = Theme.menlo.subtitle1
         )
 

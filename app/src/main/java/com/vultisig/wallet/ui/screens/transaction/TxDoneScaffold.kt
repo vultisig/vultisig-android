@@ -60,7 +60,7 @@ internal fun TxDoneScaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
@@ -98,7 +98,7 @@ internal fun TxDoneScaffold(
                             textAlign = TextAlign.Companion.Center,
                             style = Theme.brockmann.body.l.medium
                                 .copy(
-                                    brush = Theme.colors.gradients.primary,
+                                    brush = Theme.v2.colors.gradients.primary,
                                 ),
                             modifier = Modifier.Companion
                                 .fillMaxWidth()
@@ -117,12 +117,12 @@ internal fun TxDoneScaffold(
                 Column(
                     modifier = Modifier.Companion
                         .background(
-                            color = Theme.colors.backgrounds.disabled,
+                            color = Theme.v2.colors.backgrounds.disabled,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.borders.light,
+                            color = Theme.v2.colors.border.light,
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                         )
                         .padding(horizontal = 24.dp, vertical = 8.dp),
@@ -160,7 +160,7 @@ internal fun TxDoneScaffold(
                                     isTransactionDetailVisible = true
                                 })
                                 .padding(vertical = 12.dp),
-                            titleColor = Theme.colors.text.light,
+                            titleColor = Theme.v2.colors.text.light,
                             content = {
                                 UiIcon(
                                     R.drawable.ic_caret_right,

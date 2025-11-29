@@ -272,7 +272,7 @@ fun BandwidthEnergyContent(
     var expandByItem by remember { mutableStateOf<Int?>(null) }
     Scaffold(
         modifier = Modifier.padding(24.dp),
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             Column(
                 modifier = Modifier.padding(20.dp),

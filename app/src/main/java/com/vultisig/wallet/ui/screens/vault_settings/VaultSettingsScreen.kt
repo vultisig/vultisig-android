@@ -98,7 +98,7 @@ private fun VaultSettingsScreen(
                             onClick = { onSettingsClick(item) },
                             isLastItem = index == enabledSettings.lastIndex,
                             tint = if (item is VaultSettingsItem.Delete)
-                                Theme.colors.alerts.error else null
+                                Theme.v2.colors.alerts.error else null
                         )
                     }
                 }
@@ -190,7 +190,7 @@ private fun BiometricFastSignBottomSheetContent(
         Text(
             text = stringResource(R.string.vault_password_biometeric_enable_biometrics_fast_signing),
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
 
         FadingHorizontalDivider(
@@ -243,7 +243,7 @@ private fun BackupVaultBottomSheetContent(
         Text(
             text = stringResource(R.string.backup_choose_method_title),
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
 
         FadingHorizontalDivider(
@@ -284,7 +284,7 @@ private fun BackupOption(
     V2Container(
         modifier = Modifier.clickOnce(onClick = onClick),
         type = ContainerType.PRIMARY,
-        borderType = ContainerBorderType.Bordered(color = Theme.colors.borders.normal),
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal),
     ) {
         Row(
             modifier = Modifier
@@ -296,7 +296,7 @@ private fun BackupOption(
             UiIcon(
                 drawableResId = icon,
                 size = 20.dp,
-                tint = Theme.colors.primary.accent4,
+                tint = Theme.v2.colors.primary.accent4,
             )
 
             UiSpacer(
@@ -310,7 +310,7 @@ private fun BackupOption(
                 Text(
                     text = title,
                     style = Theme.brockmann.headings.subtitle,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 UiSpacer(
@@ -320,14 +320,14 @@ private fun BackupOption(
                 Text(
                     text = description,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.light,
+                    color = Theme.v2.colors.text.light,
                 )
             }
 
             UiIcon(
                 drawableResId = R.drawable.ic_caret_right,
                 size = 20.dp,
-                tint = Theme.colors.text.light,
+                tint = Theme.v2.colors.text.light,
             )
         }
     }

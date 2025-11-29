@@ -60,7 +60,7 @@ fun V2BottomSheet(
                         .clip(
                             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
                         )
-                        .background(Theme.colors.buttons.secondary)
+                        .background(Theme.v2.colors.backgrounds.primary)
                         .padding(
                             all = 16.dp
                         )
@@ -69,7 +69,7 @@ fun V2BottomSheet(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Theme.colors.buttons.secondary),
+                            .background(Theme.v2.colors.backgrounds.primary),
                         content = content
                     )
                 }
@@ -112,7 +112,7 @@ fun V2BottomSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Theme.colors.buttons.secondary),
+                        .background(Theme.v2.colors.backgrounds.primary),
                     content = content
                 )
                 DragHandler(
@@ -155,7 +155,7 @@ private fun TopRow(
                 Text(
                     text = it,
                     style = Theme.brockmann.headings.title3,
-                    color = Theme.colors.neutrals.n100,
+                    color = Theme.v2.colors.neutrals.n100,
                 )
             }
         }
@@ -176,7 +176,7 @@ internal fun DragHandler(modifier: Modifier = Modifier) {
             .width(36.dp)
             .height(5.dp)
             .clip(CircleShape)
-            .background(Theme.colors.vibrant.primary)
+            .background(Theme.v2.colors.vibrant.primary)
 
     )
 }
@@ -206,7 +206,7 @@ internal fun V2BottomSheetPreview() {
         content = {
             Text(
                 text = "Add Folder",
-                color = Theme.colors.neutrals.n100,
+                color = Theme.v2.colors.neutrals.n100,
                 style = Theme.brockmann.headings.title3,
             )
         }

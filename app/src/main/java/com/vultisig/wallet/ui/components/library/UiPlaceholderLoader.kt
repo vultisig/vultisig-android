@@ -18,7 +18,7 @@ internal fun UiPlaceholderLoader(
     Spacer(
         modifier = modifier
             .clip(RoundedCornerShape(2.dp))
-            .background(Theme.colors.oxfordBlue400)
+            .background(Theme.v2.colors.backgrounds.tertiary_2)
             .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp),
     )
 }

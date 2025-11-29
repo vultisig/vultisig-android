@@ -148,7 +148,7 @@ internal fun SettingsBox(
         title?.let {
             Text(
                 text = it,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.caption
 
             )
@@ -159,7 +159,7 @@ internal fun SettingsBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = Theme.colors.backgrounds.neutral,
+                    color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .clip(RoundedCornerShape(12.dp))
@@ -196,7 +196,7 @@ internal fun SettingItem(
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = tint ?: item.leadingIconTint ?: Theme.colors.primary.accent4
+                    tint = tint ?: item.leadingIconTint ?: Theme.v2.colors.primary.accent4
                 )
                 UiSpacer(size = 16.dp)
             }
@@ -205,13 +205,13 @@ internal fun SettingItem(
                 Text(
                     text = item.title.asString(),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = tint ?: Theme.colors.text.primary
+                    color = tint ?: Theme.v2.colors.text.primary
                 )
 
                 item.subTitle?.let {
                     Text(
                         text = it.asString(),
-                        color = tint ?: Theme.colors.text.light,
+                        color = tint ?: Theme.v2.colors.text.light,
                         style = Theme.brockmann.supplementary.caption,
                     )
                 }
@@ -233,7 +233,7 @@ internal fun SettingItem(
                     Text(
                         text = if (isChecked) "ON" else "OFF",
                         style = Theme.brockmann.button.medium.medium,
-                        color = tint ?: Theme.colors.text.primary
+                        color = tint ?: Theme.v2.colors.text.primary
                     )
                 }
 
@@ -244,7 +244,7 @@ internal fun SettingItem(
                 Text(
                     text = value,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = tint ?: Theme.colors.text.primary
+                    color = tint ?: Theme.v2.colors.text.primary
                 )
                 UiSpacer(size = 12.dp)
             }
@@ -274,7 +274,7 @@ private fun SettingsItemPreview() {
             leadingIcon = R.drawable.currency,
             trailingIcon = R.drawable.ic_small_caret_right,
             value = "value",
-            backgroundColor = Theme.colors.backgrounds.primary
+            backgroundColor = Theme.v2.colors.backgrounds.primary
         ),
         onClick = {},
         isLastItem = false

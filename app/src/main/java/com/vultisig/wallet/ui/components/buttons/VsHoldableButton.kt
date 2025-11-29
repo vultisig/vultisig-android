@@ -42,8 +42,8 @@ fun VsHoldableButton(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val backgroundColor = Theme.colors.primary.accent3
-    val fillColor = Theme.colors.primary.accent2
+    val backgroundColor = Theme.v2.colors.primary.accent3
+    val fillColor = Theme.v2.colors.primary.accent5
 
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
@@ -122,7 +122,7 @@ fun VsHoldableButton(
                     horizontal = 32.dp
                 )
         ) {
-            val contentColor = Theme.colors.text.primary
+            val contentColor = Theme.v2.colors.text.primary
             if (label != null) {
                 Text(
                     text = label,

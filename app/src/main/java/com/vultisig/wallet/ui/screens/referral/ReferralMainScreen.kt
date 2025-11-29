@@ -96,7 +96,7 @@ private fun ReferralScreen(
     referralState: TextFieldState,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_screen_title),
@@ -132,7 +132,7 @@ private fun ReferralScreen(
                 StyledText(
                     parts = listOf(
                         StyledTextPart(stringResource(R.string.referral_save)),
-                        StyledTextPart("10%", Theme.colors.primary.accent4),
+                        StyledTextPart("10%", Theme.v2.colors.primary.accent4),
                         StyledTextPart(stringResource(R.string.referral_add_referral))
                     ),
                     fontSize = 16.sp,
@@ -180,27 +180,27 @@ private fun ReferralScreen(
                 ) {
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = Theme.colors.borders.light,
+                        color = Theme.v2.colors.border.light,
                     )
 
                     Text(
                         text = stringResource(R.string.referral_or),
                         modifier = Modifier.padding(16.dp),
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.supplementary.caption,
                         textAlign = TextAlign.Center,
                     )
 
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = Theme.colors.borders.light,
+                        color = Theme.v2.colors.border.light,
                     )
                 }
 
                 StyledText(
                     parts = listOf(
                         StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
-                        StyledTextPart("20%", Theme.colors.primary.accent4),
+                        StyledTextPart("20%", Theme.v2.colors.primary.accent4),
                         StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
                     ),
                     fontSize = 14.sp,

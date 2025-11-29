@@ -99,8 +99,8 @@ internal fun VsTab(
     Text(
         text = label,
         color = if (isEnabled)
-            Theme.colors.text.primary
-        else Theme.colors.text.button.disabled,
+            Theme.v2.colors.text.primary
+        else Theme.v2.colors.text.button.disabled,
         style = Theme.brockmann.body.s.medium,
         modifier = modifier
             .clickable(
@@ -131,7 +131,7 @@ private fun TabUnderLine(
                     )
                 }
             },
-        color = Theme.colors.primary.accent4,
+        color = Theme.v2.colors.primary.accent4,
         thickness = 1.5.dp
     )
 }

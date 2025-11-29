@@ -114,7 +114,7 @@ internal fun VerifyDepositScreen(
             }
         },
         modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
+            .background(Theme.v2.colors.backgrounds.primary)
             .fillMaxSize(),
         content = { contentPadding ->
             Column(
@@ -133,7 +133,7 @@ internal fun VerifyDepositScreen(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.colors.backgrounds.secondary,
+                            color = Theme.v2.colors.backgrounds.secondary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(
@@ -143,7 +143,7 @@ internal fun VerifyDepositScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.light,
+                        color = Theme.v2.colors.text.light,
                     )
 
                     UiSpacer(24.dp)
@@ -217,7 +217,7 @@ internal fun VerifyDepositScreen(
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             maxLines = 1,
                         )
 
@@ -245,7 +245,7 @@ internal fun VerifyDepositScreen(
                                 Text(
                                     text = chain.raw,
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.colors.text.primary,
+                                    color = Theme.v2.colors.text.primary,
                                     textAlign = TextAlign.End,
                                     maxLines = 1,
                                     overflow = TextOverflow.MiddleEllipsis,
@@ -282,7 +282,7 @@ internal fun VerifyDepositScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
