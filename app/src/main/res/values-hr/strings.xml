@@ -667,6 +667,7 @@
     <string name="search_bar_search">Traži</string>
     <string name="search_bar_cancel">Otkaži</string>
     <string name="chain_selection_select_chains">Odaberite lance</string>
+    <string name="chain_selection_select_defi_chains">Odaberite DeFi lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
     <string name="transaction_type_button_functions">Funkcije</string>
     <string name="copy_address">Kopiraj adresu</string>

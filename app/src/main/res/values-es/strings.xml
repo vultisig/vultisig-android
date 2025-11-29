@@ -668,6 +668,7 @@
     <string name="search_bar_search">Buscar</string>
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleccionar cadenas</string>
+    <string name="chain_selection_select_defi_chains">Seleccionar cadenas DeFi</string>
     <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>

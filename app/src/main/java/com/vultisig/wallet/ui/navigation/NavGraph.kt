@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.navigation.Route.VerifySend
 import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.DeFiChainSelectionScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
@@ -153,6 +154,9 @@ internal fun SetupNavGraph(
 
         dialog<AddChainAccount> {
             ChainSelectionScreen()
+        }
+        dialog<Route.AddDeFiChainAccount> {
+            DeFiChainSelectionScreen()
         }
         composable<Route.VaultSettings>{
             VaultSettingsScreen()

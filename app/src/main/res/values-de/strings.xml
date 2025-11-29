@@ -668,6 +668,7 @@
     <string name="search_bar_search">Suche</string>
     <string name="search_bar_cancel">Abbrechen</string>
     <string name="chain_selection_select_chains">Ketten auswählen</string>
+    <string name="chain_selection_select_defi_chains">DeFi-Ketten auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Ketten gefunden</string>
     <string name="transaction_type_button_functions">Funktionen</string>
     <string name="copy_address">Adresse kopieren</string>

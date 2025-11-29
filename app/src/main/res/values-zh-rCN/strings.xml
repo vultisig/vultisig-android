@@ -1108,6 +1108,7 @@
     
     <!-- Chain Selection -->
     <string name="chain_selection_select_chains">选择区块链</string>
+    <string name="chain_selection_select_defi_chains">选择 DeFi 区块链</string>
     <string name="chain_selection_no_chains_found">未找到区块链</string>
     
     <!-- Transaction Type -->

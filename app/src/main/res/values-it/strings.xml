@@ -666,6 +666,7 @@
     <string name="search_bar_search">Cerca</string>
     <string name="search_bar_cancel">Annulla</string>
     <string name="chain_selection_select_chains">Seleziona catene</string>
+    <string name="chain_selection_select_defi_chains">Seleziona catene DeFi</string>
     <string name="chain_selection_no_chains_found">Nessuna catena trovata</string>
     <string name="transaction_type_button_functions">Funzioni</string>
     <string name="copy_address">Copia indirizzo</string>
