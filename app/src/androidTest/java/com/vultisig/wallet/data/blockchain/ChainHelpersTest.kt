@@ -4,6 +4,7 @@ import JsonReader
 import TransactionData
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
+import com.vultisig.wallet.app.WalletCoreLoader
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -318,6 +319,7 @@ class ChainHelpersTest {
         }
     }
     private fun loadTransactionData(jsonFile: String): List<TransactionData> {
+        WalletCoreLoader
         val appContext: Context = InstrumentationRegistry.getInstrumentation().context
         val data = JsonReader.readJsonFromAsset(appContext, jsonFile)
             ?: error("Failed can't load payload $jsonFile")

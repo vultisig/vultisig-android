@@ -10,7 +10,6 @@ import timber.log.Timber
 internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        WalletCoreLoader
         SharedPrefsMasterKeyInitializer
 
         if (BuildConfig.DEBUG) {
