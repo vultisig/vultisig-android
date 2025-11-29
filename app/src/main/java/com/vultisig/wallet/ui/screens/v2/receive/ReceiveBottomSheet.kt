@@ -75,7 +75,7 @@ private fun ReceiveContent(
         Text(
             text = stringResource(R.string.select_chain_title),
             style = Theme.brockmann.body.l.medium,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
         UiSpacer(16.dp)
 
@@ -127,7 +127,7 @@ private fun ReceiveContent(
                             Text(
                                 text = chain.ticker.uppercase(),
                                 style = Theme.brockmann.body.s.medium,
-                                color = Theme.colors.text.primary
+                                color = Theme.v2.colors.text.primary
                             )
 
                             UiSpacer(
@@ -146,7 +146,7 @@ private fun ReceiveContent(
                                     ),
                                     text = chain.name,
                                     style = Theme.brockmann.body.s.medium,
-                                    color = Theme.colors.text.primary
+                                    color = Theme.v2.colors.text.primary
                                 )
                             }
                         }

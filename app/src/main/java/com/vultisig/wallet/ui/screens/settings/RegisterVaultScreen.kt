@@ -47,8 +47,8 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.settings.RegisterVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.Theme.montserrat
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -60,8 +60,8 @@ internal fun RegisterVaultScreen(
     viewModel: RegisterVaultViewModel = hiltViewModel(),
 ) {
     val uriHandler = VsUriHandler()
-    val mainColor = colors.neutral0
-    val backgroundColor = colors.transparent
+    val mainColor = colors.neutrals.n50
+    val backgroundColor = colors.backgrounds.transparent
     val context = LocalContext.current
     val uiModel by viewModel.uiModel.collectAsState()
 
@@ -89,7 +89,7 @@ internal fun RegisterVaultScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.oxfordBlue800),
+            .background(colors.backgrounds.primary),
         topBar = {
             TopBar(
                 navController = navController,
@@ -129,7 +129,7 @@ internal fun FormRegister(
     Card(
         modifier = modifier.border(width = 1.dp, colors.backgrounds.tertiary, shape = RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = colors.oxfordBlue600Main,
+            containerColor = colors.backgrounds.neutral,
         ),
         shape = RoundedCornerShape(16.dp),
 
@@ -240,7 +240,7 @@ private fun RegisterVaultScreen(
                 )
                 Text(
                     text = stringResource(R.string.register_vault_screen_step_3),
-                    color = colors.neutral0,
+                    color = colors.neutrals.n50,
                     style = Theme.brockmann.supplementary.footnote,
                 )
             }
@@ -262,7 +262,7 @@ private fun RegisterVaultScreen(
                     )
                     Text(
                         text = stringResource(R.string.register_vault_screen_step_4),
-                        color = colors.neutral0,
+                        color = colors.neutrals.n50,
                         style = Theme.brockmann.supplementary.footnote,
                     )
                 }

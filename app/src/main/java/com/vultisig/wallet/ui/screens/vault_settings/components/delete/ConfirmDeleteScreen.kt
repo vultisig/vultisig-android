@@ -35,7 +35,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.screens.SettingInfoHorizontalItem
 import com.vultisig.wallet.ui.screens.itemModifier
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.Theme.colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 
 @Composable

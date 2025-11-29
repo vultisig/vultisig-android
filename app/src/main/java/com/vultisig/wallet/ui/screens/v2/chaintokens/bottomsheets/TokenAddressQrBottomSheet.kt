@@ -97,7 +97,7 @@ private fun TokenAddressQrContent(
         Text(
             text = chainAddress,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier.width(232.dp),
             textAlign = TextAlign.Center
         )

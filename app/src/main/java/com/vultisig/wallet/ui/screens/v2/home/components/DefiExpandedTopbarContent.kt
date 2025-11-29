@@ -30,7 +30,7 @@ internal fun DefiExpandedTopbarContent(
         modifier = Modifier
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(
                     size = 16.dp
                 )
@@ -58,7 +58,7 @@ internal fun DefiExpandedTopbarContent(
         ) {
             Text(
                 text = stringResource(R.string.home_defi_portfolio),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium
             )
 

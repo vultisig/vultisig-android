@@ -106,7 +106,6 @@ import com.vultisig.wallet.ui.screens.settings.FaqSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
-import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.swap.swapScreen
@@ -230,9 +229,6 @@ internal fun SetupNavGraph(
             FaqSettingScreen(navController = navController)
         }
 
-        composable<Route.VultisigToken>{
-            VultisigTokenScreen(navController = navController)
-        }
 
         composable<Route.DiscountTiers>{
             val vaultId = it.toRoute<Route.DiscountTiers>().vaultId

@@ -124,7 +124,7 @@ internal fun ChainTokensScreen(
         onRefresh = onRefresh,
         isRefreshing = uiModel.isRefreshing,
         snackbarState = snackbarState,
-        backgroundColor = Theme.colors.backgrounds.primary,
+        backgroundColor = Theme.v2.colors.backgrounds.primary,
         topBarExpandedContent = {
             ExpandedTopbarContainer {
                 Row(
@@ -165,7 +165,7 @@ internal fun ChainTokensScreen(
                     Text(
                         text = uiModel.chainName,
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                     )
                 }
 
@@ -177,7 +177,7 @@ internal fun ChainTokensScreen(
                     value = uiModel.totalBalance,
                     isVisible = uiModel.isBalanceVisible,
                     style = Theme.satoshi.price.title1,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 UiSpacer(
@@ -208,7 +208,7 @@ internal fun ChainTokensScreen(
                             horizontal = 6.dp,
                             vertical = 4.dp,
                         ),
-                    tint = Theme.colors.alerts.info,
+                    tint = Theme.v2.colors.alerts.info,
                     maxLength = 108.dp
                 )
 
@@ -288,7 +288,7 @@ internal fun ChainTokensScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .background(Theme.colors.backgrounds.primary)
+                        .background(Theme.v2.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
                     ChainTokensTabMenuAndSearchBar(

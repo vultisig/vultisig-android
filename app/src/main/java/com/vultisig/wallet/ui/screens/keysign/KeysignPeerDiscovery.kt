@@ -58,7 +58,7 @@ internal fun KeysignPeerDiscovery(
     else
         stringResource(R.string.qr_title_join_keysign)
 
-    val qrShareBackground = Theme.colors.oxfordBlue800
+    val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
     val qrShareDescription = if (keysignPayload != null) {
         if (isSwap)

@@ -85,7 +85,7 @@ private fun BiometryAuthView(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.colors.oxfordBlue600Main)
+            .background(Theme.v2.colors.backgrounds.secondary)
             .padding(all = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -100,7 +100,7 @@ private fun BiometryAuthView(
 
         Text(
             text = stringResource(id = R.string.app_name),
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             textAlign = TextAlign.Center,
             style = Theme.montserrat.heading2,
         )
@@ -109,7 +109,7 @@ private fun BiometryAuthView(
 
         Text(
             text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault),
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             textAlign = TextAlign.Center,
             style = Theme.montserrat.subtitle1,
         )

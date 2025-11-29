@@ -39,7 +39,7 @@ internal fun ReferralOnboardingScreen(
     model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_onboarding_title),
@@ -63,7 +63,7 @@ internal fun ReferralOnboardingScreen(
                             .padding(start = 24.dp)
                             .width(1.dp)
                             .fillMaxHeight(0.92f)
-                            .background(Theme.colors.borders.light)
+                            .background(Theme.v2.colors.border.light)
                     )
 
                     Column {
@@ -158,7 +158,7 @@ private fun TimeLineItem(
             modifier = Modifier
                 .width(24.dp)
                 .height(1.dp)
-                .background(Theme.colors.borders.light)
+                .background(Theme.v2.colors.border.light)
         )
 
         Box(
@@ -186,7 +186,7 @@ private fun HowItWorksTitle() {
         Text(
             text = stringResource(R.string.referral_how_it_works),
             style = Theme.brockmann.headings.largeTitle,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp)
         )
     }
@@ -196,7 +196,7 @@ private fun HowItWorksTitle() {
 @Composable
 private fun ReferralOnboardingScreenPreview() {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_onboarding_title),
@@ -218,7 +218,7 @@ private fun ReferralOnboardingScreenPreview() {
                             .padding(start = 24.dp)
                             .width(1.dp)
                             .fillMaxHeight(0.92f)
-                            .background(Theme.colors.borders.light)
+                            .background(Theme.v2.colors.border.light)
                     )
 
                     Column {

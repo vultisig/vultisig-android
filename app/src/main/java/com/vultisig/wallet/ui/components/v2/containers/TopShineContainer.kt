@@ -17,7 +17,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun TopShineContainer(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Theme.colors.backgrounds.secondary,
+    backgroundColor: Color = Theme.v2.colors.backgrounds.secondary,
     content: @Composable () -> Unit,
 ) {
     Card(
@@ -41,7 +41,7 @@ private fun PreviewTopShineContainer() {
     TopShineContainer {
         Text(
             text = "top shine container",
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.body.l.medium,
             modifier = Modifier.padding(16.dp)
         )

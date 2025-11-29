@@ -104,7 +104,7 @@ internal fun HomePage(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Theme.colors.backgrounds.primary)
+                        .background(Theme.v2.colors.backgrounds.primary)
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -120,7 +120,7 @@ internal fun HomePage(
                     ) {
                         Text(
                             text = stringResource(R.string.home_portfolio_balance),
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             style = Theme.brockmann.body.s.medium
                         )
                         UiSpacer(
@@ -131,7 +131,7 @@ internal fun HomePage(
                             value = state.totalFiatValue,
                             isVisible = state.isBalanceValueVisible,
                             style = Theme.satoshi.price.bodyS,
-                            color = Theme.colors.text.primary,
+                            color = Theme.v2.colors.text.primary,
                         )
                     }
                 }
@@ -141,7 +141,7 @@ internal fun HomePage(
                 )
 
                 UiHorizontalDivider(
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                 )
             }
         },
@@ -218,7 +218,7 @@ internal fun HomePage(
             ) {
                 LazyColumn(
                     modifier = Modifier
-                        .background(Theme.colors.backgrounds.primary)
+                        .background(Theme.v2.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
                     item {

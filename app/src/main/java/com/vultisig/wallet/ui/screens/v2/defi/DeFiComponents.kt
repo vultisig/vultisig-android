@@ -62,7 +62,7 @@ internal fun BalanceBanner(
             .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
@@ -74,7 +74,7 @@ internal fun BalanceBanner(
         ) {
             Text(
                 text = Chain.ThorChain.name,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
 
@@ -82,7 +82,7 @@ internal fun BalanceBanner(
 
             Text(
                 text = stringResource(R.string.defi_balance),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -96,7 +96,7 @@ internal fun BalanceBanner(
             } else {
                 Text(
                     text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
             }
@@ -111,7 +111,7 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 private fun BalanceBannerPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -128,7 +128,7 @@ private fun BalanceBannerPreview() {
 private fun BalanceBannerHiddenPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -145,7 +145,7 @@ private fun BalanceBannerHiddenPreview() {
 private fun BalanceBannerLoadingPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -390,7 +390,7 @@ internal fun PositionsSelectionDialog(
                 Text(
                     stringResource(R.string.select_positions),
                     style = Theme.brockmann.headings.title2,
-                    color = Theme.colors.neutrals.n100,
+                    color = Theme.v2.colors.neutrals.n100,
                 )
 
                 UiSpacer(16.dp)
@@ -398,7 +398,7 @@ internal fun PositionsSelectionDialog(
                 Text(
                     text = stringResource(R.string.enable_at_least_one_position),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
         },
@@ -434,7 +434,7 @@ internal fun NoPositionsContainer(
             Text(
                 text = stringResource(R.string.manage_positions),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 modifier = Modifier
                     .clip(shape = CircleShape)
                     .clickOnce(onClick = onManagePositionsClick)
@@ -466,7 +466,7 @@ private fun PositionsSelectionDialogPreview() {
 private fun InfoItemWithValuePreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         InfoItem(
@@ -482,7 +482,7 @@ private fun InfoItemWithValuePreview() {
 private fun InfoItemWithoutValuePreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         InfoItem(
@@ -498,7 +498,7 @@ private fun InfoItemWithoutValuePreview() {
 private fun InfoItemsRowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Row(
@@ -529,15 +529,15 @@ private fun InfoItemsRowPreview() {
 private fun ActionButtonBondEnabledPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.colors.buttons.primary,
-            contentColor = Theme.colors.text.primary,
-            iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+            background = Theme.v2.colors.buttons.tertiary,
+            contentColor = Theme.v2.colors.text.primary,
+            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
             enabled = true,
             onClick = {}
         )
@@ -549,15 +549,15 @@ private fun ActionButtonBondEnabledPreview() {
 private fun ActionButtonBondDisabledPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.colors.buttons.primary,
-            contentColor = Theme.colors.text.primary,
-            iconCircleColor = Theme.colors.text.primary,
+            background = Theme.v2.colors.buttons.tertiary,
+            contentColor = Theme.v2.colors.text.primary,
+            iconCircleColor = Theme.v2.colors.text.primary,
             enabled = false,
             onClick = {}
         )
@@ -569,16 +569,16 @@ private fun ActionButtonBondDisabledPreview() {
 private fun ActionButtonUnbondPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Unbond",
             icon = R.drawable.circle_minus,
             background = Color.Transparent,
-            border = BorderStroke(1.dp, Theme.colors.buttons.primary),
-            contentColor = Theme.colors.buttons.primary,
-            iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
+            contentColor = Theme.v2.colors.buttons.tertiary,
+            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
             onClick = {}
         )
     }
@@ -589,7 +589,7 @@ private fun ActionButtonUnbondPreview() {
 private fun ActionButtonsRowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Row(
@@ -599,9 +599,9 @@ private fun ActionButtonsRowPreview() {
             ActionButton(
                 title = "Bond",
                 icon = R.drawable.circle_plus,
-                background = Theme.colors.buttons.primary,
-                contentColor = Theme.colors.text.primary,
-                iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+                background = Theme.v2.colors.buttons.tertiary,
+                contentColor = Theme.v2.colors.text.primary,
+                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = {}
             )
@@ -609,9 +609,9 @@ private fun ActionButtonsRowPreview() {
                 title = "Unbond",
                 icon = R.drawable.circle_minus,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.colors.buttons.primary),
-                contentColor = Theme.colors.buttons.primary,
-                iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
+                contentColor = Theme.v2.colors.buttons.tertiary,
+                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = {}
             )
@@ -624,14 +624,14 @@ private fun ActionButtonsRowPreview() {
 private fun CompleteNodeCardMockPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Theme.colors.backgrounds.secondary,
+                    Theme.v2.colors.backgrounds.secondary,
                     RoundedCornerShape(12.dp)
                 )
                 .padding(16.dp)
@@ -640,7 +640,7 @@ private fun CompleteNodeCardMockPreview() {
             Text(
                 text = "thor1abcd...xyz",
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.colors.text.primary
+                color = Theme.v2.colors.text.primary
             )
 
             UiSpacer(12.dp)
@@ -676,9 +676,9 @@ private fun CompleteNodeCardMockPreview() {
                 ActionButton(
                     title = "Bond",
                     icon = R.drawable.circle_plus,
-                    background = Theme.colors.buttons.primary,
-                    contentColor = Theme.colors.text.primary,
-                    iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+                    background = Theme.v2.colors.buttons.tertiary,
+                    contentColor = Theme.v2.colors.text.primary,
+                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
                     onClick = {}
                 )
@@ -686,9 +686,9 @@ private fun CompleteNodeCardMockPreview() {
                     title = "Unbond",
                     icon = R.drawable.circle_minus,
                     background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.colors.buttons.primary),
-                    contentColor = Theme.colors.buttons.primary,
-                    iconCircleColor = Theme.colors.buttons.primary.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
+                    contentColor = Theme.v2.colors.buttons.tertiary,
+                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
                     onClick = {}
                 )
@@ -702,7 +702,7 @@ private fun CompleteNodeCardMockPreview() {
 private fun ApyInfoItemPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(
@@ -716,7 +716,7 @@ private fun ApyInfoItemPreview() {
 private fun ApyInfoItemHighPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(
@@ -730,7 +730,7 @@ private fun ApyInfoItemHighPreview() {
 private fun ApyInfoItemLowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(

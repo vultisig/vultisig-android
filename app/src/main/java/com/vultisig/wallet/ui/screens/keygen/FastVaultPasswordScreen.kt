@@ -90,7 +90,7 @@ internal fun FastVaultPasswordScreen(
     val statusBarHeight = WindowInsets.statusBars.getTop(LocalDensity.current)
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick
@@ -109,7 +109,7 @@ internal fun FastVaultPasswordScreen(
                 Text(
                     text = title,
                     style = Theme.brockmann.headings.largeTitle,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
                 UiSpacer(16.dp)
 
@@ -213,8 +213,8 @@ private fun WarningCard(
     modifier: Modifier,
     onShowMoreInfo: () -> Unit,
 ) {
-    val warningColor = Theme.colors.alerts.warning
-    val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
+    val warningColor = Theme.v2.colors.alerts.warning
+    val lightWarningColor = Theme.v2.colors.alerts.warning.copy(alpha = 0.25f)
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

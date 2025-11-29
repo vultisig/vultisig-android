@@ -38,7 +38,7 @@ internal fun ShowQrHelperBottomSheet(
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
-        containerColor = Theme.colors.backgrounds.secondary,
+        containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
         onDismissRequest = onDismiss,
@@ -57,7 +57,7 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
             horizontalAlignment = CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Theme.colors.backgrounds.secondary)
+                .background(Theme.v2.colors.backgrounds.secondary)
                 .padding(horizontal = 35.dp),
         ) {
             Image(
@@ -73,18 +73,18 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
                     append(stringResource(R.string.scan_qr_code_modal_scan_the))
                     append(" ")
                     withStyle(
-                        style = SpanStyle(brush = Theme.colors.gradients.primary)
+                        style = SpanStyle(brush = Theme.v2.colors.gradients.primary)
                     ) {
                         append(stringResource(R.string.scan_qr_code_modal_qr_code))
                     }
                 },
                 style = Theme.brockmann.headings.title2,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
             UiSpacer(12.dp)
             Text(
                 text = stringResource(R.string.scan_qr_code_modal_annotation),
-                color = Theme.colors.text.light,
+                color = Theme.v2.colors.text.light,
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center
             )
@@ -111,7 +111,7 @@ private fun BoxScope.HandlerLine() {
             .width(64.dp)
             .height(4.dp)
             .background(
-                color = Theme.colors.borders.normal,
+                color = Theme.v2.colors.border.normal,
                 shape = CircleShape,
             )
     )

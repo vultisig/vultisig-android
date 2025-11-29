@@ -41,7 +41,7 @@ internal fun FollowXBanner(
             .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
@@ -57,7 +57,7 @@ internal fun FollowXBanner(
             Text(
                 text = stringResource(R.string.invite_to_x_banner_title),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
             )
             UiSpacer(
                 size = 2.dp
@@ -65,7 +65,7 @@ internal fun FollowXBanner(
             Text(
                 text = stringResource(R.string.invite_to_x_banner_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
             UiSpacer(
                 size = 16.dp
@@ -75,12 +75,12 @@ internal fun FollowXBanner(
             Text(
                 text = stringResource(R.string.invite_to_x_banner_button, TWITTER_ID),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.colors.text.button.dark,
+                color = Theme.v2.colors.backgrounds.primary,
                 modifier = Modifier
                     .clip(shape = CircleShape)
                     .clickOnce(onClick = onFollowXClick)
                     .background(
-                        color = Theme.colors.aquamarine
+                        color = Theme.v2.colors.buttons.primary
                     )
                     .padding(
                         vertical = 8.dp,

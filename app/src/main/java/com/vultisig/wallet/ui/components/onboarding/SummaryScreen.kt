@@ -33,12 +33,12 @@ internal fun SummaryScreen(
 ) {
     Column(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .fillMaxSize(),
     ) {
         Box(
             modifier = Modifier
-                .background(Theme.colors.backgrounds.primary)
+                .background(Theme.v2.colors.backgrounds.primary)
                 .weight(1f)
                 .fillMaxSize(),
         ) {

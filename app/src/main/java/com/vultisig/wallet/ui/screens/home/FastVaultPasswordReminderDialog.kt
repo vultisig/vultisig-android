@@ -56,7 +56,7 @@ private fun FastVaultPasswordReminderDialog(
 ) {
     Column(
         modifier = Modifier
-            .background(Theme.colors.backgrounds.primary)
+            .background(Theme.v2.colors.backgrounds.primary)
             .fillMaxWidth()
             .padding(all = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -66,7 +66,7 @@ private fun FastVaultPasswordReminderDialog(
             text = stringResource(R.string.verify_your_server_share_password),
             textAlign = TextAlign.Center,
             style = Theme.brockmann.headings.title3,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier
                 .padding(all = 10.dp),
         )
@@ -77,7 +77,7 @@ private fun FastVaultPasswordReminderDialog(
             text = stringResource(R.string.periodically_ask_verify_password),
             textAlign = TextAlign.Center,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             modifier = Modifier
         )
 

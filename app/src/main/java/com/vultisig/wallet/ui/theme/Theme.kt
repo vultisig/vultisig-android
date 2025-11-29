@@ -9,13 +9,14 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.core.graphics.toColorInt
 import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
 import com.vultisig.wallet.ui.theme.v2.V2
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
 fun OnBoardingComposeTheme(
     content: @Composable () -> Unit,
 ) {
     AppUtils(
-        appColor = Colors.Default,
+        appColor = colors,
         menloTypography = menloTypography,
         montserratTypography = montserratTypography,
         brockmannTypography = brockmannTypography,
@@ -41,10 +42,6 @@ internal object Theme {
     @Composable
     get() = LocalV2Theme.current
 
-    val colors: Colors
-        @Composable
-        get() = LocalAppColors.current
-
     val menlo: VultisigTypography
         @Composable
         get() = LocalMenloFamilyTypography.current
@@ -63,4 +60,4 @@ internal object Theme {
 
 internal val Theme.cursorBrush: Brush
     @Composable
-    get() = SolidColor(colors.neutral100)
+    get() = SolidColor(v2.colors.neutrals.n100)

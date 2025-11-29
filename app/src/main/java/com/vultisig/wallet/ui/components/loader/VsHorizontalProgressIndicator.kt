@@ -25,8 +25,8 @@ internal fun VsHorizontalProgressIndicator(
     modifier: Modifier = Modifier,
     height: Dp = 2.dp,
 ) {
-    val indicatorBrush = Theme.colors.gradients.primaryReversed
-    val glowingColor = Theme.colors.buttons.primary
+    val indicatorBrush = Theme.v2.colors.gradients.primaryReversed
+    val glowingColor = Theme.v2.colors.buttons.tertiary
 
     val targetProgress by animateFloatAsState(
         targetValue = progress,
@@ -75,7 +75,7 @@ private fun VsHorizontalProgressIndicatorPreview() {
         modifier = Modifier
             .fillMaxWidth()
             .height(24.dp)
-            .background(Theme.colors.backgrounds.primary),
+            .background(Theme.v2.colors.backgrounds.primary),
         verticalArrangement = Arrangement.Center,
     ) {
         VsHorizontalProgressIndicator(

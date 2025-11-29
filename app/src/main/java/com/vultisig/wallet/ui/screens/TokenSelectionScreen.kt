@@ -72,13 +72,13 @@ internal fun TokenSelectionScreen(
                 Text(
                     text = stringResource(R.string.token_selection_screen_select_tokens),
                     style = Theme.brockmann.headings.title2,
-                    color = Theme.colors.neutrals.n100,
+                    color = Theme.v2.colors.neutrals.n100,
                 )
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.token_selecton_screen_enable_at_least_one),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
 
             }

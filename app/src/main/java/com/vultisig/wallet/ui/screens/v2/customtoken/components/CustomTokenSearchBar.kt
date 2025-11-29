@@ -66,7 +66,7 @@ internal fun CustomTokenSearchBar(
                         UiIcon(
                             drawableResId = R.drawable.search_custom_token,
                             size = 16.dp,
-                            tint = Theme.colors.text.button.light,
+                            tint = Theme.v2.colors.text.button.light,
                             onClick = onSearchClick
                         )
                         UiSpacer(
@@ -82,7 +82,7 @@ internal fun CustomTokenSearchBar(
                         .weight(1f)
                         .fillMaxHeight(),
                     textStyle = Theme.brockmann.supplementary.footnote.copy(
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                     ),
                     lineLimits = TextFieldLineLimits.SingleLine,
                     onKeyboardAction = {
@@ -99,7 +99,7 @@ internal fun CustomTokenSearchBar(
                                 Text(
                                     text = context.getString(R.string.custom_token_enter_contract_address),
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.colors.text.extraLight
+                                    color = Theme.v2.colors.text.extraLight
                                 )
                             } else {
                                 textField()
@@ -120,7 +120,7 @@ internal fun CustomTokenSearchBar(
                             R.drawable.paste_v2 else
                             R.drawable.big_close,
                         size = 16.dp,
-                        tint = Theme.colors.text.light,
+                        tint = Theme.v2.colors.text.light,
                         onClick = if (it) onPasteClick else onCloseClick,
                     )
                 }
@@ -140,12 +140,12 @@ internal fun CustomTokenSearchBar(
                 VsCircleButton(
                     drawableResId = R.drawable.icon_search_menu,
                     onClick = onSearchClick,
-                    type = VsCircleButtonType.Custom(color = Theme.colors.backgrounds.secondary),
+                    type = VsCircleButtonType.Custom(color = Theme.v2.colors.backgrounds.secondary),
                     modifier = Modifier.Companion,
                     size = VsCircleButtonSize.Custom(size = 40.dp),
                     designType = DesignType.Solid,
                     iconSize = 20.dp,
-                    tint = Theme.colors.text.light
+                    tint = Theme.v2.colors.text.light
                 )
             }
 

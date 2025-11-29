@@ -35,7 +35,7 @@ internal fun ChainSelectorPickerItem(
             TokenLogo(
                 errorLogoModifier = Modifier
                     .size(40.dp)
-                    .background(Theme.colors.neutral100),
+                    .background(Theme.v2.colors.neutrals.n100),
                 logo = item.logo,
                 title = item.title,
                 modifier = Modifier
@@ -49,7 +49,7 @@ internal fun ChainSelectorPickerItem(
 
             Text(
                 text = item.chain.raw,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.m.medium
             )
         }

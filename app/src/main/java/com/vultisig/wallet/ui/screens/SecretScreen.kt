@@ -46,7 +46,7 @@ private fun SecretScreen(
 ) {
 
     Scaffold(
-        containerColor = Theme.colors.oxfordBlue800,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             TopBar(
                 navController = navController,

@@ -53,9 +53,9 @@ internal fun VaultCeil(
 
     val (logo, containerType) =
         if (isSelected)
-            Theme.colors.backgrounds.tertiary to Theme.colors.backgrounds.tertiary to ContainerType.SECONDARY
+            Theme.v2.colors.backgrounds.tertiary_2 to Theme.v2.colors.backgrounds.tertiary_2 to ContainerType.SECONDARY
         else
-            Theme.colors.backgrounds.secondary to Theme.colors.backgrounds.tertiary to ContainerType.PRIMARY
+            Theme.v2.colors.backgrounds.secondary to Theme.v2.colors.backgrounds.tertiary_2 to ContainerType.PRIMARY
 
     val (logoBackground, logoBorder) = logo
     FormCard {
@@ -79,7 +79,7 @@ internal fun VaultCeil(
                         Row {
                             UiIcon(
                                 drawableResId = R.drawable.hamburger_menu,
-                                tint = Theme.colors.text.extraLight,
+                                tint = Theme.v2.colors.text.extraLight,
                                 size = 16.dp,
                             )
                             UiSpacer(
@@ -112,7 +112,7 @@ internal fun VaultCeil(
                         UiIcon(
                             size = 16.dp,
                             drawableResId = if (isSelected) R.drawable.folder_selected else R.drawable.folder,
-                            tint = Theme.colors.alerts.info
+                            tint = Theme.v2.colors.alerts.info
                         )
                     } else {
                         VaultIcon(
@@ -131,7 +131,7 @@ internal fun VaultCeil(
                     Text(
                         text = model.name,
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 140.dp),
@@ -145,7 +145,7 @@ internal fun VaultCeil(
                         if (model.isFolder && isSelected && activeVaultName != null) {
                             UiIcon(
                                 drawableResId = R.drawable.ic_check,
-                                tint = Theme.colors.alerts.info,
+                                tint = Theme.v2.colors.alerts.info,
                                 size = 16.dp,
                             )
                             UiSpacer(
@@ -189,7 +189,7 @@ internal fun VaultCeil(
                                     ?: "",
                                 style = Theme.brockmann.supplementary.footnote,
                                 color = if (model.isFolder && isSelected)
-                                    Theme.colors.alerts.info else Theme.colors.text.extraLight,
+                                    Theme.v2.colors.alerts.info else Theme.v2.colors.text.extraLight,
 
                                 )
                         }
@@ -210,7 +210,7 @@ internal fun VaultCeil(
                         if (isSelected) {
                             UiIcon(
                                 drawableResId = R.drawable.ic_check,
-                                tint = Theme.colors.alerts.success,
+                                tint = Theme.v2.colors.alerts.success,
                                 size = 20.dp,
                             )
                             UiSpacer(
@@ -225,13 +225,13 @@ internal fun VaultCeil(
                                 model.signersSize
                             ),
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             modifier = Modifier
                                 .border(
                                     shape = RoundedCornerShape(
                                         size = 8.dp
                                     ),
-                                    color = Theme.colors.borders.light,
+                                    color = Theme.v2.colors.border.light,
                                     width = 1.dp
                                 )
                                 .padding(
@@ -245,7 +245,7 @@ internal fun VaultCeil(
                         UiIcon(
                             drawableResId = R.drawable.ic_small_caret_right,
                             size = 20.dp,
-                            tint = Theme.colors.text.primary,
+                            tint = Theme.v2.colors.text.primary,
                         )
                 }
             }
@@ -263,7 +263,7 @@ private fun ActiveVaultName(
         text = content,
         style = Theme.brockmann.supplementary.footnote,
         color = if (isFolder && isSelected)
-            Theme.colors.alerts.info else Theme.colors.text.extraLight,
+            Theme.v2.colors.alerts.info else Theme.v2.colors.text.extraLight,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.widthIn(max = 140.dp),

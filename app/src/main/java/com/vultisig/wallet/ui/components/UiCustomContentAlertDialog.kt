@@ -21,7 +21,7 @@ internal fun UiCustomContentAlertDialog(
     onDismissRequest: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
-    val appColor = Theme.colors
+    val appColor = Theme.v2.colors
     BasicAlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest
@@ -29,10 +29,10 @@ internal fun UiCustomContentAlertDialog(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(size = 16.dp))
-                .background(appColor.oxfordBlue400)
+                .background(appColor.backgrounds.tertiary_2)
                 .border(
                     width = 1.dp,
-                    color = appColor.neutral0,
+                    color = appColor.neutrals.n50,
                     shape = RoundedCornerShape(size = 16.dp)
                 )
                 .padding(16.dp),

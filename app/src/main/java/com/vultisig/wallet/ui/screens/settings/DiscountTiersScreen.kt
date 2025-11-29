@@ -65,7 +65,7 @@ internal fun DiscountTiersScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.colors.backgrounds.secondary),
+            .background(Theme.v2.colors.backgrounds.secondary),
         topBar = {
             V2Topbar(
                 title = stringResource(R.string.vault_settings_discounts),
@@ -99,7 +99,7 @@ internal fun DiscountTiersScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         width = 1.dp,
-                        color = Theme.colors.borders.light,
+                        color = Theme.v2.colors.border.light,
                         shape = RoundedCornerShape(16.dp)
                     )
             ) {
@@ -266,7 +266,7 @@ private fun TierCard(
                 )
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Theme.colors.backgrounds.neutral)
+                .background(Theme.v2.colors.backgrounds.secondary)
                 .clickable { onClickCard.invoke() }
         ) {
         Column(

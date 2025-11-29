@@ -82,10 +82,10 @@ internal fun TotalBondWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.colors.backgrounds.secondary)
+            .background(Theme.v2.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.normal,
+                color = Theme.v2.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -117,7 +117,7 @@ internal fun TotalBondWidget(
                     Text(
                         text = if (isBalanceVisible) totalBonded else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                     )
                 }
             }
@@ -149,10 +149,10 @@ internal fun ActiveNodesWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.colors.backgrounds.secondary)
+            .background(Theme.v2.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.normal,
+                color = Theme.v2.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -169,7 +169,7 @@ internal fun ActiveNodesWidget(
             UiIcon(
                 drawableResId = R.drawable.ic_caret_down,
                 size = 16.dp,
-                tint = Theme.colors.text.light,
+                tint = Theme.v2.colors.text.light,
                 modifier = Modifier.rotate(180f)
             )
         }

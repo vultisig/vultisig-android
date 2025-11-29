@@ -41,7 +41,7 @@ internal fun NoFoundContent(
             Text(
                 text = message,
                 style = Theme.brockmann.headings.subtitle,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
         }
     }

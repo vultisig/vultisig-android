@@ -23,7 +23,7 @@ internal fun BottomFadeEffect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         Color.Transparent,
-                        Theme.colors.backgrounds.primary
+                        Theme.v2.colors.backgrounds.primary
                     )
                 )
             ),

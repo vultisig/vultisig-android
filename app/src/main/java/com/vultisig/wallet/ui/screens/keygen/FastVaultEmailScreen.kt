@@ -58,7 +58,7 @@ private fun FastVaultEmailScreen(
     onBackClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick
@@ -95,13 +95,13 @@ private fun FastVaultEmailScreen(
             Text(
                 text = stringResource(R.string.enter_email_screen_title),
                 style = Theme.brockmann.headings.largeTitle,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
             UiSpacer(16.dp)
             Text(
                 text = stringResource(R.string.enter_email_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.extraLight
+                color = Theme.v2.colors.text.extraLight
             )
             VsTextInputField(
                 textFieldState = textFieldState,

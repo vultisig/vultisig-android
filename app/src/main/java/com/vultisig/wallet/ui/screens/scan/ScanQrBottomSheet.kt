@@ -19,7 +19,7 @@ fun ScanQrBottomSheet (
             skipPartiallyExpanded = true,
         ),
         dragHandle = null,
-        containerColor = Theme.colors.transparent,
+        containerColor = Theme.v2.colors.backgrounds.transparent,
         onDismissRequest = onDismiss,
         shape = RectangleShape
     ) {

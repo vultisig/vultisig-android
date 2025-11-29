@@ -11,7 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.Theme.colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
 internal fun PercentText(
@@ -21,7 +21,7 @@ internal fun PercentText(
     Text(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(colors.oxfordBlue600Main)
+            .background(colors.backgrounds.secondary)
             .padding(
                 horizontal = 19.dp,
                 vertical = 5.dp
@@ -31,7 +31,7 @@ internal fun PercentText(
             R.string.send_percent,
             percent
         ),
-        color = colors.neutral100,
+        color = colors.neutrals.n100,
         style = Theme.menlo.overline2,
     )
 }

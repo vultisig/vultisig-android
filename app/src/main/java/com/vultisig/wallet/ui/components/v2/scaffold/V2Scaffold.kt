@@ -104,7 +104,7 @@ private fun V2Scaffold(
         topBar = topBar,
         bottomBar = bottomBar,
         modifier = modifier,
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
     ) {
         Box(
             modifier = Modifier

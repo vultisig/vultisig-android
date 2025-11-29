@@ -54,7 +54,7 @@ internal fun TransactionDoneView(
     BackHandler(onBack = onBack)
 
     Scaffold(
-        containerColor = Theme.colors.oxfordBlue800,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
@@ -136,7 +136,7 @@ private fun TxLinkAndHash(
     ) {
         Text(
             text = stringResource(if (isApproved) R.string.transaction_done_form_approve else R.string.transaction_done_form_title),
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             style = Theme.montserrat.heading5,
         )
 
@@ -148,7 +148,7 @@ private fun TxLinkAndHash(
     }
     Text(
         text = transactionHash,
-        color = Theme.colors.turquoise800,
+        color = Theme.v2.colors.backgrounds.teal,
         style = Theme.menlo.subtitle3,
     )
 }
@@ -220,7 +220,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
             title = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.colors.neutral100,
+                        color = Theme.v2.colors.neutrals.n100,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
@@ -233,7 +233,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
             value = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.colors.neutral100,
+                        color = Theme.v2.colors.neutrals.n100,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
@@ -243,7 +243,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
                 }
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.colors.neutral400,
+                        color = Theme.v2.colors.neutrals.n400,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,

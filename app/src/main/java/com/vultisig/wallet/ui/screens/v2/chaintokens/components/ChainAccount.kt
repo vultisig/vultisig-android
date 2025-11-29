@@ -67,7 +67,7 @@ internal fun ChainAccount(
                 errorLogoModifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Theme.colors.body),
+                    .background(Theme.v2.colors.backgrounds.body),
             )
             monoToneChainLogo.takeIf { chainLogo != tokenLogo }?.let {
                 Image(
@@ -77,11 +77,11 @@ internal fun ChainAccount(
                         .size(16.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.backgrounds.secondary,
+                            color = Theme.v2.colors.backgrounds.secondary,
                             shape = CircleShape
                         )
                         .background(
-                            Theme.colors.neutral200,
+                            Theme.v2.colors.neutrals.n200,
                             CircleShape
                         )
                         .align(Alignment.BottomEnd)
@@ -102,7 +102,7 @@ internal fun ChainAccount(
                 style = Theme.brockmann.body.s.medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = Theme.colors.text.primary
+                color = Theme.v2.colors.text.primary
             )
             UiSpacer(
                 size = 2.dp
@@ -119,7 +119,7 @@ internal fun ChainAccount(
                     value = price,
                     isVisible = true,
                     style = Theme.satoshi.price.caption,
-                    color = Theme.colors.text.light,
+                    color = Theme.v2.colors.text.light,
                     modifier = Modifier
                         .padding(
                             horizontal = 8.dp,
@@ -141,7 +141,7 @@ internal fun ChainAccount(
                 value = fiatBalance,
                 isVisible = isBalanceVisible,
                 style = Theme.satoshi.price.bodyS,
-                color = Theme.colors.neutrals.n50,
+                color = Theme.v2.colors.neutrals.n50,
             )
 
             UiSpacer(
@@ -152,7 +152,7 @@ internal fun ChainAccount(
                 value = balance,
                 isVisible = isBalanceVisible,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
                 maxLines = 2,
                 textAlign = TextAlign.End,
             )
@@ -165,7 +165,7 @@ internal fun ChainAccount(
         UiIcon(
             drawableResId = R.drawable.ic_small_caret_right,
             size = 16.dp,
-            tint = Theme.colors.text.primary,
+            tint = Theme.v2.colors.text.primary,
         )
     }
 }

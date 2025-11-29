@@ -65,13 +65,13 @@ private fun SelectAssetScreen(
     onSelectChain: (Chain) -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             Column {
                 Text(
                     text = stringResource(R.string.select_asset_title),
                     style = Theme.brockmann.body.l.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -109,7 +109,7 @@ private fun SelectAssetScreen(
                                 onAssetClick(item)
                             })
                             .background(
-                                color = Theme.colors.backgrounds.secondary,
+                                color = Theme.v2.colors.backgrounds.secondary,
                                 shape = RoundedCornerShape(
                                     topStart = if (isFirst) rounding else 0.dp,
                                     topEnd = if (isFirst) rounding else 0.dp,
@@ -121,8 +121,8 @@ private fun SelectAssetScreen(
 
                     if (!isLast) {
                         UiGradientDivider(
-                            initialColor = Theme.colors.backgrounds.secondary,
-                            endColor = Theme.colors.backgrounds.secondary,
+                            initialColor = Theme.v2.colors.backgrounds.secondary,
+                            endColor = Theme.v2.colors.backgrounds.secondary,
                         )
                     }
                 }
@@ -161,7 +161,7 @@ private fun AssetItem(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.colors.neutral100),
+                .background(Theme.v2.colors.neutrals.n100),
             logo = logo,
             title = title,
             modifier = Modifier
@@ -171,18 +171,18 @@ private fun AssetItem(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier.weight(2f)
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
             modifier = Modifier
                 .border(
                     width = 1.dp,
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(70.dp),
                 )
                 .padding(
@@ -200,13 +200,13 @@ private fun AssetItem(
                 AutoSizingText(
                     text = amount,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 AutoSizingText(
                     text = value,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
         }

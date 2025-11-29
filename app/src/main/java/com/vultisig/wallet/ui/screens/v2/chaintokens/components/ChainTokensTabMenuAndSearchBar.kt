@@ -98,7 +98,7 @@ fun ChainTokensTabMenuAndSearchBar(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
-                        tint = Theme.colors.primary.accent4,
+                        tint = Theme.v2.colors.primary.accent4,
                     )
                 }
             }

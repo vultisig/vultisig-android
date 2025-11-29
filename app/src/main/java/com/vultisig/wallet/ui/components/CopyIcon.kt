@@ -27,7 +27,7 @@ internal fun CopyIcon(
             VsClipboardService.copy(context, textToCopy)
             onCopyCompleted(textToCopy)
         },
-        tint = tint ?: Theme.colors.neutral100,
+        tint = tint ?: Theme.v2.colors.neutrals.n100,
     )
 }
 

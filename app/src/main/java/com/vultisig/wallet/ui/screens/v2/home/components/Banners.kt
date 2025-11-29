@@ -37,7 +37,7 @@ internal fun Banners(
     )
     UiSpacer(20.dp)
     UiHorizontalDivider(
-        color = Theme.colors.borders.light,
+        color = Theme.v2.colors.border.light,
         modifier = Modifier.Companion.padding(horizontal = 16.dp)
     )
 }

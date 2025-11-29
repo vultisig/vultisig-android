@@ -94,7 +94,7 @@ private fun ReferralEditVaultScreen(
     }
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_edit_referral),
@@ -114,7 +114,7 @@ private fun ReferralEditVaultScreen(
                 Text(
                     text = stringResource(R.string.referral_view_your_referral_code),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 UiSpacer(8.dp)
@@ -136,8 +136,8 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.colors.backgrounds.primary,
-                    endColor = Theme.colors.backgrounds.primary,
+                    initialColor = Theme.v2.colors.backgrounds.primary,
+                    endColor = Theme.v2.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)
@@ -156,7 +156,7 @@ private fun ReferralEditVaultScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                         text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,
@@ -165,7 +165,7 @@ private fun ReferralEditVaultScreen(
                     UiSpacer(1f)
 
                     Text(
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                         text = state.referralExpiration,
                         textAlign = TextAlign.Start,
@@ -175,8 +175,8 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.colors.backgrounds.primary,
-                    endColor = Theme.colors.backgrounds.primary,
+                    initialColor = Theme.v2.colors.backgrounds.primary,
+                    endColor = Theme.v2.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)

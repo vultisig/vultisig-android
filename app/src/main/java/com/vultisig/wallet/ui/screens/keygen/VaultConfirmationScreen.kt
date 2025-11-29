@@ -52,7 +52,7 @@ private fun VaultConfirmationScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.colors.backgrounds.primary),
+            .background(Theme.v2.colors.backgrounds.primary),
     ) {
         RiveAnimation(
             animation = when (action) {
@@ -72,7 +72,7 @@ private fun VaultConfirmationScreen(
                 appendLine(stringResource(R.string.vault_confirmation_vault_upgraded))
                 withStyle(
                     SpanStyle(
-                        brush = Theme.colors.gradients.primary,
+                        brush = Theme.v2.colors.gradients.primary,
                     )
                 ) {
                     append(stringResource(R.string.vault_created_success_part_2))
@@ -82,7 +82,7 @@ private fun VaultConfirmationScreen(
             else -> buildAnnotatedString {
                 withStyle(
                     SpanStyle(
-                        brush = Theme.colors.gradients.primary,
+                        brush = Theme.v2.colors.gradients.primary,
                     )
                 ) {
                     appendLine(stringResource(R.string.vault_confirmation_well_done))
@@ -94,7 +94,7 @@ private fun VaultConfirmationScreen(
         Text(
             text = wellDoneText,
             style = Theme.brockmann.headings.largeTitle,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(all = 24.dp),

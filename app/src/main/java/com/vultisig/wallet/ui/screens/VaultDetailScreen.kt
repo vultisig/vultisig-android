@@ -201,7 +201,7 @@ fun VaultDetailGroup(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.extraLight
+            color = Theme.v2.colors.text.extraLight
         )
         content()
     }
@@ -265,7 +265,7 @@ private fun KeyItemPrev() {
 @Composable
 internal fun Modifier.itemModifier(): Modifier = border(
     width = 1.dp,
-    color = Theme.colors.borders.light,
+    color = Theme.v2.colors.border.light,
     shape = RoundedCornerShape(
         size = 12.dp
     )
@@ -274,7 +274,7 @@ internal fun Modifier.itemModifier(): Modifier = border(
         shape = RoundedCornerShape(
             size = 12.dp
         ),
-        color = Theme.colors.backgrounds.disabled
+        color = Theme.v2.colors.backgrounds.disabled
     )
     .padding(
         vertical = 24.dp,
@@ -298,13 +298,13 @@ private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Un
             Text(
                 text = type,
                 style = Theme.brockmann.headings.subtitle,
-                color = Theme.colors.text.primary
+                color = Theme.v2.colors.text.primary
             )
 
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight
+                color = Theme.v2.colors.text.extraLight
             )
         }
         UiSpacer(16.dp)
@@ -329,7 +329,7 @@ internal fun SettingInfoHorizontalItem(
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.primary
+            color = Theme.v2.colors.text.primary
         )
 
         if (value == null)
@@ -340,7 +340,7 @@ internal fun SettingInfoHorizontalItem(
             Text(
                 text = value,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary
+                color = Theme.v2.colors.text.primary
             )
     }
 
@@ -362,13 +362,13 @@ internal fun SettingInfoItemVertical(
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
         )
 
         Text(
             text = value,
             style = Theme.brockmann.button.medium.medium,
-            color = Theme.colors.neutral0
+            color = Theme.v2.colors.neutrals.n50
         )
 
         content?.let {
@@ -394,7 +394,7 @@ private fun DeviceItem(
                 Text(
                     text = stringResource(R.string.peer_discovery_this_device),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.light
+                    color = Theme.v2.colors.text.light
                 )
             }
         } else null

@@ -60,13 +60,13 @@ private fun SelectNetworkScreen(
     onNetworkClick: (NetworkUiModel) -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             Column {
                 Text(
                     text = stringResource(R.string.select_chain_title),
                     style = Theme.brockmann.body.l.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -93,7 +93,7 @@ private fun SelectNetworkScreen(
                         Text(
                             text = stringResource(R.string.select_chain_chain_title),
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                         )
 
                         UiSpacer(1f)
@@ -101,7 +101,7 @@ private fun SelectNetworkScreen(
                         Text(
                             text = stringResource(R.string.select_chain_balance_title),
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                         )
 
                         UiSpacer(20.dp)
@@ -116,9 +116,9 @@ private fun SelectNetworkScreen(
                     val rounding = 12.dp
                     val isSelected = state.selectedNetwork == item.chain
                     val selectedColor = if (isSelected) {
-                        Theme.colors.backgrounds.tertiary
+                        Theme.v2.colors.backgrounds.tertiary_2
                     } else {
-                        Theme.colors.backgrounds.secondary
+                        Theme.v2.colors.backgrounds.secondary
                     }
 
                     NetworkItem(
@@ -172,7 +172,7 @@ private fun NetworkItem(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.colors.neutral100),
+                .background(Theme.v2.colors.neutrals.n100),
             logo = logo,
             title = title,
             modifier = Modifier
@@ -182,7 +182,7 @@ private fun NetworkItem(
         Text(
             text = title,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
 
         if (value.isNotEmpty()) {
@@ -191,7 +191,7 @@ private fun NetworkItem(
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
             )
         }
     }

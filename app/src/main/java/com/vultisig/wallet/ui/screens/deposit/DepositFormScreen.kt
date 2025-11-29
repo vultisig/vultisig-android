@@ -189,7 +189,7 @@ internal fun DepositFormScreen(
             FormCard {
                 Text(
                     text = state.depositMessage.asString(),
-                    color = Theme.colors.neutral100,
+                    color = Theme.v2.colors.neutrals.n100,
                     style = Theme.menlo.body1,
                     modifier = Modifier
                         .fillMaxWidth()

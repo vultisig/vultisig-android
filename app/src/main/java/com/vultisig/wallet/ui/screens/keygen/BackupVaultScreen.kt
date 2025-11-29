@@ -54,7 +54,7 @@ private fun BackupVaultScreen(
     onBackupClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.backup_vault_topbar_title)
@@ -83,7 +83,7 @@ private fun BackupVaultScreen(
                 Text(
                     text = stringResource(R.string.backup_vault_backup_vault_share_title),
                     style = Theme.brockmann.headings.title1,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -95,7 +95,7 @@ private fun BackupVaultScreen(
                             url = "https://docs.vultisig.com/vultisig-user-actions/managing-your-vault/vault-backup",
                             styles = TextLinkStyles(
                                 style = SpanStyle(
-                                    color = Theme.colors.text.light,
+                                    color = Theme.v2.colors.text.light,
                                     textDecoration = TextDecoration.Underline,
                                 )
                             )
@@ -108,7 +108,7 @@ private fun BackupVaultScreen(
                 Text(
                     text = link,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                     textAlign = TextAlign.Center,
                 )
             }

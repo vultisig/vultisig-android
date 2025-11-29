@@ -74,7 +74,7 @@ private fun ShareLinkContent(
         Text(
             text = stringResource(R.string.app_name),
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
@@ -87,7 +87,7 @@ private fun ShareLinkContent(
 
         Text(
             text = stringResource(R.string.settings_screen_share_the_app),
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier
                 .padding(
@@ -132,7 +132,7 @@ private fun ShareLinkContent(
                 Text(
                     text = uiModel.link,
                     style = Theme.brockmann.body.m.regular,
-                    color = Theme.colors.text.light,
+                    color = Theme.v2.colors.text.light,
                     modifier = Modifier
                         .weight(1f),
                     maxLines = 1,
@@ -145,7 +145,7 @@ private fun ShareLinkContent(
 
                 CopyIcon(
                     textToCopy = uiModel.link,
-                    tint = Theme.colors.primary.accent4,
+                    tint = Theme.v2.colors.primary.accent4,
                     size = 16.dp,
                 )
 
@@ -178,7 +178,7 @@ private fun ShareOptionItem(
                 onClick = onClick
             )
             .background(
-                Theme.colors.backgrounds.secondary
+                Theme.v2.colors.backgrounds.secondary
             ),
         contentAlignment = Alignment.Center,
     ) {

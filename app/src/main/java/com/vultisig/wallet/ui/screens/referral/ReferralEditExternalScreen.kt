@@ -45,7 +45,7 @@ internal fun ReferralEditExternalScreen(
     val clipboardData = VsClipboardService.getClipboardData()
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_edit_external_title),
@@ -71,7 +71,7 @@ internal fun ReferralEditExternalScreen(
                 Text(
                     text = stringResource(R.string.referral_use_referred_code),
                     textAlign = TextAlign.Start,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
                 )
 
@@ -117,7 +117,7 @@ private fun ReferralEditExternalScreenPreview() {
     val textFieldState = TextFieldState("FRIEND-CODE-123")
     
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.referral_edit_external_title),
@@ -134,7 +134,7 @@ private fun ReferralEditExternalScreenPreview() {
                 Text(
                     text = stringResource(R.string.referral_use_referred_code),
                     textAlign = TextAlign.Start,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
                 )
 

@@ -115,7 +115,7 @@ private fun BackupPasswordRequestScreen(
                         64.dp,
                     )
                     .background(
-                        color = Theme.colors.backgrounds.tertiary,
+                        color = Theme.v2.colors.backgrounds.tertiary_2,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .clip(
@@ -135,7 +135,7 @@ private fun BackupPasswordRequestScreen(
             Text(
                 text = stringResource(R.string.backup_password_request_title),
                 style = Theme.brockmann.headings.title2,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.Center,
             )
 
@@ -224,7 +224,7 @@ private fun BackupCaution(
             UiIcon(
                 drawableResId = icon,
                 size = 20.dp,
-                tint = Theme.colors.primary.accent4,
+                tint = Theme.v2.colors.primary.accent4,
             )
             UiSpacer(16.dp)
 
@@ -232,9 +232,9 @@ private fun BackupCaution(
                 text = highlightedText(
                     mainText = mainText,
                     highlightedWords = highlightedWords,
-                    mainTextColor = Theme.colors.text.extraLight,
+                    mainTextColor = Theme.v2.colors.text.extraLight,
                     mainTextStyle = Theme.brockmann.supplementary.footnote,
-                    highlightTextColor = Theme.colors.text.primary,
+                    highlightTextColor = Theme.v2.colors.text.primary,
                     highlightTextStyle = Theme.brockmann.supplementary.footnote,
                 ),
                 modifier = Modifier

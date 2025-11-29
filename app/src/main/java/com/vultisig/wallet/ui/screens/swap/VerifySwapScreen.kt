@@ -181,7 +181,7 @@ private fun VerifySwapScreen(
     onDismissRequest: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
@@ -206,7 +206,7 @@ private fun VerifySwapScreen(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.colors.backgrounds.secondary,
+                            color = Theme.v2.colors.backgrounds.secondary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(
@@ -216,7 +216,7 @@ private fun VerifySwapScreen(
                     Text(
                         text = stringResource(R.string.verify_swap_youre_swapping_title),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.light,
+                        color = Theme.v2.colors.text.light,
                     )
 
                     UiSpacer(24.dp)
@@ -235,7 +235,7 @@ private fun VerifySwapScreen(
                         ) {
                             VerticalDivider(
                                 thickness = 1.dp,
-                                color = Theme.colors.borders.light,
+                                color = Theme.v2.colors.border.light,
                                 modifier = Modifier
                                     .height(16.dp)
                             )
@@ -243,11 +243,11 @@ private fun VerifySwapScreen(
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_down),
                                 contentDescription = null,
-                                tint = Theme.colors.primary.accent4,
+                                tint = Theme.v2.colors.primary.accent4,
                                 modifier = Modifier
                                     .size(24.dp)
                                     .background(
-                                        color = Theme.colors.backgrounds.tertiary,
+                                        color = Theme.v2.colors.backgrounds.tertiary_2,
                                         shape = CircleShape,
                                     )
                                     .padding(6.dp)
@@ -255,7 +255,7 @@ private fun VerifySwapScreen(
 
                             VerticalDivider(
                                 thickness = 1.dp,
-                                color = Theme.colors.borders.light,
+                                color = Theme.v2.colors.border.light,
                                 modifier = Modifier
                                     .height(16.dp)
                             )
@@ -264,12 +264,12 @@ private fun VerifySwapScreen(
                         Text(
                             stringResource(R.string.swap_form_dst_token_title),
                             style = Theme.brockmann.supplementary.captionSmall,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                         )
 
                         HorizontalDivider(
                             thickness = 1.dp,
-                            color = Theme.colors.borders.light,
+                            color = Theme.v2.colors.border.light,
                         )
                     }
 
@@ -363,7 +363,7 @@ private fun VerifySwapScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
 
@@ -411,12 +411,12 @@ internal fun SwapToken(
             errorLogoModifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(Theme.colors.neutral200),
+                .background(Theme.v2.colors.neutrals.n200),
             modifier = Modifier
                 .size(24.dp)
                 .border(
                     width = 1.dp,
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                     shape = CircleShape,
                 ),
         )
@@ -424,7 +424,7 @@ internal fun SwapToken(
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.colors.text.extraLight)) {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.extraLight)) {
                 append(token.ticker)
             }
         }
@@ -436,7 +436,7 @@ internal fun SwapToken(
                 Text(
                     text = stringResource(R.string.swap_form_min_pay),
                     style = Theme.brockmann.supplementary.captionSmall,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
 
@@ -456,13 +456,13 @@ internal fun SwapToken(
                 Text(
                     text = text,
                     style = Theme.brockmann.headings.title3,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 Text(
                     text = valuedToken.fiatValue,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
         }
@@ -480,7 +480,7 @@ internal fun SwapToken(
                         .size(16.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.borders.light,
+                            color = Theme.v2.colors.border.light,
                             shape = CircleShape,
                         )
                 )
@@ -497,7 +497,7 @@ internal fun SwapToken(
                     Text(
                         text = stringResource(R.string.swap_form_on_chain) + " ${token.chain.swapAssetName()}",
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                     )
                 }
             }
@@ -511,7 +511,7 @@ internal fun VerifyCardDivider(
 ) {
     HorizontalDivider(
         thickness = 1.dp,
-        color = Theme.colors.borders.light,
+        color = Theme.v2.colors.border.light,
         modifier = Modifier
             .padding(
                 vertical = size,
@@ -536,14 +536,14 @@ internal fun VerifyCardDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             maxLines = 1,
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
             maxLines = 1,
@@ -566,7 +566,7 @@ internal fun VerifyVaultDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             maxLines = 1,
         )
 
@@ -579,7 +579,7 @@ internal fun VerifyVaultDetails(
             Text(
                 text = subtitle,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 textAlign = TextAlign.End,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -597,7 +597,7 @@ internal fun VerifyVaultDetails(
                 Text(
                     text = display,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                     maxLines = 1,
                 )
             }
@@ -622,14 +622,14 @@ internal fun VerifyCardJsonDetails(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             maxLines = 1,
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Start,
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         )

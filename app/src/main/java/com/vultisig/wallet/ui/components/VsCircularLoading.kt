@@ -25,7 +25,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun VsCircularLoading(
     modifier: Modifier = Modifier,
     strokeWidth: Float = 10f,
-    color1: Color = Theme.colors.buttons.primary,
+    color1: Color = Theme.v2.colors.buttons.tertiary,
     color2: Color = Color.Transparent,
 ) {
     val infiniteTransition = rememberInfiniteTransition(

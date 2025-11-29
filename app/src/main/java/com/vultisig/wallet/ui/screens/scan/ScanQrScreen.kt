@@ -271,7 +271,7 @@ internal fun ScanQrScreen(
                         Text(
                             text = stringResource(R.string.camera_permission_denied),
                             textAlign = TextAlign.Center,
-                            color = Theme.colors.neutral100,
+                            color = Theme.v2.colors.neutrals.n100,
                             style = Theme.montserrat.subtitle1,
                             modifier = Modifier.fillMaxWidth(0.5f)
                         )

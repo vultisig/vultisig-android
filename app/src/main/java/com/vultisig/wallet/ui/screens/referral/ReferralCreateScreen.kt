@@ -115,7 +115,7 @@ private fun ReferralCreateScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = Theme.colors.backgrounds.primary,
+            containerColor = Theme.v2.colors.backgrounds.primary,
             topBar = {
                 VsTopAppBar(
                     title = stringResource(R.string.referral_create_create_referral),
@@ -135,7 +135,7 @@ private fun ReferralCreateScreen(
                     .padding(16.dp),
             ) {
                 Text(
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
                     text = stringResource(R.string.referral_create_pick_referral_code),
                     textAlign = TextAlign.Start,
@@ -188,7 +188,7 @@ private fun ReferralCreateScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             style = Theme.brockmann.body.s.medium,
                             text = stringResource(R.string.referral_create_status),
                             textAlign = TextAlign.Start,
@@ -211,14 +211,14 @@ private fun ReferralCreateScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.colors.backgrounds.primary,
-                    endColor = Theme.colors.backgrounds.primary,
+                    initialColor = Theme.v2.colors.backgrounds.primary,
+                    endColor = Theme.v2.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)
 
                 Text(
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
                     text = stringResource(R.string.referral_create_set_expiration_years),
                     textAlign = TextAlign.Start,
@@ -240,7 +240,7 @@ private fun ReferralCreateScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                         text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,
@@ -249,7 +249,7 @@ private fun ReferralCreateScreen(
                     UiSpacer(1f)
 
                     Text(
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                         text = state.formattedYearExpiration,
                         textAlign = TextAlign.Start,
@@ -259,8 +259,8 @@ private fun ReferralCreateScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.colors.backgrounds.primary,
-                    endColor = Theme.colors.backgrounds.primary,
+                    initialColor = Theme.v2.colors.backgrounds.primary,
+                    endColor = Theme.v2.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)
@@ -354,21 +354,21 @@ private fun SearchReferralTag(
     type: SearchStatusType,
 ) {
     val (color, text) = when (type) {
-        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_invalid))
-        SearchStatusType.SUCCESS -> Pair(Theme.colors.alerts.success, stringResource(R.string.referral_create_available))
-        SearchStatusType.ERROR -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_taken))
-        else -> Pair(Theme.colors.alerts.error, stringResource(R.string.referral_create_unknown))
+        SearchStatusType.VALIDATION_ERROR -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_invalid))
+        SearchStatusType.SUCCESS -> Pair(Theme.v2.colors.alerts.success, stringResource(R.string.referral_create_available))
+        SearchStatusType.ERROR -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_taken))
+        else -> Pair(Theme.v2.colors.alerts.error, stringResource(R.string.referral_create_unknown))
     }
 
     Box(
         modifier = Modifier
             .background(
-                color = Theme.colors.backgrounds.secondary,
+                color = Theme.v2.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(50)
             )
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(50)
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -398,15 +398,15 @@ fun CounterYearExpiration(
             shape = RoundedCornerShape(12.dp),
             enabled = count != defaultInitCounter,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Theme.colors.backgrounds.secondary,
-                contentColor = Theme.colors.text.primary,
-                disabledContainerColor = Theme.colors.backgrounds.secondary.copy(alpha = 0.5f),
-                disabledContentColor = Theme.colors.text.primary.copy(alpha = 0.5f),
+                containerColor = Theme.v2.colors.backgrounds.secondary,
+                contentColor = Theme.v2.colors.text.primary,
+                disabledContainerColor = Theme.v2.colors.backgrounds.secondary.copy(alpha = 0.5f),
+                disabledContentColor = Theme.v2.colors.text.primary.copy(alpha = 0.5f),
             ),
             modifier = Modifier
                 .weight(1f)
                 .height(height = 60.dp)
-                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
                 painter = painterResource(R.drawable.circle_minus),
@@ -418,12 +418,12 @@ fun CounterYearExpiration(
             modifier = Modifier
                 .weight(1f)
                 .height(height = 60.dp)
-                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = count.toString(),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.m.medium,
             )
         }
@@ -432,13 +432,13 @@ fun CounterYearExpiration(
             onClick = { if (count < 100) onIncrement() },
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Theme.colors.backgrounds.secondary,
-                contentColor = Theme.colors.text.primary
+                containerColor = Theme.v2.colors.backgrounds.secondary,
+                contentColor = Theme.v2.colors.text.primary
             ),
             modifier = Modifier
                 .weight(1f)
                 .height(height = 60.dp)
-                .border(1.dp, Theme.colors.borders.normal, RoundedCornerShape(12.dp)),
+                .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp)),
         ) {
             Icon(
                 painter = painterResource(R.drawable.circle_plus),
@@ -460,7 +460,7 @@ internal fun EstimatedNetworkFee(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
         )
 
         Column(
@@ -484,13 +484,13 @@ internal fun EstimatedNetworkFee(
                 Text(
                     text = tokenGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 Text(
                     text = fiatGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
         }

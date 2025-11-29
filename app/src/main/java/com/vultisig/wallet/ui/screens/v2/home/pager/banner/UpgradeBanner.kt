@@ -44,7 +44,7 @@ internal fun UpgradeBanner(
             Text(
                 text = stringResource(R.string.upgrade_banner_sign_faster),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
             )
             UiSpacer(
                 size = 2.dp
@@ -52,7 +52,7 @@ internal fun UpgradeBanner(
             Text(
                 text = stringResource(R.string.upgrade_banner_upgrade_your),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
             UiSpacer(
                 size = 16.dp
@@ -62,12 +62,12 @@ internal fun UpgradeBanner(
             Text(
                 text = stringResource(R.string.upgrade_banner_upgrade_now),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.colors.text.button.dark,
+                color = Theme.v2.colors.backgrounds.primary,
                 modifier = Modifier
                     .clip(shape = CircleShape)
                     .clickOnce(onClick = onUpgradeClick)
                     .background(
-                        color = Theme.colors.aquamarine
+                        color =  Theme.v2.colors.buttons.primary
                     )
                     .padding(
                         vertical = 8.dp,

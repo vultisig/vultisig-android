@@ -18,8 +18,8 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun ExpandedTopbarContainer(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Theme.colors.backgrounds.primary,
-    shineSpotColor: Color = Theme.colors.primary.accent1,
+    backgroundColor: Color = Theme.v2.colors.backgrounds.primary,
+    shineSpotColor: Color = Theme.v2.colors.primary.accent1,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val windowInfo = LocalWindowInfo.current

@@ -87,7 +87,7 @@ private fun FastVaultVerificationScreen(
     val hasClipContent = textToPaste != null
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick
@@ -111,7 +111,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_email_sent_to, state.sentEmailTo
                                 ),
-                                color = Theme.colors.text.extraLight,
+                                color = Theme.v2.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
 
@@ -119,7 +119,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_change_email,
                                 ),
-                                color = Theme.colors.text.light,
+                                color = Theme.v2.colors.text.light,
                                 textDecoration = TextDecoration.Underline,
                                 style = Theme.brockmann.supplementary.footnote,
                                 modifier = Modifier.clickOnce(
@@ -138,7 +138,7 @@ private fun FastVaultVerificationScreen(
                             append(" ")
                             withStyle(
                                 style = SpanStyle(
-                                    color = Theme.colors.text.light,
+                                    color = Theme.v2.colors.text.light,
                                     textDecoration = TextDecoration.Underline
                                 )
                             ) {
@@ -149,7 +149,7 @@ private fun FastVaultVerificationScreen(
                         Text(
                             text = annotatedString,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp)
@@ -183,13 +183,13 @@ private fun FastVaultVerificationScreen(
                 Text(
                     text = stringResource(R.string.enter_backup_screen_title),
                     style = Theme.brockmann.headings.largeTitle,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.enter_backup_screen_desc),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight
+                    color = Theme.v2.colors.text.extraLight
                 )
                 UiSpacer(1f)
 
@@ -218,7 +218,7 @@ private fun FastVaultVerificationScreen(
                         modifier = Modifier
                             .fillMaxHeight()
                             .background(
-                                color = Theme.colors.backgrounds.secondary,
+                                color = Theme.v2.colors.backgrounds.secondary,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .padding(all = 12.dp)
@@ -234,8 +234,8 @@ private fun FastVaultVerificationScreen(
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
                             style = Theme.brockmann.body.s.medium,
-                            color = if (hasClipContent) Theme.colors.text.primary
-                            else Theme.colors.text.button.disabled,
+                            color = if (hasClipContent) Theme.v2.colors.text.primary
+                            else Theme.v2.colors.text.button.disabled,
                         )
                     }
                 }
@@ -256,7 +256,7 @@ private fun FastVaultVerificationScreen(
                             )
                             Text(
                                 text = stringResource(R.string.vault_backup_verifying_pin),
-                                color = Theme.colors.text.primary,
+                                color = Theme.v2.colors.text.primary,
                                 style = Theme.brockmann.supplementary.footnote
                             )
                         }
@@ -266,7 +266,7 @@ private fun FastVaultVerificationScreen(
                         VerifyPinState.Error -> {
                             Text(
                                 text = stringResource(R.string.vault_backup_error_pin),
-                                color = Theme.colors.alerts.error,
+                                color = Theme.v2.colors.alerts.error,
                                 style = Theme.brockmann.supplementary.footnote
                             )
                         }

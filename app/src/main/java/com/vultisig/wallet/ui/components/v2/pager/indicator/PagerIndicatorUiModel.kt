@@ -19,8 +19,8 @@ internal data class PagerIndicatorUiModel(
 
 @Composable
 internal fun rememberPagerIndicatorUiModel(
-    selectedColor: Color = Theme.colors.text.primary,
-    defaultColor: Color = Theme.colors.backgrounds.tertiary,
+    selectedColor: Color = Theme.v2.colors.text.primary,
+    defaultColor: Color = Theme.v2.colors.backgrounds.tertiary_2,
     defaultRadius: Dp = 4.dp,
     selectedLength: Dp = 12.dp,
     space: Dp = 4.dp,

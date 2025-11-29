@@ -38,13 +38,13 @@ internal fun TokenNotFoundError(
         UiSpacer(size = 12.dp)
         Text(
             text = stringResource(R.string.custom_token_token_not_found),
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.headings.title3
         )
         UiSpacer(size = 8.dp)
         Text(
             text = stringResource(R.string.custom_token_not_found_desc),
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Companion.Center,
             modifier = Modifier.Companion

@@ -198,7 +198,7 @@ private fun SendFormScreen(
     }
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.send_screen_title),
@@ -216,7 +216,7 @@ private fun SendFormScreen(
                     Indicator(
                         modifier = Modifier.align(Alignment.TopCenter),
                         isRefreshing = state.isRefreshing,
-                        color = Theme.colors.primary.accent3,
+                        color = Theme.v2.colors.primary.accent3,
                         state = pullToRefreshState
                     )
                 },
@@ -247,7 +247,7 @@ private fun SendFormScreen(
                                 TokenLogo(
                                     errorLogoModifier = Modifier
                                         .size(16.dp)
-                                        .background(Theme.colors.neutral100),
+                                        .background(Theme.v2.colors.neutrals.n100),
                                     logo = selectedToken?.tokenLogo ?: "",
                                     title = selectedToken?.title ?: "",
                                     modifier = Modifier
@@ -259,7 +259,7 @@ private fun SendFormScreen(
                                 Text(
                                     text = selectedToken?.title ?: "",
                                     style = Theme.brockmann.supplementary.caption,
-                                    color = Theme.colors.text.extraLight,
+                                    color = Theme.v2.colors.text.extraLight,
                                 )
                             }
                         }
@@ -317,7 +317,7 @@ private fun SendFormScreen(
                                                 R.string.form_token_selection_balance,
                                                 token.balance ?: ""
                                             ),
-                                            color = Theme.colors.text.light,
+                                            color = Theme.v2.colors.text.light,
                                             style = Theme.brockmann.body.s.medium,
                                             textAlign = TextAlign.End,
                                         )
@@ -328,7 +328,7 @@ private fun SendFormScreen(
                                             Text(
                                                 text = fiatValue,
                                                 textAlign = TextAlign.End,
-                                                color = Theme.colors.text.extraLight,
+                                                color = Theme.v2.colors.text.extraLight,
                                                 style = Theme.brockmann.supplementary.caption,
                                             )
                                         }
@@ -349,7 +349,7 @@ private fun SendFormScreen(
                         completeTitleContent = {
                             Text(
                                 text = addressFieldState.text.toString(),
-                                color = Theme.colors.text.extraLight,
+                                color = Theme.v2.colors.text.extraLight,
                                 style = Theme.brockmann.body.s.medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.MiddleEllipsis,
@@ -368,7 +368,7 @@ private fun SendFormScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.send_from_address),
-                                color = Theme.colors.text.extraLight,
+                                color = Theme.v2.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.caption,
                             )
 
@@ -380,12 +380,12 @@ private fun SendFormScreen(
                                     .border(
                                         border = BorderStroke(
                                             width = 1.dp,
-                                            color = Theme.colors.borders.light,
+                                            color = Theme.v2.colors.border.light,
                                         ),
                                         shape = RoundedCornerShape(12.dp),
                                     )
                                     .background(
-                                        color = Theme.colors.backgrounds.secondary,
+                                        color = Theme.v2.colors.backgrounds.secondary,
                                         shape = RoundedCornerShape(12.dp),
                                     )
                                     .padding(
@@ -396,7 +396,7 @@ private fun SendFormScreen(
                             ) {
                                 Text(
                                     text = state.srcVaultName,
-                                    color = Theme.colors.text.primary,
+                                    color = Theme.v2.colors.text.primary,
                                     style = Theme.brockmann.supplementary.caption,
                                     maxLines = 1,
                                     overflow = TextOverflow.MiddleEllipsis,
@@ -404,7 +404,7 @@ private fun SendFormScreen(
 
                                 Text(
                                     text = state.srcAddress,
-                                    color = Theme.colors.text.extraLight,
+                                    color = Theme.v2.colors.text.extraLight,
                                     style = Theme.brockmann.supplementary.caption,
                                     maxLines = 1,
                                     overflow = TextOverflow.MiddleEllipsis,
@@ -415,7 +415,7 @@ private fun SendFormScreen(
 
                             Text(
                                 text = stringResource(R.string.send_to_address),
-                                color = Theme.colors.text.extraLight,
+                                color = Theme.v2.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.caption,
                             )
 
@@ -495,7 +495,7 @@ private fun SendFormScreen(
                                     UiIcon(
                                         drawableResId = R.drawable.advance_gas_settings,
                                         size = 16.dp,
-                                        tint = Theme.colors.text.primary,
+                                        tint = Theme.v2.colors.text.primary,
                                         onClick = onGasSettingsClick,
                                     )
                                 }
@@ -553,7 +553,7 @@ private fun SendFormScreen(
                                             ),
                                             textStyle = Theme.brockmann.headings.largeTitle
                                                 .copy(
-                                                    color = Theme.colors.text.primary,
+                                                    color = Theme.v2.colors.text.primary,
                                                     textAlign = TextAlign.Center,
                                                 ),
                                             cursorBrush = Theme.cursorBrush,
@@ -571,7 +571,7 @@ private fun SendFormScreen(
                                                 if (primaryFieldState.text.isEmpty()) {
                                                     Text(
                                                         text = "0",
-                                                        color = Theme.colors.text.light,
+                                                        color = Theme.v2.colors.text.light,
                                                         style = Theme.brockmann.headings.largeTitle,
                                                         textAlign = TextAlign.Center,
                                                         modifier = Modifier
@@ -584,7 +584,7 @@ private fun SendFormScreen(
 
                                         Text(
                                             text = " $primaryAmountText",
-                                            color = Theme.colors.text.primary,
+                                            color = Theme.v2.colors.text.primary,
                                             style = Theme.brockmann.headings.largeTitle,
                                             textAlign = TextAlign.Center,
                                         )
@@ -592,7 +592,7 @@ private fun SendFormScreen(
 
                                     Text(
                                         text = "${secondaryFieldState.text.ifEmpty { "0" }} $secondaryAmountText",
-                                        color = Theme.colors.text.extraLight,
+                                        color = Theme.v2.colors.text.extraLight,
                                         style = Theme.brockmann.body.s.medium,
                                         textAlign = TextAlign.Center,
                                     )
@@ -652,7 +652,7 @@ private fun SendFormScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier
                                     .background(
-                                        color = Theme.colors.backgrounds.secondary,
+                                        color = Theme.v2.colors.backgrounds.secondary,
                                         shape = RoundedCornerShape(12.dp)
                                     )
                                     .padding(
@@ -662,13 +662,13 @@ private fun SendFormScreen(
                                 Text(
                                     text = stringResource(R.string.send_form_balance_available),
                                     style = Theme.brockmann.body.s.medium,
-                                    color = Theme.colors.text.primary,
+                                    color = Theme.v2.colors.text.primary,
                                 )
 
                                 Text(
                                     text = state.selectedCoin?.balance ?: "",
                                     style = Theme.brockmann.body.s.medium,
-                                    color = Theme.colors.text.light,
+                                    color = Theme.v2.colors.text.light,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier
                                         .weight(1f),
@@ -701,14 +701,14 @@ private fun SendFormScreen(
                                     Text(
                                         text = stringResource(R.string.send_form_add_memo),
                                         style = Theme.brockmann.supplementary.caption,
-                                        color = Theme.colors.text.extraLight,
+                                        color = Theme.v2.colors.text.extraLight,
                                         modifier = Modifier
                                             .weight(1f),
                                     )
 
                                     UiIcon(
                                         drawableResId = R.drawable.ic_caret_down,
-                                        tint = Theme.colors.text.primary,
+                                        tint = Theme.v2.colors.text.primary,
                                         size = 16.dp,
                                         modifier = Modifier
                                             .rotate(rotationAngle)
@@ -769,7 +769,7 @@ private fun SendFormScreen(
                                 UiSpacer(size = 8.dp)
                                 Text(
                                     text = errorMessage.asString(),
-                                    color = Theme.colors.error,
+                                    color = Theme.v2.colors.backgrounds.amber,
                                     style = Theme.menlo.body1
                                 )
                             }
@@ -814,7 +814,7 @@ internal fun EstimatedNetworkFee(
         Text(
             text = stringResource(R.string.send_form_est_network_fee),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
         )
 
         Column(
@@ -840,13 +840,13 @@ internal fun EstimatedNetworkFee(
                 Text(
                     text = tokenGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 Text(
                     text = fiatGas,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             }
         }
@@ -864,9 +864,9 @@ internal fun FadingHorizontalDivider(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
+                        Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
                         Color(0xFF284570),
-                        Theme.colors.backgrounds.secondary.copy(alpha = 0f),
+                        Theme.v2.colors.backgrounds.secondary.copy(alpha = 0f),
                     ),
                     startX = 0f,
                     endX = Float.POSITIVE_INFINITY,
@@ -881,12 +881,12 @@ private fun Modifier.vsClickableBackground() =
     border(
         border = BorderStroke(
             width = 1.dp,
-            color = Theme.colors.borders.light,
+            color = Theme.v2.colors.border.light,
         ),
         shape = RoundedCornerShape(12.dp),
     )
         .background(
-            color = Theme.colors.backgrounds.secondary,
+            color = Theme.v2.colors.backgrounds.secondary,
             shape = RoundedCornerShape(12.dp),
         )
 
@@ -900,20 +900,20 @@ private fun PercentageChip(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.light,
+        color = Theme.v2.colors.text.light,
         textAlign = TextAlign.Center,
         modifier = modifier
             .clickable(onClick = onClick)
             .then(
                 if (isSelected)
                     Modifier.background(
-                        color = Theme.colors.primary.accent3,
+                        color = Theme.v2.colors.primary.accent3,
                         shape = RoundedCornerShape(99.dp),
                     )
                 else
                     Modifier.border(
                         width = 1.dp,
-                        color = Theme.colors.borders.light,
+                        color = Theme.v2.colors.border.light,
                         shape = RoundedCornerShape(99.dp),
                     )
             )
@@ -933,7 +933,7 @@ private fun TokenFiatToggle(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = modifier
             .background(
-                color = Theme.colors.backgrounds.secondary,
+                color = Theme.v2.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(99.dp)
             )
             .padding(
@@ -963,13 +963,13 @@ private fun ToggleButton(
     UiIcon(
         drawableResId = drawableResId,
         size = 16.dp,
-        tint = Theme.colors.text.light,
+        tint = Theme.v2.colors.text.light,
         modifier = Modifier
             .clickable(onClick = onClick)
             .then(
                 if (isSelected)
                     Modifier.background(
-                        color = Theme.colors.primary.accent3,
+                        color = Theme.v2.colors.primary.accent3,
                         shape = CircleShape,
                     )
                 else Modifier
@@ -997,7 +997,7 @@ private fun FoldableSection(
         modifier = Modifier
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.normal,
+                color = Theme.v2.colors.border.normal,
                 shape = RoundedCornerShape(12.dp),
             )
     ) {
@@ -1011,7 +1011,7 @@ private fun FoldableSection(
         ) {
             Text(
                 text = title,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
             )
 
@@ -1024,7 +1024,7 @@ private fun FoldableSection(
                     UiIcon(
                         drawableResId = R.drawable.ic_check,
                         size = 16.dp,
-                        tint = Theme.colors.alerts.success,
+                        tint = Theme.v2.colors.alerts.success,
                     )
 
                     UiSpacer(1.dp)
@@ -1032,7 +1032,7 @@ private fun FoldableSection(
                     UiIcon(
                         drawableResId = R.drawable.pencil,
                         size = 16.dp,
-                        tint = Theme.colors.text.primary,
+                        tint = Theme.v2.colors.text.primary,
                     )
                 }
             }

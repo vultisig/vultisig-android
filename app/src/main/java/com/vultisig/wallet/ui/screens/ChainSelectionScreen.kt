@@ -57,7 +57,7 @@ internal fun ChainSelectionScreen(
             Text(
                 text = title,
                 style = Theme.brockmann.headings.title2,
-                color = Theme.colors.neutrals.n100,
+                color = Theme.v2.colors.neutrals.n100,
             )
         },
         items = state.chains.map {

@@ -71,7 +71,7 @@ private fun AddressBookContent(
                 Text(
                     text = stringResource(R.string.address_book_toolbar_title),
                     style = Theme.brockmann.headings.title3,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .padding(all = 10.dp)
@@ -87,7 +87,7 @@ private fun AddressBookContent(
                         )
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.borders.light,
+                            color = Theme.v2.colors.border.light,
                             shape = RoundedCornerShape(99.dp),
                         )
                         .fillMaxWidth(),
@@ -144,7 +144,7 @@ private fun RowScope.PickerItem(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.colors.text.light,
+        color = Theme.v2.colors.text.light,
         textAlign = TextAlign.Center,
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
@@ -153,7 +153,7 @@ private fun RowScope.PickerItem(
             .then(
                 if (isSelected)
                     Modifier.background(
-                        color = Theme.colors.primary.accent3,
+                        color = Theme.v2.colors.primary.accent3,
                         shape = RoundedCornerShape(99.dp),
                     )
                 else Modifier
@@ -177,7 +177,7 @@ private fun EntryItem(
             .clickable(onClick = onClick)
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(12.dp),
             )
             .padding(
@@ -209,7 +209,7 @@ private fun EntryItem(
                         .uppercase()
                         .toString(),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -222,7 +222,7 @@ private fun EntryItem(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -230,7 +230,7 @@ private fun EntryItem(
             Text(
                 text = subtitle,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.colors.text.light,
+                color = Theme.v2.colors.text.light,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )

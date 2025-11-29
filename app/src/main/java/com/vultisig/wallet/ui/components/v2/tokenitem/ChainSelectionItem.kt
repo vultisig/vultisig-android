@@ -85,7 +85,7 @@ internal fun GridItem(
                     shape = RoundedCornerShape(size = 24.dp)
                 )
                 .background(
-                    color = if (checked) Theme.colors.backgrounds.secondary else Theme.colors.backgrounds.disabled
+                    color = if (checked) Theme.v2.colors.backgrounds.secondary else Theme.v2.colors.backgrounds.disabled
                 )
         ) {
             androidx.compose.animation.AnimatedVisibility(
@@ -132,11 +132,11 @@ internal fun GridPlus(
                     shape = RoundedCornerShape(size = 24.dp)
                 )
                 .background(
-                    color = Theme.colors.backgrounds.disabled
+                    color = Theme.v2.colors.backgrounds.disabled
                 )
                 .dashedBorder(
                     width = 1.dp,
-                    color = Theme.colors.borders.normal,
+                    color = Theme.v2.colors.border.normal,
                     cornerRadius = 24.dp,
                     dashLength = 4.dp,
                     intervalLength = 4.dp,
@@ -146,7 +146,7 @@ internal fun GridPlus(
                 drawableResId = R.drawable.plus,
                 contentDescription = null,
                 size = 28.dp,
-                tint = Theme.colors.primary.accent4
+                tint = Theme.v2.colors.primary.accent4
             )
         }
 
@@ -157,7 +157,7 @@ internal fun GridPlus(
         Text(
             text = model.title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             modifier = Modifier
                 .widthIn(max = 74.dp),
             maxLines = 1,
@@ -277,7 +277,7 @@ private fun TokenUiGridLogo(
                 ) {
                     Text(
                         token.name.firstOrNull()?.toString().orEmpty(),
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium
                     )
                 }
@@ -323,7 +323,7 @@ private fun TokenUiGridName(
     Text(
         text = token.name,
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.primary,
+        color = Theme.v2.colors.text.primary,
         modifier = Modifier
             .widthIn(max = 74.dp),
         maxLines = 1,
@@ -339,7 +339,7 @@ private fun TokenUiGridName(
     Text(
         text = mapper(tokens),
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.primary,
+        color = Theme.v2.colors.text.primary,
         modifier = Modifier
             .widthIn(max = 74.dp),
         maxLines = 1,

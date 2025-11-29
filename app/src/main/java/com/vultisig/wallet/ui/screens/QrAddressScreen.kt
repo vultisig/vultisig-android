@@ -43,7 +43,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
     val chainName = viewModel.chainName
     val context = LocalContext.current
     val bitmapPainter by viewModel.qrBitmapPainter.collectAsState()
-    val background = Theme.colors.oxfordBlue800
+    val background = Theme.v2.colors.backgrounds.primary
     val title = stringResource(id = R.string.qr_address_screen_title)
 
     Scaffold(

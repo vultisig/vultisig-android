@@ -104,13 +104,13 @@ fun VsTopAppBar(
                 Text(
                     text = title,
                     style = Theme.brockmann.body.l.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.colors.backgrounds.primary,
+            containerColor = Theme.v2.colors.backgrounds.primary,
         ),
         navigationIcon = navigationContent,
         actions = actions,
@@ -131,7 +131,7 @@ fun VsTopAppBarAction(
         UiIcon(
             drawableResId = icon,
             contentDescription = null,
-            tint = Theme.colors.text.primary,
+            tint = Theme.v2.colors.text.primary,
             size = 24.dp,
         )
     }
@@ -156,13 +156,13 @@ fun VsTopAppProgressBar(
                             .padding(horizontal = 16.dp),
                         text = title,
                         style = Theme.brockmann.headings.title3,
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         textAlign = TextAlign.Start,
                     )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Theme.colors.backgrounds.primary,
+                containerColor = Theme.v2.colors.backgrounds.primary,
             ),
             navigationIcon = {
                 navigationContent()

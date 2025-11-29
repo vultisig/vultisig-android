@@ -21,8 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +53,7 @@ internal fun DottyBottomSheet(
                                 topEnd = 32.dp,
                             )
                         )
-                        .background(Theme.colors.buttons.secondary)
+                        .background(Theme.v2.colors.backgrounds.primary)
                         .drawBehind {
                             generateBackgroundDots(
                                 dotColor = Color(0xff172854),
@@ -80,7 +80,7 @@ private fun DrawScope.bottomFade() {
         brush = Brush.verticalGradient(
             colors = listOf(
                 Color.Transparent,
-                Colors.Default.backgrounds.secondary
+                colors.backgrounds.secondary
             )
         ),
     )
@@ -90,7 +90,7 @@ private fun DrawScope.bottomFade() {
 private fun DrawScope.generateBackgroundDots(
     stepSize: Float = 50f,
     dotRadius: Float = 3f,
-    dotColor: Color = Colors.Default.neutrals.n50
+    dotColor: Color = colors.neutrals.n50
 ) {
     val width = size.width
     val height = size.height

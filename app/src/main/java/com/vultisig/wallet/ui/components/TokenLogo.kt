@@ -37,7 +37,7 @@ internal fun TokenLogo(
         contentDescription = null,
          modifier = modifier
              .clip(CircleShape)
-             .background(Theme.colors.transparent, CircleShape),
+             .background(Theme.v2.colors.backgrounds.transparent, CircleShape),
         error = {
             Box(
                 modifier = errorLogoModifier,
@@ -45,7 +45,7 @@ internal fun TokenLogo(
             ) {
                 Text(
                     text = if (title.isNotEmpty()) title.first().toString() else "",
-                    color = Theme.colors.oxfordBlue600Main,
+                    color = Theme.v2.colors.backgrounds.secondary,
                     style = Theme.montserrat.subtitle1
                 )
             }

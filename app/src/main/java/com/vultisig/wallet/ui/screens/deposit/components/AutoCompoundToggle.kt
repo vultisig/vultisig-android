@@ -36,12 +36,12 @@ internal fun AutoCompoundToggle(
         ) {
             Text(
                 text = title,
-                color = Theme.colors.neutral100,
+                color = Theme.v2.colors.neutrals.n100,
                 style = Theme.menlo.body1
             )
             Text(
                 text = subtitle,
-                color = Theme.colors.neutral100,
+                color = Theme.v2.colors.neutrals.n100,
                 style = Theme.menlo.body3,
             )
         }

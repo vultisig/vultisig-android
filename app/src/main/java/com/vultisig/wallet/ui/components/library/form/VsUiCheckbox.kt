@@ -22,16 +22,16 @@ internal fun VsUiCheckbox(
 ) {
     Surface(
         color = if (checked) {
-            Theme.colors.backgrounds.success
+            Theme.v2.colors.backgrounds.success
         } else {
-            Theme.colors.backgrounds.secondary
+            Theme.v2.colors.backgrounds.secondary
         },
         shape = CircleShape,
         border = BorderStroke(1.dp,
             if (checked) {
-                Theme.colors.alerts.success
+                Theme.v2.colors.alerts.success
             } else {
-                Theme.colors.borders.normal
+                Theme.v2.colors.border.normal
             }
         ),
         modifier = Modifier
@@ -43,7 +43,7 @@ internal fun VsUiCheckbox(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_check),
                 contentDescription = null,
-                tint = Theme.colors.alerts.success,
+                tint = Theme.v2.colors.alerts.success,
             )
         }
     }

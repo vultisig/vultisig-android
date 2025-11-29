@@ -16,7 +16,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
-import com.vultisig.wallet.ui.theme.Colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -58,10 +58,10 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
     data object RegisterVault : SettingsItem(
         SettingsItemUiModel(
             title = UiText.StringResource(R.string.settings_screen_register_your_vaults),
-            backgroundColor = Colors.Default.buttons.primary,
+            backgroundColor = colors.buttons.tertiary,
             leadingIcon = R.drawable.register,
             trailingIcon = R.drawable.ic_small_caret_right,
-            leadingIconTint =  Colors.Default.text.primary,
+            leadingIconTint =  colors.text.primary,
         )
     )
 

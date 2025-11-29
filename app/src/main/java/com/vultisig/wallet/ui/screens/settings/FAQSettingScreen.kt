@@ -88,7 +88,7 @@ private fun FaqSettingScreen(
 
 @Composable
 private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
-    val colors = Theme.colors
+    val colors = Theme.v2.colors
     var isExpanded by remember {
         mutableStateOf(false)
     }
@@ -111,7 +111,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
 
             Text(
                 text = faq.question,
-                color = Theme.colors.text.light,
+                color = Theme.v2.colors.text.light,
                 style = Theme.brockmann.body.s.medium,
                 lineHeight = 20.sp,
                 modifier = Modifier.weight(1f)
@@ -131,7 +131,7 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
             UiSpacer(4.dp)
             Text(
                 text = faq.answer,
-                color = colors.neutral0,
+                color = colors.neutrals.n50,
                 style = Theme.brockmann.supplementary.footnote,
                 lineHeight = 18.sp,
             )

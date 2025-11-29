@@ -77,7 +77,7 @@ internal fun QrContainer(
                             )
                         )
                         .background(
-                            color = Theme.colors.backgrounds.secondary,
+                            color = Theme.v2.colors.backgrounds.secondary,
                         )
                 ){
                     if(qrCode != null){
@@ -101,7 +101,7 @@ internal fun QrContainer(
                         chainName
                     ),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
             }
         }

@@ -24,9 +24,9 @@ internal fun GradientButton(
     Text(
         text = text,
         color = if (isSelected)
-            Theme.colors.oxfordBlue800
+            Theme.v2.colors.backgrounds.primary
         else
-            Theme.colors.turquoise800,
+            Theme.v2.colors.backgrounds.teal,
         style = Theme.montserrat.subtitle1,
         textAlign = TextAlign.Center,
         maxLines = 1,

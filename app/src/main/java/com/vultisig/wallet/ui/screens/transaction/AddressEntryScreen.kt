@@ -85,7 +85,7 @@ internal fun AddAddressEntryScreen(
     onBackClick: () -> Unit = {},
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(state.titleRes),
@@ -179,7 +179,7 @@ internal fun SelectChain(
     ) {
         Text(
             text = stringResource(R.string.select_chain_chain_title),
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.body.s.medium,
         )
 
@@ -192,11 +192,11 @@ internal fun SelectChain(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(size = 12.dp)
                 )
                 .background(
-                    color = Theme.colors.backgrounds.secondary,
+                    color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(size = 12.dp)
                 )
                 .padding(
@@ -209,7 +209,7 @@ internal fun SelectChain(
                 Text(
                     text = stringResource(R.string.address_entry_select),
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                 )
             } else {
                 TokenLogo(
@@ -224,7 +224,7 @@ internal fun SelectChain(
                 Text(
                     text = selectedChain.raw,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
             }
 

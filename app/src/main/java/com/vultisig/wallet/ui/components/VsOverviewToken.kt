@@ -47,12 +47,12 @@ internal fun VsOverviewToken(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .background(
-                color = Theme.colors.backgrounds.secondary,
+                color = Theme.v2.colors.backgrounds.secondary,
                 shape = shape,
             )
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = shape,
             )
             .padding(
@@ -63,7 +63,7 @@ internal fun VsOverviewToken(
         Text(
             text = header,
             style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -78,14 +78,14 @@ internal fun VsOverviewToken(
                     .size(36.dp)
                     .border(
                         width = 1.dp,
-                        color = Theme.colors.borders.light,
+                        color = Theme.v2.colors.border.light,
                         shape = CircleShape,
                     )
                     .align(Alignment.Center),
                 errorLogoModifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Theme.colors.neutral200),
+                    .background(Theme.v2.colors.neutrals.n200),
             )
 
             chainLogo.takeIf { it != getCoinLogo(token.logo) }?.let {
@@ -96,10 +96,10 @@ internal fun VsOverviewToken(
                         .offset(x = 5.dp, y = 5.dp)
                         .size(20.dp)
                         .clip(CircleShape)
-                        .background(Theme.colors.neutral100, CircleShape)
+                        .background(Theme.v2.colors.neutrals.n100, CircleShape)
                         .border(
                             width = 2.dp,
-                            color = Theme.colors.buttons.secondary,
+                            color = Theme.v2.colors.backgrounds.primary,
                             shape = CircleShape
                         )
                         .align(BottomEnd)
@@ -112,7 +112,7 @@ internal fun VsOverviewToken(
         val text = buildAnnotatedString {
             append(value)
             append(" ")
-            withStyle(SpanStyle(color = Theme.colors.text.extraLight)) {
+            withStyle(SpanStyle(color = Theme.v2.colors.text.extraLight)) {
                 append(token.ticker)
             }
         }
@@ -120,7 +120,7 @@ internal fun VsOverviewToken(
         Text(
             text = text,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -128,7 +128,7 @@ internal fun VsOverviewToken(
         Text(
             text = valuedToken.fiatValue,
             style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
         )
     }
 }

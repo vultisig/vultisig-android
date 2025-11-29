@@ -83,7 +83,7 @@ internal fun DefiPositionScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Theme.colors.backgrounds.primary),
+                .background(Theme.v2.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -109,7 +109,7 @@ internal fun DefiPositionScreenContent(
                             drawableResId = R.drawable.edit_chain,
                             size = 16.dp,
                             modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.colors.primary.accent4,
+                            tint = Theme.v2.colors.primary.accent4,
                             onClick = onEditPositionClick,
                         )
                     }

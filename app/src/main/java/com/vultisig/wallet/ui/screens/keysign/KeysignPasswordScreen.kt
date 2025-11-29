@@ -59,7 +59,7 @@ internal fun InputPasswordScreen(
     onBackClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick,
@@ -76,7 +76,7 @@ internal fun InputPasswordScreen(
             ) {
                 Text(
                     text = stringResource(R.string.keysign_password_enter_your_password),
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.headings.largeTitle,
                 )
 
@@ -85,7 +85,7 @@ internal fun InputPasswordScreen(
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                     )
                 }
@@ -128,7 +128,7 @@ internal fun InputPasswordScreen(
                     if (state.passwordHint != null) {
                         Text(
                             text = state.passwordHint.asString(),
-                            color = Theme.colors.text.light,
+                            color = Theme.v2.colors.text.light,
                             style = Theme.brockmann.supplementary.footnote,
                             modifier = Modifier.fillMaxWidth(),
                         )

@@ -43,7 +43,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun DefaultChainSetting(navController: NavHostController) {
 
-    val colors = Theme.colors
+    val colors = Theme.v2.colors
     val viewModel = hiltViewModel<DefaultChainsSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
@@ -54,7 +54,7 @@ internal fun DefaultChainSetting(navController: NavHostController) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.oxfordBlue800),
+            .background(colors.backgrounds.primary),
         topBar = {
             TopBar(
                 navController = navController,
@@ -93,7 +93,7 @@ internal fun TokenSelection(
     isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit),
 ) {
-    val appColor = Theme.colors
+    val appColor = Theme.v2.colors
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,7 +104,7 @@ internal fun TokenSelection(
             ),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = appColor.oxfordBlue600Main
+            containerColor = appColor.backgrounds.secondary
         )
     ) {
         Row(
@@ -127,12 +127,12 @@ internal fun TokenSelection(
             ) {
                 Text(
                     text = title,
-                    color = appColor.neutral100,
+                    color = appColor.neutrals.n50,
                     style = Theme.montserrat.subtitle1,
                 )
                 Text(
                     text = subtitle,
-                    color = appColor.neutral100,
+                    color = appColor.neutrals.n50,
                     style = Theme.montserrat.body3,
                 )
             }
@@ -141,12 +141,12 @@ internal fun TokenSelection(
 
             VsSwitch(
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = appColor.neutral0,
-                    checkedBorderColor = appColor.turquoise800,
-                    checkedTrackColor = appColor.turquoise800,
-                    uncheckedThumbColor = appColor.neutral0,
-                    uncheckedBorderColor = appColor.oxfordBlue400,
-                    uncheckedTrackColor = appColor.oxfordBlue400
+                    checkedThumbColor = appColor.neutrals.n50,
+                    checkedBorderColor = appColor.backgrounds.teal,
+                    checkedTrackColor = appColor.backgrounds.teal,
+                    uncheckedThumbColor = appColor.neutrals.n50,
+                    uncheckedBorderColor = appColor.variables.bordersLight,
+                    uncheckedTrackColor = appColor.variables.bordersLight
                 ),
                 checked = isChecked,
                 onCheckedChange = null,

@@ -92,7 +92,7 @@ internal fun CheckForUpdateScreen(
                     else
                         stringResource(R.string.app_up_to_date),
                 style = Theme.brockmann.button.medium.large,
-                color = Theme.colors.neutral0
+                color = Theme.v2.colors.neutrals.n50
             )
 
             UiSpacer(

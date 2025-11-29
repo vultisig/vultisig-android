@@ -31,8 +31,9 @@ import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.theme.Colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.theme.Theme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -73,8 +74,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val systemBarStyle = SystemBarStyle.auto(
-            Colors.Default.oxfordBlue800.toArgb(),
-            Colors.Default.oxfordBlue800.toArgb(),
+            colors.backgrounds.primary.toArgb(),
+           colors.backgrounds.primary.toArgb(),
         ) { true }
 
         enableEdgeToEdge(
@@ -90,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 
                 Box(
                     modifier = Modifier
-                        .background(color = Colors.Default.backgrounds.primary)
+                        .background(color = Theme.v2.colors.backgrounds.primary)
                         .safeDrawingPadding()
                 ) {
 

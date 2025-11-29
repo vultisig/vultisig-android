@@ -50,7 +50,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
@@ -433,7 +433,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private suspend fun loadQr(data: String) {
         val qrBitmap = withContext(Dispatchers.IO) {
-            generateQrBitmap(data, NeutralsColors.Default.n50, Color.Transparent, null)
+            generateQrBitmap(data, colors.neutrals.n50, Color.Transparent, null)
         }
         this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
         val bitmapPainter = BitmapPainter(

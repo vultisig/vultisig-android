@@ -35,7 +35,7 @@ internal fun MonthlyBackupReminder(
             skipPartiallyExpanded = true,
         ),
         dragHandle = null,
-        containerColor = Theme.colors.oxfordBlue800,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         onDismissRequest = onDismiss,
     ) {
         Column(
@@ -57,7 +57,7 @@ internal fun MonthlyBackupReminder(
                         .padding(horizontal = 40.dp),
                     text = stringResource(id = R.string.monthly_backup_reminder_title),
                     style = Theme.montserrat.subtitle1.copy(fontWeight = FontWeight.Medium),
-                    color = Theme.colors.neutral0,
+                    color = Theme.v2.colors.neutrals.n50,
                     textAlign = TextAlign.Center
                 )
 
