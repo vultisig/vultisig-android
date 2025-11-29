@@ -540,12 +540,16 @@ internal fun VerifyCardDetails(
             maxLines = 1,
         )
 
+        UiSpacer(
+            weight = 1f
+        )
+
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.colors.text.primary,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.widthIn(max = 100.dp),
             maxLines = 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
