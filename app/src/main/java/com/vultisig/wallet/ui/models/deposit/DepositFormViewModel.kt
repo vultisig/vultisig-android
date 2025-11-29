@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.RujiStakeBalances
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -161,6 +162,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val thorChainApi: ThorChainApi,
+    private val mayaChainApi: MayaChainApi,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val enableCoin: EnableTokenUseCase,
@@ -572,12 +574,34 @@ internal class DepositFormViewModel @Inject constructor(
                     handleRujiDepositOption(DepositOption.WithdrawRujiRewards)
                 }
 
+                DepositOption.RemoveCacaoPool -> {
+                    handleRemoveCacaoOption()
+                }
+
                 else -> Unit
             }
 
 
             if (!bondAddress.isNullOrEmpty()) {
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
+            }
+        }
+    }
+
+    private suspend fun handleRemoveCacaoOption() {
+        val addressValue = address.value?.address ?: return
+        val balance = mayaChainApi.getUnStakeCacaoBalance(addressValue)
+        balance?.let {
+            val unstakableAmount = mapTokenValueToStringWithUnit(
+                TokenValue(
+                    value = balance.toBigInteger(),
+                    token = Coins.MayaChain.CACAO
+                )
+            )
+            state.update {
+                it.copy(
+                    unstakableAmount = unstakableAmount
+                )
             }
         }
     }
