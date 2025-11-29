@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
@@ -148,6 +149,8 @@ internal fun <T> SelectPopup(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             FastSelectionModalContent(
+                modifier = Modifier
+                    .align(alignment = Alignment.Center),
                 items = uiModel.items,
                 currentIndex = currentSelectionIndex,
                 pressPosition = uiModel.pressPosition,

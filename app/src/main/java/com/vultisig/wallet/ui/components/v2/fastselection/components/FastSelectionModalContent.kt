@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -55,6 +54,7 @@ internal val FAST_SELECTION_MODAL_WIDTH = 300.dp
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 internal fun <T> FastSelectionModalContent(
+    modifier: Modifier,
     items: List<T>,
     currentIndex: Int,
     pressPosition: Offset,
@@ -110,13 +110,7 @@ internal fun <T> FastSelectionModalContent(
     }
 
     Box(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    x = maximumXOffset.toInt(),
-                    y = yOffset.toInt()
-                )
-            }
+        modifier = modifier
     ) {
         AnimatedVisibility(
             visible = true,
