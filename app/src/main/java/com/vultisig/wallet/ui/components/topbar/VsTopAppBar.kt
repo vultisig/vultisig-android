@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -20,8 +19,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.DashedProgressIndicator
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -123,18 +124,13 @@ fun VsTopAppBarAction(
     @DrawableRes icon: Int,
     onClick: (() -> Unit)?,
 ) {
-    IconButton(
-        onClick = clickOnce {
-            onClick?.invoke()
-        }
-    ) {
-        UiIcon(
-            drawableResId = icon,
-            contentDescription = null,
-            tint = Theme.colors.text.primary,
-            size = 24.dp,
-        )
-    }
+    VsCircleButton(
+        onClick = { onClick?.invoke() },
+        size = VsCircleButtonSize.Small,
+        type = VsCircleButtonType.Secondary,
+        designType = DesignType.Shined,
+        icon = icon,
+    )
 }
 
 @Composable
