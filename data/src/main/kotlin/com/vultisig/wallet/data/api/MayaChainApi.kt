@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.MayaChainDepositCacaoResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
@@ -22,6 +23,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.http.path
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
@@ -31,6 +33,10 @@ interface MayaChainApi {
     suspend fun getBalance(
         address: String,
     ): List<CosmosBalance>
+
+    suspend fun getUnStakeCacaoBalance(
+        address: String,
+    ): String?
 
     suspend fun getAccountNumber(
         address: String,
@@ -64,6 +70,24 @@ internal class MayaChainApiImp @Inject constructor(
             }
         val resp = response.body<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
+    }
+
+    override suspend fun getUnStakeCacaoBalance(address: String): String? {
+        return try {
+            val request = httpClient.get("https://midgard.mayachain.info") {
+                url {
+                    path(
+                        "v2",
+                        "cacaopool",
+                        address
+                    )
+                }
+            }.body<List<MayaChainDepositCacaoResponse>>()
+            request.firstOrNull()?.cacaoDeposit
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch CACAO pool balance for address: $address")
+            null
+        }
     }
 
     override suspend fun getSwapQuotes(
