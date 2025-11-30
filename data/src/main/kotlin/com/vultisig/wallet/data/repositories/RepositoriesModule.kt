@@ -146,6 +146,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindDefaultDeFiChainsRepository(
+        impl: DefaultDeFiChainsRepositoryImpl,
+    ): DefaultDeFiChainsRepository
+
+    @Binds
+    @Singleton
     fun bindDepositTransactionRepository(
         impl: DepositTransactionRepositoryImpl
     ): DepositTransactionRepository

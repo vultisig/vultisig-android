@@ -675,6 +675,7 @@
     <string name="search_bar_search">Zoeken</string>
     <string name="search_bar_cancel">Annuleren</string>
     <string name="chain_selection_select_chains">Selecteer ketens</string>
+    <string name="chain_selection_select_defi_chains">Selecteer DeFi ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
     <string name="transaction_type_button_functions">Functies</string>
     <string name="copy_address">Kopieer adres</string>
@@ -805,6 +806,8 @@
     <string name="backup_password_request_description">We raden u aan geen back-upwachtwoord in te stellen voor gedeelde apparaatkluisjes. Uw gegevens zijn veilig als de back-ups correct op verschillende locaties worden opgeslagen, wat al een aanzienlijke bescherming biedt. Vergeet niet dat back-upwachtwoorden niet kunnen worden hersteld als u ze vergeet. Uw keuze!</string>
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
     <string name="address_bookmark_error_invalid_address">Dit adres is niet geldig voor %s</string>
+    <string name="address_bookmark_error_empty_label">Label mag niet leeg zijn</string>
+    <string name="address_bookmark_error_invalid_label">Label moet tussen 1 en %d tekens zijn</string>
     <string name="send_form_ripple_reaping_warning">Zorg ervoor dat je voldoende saldo achterlaat om de kosten te dekken. Als het saldo onder de 1 XRP (Existentiële Storting) komt, wordt het account gedeactiveerd (opgenomen) en gaat het resterende saldo verloren. Je kunt het adres op elk moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Hiermee krijg je het verloren geld echter niet terug.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="vault_backup_verifying_pin">Code verifiëren, even geduld a.u.b.</string>

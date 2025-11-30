@@ -132,6 +132,10 @@ internal fun AddAddressEntryScreen(
                 hint = stringResource(R.string.add_address_type_hint),
                 textFieldState = titleTextFieldState,
                 keyboardType = KeyboardType.Text,
+                footNote = state.titleError?.asString(),
+                innerState = if (state.titleError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default
             )
 
 

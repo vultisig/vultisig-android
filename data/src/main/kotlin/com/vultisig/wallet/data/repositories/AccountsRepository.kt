@@ -254,106 +254,106 @@ internal class AccountsRepositoryImpl @Inject constructor(
         return emptyList()
     }
 
-    override suspend fun loadDeFiAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
-        supervisorScope {
-            val vault = getVault(vaultId)
-            val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
-                .distinctBy { it.id.lowercase() }
+    override suspend fun loadDeFiAddresses(
+        vaultId: String,
+        isRefresh: Boolean
+    ): Flow<List<Address>> = channelFlow {
+        val vault = getVault(vaultId)
+        val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
+            .distinctBy { it.id.lowercase() }
 
-            val loadPrices = if (isRefresh) {
-                async { tokenPriceRepository.refresh(defiCoins) }
-            } else {
-                null
-            }
-
-            val coins = defiCoins.groupBy { it.chain }
-            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
-            }
-
-            // emit cached
-            try {
-                val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
-                if (thorchainAddress != null) {
-                    val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        address = thorchainAddress.address,
-                        vaultId = vaultId,
-                    )
-
-                    if (cachedDeFiBalances.isNotEmpty()) {
-                        val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
-                            balance.tokenBalance.tokenValue?.unit?.lowercase()
-                        }
-
-                        val cachedAddresses = addresses.map { address ->
-                            val updatedAccounts = address.accounts.map { account ->
-                                val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
-                                if (cachedBalance != null) {
-                                    account.applyBalance(
-                                        cachedBalance.tokenBalance,
-                                        cachedBalance.price
-                                    )
-                                } else {
-                                    account.copy(
-                                        tokenValue = TokenValue(
-                                            value = BigInteger.ZERO,
-                                            unit = account.token.ticker,
-                                            decimals = account.token.decimal
-                                        ),
-                                        fiatValue = FiatValue(
-                                            value = BigDecimal.ZERO,
-                                            currency = AppCurrency.USD.ticker,
-                                        ),
-                                        price = null
-                                    )
-                                }
-                            }
-                            address.copy(accounts = updatedAccounts)
-                        }
-
-                        send(cachedAddresses)
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to load cached DeFi balances")
-            }
-
-            if (!isRefresh) {
-                return@supervisorScope
-            }
-
-            loadPrices?.await()
-            // emit network
-            addresses.mapIndexed { index, account ->
-                async {
-                    try {
-                        val address = account.address
-                        val newAccounts = supervisorScope {
-                            account.accounts.map {
-                                async {
-                                    val balance =
-                                        balanceRepository.getDefiTokenBalanceAndPrice(
-                                            address = address,
-                                            coin = it.token,
-                                            vaultId = vaultId,
-                                        ).first()
-
-                                    it.applyBalance(balance.tokenBalance, balance.price)
-                                }
-                            }.awaitAll()
-                        }
-
-                        addresses[index] = account.copy(accounts = newAccounts)
-
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        // ignore
-                    }
-                }
-            }.awaitAll()
-
-            send(addresses)
+        val loadPrices = if (isRefresh) {
+            async { tokenPriceRepository.refresh(defiCoins) }
+        } else {
+            null
         }
+
+        val coins = defiCoins.groupBy { it.chain }
+        val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+        }
+
+        // emit cached
+        try {
+            val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
+            if (thorchainAddress != null) {
+                val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                    address = thorchainAddress.address,
+                    vaultId = vaultId,
+                )
+
+                if (cachedDeFiBalances.isNotEmpty()) {
+                    val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
+                        balance.tokenBalance.tokenValue?.unit?.lowercase()
+                    }
+
+                    val cachedAddresses = addresses.map { address ->
+                        val updatedAccounts = address.accounts.map { account ->
+                            val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
+                            if (cachedBalance != null) {
+                                account.applyBalance(
+                                    cachedBalance.tokenBalance,
+                                    cachedBalance.price
+                                )
+                            } else {
+                                account.copy(
+                                    tokenValue = TokenValue(
+                                        value = BigInteger.ZERO,
+                                        unit = account.token.ticker,
+                                        decimals = account.token.decimal
+                                    ),
+                                    fiatValue = FiatValue(
+                                        value = BigDecimal.ZERO,
+                                        currency = AppCurrency.USD.ticker,
+                                    ),
+                                    price = null
+                                )
+                            }
+                        }
+                        address.copy(accounts = updatedAccounts)
+                    }
+
+                    send(cachedAddresses)
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load cached DeFi balances")
+        }
+
+        if (!isRefresh) {
+            return@channelFlow
+        }
+
+        loadPrices?.await()
+
+        // emit network
+        val updated = addresses.map { account ->
+            async {
+                try {
+                    val address = account.address
+                    val newAccounts =
+                        account.accounts.map {
+                            async {
+                                val balance =
+                                    balanceRepository.getDefiTokenBalanceAndPrice(
+                                        address = address,
+                                        coin = it.token,
+                                        vaultId = vaultId,
+                                    ).first()
+
+                                it.applyBalance(balance.tokenBalance, balance.price)
+                            }
+                        }.awaitAll()
+
+                    account.copy(accounts = newAccounts)
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    null
+                }
+            }
+        }.awaitAll().filterNotNull()
+
+        send(updated)
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {

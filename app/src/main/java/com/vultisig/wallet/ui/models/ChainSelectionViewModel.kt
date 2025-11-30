@@ -98,6 +98,12 @@ internal class ChainSelectionViewModel @Inject constructor(
         }
     }
 
+    fun onBackClick() {
+        viewModelScope.launch {
+            navigator.back()
+        }
+    }
+    
     fun cancelChanges(){
         viewModelScope.launch {
             navigator.back()

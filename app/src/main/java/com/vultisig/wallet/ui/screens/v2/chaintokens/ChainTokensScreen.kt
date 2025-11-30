@@ -81,6 +81,7 @@ internal fun ChainTokensScreen(
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
         onBuy = viewModel::buy,
+        onReceive = viewModel::openAddressQr,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onBackClick = { navController.popBackStack() },

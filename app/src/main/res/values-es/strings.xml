@@ -668,6 +668,7 @@
     <string name="search_bar_search">Buscar</string>
     <string name="search_bar_cancel">Cancelar</string>
     <string name="chain_selection_select_chains">Seleccionar cadenas</string>
+    <string name="chain_selection_select_defi_chains">Seleccionar cadenas DeFi</string>
     <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
@@ -796,6 +797,8 @@
     <string name="backup_password_request_description">Le recomendamos no establecer una contraseña de copia de seguridad para los recursos compartidos de la bóveda de dispositivos. Sus datos estarán seguros si las copias de seguridad se almacenan correctamente en diferentes ubicaciones, lo cual ya representa una protección significativa. Recuerde que las contraseñas de copia de seguridad no se pueden recuperar si las olvida. ¡Usted decide!</string>
     <string name="backup_password_request_no_password_action">Copia de seguridad sin contraseña</string>
     <string name="address_bookmark_error_invalid_address">Esta dirección no es válida para %s</string>
+    <string name="address_bookmark_error_empty_label">La etiqueta no puede estar vacía</string>
+    <string name="address_bookmark_error_invalid_label">La etiqueta debe tener entre 1 y %d caracteres</string>
     <string name="send_form_ripple_reaping_warning">Asegúrate de tener fondos suficientes para cubrir las comisiones. Si el saldo de una cuenta cae por debajo de 1 XRP (Depósito Existente), la cuenta se desactivará (se liquidará) y los fondos restantes se perderán. Puedes reactivar la dirección con un nuevo depósito superior al depósito existente en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="vault_backup_verifying_pin">Verificando código, por favor espere</string>
