@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -59,7 +58,7 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -180,26 +179,17 @@ private fun VerifySwapScreen(
     onContinueAnyway: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            if (showToolbar) {
-                VsTopAppBar(
-                    title = stringResource(R.string.verify_swap_swap_overview),
-                    onBackClick = onBackClick,
-                )
-            }
-        },
-        content = { contentPadding ->
+    V2Scaffold(
+        title = stringResource(R.string.verify_swap_swap_overview).takeIf { showToolbar },
+        onBackClick = onBackClick.takeIf { showToolbar },
+        content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 modifier = Modifier
-                    .padding(contentPadding)
-                    .padding(all = 16.dp)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)){
+                Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)) {
                     SecurityScannerBadget(scanStatus)
                 }
 
@@ -351,7 +341,8 @@ private fun VerifySwapScreen(
             ) {
 
                 if (hasToShowWarningScanning &&
-                    scanStatus is TransactionScanStatus.Scanned) {
+                    scanStatus is TransactionScanStatus.Scanned
+                ) {
                     SecurityScannerBottomSheet(
                         securityScannerModel = scanStatus.result,
                         onContinueAnyway = onContinueAnyway,
@@ -385,7 +376,7 @@ private fun VerifySwapScreen(
                     )
                 }
             }
-        }
+        },
     )
 }
 

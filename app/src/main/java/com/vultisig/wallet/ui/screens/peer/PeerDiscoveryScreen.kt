@@ -75,6 +75,7 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.util.dashedBorder
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
@@ -161,34 +162,61 @@ internal fun PeerDiscoveryScreen(
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
 
     var isExpanded by remember { mutableStateOf(false) }
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.peer_discovery_topbar_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-                actions = {
-                    if (showHelp) {
-                        VsTopAppBarAction(
-                            icon = R.drawable.ic_question_mark,
-                            onClick = onHelpClick,
-                        )
-                    }
+    V2Scaffold(
+        title = stringResource(R.string.peer_discovery_topbar_title),
+        onBackClick = onBackClick,
+        actions = {
+            if (showHelp) {
+                VsTopAppBarAction(
+                    icon = R.drawable.ic_question_mark,
+                    onClick = onHelpClick,
+                )
 
-                    VsTopAppBarAction(
-                        icon = R.drawable.ic_share,
-                        onClick = onShareQrClick,
-                    )
-                },
+                UiSpacer(
+                    size = 8.dp
+                )
+            }
+
+            VsTopAppBarAction(
+                icon = R.drawable.ic_share,
+                onClick = onShareQrClick,
             )
         },
-        content = { contentPadding ->
-
-            Box(
+        bottomBar = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
-                    .padding(paddingValues = contentPadding)
+                    .padding(
+                        vertical = 12.dp,
+                        horizontal = 24.dp,
+                    )
             ) {
+                VsButton(
+                    label = if (hasEnoughDevices) stringResource(R.string.peer_discovery_action_next_title)
+                    else stringResource(R.string.peer_discovery_waiting_for_devices_action),
+                    state = if (hasEnoughDevices)
+                        VsButtonState.Enabled
+                    else VsButtonState.Disabled,
+                    onClick = onNextClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+
+                Text(
+                    text = buildNetworkModeText(
+                        network = state.network,
+                        onSwitchModeClick = onSwitchModeClick
+                    ),
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.supplementary.caption,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        content = {
+
+            Box {
                 if (state.showQrHelpModal) {
                     ShowQrHelperBottomSheet(
                         onDismiss = onDismissQrHelpModal
@@ -197,7 +225,6 @@ internal fun PeerDiscoveryScreen(
 
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 24.dp)
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -253,9 +280,9 @@ internal fun PeerDiscoveryScreen(
                             style = Theme.brockmann.headings.title2,
                             color = Theme.colors.text.primary,
                         )
-                        
+
                         UiSpacer(size = 12.dp)
-                        
+
                         if (state.qr != null) {
                             Box(
                                 modifier = Modifier
@@ -352,39 +379,8 @@ internal fun PeerDiscoveryScreen(
                 }
             }
         },
-        bottomBar = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .padding(
-                        vertical = 12.dp,
-                        horizontal = 24.dp,
-                    )
-            ) {
-                VsButton(
-                    label = if (hasEnoughDevices) stringResource(R.string.peer_discovery_action_next_title)
-                    else stringResource(R.string.peer_discovery_waiting_for_devices_action),
-                    state = if (hasEnoughDevices)
-                        VsButtonState.Enabled
-                    else VsButtonState.Disabled,
-                    onClick = onNextClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
 
-                Text(
-                    text = buildNetworkModeText(
-                        network = state.network,
-                        onSwitchModeClick = onSwitchModeClick
-                    ),
-                    color = Theme.colors.text.extraLight,
-                    style = Theme.brockmann.supplementary.caption,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    )
+        )
 
 }
 
@@ -475,7 +471,7 @@ private fun QrCodeContainer(
 @Composable
 private fun ExpandedQrOverlay(
     qrCode: BitmapPainter,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val scale = remember { Animatable(0.8f) }
     val alpha = remember { Animatable(0f) }
@@ -517,6 +513,11 @@ private fun ExpandedQrOverlay(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
+                .graphicsLayer(
+                    scaleX = scale.value,
+                    scaleY = scale.value,
+                    alpha = alpha.value
+                )
         ) {
             Icon(
                 painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
@@ -531,7 +532,7 @@ private fun ExpandedQrOverlay(
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
-                .fillMaxSize(0.9f)
+                .fillMaxSize()
                 .graphicsLayer(
                     scaleX = scale.value,
                     scaleY = scale.value,
