@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -166,10 +165,16 @@ internal enum class SendSections {
     BondAddress,
 }
 
-enum class SendFormType {
-    Send,
-    Bond,
-    UnBond,
+enum class SendFormType(val type: String) {
+    Send("send"),
+    Bond("bond"),
+    UnBond("unbond");
+
+    companion object {
+        fun fromString(type: String?): SendFormType? {
+            return entries.firstOrNull { it.type.equals(type, ignoreCase = true) }
+        }
+    }
 }
 
 internal sealed class GasSettings {
@@ -210,7 +215,6 @@ internal class SendFormViewModel @Inject constructor(
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
-    private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -228,6 +232,8 @@ internal class SendFormViewModel @Inject constructor(
     val bondTokenAmountFieldState = TextFieldState()
 
     private var vaultId: String? = null
+
+    private var sendType: String? = null
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -277,6 +283,7 @@ internal class SendFormViewModel @Inject constructor(
             address = args.address,
             amount = args.amount,
             memo = args.memo,
+            type = args.type,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -324,6 +331,7 @@ internal class SendFormViewModel @Inject constructor(
         address: String?,
         amount: String?,
         memo: String?,
+        type: String?
     ) {
         memoFieldState.clearText()
 
@@ -332,6 +340,7 @@ internal class SendFormViewModel @Inject constructor(
 
             loadAccounts(vaultId)
             loadVaultName()
+            initFormType(type)
         }
 
         if (address != null) {
@@ -361,6 +370,12 @@ internal class SendFormViewModel @Inject constructor(
 
         memo?.let {
             memoFieldState.setTextAndPlaceCursorAtEnd(it)
+        }
+    }
+
+    private fun initFormType(type: String?) {
+        if (type != null) {
+            uiState.update { it.copy(type = SendFormType.fromString(type) ?: SendFormType.Send) }
         }
     }
 

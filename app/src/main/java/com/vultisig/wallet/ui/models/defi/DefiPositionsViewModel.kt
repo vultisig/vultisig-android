@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -43,6 +44,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
+import com.vultisig.wallet.ui.utils.address
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -849,10 +851,10 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
+                        type = SendFormType.Bond.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,
-                        memo = "BOND:${nodeAddress}",
                     )
                 )
             } else {
@@ -870,8 +872,10 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
+                        type = SendFormType.Bond.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
+                        address = nodeAddress,
                     )
                 )
             } else {
@@ -889,9 +893,9 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
+                        type = SendFormType.Bond.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
-                        memo = "BOND:", // User will need to add node address
                     )
                 )
             } else {
@@ -933,7 +937,6 @@ internal class DefiPositionsViewModel @Inject constructor(
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
             val tcy = Coins.ThorChain.TCY
-            val stcy = Coins.ThorChain.sTCY
             val ytcy = Coins.ThorChain.yTCY
             val yrune = Coins.ThorChain.yRUNE
 

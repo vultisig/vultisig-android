@@ -989,17 +989,6 @@ fun BondFormContent(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-
-        VsButton(
-            label = stringResource(R.string.bond_button_label),
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onBond,
-            state = if (isLoading) {
-                VsButtonState.Disabled
-            } else {
-                VsButtonState.Enabled
-            },
-        )
     }
 }
 
