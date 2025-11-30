@@ -402,6 +402,7 @@
     <string name="swap_error_amount_too_low">Importo dello swap troppo basso</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo %1$s insufficiente per lo swap e le commissioni del gas. Ricarica %1$s o riduci l\'importo dello swap</string>
     <string name="swap_error_insufficient_source_token">Saldo %1$s insufficiente per lo scambio</string>
+    <string name="swap_error_insufficient_gas_fees">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio.</string>
     <string name="swap_error_time_out">La richiesta di scambio è scaduta. Riprova.</string>
     <string name="swap_error_small_swap_amount">Importo dello swap troppo piccolo. Aumenta l\'importo per poter effettuare lo swap.</string>
     <string name="keygen_verify_server_backup_invalid_code">Codice non valido</string>

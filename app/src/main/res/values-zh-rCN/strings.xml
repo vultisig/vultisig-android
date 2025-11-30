@@ -707,6 +707,7 @@
     <string name="swap_error_amount_too_low">交换金额太低</string>
     <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
+    <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_small_swap_amount">交换金额太小。请增加金额以进行交换</string>
     

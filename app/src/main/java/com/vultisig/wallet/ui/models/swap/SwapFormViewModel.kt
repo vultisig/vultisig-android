@@ -309,8 +309,8 @@ internal class SwapFormViewModel @Inject constructor(
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.FormattedText(
-                            R.string.signing_error_insufficient_funds,
-                            listOf(nativeTokenAccount.token.ticker)
+                            R.string.swap_error_insufficient_gas_fees,
+                            listOf("${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})")
                         )
                     )
                 }

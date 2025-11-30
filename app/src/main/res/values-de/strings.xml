@@ -402,6 +402,7 @@
     <string name="swap_error_amount_too_low">Swap-Betrag zu niedrig</string>
     <string name="swap_error_insufficient_balance_and_fees">Unzureichendes %1$s-Guthaben für den Swap und Gasgebühren. Laden Sie %1$s auf oder reduzieren Sie den Swap-Betrag</string>
     <string name="swap_error_insufficient_source_token">Unzureichendes %1$s-Guthaben zum Tauschen</string>
+    <string name="swap_error_insufficient_gas_fees">Nicht genügend %1$s für Gasgebühren. Bitte füllen Sie die Wallet auf.</string>
     <string name="swap_error_time_out">Die Swap-Anfrage ist abgelaufen. Bitte versuchen Sie es erneut.</string>
     <string name="swap_error_small_swap_amount">Der Swap-Betrag ist zu gering. Bitte erhöhen Sie den Betrag, um tauschen zu können.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ungültiger Code</string>

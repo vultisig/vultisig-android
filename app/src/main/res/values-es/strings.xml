@@ -402,6 +402,7 @@
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para el intercambio y las comisiones de gas. Recargue %1$s o reduzca el monto del intercambio</string>
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para intercambiar</string>
+    <string name="swap_error_insufficient_gas_fees">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera.</string>
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_small_swap_amount">El monto del intercambio es demasiado pequeño. Por favor, aumente el monto para poder intercambiar.</string>
     <string name="keygen_verify_server_backup_invalid_code">Código inválido</string>

@@ -402,6 +402,7 @@
     <string name="swap_error_amount_too_low">Iznos zamjene je prenizak</string>
     <string name="swap_error_insufficient_balance_and_fees">Nedovoljno %1$s salda za zamjenu i naknade za gas. Dopunite %1$s ili smanjite iznos zamjene</string>
     <string name="swap_error_insufficient_source_token">Nedovoljno %1$s salda za zamjenu</string>
+    <string name="swap_error_insufficient_gas_fees">Nema dovoljno %1$s za pokrivanje naknada za gas. Molimo uplatite novčanik.</string>
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
     <string name="swap_error_small_swap_amount">Iznos zamjene premali. Povećajte iznos kako biste mogli zamijeniti</string>
     <string name="keygen_verify_server_backup_invalid_code">Neispravan kod</string>

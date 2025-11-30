@@ -413,6 +413,7 @@
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
     <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
+    <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de portemonnee aan.</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_error_small_swap_amount">Het ruilbedrag is te klein. Verhoog het bedrag om te kunnen ruilen.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ongeldige code</string>

@@ -467,6 +467,7 @@
     <string name="swap_error_amount_too_low">Swap Amount too low</string>
     <string name="swap_error_insufficient_balance_and_fees">Insufficient %1$s balance for the swap and gas fees. Top up %1$s or reduce swap amount</string>
     <string name="swap_error_insufficient_source_token">Insufficient %1$s balance to swap</string>
+    <string name="swap_error_insufficient_gas_fees">Not enough %1$s to cover gas fees. Please fund the wallet.</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="swap_error_small_swap_amount">Swap amount too small. Please increase the amount to be able to swap</string>
     <string name="keygen_verify_server_backup_invalid_code">Invalid code</string>
