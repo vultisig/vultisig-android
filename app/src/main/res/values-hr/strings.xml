@@ -667,6 +667,7 @@
     <string name="search_bar_search">Traži</string>
     <string name="search_bar_cancel">Otkaži</string>
     <string name="chain_selection_select_chains">Odaberite lance</string>
+    <string name="chain_selection_select_defi_chains">Odaberite DeFi lance</string>
     <string name="chain_selection_no_chains_found">Nisu pronađeni lanci</string>
     <string name="transaction_type_button_functions">Funkcije</string>
     <string name="copy_address">Kopiraj adresu</string>
@@ -797,6 +798,8 @@
     <string name="backup_password_request_description">Preporučujemo da ne postavljate lozinku sigurnosne kopije za dijeljene resurse trezora uređaja - vaši su podaci sigurni ako su sigurnosne kopije pravilno pohranjene na različitim lokacijama, što je već značajna zaštita. Zapamtite, lozinke sigurnosne kopije ne mogu se oporaviti ako ih zaboravite. Vaš je izbor!</string>
     <string name="backup_password_request_no_password_action">Sigurnosna kopija bez lozinke</string>
     <string name="address_bookmark_error_invalid_address">Ova adresa nije važeća za %s</string>
+    <string name="address_bookmark_error_empty_label">Oznaka ne može biti prazna</string>
+    <string name="address_bookmark_error_invalid_label">Oznaka mora imati između 1 i %d znakova</string>
     <string name="send_form_ripple_reaping_warning">Osigurajte dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 XRP (egzistencijalni depozit), račun će biti deaktiviran (potrošen) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati novim depozitom većim od egzistencijalnog depozita u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="vault_backup_verifying_pin">Provjera koda, molimo pričekajte</string>
