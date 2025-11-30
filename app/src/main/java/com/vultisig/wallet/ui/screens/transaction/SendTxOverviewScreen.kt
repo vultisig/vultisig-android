@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -268,17 +269,15 @@ internal fun TxDetails(
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .weight(1f),
         ) {
             Text(
                 text = hash,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.colors.text.primary,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.MiddleEllipsis,
                 maxLines = 1,
                 modifier = Modifier
-                    .weight(1f),
+                    .widthIn(max = 100.dp),
             )
 
             CopyIcon(
