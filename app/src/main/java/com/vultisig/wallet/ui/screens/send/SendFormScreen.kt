@@ -240,44 +240,36 @@ private fun SendFormScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(all = 16.dp)
                 ) {
-                    if (state.type == SendFormType.Send) {
-                        SendFormContent(
-                            state = state,
-                            onExpandSection = onExpandSection,
-                            onSelectNetworkRequest = onSelectNetworkRequest,
-                            onNetworkDragCancel = onNetworkDragCancel,
-                            onNetworkDrag = onNetworkDrag,
-                            onNetworkDragStart = onNetworkDragStart,
-                            onNetworkDragEnd = onNetworkDragEnd,
-                            onNetworkLongPressStarted = onNetworkLongPressStarted,
-                            onSelectTokenRequest = onSelectTokenRequest,
-                            onAssetDragCancel = onAssetDragCancel,
-                            onAssetDrag = onAssetDrag,
-                            onAssetDragStart = onAssetDragStart,
-                            onAssetDragEnd = onAssetDragEnd,
-                            onAssetLongPressStarted = onAssetLongPressStarted,
-                            addressFieldState = addressFieldState,
-                            onDstAddressLostFocus = onDstAddressLostFocus,
-                            onSetOutputAddress = onSetOutputAddress,
-                            onScanDstAddressRequest = onScanDstAddressRequest,
-                            onAddressBookClick = onAddressBookClick,
-                            onGasSettingsClick = onGasSettingsClick,
-                            tokenAmountFieldState = tokenAmountFieldState,
-                            fiatAmountFieldState = fiatAmountFieldState,
-                            focusManager = focusManager,
-                            onSend = onSend,
-                            onToogleAmountInputType = onToogleAmountInputType,
-                            onChoosePercentageAmount = onChoosePercentageAmount,
-                            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                            memoFieldState = memoFieldState
-                        )
-                    } else {
-                        BondFormContent(
-                            nodeAddressFieldState = nodeAddressFieldState,
-                            operatorFeeFieldState = operatorFeeFieldState,
-                            amountFieldState = amountBondFieldState,
-                        )
-                    }
+                    SendFormContent(
+                        state = state,
+                        onExpandSection = onExpandSection,
+                        onSelectNetworkRequest = onSelectNetworkRequest,
+                        onNetworkDragCancel = onNetworkDragCancel,
+                        onNetworkDrag = onNetworkDrag,
+                        onNetworkDragStart = onNetworkDragStart,
+                        onNetworkDragEnd = onNetworkDragEnd,
+                        onNetworkLongPressStarted = onNetworkLongPressStarted,
+                        onSelectTokenRequest = onSelectTokenRequest,
+                        onAssetDragCancel = onAssetDragCancel,
+                        onAssetDrag = onAssetDrag,
+                        onAssetDragStart = onAssetDragStart,
+                        onAssetDragEnd = onAssetDragEnd,
+                        onAssetLongPressStarted = onAssetLongPressStarted,
+                        addressFieldState = addressFieldState,
+                        onDstAddressLostFocus = onDstAddressLostFocus,
+                        onSetOutputAddress = onSetOutputAddress,
+                        onScanDstAddressRequest = onScanDstAddressRequest,
+                        onAddressBookClick = onAddressBookClick,
+                        onGasSettingsClick = onGasSettingsClick,
+                        tokenAmountFieldState = tokenAmountFieldState,
+                        fiatAmountFieldState = fiatAmountFieldState,
+                        focusManager = focusManager,
+                        onSend = onSend,
+                        onToogleAmountInputType = onToogleAmountInputType,
+                        onChoosePercentageAmount = onChoosePercentageAmount,
+                        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+                        memoFieldState = memoFieldState
+                    )
                 }
             }
         },
@@ -337,251 +329,86 @@ private fun SendFormContent(
     memoFieldState: TextFieldState
 ) {
     // select asset
-    FoldableSection(
-        expanded = state.expandedSection == SendSections.Asset,
-        onToggle = {
-            onExpandSection(SendSections.Asset)
-        },
-        complete = true,
-        title = stringResource(R.string.form_token_selection_asset),
-        completeTitleContent = {
-            Row(
-                modifier = Modifier.weight(1f)
-            ) {
-                val selectedToken = state.selectedCoin
-
-                TokenLogo(
-                    errorLogoModifier = Modifier
-                        .size(16.dp)
-                        .background(Theme.colors.neutral100),
-                    logo = selectedToken?.tokenLogo ?: "",
-                    title = selectedToken?.title ?: "",
-                    modifier = Modifier
-                        .size(16.dp)
-                )
-
-                UiSpacer(4.dp)
-
-                Text(
-                    text = selectedToken?.title ?: "",
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight,
-                )
-            }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
-        ) {
-            ChainSelector(
-                title = stringResource(R.string.send_from_address),
-                // TODO selectedChain should not be nullable
-                //  or default value should be something else
-                chain = state.selectedCoin?.model?.address?.chain
-                    ?: Chain.ThorChain,
-                onClick = onSelectNetworkRequest,
-                onDragCancel = onNetworkDragCancel,
-                onDrag = onNetworkDrag,
-                onDragStart = onNetworkDragStart,
-                onDragEnd = onNetworkDragEnd,
-                onLongPressStarted = onNetworkLongPressStarted,
-            )
-
-            UiSpacer(12.dp)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
-                TokenChip(
-                    selectedToken = state.selectedCoin,
-                    onSelectTokenClick = onSelectTokenRequest,
-
-                    onDragCancel = onAssetDragCancel,
-                    onDrag = onAssetDrag,
-                    onDragStart = onAssetDragStart,
-                    onDragEnd = onAssetDragEnd,
-                    onLongPressStarted = onAssetLongPressStarted,
-
-                    )
-
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .weight(1f),
-                ) {
-                    state.selectedCoin?.let { token ->
-                        Text(
-                            text = stringResource(
-                                R.string.form_token_selection_balance,
-                                token.balance ?: ""
-                            ),
-                            color = Theme.colors.text.light,
-                            style = Theme.brockmann.body.s.medium,
-                            textAlign = TextAlign.End,
-                        )
-
-                        UiSpacer(2.dp)
-
-                        token.fiatValue?.let { fiatValue ->
-                            Text(
-                                text = fiatValue,
-                                textAlign = TextAlign.End,
-                                color = Theme.colors.text.extraLight,
-                                style = Theme.brockmann.supplementary.caption,
-                            )
-                        }
-                    }
-                }
-            }
-        }
+    if (state.type == SendFormType.Send) {
+        FoldableAssetWidget(
+            state = state,
+            onExpandSection = onExpandSection,
+            onSelectNetworkRequest = onSelectNetworkRequest,
+            onNetworkDragCancel = onNetworkDragCancel,
+            onNetworkDrag = onNetworkDrag,
+            onNetworkDragStart = onNetworkDragStart,
+            onNetworkDragEnd = onNetworkDragEnd,
+            onNetworkLongPressStarted = onNetworkLongPressStarted,
+            onSelectTokenRequest = onSelectTokenRequest,
+            onAssetDragCancel = onAssetDragCancel,
+            onAssetDrag = onAssetDrag,
+            onAssetDragStart = onAssetDragStart,
+            onAssetDragEnd = onAssetDragEnd,
+            onAssetLongPressStarted = onAssetLongPressStarted
+        )
     }
 
     // input dst address
-    FoldableSection(
-        expanded = state.expandedSection == SendSections.Address,
-        complete = state.isDstAddressComplete,
-        title = stringResource(R.string.add_address_address_title),
-        onToggle = {
-            onExpandSection(SendSections.Address)
-        },
-        completeTitleContent = {
-            Text(
-                text = addressFieldState.text.toString(),
-                color = Theme.colors.text.extraLight,
-                style = Theme.brockmann.body.s.medium,
-                maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis,
-                modifier = Modifier.weight(1f),
-            )
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = 16.dp,
-                    end = 12.dp,
-                    bottom = 12.dp,
-                )
-        ) {
-            Text(
-                text = stringResource(R.string.send_from_address),
-                color = Theme.colors.text.extraLight,
-                style = Theme.brockmann.supplementary.caption,
-            )
+    FoldableDestinationAddressWidget(
+        state = state,
+        onExpandSection = onExpandSection,
+        addressFieldState = addressFieldState,
+        onDstAddressLostFocus = onDstAddressLostFocus,
+        onSetOutputAddress = onSetOutputAddress,
+        onScanDstAddressRequest = onScanDstAddressRequest,
+        onAddressBookClick = onAddressBookClick
+    )
 
-            UiSpacer(12.dp)
+    // amount
+    FoldableAmountWidget(
+        state = state,
+        addressFieldState = addressFieldState,
+        onExpandSection = onExpandSection,
+        onGasSettingsClick = onGasSettingsClick,
+        tokenAmountFieldState = tokenAmountFieldState,
+        fiatAmountFieldState = fiatAmountFieldState,
+        focusManager = focusManager,
+        onSend = onSend,
+        onToogleAmountInputType = onToogleAmountInputType,
+        onChoosePercentageAmount = onChoosePercentageAmount,
+        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+        memoFieldState = memoFieldState
+    )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = Theme.colors.borders.light,
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    .background(
-                        color = Theme.colors.backgrounds.secondary,
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
+    UiSpacer(24.dp)
+
+    AnimatedContent(
+        targetState = state.reapingError,
+        label = "error message"
+    ) { errorMessage ->
+        if (errorMessage != null) {
+            Column {
+                UiSpacer(size = 8.dp)
                 Text(
-                    text = state.srcVaultName,
-                    color = Theme.colors.text.primary,
-                    style = Theme.brockmann.supplementary.caption,
-                    maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
-                )
-
-                Text(
-                    text = state.srcAddress,
-                    color = Theme.colors.text.extraLight,
-                    style = Theme.brockmann.supplementary.caption,
-                    maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
-                )
-            }
-
-            UiSpacer(16.dp)
-
-            Text(
-                text = stringResource(R.string.send_to_address),
-                color = Theme.colors.text.extraLight,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
-
-            VsTextInputField(
-                textFieldState = addressFieldState,
-                hint = stringResource(R.string.send_to_address_hint),
-                onFocusChanged = {
-                    if (!it) {
-                        onDstAddressLostFocus()
-                    }
-                },
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next,
-                innerState = if (state.dstAddressError != null)
-                    VsTextInputFieldInnerState.Error
-                else VsTextInputFieldInnerState.Default,
-                footNote = state.dstAddressError?.asString(),
-                modifier = Modifier
-                    .fillMaxWidth(),
-            )
-
-            UiSpacer(16.dp)
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                PasteIcon(
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onPaste = onSetOutputAddress
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.camera,
-                    size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onClick = onScanDstAddressRequest,
-                )
-
-                UiIcon(
-                    drawableResId = R.drawable.ic_bookmark,
-                    size = 20.dp,
-                    modifier = Modifier
-                        .vsClickableBackground()
-                        .padding(all = 12.dp)
-                        .weight(1f),
-                    onClick = onAddressBookClick,
+                    text = errorMessage.asString(),
+                    color = Theme.colors.error,
+                    style = Theme.menlo.body1
                 )
             }
         }
     }
+}
 
-
+@Composable
+private fun FoldableAmountWidget(
+    state: SendFormUiModel,
+    addressFieldState: TextFieldState,
+    onExpandSection: (SendSections) -> Unit,
+    onGasSettingsClick: () -> Unit,
+    tokenAmountFieldState: TextFieldState,
+    fiatAmountFieldState: TextFieldState,
+    focusManager: FocusManager,
+    onSend: () -> Unit,
+    onToogleAmountInputType: (Boolean) -> Unit,
+    onChoosePercentageAmount: (Float) -> Unit,
+    onChooseMaxTokenAmount: () -> Unit,
+    memoFieldState: TextFieldState
+) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Amount,
         onToggle = {
@@ -863,21 +690,280 @@ private fun SendFormContent(
             }
         }
     }
+}
 
-    UiSpacer(24.dp)
-
-    AnimatedContent(
-        targetState = state.reapingError,
-        label = "error message"
-    ) { errorMessage ->
-        if (errorMessage != null) {
-            Column {
-                UiSpacer(size = 8.dp)
-                Text(
-                    text = errorMessage.asString(),
-                    color = Theme.colors.error,
-                    style = Theme.menlo.body1
+@Composable
+private fun FoldableDestinationAddressWidget(
+    state: SendFormUiModel,
+    onExpandSection: (SendSections) -> Unit,
+    addressFieldState: TextFieldState,
+    onDstAddressLostFocus: () -> Unit,
+    onSetOutputAddress: (String) -> Unit,
+    onScanDstAddressRequest: () -> Unit,
+    onAddressBookClick: () -> Unit
+) {
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Address,
+        complete = state.isDstAddressComplete,
+        title = stringResource(R.string.add_address_address_title),
+        onToggle = {
+            onExpandSection(SendSections.Address)
+        },
+        completeTitleContent = {
+            Text(
+                text = addressFieldState.text.toString(),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.body.s.medium,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
                 )
+        ) {
+            if (state.type == SendFormType.Send) {
+                Text(
+                    text = stringResource(R.string.send_from_address),
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.supplementary.caption,
+                )
+
+                UiSpacer(12.dp)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Theme.colors.borders.light,
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .background(
+                            color = Theme.colors.backgrounds.secondary,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 8.dp,
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = state.srcVaultName,
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.supplementary.caption,
+                        maxLines = 1,
+                        overflow = TextOverflow.MiddleEllipsis,
+                    )
+
+                    Text(
+                        text = state.srcAddress,
+                        color = Theme.colors.text.extraLight,
+                        style = Theme.brockmann.supplementary.caption,
+                        maxLines = 1,
+                        overflow = TextOverflow.MiddleEllipsis,
+                    )
+                }
+
+                UiSpacer(16.dp)
+            }
+
+            Text(
+                text = when (state.type) {
+                    SendFormType.Bond -> stringResource(R.string.bond_node_address)
+                    else -> stringResource(R.string.send_to_address)
+                },
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = addressFieldState,
+                hint = stringResource(R.string.send_to_address_hint),
+                onFocusChanged = {
+                    if (!it) {
+                        onDstAddressLostFocus()
+                    }
+                },
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                innerState = if (state.dstAddressError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
+                footNote = state.dstAddressError?.asString(),
+                modifier = Modifier
+                    .fillMaxWidth(),
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PasteIcon(
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onPaste = onSetOutputAddress
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onScanDstAddressRequest,
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_bookmark,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onAddressBookClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FoldableAssetWidget(
+    state: SendFormUiModel,
+    onExpandSection: (SendSections) -> Unit,
+    onSelectNetworkRequest: () -> Unit,
+    onNetworkDragCancel: () -> Unit,
+    onNetworkDrag: (Offset) -> Unit,
+    onNetworkDragStart: (Offset) -> Unit,
+    onNetworkDragEnd: () -> Unit,
+    onNetworkLongPressStarted: (Offset) -> Unit,
+    onSelectTokenRequest: () -> Unit,
+    onAssetDragCancel: () -> Unit,
+    onAssetDrag: (Offset) -> Unit,
+    onAssetDragStart: (Offset) -> Unit,
+    onAssetDragEnd: () -> Unit,
+    onAssetLongPressStarted: (Offset) -> Unit
+) {
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Asset,
+        onToggle = {
+            onExpandSection(SendSections.Asset)
+        },
+        complete = true,
+        title = stringResource(R.string.form_token_selection_asset),
+        completeTitleContent = {
+            Row(
+                modifier = Modifier.weight(1f)
+            ) {
+                val selectedToken = state.selectedCoin
+
+                TokenLogo(
+                    errorLogoModifier = Modifier
+                        .size(16.dp)
+                        .background(Theme.colors.neutral100),
+                    logo = selectedToken?.tokenLogo ?: "",
+                    title = selectedToken?.title ?: "",
+                    modifier = Modifier
+                        .size(16.dp)
+                )
+
+                UiSpacer(4.dp)
+
+                Text(
+                    text = selectedToken?.title ?: "",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                )
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
+                )
+        ) {
+            ChainSelector(
+                title = stringResource(R.string.send_from_address),
+                // TODO selectedChain should not be nullable
+                //  or default value should be something else
+                chain = state.selectedCoin?.model?.address?.chain
+                    ?: Chain.ThorChain,
+                onClick = onSelectNetworkRequest,
+                onDragCancel = onNetworkDragCancel,
+                onDrag = onNetworkDrag,
+                onDragStart = onNetworkDragStart,
+                onDragEnd = onNetworkDragEnd,
+                onLongPressStarted = onNetworkLongPressStarted,
+            )
+
+            UiSpacer(12.dp)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+            ) {
+                TokenChip(
+                    selectedToken = state.selectedCoin,
+                    onSelectTokenClick = onSelectTokenRequest,
+
+                    onDragCancel = onAssetDragCancel,
+                    onDrag = onAssetDrag,
+                    onDragStart = onAssetDragStart,
+                    onDragEnd = onAssetDragEnd,
+                    onLongPressStarted = onAssetLongPressStarted,
+
+                    )
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .weight(1f),
+                ) {
+                    state.selectedCoin?.let { token ->
+                        Text(
+                            text = stringResource(
+                                R.string.form_token_selection_balance,
+                                token.balance ?: ""
+                            ),
+                            color = Theme.colors.text.light,
+                            style = Theme.brockmann.body.s.medium,
+                            textAlign = TextAlign.End,
+                        )
+
+                        UiSpacer(2.dp)
+
+                        token.fiatValue?.let { fiatValue ->
+                            Text(
+                                text = fiatValue,
+                                textAlign = TextAlign.End,
+                                color = Theme.colors.text.extraLight,
+                                style = Theme.brockmann.supplementary.caption,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -980,7 +1066,7 @@ fun BondFormContent(
                 },
                 keyboardType = KeyboardType.Decimal,
                 imeAction = ImeAction.Done,
-                innerState = if (amountError != null){
+                innerState = if (amountError != null) {
                     VsTextInputFieldInnerState.Error
                 } else {
                     VsTextInputFieldInnerState.Default
