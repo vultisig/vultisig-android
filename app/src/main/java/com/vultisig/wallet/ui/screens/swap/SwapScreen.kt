@@ -109,6 +109,7 @@ import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
@@ -182,27 +183,21 @@ internal fun SwapScreen(
 
     val isShowingKeyboard by rememberKeyboardVisibilityAsState()
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.chain_account_view_swap),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-                actions = {
-                    if (state.expiredAt != null) {
-                        QuoteTimer(
-                            expiredAt = state.expiredAt,
-                            modifier = Modifier
-                                .padding(
-                                    horizontal = 16.dp,
-                                )
+    V2Scaffold(
+        title = stringResource(R.string.chain_account_view_swap),
+        onBackClick = onBackClick,
+        actions = {
+            if (state.expiredAt != null) {
+                QuoteTimer(
+                    expiredAt = state.expiredAt,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
                         )
-                    }
-                }
-            )
+                )
+            }
         },
-        content = { contentPadding ->
+        content = {
 
             var topCenter by remember {
                 mutableStateOf(Offset.Zero)
@@ -223,12 +218,7 @@ internal fun SwapScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(contentPadding)
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 16.dp
-                        ),
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     Box {
                         Column(
@@ -298,7 +288,8 @@ internal fun SwapScreen(
                                     modifier = Modifier
                                         .graphicsLayer {
                                             this.translationY = -size.height / 2 + topCenter.y
-                                            this.translationX = (topCenter.x + bottomCenter.x).div(2) - (size.width) / 2
+                                            this.translationX =
+                                                (topCenter.x + bottomCenter.x).div(2) - (size.width) / 2
                                         }
                                         .size(40.dp)
                                         .background(
@@ -308,8 +299,7 @@ internal fun SwapScreen(
                                         .padding(all = space)
                                         .onGloballyPositioned {
                                             flipButtonBottomCenter = it.boundsInRoot().bottomCenter
-                                        }
-                                    ,
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     AnimatedContent(
@@ -401,7 +391,9 @@ internal fun SwapScreen(
                         FormDetails2(
                             title = stringResource(R.string.swap_form_estimated_fees_title),
                             value = state.fee,
-                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                            placeholder = if (state.isLoading) {
+                                { UiPlaceholderLoader(placeHolderModifier) }
+                            } else null
                         )
 
                         FormDetails2(
@@ -430,13 +422,17 @@ internal fun SwapScreen(
                                     )
                                 }
                             },
-                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                            placeholder = if (state.isLoading) {
+                                { UiPlaceholderLoader(placeHolderModifier) }
+                            } else null
                         )
 
                         FormDetails2(
                             title = stringResource(R.string.swap_form_total_fees_title),
                             value = state.totalFee,
-                            placeholder = if (state.isLoading) { { UiPlaceholderLoader(placeHolderModifier) } } else null
+                            placeholder = if (state.isLoading) {
+                                { UiPlaceholderLoader(placeHolderModifier) }
+                            } else null
                         )
                     }
                 }
@@ -446,7 +442,9 @@ internal fun SwapScreen(
                     val errorBoxWidth = 200.dp
                     val errorWidthBoxPx = errorBoxWidth.toPx().toInt()
                     val spacePx = space.toPx().toInt()
-                    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx().toInt()
+                    val statusBarHeight =
+                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx()
+                            .toInt()
                     HintBox(
                         modifier = Modifier.width(errorBoxWidth),
                         message = error.asString(),
@@ -582,7 +580,7 @@ private fun TokenInput(
     onDragCancel: () -> Unit = {},
     onLongPressStarted: (Offset) -> Unit = {},
     textFieldContent: @Composable ColumnScope.() -> Unit,
-    ) {
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
@@ -887,6 +885,7 @@ internal fun SwapFormScreenPreview3() {
         srcAmountTextFieldState = TextFieldState(),
     )
 }
+
 @Preview
 @Composable
 internal fun SwapFormScreenPreview4() {

@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +42,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -95,136 +94,127 @@ private fun ReferralScreen(
     clipboardData: MutableState<String?>,
     referralState: TextFieldState,
 ) {
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_screen_title),
-                onBackClick = {
-                    onBackPressed()
-                },
-            )
-        },
-        content = { contentPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
-                    .imePadding()
-                    .navigationBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+    V2Scaffold(
+        onBackClick = onBackPressed,
+        title = stringResource(R.string.referral_screen_title),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                .imePadding()
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.crypto_natives_v2),
-                        contentDescription = "ReferralImage",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                UiSpacer(1f)
-
-                StyledText(
-                    parts = listOf(
-                        StyledTextPart(stringResource(R.string.referral_save)),
-                        StyledTextPart("10%", Theme.colors.primary.accent4),
-                        StyledTextPart(stringResource(R.string.referral_add_referral))
-                    ),
-                    fontSize = 16.sp,
-                    fontFamily = Theme.brockmann.body.m.medium.fontFamily,
-                    fontWeight = Theme.brockmann.body.m.medium.fontWeight,
-                )
-
-                UiSpacer(16.dp)
-
-                VsTextInputField(
-                    textFieldState = referralState,
-                    innerState = state.referralMessageState,
-                    hint = stringResource(R.string.referral_screen_code_hint),
-                    trailingIcon = if (state.isSaveEnabled) R.drawable.clipboard_paste else null,
-                    onTrailingIconClick = {
-                        val content = clipboardData.value
-                        if (content.isNullOrEmpty()) return@VsTextInputField
-                        onPasteIcon(content)
-                    },
-                    footNote = state.referralMessage?.asString(),
-                    focusRequester = null, //focusRequester,
-                    imeAction = ImeAction.Go,
-                    keyboardType = KeyboardType.Text,
-                    enabled = state.isSaveEnabled,
-                )
-
-                UiSpacer(16.dp)
-
-                VsButton(
-                    label = if (state.isSaveEnabled) {
-                        stringResource(R.string.referral_save_referral_code)
-                    } else {
-                        stringResource(R.string.referral_edit_referred)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    variant = VsButtonVariant.Secondary,
-                    state = VsButtonState.Enabled,
-                    onClick = onSavedOrEditExternalReferral,
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Theme.colors.borders.light,
-                    )
-
-                    Text(
-                        text = stringResource(R.string.referral_or),
-                        modifier = Modifier.padding(16.dp),
-                        color = Theme.colors.text.primary,
-                        style = Theme.brockmann.supplementary.caption,
-                        textAlign = TextAlign.Center,
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Theme.colors.borders.light,
-                    )
-                }
-
-                StyledText(
-                    parts = listOf(
-                        StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
-                        StyledTextPart("20%", Theme.colors.primary.accent4),
-                        StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
-                    ),
-                    fontSize = 14.sp,
-                    fontFamily = Theme.brockmann.body.m.regular.fontFamily,
-                    fontWeight = Theme.brockmann.body.m.regular.fontWeight
-                )
-
-                UiSpacer(16.dp)
-
-                VsButton(
-                    label = if (state.isCreateEnabled) {
-                        stringResource(R.string.referral_create_referral)
-                    } else {
-                        stringResource(R.string.referral_edit_referral)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    variant = VsButtonVariant.Primary,
-                    state = VsButtonState.Enabled,
-                    onClick = onCreateOrEditReferral,
+                Image(
+                    painter = painterResource(id = R.drawable.crypto_natives_v2),
+                    contentDescription = "ReferralImage",
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-        },
-    )
+
+            UiSpacer(1f)
+
+            StyledText(
+                parts = listOf(
+                    StyledTextPart(stringResource(R.string.referral_save)),
+                    StyledTextPart("10%", Theme.colors.primary.accent4),
+                    StyledTextPart(stringResource(R.string.referral_add_referral))
+                ),
+                fontSize = 16.sp,
+                fontFamily = Theme.brockmann.body.m.medium.fontFamily,
+                fontWeight = Theme.brockmann.body.m.medium.fontWeight,
+            )
+
+            UiSpacer(16.dp)
+
+            VsTextInputField(
+                textFieldState = referralState,
+                innerState = state.referralMessageState,
+                hint = stringResource(R.string.referral_screen_code_hint),
+                trailingIcon = if (state.isSaveEnabled) R.drawable.clipboard_paste else null,
+                onTrailingIconClick = {
+                    val content = clipboardData.value
+                    if (content.isNullOrEmpty()) return@VsTextInputField
+                    onPasteIcon(content)
+                },
+                footNote = state.referralMessage?.asString(),
+                focusRequester = null, //focusRequester,
+                imeAction = ImeAction.Go,
+                keyboardType = KeyboardType.Text,
+                enabled = state.isSaveEnabled,
+            )
+
+            UiSpacer(16.dp)
+
+            VsButton(
+                label = if (state.isSaveEnabled) {
+                    stringResource(R.string.referral_save_referral_code)
+                } else {
+                    stringResource(R.string.referral_edit_referred)
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                variant = VsButtonVariant.Secondary,
+                state = VsButtonState.Enabled,
+                onClick = onSavedOrEditExternalReferral,
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Theme.colors.borders.light,
+                )
+
+                Text(
+                    text = stringResource(R.string.referral_or),
+                    modifier = Modifier.padding(16.dp),
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.supplementary.caption,
+                    textAlign = TextAlign.Center,
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = Theme.colors.borders.light,
+                )
+            }
+
+            StyledText(
+                parts = listOf(
+                    StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
+                    StyledTextPart("20%", Theme.colors.primary.accent4),
+                    StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
+                ),
+                fontSize = 14.sp,
+                fontFamily = Theme.brockmann.body.m.regular.fontFamily,
+                fontWeight = Theme.brockmann.body.m.regular.fontWeight
+            )
+
+            UiSpacer(16.dp)
+
+            VsButton(
+                label = if (state.isCreateEnabled) {
+                    stringResource(R.string.referral_create_referral)
+                } else {
+                    stringResource(R.string.referral_edit_referral)
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                variant = VsButtonVariant.Primary,
+                state = VsButtonState.Enabled,
+                onClick = onCreateOrEditReferral,
+            )
+        }
+    }
 }
 
 @SuppressLint("UnrememberedMutableState")

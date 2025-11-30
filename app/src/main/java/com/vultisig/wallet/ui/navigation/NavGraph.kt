@@ -197,7 +197,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Route.AddressBookScreen> {
-            AddressBookScreen(navController = navController)
+            AddressBookScreen()
         }
 
         composable<AddressEntry> {

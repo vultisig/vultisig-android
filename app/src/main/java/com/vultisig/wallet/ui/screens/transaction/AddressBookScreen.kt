@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,8 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.logo
@@ -44,7 +43,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
@@ -53,7 +56,6 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun AddressBookScreen(
-    navController: NavController,
     model: AddressBookViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
@@ -63,8 +65,8 @@ internal fun AddressBookScreen(
     }
 
     AddressBookScreen(
-        navController = navController,
         state = state,
+        onBackClick = model::back,
         onAddressClick = model::clickAddress,
         onDeleteAddressClick = model::deleteAddress,
         onToggleEditMode = model::toggleEditMode,
@@ -75,8 +77,8 @@ internal fun AddressBookScreen(
 
 @Composable
 internal fun AddressBookScreen(
-    navController: NavController,
     state: AddressBookUiModel,
+    onBackClick: () -> Unit,
     onAddressClick: (AddressBookEntryUiModel) -> Unit = {},
     onDeleteAddressClick: (AddressBookEntryUiModel) -> Unit = {},
     onToggleEditMode: () -> Unit = {},
@@ -84,78 +86,43 @@ internal fun AddressBookScreen(
     onMove: (from: Int, to: Int) -> Unit,
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp),
-                title = if (isEditModeEnabled)
-                    stringResource(R.string.address_book_title_edit)
-                else
-                    stringResource(R.string.address_book_toolbar_title),
-                navigationContent = {
-                    UiIcon(
-                        drawableResId = R.drawable.ic_caret_left,
-                        onClick = { navController.popBackStack() },
-                        size = 24.dp,
-                    )
-                },
-                actions = {
-                    if (state.entries.isNotEmpty()) {
-                        if (isEditModeEnabled) {
-                            Text(
-                                text = stringResource(R.string.address_book_edit_mode_done),
-                                style = Theme.brockmann.button.medium.medium,
-                                color = Theme.colors.primary.accent4,
-                                modifier = Modifier
-                                    .background(
-                                        color = Theme.colors.backgrounds.secondary,
-                                        shape = CircleShape
-                                    )
-                                    .padding(
-                                        all = 12.dp
-                                    )
-                                    .clickOnce(onClick = onToggleEditMode)
-                            )
 
-                        } else {
-                            UiIcon(
-                                drawableResId = R.drawable.reame,
-                                contentDescription = "edit",
-                                tint = Theme.colors.text.button.light,
-                                onClick = onToggleEditMode,
-                                size = 16.dp,
-                            )
-
-                        }
-                    }
-                }
-            )
-        },
-        content = { scaffoldPadding ->
+    V2Scaffold(
+        actions = {
             if (state.entries.isNotEmpty()) {
-                VerticalReorderList(
-                    data = state.entries,
-                    onMove = onMove,
-                    key = { it.model.id },
-                    isReorderEnabled = state.isEditModeEnabled,
-                    modifier = Modifier.padding(scaffoldPadding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) { entry ->
-                    AddressItem(
-                        image = entry.image,
-                        name = entry.name,
-                        address = entry.address,
-                        isEditModeEnabled = isEditModeEnabled,
-                        onClick = { onAddressClick(entry) },
-                        onDeleteClick = { onDeleteAddressClick(entry) })
+                if (isEditModeEnabled) {
+                    Text(
+                        text = stringResource(R.string.address_book_edit_mode_done),
+                        style = Theme.brockmann.button.medium.medium,
+                        color = Theme.colors.primary.accent4,
+                        modifier = Modifier
+                            .clickOnce(onClick = onToggleEditMode)
+                            .background(
+                                color = Theme.colors.backgrounds.secondary,
+                                shape = CircleShape
+                            )
+                            .padding(
+                                all = 12.dp
+                            )
+                    )
+
+                } else {
+                    VsCircleButton(
+                        onClick = onToggleEditMode,
+                        size = VsCircleButtonSize.Small,
+                        type = VsCircleButtonType.Secondary,
+                        designType = DesignType.Shined,
+                        icon = R.drawable.reame,
+                    )
                 }
-            } else {
-                NoAddressView(onAddAddressClick = onAddAddressClick)
             }
-        }, bottomBar = {
+        },
+        onBackClick = onBackClick,
+        title = if (isEditModeEnabled)
+            stringResource(R.string.address_book_title_edit)
+        else
+            stringResource(R.string.address_book_toolbar_title),
+        bottomBar = {
             if (state.entries.isNotEmpty()) {
                 VsButton(
                     label = stringResource(R.string.address_book_add_address_button),
@@ -168,7 +135,29 @@ internal fun AddressBookScreen(
                         ),
                 )
             }
-        })
+        }
+    ) {
+        if (state.entries.isNotEmpty()) {
+            VerticalReorderList(
+                data = state.entries,
+                onMove = onMove,
+                key = { it.model.id },
+                isReorderEnabled = state.isEditModeEnabled,
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) { entry ->
+                AddressItem(
+                    image = entry.image,
+                    name = entry.name,
+                    address = entry.address,
+                    isEditModeEnabled = isEditModeEnabled,
+                    onClick = { onAddressClick(entry) },
+                    onDeleteClick = { onDeleteAddressClick(entry) })
+            }
+        } else {
+            NoAddressView(onAddAddressClick = onAddAddressClick)
+        }
+    }
 }
 
 @Composable
@@ -343,5 +332,34 @@ private fun AddressItemPreview2() {
         isEditModeEnabled = false,
         onClick = {},
         onDeleteClick = {}
+    )
+}
+
+@Preview
+@Composable
+private fun AddressBookScreenPreview() {
+    AddressBookScreen(
+        state = AddressBookUiModel(
+            isEditModeEnabled = false,
+            entries = listOf(
+                AddressBookEntryUiModel(
+                    model = AddressBookEntry(
+                        chain = Chain.Ethereum,
+                        address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                        title = "Online Wallet"
+                    ),
+                    image = "",
+                    name = "Online Wallet",
+                    network = "Ethereum",
+                    address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                )
+            )
+        ),
+        onBackClick = {},
+        onAddressClick = {},
+        onDeleteAddressClick = {},
+        onToggleEditMode = {},
+        onAddAddressClick = {},
+        onMove = { _, _ -> }
     )
 }
