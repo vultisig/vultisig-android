@@ -96,6 +96,7 @@ internal fun AddressBookScreen(
                         style = Theme.brockmann.button.medium.medium,
                         color = Theme.colors.primary.accent4,
                         modifier = Modifier
+                            .clickOnce(onClick = onToggleEditMode)
                             .background(
                                 color = Theme.colors.backgrounds.secondary,
                                 shape = CircleShape
@@ -103,7 +104,6 @@ internal fun AddressBookScreen(
                             .padding(
                                 all = 12.dp
                             )
-                            .clickOnce(onClick = onToggleEditMode)
                     )
 
                 } else {
