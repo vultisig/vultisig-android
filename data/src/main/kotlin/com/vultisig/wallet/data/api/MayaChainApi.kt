@@ -73,17 +73,21 @@ internal class MayaChainApiImp @Inject constructor(
     }
 
     override suspend fun getUnStakeCacaoBalance(address: String): String? {
-        val request = httpClient.get("https://midgard.mayachain.info") {
-            url {
-                path(
-                    "v2",
-                    "cacaopool",
-                    address
-                )
-            }
-        }.body<List<MayaChainDepositCacaoResponse>>()
-
-        return request.firstOrNull()?.cacaoDeposit
+        return try {
+            val request = httpClient.get("https://midgard.mayachain.info") {
+                url {
+                    path(
+                        "v2",
+                        "cacaopool",
+                        address
+                    )
+                }
+            }.body<List<MayaChainDepositCacaoResponse>>()
+            request.firstOrNull()?.cacaoDeposit
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch CACAO pool balance for address: $address")
+            null
+        }
     }
 
     override suspend fun getSwapQuotes(
