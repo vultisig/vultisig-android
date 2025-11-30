@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
@@ -63,7 +63,7 @@ internal fun TxDoneScaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
-                VsTopAppBar(
+                V2Topbar(
                     title = stringResource(R.string.tx_overview_screen_title),
                     onBackClick = onBack,
                 )
