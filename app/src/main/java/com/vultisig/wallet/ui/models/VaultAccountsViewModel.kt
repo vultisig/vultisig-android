@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
+import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
@@ -40,6 +41,7 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -117,6 +119,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
+    private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
 ) : ViewModel() {
@@ -159,6 +162,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadData(vaultId: VaultId) {
+        val vaultChanged = this.vaultId != null && this.vaultId != vaultId
+
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
@@ -166,7 +171,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
-        loadDeFiBalances(vaultId, false)
+        loadDeFiBalances(vaultId, vaultChanged)
     }
 
     private fun enableVultTokenIfNeeded(vaultId: VaultId) {
@@ -351,31 +356,39 @@ internal class VaultAccountsViewModel @Inject constructor(
                 .launchIn(this)
         }
     }
-    
+
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob = viewModelScope.launch {
             combine(
                 accountsRepository
                     .loadDeFiAddresses(vaultId, isRefresh)
-                    .map { it ->
-                        it.sortByAccountsTotalFiatValue()
+                    .map { addresses ->
+                        addresses.sortByAccountsTotalFiatValue()
                     }
-                    .catch {
+                    .catch { error ->
                         updateRefreshing(false)
-                        Timber.e(it)
+                        Timber.e(error, "Error loading DeFi balances for vault: $vaultId")
                     },
                 uiState.value.searchTextFieldState.textAsFlow(),
-                //uiState.map { it.cryptoConnectionType }.distinctUntilChanged()
-            ) { accounts, searchQuery,  ->
-                Timber.d("Defi Accounts Loaded: $accounts")
-
-                accounts.updateUiStateFromList(
-                        searchQuery = searchQuery.toString(),
-                        isDefi = true,
-                    )
+                defaultDeFiChainsRepository.getDefaultChains(vaultId),
+            ) { accounts, searchQuery, selectedDeFiChains ->
+                Timber.d("DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}")
+                
+                val filteredAccounts = accounts.filter { address ->
+                    val isSelected = selectedDeFiChains.contains(address.chain)
+                    Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
+                    isSelected
+                }
+                
+                Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
+                
+                filteredAccounts.updateUiStateFromList(
+                    searchQuery = searchQuery.toString(),
+                    isDefi = true,
+                )
             }
-            .launchIn(this)
+                .launchIn(this)
         }
     }
 
@@ -412,6 +425,8 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
         }
         updateRefreshing(false)
+
+        Timber.d("Update updateUiStateFromList", "$this")
     }
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
@@ -432,6 +447,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
 
     private fun updateRefreshing(isRefreshing: Boolean) {
+        Timber.d("UpdateRefresh $isRefreshing")
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
@@ -494,13 +510,17 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun openAddChainAccount() {
         vaultId?.let { vaultId ->
             viewModelScope.launch {
-                navigator.route(Route.AddChainAccount(
-                    vaultId = vaultId,
-                ))
+                if (uiState.value.cryptoConnectionType == CryptoConnectionType.Defi) {
+                    navigator.route(Route.AddDeFiChainAccount(
+                        vaultId = vaultId,
+                    ))
+                } else {
+                    navigator.route(Route.AddChainAccount(
+                        vaultId = vaultId,
+                    ))
+                }
                 requestResultRepository.request<Unit>(REFRESH_CHAIN_DATA)
 
-                // Manually trigger loadData because dialog popBackStack in NavGraph
-                // doesn't automatically re-trigger LaunchedEffect
                 loadData(vaultId)
             }
         }

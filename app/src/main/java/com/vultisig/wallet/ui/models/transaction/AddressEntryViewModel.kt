@@ -41,6 +41,7 @@ internal data class AddAddressEntryUiModel(
     val selectedChain: Chain = Chain.Ethereum,
     val chains: List<Chain> = Chain.entries,
     val addressError: UiText? = null,
+    val titleError: UiText? = null,
 )
 
 @HiltViewModel
@@ -53,6 +54,10 @@ internal class AddressEntryViewModel @Inject constructor(
     private val orderRepository: OrderRepository<AddressBookOrderEntity>,
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
+
+    companion object {
+        private const val LABEL_MAX_LENGTH = 100
+    }
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
@@ -104,6 +109,15 @@ internal class AddressEntryViewModel @Inject constructor(
                 )
             }
         }
+            .launchIn(viewModelScope)
+        
+        titleTextFieldState.textAsFlow()
+            .filter { it.isNotEmpty() }
+            .map {
+                state.update {
+                    it.copy(titleError = null)
+                }
+            }
             .launchIn(viewModelScope)
 
     }
@@ -183,6 +197,29 @@ internal class AddressEntryViewModel @Inject constructor(
         val chain = state.value.selectedChain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
+        
+        when {
+            title.isBlank() -> {
+                state.update {
+                    it.copy(
+                        titleError = UiText.StringResource(R.string.address_bookmark_error_empty_label)
+                    )
+                }
+                return
+            }
+            title.length > LABEL_MAX_LENGTH -> {
+                state.update {
+                    it.copy(
+                        titleError = UiText.FormattedText(
+                            R.string.address_bookmark_error_invalid_label,
+                            listOf(LABEL_MAX_LENGTH)
+                        )
+                    )
+                }
+                return
+            }
+        }
+        
         validateAddress(chain, address)?.let {
             state.update {
                 it.copy(
