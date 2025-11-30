@@ -282,7 +282,10 @@ internal class SwapFormViewModel @Inject constructor(
                         ?: BigInteger.ZERO) > selectedSrcBalance
                 ) {
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                        UiText.FormattedText(
+                            R.string.swap_error_insufficient_balance_and_fees,
+                            listOf(srcToken.ticker)
+                        )
                     )
                 }
             } else {
@@ -295,14 +298,20 @@ internal class SwapFormViewModel @Inject constructor(
 
                 if (selectedSrcBalance < srcAmountInt) {
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                        UiText.FormattedText(
+                            R.string.swap_error_insufficient_source_token,
+                            listOf(srcToken.ticker)
+                        )
                     )
                 }
                 if (nativeTokenValue < (estimatedNetworkFeeTokenValue.value?.value
                         ?: BigInteger.ZERO)
                 ) {
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.signing_error_insufficient_funds)
+                        UiText.FormattedText(
+                            R.string.swap_error_insufficient_gas_fees,
+                            listOf("${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})")
+                        )
                     )
                 }
             }
