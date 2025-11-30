@@ -401,7 +401,7 @@
     <string name="create_folder">Create Folder</string>
     <string name="keygen_password_title">PASSWORD</string>
     <string name="password_should_not_be_empty">Password should not be empty</string>
-    <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
+    <string name="signing_error_insufficient_funds">Not enough %1$s to cover gas fees. Please fund the wallet with %1$s.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
@@ -462,8 +462,10 @@
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
     <string name="form_token_selection_asset">Asset</string>
-    <string name="insufficient_native_token">Insufficient %1$s</string>
+    <string name="insufficient_native_token">Not enough %1$s to cover gas fees</string>
     <string name="swap_error_amount_too_low">Swap Amount too low</string>
+    <string name="swap_error_insufficient_balance_and_fees">Insufficient %1$s balance for the swap and gas fees. Top up %1$s or reduce swap amount</string>
+    <string name="swap_error_insufficient_source_token">Insufficient %1$s balance to swap</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="swap_error_small_swap_amount">Swap amount too small. Please increase the amount to be able to swap</string>
     <string name="keygen_verify_server_backup_invalid_code">Invalid code</string>

@@ -338,7 +338,7 @@
     <string name="create_folder">Criar pasta</string>
     <string name="keygen_password_title">Proteja o seu cofre</string>
     <string name="password_should_not_be_empty">A palavra-passe não deve estar vazia</string>
-    <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
+    <string name="signing_error_insufficient_funds">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira com %1$s.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
@@ -397,8 +397,10 @@
     <string name="scan_qr_code_error_button">Voltar</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Ativo</string>
-    <string name="insufficient_native_token">%1$s insuficiente</string>
+    <string name="insufficient_native_token">%1$s insuficiente para taxas de gás</string>
     <string name="swap_error_amount_too_low">Valor de swap muito baixo</string>
+    <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para o swap e taxas de gás. Recarregue %1$s ou reduza o valor do swap</string>
+    <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para trocar</string>
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
     <string name="swap_error_small_swap_amount">Valor de troca muito pequeno. Por favor aumente o valor para poder trocar</string>
     <string name="keygen_verify_server_backup_invalid_code">Código inválido</string>

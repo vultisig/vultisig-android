@@ -349,7 +349,7 @@
     <string name="create_folder">Map maken</string>
     <string name="keygen_password_title">WACHTWOORD</string>
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
-    <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de portemonnee.</string>
+    <string name="signing_error_insufficient_funds">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de portemonnee aan met %1$s.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
@@ -408,8 +408,10 @@
     <string name="scan_qr_code_error_button">Rug</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Bezit</string>
-    <string name="insufficient_native_token">Onvoldoende %1$s</string>
+    <string name="insufficient_native_token">Onvoldoende %1$s voor gaskosten</string>
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
+    <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
+    <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_error_small_swap_amount">Het ruilbedrag is te klein. Verhoog het bedrag om te kunnen ruilen.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ongeldige code</string>

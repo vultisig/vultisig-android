@@ -338,7 +338,7 @@
     <string name="create_folder">Stvori mapu</string>
     <string name="keygen_password_title">LOZINKA</string>
     <string name="password_should_not_be_empty">Lozinka ne smije biti prazna</string>
-    <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
+    <string name="signing_error_insufficient_funds">Nema dovoljno %1$s za pokrivanje naknada za gas.\n Molimo uplatite novčanik s %1$s.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
@@ -397,8 +397,10 @@
     <string name="scan_qr_code_error_button">Nazad</string>
     <string name="form_token_selection_balance">Stanje: %s</string>
     <string name="form_token_selection_asset">Sredstvo</string>
-    <string name="insufficient_native_token">Nedovoljno %1$s</string>
+    <string name="insufficient_native_token">Nedovoljno %1$s za naknade za gas</string>
     <string name="swap_error_amount_too_low">Iznos zamjene je prenizak</string>
+    <string name="swap_error_insufficient_balance_and_fees">Nedovoljno %1$s salda za zamjenu i naknade za gas. Dopunite %1$s ili smanjite iznos zamjene</string>
+    <string name="swap_error_insufficient_source_token">Nedovoljno %1$s salda za zamjenu</string>
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
     <string name="swap_error_small_swap_amount">Iznos zamjene premali. Povećajte iznos kako biste mogli zamijeniti</string>
     <string name="keygen_verify_server_backup_invalid_code">Neispravan kod</string>

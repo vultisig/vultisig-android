@@ -581,7 +581,7 @@
     <string name="password_should_not_be_empty">密码不应为空</string>
     
     <!-- Signing Errors -->
-    <string name="signing_error_insufficient_funds">没有足够的燃料来支付交易费用。\n请为钱包充值。</string>
+    <string name="signing_error_insufficient_funds">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值 %1$s。</string>
     <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的金库份额。</string>
     
     <!-- Verify Transaction -->
@@ -700,10 +700,12 @@
     <string name="form_token_selection_asset">资产</string>
     
     <!-- Insufficient Native Token -->
-    <string name="insufficient_native_token">%1$s 不足</string>
+    <string name="insufficient_native_token">%1$s 不足以支付 Gas 费用</string>
     
     <!-- Swap Errors -->
     <string name="swap_error_amount_too_low">交换金额太低</string>
+    <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
+    <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_small_swap_amount">交换金额太小。请增加金额以进行交换</string>
     

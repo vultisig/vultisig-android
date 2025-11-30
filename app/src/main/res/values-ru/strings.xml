@@ -349,7 +349,7 @@
     <string name="create_folder">Создать папку</string>
     <string name="keygen_password_title">ПАРОЛЬ</string>
     <string name="password_should_not_be_empty">Пароль не должен быть пустым</string>
-    <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию.\n Пожалуйста, пополните кошелек.</string>
+    <string name="signing_error_insufficient_funds">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек %1$s.</string>
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрый знак</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
@@ -408,8 +408,10 @@
     <string name="scan_qr_code_error_button">Назад</string>
     <string name="form_token_selection_balance">Баланс: %s</string>
     <string name="form_token_selection_asset">Объект</string>
-    <string name="insufficient_native_token">Недостаточно %1$s</string>
+    <string name="insufficient_native_token">Недостаточно %1$s для комиссии за газ</string>
     <string name="swap_error_amount_too_low">Сумма обмена слишком мала</string>
+    <string name="swap_error_insufficient_balance_and_fees">Недостаточный баланс %1$s для обмена и комиссии за газ. Пополните %1$s или уменьшите сумму обмена</string>
+    <string name="swap_error_insufficient_source_token">Недостаточный баланс %1$s для обмена</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_small_swap_amount">Сумма обмена слишком мала. Пожалуйста, увеличьте сумму, чтобы иметь возможность обмена</string>
     <string name="keygen_verify_server_backup_invalid_code">Неверный код</string>

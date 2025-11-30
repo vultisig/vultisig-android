@@ -338,7 +338,7 @@
     <string name="create_folder">Crear carpeta</string>
     <string name="keygen_password_title">CONTRASEÑA</string>
     <string name="password_should_not_be_empty">La contraseña no debe estar vacía</string>
-    <string name="signing_error_insufficient_funds">No hay suficiente gasolina para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
+    <string name="signing_error_insufficient_funds">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera con %1$s.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Señal rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
@@ -397,8 +397,10 @@
     <string name="scan_qr_code_error_button">Atrás</string>
     <string name="form_token_selection_balance">Monto: %s</string>
     <string name="form_token_selection_asset">Activo</string>
-    <string name="insufficient_native_token">%1$s insuficientes</string>
+    <string name="insufficient_native_token">No hay suficiente %1$s para las comisiones de gas</string>
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
+    <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para el intercambio y las comisiones de gas. Recargue %1$s o reduzca el monto del intercambio</string>
+    <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para intercambiar</string>
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_small_swap_amount">El monto del intercambio es demasiado pequeño. Por favor, aumente el monto para poder intercambiar.</string>
     <string name="keygen_verify_server_backup_invalid_code">Código inválido</string>

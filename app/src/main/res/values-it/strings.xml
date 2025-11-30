@@ -338,7 +338,7 @@
     <string name="create_folder">Crea cartella</string>
     <string name="keygen_password_title">PASSWORD</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
-    <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
+    <string name="signing_error_insufficient_funds">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio con %1$s.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
@@ -397,8 +397,10 @@
     <string name="scan_qr_code_error_button">Indietro</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Risorsa</string>
-    <string name="insufficient_native_token">%1$s insufficienti</string>
+    <string name="insufficient_native_token">%1$s insufficienti per le commissioni del gas</string>
     <string name="swap_error_amount_too_low">Importo dello swap troppo basso</string>
+    <string name="swap_error_insufficient_balance_and_fees">Saldo %1$s insufficiente per lo swap e le commissioni del gas. Ricarica %1$s o riduci l\'importo dello swap</string>
+    <string name="swap_error_insufficient_source_token">Saldo %1$s insufficiente per lo scambio</string>
     <string name="swap_error_time_out">La richiesta di scambio è scaduta. Riprova.</string>
     <string name="swap_error_small_swap_amount">Importo dello swap troppo piccolo. Aumenta l\'importo per poter effettuare lo swap.</string>
     <string name="keygen_verify_server_backup_invalid_code">Codice non valido</string>

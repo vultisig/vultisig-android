@@ -338,7 +338,7 @@
     <string name="create_folder">Ordner erstellen</string>
     <string name="keygen_password_title">PASSWORT</string>
     <string name="password_should_not_be_empty">Das Passwort darf nicht leer sein</string>
-    <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
+    <string name="signing_error_insufficient_funds">Nicht genügend %1$s für Gasgebühren. Bitte füllen Sie die Wallet mit %1$s auf.</string>
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
@@ -397,8 +397,10 @@
     <string name="scan_qr_code_error_button">Zurück</string>
     <string name="form_token_selection_balance">Guthaben: %s</string>
     <string name="form_token_selection_asset">Vermögenswert</string>
-    <string name="insufficient_native_token">Nicht genügend %1$s</string>
+    <string name="insufficient_native_token">Nicht genügend %1$s für Gasgebühren</string>
     <string name="swap_error_amount_too_low">Swap-Betrag zu niedrig</string>
+    <string name="swap_error_insufficient_balance_and_fees">Unzureichendes %1$s-Guthaben für den Swap und Gasgebühren. Laden Sie %1$s auf oder reduzieren Sie den Swap-Betrag</string>
+    <string name="swap_error_insufficient_source_token">Unzureichendes %1$s-Guthaben zum Tauschen</string>
     <string name="swap_error_time_out">Die Swap-Anfrage ist abgelaufen. Bitte versuchen Sie es erneut.</string>
     <string name="swap_error_small_swap_amount">Der Swap-Betrag ist zu gering. Bitte erhöhen Sie den Betrag, um tauschen zu können.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ungültiger Code</string>
