@@ -350,7 +350,7 @@
     <string name="create_folder">Создать папку</string>
     <string name="keygen_password_title">ПАРОЛЬ</string>
     <string name="password_should_not_be_empty">Пароль не должен быть пустым</string>
-    <string name="signing_error_insufficient_funds">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек %1$s.</string>
+    <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию.\n Пожалуйста, пополните кошелек.</string>
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрый знак</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>

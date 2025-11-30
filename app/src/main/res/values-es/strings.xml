@@ -339,7 +339,7 @@
     <string name="create_folder">Crear carpeta</string>
     <string name="keygen_password_title">CONTRASEÑA</string>
     <string name="password_should_not_be_empty">La contraseña no debe estar vacía</string>
-    <string name="signing_error_insufficient_funds">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera con %1$s.</string>
+    <string name="signing_error_insufficient_funds">No hay suficiente gasolina para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Señal rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>

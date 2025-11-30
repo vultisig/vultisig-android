@@ -402,7 +402,7 @@
     <string name="create_folder">Create Folder</string>
     <string name="keygen_password_title">PASSWORD</string>
     <string name="password_should_not_be_empty">Password should not be empty</string>
-    <string name="signing_error_insufficient_funds">Not enough %1$s to cover gas fees. Please fund the wallet with %1$s.</string>
+    <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>

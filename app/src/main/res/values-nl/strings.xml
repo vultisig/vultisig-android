@@ -350,7 +350,7 @@
     <string name="create_folder">Map maken</string>
     <string name="keygen_password_title">WACHTWOORD</string>
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
-    <string name="signing_error_insufficient_funds">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de portemonnee aan met %1$s.</string>
+    <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de portemonnee.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>

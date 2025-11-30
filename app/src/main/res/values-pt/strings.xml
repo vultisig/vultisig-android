@@ -339,7 +339,7 @@
     <string name="create_folder">Criar pasta</string>
     <string name="keygen_password_title">Proteja o seu cofre</string>
     <string name="password_should_not_be_empty">A palavra-passe não deve estar vazia</string>
-    <string name="signing_error_insufficient_funds">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira com %1$s.</string>
+    <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>

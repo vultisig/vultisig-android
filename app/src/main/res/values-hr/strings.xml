@@ -339,7 +339,7 @@
     <string name="create_folder">Stvori mapu</string>
     <string name="keygen_password_title">LOZINKA</string>
     <string name="password_should_not_be_empty">Lozinka ne smije biti prazna</string>
-    <string name="signing_error_insufficient_funds">Nema dovoljno %1$s za pokrivanje naknada za gas.\n Molimo uplatite novčanik s %1$s.</string>
+    <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>

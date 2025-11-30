@@ -339,7 +339,7 @@
     <string name="create_folder">Ordner erstellen</string>
     <string name="keygen_password_title">PASSWORT</string>
     <string name="password_should_not_be_empty">Das Passwort darf nicht leer sein</string>
-    <string name="signing_error_insufficient_funds">Nicht genügend %1$s für Gasgebühren. Bitte füllen Sie die Wallet mit %1$s auf.</string>
+    <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>

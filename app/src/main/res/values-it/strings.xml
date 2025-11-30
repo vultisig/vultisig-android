@@ -339,7 +339,7 @@
     <string name="create_folder">Crea cartella</string>
     <string name="keygen_password_title">PASSWORD</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
-    <string name="signing_error_insufficient_funds">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio con %1$s.</string>
+    <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
