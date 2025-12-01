@@ -83,6 +83,7 @@
     <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
     <string name="choose_tokens">Tokens wählen</string>
     <string name="send_screen_title">Senden</string>
+    <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Senden</string>
     <string name="send_from_address">Von</string>
     <string name="send_to_address">Zu</string>

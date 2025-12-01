@@ -97,6 +97,7 @@
     <string name="insufficient_utxos_error">No hay suficientes UTXOs disponibles para cubrir el monto seleccionado. Por favor, agregue más fondos o reduzca el monto que está enviando</string>
     <string name="choose_tokens">Elegir Tokens</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">A</string>

@@ -95,6 +95,7 @@
     <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="choose_tokens">Kies Tokens</string>
     <string name="send_screen_title">Sturen</string>
+    <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Sturen</string>
     <string name="send_from_address">Van</string>
     <string name="send_to_address">Aan</string>

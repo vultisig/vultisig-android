@@ -203,7 +203,10 @@ private fun SendFormScreen(
     }
 
     V2Scaffold(
-        title = stringResource(R.string.send_screen_title),
+        title = when (state.type) {
+            SendFormType.Bond -> stringResource(R.string.bond_screen_title)
+            else -> stringResource(R.string.send_screen_title)
+        },
         onBackClick = onBackClick,
         bottomBar = {
             VsButton(

@@ -131,6 +131,7 @@
     
     <!-- Send Screen -->
     <string name="send_screen_title">发送</string>
+    <string name="bond_screen_title">绑定</string>
     <string name="send_from_address">从</string>
     <string name="send_to_address">发送至</string>
     <string name="send_to_address_hint">在此输入地址</string>

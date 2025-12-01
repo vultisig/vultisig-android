@@ -95,6 +95,7 @@
     <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="choose_tokens">Выберите токены</string>
     <string name="send_screen_title">Отправить</string>
+    <string name="bond_screen_title">Привязать</string>
     <string name="transaction_type_button_send">Отправить</string>
     <string name="send_from_address">От</string>
     <string name="send_to_address">Кому</string>

@@ -82,6 +82,7 @@
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
