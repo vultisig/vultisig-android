@@ -72,7 +72,11 @@
 -keep interface okhttp3.** { *; }
 
 # Umbrella protection
+-keep class org.web3j.** { *; }
 
 # Sometimes the previous rule is not enough and some classes are leaked.
 # Keep classes that extend TypeReference.
+-keep class * extends org.web3j.abi.TypeReference
 
+# Keep Web3j data types. Sometimes the previous rule is not enough and data types are leaked.
+-keep class org.web3j.abi.datatypes.** { *; }
