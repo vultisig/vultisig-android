@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +39,7 @@ import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -116,25 +115,60 @@ internal fun VerifySendScreen(
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            if (hasToolbar) {
-                VsTopAppBar(
-                    title = stringResource(R.string.verify_send_send_overview),
-                    onBackClick = onBackClick,
-                )
+    V2Scaffold(
+        title = stringResource(R.string.verify_send_send_overview).takeIf { hasToolbar },
+        onBackClick = onBackClick.takeIf { hasToolbar },
+        bottomBar = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 24.dp,
+                        vertical = 12.dp
+                    )
+            ) {
+                if (state.showScanningWarning &&
+                    state.txScanStatus is TransactionScanStatus.Scanned
+                ) {
+                    SecurityScannerBottomSheet(
+                        securityScannerModel = state.txScanStatus.result,
+                        onContinueAnyway = onConfirmScanning,
+                        onDismissRequest = onDismissScanning,
+                    )
+                }
+                if (state.hasFastSign) {
+                    Text(
+                        text = stringResource(R.string.verify_deposit_hold_paired),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.colors.text.extraLight,
+                        textAlign = TextAlign.Center,
+                    )
+                    VsHoldableButton(
+                        label = stringResource(R.string.verify_swap_sign_button),
+                        onLongClick = onConfirm,
+                        onClick = onFastSignClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled
+                    VsButton(
+                        label = confirmTitle,
+                        state = buttonState,
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
-            .fillMaxSize(),
-        content = { contentPadding ->
+        content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(contentPadding)
-                    .padding(all = 16.dp)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
@@ -283,51 +317,6 @@ internal fun VerifySendScreen(
                 }
             }
         },
-        bottomBar = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp
-                    )
-            ) {
-                if (state.showScanningWarning &&
-                    state.txScanStatus is TransactionScanStatus.Scanned) {
-                    SecurityScannerBottomSheet(
-                        securityScannerModel = state.txScanStatus.result,
-                        onContinueAnyway = onConfirmScanning,
-                        onDismissRequest = onDismissScanning,
-                    )
-                }
-                if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.extraLight,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
-                        label = stringResource(R.string.verify_swap_sign_button),
-                        onLongClick = onConfirm,
-                        onClick = onFastSignClick,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
-                        VsButtonState.Disabled
-                    else VsButtonState.Enabled
-                    VsButton(
-                        label = confirmTitle,
-                        state = buttonState,
-                        onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
     )
 }
 

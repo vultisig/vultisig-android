@@ -119,6 +119,7 @@
     <string name="send_error_no_address">Адрес недействителен</string>
     <string name="send_error_no_amount">Сумма должна быть положительным числом</string>
     <string name="send_error_insufficient_balance">Недостаточно средств</string>
+    <string name="send_error_insufficient_native_balance_with_fees">Недостаточный баланс %1$s</string>
     <string name="settings_screen_language">Язык</string>
     <string name="settings_screen_currency">Валюта</string>
     <string name="settings_screen_default_chains">Сети по умолчанию</string>
@@ -408,8 +409,11 @@
     <string name="scan_qr_code_error_button">Назад</string>
     <string name="form_token_selection_balance">Баланс: %s</string>
     <string name="form_token_selection_asset">Объект</string>
-    <string name="insufficient_native_token">Недостаточно %1$s</string>
+    <string name="insufficient_native_token">Недостаточно %1$s для комиссии за газ</string>
     <string name="swap_error_amount_too_low">Сумма обмена слишком мала</string>
+    <string name="swap_error_insufficient_balance_and_fees">Недостаточный баланс %1$s для обмена и комиссии за газ. Пополните %1$s или уменьшите сумму обмена</string>
+    <string name="swap_error_insufficient_source_token">Недостаточный баланс %1$s для обмена</string>
+    <string name="swap_error_insufficient_gas_fees">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек.</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_small_swap_amount">Сумма обмена слишком мала. Пожалуйста, увеличьте сумму, чтобы иметь возможность обмена</string>
     <string name="keygen_verify_server_backup_invalid_code">Неверный код</string>

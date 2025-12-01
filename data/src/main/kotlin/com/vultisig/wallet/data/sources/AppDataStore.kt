@@ -15,7 +15,7 @@ import javax.inject.Inject
 internal val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_pref")
 
 // TODO add interface
-internal class AppDataStore @Inject constructor(@ApplicationContext context: Context) {
+class AppDataStore @Inject constructor(@ApplicationContext context: Context) {
 
     private val dataStore = context.dataStore
 

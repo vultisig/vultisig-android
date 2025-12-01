@@ -119,6 +119,7 @@
     <string name="send_error_no_address">Adres is ongeldig</string>
     <string name="send_error_no_amount">Het bedrag moet een positief getal zijn</string>
     <string name="send_error_insufficient_balance">Onvoldoende saldo</string>
+    <string name="send_error_insufficient_native_balance_with_fees">Onvoldoende %1$s saldo</string>
     <string name="settings_screen_language">Taal</string>
     <string name="settings_screen_currency">Valuta</string>
     <string name="settings_screen_default_chains">Standaard kettingen</string>
@@ -408,8 +409,11 @@
     <string name="scan_qr_code_error_button">Rug</string>
     <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Bezit</string>
-    <string name="insufficient_native_token">Onvoldoende %1$s</string>
+    <string name="insufficient_native_token">Onvoldoende %1$s voor gaskosten</string>
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
+    <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
+    <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
+    <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de portemonnee aan.</string>
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_error_small_swap_amount">Het ruilbedrag is te klein. Verhoog het bedrag om te kunnen ruilen.</string>
     <string name="keygen_verify_server_backup_invalid_code">Ongeldige code</string>

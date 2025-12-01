@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,8 +25,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateUiModel
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
@@ -57,18 +55,12 @@ internal fun CheckForUpdateScreen(
     onUpdateClick: () -> Unit = {},
     onClickSecret: () -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.check_updates_title),
-                iconLeft = com.vultisig.wallet.R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-            )
-        }
+    V2Scaffold(
+        onBackClick = onBackClick,
+        title = stringResource(R.string.check_updates_title),
     ) {
         Column(
             modifier = Modifier
-                .padding(it)
                 .fillMaxSize()
                 .shadeCircle(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -101,8 +93,8 @@ internal fun CheckForUpdateScreen(
 
             AppVersionText(
                 modifier = Modifier
-                   .padding(top = 12.dp , bottom = 24.dp)
-                     .clickable(onClick =onClickSecret)
+                    .padding(top = 12.dp, bottom = 24.dp)
+                    .clickable(onClick = onClickSecret)
             )
 
 
@@ -141,11 +133,11 @@ internal class CheckForUpdatePreviewParameterProvider :
 }
 
 
-@Preview()
+@Preview
 @Composable
 private fun CheckForUpdateScreenPreview(
     @PreviewParameter(CheckForUpdatePreviewParameterProvider::class)
-    model: CheckForUpdateUiModel
+    model: CheckForUpdateUiModel,
 ) {
     CheckForUpdateScreen(model)
 }
