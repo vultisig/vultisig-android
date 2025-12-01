@@ -94,7 +94,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                     password = null
                 ),
                 opts = NavigationOptions(
-                    popUpToRoute = Route.Onboarding.VaultBackup::class,
+                    popUpToRoute = Route.VaultInfo.Email::class,
                     inclusive = true,
                 )
             )
