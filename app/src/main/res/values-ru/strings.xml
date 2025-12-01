@@ -119,6 +119,7 @@
     <string name="send_error_no_gas_fee">Нет платы за газ</string>
     <string name="send_error_no_address">Адрес недействителен</string>
     <string name="send_error_no_amount">Сумма должна быть положительным числом</string>
+    <string name="send_error_invalid_operator_fee">Комиссия оператора должна быть действительным числом от 0 до 10000 базисных пунктов</string>
     <string name="send_error_insufficient_balance">Недостаточно средств</string>
     <string name="send_error_insufficient_native_balance_with_fees">Недостаточный баланс %1$s</string>
     <string name="settings_screen_language">Язык</string>

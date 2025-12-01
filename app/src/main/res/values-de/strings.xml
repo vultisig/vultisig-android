@@ -100,6 +100,7 @@
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Fehler</string>
     <string name="send_error_no_amount">Die Menge muss eine positive Zahl sein</string>
+    <string name="send_error_invalid_operator_fee">Die Betreibergebühr muss eine gültige Zahl zwischen 0 und 10000 Basispunkten sein</string>
     <string name="settings_screen_language">Sprache</string>
     <string name="settings_screen_currency">Währung</string>
     <string name="settings_screen_faq">FAQ</string>

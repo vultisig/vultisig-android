@@ -165,6 +165,7 @@
     <string name="send_error_no_gas_fee">无燃料费</string>
     <string name="send_error_no_address">地址无效</string>
     <string name="send_error_no_amount">金额必须是正数</string>
+    <string name="send_error_invalid_operator_fee">运营商费用必须是0到10000基点之间的有效数字</string>
     <string name="send_error_max_shares">金额不应超过余额</string>
     <string name="send_error_insufficient_balance">资金不足</string>
     <string name="send_error_insufficient_native_balance_with_fees">%1$s 余额不足</string>

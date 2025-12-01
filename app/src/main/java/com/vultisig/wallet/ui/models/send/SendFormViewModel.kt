@@ -23,6 +23,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositMemo.Bond
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
@@ -46,6 +49,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -68,6 +72,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -86,6 +91,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
@@ -216,7 +222,8 @@ internal class SendFormViewModel @Inject constructor(
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
-) : ViewModel() {
+    private val depositTransactionRepository: DepositTransactionRepository,
+    ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
 
@@ -720,7 +727,12 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(errorText = null) }
     }
 
+    // TODO: Adjust
     fun send() {
+        if (uiState.value.type == SendFormType.Bond) {
+            bond()
+            return
+        }
         viewModelScope.launch {
             showLoading()
             try {
@@ -974,6 +986,155 @@ internal class SendFormViewModel @Inject constructor(
                 hideLoading()
             }
         }
+    }
+
+    // TODO: Add Fee Validation
+    fun bond() {
+        viewModelScope.launch {
+            val vaultId = vaultId
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_token)
+                )
+
+            val selectedAccount = selectedAccount
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_token)
+                )
+
+            val chain = selectedAccount.token.chain
+
+            val gasFee = gasFee.value
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_gas_fee)
+                )
+
+            if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_gas_fee)
+                )
+            }
+
+            val dstAddress = try {
+                addressParserRepository.resolveName(
+                    addressFieldState.text.toString(),
+                    chain,
+                )
+            } catch (e: Exception) {
+                Timber.e(e)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.failed_to_resolve_address)
+                )
+            }
+
+            val providerAddress =
+                if (providerBondFieldState.text.toString().isNotEmpty()) {
+                    try {
+                        addressParserRepository.resolveName(
+                            providerBondFieldState.text.toString(),
+                            chain,
+                        )
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.failed_to_resolve_address)
+                        )
+                    }
+                } else {
+                    ""
+                }
+
+            val feeBondOperator = operatorFeesBondFieldState.text.toString()
+
+            // Validate operator fee is a valid integer (basis points)
+            val operatorFeeValue: Int? = if (feeBondOperator.isNotEmpty()) {
+                feeBondOperator.toIntOrNull()?.takeIf { it in 0..10000 } // Basis points: 0-10000 (0-100%)
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_invalid_operator_fee)
+                    )
+            } else {
+                null
+            }
+
+            if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+            }
+
+            val tokenAmount = tokenAmountFieldState.text
+                .toString()
+                .toBigDecimalOrNull()
+
+            if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_amount)
+                )
+            }
+
+            val selectedToken = selectedAccount.token
+            val srcAddress = selectedToken.address
+            val tokenAmountInt =
+                tokenAmount
+                    .movePointRight(selectedToken.decimal)
+                    .toBigInteger()
+
+            val depositMemo = Bond.Thor(
+                nodeAddress = dstAddress,
+                providerAddress = providerAddress.takeIf { it.isNotEmpty() },
+                operatorFee = operatorFeeValue,
+            )
+
+
+            val specific = withContext(Dispatchers.IO){
+                blockChainSpecificRepository
+                    .getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = true,
+                    )
+            }
+
+            val depositTx = DepositTransaction(
+                id = UUID.randomUUID().toString(),
+                vaultId = vaultId,
+                srcToken = selectedToken,
+                srcAddress = srcAddress,
+                dstAddress = dstAddress,
+                memo = depositMemo.toString(),
+                srcTokenValue = TokenValue(
+                    value = tokenAmountInt,
+                    token = selectedToken,
+                ),
+                estimatedFees = gasFee,
+                estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                blockChainSpecific = specific.blockChainSpecific,
+            )
+
+            depositTransactionRepository.addTransaction(depositTx)
+
+            navigator.route(
+                Route.VerifyDeposit(
+                    transactionId = depositTx.id,
+                    vaultId = vaultId,
+                )
+            )
+        }
+    }
+
+    private suspend fun getFeesFiatValue(
+        gasFee: TokenValue,
+        selectedToken: Coin,
+    ): EstimatedGasFee {
+        return gasFeeToEstimatedFee(
+            GasFeeParams(BigInteger.valueOf(1),
+                gasFee = gasFee,
+                selectedToken = selectedToken,
+            )
+        )
     }
 
     @kotlin.ExperimentalStdlibApi

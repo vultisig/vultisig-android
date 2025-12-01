@@ -98,6 +98,7 @@
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Errore</string>
     <string name="send_error_no_amount">a quantità deve essere un numero positivo.</string>
+    <string name="send_error_invalid_operator_fee">La commissione dell\'operatore deve essere un numero valido tra 0 e 10000 punti base</string>
     <string name="settings_screen_language">Lingua</string>
     <string name="settings_screen_currency">Valuta</string>
     <string name="settings_screen_faq">FAQ</string>
