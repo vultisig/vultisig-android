@@ -12,8 +12,8 @@ internal fun V2Loading(
     modifier: Modifier = Modifier,
 ){
     CircularProgressIndicator(
-        color = Theme.colors.alerts.success,
-        trackColor = Theme.colors.borders.normal,
+        color = Theme.v2.colors.alerts.success,
+        trackColor = Theme.v2.colors.border.normal,
         modifier = modifier
     )
 }

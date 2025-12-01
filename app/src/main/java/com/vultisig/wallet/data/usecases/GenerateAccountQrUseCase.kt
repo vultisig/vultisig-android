@@ -12,8 +12,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
-import com.vultisig.wallet.ui.theme.NeutralsColors
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -80,7 +81,7 @@ internal class GenerateAccountQrUseCaseImpl @Inject constructor(
         val qrBitmap = withContext(Dispatchers.IO) {
             generateQrBitmap(
                 address,
-                NeutralsColors.Default.n50,
+                colors.neutrals.n50,
                 Color.Transparent,
                 logo
             )

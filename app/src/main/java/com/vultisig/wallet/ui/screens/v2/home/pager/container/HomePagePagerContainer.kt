@@ -39,7 +39,7 @@ internal fun HomePagePagerContainer(
                 icon = R.drawable.glass,
                 size = VsCircleButtonSize.Custom(size = 40.dp),
                 type = VsCircleButtonType.Custom(
-                    color = Theme.colors.neutrals.n100.copy(alpha = 0.2f)
+                    color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f)
                 ),
                 modifier = Modifier
                     .align(alignment = Alignment.TopEnd)

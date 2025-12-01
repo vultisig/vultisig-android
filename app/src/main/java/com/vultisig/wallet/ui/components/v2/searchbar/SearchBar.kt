@@ -75,7 +75,7 @@ internal fun SearchBar(
             type = ContainerType.SECONDARY,
             borderType = if (isFocusedState)
                 ContainerBorderType.Bordered(
-                    color = Theme.colors.borders.normal,
+                    color = Theme.v2.colors.border.normal,
                 )
             else ContainerBorderType.Borderless,
             modifier = Modifier
@@ -87,8 +87,8 @@ internal fun SearchBar(
                 state = state,
                 cursorBrush = Brush.linearGradient(
                     colors = listOf(
-                        Theme.colors.primary.accent4,
-                        Theme.colors.primary.accent4,
+                        Theme.v2.colors.primary.accent4,
+                        Theme.v2.colors.primary.accent4,
                     )
                 ),
                 modifier = Modifier
@@ -105,7 +105,7 @@ internal fun SearchBar(
                 ),
                 lineLimits = TextFieldLineLimits.SingleLine,
                 textStyle = Theme.brockmann.supplementary.footnote.copy(
-                    color = Theme.colors.text.primary
+                    color = Theme.v2.colors.text.primary
                 ),
                 decorator = { input ->
                     Row(
@@ -116,7 +116,7 @@ internal fun SearchBar(
                         UiIcon(
                             drawableResId = R.drawable.ic_search,
                             size = 16.dp,
-                            tint = Theme.colors.text.primary,
+                            tint = Theme.v2.colors.text.primary,
                         )
                         UiSpacer(
                             8.dp,
@@ -124,7 +124,7 @@ internal fun SearchBar(
                         if (state.text.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.search_bar_search),
-                                color = Theme.colors.text.extraLight,
+                                color = Theme.v2.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
                             UiSpacer(
@@ -141,7 +141,7 @@ internal fun SearchBar(
                             UiIcon(
                                 drawableResId = R.drawable.close_circle,
                                 size = 18.dp,
-                                tint = Theme.colors.neutrals.n300,
+                                tint = Theme.v2.colors.neutrals.n300,
                                 onClick = {
                                     state.clearText()
                                 }
@@ -163,7 +163,7 @@ internal fun SearchBar(
                     )
                     Text(
                         text = stringResource(R.string.search_bar_cancel),
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                         modifier = Modifier
                             .clickable(

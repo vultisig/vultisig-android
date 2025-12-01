@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.Theme.colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
 internal fun ReshareStartScreen(
@@ -55,7 +55,7 @@ private fun ReshareStartScreen(
     onJoinClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = colors.oxfordBlue800,
+        containerColor = colors.backgrounds.primary,
         content = {
             Column(
                 modifier = Modifier
@@ -72,7 +72,7 @@ private fun ReshareStartScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_caret_left),
                             contentDescription = null,
-                            tint = colors.neutral0,
+                            tint = colors.neutrals.n50,
                         )
                     }
                     Image(
@@ -92,14 +92,14 @@ private fun ReshareStartScreen(
             ) {
                 Text(
                     text = stringResource(id = R.string.reshare_start_screen_title),
-                    color = colors.neutral0,
+                    color = colors.neutrals.n50,
                     style = Theme.montserrat.heading4,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     modifier = Modifier.padding(top = 16.dp),
                     text = stringResource(id = R.string.reshare_start_screen_body),
-                    color = colors.neutral0,
+                    color = colors.neutrals.n50,
                     style = Theme.montserrat.body1,
                     textAlign = TextAlign.Center
                 )
@@ -129,9 +129,9 @@ private fun ReshareStartScreen(
                 /* fast&active vaults are temporarily disabled
                 MultiColorButton(
                     text = stringResource(R.string.reshare_start_start_with_vultisigner_button),
-                    backgroundColor = colors.oxfordBlue800,
+                    backgroundColor = colors.backgrounds.primary,
                     textColor = colors.turquoise800,
-                    iconColor = colors.oxfordBlue800,
+                    iconColor = colors.backgrounds.primary,
                     borderSize = 1.dp,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier

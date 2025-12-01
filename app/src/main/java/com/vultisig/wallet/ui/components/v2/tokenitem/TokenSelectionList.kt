@@ -188,7 +188,7 @@ private fun GridTitle(title: String) {
     Text(
         text = title,
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.primary,
+        color = Theme.v2.colors.text.primary,
         modifier = Modifier
             .widthIn(max = 74.dp),
         maxLines = 1,
@@ -325,7 +325,7 @@ private fun TokenSelectionListPreview() {
                 Text(
                     "Select tokens to manage",
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.extraLight
+                    color = Theme.v2.colors.text.extraLight
                 )
             }
         },

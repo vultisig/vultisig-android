@@ -21,9 +21,9 @@ internal fun VaultIcon(
         contentDescription = "vault type logo",
         size = size,
         tint = if (isFastVault) {
-            Theme.colors.alerts.warning
+            Theme.v2.colors.alerts.warning
         } else {
-            Theme.colors.alerts.success
+            Theme.v2.colors.alerts.success
         },
     )
 }

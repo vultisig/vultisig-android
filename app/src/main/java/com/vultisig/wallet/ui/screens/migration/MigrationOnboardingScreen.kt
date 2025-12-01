@@ -41,7 +41,7 @@ internal fun MigrationOnboardingScreen(
     val pages = getPages(state.vaultType)
 
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 title = stringResource(R.string.migration_onboarding_upgrade_your_vault),
@@ -89,15 +89,15 @@ private fun getPages(
         text = listOf(
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_1_text_start,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_1_text_emphasized,
-                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary)
+                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary)
             ),
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_1_text_end,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
             ),
         ),
         buttonText = stringResource(R.string.migration_onboarding_upgrade_now),
@@ -108,15 +108,15 @@ private fun getPages(
             text = listOf(
                 PartiallyGradientTextItem(
                     resId = R.string.migration_onboarding_step_3_text_start,
-                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
                 ),
                 PartiallyGradientTextItem(
                     resId = R.string.migration_onboarding_step_3_text_emphasize,
-                    coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                    coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
                 ),
                 PartiallyGradientTextItem(
                     resId = R.string.migration_onboarding_step_3_text_end,
-                    coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                    coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
                 ),
             ),
             buttonText = stringResource(R.string.peer_discovery_action_next_title)
@@ -127,11 +127,11 @@ private fun getPages(
         text = listOf(
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_2_text_start,
-                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
             ),
             PartiallyGradientTextItem(
                 resId = R.string.migration_onboarding_step_2_text_end,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
             ),
         ),
         buttonText = stringResource(R.string.peer_discovery_action_next_title)

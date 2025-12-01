@@ -40,13 +40,13 @@ internal fun ChainLogo(
                         )
                     )
                     .background(
-                        color = Theme.colors.backgrounds.tertiary
+                        color = Theme.v2.colors.backgrounds.tertiary_2
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = name.firstOrNull()?.toString() ?: "",
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.supplementary.caption
                 )
             }

@@ -94,11 +94,11 @@ internal fun AddressBookScreen(
                     Text(
                         text = stringResource(R.string.address_book_edit_mode_done),
                         style = Theme.brockmann.button.medium.medium,
-                        color = Theme.colors.primary.accent4,
+                        color = Theme.v2.colors.primary.accent4,
                         modifier = Modifier
                             .clickOnce(onClick = onToggleEditMode)
                             .background(
-                                color = Theme.colors.backgrounds.secondary,
+                                color = Theme.v2.colors.backgrounds.secondary,
                                 shape = CircleShape
                             )
                             .padding(
@@ -176,7 +176,7 @@ private fun NoAddressView(
         Text(
             text = stringResource(R.string.address_book_empty_title),
             style = Theme.brockmann.button.semibold.large,
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             textAlign = TextAlign.Center
         )
 
@@ -187,7 +187,7 @@ private fun NoAddressView(
         Text(
             text = stringResource(R.string.address_book_empty_description),
             style = Theme.brockmann.button.medium.medium,
-            color = Theme.colors.neutral300,
+            color = Theme.v2.colors.neutrals.n300,
             textAlign = TextAlign.Center
         )
 
@@ -244,14 +244,14 @@ private fun AddressItem(
                 .fillMaxWidth()
                 .clickOnce(onClick = onClick)
                 .background(
-                    color = Theme.colors.backgrounds.secondary,
+                    color = Theme.v2.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(
                         size = 12.dp
                     ),
                 )
                 .border(
                     width = 1.dp,
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(
                         size = 12.dp
                     )
@@ -278,7 +278,7 @@ private fun AddressItem(
                 Text(
                     text = name,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                 )
 
                 UiSpacer(
@@ -287,7 +287,7 @@ private fun AddressItem(
                 Text(
                     text = address,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.colors.text.light,
+                    color = Theme.v2.colors.text.light,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis
                 )

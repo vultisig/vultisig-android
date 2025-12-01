@@ -26,9 +26,9 @@ internal fun PagerCircleIndicator(
     ) {
         repeat(size) { iteration ->
             val color = if (currentIndex == iteration)
-                Theme.colors.turquoise800
+                Theme.v2.colors.backgrounds.teal
             else
-                Theme.colors.oxfordBlue200
+                Theme.v2.colors.border.normal
 
             Box(
                 modifier = Modifier

@@ -139,7 +139,7 @@ internal fun <T> FastSelectionModalContent(
                     )
                     .clip(RoundedCornerShape(24.dp))
                     .background(
-                        color = Theme.colors.backgrounds.tertiary.copy(alpha = 0.5f)
+                        color = Theme.v2.colors.backgrounds.tertiary_2.copy(alpha = 0.5f)
                     )
             ) {
                 val paddingItems = visibleItemCount / 2

@@ -14,8 +14,8 @@ fun DashedProgressIndicator(
     progress: Int = 3,
     totalNumberOfBars: Int = 12
 ) {
-    val activeColor = Theme.colors.alerts.success
-    val inactiveColor = Theme.colors.borders.light
+    val activeColor = Theme.v2.colors.alerts.success
+    val inactiveColor = Theme.v2.colors.border.light
     Canvas(modifier = modifier) {
         val barArea = size.width / totalNumberOfBars
         val barLength = barArea - 8.dp.toPx()

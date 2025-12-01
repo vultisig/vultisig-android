@@ -48,7 +48,7 @@ internal fun SecurityScannerBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.colors.backgrounds.secondary,
+        containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
     ) {
@@ -69,7 +69,7 @@ internal fun SettingsSecurityScannerBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.colors.backgrounds.secondary,
+        containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         dragHandle = null,
     ) {
@@ -114,7 +114,7 @@ fun SecurityScannerBottomSheetContent(
 
         Text(
             text = contentStyle.description,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -127,7 +127,7 @@ fun SecurityScannerBottomSheetContent(
             ) {
                 Text(
                     text = stringResource(R.string.security_scanner_powered_by),
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                     style = Theme.brockmann.body.s.medium,
                     textAlign = TextAlign.Center,
                 )
@@ -175,9 +175,9 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
 
     val description = description ?: stringResource(R.string.security_scanner_default_description)
     val (color, icon) = if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
-        Pair(Theme.colors.alerts.error, Icons.Outlined.Warning)
+        Pair(Theme.v2.colors.alerts.error, Icons.Outlined.Warning)
     } else {
-        Pair(Theme.colors.alerts.warning, Icons.Outlined.Info)
+        Pair(Theme.v2.colors.alerts.warning, Icons.Outlined.Info)
     }
 
     return SecurityScannerBottomSheetStyle(
@@ -192,7 +192,7 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
 private fun buildSettingsSecurityScannerBottomSheeStyle() = SecurityScannerBottomSheetStyle(
     title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
     description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
-    imageColor = Theme.colors.alerts.warning,
+    imageColor = Theme.v2.colors.alerts.warning,
     image = Icons.Outlined.Info,
 )
 
