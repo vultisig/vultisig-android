@@ -136,8 +136,6 @@ dependencies {
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
     implementation(libs.bcprov.jdk15on)
-    implementation(libs.ethers.abi)
-    implementation(libs.ethers.bom)
 
     // test
     testImplementation(libs.junit)
