@@ -91,7 +91,6 @@ internal fun HomePage(
     val isWallet = state.cryptoConnectionType == CryptoConnectionType.Wallet
 
     val context = LocalContext.current
-
     ScaffoldWithExpandableTopBar(
         snackbarState = snackbarState,
         isRefreshing = state.isRefreshing,

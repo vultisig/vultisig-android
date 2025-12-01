@@ -9,6 +9,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,36 +38,37 @@ internal fun ScaffoldWithExpandableTopBar(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
 ) {
-
-    PullToRefreshBox(
-        onRefresh = onRefresh,
-        isRefreshing = isRefreshing,
-    ) {
-        Scaffold(
-            modifier = modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                if (topBarCollapsedContent != null) {
-                    VsExpandableTopBar(
-                        expandedContent = topBarExpandedContent,
-                        collapsedContent = topBarCollapsedContent,
-                        scrollBehavior = scrollBehavior,
-                        backgroundColor = backgroundColor,
-                    )
-                } else {
-                    Box(
-                        content = topBarExpandedContent
-                    )
-                }
-            },
-            bottomBar = bottomBarContent,
-            content = content
-        )
-        VsSnackBar(
-            snackbarState = snackbarState,
-            modifier = Modifier
-                .align(alignment = Alignment.BottomCenter)
-        )
+    key(isRefreshing) {
+        PullToRefreshBox(
+            onRefresh = onRefresh,
+            isRefreshing = isRefreshing,
+        ) {
+            Scaffold(
+                modifier = modifier
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    if (topBarCollapsedContent != null) {
+                        VsExpandableTopBar(
+                            expandedContent = topBarExpandedContent,
+                            collapsedContent = topBarCollapsedContent,
+                            scrollBehavior = scrollBehavior,
+                            backgroundColor = backgroundColor,
+                        )
+                    } else {
+                        Box(
+                            content = topBarExpandedContent
+                        )
+                    }
+                },
+                bottomBar = bottomBarContent,
+                content = content
+            )
+            VsSnackBar(
+                snackbarState = snackbarState,
+                modifier = Modifier
+                    .align(alignment = Alignment.BottomCenter)
+            )
+        }
     }
 }
 

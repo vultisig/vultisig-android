@@ -244,7 +244,16 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun refreshData() {
         val vaultId = vaultId ?: return
         updateRefreshing(true)
-        loadAccounts(vaultId, true)
+        Timber.d("IsRefreshing: TRUE")
+            loadAccounts(vaultId, true)
+
+            loadDeFiBalances(vaultId,true)
+        /*viewModelScope.launch {
+            delay(3000)
+            updateRefreshing(false)
+            delay(2000)
+            updateRefreshing(false)
+        } */
     }
 
     fun send() {
