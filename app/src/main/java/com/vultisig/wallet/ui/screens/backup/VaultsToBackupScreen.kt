@@ -68,7 +68,7 @@ internal fun VaultsToBackupScreen(
     V2Scaffold(
         onBackClick = onBackClick,
         modifier = Modifier
-            .background(color = Theme.colors.backgrounds.primary),
+            .background(color = Theme.v2.colors.backgrounds.primary),
     ) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize()
@@ -130,7 +130,7 @@ private fun SelectVaultTypeHeader(
         Text(
             text = stringResource(R.string.backup_select_vaults_title),
             style = Theme.brockmann.headings.title1,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
 
         UiSpacer(
@@ -140,7 +140,7 @@ private fun SelectVaultTypeHeader(
         Text(
             text = stringResource(R.string.backup_select_vaults_subtitle),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
         )
 
         UiSpacer(
@@ -187,14 +187,14 @@ private fun BackupVaultContainer(
                 Row {
                     Text(
                         text = title,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                     )
                     UiSpacer(weight = 1f)
                     UiIcon(
                         drawableResId = R.drawable.ic_small_caret_right,
                         size = 16.dp,
-                        tint = Theme.colors.text.extraLight,
+                        tint = Theme.v2.colors.text.extraLight,
                     )
                 }
                 UiSpacer(size = topSpacerHeight)
@@ -291,7 +291,7 @@ private fun RemainedCountText(remainedCount: Int?) {
                 R.string.more,
                 remainedCount
             ),
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -317,7 +317,7 @@ internal fun VaultToBackup(
             Text(
                 text = model.name,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -359,7 +359,7 @@ private fun VaultMetaInfo(model: VaultToBackupUiModel) {
                     model.size
                 ),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
 
         }

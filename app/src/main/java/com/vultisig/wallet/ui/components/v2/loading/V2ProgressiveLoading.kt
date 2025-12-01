@@ -28,9 +28,9 @@ internal fun V2ProgressiveLoading(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
     strokeWidth: Dp = 2.dp,
-    backgroundColor: Color = Theme.colors.borders.normal,
-    progressColor: Color = Theme.colors.alerts.success,
-    iconColor: Color = Theme.colors.alerts.success,
+    backgroundColor: Color = Theme.v2.colors.border.normal,
+    progressColor: Color = Theme.v2.colors.alerts.success,
+    iconColor: Color = Theme.v2.colors.alerts.success,
     @DrawableRes icon: Int = R.drawable.ic_check,
 ) {
     val bounceScale by animateFloatAsState(

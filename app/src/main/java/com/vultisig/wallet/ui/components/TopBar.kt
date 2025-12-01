@@ -63,13 +63,13 @@ internal fun TopBarWithoutNav(
                 text = centerText,
                 style = Theme.montserrat.heading5,
                 fontWeight = FontWeight.Bold,
-                color = Theme.colors.neutral0,
+                color = Theme.v2.colors.neutrals.n50,
                 textAlign = TextAlign.Center,
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.colors.oxfordBlue800,
-            titleContentColor = Theme.colors.neutral0
+            containerColor = Theme.v2.colors.backgrounds.primary,
+            titleContentColor = Theme.v2.colors.neutrals.n50
         ),
         navigationIcon = {
             startIcon?.let {
@@ -81,7 +81,7 @@ internal fun TopBarWithoutNav(
                     Icon(
                         painter = painterResource(id = it),
                         contentDescription = null,
-                        tint = Theme.colors.neutral0,
+                        tint = Theme.v2.colors.neutrals.n50,
                         modifier = Modifier
                             .size(24.dp)
                     )
@@ -96,7 +96,7 @@ internal fun TopBarWithoutNav(
                     Icon(
                         painter = painterResource(id = endIcon),
                         contentDescription = null,
-                        tint = Theme.colors.neutral0,
+                        tint = Theme.v2.colors.neutrals.n50,
                         modifier = Modifier
                             .size(24.dp),
                     )

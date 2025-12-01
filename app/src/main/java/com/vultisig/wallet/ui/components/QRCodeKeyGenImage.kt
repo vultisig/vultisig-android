@@ -62,7 +62,7 @@ internal fun QRCodeKeyGenImage(
         }
     ) {
         Surface(
-            color = Theme.colors.neutral0,
+            color = Theme.v2.colors.neutrals.n50,
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .padding(innerPadding),

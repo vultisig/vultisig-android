@@ -48,7 +48,7 @@ internal fun AccountList(
 
                     if (index != accounts.lastIndex) {
                         UiHorizontalDivider(
-                            color = Theme.colors.borders.light,
+                            color = Theme.v2.colors.border.light,
                         )
                     }
                 }

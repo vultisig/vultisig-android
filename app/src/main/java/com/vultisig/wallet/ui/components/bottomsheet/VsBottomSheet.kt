@@ -33,7 +33,7 @@ object VsBottomSheet {
                     height = 6.dp,
                 )
                 .background(
-                    color = Theme.colors.neutrals.n600,
+                    color = Theme.v2.colors.neutrals.n600,
                     shape = RoundedCornerShape(16.dp)
                 )
         )
@@ -53,11 +53,11 @@ fun VsModalBottomSheet(
 
     ModalBottomSheet(
         sheetState = sheetState,
-        scrimColor = Theme.colors.neutrals.n900.copy(alpha = 0.8f),
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.8f),
         dragHandle = {
             VsBottomSheet.DragHandle()
         },
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         modifier = Modifier
             .statusBarsPadding(),
         onDismissRequest = {

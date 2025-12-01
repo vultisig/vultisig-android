@@ -50,7 +50,7 @@ internal fun TierDiscountBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.colors.backgrounds.secondary,
+        containerColor = Theme.v2.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
@@ -72,7 +72,7 @@ internal fun TierDiscountBottomSheetContent(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Theme.colors.backgrounds.secondary)
+            .background(Theme.v2.colors.backgrounds.secondary)
             .drawBehind {
                 // Draw dots with 0.05 alpha, starting on 80% of the height
                 // we gradually make them dissapear to match the bottom bar color
@@ -150,7 +150,7 @@ internal fun TierDiscountBottomSheetContent(
                     } else {
                         pushStyle(
                             Theme.brockmann.headings.title1.copy(
-                                color = tierStyle.tierColor ?: Theme.colors.text.primary
+                                color = tierStyle.tierColor ?: Theme.v2.colors.text.primary
                             ).toSpanStyle()
                         )
                     }
@@ -160,7 +160,7 @@ internal fun TierDiscountBottomSheetContent(
                 },
                 style = Theme.brockmann.headings.title1,
                 textAlign = TextAlign.Center,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
 
             UiSpacer(32.dp)
@@ -178,7 +178,7 @@ internal fun TierDiscountBottomSheetContent(
                 },
                 style = Theme.brockmann.body.s.regular,
                 textAlign = TextAlign.Center,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
                     .fillMaxWidth()
@@ -227,7 +227,7 @@ private fun TierTitleWithBackgroundImage(tierStyle: BottomSheetTierStyle) {
             append(" " + tierStyle.titlePart3)
         },
         style = Theme.brockmann.headings.title1,
-        color = Theme.colors.text.primary,
+        color = Theme.v2.colors.text.primary,
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth()
     )

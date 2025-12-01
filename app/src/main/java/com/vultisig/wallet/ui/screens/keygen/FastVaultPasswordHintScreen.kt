@@ -58,7 +58,7 @@ private fun FastVaultPasswordHintScreen(
     onBackClick: () -> Unit,
 ) {
     Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick
@@ -107,13 +107,13 @@ private fun FastVaultPasswordHintScreen(
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_title),
                 style = Theme.brockmann.headings.largeTitle,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
             UiSpacer(16.dp)
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.colors.text.extraLight
+                color = Theme.v2.colors.text.extraLight
             )
             VsTextInputField(
                 textFieldState = textFieldState,

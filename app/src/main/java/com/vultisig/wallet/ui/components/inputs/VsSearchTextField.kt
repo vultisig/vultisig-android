@@ -30,7 +30,7 @@ internal fun VsSearchTextField(
                 all = 16.dp,
             )
             .background(
-                color = Theme.colors.fills.tertiary,
+                color = Theme.v2.colors.fills.primary,
                 shape = RoundedCornerShape(10.dp)
             )
             .padding(
@@ -40,13 +40,13 @@ internal fun VsSearchTextField(
         UiIcon(
             drawableResId = R.drawable.ic_search,
             size = 22.dp,
-            tint = Theme.colors.text.extraLight,
+            tint = Theme.v2.colors.text.extraLight,
         )
 
         BasicFormTextField(
             textFieldState = fieldState,
             textStyle = Theme.brockmann.body.m.medium,
-            hintColor = Theme.colors.text.extraLight,
+            hintColor = Theme.v2.colors.text.extraLight,
             hint = stringResource(R.string.token_selection_search_hint),
             keyboardType = KeyboardType.Text,
             onLostFocus = { /* no-op */ },

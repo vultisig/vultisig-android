@@ -131,7 +131,7 @@ private fun TokenDetailsContent(
             Text(
                 text = uiModel.token.name,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
         }
 
@@ -143,7 +143,7 @@ private fun TokenDetailsContent(
             value = uiModel.token.fiatBalance,
             isVisible = uiModel.isBalanceVisible,
             style = Theme.satoshi.price.title1,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
         )
 
         UiSpacer(
@@ -154,7 +154,7 @@ private fun TokenDetailsContent(
             value = uiModel.token.balance,
             isVisible = uiModel.isBalanceVisible,
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.colors.text.extraLight,
+            color = Theme.v2.colors.text.extraLight,
         )
 
         UiSpacer(
@@ -204,7 +204,7 @@ private fun TokenDetailsContent(
         )
 
         TopShineContainer(
-            backgroundColor = Theme.colors.backgrounds.primary
+            backgroundColor = Theme.v2.colors.backgrounds.primary
         ) {
             Column {
                 TokenMeta(
@@ -241,7 +241,7 @@ private fun TokenMeta(
         V2Container {
             Text(
                 text = key,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier
                     .padding(all = 4.dp)
@@ -255,7 +255,7 @@ private fun TokenMeta(
         ) {
             LoadableValue(
                 value = value,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.satoshi.price.bodyS,
                 isVisible = isVisible,
                 modifier = Modifier

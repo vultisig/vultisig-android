@@ -54,7 +54,7 @@ internal fun VsSnackBar(
                 .padding(horizontal = 16.dp),
             type = ContainerType.TERTIARY,
             borderType = ContainerBorderType.Bordered(
-                color = Theme.colors.borders.normal,
+                color = Theme.v2.colors.border.normal,
             ),
             cornerType = CornerType.RoundedCornerShape(
                 size = 24.dp
@@ -78,7 +78,7 @@ internal fun VsSnackBar(
                 Text(
                     text = snackbarState.message,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.colors.neutral0
+                    color = Theme.v2.colors.neutrals.n50
                 )
             }
         }
