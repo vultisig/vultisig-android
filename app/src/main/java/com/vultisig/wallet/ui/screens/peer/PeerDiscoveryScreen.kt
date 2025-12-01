@@ -208,7 +208,7 @@ internal fun PeerDiscoveryScreen(
                         network = state.network,
                         onSwitchModeClick = onSwitchModeClick
                     ),
-                    color = Theme.colors.text.extraLight,
+                    color = Theme.v2.colors.text.extraLight,
                     style = Theme.brockmann.supplementary.caption,
                     textAlign = TextAlign.Center
                 )
