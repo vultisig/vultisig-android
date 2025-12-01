@@ -989,6 +989,9 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     // TODO: Add Fee Validation
+    // TODO: Catch exception
+    // TODO: Validate Address
+    // TODO Show loading
     fun bond() {
         viewModelScope.launch {
             val vaultId = vaultId
