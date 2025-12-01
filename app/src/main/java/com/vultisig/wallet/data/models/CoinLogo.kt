@@ -113,6 +113,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "vhype" -> R.drawable.vhype
         "vkhype" -> R.drawable.vkhype
         "wsthype" -> R.drawable.wsthype
+        "ada" -> R.drawable.cardano
         else -> logoName
     }
 }
