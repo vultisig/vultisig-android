@@ -1009,5 +1009,6 @@
     <string name="bond_amount">Bond Amount</string>
     <string name="bond_amount_hint">Enter amount in %s</string>
     <string name="bond_button_label">Bond</string>
+    <string name="bond_operator_fees_basis_point">Operator-fees (Basis Points)</string>
 
 </resources>

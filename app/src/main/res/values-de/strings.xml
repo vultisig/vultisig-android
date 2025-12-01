@@ -951,4 +951,5 @@
     <string name="bond_amount">Bond-Betrag</string>
     <string name="bond_amount_hint">Betrag in %s eingeben</string>
     <string name="bond_button_label">Bonden</string>
+    <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
 </resources>

@@ -130,10 +130,6 @@ internal data class SendFormUiModel(
     // type
     val type: SendFormType = SendFormType.Send,
 
-    // bond node
-    val nodeAddress: String = "",
-    val isDstNodeAddressComplete: Boolean = false,
-
     // errors
     val errorText: UiText? = null,
     val dstAddressError: UiText? = null,
@@ -227,9 +223,8 @@ internal class SendFormViewModel @Inject constructor(
     val memoFieldState = TextFieldState()
 
     // bond node
-    val bondNodeAddressFieldState = TextFieldState()
     val operatorFeesBondFieldState = TextFieldState()
-    val bondTokenAmountFieldState = TextFieldState()
+    val providerBondFieldState = TextFieldState()
 
     private var vaultId: String? = null
 

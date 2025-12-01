@@ -948,4 +948,5 @@
     <string name="bond_amount">Valor do Bond</string>
     <string name="bond_amount_hint">Insira o valor em %s</string>
     <string name="bond_button_label">Vincular</string>
+    <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
 </resources>

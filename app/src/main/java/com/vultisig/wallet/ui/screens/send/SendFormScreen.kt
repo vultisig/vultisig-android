@@ -134,9 +134,7 @@ internal fun NavGraphBuilder.sendScreen(
             onAssetDragEnd = onNetworkDragEnd,
             onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
-            nodeAddressFieldState = viewModel.bondNodeAddressFieldState,
             operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
-            amountBondFieldState = viewModel.bondTokenAmountFieldState,
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -191,9 +189,7 @@ private fun SendFormScreen(
     onAssetLongPressStarted: (Offset) -> Unit,
 
     // bond fields
-    nodeAddressFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
-    amountBondFieldState: TextFieldState,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -268,7 +264,8 @@ private fun SendFormScreen(
                         onToogleAmountInputType = onToogleAmountInputType,
                         onChoosePercentageAmount = onChoosePercentageAmount,
                         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                        memoFieldState = memoFieldState
+                        memoFieldState = memoFieldState,
+                        operatorFeeFieldState = operatorFeeFieldState,
                     )
                 }
             }
@@ -326,7 +323,8 @@ private fun SendFormContent(
     onToogleAmountInputType: (Boolean) -> Unit,
     onChoosePercentageAmount: (Float) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
-    memoFieldState: TextFieldState
+    memoFieldState: TextFieldState,
+    operatorFeeFieldState: TextFieldState,
 ) {
     // select asset
     if (state.type == SendFormType.Send) {
@@ -372,7 +370,8 @@ private fun SendFormContent(
         onToogleAmountInputType = onToogleAmountInputType,
         onChoosePercentageAmount = onChoosePercentageAmount,
         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-        memoFieldState = memoFieldState
+        memoFieldState = memoFieldState,
+        operatorFeeFieldState = operatorFeeFieldState,
     )
 
     UiSpacer(24.dp)
@@ -407,7 +406,8 @@ private fun FoldableAmountWidget(
     onToogleAmountInputType: (Boolean) -> Unit,
     onChoosePercentageAmount: (Float) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
-    memoFieldState: TextFieldState
+    memoFieldState: TextFieldState,
+    operatorFeeFieldState: TextFieldState,
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Amount,
@@ -611,7 +611,7 @@ private fun FoldableAmountWidget(
             UiSpacer(12.dp)
 
             // memo
-            if (state.hasMemo) {
+            if (state.hasMemo && state.type == SendFormType.Send) {
                 var isMemoExpanded by remember { mutableStateOf(false) }
 
                 val rotationAngle by animateFloatAsState(
@@ -669,6 +669,30 @@ private fun FoldableAmountWidget(
                         },
                         modifier = Modifier
                             .fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (state.type == SendFormType.Bond) {
+                Column(
+                    modifier = Modifier.padding(
+                        vertical = 2.dp,
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.bond_operator_fees_basis_point),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.colors.text.extraLight,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    VsTextInputField(
+                        textFieldState = operatorFeeFieldState,
+                        hint = "0",
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     UiSpacer(12.dp)
@@ -1355,8 +1379,6 @@ private fun SendScreenPreview() {
         onAssetDragEnd = {},
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
-        nodeAddressFieldState = TextFieldState(),
         operatorFeeFieldState = TextFieldState(),
-        amountBondFieldState = TextFieldState(),
     )
 }

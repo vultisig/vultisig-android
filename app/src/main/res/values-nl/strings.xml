@@ -958,4 +958,5 @@
     <string name="bond_amount">Bond Bedrag</string>
     <string name="bond_amount_hint">Voer bedrag in %s in</string>
     <string name="bond_button_label">Bonden</string>
+    <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
 </resources>

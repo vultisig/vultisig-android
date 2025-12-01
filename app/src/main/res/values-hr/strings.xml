@@ -950,4 +950,5 @@
     <string name="bond_amount">Iznos Veze</string>
     <string name="bond_amount_hint">Unesite iznos u %s</string>
     <string name="bond_button_label">Vezati</string>
+    <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
 </resources>
