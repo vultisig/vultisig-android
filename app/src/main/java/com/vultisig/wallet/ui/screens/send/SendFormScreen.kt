@@ -892,7 +892,6 @@ private fun FoldableDestinationAddressWidget(
                 )
             }
 
-            // TODO: Fix callbacks
             if (state.type == SendFormType.Bond) {
                 UiSpacer(12.dp)
 
@@ -905,16 +904,17 @@ private fun FoldableDestinationAddressWidget(
                 UiSpacer(12.dp)
 
                 VsTextInputField(
-                    textFieldState = addressFieldState,
+                    textFieldState = providerFieldState,
                     hint = stringResource(R.string.send_to_address_hint),
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next,
-                    innerState = if (state.dstAddressError != null)
+                    innerState = if (state.bondProviderError != null){
                         VsTextInputFieldInnerState.Error
-                    else VsTextInputFieldInnerState.Default,
-                    footNote = state.dstAddressError?.asString(),
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    } else {
+                        VsTextInputFieldInnerState.Default
+                    },
+                    footNote = state.bondProviderError?.asString(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 UiSpacer(16.dp)
@@ -927,7 +927,7 @@ private fun FoldableDestinationAddressWidget(
                             .vsClickableBackground()
                             .padding(all = 12.dp)
                             .weight(1f),
-                        onPaste = onSetOutputAddress
+                        onPaste = onSetOutputProvider
                     )
 
                     UiIcon(
@@ -937,7 +937,7 @@ private fun FoldableDestinationAddressWidget(
                             .vsClickableBackground()
                             .padding(all = 12.dp)
                             .weight(1f),
-                        onClick = onScanDstAddressRequest,
+                        onClick = onScanProviderRequest,
                     )
 
                     UiIcon(
@@ -947,7 +947,7 @@ private fun FoldableDestinationAddressWidget(
                             .vsClickableBackground()
                             .padding(all = 12.dp)
                             .weight(1f),
-                        onClick = onAddressBookClick,
+                        onClick = onAddressProviderBookClick,
                     )
                 }
             }
