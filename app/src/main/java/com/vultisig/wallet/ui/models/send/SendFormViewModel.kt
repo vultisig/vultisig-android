@@ -158,7 +158,6 @@ internal enum class SendSections {
     Asset,
     Address,
     Amount,
-
     BondAddress,
 }
 
@@ -172,6 +171,11 @@ enum class SendFormType(val type: String) {
             return entries.firstOrNull { it.type.equals(type, ignoreCase = true) }
         }
     }
+}
+
+enum class AddressBookType {
+    OUTPUT,
+    PROVIDER
 }
 
 internal sealed class GasSettings {
@@ -528,11 +532,12 @@ internal class SendFormViewModel @Inject constructor(
         qrCode: String?,
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
+        fieldState: TextFieldState = addressFieldState,
     ) {
         if (!qrCode.isNullOrBlank()) {
             Timber.d("setAddressFromQrCode(address = $qrCode)")
 
-            addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+            fieldState.setTextAndPlaceCursorAtEnd(qrCode)
 
             val vaultId = vaultId
             if (!vaultId.isNullOrBlank()) {
@@ -603,6 +608,10 @@ internal class SendFormViewModel @Inject constructor(
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
+    fun setProviderAddress(address: String) {
+        providerBondFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
     fun scanAddress() {
         viewModelScope.launch {
             val qr = requestQrScan.invoke()
@@ -612,32 +621,52 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun openAddressBook() {
+    fun scanProviderAddress() {
+        viewModelScope.launch {
+            val qr = requestQrScan.invoke()
+            if (!qr.isNullOrBlank()) {
+                setAddressFromQrCode(qr, null, null, providerBondFieldState)
+            }
+        }
+    }
+
+    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
+            val requestId = when (addressType) {
+                AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
+                AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
+            }
+
             navigator.route(
                 Route.AddressBook(
-                    requestId = REQUEST_ADDRESS_ID,
+                    requestId = requestId,
                     chainId = selectedChain.id,
                     excludeVaultId = vaultId,
                 )
             )
 
-            val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
+            val address: AddressBookEntry = requestResultRepository.request(requestId)
                 ?: return@launch
 
-            val selectedNewChain = address.chain
-            if (selectedChain != selectedNewChain) {
-                preSelectToken(
-                    preSelectedChainIds = listOf(selectedNewChain.id),
-                    preSelectedTokenId = null,
-                    forcePreselection = true
-                )
+            when (addressType) {
+                AddressBookType.OUTPUT -> {
+                    val selectedNewChain = address.chain
+                    if (selectedChain != selectedNewChain) {
+                        preSelectToken(
+                            preSelectedChainIds = listOf(selectedNewChain.id),
+                            preSelectedTokenId = null,
+                            forcePreselection = true
+                        )
+                    }
+                    setOutputAddress(address.address)
+                }
+                AddressBookType.PROVIDER -> {
+                    setProviderAddress(address.address)
+                }
             }
-
-            setOutputAddress(address.address)
         }
     }
 
@@ -1662,6 +1691,7 @@ internal class SendFormViewModel @Inject constructor(
 
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
+        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }
 }
 

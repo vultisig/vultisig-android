@@ -79,6 +79,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.send.AddressBookType
 import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
@@ -134,6 +135,10 @@ internal fun NavGraphBuilder.sendScreen(
             onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
             operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
+            providerFieldState = viewModel.providerBondFieldState,
+            onSetProviderAddressRequest = viewModel::setProviderAddress,
+            onScanProviderAddressRequest = viewModel::scanProviderAddress,
+            onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -169,6 +174,10 @@ private fun SendFormScreen(
     onAddressBookClick: () -> Unit = {},
     onScanDstAddressRequest: () -> Unit = {},
     onSend: () -> Unit = {},
+    onAddressProviderBookClick: () -> Unit = {},
+    onScanProviderAddressRequest: () -> Unit = {},
+    onSetProviderAddressRequest: (String) -> Unit = {},
+
     onRefreshRequest: () -> Unit = {},
     onGasSettingsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -189,6 +198,7 @@ private fun SendFormScreen(
 
     // bond fields
     operatorFeeFieldState: TextFieldState,
+    providerFieldState: TextFieldState,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -281,7 +291,13 @@ private fun SendFormScreen(
                         onChoosePercentageAmount = onChoosePercentageAmount,
                         onChooseMaxTokenAmount = onChooseMaxTokenAmount,
                         memoFieldState = memoFieldState,
+
+                        // Bond
                         operatorFeeFieldState = operatorFeeFieldState,
+                        providerFieldState = providerFieldState,
+                        onSetProvider = onSetProviderAddressRequest,
+                        onScanProvider = onScanProviderAddressRequest,
+                        onProviderBookClick = onAddressProviderBookClick,
                     )
                 }
             }
@@ -319,7 +335,13 @@ private fun SendFormContent(
     onChoosePercentageAmount: (Float) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
+
+    // Bond
     operatorFeeFieldState: TextFieldState,
+    providerFieldState: TextFieldState,
+    onSetProvider: (String) -> Unit,
+    onScanProvider: () -> Unit,
+    onProviderBookClick: () -> Unit,
 ) {
     // select asset
     if (state.type == SendFormType.Send) {
@@ -346,10 +368,14 @@ private fun SendFormContent(
         state = state,
         onExpandSection = onExpandSection,
         addressFieldState = addressFieldState,
+        providerFieldState = providerFieldState,
         onDstAddressLostFocus = onDstAddressLostFocus,
         onSetOutputAddress = onSetOutputAddress,
         onScanDstAddressRequest = onScanDstAddressRequest,
-        onAddressBookClick = onAddressBookClick
+        onAddressBookClick = onAddressBookClick,
+        onSetOutputProvider = onSetProvider,
+        onScanProviderRequest = onScanProvider,
+        onAddressProviderBookClick = onProviderBookClick,
     )
 
     // amount
@@ -1441,5 +1467,6 @@ private fun SendScreenPreview() {
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
         operatorFeeFieldState = TextFieldState(),
+        providerFieldState = TextFieldState(),
     )
 }
