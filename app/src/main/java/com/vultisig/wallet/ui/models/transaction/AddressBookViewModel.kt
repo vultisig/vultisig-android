@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -165,6 +166,12 @@ internal class AddressBookViewModel @Inject constructor(
             val upperOrder = updatedPositionsList.getOrNull(to + 1)?.id
             val lowerOrder = updatedPositionsList.getOrNull(to - 1)?.id
             orderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
+        }
+    }
+
+    fun back(){
+        viewModelScope.launch {
+            navigator.back()
         }
     }
 

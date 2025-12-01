@@ -35,7 +35,6 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
@@ -78,8 +77,8 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
@@ -203,15 +202,31 @@ private fun SendFormScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.send_screen_title),
-                onBackClick = onBackClick,
+    V2Scaffold(
+        title = stringResource(R.string.send_screen_title),
+        onBackClick = onBackClick,
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.send_continue_button),
+                state = if (state.isLoading)
+                    VsButtonState.Disabled
+                else
+                    VsButtonState.Enabled,
+                onClick = {
+                    if (!state.isLoading) {
+                        focusManager.clearFocus()
+                        onSend()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 24.dp,
+                        vertical = 12.dp,
+                    ),
             )
         },
-        content = { contentPadding ->
+        content = {
             val pullToRefreshState = rememberPullToRefreshState()
 
             PullToRefreshBox(
@@ -227,14 +242,12 @@ private fun SendFormScreen(
                     )
                 },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
+                    .fillMaxSize(),
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .verticalScroll(rememberScrollState())
-                        .padding(all = 16.dp)
                 ) {
                     SendFormContent(
                         state = state,

@@ -35,8 +35,12 @@ internal class AddressParserRepositoryImpl @Inject constructor(
             }
             // try to resolve it as TNS name
             else -> {
-                thorChainApi.resolveName(input, chain.swapAssetName())
-                    ?: error("Failed to resolve address $input for $chain")
+                if (input.isNotEmpty()) {
+                    thorChainApi.resolveName(input, chain.swapAssetName())
+                        ?: error("Failed to resolve address $input for $chain")
+                } else {
+                    error("Failed to resolve address $input for $chain")
+                }
             }
         }
     }

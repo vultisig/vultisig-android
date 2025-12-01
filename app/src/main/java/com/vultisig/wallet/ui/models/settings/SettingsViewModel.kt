@@ -455,6 +455,7 @@ internal class SettingsViewModel @Inject constructor(
     fun onContinueReferralBottomSheet() {
         viewModelScope.launch {
             referralRepository.visitReferralCode()
+            referralRepository.setAsShown()
             state.update {
                 it.copy(hasToShowReferralCodeSheet = false)
             }
@@ -468,11 +469,11 @@ internal class SettingsViewModel @Inject constructor(
 
     fun onClickReferralCode() {
         viewModelScope.launch {
-            if (hasUsedReferral) {
+            if (hasUsedReferral || referralRepository.isShown()) {
                 navigateTo(Destination.ReferralCode(vaultId))
             } else {
                 state.update {
-                    it.copy(hasToShowReferralCodeSheet = !hasUsedReferral)
+                    it.copy(hasToShowReferralCodeSheet = true)
                 }
             }
         }
@@ -480,6 +481,7 @@ internal class SettingsViewModel @Inject constructor(
 
     fun onDismissReferralBottomSheet() {
         viewModelScope.launch {
+            referralRepository.setAsShown()
             state.update {
                 it.copy(hasToShowReferralCodeSheet = false)
             }
