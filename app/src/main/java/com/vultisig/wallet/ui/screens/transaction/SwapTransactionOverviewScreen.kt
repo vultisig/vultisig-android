@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
@@ -211,9 +213,9 @@ internal fun TextDetails(
             text = subtitle,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-            overflow = TextOverflow.Ellipsis,
+            overflow = TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.widthIn(max = 100.dp),
             maxLines = 1,
         )
     }
@@ -236,6 +238,10 @@ internal fun Details(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = titleColor ?: Theme.v2.colors.text.extraLight,
+        )
+
+        UiSpacer(
+            weight = 1f
         )
 
         content()
