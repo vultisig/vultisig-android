@@ -955,4 +955,5 @@
     <string name="bond_amount_hint">Inserisci l\'importo in %s</string>
     <string name="bond_button_label">Vincola</string>
     <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
+    <string name="bond_provider_optional">Fornitore (Opzionale)</string>
 </resources>

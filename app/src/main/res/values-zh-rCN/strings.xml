@@ -1361,5 +1361,6 @@
     <string name="bond_amount_hint">输入 %s 金额</string>
     <string name="bond_button_label">绑定</string>
     <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
+    <string name="bond_provider_optional">提供商（可选）</string>
 
 </resources>
