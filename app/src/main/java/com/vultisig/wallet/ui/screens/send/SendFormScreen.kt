@@ -864,6 +864,71 @@ private fun FoldableDestinationAddressWidget(
                     onClick = onAddressBookClick,
                 )
             }
+
+            // TODO: Fix callbacks
+            if (state.type == SendFormType.Bond) {
+                UiSpacer(12.dp)
+
+                Text(
+                    text = "Provider (Optional)",
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.supplementary.caption,
+                )
+
+                UiSpacer(12.dp)
+
+                VsTextInputField(
+                    textFieldState = addressFieldState,
+                    hint = stringResource(R.string.send_to_address_hint),
+                    onFocusChanged = {
+                        if (!it) {
+                            onDstAddressLostFocus()
+                        }
+                    },
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                    innerState = if (state.dstAddressError != null)
+                        VsTextInputFieldInnerState.Error
+                    else VsTextInputFieldInnerState.Default,
+                    footNote = state.dstAddressError?.asString(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                )
+
+                UiSpacer(16.dp)
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    PasteIcon(
+                        modifier = Modifier
+                            .vsClickableBackground()
+                            .padding(all = 12.dp)
+                            .weight(1f),
+                        onPaste = onSetOutputAddress
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.camera,
+                        size = 20.dp,
+                        modifier = Modifier
+                            .vsClickableBackground()
+                            .padding(all = 12.dp)
+                            .weight(1f),
+                        onClick = onScanDstAddressRequest,
+                    )
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_bookmark,
+                        size = 20.dp,
+                        modifier = Modifier
+                            .vsClickableBackground()
+                            .padding(all = 12.dp)
+                            .weight(1f),
+                        onClick = onAddressBookClick,
+                    )
+                }
+            }
         }
     }
 }
