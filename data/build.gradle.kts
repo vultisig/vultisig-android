@@ -118,6 +118,7 @@ dependencies {
     implementation(libs.apache.compress.xz)
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
+    implementation(libs.web3)
 
     // test
     testImplementation(libs.ktor.client.mock)
@@ -130,47 +131,15 @@ dependencies {
     androidTestImplementation(libs.wallet.core)
 
     implementation(platform(libs.ethers.bom)) {
-        exclude(
-            group = "org.bouncycastle",
-            module = "bcprov-jdk18on"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-slf4j2-impl"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-core"
-        )
-        exclude(
-            group = "org.bouncycastle",
-            module = "bcprov-jdk15to18"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-api"
-        )
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j2-impl")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-api")
     }
     implementation(libs.ethers.abi) {
-        exclude(
-            group = "org.bouncycastle",
-            module = "bcprov-jdk18on"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-slf4j2-impl"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-core"
-        )
-        exclude(
-            group = "org.apache.logging.log4j",
-            module = "log4j-api"
-        )
-        exclude(
-            group = "org.bouncycastle",
-            module = "bcprov-jdk15to18"
-        )
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j2-impl")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
+        exclude(group = "org.apache.logging.log4j", module = "log4j-api")
     }
 }
