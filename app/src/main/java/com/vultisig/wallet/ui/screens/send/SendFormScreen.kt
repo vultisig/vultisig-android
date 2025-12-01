@@ -283,27 +283,6 @@ private fun SendFormScreen(
                 }
             }
         },
-        bottomBar = {
-            VsButton(
-                label = stringResource(R.string.send_continue_button),
-                state = if (state.isLoading)
-                    VsButtonState.Disabled
-                else
-                    VsButtonState.Enabled,
-                onClick = {
-                    if (!state.isLoading) {
-                        focusManager.clearFocus()
-                        onSend()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 12.dp,
-                    ),
-            )
-        }
     )
 }
 
