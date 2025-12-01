@@ -715,11 +715,17 @@ private fun FoldableAmountWidget(
 private fun FoldableDestinationAddressWidget(
     state: SendFormUiModel,
     onExpandSection: (SendSections) -> Unit,
+    // dst address
     addressFieldState: TextFieldState,
     onDstAddressLostFocus: () -> Unit,
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
-    onAddressBookClick: () -> Unit
+    onAddressBookClick: () -> Unit,
+    // bond provider
+    providerFieldState: TextFieldState,
+    onSetOutputProvider: (String) -> Unit,
+    onScanProviderRequest: () -> Unit,
+    onAddressProviderBookClick: () -> Unit,
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Address,
@@ -865,7 +871,7 @@ private fun FoldableDestinationAddressWidget(
                 UiSpacer(12.dp)
 
                 Text(
-                    text = "Provider (Optional)",
+                    text = stringResource(R.string.bond_provider_optional),
                     color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.supplementary.caption,
                 )
@@ -875,11 +881,6 @@ private fun FoldableDestinationAddressWidget(
                 VsTextInputField(
                     textFieldState = addressFieldState,
                     hint = stringResource(R.string.send_to_address_hint),
-                    onFocusChanged = {
-                        if (!it) {
-                            onDstAddressLostFocus()
-                        }
-                    },
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next,
                     innerState = if (state.dstAddressError != null)

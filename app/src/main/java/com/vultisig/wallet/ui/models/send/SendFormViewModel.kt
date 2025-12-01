@@ -135,6 +135,7 @@ internal data class SendFormUiModel(
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
     val reapingError: UiText? = null,
+    val bondProviderError: UiText? = null,
 
     val hasMemo: Boolean = false,
     val showGasFee: Boolean = true,
