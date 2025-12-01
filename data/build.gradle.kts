@@ -143,6 +143,10 @@ dependencies {
             module = "log4j-core"
         )
         exclude(
+            group = "org.bouncycastle",
+            module = "bcprov-jdk15to18"
+        )
+        exclude(
             group = "org.apache.logging.log4j",
             module = "log4j-api"
         )
@@ -163,6 +167,10 @@ dependencies {
         exclude(
             group = "org.apache.logging.log4j",
             module = "log4j-api"
+        )
+        exclude(
+            group = "org.bouncycastle",
+            module = "bcprov-jdk15to18"
         )
     }
 }
