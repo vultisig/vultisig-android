@@ -46,6 +46,12 @@ data class Backgrounds(
     val light: Color = Color(0xFF11284B),
     val transparent: Color = Color.Transparent,
     val red: Color = Color(0xFFFC070C),
+    val body: Color = Color(0xffBBC1C7),
+    val amber: Color = Color(0xFFFFB400),
+    val teal: Color = Color(0xFF15D7AC),
+    val orange: Color = Color(0xffF7961B),
+    val disabled: Color = Color(0x800B1A3A)
+
 
 )
 

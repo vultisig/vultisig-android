@@ -1255,7 +1255,6 @@ internal class SendFormViewModel @Inject constructor(
                 val tokenAmountInt =
                     tokenAmount.movePointRight(selectedToken.decimal)
                         .toBigInteger()
-                        ?: BigInteger.ZERO
 
                 // Get Token Balance normal and check there is for fees
                 val depositMemo = DepositMemo.Unbond.Thor(

@@ -399,7 +399,7 @@ private fun SendFormContent(
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
-                        color = Theme.colors.error,
+                        color = Theme.v2.colors.backgrounds.amber,
                         style = Theme.menlo.body1
                     )
                 }
@@ -447,7 +447,7 @@ private fun SendFormContent(
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
-                        color = Theme.colors.error,
+                        color = Theme.v2.colors.backgrounds.amber,
                         style = Theme.menlo.body1
                     )
                 }
@@ -1200,7 +1200,7 @@ private fun FoldableAssetWidget(
                                 R.string.form_token_selection_balance,
                                 token.balance ?: ""
                             ),
-                            color = Theme.colors.text.light,
+                            color = Theme.v2.colors.text.light,
                             style = Theme.brockmann.body.s.medium,
                             textAlign = TextAlign.End,
                         )
@@ -1429,7 +1429,7 @@ private fun PercentageChip(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.colors.text.light,
+        color = Theme.v2.colors.text.light,
         textAlign = TextAlign.Center,
         modifier = modifier
             .clickable(onClick = onClick)
