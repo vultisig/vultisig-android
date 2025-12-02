@@ -82,6 +82,7 @@
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
+    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
@@ -101,6 +102,7 @@
     <string name="select_chain_chain_title">Cadeia</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_error_no_amount">A quantidade deve ser um número positivo.</string>
+    <string name="send_error_invalid_operator_fee">A taxa do operador deve ser um número válido entre 0 e 10000 pontos base</string>
     <string name="settings_screen_language">Idioma</string>
     <string name="settings_screen_currency">Moeda</string>
     <string name="settings_screen_faq">FAQ</string>
@@ -428,6 +430,7 @@
     <string name="node_address_formatted">Endereço: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Desvincular</string>
+    <string name="unbond_screen_title">Desvincular</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>
@@ -945,4 +948,13 @@
     <string name="energy">Energia</string>
     <string name="bandwidth_dec">Os Pontos de Largura de Banda (Bandwidth Points) são necessários para todas as transações na TRON, incluindo envios de tokens padrão e interações com contratos inteligentes. Cada utilizador da TRON recebe 600 Pontos de Largura de Banda gratuitos por dia, o que pode cobrir aproximadamente dois envios básicos. Além disso, pode ganhar Pontos de Largura de Banda extra ao fazer staking de TRX, aumentando o seu saldo diário para suportar mais transações. Se tiver Pontos de Largura de Banda suficientes, pode enviar tokens, fazer staking de TRX ou interagir com contratos inteligentes sem pagar TRX em taxas de gás.</string>
     <string name="energy_dec">A Energia (Energy) é necessária para ações mais complexas, como interagir com contratos inteligentes (por exemplo, swaps ou transações de dApps). Ao contrário da Largura de Banda, a Energia não é gratuita — é necessário fazer staking de TRX para ganhar Energia. (Os utilizadores mais avançados também podem adquirir Energia através de mecanismos de leasing, como o JustLend ou os mercados de aluguer de Energia da Tronify). No entanto, ter Energia pode reduzir significativamente ou mesmo eliminar as taxas de gás para interações com contratos inteligentes, tornando-a valiosa para aqueles que utilizam dApps da TRON com frequência.</string>
+    
+    <!-- Bond Form -->
+    <string name="bond_node_address">Endereço do Nó</string>
+    <string name="bond_node_address_hint">Insira o endereço do nó THORChain</string>
+    <string name="bond_amount">Valor do Bond</string>
+    <string name="bond_amount_hint">Insira o valor em %s</string>
+    <string name="bond_button_label">Vincular</string>
+    <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
+    <string name="bond_provider_optional">Fornecedor (Opcional)</string>
 </resources>

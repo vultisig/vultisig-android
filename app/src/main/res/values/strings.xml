@@ -9,6 +9,7 @@
     <string name="node_address_formatted">Address: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Unbond</string>
+    <string name="unbond_screen_title">Unbond</string>
     <string name="bond">Bond</string>
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
@@ -121,6 +122,7 @@
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="choose_tokens">Choose Tokens</string>
     <string name="send_screen_title">Send</string>
+    <string name="bond_screen_title">Bond</string>
     <string name="send_from_address">From</string>
     <string name="send_to_address">Send to</string>
     <string name="send_to_address_hint">Enter address here</string>
@@ -145,6 +147,7 @@
     <string name="send_error_no_gas_fee">No gas fees</string>
     <string name="send_error_no_address">Address is invalid</string>
     <string name="send_error_no_amount">Amount must be a positive number</string>
+    <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
     <string name="send_error_max_shares">Amount should not exceed balance</string>
     <string name="send_error_insufficient_balance">Insufficient funds</string>
     <string name="send_error_insufficient_native_balance_with_fees">Insufficient %1$s balance</string>
@@ -1006,5 +1009,14 @@
     <string name="energy_dec">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
+    
+    <!-- Bond Form -->
+    <string name="bond_node_address">Node Address</string>
+    <string name="bond_node_address_hint">Enter THORChain node address</string>
+    <string name="bond_amount">Bond Amount</string>
+    <string name="bond_amount_hint">Enter amount in %s</string>
+    <string name="bond_button_label">Bond</string>
+    <string name="bond_operator_fees_basis_point">Operator-fees (Basis Points)</string>
+    <string name="bond_provider_optional">Provider (Optional)</string>
 
 </resources>

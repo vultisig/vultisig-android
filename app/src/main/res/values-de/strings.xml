@@ -83,6 +83,7 @@
     <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
     <string name="choose_tokens">Tokens wählen</string>
     <string name="send_screen_title">Senden</string>
+    <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Senden</string>
     <string name="send_from_address">Von</string>
     <string name="send_to_address">Zu</string>
@@ -99,6 +100,7 @@
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Fehler</string>
     <string name="send_error_no_amount">Die Menge muss eine positive Zahl sein</string>
+    <string name="send_error_invalid_operator_fee">Die Betreibergebühr muss eine gültige Zahl zwischen 0 und 10000 Basispunkten sein</string>
     <string name="settings_screen_language">Sprache</string>
     <string name="settings_screen_currency">Währung</string>
     <string name="settings_screen_faq">FAQ</string>
@@ -428,6 +430,7 @@
     <string name="node_address_formatted">Adresse: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Entbinden</string>
+    <string name="unbond_screen_title">Entbinden</string>
     <string name="bond">Binden</string>
     <string name="active_nodes">Aktive Knoten</string>
     <string name="next_churn">Nächster Wechsel</string>
@@ -948,4 +951,13 @@
     <string name="energy">Energie</string>
     <string name="bandwidth_dec">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
     <string name="energy_dec">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
+    
+    <!-- Bond Form -->
+    <string name="bond_node_address">Knotenadresse</string>
+    <string name="bond_node_address_hint">THORChain-Knotenadresse eingeben</string>
+    <string name="bond_amount">Bond-Betrag</string>
+    <string name="bond_amount_hint">Betrag in %s eingeben</string>
+    <string name="bond_button_label">Bonden</string>
+    <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
+    <string name="bond_provider_optional">Anbieter (Optional)</string>
 </resources>
