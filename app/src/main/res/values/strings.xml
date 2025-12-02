@@ -9,6 +9,7 @@
     <string name="node_address_formatted">Address: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Unbond</string>
+    <string name="unbond_screen_title">Unbond</string>
     <string name="bond">Bond</string>
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>

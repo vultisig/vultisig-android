@@ -11,6 +11,7 @@
     <string name="node_address_formatted">地址: %s</string>
     <string name="apy">年化收益率</string>
     <string name="unbond">解绑</string>
+    <string name="unbond_screen_title">解绑</string>
     <string name="bond">绑定</string>
     <string name="active_nodes">活跃节点</string>
     <string name="next_churn">下次轮换</string>

@@ -441,6 +441,7 @@
     <string name="node_address_formatted">Адрес: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Отвязать</string>
+    <string name="unbond_screen_title">Отвязать</string>
     <string name="bond">Привязать</string>
     <string name="active_nodes">Активные узлы</string>
     <string name="next_churn">Следующая ротация</string>

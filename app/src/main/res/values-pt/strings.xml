@@ -430,6 +430,7 @@
     <string name="node_address_formatted">Endereço: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Desvincular</string>
+    <string name="unbond_screen_title">Desvincular</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>

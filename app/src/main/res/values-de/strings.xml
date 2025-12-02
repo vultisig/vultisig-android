@@ -430,6 +430,7 @@
     <string name="node_address_formatted">Adresse: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Entbinden</string>
+    <string name="unbond_screen_title">Entbinden</string>
     <string name="bond">Binden</string>
     <string name="active_nodes">Aktive Knoten</string>
     <string name="next_churn">Nächster Wechsel</string>

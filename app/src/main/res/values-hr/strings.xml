@@ -430,6 +430,7 @@
     <string name="node_address_formatted">Adresa: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Odveži</string>
+    <string name="unbond_screen_title">Odveži</string>
     <string name="bond">Veži</string>
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>

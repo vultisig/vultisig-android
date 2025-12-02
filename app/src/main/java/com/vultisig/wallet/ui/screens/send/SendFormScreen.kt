@@ -214,6 +214,7 @@ private fun SendFormScreen(
     V2Scaffold(
         title = when (state.type) {
             SendFormType.Bond -> stringResource(R.string.bond_screen_title)
+            SendFormType.UnBond -> stringResource(R.string.unbond_screen_title)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
