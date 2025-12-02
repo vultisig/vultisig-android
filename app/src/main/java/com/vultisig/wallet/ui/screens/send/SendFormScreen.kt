@@ -567,7 +567,7 @@ private fun FoldableAmountWidget(
                                 if (primaryFieldState.text.isEmpty()) {
                                     Text(
                                         text = "0",
-                                        color = Theme.colors.text.light,
+                                        color = Theme.v2.colors.text.light,
                                         style = Theme.brockmann.headings.largeTitle,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier
@@ -664,7 +664,7 @@ private fun FoldableAmountWidget(
                 Text(
                     text = state.selectedCoin?.balance ?: "",
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.colors.text.light,
+                    color = Theme.v2.colors.text.light,
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .weight(1f),
