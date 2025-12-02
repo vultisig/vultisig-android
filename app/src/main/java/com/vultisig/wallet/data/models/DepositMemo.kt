@@ -37,7 +37,6 @@ internal interface DepositMemo {
             override fun toString(): String = buildString {
                 append("BOND:")
                 append(nodeAddress)
-
                 if (!providerAddress.isNullOrBlank()) {
                     append(":")
                     append(providerAddress)
