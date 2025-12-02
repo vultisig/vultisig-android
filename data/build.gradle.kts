@@ -48,8 +48,7 @@ protobuf {
 
     plugins {
         id("kotlinx-protobuf-gen") {
-            artifact =
-                "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen.get()}:jvm8@jar"
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:${libs.versions.kotlinxProtobufGen.get()}:jvm8@jar"
         }
     }
 
@@ -118,28 +117,14 @@ dependencies {
     implementation(libs.apache.compress.xz)
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
-    implementation(libs.web3)
 
     // test
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
-
+    
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test"))
     androidTestImplementation(libs.wallet.core)
-
-    implementation(platform(libs.ethers.bom)) {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j2-impl")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    }
-    implementation(libs.ethers.abi) {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j2-impl")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-        exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    }
 }
