@@ -90,10 +90,8 @@ internal interface DepositMemo {
                     append(":")
                     append(providerAddress)
                 }
-
             }
         }
-
     }
 
     data class Leave(
