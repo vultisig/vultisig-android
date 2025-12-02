@@ -1201,7 +1201,7 @@ internal class SendFormViewModel @Inject constructor(
 
                 if (nonDeFiBalance < gasFee.value) {
                     throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
                 }
 
