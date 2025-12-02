@@ -80,7 +80,7 @@ private fun StartScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Theme.colors.backgrounds.primary),
+                .background(Theme.v2.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
         ) {
             Column(
@@ -98,7 +98,7 @@ private fun StartScreen(
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.create_new_vault_screen_vultisig),
-                    color = Theme.colors.text.primary,
+                    color = Theme.v2.colors.text.primary,
                     style = Theme.brockmann.headings.largeTitle
                 )
             }
@@ -170,16 +170,16 @@ private fun SeparatorWithText(
     ) {
         HorizontalDivider(
             modifier = Modifier.weight(1f),
-            color = Theme.colors.borders.light,
+            color = Theme.v2.colors.border.light,
         )
         Text(
             text = text,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.colors.text.primary
+            color = Theme.v2.colors.text.primary
         )
         HorizontalDivider(
             modifier = Modifier.weight(1f),
-            color = Theme.colors.borders.light,
+            color = Theme.v2.colors.border.light,
         )
     }
 }

@@ -143,11 +143,11 @@ internal fun VsCodeInputField(
                     modifier = boxModifier
                         .background(
                             color = when {
-                                value.length <= index -> Theme.colors.backgrounds.secondary
+                                value.length <= index -> Theme.v2.colors.backgrounds.secondary
                                 else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.colors.backgrounds.secondary
-                                    VsCodeInputFieldState.Success -> Theme.colors.backgrounds.success
-                                    VsCodeInputFieldState.Error -> Theme.colors.backgrounds.error
+                                    VsCodeInputFieldState.Default -> Theme.v2.colors.backgrounds.secondary
+                                    VsCodeInputFieldState.Success -> Theme.v2.colors.backgrounds.success
+                                    VsCodeInputFieldState.Error -> Theme.v2.colors.backgrounds.error
                                 }
                             },
                             shape = inputBoxShape,
@@ -158,12 +158,12 @@ internal fun VsCodeInputField(
                                 else -> 1.dp
                             },
                             color = when {
-                                isActiveBox -> Theme.colors.borders.normal
-                                value.length <= index -> Theme.colors.borders.light
+                                isActiveBox -> Theme.v2.colors.border.normal
+                                value.length <= index -> Theme.v2.colors.border.light
                                 else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.colors.borders.light
-                                    VsCodeInputFieldState.Success -> Theme.colors.alerts.success
-                                    VsCodeInputFieldState.Error -> Theme.colors.alerts.error
+                                    VsCodeInputFieldState.Default -> Theme.v2.colors.border.light
+                                    VsCodeInputFieldState.Success -> Theme.v2.colors.alerts.success
+                                    VsCodeInputFieldState.Error -> Theme.v2.colors.alerts.error
                                 }
                             },
                             shape = inputBoxShape,
@@ -180,7 +180,7 @@ internal fun VsCodeInputField(
 
                     Text(
                         text = displayChar.toString(),
-                        color = Theme.colors.text.primary,
+                        color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
                         modifier = Modifier
                             .padding(all = 12.dp)

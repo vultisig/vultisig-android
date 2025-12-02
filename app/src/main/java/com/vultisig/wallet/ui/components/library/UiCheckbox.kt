@@ -21,9 +21,9 @@ internal fun UiCheckbox(
 ) {
     Surface(
         color = if (checked) {
-            Theme.colors.turquoise800
+            Theme.v2.colors.backgrounds.teal
         } else {
-            Theme.colors.oxfordBlue200
+            Theme.v2.colors.border.normal
         },
         shape = RoundedCornerShape(2.dp),
         modifier = Modifier
@@ -34,7 +34,7 @@ internal fun UiCheckbox(
             Icon(
                 painter = painterResource(id = R.drawable.check),
                 contentDescription = null,
-                tint = Theme.colors.neutral100,
+                tint = Theme.v2.colors.neutrals.n100,
             )
         }
     }

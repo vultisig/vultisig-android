@@ -34,7 +34,7 @@ internal fun FormSearchBar(
             UiIcon(
                 drawableResId = R.drawable.ic_search,
                 size = 24.dp,
-                tint = Theme.colors.neutral500
+                tint = Theme.v2.colors.neutrals.n500
             )
 
             BasicFormTextField(
