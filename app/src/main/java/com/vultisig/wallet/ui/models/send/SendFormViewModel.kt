@@ -1166,6 +1166,7 @@ internal class SendFormViewModel @Inject constructor(
     fun unbond() {
         viewModelScope.launch {
             try {
+                showLoading()
                 val vaultId = vaultId
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
