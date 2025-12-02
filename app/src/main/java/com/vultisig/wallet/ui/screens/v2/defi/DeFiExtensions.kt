@@ -11,8 +11,8 @@ import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.StakingTabUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState.Companion.fromApiStatus
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
-import timber.log.Timber
 import wallet.core.jni.CoinType
 
 internal fun defaultPositionsBondDialog(): List<PositionUiModelDialog> =
@@ -62,6 +62,21 @@ internal fun emptyStakingTabUiModel() = StakingTabUiModel(
     positions = emptyList()
 )
 
+internal fun DeFiNavActions.getContractByDeFiAction(): String? {
+    return when (this) {
+        DeFiNavActions.WITHDRAW_RUJI,
+        DeFiNavActions.STAKE_RUJI,
+        DeFiNavActions.UNSTAKE_RUJI -> STAKING_RUJI_CONTRACT
+
+        DeFiNavActions.MINT_YRUNE,
+        DeFiNavActions.REDEEM_YRUNE -> YRUNE_CONTRACT
+
+        DeFiNavActions.MINT_YTCY,
+        DeFiNavActions.REDEEM_YTCY -> YTCY_CONTRACT
+        else -> null
+    }
+}
+
 internal fun BondedNodePosition.toUiModel(): BondedNodeUiModel {
     return BondedNodeUiModel(
         address = node.address.formatAddress(),
@@ -73,4 +88,16 @@ internal fun BondedNodePosition.toUiModel(): BondedNodeUiModel {
         nextChurn = nextChurn.formatDate(),
     )
 }
+
+internal const val STAKING_RUJI_CONTRACT =
+    "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
+
+internal const val STAKING_TCY_COMPOUND_CONTRACT =
+    "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+
+internal const val YRUNE_CONTRACT =
+    "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
+
+internal const val YTCY_CONTRACT =
+    "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
 

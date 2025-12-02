@@ -69,6 +69,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -137,7 +139,7 @@ internal data class SendFormUiModel(
     val estimatedFee: UiText = UiText.Empty,
 
     // type
-    val type: SendFormType = SendFormType.Send,
+    val defiType: DeFiNavActions? = null,
 
     // errors
     val errorText: UiText? = null,
@@ -168,18 +170,6 @@ internal enum class SendSections {
     Address,
     Amount,
     BondAddress,
-}
-
-enum class SendFormType(val type: String) {
-    Send("send"),
-    Bond("bond"),
-    UnBond("unbond");
-
-    companion object {
-        fun fromString(type: String?): SendFormType? {
-            return entries.firstOrNull { it.type.equals(type, ignoreCase = true) }
-        }
-    }
 }
 
 enum class AddressBookType {
@@ -243,7 +233,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private var vaultId: String? = null
 
-    private var type: SendFormType = SendFormType.Send
+    private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -344,10 +334,10 @@ internal class SendFormViewModel @Inject constructor(
         type: String?
     ) {
         memoFieldState.clearText()
-        this.type = if (type == null) {
-            SendFormType.Send
+        this.defiType = if (type == null) {
+            null
         } else {
-            SendFormType.fromString(type) ?: SendFormType.Send
+            parseDepositType(type)
         }
 
         if (this.vaultId != vaultId) {
@@ -388,7 +378,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun initFormType() {
-        uiState.update { it.copy(type = this.type) }
+        uiState.update { it.copy(defiType = this.defiType) }
     }
 
     private fun loadVaultName() {
@@ -715,7 +705,13 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
-        val availableTokenBalance = if (type == SendFormType.Send || type == SendFormType.Bond) {
+        val availableTokenBalance = if (defiType == null
+            || defiType == DeFiNavActions.BOND
+            || defiType == DeFiNavActions.STAKE_RUJI
+            || defiType == DeFiNavActions.MINT_YRUNE
+            || defiType == DeFiNavActions.REDEEM_YRUNE
+            || defiType == DeFiNavActions.MINT_YTCY
+            || defiType == DeFiNavActions.REDEEM_YTCY) {
             getAvailableTokenBalance(
                 selectedAccount,
                 currentGasFee.value
@@ -723,7 +719,7 @@ internal class SendFormViewModel @Inject constructor(
         } else {
             getAvailableTokenBalance(
                 selectedAccount,
-                BigInteger.ZERO // Substraction should not happen to DeFi Balance (Stake, Rewards, etc...)
+                BigInteger.ZERO // Substraction should not happen to DeFi Balance (Unbond, Staked, Rewards, etc...)
             )
         }
 
@@ -741,9 +737,11 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun onClickContinue() {
-        when (uiState.value.type) {
-            SendFormType.Bond -> bond()
-            SendFormType.UnBond -> unbond()
+        when (uiState.value.defiType) {
+            DeFiNavActions.BOND -> bond()
+            DeFiNavActions.UNBOND -> unbond()
+            DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
+            DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redem()
             else -> send()
         }
     }
@@ -1314,6 +1312,14 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun redem() {
+        TODO("Not yet implemented")
+    }
+
+    private fun mint() {
+        TODO("Not yet implemented")
+    }
+
     private suspend fun getFeesFiatValue(
         gasFee: TokenValue,
         selectedToken: Coin,
@@ -1430,7 +1436,14 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun loadAccounts(vaultId: VaultId) {
         loadAccountsJob?.cancel()
-        loadAccountsJob = if (this.type == SendFormType.Send || this.type == SendFormType.Bond) {
+        loadAccountsJob = if (this.defiType == null
+            || this.defiType == DeFiNavActions.BOND
+            || this.defiType == DeFiNavActions.STAKE_RUJI
+            || this.defiType == DeFiNavActions.MINT_YRUNE
+            || this.defiType == DeFiNavActions.MINT_YTCY
+            || this.defiType == DeFiNavActions.REDEEM_YRUNE
+            || this.defiType == DeFiNavActions.REDEEM_YTCY
+        ) {
             viewModelScope.launch {
                 accountsRepository.loadAddresses(vaultId)
                     .map { addrs -> addrs.flatMap { it.accounts } }

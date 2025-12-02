@@ -80,12 +80,12 @@ import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
-import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.TokenChip
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
@@ -212,9 +212,9 @@ private fun SendFormScreen(
     }
 
     V2Scaffold(
-        title = when (state.type) {
-            SendFormType.Bond -> stringResource(R.string.bond_screen_title)
-            SendFormType.UnBond -> stringResource(R.string.unbond_screen_title)
+        title = when (state.defiType) {
+            DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
+            DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
@@ -343,8 +343,8 @@ private fun SendFormContent(
     onScanProvider: () -> Unit,
     onProviderBookClick: () -> Unit,
 ) {
-    // select asset
-    if (state.type == SendFormType.Send) {
+    // send asset
+    if (state.defiType == null) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -405,7 +405,7 @@ private fun SendFormContent(
                 }
             }
         }
-    } else if (state.type == SendFormType.Bond || state.type == SendFormType.UnBond) {
+    } else if (state.defiType == DeFiNavActions.BOND || state.defiType == DeFiNavActions.UNBOND) {
         FoldableBondDestinationAddress(
             state = state,
             onExpandSection = onExpandSection,
@@ -453,6 +453,27 @@ private fun SendFormContent(
                 }
             }
         }
+    } else if (state.defiType == DeFiNavActions.STAKE_RUJI
+        || state.defiType == DeFiNavActions.MINT_YRUNE
+        || state.defiType == DeFiNavActions.MINT_YTCY
+        || state.defiType == DeFiNavActions.REDEEM_YRUNE
+        || state.defiType == DeFiNavActions.REDEEM_YTCY
+    ) {
+        FoldableAmountWidget(
+            state = state,
+            addressFieldState = addressFieldState,
+            onExpandSection = onExpandSection,
+            onGasSettingsClick = onGasSettingsClick,
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusManager = focusManager,
+            onSend = onSend,
+            onToogleAmountInputType = onToogleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            memoFieldState = memoFieldState,
+            operatorFeeFieldState = operatorFeeFieldState,
+        )
     }
 }
 
@@ -674,7 +695,7 @@ private fun FoldableAmountWidget(
             UiSpacer(12.dp)
 
             // memo
-            if (state.hasMemo && state.type == SendFormType.Send) {
+            if (state.hasMemo && state.defiType == null) {
                 var isMemoExpanded by remember { mutableStateOf(false) }
 
                 val rotationAngle by animateFloatAsState(
@@ -738,7 +759,7 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.type == SendFormType.Bond) {
+            if (state.defiType == DeFiNavActions.BOND) {
                 Column(
                     modifier = Modifier.padding(
                         vertical = 2.dp,
@@ -865,8 +886,8 @@ private fun FoldableDestinationAddressWidget(
             UiSpacer(16.dp)
 
             Text(
-                text = when (state.type) {
-                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
+                text = when (state.defiType) {
+                    DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.v2.colors.text.extraLight,
@@ -974,8 +995,8 @@ private fun FoldableBondDestinationAddress(
                 )
         ) {
             Text(
-                text = when (state.type) {
-                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
+                text = when (state.defiType) {
+                    null, DeFiNavActions.BOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.v2.colors.text.extraLight,
