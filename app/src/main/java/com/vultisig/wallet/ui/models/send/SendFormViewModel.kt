@@ -223,7 +223,7 @@ internal class SendFormViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val depositTransactionRepository: DepositTransactionRepository,
-    ) : ViewModel() {
+) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
 
@@ -240,7 +240,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private var vaultId: String? = null
 
-    private var sendType: String? = null
+    private var type: SendFormType = SendFormType.Send
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -341,13 +341,17 @@ internal class SendFormViewModel @Inject constructor(
         type: String?
     ) {
         memoFieldState.clearText()
+        this.type = if (type == null) {
+            SendFormType.Send
+        } else {
+            SendFormType.fromString(type) ?: SendFormType.Send
+        }
 
         if (this.vaultId != vaultId) {
             this.vaultId = vaultId
-
             loadAccounts(vaultId)
             loadVaultName()
-            initFormType(type)
+            initFormType()
         }
 
         if (address != null) {
@@ -380,10 +384,8 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private fun initFormType(type: String?) {
-        if (type != null) {
-            uiState.update { it.copy(type = SendFormType.fromString(type) ?: SendFormType.Send) }
-        }
+    private fun initFormType() {
+        uiState.update { it.copy(type = this.type) }
     }
 
     private fun loadVaultName() {
@@ -447,7 +449,7 @@ internal class SendFormViewModel @Inject constructor(
                     requestId = requestId,
                     pressX = position.x,
                     pressY = position.y,
-                    vaultId = vaultId ,
+                    vaultId = vaultId,
                     selectedNetworkId = selectedChain.id,
                     filters = Route.SelectNetwork.Filters.None
                 )
@@ -728,7 +730,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun onClickContinue() {
-        when(uiState.value.type) {
+        when (uiState.value.type) {
             SendFormType.Bond -> bond()
             else -> send()
         }
@@ -1050,7 +1052,8 @@ internal class SendFormViewModel @Inject constructor(
 
                 // Validate operator fee is a valid integer (basis points)
                 val operatorFeeValue: Int? = if (feeBondOperator.isNotEmpty()) {
-                    feeBondOperator.toIntOrNull()?.takeIf { it in 0..10000 } // Basis points: 0-10000 (0-100%)
+                    feeBondOperator.toIntOrNull()
+                        ?.takeIf { it in 0..10000 } // Basis points: 0-10000 (0-100%)
                         ?: throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_invalid_operator_fee)
                         )
@@ -1085,7 +1088,7 @@ internal class SendFormViewModel @Inject constructor(
                     selectedAccount,
                     gasFee.value,
                 )?.value ?: BigInteger.ZERO
-                
+
                 if (tokenAmountInt > availableTokenBalance) {
                     throw InvalidTransactionDataException(
                         UiText.FormattedText(
@@ -1101,7 +1104,7 @@ internal class SendFormViewModel @Inject constructor(
                     operatorFee = operatorFeeValue,
                 )
 
-                val specific = withContext(Dispatchers.IO){
+                val specific = withContext(Dispatchers.IO) {
                     blockChainSpecificRepository
                         .getSpecific(
                             chain,
@@ -1153,7 +1156,8 @@ internal class SendFormViewModel @Inject constructor(
         selectedToken: Coin,
     ): EstimatedGasFee {
         return gasFeeToEstimatedFee(
-            GasFeeParams(BigInteger.valueOf(1),
+            GasFeeParams(
+                BigInteger.valueOf(1),
                 gasFee = gasFee,
                 selectedToken = selectedToken,
             )
@@ -1263,10 +1267,18 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun loadAccounts(vaultId: VaultId) {
         loadAccountsJob?.cancel()
-        loadAccountsJob = viewModelScope.launch {
-            accountsRepository.loadAddresses(vaultId)
-                .map { addrs -> addrs.flatMap { it.accounts } }
-                .collect(accounts)
+        loadAccountsJob = if (this.type == SendFormType.Send || this.type == SendFormType.Bond) {
+            viewModelScope.launch {
+                accountsRepository.loadAddresses(vaultId)
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect(accounts)
+            }
+        } else {
+            viewModelScope.launch {
+                accountsRepository.loadDeFiAddresses(vaultId, false)
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect(accounts)
+            }
         }
     }
 
@@ -1400,7 +1412,7 @@ internal class SendFormViewModel @Inject constructor(
             ) { token, dstAddress, tokenAmount, specific, memo ->
                 try {
                     val chain = token.chain
-                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano){
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
                         planFee.value = 1
                     }
 
@@ -1443,7 +1455,8 @@ internal class SendFormViewModel @Inject constructor(
                 // Only require to re-trigger utxo chains, due to no change output utxo and therefore
                 // less fees
                 if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    val spec = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO ?: return@collect
+                    val spec = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
+                        ?: return@collect
                     val updatedSpec = specific.value?.copy(
                         blockChainSpecific = spec.copy(
                             sendMaxAmount = isMax
