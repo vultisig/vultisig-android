@@ -1492,7 +1492,7 @@ private fun ToggleButton(
     UiIcon(
         drawableResId = drawableResId,
         size = 16.dp,
-        tint = Theme.colors.text.light,
+        tint = Theme.v2.colors.text.light,
         modifier = Modifier
             .clickable(onClick = onClick)
             .then(
