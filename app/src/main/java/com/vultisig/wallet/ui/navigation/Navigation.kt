@@ -531,9 +531,6 @@ internal sealed class Route {
     data object FAQSetting
 
     @Serializable
-    data object VultisigToken
-
-    @Serializable
     data class DiscountTiers(
         val vaultId: String,
     )

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.theme.v2
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 data class Colors(
@@ -11,13 +12,23 @@ data class Colors(
     val border: Border = Border(),
     val alerts: Alerts = Alerts(),
     val neutrals: Neutrals = Neutrals(),
-    val variables: Variables = Variables()
+    val variables: Variables = Variables(),
+    val fills: FillsColors = FillsColors(),
+    val vibrant: Vibrant = Vibrant(),
 )
 
 data class Gradients(
-    val primary: List<Color> = listOf(
-        Color(0xFF33E6BF),
-        Color(0xFF0439C7),
+    val primary: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF33E6BF),
+            Color(0xFF0439C7),
+        )
+    ),
+    val primaryReversed: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF0439C7),
+            Color(0xFF33E6BF),
+        )
     )
 )
 
@@ -60,6 +71,7 @@ data class Primary(
     val accent2: Color = Color(0xFF0439C7),
     val accent3: Color = Color(0xFF2155DF),
     val accent4: Color = Color(0xFF4879FD),
+    val accent5: Color = Color(0xFF0339C7),
 )
 
 data class Text(
@@ -83,7 +95,7 @@ data class Border(
     val extraLight: Color = Color(0xFF02122B),
     val primaryAccent4: Color = Color(0xFF4879FD),
     val disabled: Color = Color(0x992155DF),
-    )
+)
 
 data class Alerts(
     val success: Color = Color(0xFF13C89D),
@@ -94,21 +106,29 @@ data class Alerts(
 
 data class Neutrals(
     val n50: Color = Color(0xFFFFFFFF),
-    val n100: Color = Color(0xFFEFF2F6),
+    val n100: Color = Color(0xffF3F4F5),
     val n200: Color = Color(0xFFCBD7E9),
-    val n300: Color = Color(0xFF97ACBF),
-    val n400: Color = Color(0xFF849CB2),
-    val n500: Color = Color(0xFF7D909E),
-    val n600: Color = Color(0xFF626C77),
+    val n300: Color = Color(0xffBDBDBD),
+    val n400: Color = Color(0xffA7A7A7),
+    val n500: Color = Color(0xff9F9F9F),
+    val n600: Color = Color(0xFF4B5563),
     val n700: Color = Color(0xFF383A40),
     val n800: Color = Color(0xFF0F1011),
     val n900: Color = Color(0xFF000000),
-)
+
+    )
 
 data class Variables(
     val backgroundsSurface1: Color = Color(0xFF061B3A),
     val bordersLight: Color = Color(0xFF11284A),
     val textPrimary: Color = Color(0xFFF0F4FC)
+)
 
+data class FillsColors(
+    val primary: Color = Color(0x1F787880),
+)
+
+data class Vibrant(
+    val primary: Color = Color(0xFF333333)
 )
 

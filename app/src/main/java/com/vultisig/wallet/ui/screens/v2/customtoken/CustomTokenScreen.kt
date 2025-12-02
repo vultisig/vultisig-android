@@ -83,7 +83,7 @@ private fun CustomTokenScreen(
             )
             Text(
                 text = stringResource(R.string.custom_token_screen_title),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.headings.title2,
             )
 

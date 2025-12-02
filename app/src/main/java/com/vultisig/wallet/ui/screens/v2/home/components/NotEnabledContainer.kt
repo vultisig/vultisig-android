@@ -43,7 +43,7 @@ internal fun NotEnabledContainer(
             Text(
                 text = title,
                 style = Theme.brockmann.headings.title3,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
 
             UiSpacer(8.dp)
@@ -51,7 +51,7 @@ internal fun NotEnabledContainer(
             Text(
                 text = content,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.colors.text.extraLight,
+                color = Theme.v2.colors.text.extraLight,
                 textAlign = TextAlign.Center
             )
 

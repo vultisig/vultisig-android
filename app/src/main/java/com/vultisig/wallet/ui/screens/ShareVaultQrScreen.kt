@@ -62,8 +62,8 @@ internal fun ShareVaultQrScreen(
     val qrBitmapPainter by viewModel.qrBitmapPainter.collectAsState()
 
     val context = LocalContext.current
-    val mainColor = Theme.colors.neutral0
-    val backgroundColor = Theme.colors.transparent
+    val mainColor = Theme.v2.colors.neutrals.n50
+    val backgroundColor = Theme.v2.colors.backgrounds.transparent
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) WriteFilePermissionHandler(
         viewModel.permissionFlow, viewModel::onPermissionResult
@@ -141,7 +141,7 @@ internal fun ShareVaultQrScreen(
                 onBackClick = onBackClick,
             )
         },
-        containerColor = Theme.colors.backgrounds.primary,
+        containerColor = Theme.v2.colors.backgrounds.primary,
         bottomBar = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -224,14 +224,14 @@ private fun QrContainer(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Theme.colors.backgrounds.secondary,
+                color = Theme.v2.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(
                     size = 24.dp
                 )
             )
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(
                     size = 24.dp
                 )
@@ -247,7 +247,7 @@ private fun QrContainer(
         Text(
             text = name,
             style = Theme.brockmann.body.m.medium,
-            color = Theme.colors.text.primary,
+            color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center
         )
 
@@ -261,7 +261,7 @@ private fun QrContainer(
                 uid.takeLast(10)
             ), /*Should we display the full text, or only the last 10 items, based on the UI design??*/
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
         )
 
         UiSpacer(
@@ -274,7 +274,7 @@ private fun QrContainer(
                 .aspectRatio(1f)
                 .border(
                     width = 1.dp,
-                    color = Theme.colors.borders.light,
+                    color = Theme.v2.colors.border.light,
                     shape = RoundedCornerShape(
                         size = 28.dp,
                     )
@@ -299,7 +299,7 @@ private fun QrContainer(
         Text(
             text = stringResource(R.string.share_vault_qr_address),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
         )
 
     }
@@ -311,7 +311,7 @@ private fun Info() {
         modifier = Modifier
             .border(
                 width = 1.dp,
-                color = Theme.colors.borders.light,
+                color = Theme.v2.colors.border.light,
                 shape = RoundedCornerShape(
                     size = 12.dp
                 )
@@ -320,7 +320,7 @@ private fun Info() {
                 shape = RoundedCornerShape(
                     size = 12.dp
                 ),
-                color = Theme.colors.backgrounds.neutral
+                color = Theme.v2.colors.backgrounds.secondary
             )
             .padding(
                 all = 16.dp
@@ -331,12 +331,12 @@ private fun Info() {
         UiIcon(
             drawableResId = R.drawable.ic_info,
             size = 16.dp,
-            tint = Theme.colors.text.light,
+            tint = Theme.v2.colors.text.light,
         )
         Text(
             text = stringResource(R.string.share_vault_qr_info),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.colors.text.light,
+            color = Theme.v2.colors.text.light,
         )
     }
 }

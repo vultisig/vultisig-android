@@ -6,7 +6,8 @@ import android.graphics.BitmapFactory
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.toArgb
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.Colors
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -37,7 +38,7 @@ internal class CreateQrCodeSharingBitmapUseCaseImpl @Inject constructor(
         return makeQrCodeBitmapShareFormat(
             context,
             qr,
-            Colors.Default.oxfordBlue800.toArgb(),
+            colors.backgrounds.primary.toArgb(),
             logo,
             titleString,
             descriptionString,

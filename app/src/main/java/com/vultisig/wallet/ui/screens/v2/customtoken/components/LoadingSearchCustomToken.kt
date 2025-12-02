@@ -25,7 +25,7 @@ internal fun LoadingSearchCustomToken() {
     V2Container(
         type = ContainerType.TERTIARY,
         cornerType = CornerType.RoundedCornerShape(size = 24.dp),
-        borderType = ContainerBorderType.Bordered(color = Theme.colors.borders.normal)
+        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
     ) {
         Column(
             modifier = Modifier.Companion
@@ -42,7 +42,7 @@ internal fun LoadingSearchCustomToken() {
             )
             Text(
                 text = stringResource(R.string.custom_token_screen_finding_token),
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.supplementary.footnote
 
             )

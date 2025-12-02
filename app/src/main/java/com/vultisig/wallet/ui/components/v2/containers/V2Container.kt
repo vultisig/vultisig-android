@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.theme.Colors
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 internal enum class ContainerType {
     PRIMARY,
@@ -28,7 +28,7 @@ internal enum class ContainerType {
 
 internal sealed interface ContainerBorderType {
     object Borderless : ContainerBorderType
-    data class Bordered(val color: Color = Colors.Default.borders.light) : ContainerBorderType
+    data class Bordered(val color: Color = colors.border.light) : ContainerBorderType
 }
 
 internal sealed interface CornerType {
@@ -45,9 +45,9 @@ internal fun V2Container(
     content: @Composable () -> Unit,
 ) {
     val containerColor = when (type) {
-        ContainerType.PRIMARY -> Theme.colors.backgrounds.primary
-        ContainerType.SECONDARY -> Theme.colors.backgrounds.secondary
-        ContainerType.TERTIARY -> Theme.colors.backgrounds.tertiary
+        ContainerType.PRIMARY -> Theme.v2.colors.backgrounds.primary
+        ContainerType.SECONDARY -> Theme.v2.colors.backgrounds.secondary
+        ContainerType.TERTIARY -> Theme.v2.colors.backgrounds.tertiary_2
     }
 
     val borderColor = when (borderType) {
@@ -98,7 +98,7 @@ private fun PreviewV2Container() {
         ) {
             Text(
                 text = "This is primary bordered container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -109,7 +109,7 @@ private fun PreviewV2Container() {
         ) {
             Text(
                 text = "This is primary borderless container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -117,11 +117,11 @@ private fun PreviewV2Container() {
 
         V2Container(
             type = ContainerType.PRIMARY,
-            borderType = ContainerBorderType.Bordered(Colors.Default.alerts.info)
+            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info)
         ) {
             Text(
                 text = "This is primary custom border color container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -132,7 +132,7 @@ private fun PreviewV2Container() {
         ) {
             Text(
                 text = "This is secondary bordered container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )
@@ -143,18 +143,18 @@ private fun PreviewV2Container() {
         ) {
             Text(
                 text = "This is secondary borderless container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )
         }
         V2Container(
             type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Bordered(Colors.Default.alerts.info)
+            borderType = ContainerBorderType.Bordered(Theme.v2.colors.alerts.info)
         ) {
             Text(
                 text = "This is secondary custom border color container",
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier.padding(16.dp)
             )

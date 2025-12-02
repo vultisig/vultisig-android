@@ -142,7 +142,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.colors.text.extraLight,
+                        color = Theme.v2.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
@@ -180,7 +180,7 @@ internal fun VerifySendScreen(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.colors.backgrounds.secondary,
+                            color = Theme.v2.colors.backgrounds.secondary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(
@@ -190,7 +190,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.light,
+                        color = Theme.v2.colors.text.light,
                     )
 
                     UiSpacer(24.dp)
@@ -254,7 +254,7 @@ internal fun VerifySendScreen(
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.colors.text.extraLight,
+                            color = Theme.v2.colors.text.extraLight,
                             maxLines = 1,
                         )
 
@@ -275,7 +275,7 @@ internal fun VerifySendScreen(
                             Text(
                                 text = chain.raw,
                                 style = Theme.brockmann.supplementary.footnote,
-                                color = Theme.colors.text.primary,
+                                color = Theme.v2.colors.text.primary,
                                 textAlign = TextAlign.End,
                                 maxLines = 1,
                                 overflow = TextOverflow.MiddleEllipsis,
@@ -329,7 +329,7 @@ internal fun AddressField(
     Column {
         Text(
             text = title,
-            color = Theme.colors.neutral100,
+            color = Theme.v2.colors.neutrals.n100,
             style = Theme.montserrat.heading5,
         )
 
@@ -338,7 +338,7 @@ internal fun AddressField(
         Text(
             text = address,
             style = Theme.montserrat.subtitle3,
-            color = Theme.colors.turquoise800,
+            color = Theme.v2.colors.backgrounds.teal,
         )
 
         if (divider) {
@@ -364,7 +364,7 @@ internal fun OtherField(
         ) {
             Text(
                 text = title,
-                color = Theme.colors.neutral100,
+                color = Theme.v2.colors.neutrals.n100,
                 style = Theme.montserrat.subtitle1,
             )
 
@@ -374,7 +374,7 @@ internal fun OtherField(
             Text(
                 text = value,
                 textAlign = TextAlign.End,
-                color = Theme.colors.neutral100,
+                color = Theme.v2.colors.neutrals.n100,
                 style = Theme.menlo.subtitle1,
             )
         }

@@ -14,11 +14,11 @@ internal fun VsSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: SwitchColors = SwitchDefaults.colors(
-        checkedThumbColor = Theme.colors.neutrals.n50,
-        checkedTrackColor = Theme.colors.primary.accent4,
-        uncheckedThumbColor = Theme.colors.neutrals.n50,
-        uncheckedTrackColor = Theme.colors.neutral500,
-        uncheckedBorderColor = Theme.colors.neutral500,
+        checkedThumbColor = Theme.v2.colors.neutrals.n50,
+        checkedTrackColor = Theme.v2.colors.primary.accent4,
+        uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
+        uncheckedTrackColor = Theme.v2.colors.neutrals.n500,
+        uncheckedBorderColor = Theme.v2.colors.neutrals.n500,
     ),
 ) {
     Switch(

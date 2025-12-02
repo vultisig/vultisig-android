@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import com.vultisig.wallet.ui.theme.v2.Colors
+import com.vultisig.wallet.ui.theme.v2.V2.colors
 
 @Composable
 internal fun AppUtils(
@@ -39,7 +41,7 @@ internal fun AppUtils(
 
 
 internal val LocalAppColors = compositionLocalOf {
-    Colors.Default
+    colors
 }
 internal val LocalMenloFamilyTypography = compositionLocalOf {
     menloTypography

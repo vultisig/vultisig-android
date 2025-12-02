@@ -32,7 +32,7 @@ internal fun V2Topbar(
             Text(
                 text = title.orEmpty(),
                 style = Theme.brockmann.headings.title3,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
         },
         navigationIcon = onBackClick?.let {
@@ -49,7 +49,7 @@ internal fun V2Topbar(
             }
         } ?: {},
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.colors.backgrounds.primary,
+            containerColor = Theme.v2.colors.backgrounds.primary,
         ),
         windowInsets = WindowInsets(0.dp)
     )
@@ -67,7 +67,7 @@ fun V2Topbar(
             Text(
                 text = title.orEmpty(),
                 style = Theme.brockmann.headings.title3,
-                color = Theme.colors.text.primary,
+                color = Theme.v2.colors.text.primary,
             )
         },
         navigationIcon = {
@@ -91,7 +91,7 @@ fun V2Topbar(
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Theme.colors.backgrounds.primary,
+            containerColor = Theme.v2.colors.backgrounds.primary,
         ),
         windowInsets = WindowInsets(0.dp)
     )

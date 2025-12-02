@@ -58,17 +58,17 @@ internal fun VsCircleButton(
     }
 
     val backgroundColor = when (type) {
-        VsCircleButtonType.Primary -> Theme.colors.primary.accent3
-        VsCircleButtonType.Secondary -> Theme.colors.backgrounds.tertiary
-        VsCircleButtonType.Tertiary -> Theme.colors.fills.tertiary.copy(alpha = 0.32f)
+        VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
+        VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
+        VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
         is VsCircleButtonType.Custom -> type.color
     }
 
     val brushColors = listOf(
-        Theme.colors.neutrals.n100,
+        Theme.v2.colors.neutrals.n100,
         Color.Transparent,
         Color.Transparent,
-        Theme.colors.neutrals.n100,
+        Theme.v2.colors.neutrals.n100,
     )
 
 
@@ -95,7 +95,7 @@ internal fun VsCircleButton(
                     if (hasBorder) {
                         Modifier.border(
                             width = 1.dp,
-                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
                             shape = CircleShape
                         )
                     } else
@@ -107,7 +107,7 @@ internal fun VsCircleButton(
     ) {
         UiIcon(
             drawableResId = icon,
-            tint = Theme.colors.neutrals.n100,
+            tint = Theme.v2.colors.neutrals.n100,
             size = 20.dp
         )
     }
@@ -131,9 +131,9 @@ internal fun VsCircleButton(
     }
 
     val backgroundColor = when (type) {
-        VsCircleButtonType.Primary -> Theme.colors.primary.accent3
-        VsCircleButtonType.Secondary -> Theme.colors.backgrounds.tertiary
-        VsCircleButtonType.Tertiary -> Theme.colors.fills.tertiary.copy(alpha = 0.32f)
+        VsCircleButtonType.Primary -> Theme.v2.colors.primary.accent3
+        VsCircleButtonType.Secondary -> Theme.v2.colors.backgrounds.tertiary_2
+        VsCircleButtonType.Tertiary -> Theme.v2.colors.fills.primary.copy(alpha = 0.32f)
         is VsCircleButtonType.Custom -> type.color
     }
 
@@ -151,14 +151,14 @@ internal fun VsCircleButton(
                         .shinedBottom()
                         .border(
                             width = 1.dp,
-                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
                             shape = CircleShape
                         )
                 } else {
                     if (hasBorder) {
                         Modifier.border(
                             width = 1.dp,
-                            color = Theme.colors.neutrals.n100.copy(alpha = 0.1f),
+                            color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.1f),
                             shape = CircleShape
                         )
                     } else
@@ -175,7 +175,7 @@ internal fun VsCircleButton(
 internal fun VsCircleButton(
     modifier: Modifier = Modifier,
     @DrawableRes drawableResId: Int,
-    tint: Color = Theme.colors.neutrals.n100,
+    tint: Color = Theme.v2.colors.neutrals.n100,
     onClick: () -> Unit,
     size: VsCircleButtonSize = VsCircleButtonSize.Small,
     type: VsCircleButtonType = VsCircleButtonType.Primary,

@@ -89,7 +89,7 @@ internal fun HomePageTabMenu(
                 UiIcon(
                     drawableResId = R.drawable.ic_search,
                     size = 16.dp,
-                    tint = Theme.colors.text.primary,
+                    tint = Theme.v2.colors.text.primary,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -103,7 +103,7 @@ internal fun HomePageTabMenu(
                 UiIcon(
                     drawableResId = R.drawable.edit_chain,
                     size = 16.dp,
-                    tint = Theme.colors.primary.accent4,
+                    tint = Theme.v2.colors.primary.accent4,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -139,7 +139,7 @@ private fun HomepageTab(
             ) {
                 Text(
                     text = stringResource(R.string.search_bar_soon),
-                    color = Theme.colors.alerts.info,
+                    color = Theme.v2.colors.alerts.info,
                     style = Theme.brockmann.supplementary.caption,
                     modifier = Modifier.padding(
                         horizontal = 6.dp,
