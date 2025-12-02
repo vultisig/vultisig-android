@@ -715,10 +715,17 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
-        val availableTokenBalance = getAvailableTokenBalance(
-            selectedAccount,
-            currentGasFee.value
-        )
+        val availableTokenBalance = if (type == SendFormType.Send || type == SendFormType.Bond) {
+            getAvailableTokenBalance(
+                selectedAccount,
+                currentGasFee.value
+            )
+        } else {
+            getAvailableTokenBalance(
+                selectedAccount,
+                BigInteger.ZERO // Substraction should not happen to DeFi Balance (Stake, Rewards, etc...)
+            )
+        }
 
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
@@ -1235,18 +1242,19 @@ internal class SendFormViewModel @Inject constructor(
                 val tokenAmount = tokenAmountFieldState.text
                     .toString()
                     .toBigDecimalOrNull()
-                val selectedToken = selectedAccount.token
-                val selectedAddress = selectedToken.address
-                val tokenAmountInt =
-                    tokenAmount
-                        ?.movePointRight(selectedToken.decimal)
-                        ?.toBigInteger() ?: BigInteger.ZERO
 
                 if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_amount)
                     )
                 }
+
+                val selectedToken = selectedAccount.token
+                val selectedAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount.movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+                        ?: BigInteger.ZERO
 
                 // Get Token Balance normal and check there is for fees
                 val depositMemo = DepositMemo.Unbond.Thor(
