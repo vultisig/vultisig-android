@@ -86,6 +86,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -101,6 +102,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.flatMap
 import kotlin.uuid.Uuid
 
 
@@ -1179,6 +1181,22 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
+
+                val nonDeFiBalance =
+                    accountsRepository.loadAddresses(vaultId).firstOrNull()
+                        ?.flatMap {
+                            it.accounts
+                        }
+                        ?.find {
+                            it.token.id.equals(selectedToken.value?.id ?: "", true)
+                        }?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+                }
+
                 val dstAddress = try {
                     addressParserRepository.resolveName(
                         addressFieldState.text.toString(),
