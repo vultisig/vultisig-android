@@ -360,54 +360,96 @@ private fun SendFormContent(
             onAssetDragEnd = onAssetDragEnd,
             onAssetLongPressStarted = onAssetLongPressStarted
         )
-    }
 
-    // input dst address
-    FoldableDestinationAddressWidget(
-        state = state,
-        onExpandSection = onExpandSection,
-        addressFieldState = addressFieldState,
-        providerFieldState = providerFieldState,
-        onDstAddressLostFocus = onDstAddressLostFocus,
-        onSetOutputAddress = onSetOutputAddress,
-        onScanDstAddressRequest = onScanDstAddressRequest,
-        onAddressBookClick = onAddressBookClick,
-        onSetOutputProvider = onSetProvider,
-        onScanProviderRequest = onScanProvider,
-        onAddressProviderBookClick = onProviderBookClick,
-    )
+        FoldableDestinationAddressWidget(
+            state = state,
+            onExpandSection = onExpandSection,
+            addressFieldState = addressFieldState,
+            onDstAddressLostFocus = onDstAddressLostFocus,
+            onSetOutputAddress = onSetOutputAddress,
+            onScanDstAddressRequest = onScanDstAddressRequest,
+            onAddressBookClick = onAddressBookClick,
+        )
 
-    // amount
-    FoldableAmountWidget(
-        state = state,
-        addressFieldState = addressFieldState,
-        onExpandSection = onExpandSection,
-        onGasSettingsClick = onGasSettingsClick,
-        tokenAmountFieldState = tokenAmountFieldState,
-        fiatAmountFieldState = fiatAmountFieldState,
-        focusManager = focusManager,
-        onSend = onSend,
-        onToogleAmountInputType = onToogleAmountInputType,
-        onChoosePercentageAmount = onChoosePercentageAmount,
-        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-        memoFieldState = memoFieldState,
-        operatorFeeFieldState = operatorFeeFieldState,
-    )
+        FoldableAmountWidget(
+            state = state,
+            addressFieldState = addressFieldState,
+            onExpandSection = onExpandSection,
+            onGasSettingsClick = onGasSettingsClick,
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusManager = focusManager,
+            onSend = onSend,
+            onToogleAmountInputType = onToogleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            memoFieldState = memoFieldState,
+            operatorFeeFieldState = operatorFeeFieldState,
+        )
 
-    UiSpacer(24.dp)
+        UiSpacer(24.dp)
 
-    AnimatedContent(
-        targetState = state.reapingError,
-        label = "error message"
-    ) { errorMessage ->
-        if (errorMessage != null) {
-            Column {
-                UiSpacer(size = 8.dp)
-                Text(
-                    text = errorMessage.asString(),
-                    color = Theme.colors.error,
-                    style = Theme.menlo.body1
-                )
+        AnimatedContent(
+            targetState = state.reapingError,
+            label = "error message"
+        ) { errorMessage ->
+            if (errorMessage != null) {
+                Column {
+                    UiSpacer(size = 8.dp)
+                    Text(
+                        text = errorMessage.asString(),
+                        color = Theme.colors.error,
+                        style = Theme.menlo.body1
+                    )
+                }
+            }
+        }
+    } else if (state.type == SendFormType.Bond || state.type == SendFormType.UnBond) {
+        FoldableBondDestinationAddress(
+            state = state,
+            onExpandSection = onExpandSection,
+            addressFieldState = addressFieldState,
+            providerFieldState = providerFieldState,
+            onDstAddressLostFocus = onDstAddressLostFocus,
+            onSetOutputAddress = onSetOutputAddress,
+            onScanDstAddressRequest = onScanDstAddressRequest,
+            onAddressBookClick = onAddressBookClick,
+            onSetOutputProvider = onSetProvider,
+            onScanProviderRequest = onScanProvider,
+            onAddressProviderBookClick = onProviderBookClick,
+        )
+
+        FoldableAmountWidget(
+            state = state,
+            addressFieldState = addressFieldState,
+            onExpandSection = onExpandSection,
+            onGasSettingsClick = onGasSettingsClick,
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusManager = focusManager,
+            onSend = onSend,
+            onToogleAmountInputType = onToogleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            memoFieldState = memoFieldState,
+            operatorFeeFieldState = operatorFeeFieldState,
+        )
+
+        UiSpacer(24.dp)
+
+        AnimatedContent(
+            targetState = state.reapingError,
+            label = "error message"
+        ) { errorMessage ->
+            if (errorMessage != null) {
+                Column {
+                    UiSpacer(size = 8.dp)
+                    Text(
+                        text = errorMessage.asString(),
+                        color = Theme.colors.error,
+                        style = Theme.menlo.body1
+                    )
+                }
             }
         }
     }
@@ -746,6 +788,157 @@ private fun FoldableDestinationAddressWidget(
     onSetOutputAddress: (String) -> Unit,
     onScanDstAddressRequest: () -> Unit,
     onAddressBookClick: () -> Unit,
+) {
+    FoldableSection(
+        expanded = state.expandedSection == SendSections.Address,
+        complete = state.isDstAddressComplete,
+        title = stringResource(R.string.add_address_address_title),
+        onToggle = {
+            onExpandSection(SendSections.Address)
+        },
+        completeTitleContent = {
+            Text(
+                text = addressFieldState.text.toString(),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.body.s.medium,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    top = 16.dp,
+                    end = 12.dp,
+                    bottom = 12.dp,
+                )
+        ) {
+            Text(
+                text = stringResource(R.string.send_from_address),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = Theme.colors.borders.light,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .background(
+                        color = Theme.colors.backgrounds.secondary,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 8.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = state.srcVaultName,
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.supplementary.caption,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+
+                Text(
+                    text = state.srcAddress,
+                    color = Theme.colors.text.extraLight,
+                    style = Theme.brockmann.supplementary.caption,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+            }
+
+            UiSpacer(16.dp)
+
+            Text(
+                text = when (state.type) {
+                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
+                    else -> stringResource(R.string.send_to_address)
+                },
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = addressFieldState,
+                hint = stringResource(R.string.send_to_address_hint),
+                onFocusChanged = {
+                    if (!it) {
+                        onDstAddressLostFocus()
+                    }
+                },
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                innerState = if (state.dstAddressError != null)
+                    VsTextInputFieldInnerState.Error
+                else VsTextInputFieldInnerState.Default,
+                footNote = state.dstAddressError?.asString(),
+                modifier = Modifier
+                    .fillMaxWidth(),
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PasteIcon(
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onPaste = onSetOutputAddress
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onScanDstAddressRequest,
+                )
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_bookmark,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onAddressBookClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FoldableBondDestinationAddress(
+    state: SendFormUiModel,
+    onExpandSection: (SendSections) -> Unit,
+    // dst address
+    addressFieldState: TextFieldState,
+    onDstAddressLostFocus: () -> Unit,
+    onSetOutputAddress: (String) -> Unit,
+    onScanDstAddressRequest: () -> Unit,
+    onAddressBookClick: () -> Unit,
     // bond provider
     providerFieldState: TextFieldState,
     onSetOutputProvider: (String) -> Unit,
@@ -779,58 +972,9 @@ private fun FoldableDestinationAddressWidget(
                     bottom = 12.dp,
                 )
         ) {
-            if (state.type == SendFormType.Send) {
-                Text(
-                    text = stringResource(R.string.send_from_address),
-                    color = Theme.colors.text.extraLight,
-                    style = Theme.brockmann.supplementary.caption,
-                )
-
-                UiSpacer(12.dp)
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = Theme.colors.borders.light,
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .background(
-                            color = Theme.colors.backgrounds.secondary,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 8.dp,
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = state.srcVaultName,
-                        color = Theme.colors.text.primary,
-                        style = Theme.brockmann.supplementary.caption,
-                        maxLines = 1,
-                        overflow = TextOverflow.MiddleEllipsis,
-                    )
-
-                    Text(
-                        text = state.srcAddress,
-                        color = Theme.colors.text.extraLight,
-                        style = Theme.brockmann.supplementary.caption,
-                        maxLines = 1,
-                        overflow = TextOverflow.MiddleEllipsis,
-                    )
-                }
-
-                UiSpacer(16.dp)
-            }
-
             Text(
                 text = when (state.type) {
-                    SendFormType.Bond -> stringResource(R.string.bond_node_address)
+                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.colors.text.extraLight,
@@ -891,64 +1035,62 @@ private fun FoldableDestinationAddressWidget(
                 )
             }
 
-            if (state.type == SendFormType.Bond) {
-                UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
-                Text(
-                    text = stringResource(R.string.bond_provider_optional),
-                    color = Theme.colors.text.extraLight,
-                    style = Theme.brockmann.supplementary.caption,
+            Text(
+                text = stringResource(R.string.bond_provider_optional),
+                color = Theme.colors.text.extraLight,
+                style = Theme.brockmann.supplementary.caption,
+            )
+
+            UiSpacer(12.dp)
+
+            VsTextInputField(
+                textFieldState = providerFieldState,
+                hint = stringResource(R.string.send_to_address_hint),
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                innerState = if (state.bondProviderError != null) {
+                    VsTextInputFieldInnerState.Error
+                } else {
+                    VsTextInputFieldInnerState.Default
+                },
+                footNote = state.bondProviderError?.asString(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PasteIcon(
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onPaste = onSetOutputProvider
                 )
 
-                UiSpacer(12.dp)
-
-                VsTextInputField(
-                    textFieldState = providerFieldState,
-                    hint = stringResource(R.string.send_to_address_hint),
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next,
-                    innerState = if (state.bondProviderError != null){
-                        VsTextInputFieldInnerState.Error
-                    } else {
-                        VsTextInputFieldInnerState.Default
-                    },
-                    footNote = state.bondProviderError?.asString(),
-                    modifier = Modifier.fillMaxWidth(),
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onScanProviderRequest,
                 )
 
-                UiSpacer(16.dp)
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    PasteIcon(
-                        modifier = Modifier
-                            .vsClickableBackground()
-                            .padding(all = 12.dp)
-                            .weight(1f),
-                        onPaste = onSetOutputProvider
-                    )
-
-                    UiIcon(
-                        drawableResId = R.drawable.camera,
-                        size = 20.dp,
-                        modifier = Modifier
-                            .vsClickableBackground()
-                            .padding(all = 12.dp)
-                            .weight(1f),
-                        onClick = onScanProviderRequest,
-                    )
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_bookmark,
-                        size = 20.dp,
-                        modifier = Modifier
-                            .vsClickableBackground()
-                            .padding(all = 12.dp)
-                            .weight(1f),
-                        onClick = onAddressProviderBookClick,
-                    )
-                }
+                UiIcon(
+                    drawableResId = R.drawable.ic_bookmark,
+                    size = 20.dp,
+                    modifier = Modifier
+                        .vsClickableBackground()
+                        .padding(all = 12.dp)
+                        .weight(1f),
+                    onClick = onAddressProviderBookClick,
+                )
             }
         }
     }
