@@ -727,11 +727,14 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(errorText = null) }
     }
 
-    fun send() {
-        if (uiState.value.type == SendFormType.Bond) {
-            bond()
-            return
+    fun onClickContinue() {
+        when(uiState.value.type) {
+            SendFormType.Bond -> bond()
+            else -> send()
         }
+    }
+
+    fun send() {
         viewModelScope.launch {
             showLoading()
             try {

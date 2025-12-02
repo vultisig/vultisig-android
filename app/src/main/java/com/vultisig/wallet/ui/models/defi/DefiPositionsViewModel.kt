@@ -872,7 +872,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
-                        type = SendFormType.Bond.type,
+                        type = SendFormType.UnBond.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,

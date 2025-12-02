@@ -92,7 +92,6 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 
-
 internal fun NavGraphBuilder.sendScreen(
     navController: NavHostController,
 ) {
@@ -118,7 +117,7 @@ internal fun NavGraphBuilder.sendScreen(
             onChoosePercentageAmount = viewModel::choosePercentageAmount,
             onScanDstAddressRequest = viewModel::scanAddress,
             onAddressBookClick = viewModel::openAddressBook,
-            onSend = viewModel::send,
+            onSend = viewModel::onClickContinue,
             onRefreshRequest = viewModel::refreshGasFee,
             onGasSettingsClick = viewModel::openGasSettings,
             onBackClick = viewModel::back,
