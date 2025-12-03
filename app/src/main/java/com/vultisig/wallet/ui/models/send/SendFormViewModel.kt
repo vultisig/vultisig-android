@@ -147,6 +147,8 @@ internal data class SendFormUiModel(
     // type
     val defiType: DeFiNavActions? = null,
 
+    val slippage: String = "1.0",
+
     // errors
     val errorText: UiText? = null,
     val dstAddressError: UiText? = null,
@@ -236,6 +238,9 @@ internal class SendFormViewModel @Inject constructor(
     // bond node
     val operatorFeesBondFieldState = TextFieldState()
     val providerBondFieldState = TextFieldState()
+
+    // Trade
+    val slippageFieldState = TextFieldState()
 
     private var vaultId: String? = null
 
@@ -380,6 +385,10 @@ internal class SendFormViewModel @Inject constructor(
 
         memo?.let {
             memoFieldState.setTextAndPlaceCursorAtEnd(it)
+        }
+
+        if (defiType == DeFiNavActions.REDEEM_YRUNE || defiType == DeFiNavActions.REDEEM_YTCY) {
+            slippageFieldState.setTextAndPlaceCursorAtEnd("1.0")
         }
     }
 
@@ -1391,6 +1400,21 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
+                val nonDeFiBalance =
+                    accountsRepository.loadAddresses(vaultId).firstOrNull()
+                        ?.flatMap {
+                            it.accounts
+                        }
+                        ?.find {
+                            it.token.id.equals(Coins.ThorChain.RUNE.id, true)
+                        }?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedToken.address
                 val tokenAmountInt =
@@ -1529,7 +1553,7 @@ internal class SendFormViewModel @Inject constructor(
                             it.accounts
                         }
                         ?.find {
-                            it.token.id.equals(selectedToken.value?.id ?: "", true)
+                            it.token.id.equals(Coins.ThorChain.RUNE.id, true)
                         }?.tokenValue?.value ?: BigInteger.ZERO
 
                 if (nonDeFiBalance < gasFee.value) {
@@ -1666,6 +1690,21 @@ internal class SendFormViewModel @Inject constructor(
                 if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
+                val nonDeFiBalance =
+                    accountsRepository.loadAddresses(vaultId).firstOrNull()
+                        ?.flatMap {
+                            it.accounts
+                        }
+                        ?.find {
+                            it.token.id.equals(Coins.ThorChain.RUNE.id, true)
+                        }?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
                 }
 
@@ -1822,7 +1861,7 @@ internal class SendFormViewModel @Inject constructor(
                             it.accounts
                         }
                         ?.find {
-                            it.token.id.equals(selectedToken.value?.id ?: "", true)
+                            it.token.id.equals(Coins.ThorChain.RUNE.id, true)
                         }?.tokenValue?.value ?: BigInteger.ZERO
 
                 if (nonDeFiBalance < gasFee.value) {
@@ -1882,6 +1921,12 @@ internal class SendFormViewModel @Inject constructor(
                     }
                 }
 
+                val slippage = slippageFieldState.text.toString()
+                val slippageValidation = validateSlippage(slippage)
+                if (slippageValidation != null) {
+                    throw InvalidTransactionDataException(slippageValidation)
+                }
+
                 val depositTx = DepositTransaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
@@ -1899,7 +1944,7 @@ internal class SendFormViewModel @Inject constructor(
                     wasmExecuteContractPayload = ThorchainFunctions.redeemYToken(
                         fromAddress = srcAddress,
                         tokenContract = tokenContract,
-                        slippage = "1.0".formatSlippage(),
+                        slippage = slippage.formatSlippage(),
                         denom = selectedToken.contractAddress,
                         amount = tokenAmountInt,
                     )
@@ -1932,6 +1977,23 @@ internal class SendFormViewModel @Inject constructor(
                 .toPlainString()
         } catch (t: Throwable) {
             "0.01" // Default slippage for safety
+        }
+    }
+
+    private fun validateSlippage(slippage: String?): UiText? {
+        if (slippage.isNullOrBlank()) {
+            return UiText.StringResource(R.string.slippage_required_error)
+        }
+
+        return try {
+            val value = slippage.toBigDecimal()
+            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
+                UiText.StringResource(R.string.slippage_invalid_error)
+            } else {
+                null
+            }
+        } catch (e: NumberFormatException) {
+            UiText.StringResource(R.string.slippage_format_error)
         }
     }
 

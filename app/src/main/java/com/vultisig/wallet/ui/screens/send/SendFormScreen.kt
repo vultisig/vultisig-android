@@ -135,6 +135,7 @@ internal fun NavGraphBuilder.sendScreen(
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
             operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
             providerFieldState = viewModel.providerBondFieldState,
+            slippageFieldState = viewModel.slippageFieldState,
             onSetProviderAddressRequest = viewModel::setProviderAddress,
             onScanProviderAddressRequest = viewModel::scanProviderAddress,
             onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
@@ -198,6 +199,9 @@ private fun SendFormScreen(
     // bond fields
     operatorFeeFieldState: TextFieldState,
     providerFieldState: TextFieldState,
+
+    // trade
+    slippageFieldState: TextFieldState,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -302,6 +306,9 @@ private fun SendFormScreen(
                         onSetProvider = onSetProviderAddressRequest,
                         onScanProvider = onScanProviderAddressRequest,
                         onProviderBookClick = onAddressProviderBookClick,
+
+                        // trade
+                        slippageFieldState = slippageFieldState,
                     )
                 }
             }
@@ -346,6 +353,9 @@ private fun SendFormContent(
     onSetProvider: (String) -> Unit,
     onScanProvider: () -> Unit,
     onProviderBookClick: () -> Unit,
+
+    // trade
+    slippageFieldState: TextFieldState,
 ) {
     // send asset
     if (state.defiType == null) {
@@ -390,6 +400,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
         )
 
         UiSpacer(24.dp)
@@ -438,6 +449,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
         )
 
         UiSpacer(24.dp)
@@ -478,6 +490,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
         )
     }
 }
@@ -497,6 +510,7 @@ private fun FoldableAmountWidget(
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
+    slippageTexFieldState: TextFieldState,
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Amount,
@@ -781,6 +795,31 @@ private fun FoldableAmountWidget(
                     VsTextInputField(
                         textFieldState = operatorFeeFieldState,
                         hint = "0",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (state.defiType == DeFiNavActions.REDEEM_YRUNE
+                || state.defiType == DeFiNavActions.REDEEM_YTCY) {
+                Column(
+                    modifier = Modifier.padding(
+                        vertical = 2.dp,
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.deposit_form_operator_slippage_title),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.extraLight,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    VsTextInputField(
+                        textFieldState = slippageTexFieldState,
+                        hint = stringResource(R.string.slippage_hint),
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -1527,5 +1566,6 @@ private fun SendScreenPreview() {
         onAssetLongPressStarted = {},
         operatorFeeFieldState = TextFieldState(),
         providerFieldState = TextFieldState(),
+        slippageFieldState = TextFieldState(),
     )
 }
