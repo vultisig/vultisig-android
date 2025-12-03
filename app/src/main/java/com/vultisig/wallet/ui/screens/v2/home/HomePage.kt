@@ -143,6 +143,10 @@ internal fun HomePage(
                 UiHorizontalDivider(
                     color = Theme.v2.colors.border.light,
                 )
+
+                UiSpacer(
+                    size = 16.dp
+                )
             }
         },
         topBarExpandedContent = {
@@ -228,6 +232,9 @@ internal fun HomePage(
                             exit = fadeOut() + shrinkVertically()
                         ) {
                             Banners(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 16.dp),
                                 hasMigration = state.showMigration,
                                 onMigrateClick = onMigrateClick,
                                 context = context,
@@ -241,8 +248,7 @@ internal fun HomePage(
                             modifier = Modifier
                                 .animateItem()
                                 .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp)
-                            ,
+                                .padding(bottom = 16.dp),
                             onEditClick = onChooseChains,
                             isTabMenu = isTabMenu,
                             onSearchClick = {
@@ -265,13 +271,12 @@ internal fun HomePage(
                                     onChooseChains = onChooseChains
                                 )
                             } else {
-                                if (state.getAccounts.isEmpty()){
+                                if (state.getAccounts.isEmpty()) {
                                     NotEnabledContainer(
                                         title = stringResource(R.string.home_page_no_chains_enabled),
                                         content = stringResource(R.string.home_page_no_chain_enabled_desc),
                                     )
-                                }
-                                 else {
+                                } else {
                                     AccountList(
                                         onAccountClick = onAccountClick,
                                         snackbarState = snackbarState,
