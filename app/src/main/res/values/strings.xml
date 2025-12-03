@@ -11,6 +11,11 @@
     <string name="unbond">Unbond</string>
     <string name="unbond_screen_title">Unbond</string>
     <string name="bond">Bond</string>
+    <string name="bond_screen_title">Bond</string>
+    <string name="stake_screen_title">Stake</string>
+    <string name="unstake_screen_title">Unstake</string>
+    <string name="mint_screen_title">Mint</string>
+    <string name="redeem_screen_title">Redeem</string>
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
     <string name="next_award">Next award</string>

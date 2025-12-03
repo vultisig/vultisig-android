@@ -44,7 +44,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
-import com.vultisig.wallet.ui.utils.address
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -907,6 +906,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
+
             val tokenId = when (defiNavAction) {
                 DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id

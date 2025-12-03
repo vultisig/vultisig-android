@@ -213,6 +213,10 @@ private fun SendFormScreen(
 
     V2Scaffold(
         title = when (state.defiType) {
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stringResource(R.string.stake_screen_title)
+            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI -> stringResource(R.string.unstake_screen_title)
+            DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
+            DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
             DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
             else -> stringResource(R.string.send_screen_title)
