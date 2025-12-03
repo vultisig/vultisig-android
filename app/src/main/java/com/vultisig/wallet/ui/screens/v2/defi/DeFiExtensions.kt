@@ -70,6 +70,7 @@ internal fun DeFiNavActions.getContractByDeFiAction(): String? {
 
         DeFiNavActions.MINT_YTCY,
         DeFiNavActions.MINT_YRUNE -> YRUNE_YTCY_AFFILIATE_CONTRACT
+
         DeFiNavActions.REDEEM_YTCY -> YTCY_CONTRACT
         DeFiNavActions.REDEEM_YRUNE -> YRUNE_CONTRACT
 

@@ -1869,11 +1869,11 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val tokenContract = when (uiState.value.defiType) {
-                    DeFiNavActions.MINT_YRUNE -> {
+                    DeFiNavActions.REDEEM_YRUNE -> {
                         YRUNE_CONTRACT
                     }
 
-                    DeFiNavActions.MINT_YTCY -> {
+                    DeFiNavActions.REDEEM_YTCY -> {
                         YTCY_CONTRACT
                     }
 
