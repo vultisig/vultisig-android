@@ -41,8 +41,13 @@ internal interface DepositMemo {
                     append(":")
                     append(providerAddress)
                 }
-                if (operatorFee != null) {
-                    append(":")
+
+                if (operatorFee != null && operatorFee != 0) {
+                    if (providerAddress.isNullOrBlank()) {
+                        append("::")
+                    } else {
+                        append(":")
+                    }
                     append(operatorFee)
                 }
             }
@@ -90,10 +95,8 @@ internal interface DepositMemo {
                     append(":")
                     append(providerAddress)
                 }
-
             }
         }
-
     }
 
     data class Leave(

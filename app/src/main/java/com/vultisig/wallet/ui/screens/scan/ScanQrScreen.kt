@@ -4,29 +4,13 @@ package com.vultisig.wallet.ui.screens.scan
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.util.Size
-import android.view.MotionEvent
-import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.FocusMeteringAction
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -51,17 +35,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -72,7 +53,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.setupCamera
 import com.vultisig.wallet.ui.utils.unbindCameraListener
@@ -101,7 +81,7 @@ internal fun ScanQrScreen(
 internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
-    onError: (String) -> Unit = {}
+    onError: (String) -> Unit = {},
 ) {
     var isFrameHighlighted by remember { mutableStateOf(false) }
 
@@ -176,18 +156,38 @@ internal fun ScanQrScreen(
 
     Scaffold(
         bottomBar = {
-            if (cameraPermissionState.status.isGranted.not())
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    ),
+            ) {
+                if (cameraPermissionState.status.isGranted.not()) {
+                    VsButton(
+                        label = stringResource(id = R.string.scan_qr_screen_return_vault),
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+
+                    )
+                    UiSpacer(
+                        size = 12.dp
+                    )
+                }
+
                 VsButton(
-                    label = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = onDismiss,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        ),
+                        .fillMaxWidth(),
+                    onClick = {
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    },
+                    label = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                    iconLeft = R.drawable.ic_qr_upload
                 )
+            }
 
         },
         topBar = {
@@ -228,27 +228,6 @@ internal fun ScanQrScreen(
                     },
                     contentDescription = null,
                 )
-
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    VsButton(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(
-                                horizontal = 12.dp,
-                                vertical = 16.dp,
-                            ),
-                        onClick = {
-                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                        },
-                        label = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                        iconLeft = R.drawable.ic_qr_upload
-                    )
-                }
             } else if (cameraPermissionState.status.shouldShowRationale ||
                 cameraPermissionState.status.isGranted.not()
             ) {
@@ -347,7 +326,6 @@ private fun QrCameraScreen(
 }
 
 
-
 fun createScanner() = BarcodeScanning.getClient(
     BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -365,7 +343,7 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
                         error,
                         "Failed to scan image for barcodes"
                     )
-                    var errorMessage = when (error) {
+                    val errorMessage = when (error) {
                         is IllegalArgumentException -> "Unsupported image format"
                         is IllegalStateException -> "ML Kit scanner not initialized"
                         else -> error.message ?: error.toString()
