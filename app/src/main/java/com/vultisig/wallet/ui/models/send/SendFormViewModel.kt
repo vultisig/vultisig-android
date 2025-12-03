@@ -1436,7 +1436,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val depositMemo = "bond:${selectedToken.contractAddress}:$tokenAmount"
+                val depositMemo = "bond:${selectedToken.contractAddress}:$tokenAmountInt"
 
                 val specific = withContext(Dispatchers.IO) {
                     blockChainSpecificRepository
