@@ -1556,7 +1556,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val depositMemo = "withdraw:${selectedToken.contractAddress}:$tokenAmount"
+                val depositMemo = "withdraw:${selectedToken.contractAddress}:$tokenAmountInt"
 
                 val specific = withContext(Dispatchers.IO) {
                     blockChainSpecificRepository
@@ -1589,7 +1589,7 @@ internal class SendFormViewModel @Inject constructor(
                     wasmExecuteContractPayload = ThorchainFunctions.unstakeRUJI(
                         fromAddress = srcAddress,
                         stakingContract = STAKING_RUJI_CONTRACT,
-                        amount = tokenAmount.toString(),
+                        amount = tokenAmountInt.toString(),
                     )
                 )
 
