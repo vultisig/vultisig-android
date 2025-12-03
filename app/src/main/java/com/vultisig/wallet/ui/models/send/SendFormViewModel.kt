@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -24,6 +23,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositMemo
+import com.vultisig.wallet.data.models.DepositMemo.Bond
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
@@ -47,6 +50,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -69,6 +73,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -81,12 +86,14 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
@@ -95,6 +102,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.flatMap
 import kotlin.uuid.Uuid
 
 
@@ -128,11 +136,15 @@ internal data class SendFormUiModel(
     val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
 
+    // type
+    val type: SendFormType = SendFormType.Send,
+
     // errors
     val errorText: UiText? = null,
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
     val reapingError: UiText? = null,
+    val bondProviderError: UiText? = null,
 
     val hasMemo: Boolean = false,
     val showGasFee: Boolean = true,
@@ -155,6 +167,24 @@ internal enum class SendSections {
     Asset,
     Address,
     Amount,
+    BondAddress,
+}
+
+enum class SendFormType(val type: String) {
+    Send("send"),
+    Bond("bond"),
+    UnBond("unbond");
+
+    companion object {
+        fun fromString(type: String?): SendFormType? {
+            return entries.firstOrNull { it.type.equals(type, ignoreCase = true) }
+        }
+    }
+}
+
+enum class AddressBookType {
+    OUTPUT,
+    PROVIDER
 }
 
 internal sealed class GasSettings {
@@ -195,7 +225,7 @@ internal class SendFormViewModel @Inject constructor(
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
-    private val feeServiceComposite: FeeServiceComposite,
+    private val depositTransactionRepository: DepositTransactionRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -207,7 +237,13 @@ internal class SendFormViewModel @Inject constructor(
     val fiatAmountFieldState = TextFieldState()
     val memoFieldState = TextFieldState()
 
+    // bond node
+    val operatorFeesBondFieldState = TextFieldState()
+    val providerBondFieldState = TextFieldState()
+
     private var vaultId: String? = null
+
+    private var type: SendFormType = SendFormType.Send
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -257,6 +293,7 @@ internal class SendFormViewModel @Inject constructor(
             address = args.address,
             amount = args.amount,
             memo = args.memo,
+            type = args.type,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -304,14 +341,20 @@ internal class SendFormViewModel @Inject constructor(
         address: String?,
         amount: String?,
         memo: String?,
+        type: String?
     ) {
         memoFieldState.clearText()
+        this.type = if (type == null) {
+            SendFormType.Send
+        } else {
+            SendFormType.fromString(type) ?: SendFormType.Send
+        }
 
         if (this.vaultId != vaultId) {
             this.vaultId = vaultId
-
             loadAccounts(vaultId)
             loadVaultName()
+            initFormType()
         }
 
         if (address != null) {
@@ -342,6 +385,10 @@ internal class SendFormViewModel @Inject constructor(
         memo?.let {
             memoFieldState.setTextAndPlaceCursorAtEnd(it)
         }
+    }
+
+    private fun initFormType() {
+        uiState.update { it.copy(type = this.type) }
     }
 
     private fun loadVaultName() {
@@ -405,7 +452,7 @@ internal class SendFormViewModel @Inject constructor(
                     requestId = requestId,
                     pressX = position.x,
                     pressY = position.y,
-                    vaultId = vaultId ,
+                    vaultId = vaultId,
                     selectedNetworkId = selectedChain.id,
                     filters = Route.SelectNetwork.Filters.None
                 )
@@ -497,11 +544,12 @@ internal class SendFormViewModel @Inject constructor(
         qrCode: String?,
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
+        fieldState: TextFieldState = addressFieldState,
     ) {
         if (!qrCode.isNullOrBlank()) {
             Timber.d("setAddressFromQrCode(address = $qrCode)")
 
-            addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+            fieldState.setTextAndPlaceCursorAtEnd(qrCode)
 
             val vaultId = vaultId
             if (!vaultId.isNullOrBlank()) {
@@ -572,6 +620,10 @@ internal class SendFormViewModel @Inject constructor(
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
+    fun setProviderAddress(address: String) {
+        providerBondFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
     fun scanAddress() {
         viewModelScope.launch {
             val qr = requestQrScan.invoke()
@@ -581,32 +633,53 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun openAddressBook() {
+    fun scanProviderAddress() {
+        viewModelScope.launch {
+            val qr = requestQrScan.invoke()
+            if (!qr.isNullOrBlank()) {
+                setAddressFromQrCode(qr, null, null, providerBondFieldState)
+            }
+        }
+    }
+
+    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
+            val requestId = when (addressType) {
+                AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
+                AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
+            }
+
             navigator.route(
                 Route.AddressBook(
-                    requestId = REQUEST_ADDRESS_ID,
+                    requestId = requestId,
                     chainId = selectedChain.id,
                     excludeVaultId = vaultId,
                 )
             )
 
-            val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
+            val address: AddressBookEntry = requestResultRepository.request(requestId)
                 ?: return@launch
 
-            val selectedNewChain = address.chain
-            if (selectedChain != selectedNewChain) {
-                preSelectToken(
-                    preSelectedChainIds = listOf(selectedNewChain.id),
-                    preSelectedTokenId = null,
-                    forcePreselection = true
-                )
-            }
+            when (addressType) {
+                AddressBookType.OUTPUT -> {
+                    val selectedNewChain = address.chain
+                    if (selectedChain != selectedNewChain) {
+                        preSelectToken(
+                            preSelectedChainIds = listOf(selectedNewChain.id),
+                            preSelectedTokenId = null,
+                            forcePreselection = true
+                        )
+                    }
+                    setOutputAddress(address.address)
+                }
 
-            setOutputAddress(address.address)
+                AddressBookType.PROVIDER -> {
+                    setProviderAddress(address.address)
+                }
+            }
         }
     }
 
@@ -642,10 +715,17 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
-        val availableTokenBalance = getAvailableTokenBalance(
-            selectedAccount,
-            currentGasFee.value
-        )
+        val availableTokenBalance = if (type == SendFormType.Send || type == SendFormType.Bond) {
+            getAvailableTokenBalance(
+                selectedAccount,
+                currentGasFee.value
+            )
+        } else {
+            getAvailableTokenBalance(
+                selectedAccount,
+                BigInteger.ZERO // Substraction should not happen to DeFi Balance (Stake, Rewards, etc...)
+            )
+        }
 
         return availableTokenBalance?.decimal
             ?.multiply(percentage.toBigDecimal())
@@ -658,6 +738,14 @@ internal class SendFormViewModel @Inject constructor(
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
+    }
+
+    fun onClickContinue() {
+        when (uiState.value.type) {
+            SendFormType.Bond -> bond()
+            SendFormType.UnBond -> unbond()
+            else -> send()
+        }
     }
 
     fun send() {
@@ -916,6 +1004,329 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    fun bond() {
+        viewModelScope.launch {
+            showLoading()
+            try {
+                val vaultId = vaultId
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val selectedAccount = selectedAccount
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val chain = selectedAccount.token.chain
+
+                val gasFee = gasFee.value
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+
+                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+                }
+
+                val dstAddress = try {
+                    addressParserRepository.resolveName(
+                        addressFieldState.text.toString(),
+                        chain,
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.failed_to_resolve_address)
+                    )
+                }
+
+                val providerAddress =
+                    if (providerBondFieldState.text.toString().isNotEmpty()) {
+                        try {
+                            addressParserRepository.resolveName(
+                                providerBondFieldState.text.toString(),
+                                chain,
+                            )
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.failed_to_resolve_address)
+                            )
+                        }
+                    } else {
+                        ""
+                    }
+
+                val feeBondOperator = operatorFeesBondFieldState.text.toString()
+
+                // Validate operator fee is a valid integer (basis points)
+                val operatorFeeValue: Int? = if (feeBondOperator.isNotEmpty()) {
+                    feeBondOperator.toIntOrNull()
+                        ?.takeIf { it in 0..10000 } // Basis points: 0-10000 (0-100%)
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_invalid_operator_fee)
+                        )
+                } else {
+                    null
+                }
+
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount
+                        .movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                val availableTokenBalance = getAvailableTokenBalance(
+                    selectedAccount,
+                    gasFee.value,
+                )?.value ?: BigInteger.ZERO
+
+                if (tokenAmountInt > availableTokenBalance) {
+                    throw InvalidTransactionDataException(
+                        UiText.FormattedText(
+                            R.string.send_error_insufficient_native_balance_with_fees,
+                            listOf(selectedToken.ticker)
+                        )
+                    )
+                }
+
+                val depositMemo = Bond.Thor(
+                    nodeAddress = dstAddress,
+                    providerAddress = providerAddress.takeIf { it.isNotEmpty() },
+                    operatorFee = operatorFeeValue,
+                )
+
+                val specific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain,
+                            srcAddress,
+                            selectedToken,
+                            gasFee,
+                            isSwap = false,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                }
+
+                val depositTx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = selectedToken,
+                    srcAddress = srcAddress,
+                    dstAddress = dstAddress,
+                    memo = depositMemo.toString(),
+                    srcTokenValue = TokenValue(
+                        value = tokenAmountInt,
+                        token = selectedToken,
+                    ),
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                    blockChainSpecific = specific.blockChainSpecific,
+                )
+
+                depositTransactionRepository.addTransaction(depositTx)
+
+                navigator.route(
+                    Route.VerifyDeposit(
+                        transactionId = depositTx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+
+    fun unbond() {
+        viewModelScope.launch {
+            try {
+                showLoading()
+                val vaultId = vaultId
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val selectedAccount = selectedAccount
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val chain = selectedAccount.token.chain
+
+                val gasFee = gasFee.value
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+
+                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+                }
+
+                val nonDeFiBalance =
+                    accountsRepository.loadAddresses(vaultId).firstOrNull()
+                        ?.flatMap {
+                            it.accounts
+                        }
+                        ?.find {
+                            it.token.id.equals(selectedToken.value?.id ?: "", true)
+                        }?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+
+                val dstAddress = try {
+                    addressParserRepository.resolveName(
+                        addressFieldState.text.toString(),
+                        chain,
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.failed_to_resolve_address)
+                    )
+                }
+
+                val providerAddress =
+                    if (providerBondFieldState.text.toString().isNotEmpty()) {
+                        try {
+                            addressParserRepository.resolveName(
+                                providerBondFieldState.text.toString(),
+                                chain,
+                            )
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.failed_to_resolve_address)
+                            )
+                        }
+                    } else {
+                        ""
+                    }
+
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
+                val selectedToken = selectedAccount.token
+                val selectedAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount.movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                // Get Token Balance normal and check there is for fees
+                val depositMemo = DepositMemo.Unbond.Thor(
+                    nodeAddress = dstAddress,
+                    srcTokenValue = TokenValue(
+                        value = tokenAmountInt,
+                        token = selectedToken,
+                    ),
+                    providerAddress = providerAddress.takeIf { it.isNotEmpty() },
+                )
+
+                val specific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain,
+                            selectedAddress,
+                            selectedToken,
+                            gasFee,
+                            isSwap = false,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                }
+
+                val depositTx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = selectedToken,
+                    srcAddress = selectedAddress,
+                    dstAddress = dstAddress,
+                    memo = depositMemo.toString(),
+                    srcTokenValue = TokenValue(
+                        value = (chain == Chain.MayaChain)
+                            .let { if (it) 1.toBigInteger() else BigInteger.ZERO },
+                        token = selectedToken,
+                    ),
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                    blockChainSpecific = specific.blockChainSpecific,
+                )
+
+                depositTransactionRepository.addTransaction(depositTx)
+
+                navigator.route(
+                    Route.VerifyDeposit(
+                        transactionId = depositTx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
+            } finally {
+                hideLoading()
+            }
+        }
+    }
+
+    private suspend fun getFeesFiatValue(
+        gasFee: TokenValue,
+        selectedToken: Coin,
+    ): EstimatedGasFee {
+        return gasFeeToEstimatedFee(
+            GasFeeParams(
+                BigInteger.valueOf(1),
+                gasFee = gasFee,
+                selectedToken = selectedToken,
+            )
+        )
+    }
+
     @kotlin.ExperimentalStdlibApi
     private fun selectUtxosIfNeeded(
         chain: Chain,
@@ -1019,10 +1430,18 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun loadAccounts(vaultId: VaultId) {
         loadAccountsJob?.cancel()
-        loadAccountsJob = viewModelScope.launch {
-            accountsRepository.loadAddresses(vaultId)
-                .map { addrs -> addrs.flatMap { it.accounts } }
-                .collect(accounts)
+        loadAccountsJob = if (this.type == SendFormType.Send || this.type == SendFormType.Bond) {
+            viewModelScope.launch {
+                accountsRepository.loadAddresses(vaultId)
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect(accounts)
+            }
+        } else {
+            viewModelScope.launch {
+                accountsRepository.loadDeFiAddresses(vaultId, false)
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect(accounts)
+            }
         }
     }
 
@@ -1156,7 +1575,7 @@ internal class SendFormViewModel @Inject constructor(
             ) { token, dstAddress, tokenAmount, specific, memo ->
                 try {
                     val chain = token.chain
-                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano){
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
                         planFee.value = 1
                     }
 
@@ -1199,7 +1618,8 @@ internal class SendFormViewModel @Inject constructor(
                 // Only require to re-trigger utxo chains, due to no change output utxo and therefore
                 // less fees
                 if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    val spec = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO ?: return@collect
+                    val spec = specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
+                        ?: return@collect
                     val updatedSpec = specific.value?.copy(
                         blockChainSpecific = spec.copy(
                             sendMaxAmount = isMax
@@ -1631,6 +2051,7 @@ internal class SendFormViewModel @Inject constructor(
 
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
+        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }
 }
 
