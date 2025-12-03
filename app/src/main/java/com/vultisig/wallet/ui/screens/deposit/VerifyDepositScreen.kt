@@ -180,7 +180,8 @@ internal fun VerifyDepositScreen(
 
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_memo_title),
-                            subtitle = tx.memo
+                            subtitle = tx.memo,
+                            showAllContent = true
                         )
                     }
 
