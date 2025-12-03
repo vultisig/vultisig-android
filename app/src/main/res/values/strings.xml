@@ -127,7 +127,6 @@
     <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="choose_tokens">Choose Tokens</string>
     <string name="send_screen_title">Send</string>
-    <string name="bond_screen_title">Bond</string>
     <string name="send_from_address">From</string>
     <string name="send_to_address">Send to</string>
     <string name="send_to_address_hint">Enter address here</string>
