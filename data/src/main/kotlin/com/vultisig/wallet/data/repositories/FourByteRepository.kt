@@ -32,12 +32,7 @@ internal class FourByteRepositoryImpl @Inject constructor(
     override fun decodeFunctionArgs(functionSignature: String, memo: String): String? {
         return try {
             val decodeGeneric = decodeGeneric(memo, functionSignature)
-            if (!decodeGeneric.startsWith("Error decoding")) {
-                val prettyArrayJson = convertDecodedCallToPrettyArray(decodeGeneric)
-                prettyArrayJson
-            } else {
-                decodeGeneric
-            }
+            convertDecodedCallToPrettyArray(decodeGeneric)
         } catch (_: Exception) {
             null
         }

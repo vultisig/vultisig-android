@@ -111,7 +111,7 @@ private fun parseBigIntAsJsonNumber(value: String): JsonElement {
     return try {
         val big = BigInteger(value)
         JsonPrimitive(BigDecimal(big))
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         JsonPrimitive(value)
     }
 }

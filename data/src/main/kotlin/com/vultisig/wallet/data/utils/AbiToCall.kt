@@ -2,39 +2,42 @@ package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.common.toHexByteArray
 
-
+@Throws(Exception::class)
 internal fun decodeGeneric(memo: String, signature: String): String {
-    try {
-        val functionSelector = if (memo.startsWith("0x")) {
-            memo.substring(
-                2,
-                10
-            )
-        } else {
-            memo.take(8)
-        }
-
-        val (functionName, paramTypes) = parseSignature(signature)
-
-        val abi = buildAbiJson(
-            functionSelector,
-            functionName,
-            paramTypes
+    // Extract function selector (first 4 bytes after 0x)
+    val functionSelector = if (memo.startsWith("0x")) {
+        memo.substring(
+            2,
+            10
         )
-
-        val call = memo.toHexByteArray()
-        val decoded = wallet.core.jni.EthereumAbi.decodeCall(
-            call,
-            abi
-        )
-
-        return decoded
-    } catch (e: Exception) {
-        return "Error decoding: ${e.message}"
+    } else {
+        memo.take(8)
     }
+
+    // Parse signature to extract function name and parameter types
+    val (functionName, paramTypes) = parseSignature(signature)
+
+    // Build ABI JSON dynamically
+    val abi = buildAbiJson(
+        functionSelector,
+        functionName,
+        paramTypes
+    )
+
+    // Decode using wallet core
+    val call = memo.toHexByteArray()
+    val decoded = wallet.core.jni.EthereumAbi.decodeCall(
+        call,
+        abi
+    )
+
+    return decoded
 }
 
-
+/**
+ * Parse function signature into name and parameter types
+ * Example: "send((uint32,bytes32),address)" -> ("send", ["(uint32,bytes32)", "address"])
+ */
 private fun parseSignature(signature: String): Pair<String, List<String>> {
     val openParenIndex = signature.indexOf('(')
     if (openParenIndex == -1) {
@@ -47,6 +50,7 @@ private fun parseSignature(signature: String): Pair<String, List<String>> {
         signature.lastIndexOf(')')
     )
 
+    // Parse parameters considering nested tuples
     val paramTypes = parseParameters(paramsString)
 
     return Pair(
@@ -55,6 +59,10 @@ private fun parseSignature(signature: String): Pair<String, List<String>> {
     )
 }
 
+/**
+ * Parse parameter string handling nested tuples
+ * Example: "(uint32,bytes32),address,uint256" -> ["(uint32,bytes32)", "address", "uint256"]
+ */
 private fun parseParameters(paramsString: String): List<String> {
     if (paramsString.isEmpty()) return emptyList()
 
@@ -94,6 +102,9 @@ private fun parseParameters(paramsString: String): List<String> {
     return params
 }
 
+/**
+ * Build ABI JSON from function components
+ */
 private fun buildAbiJson(selector: String, functionName: String, paramTypes: List<String>): String {
     val inputs = paramTypes.mapIndexed { index, type ->
         buildInputJson(
@@ -117,9 +128,12 @@ private fun buildAbiJson(selector: String, functionName: String, paramTypes: Lis
         """.trimIndent()
 }
 
-
+/**
+ * Build JSON for a single input parameter, handling tuples recursively
+ */
 private fun buildInputJson(name: String, type: String): String {
     return if (type.startsWith("(")) {
+        // Handle tuple type
         val tupleContent = type.substring(
             1,
             type.lastIndexOf(')')
@@ -143,6 +157,7 @@ private fun buildInputJson(name: String, type: String): String {
             }
             """.trimIndent()
     } else {
+        // Simple type
         """
             {
                 "name": "$name",
