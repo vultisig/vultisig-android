@@ -43,6 +43,7 @@ class ThorchainSwapHelper {
                     .setChain("THOR")
                     .setSymbol(getTicker(keysignPayload.coin))
                     .setTicker(getTicker(keysignPayload.coin))
+                    .setSecured(keysignPayload.coin.isNativeToken)
                     .setSynth(false)
                     .build()
             )

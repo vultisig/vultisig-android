@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -24,11 +26,11 @@ import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
 import java.math.BigInteger
 
+
 @OptIn(ExperimentalStdlibApi::class)
 class ThorChainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
-    private val chainName: String,
     private val ticker: String,
     private val hrp: String?,
     private val networkId: String,
@@ -40,6 +42,15 @@ class ThorChainHelper(
         var THORCHAIN_NETWORK_ID: String = "thorchain-1"
 
         const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
+        val SECURE_ASSETS_TICKERS = listOf(
+            "BTC",
+            "ETH",
+            "BCH",
+            "LTC",
+            "DOGE",
+            "AVAX",
+            "BNB"
+        )
 
         fun maya(
             vaultHexPublicKey: String,
@@ -47,7 +58,6 @@ class ThorChainHelper(
         ) = ThorChainHelper(
             vaultHexPublicKey = vaultHexPublicKey,
             vaultHexChainCode = vaultHexChainCode,
-            chainName = "MAYA",
             ticker = "CACAO",
             hrp = "maya",
             networkId = "mayachain-mainnet-v1",
@@ -60,7 +70,6 @@ class ThorChainHelper(
         ) = ThorChainHelper(
             vaultHexPublicKey = vaultHexPublicKey,
             vaultHexChainCode = vaultHexChainCode,
-            chainName = "THOR",
             ticker = "RUNE",
             hrp = null,
             networkId = THORCHAIN_NETWORK_ID,
@@ -261,12 +270,16 @@ class ThorChainHelper(
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
+        val chainName = getChianName(keysignPayload.coin)
+        val isSecured = keysignPayload.coin.isSecuredAsset()
+
         val coin = Cosmos.THORChainCoin.newBuilder()
             .setAsset(
                 Cosmos.THORChainAsset.newBuilder()
                     .setChain(chainName)
                     .setSymbol(symbol)
                     .setTicker(assetTicker)
+                    .setSecured(isSecured)
                     .setSynth(false)
                     .build()
             )
@@ -364,7 +377,20 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
+
+
+
+    private fun getChianName(coin: Coin): String {
+        return if (coin.isSecuredAsset()) {
+            "THOR"
+        } else if (coin.ticker.uppercase() == "BNB") {
+            "BSC"
+        } else {
+            coin.chain.ticker().uppercase()
+        }
+    }
 }
+
 
 private fun TransactionType.genericWasmMessage(): Boolean =
     this.mergeOrUnMerge() || this == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
@@ -372,3 +398,54 @@ private fun TransactionType.genericWasmMessage(): Boolean =
 private fun TransactionType.mergeOrUnMerge(): Boolean =
     this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
             this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
+
+
+fun Coin.isSecuredAsset(): Boolean {
+    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && !isNativeToken
+}
+
+
+fun Coin.getNotNativeTicker(): String {
+    return ticker.uppercase().replace("X/", "")
+}
+
+fun Chain.ticker(): String {
+    return when (this) {
+        Chain.ThorChain -> "RUNE"
+        Chain.Solana -> "SOL"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX"
+        Chain.Base -> "BASE"
+        Chain.Blast -> "BLAST"
+        Chain.Arbitrum -> "ARB"
+        Chain.Polygon -> "POL"
+        Chain.Optimism -> "OP"
+        Chain.BscChain -> "BNB"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.Dash -> "DASH"
+        Chain.GaiaChain -> "UATOM"
+        Chain.Kujira -> "KUJI"
+        Chain.MayaChain -> "CACAO"
+        Chain.CronosChain -> "CRO"
+        Chain.Polkadot -> "DOT"
+        Chain.Dydx -> "DYDX"
+        Chain.ZkSync -> "ZK"
+        Chain.Sui -> "SUI"
+        Chain.Ton -> "TON"
+        Chain.Osmosis -> "OSMO"
+        Chain.Terra -> "LUNA"
+        Chain.TerraClassic -> "LUNC"
+        Chain.Noble -> "USDC"
+        Chain.Ripple -> "XRP"
+        Chain.Akash -> "AKT"
+        Chain.Tron -> "TRX"
+        Chain.Zcash -> "ZEC"
+        Chain.Cardano -> "ADA"
+        Chain.Mantle -> "MNT"
+        Chain.Sei -> "SEI"
+        Chain.Hyperliquid -> "HYPE"
+    }
+}
