@@ -931,7 +931,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                         type = defiNavAction.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = tokenId,
-                        address = defiNavAction.getContractByDeFiAction(),
+                        address = defiNavAction.getContractByDeFiAction(), // dst address
                     )
                 )
             }

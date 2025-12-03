@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
+import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_YTCY_AFFILIATE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_CONTRACT
@@ -1049,7 +1050,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = AFFILIATE_CONTRACT,
+            dstAddress = YRUNE_YTCY_AFFILIATE_CONTRACT,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
@@ -1060,7 +1061,7 @@ internal class DepositFormViewModel @Inject constructor(
             blockChainSpecific = specific.blockChainSpecific,
             wasmExecuteContractPayload = ThorchainFunctions.mintYToken(
                 fromAddress = srcAddress,
-                stakingContract = AFFILIATE_CONTRACT,
+                stakingContract = YRUNE_YTCY_AFFILIATE_CONTRACT,
                 tokenContract = tokenContract,
                 denom = selectedToken.ticker.lowercase(),
                 amount = tokenAmount,
@@ -2565,6 +2566,4 @@ private val tokensToMerge = listOf(
     ),
 )
 
-private const val AFFILIATE_CONTRACT =
-    "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"
 private const val DEFAULT_SLIPPAGE = "1.0"

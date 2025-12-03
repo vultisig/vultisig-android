@@ -68,11 +68,11 @@ internal fun DeFiNavActions.getContractByDeFiAction(): String? {
         DeFiNavActions.STAKE_RUJI,
         DeFiNavActions.UNSTAKE_RUJI -> STAKING_RUJI_CONTRACT
 
-        DeFiNavActions.MINT_YRUNE,
-        DeFiNavActions.REDEEM_YRUNE -> YRUNE_CONTRACT
-
         DeFiNavActions.MINT_YTCY,
-        DeFiNavActions.REDEEM_YTCY -> YTCY_CONTRACT
+        DeFiNavActions.MINT_YRUNE,
+        DeFiNavActions.REDEEM_YTCY,
+        DeFiNavActions.REDEEM_YRUNE -> YRUNE_YTCY_AFFILIATE_CONTRACT
+
         else -> null
     }
 }
@@ -101,3 +101,5 @@ internal const val YRUNE_CONTRACT =
 internal const val YTCY_CONTRACT =
     "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
 
+internal const val YRUNE_YTCY_AFFILIATE_CONTRACT =
+    "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"
