@@ -618,7 +618,7 @@ internal class ThorChainApiImpl @Inject constructor(
             httpResponse.bodyAsText().contains("TCYStaker doesn't exist", ignoreCase = true)) {
             TcyStakeResponse(
                 address = address,
-                amount = "10000000",
+                amount = "0",
             )
         } else if (!httpResponse.status.isSuccess()) {
             Timber.e("FetchTcyStakedAmount", "${httpResponse.status}")
