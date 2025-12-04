@@ -78,11 +78,11 @@ class TCYStakingService @Inject constructor(
         }
 
         // Emit new fresh positions
-        Timber.d("RujiStakingService: Emitting fresh TCY staking position for vault $vaultId")
+        Timber.d("TCYStakingService: Emitting fresh TCY staking position for vault $vaultId")
         emit(freshDetails)
 
         // Update DB cache
-        Timber.d("RujiStakingService: Saving fresh TCY position for vault $vaultId")
+        Timber.d("TCYStakingService: Saving fresh TCY position for vault $vaultId")
         stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
     }.flowOn(Dispatchers.IO)
 
