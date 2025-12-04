@@ -23,7 +23,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
-import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -37,6 +36,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.formatAmount
 import com.vultisig.wallet.ui.screens.v2.defi.formatDate
 import com.vultisig.wallet.ui.screens.v2.defi.formatPercentage
 import com.vultisig.wallet.ui.screens.v2.defi.formatToString
+import com.vultisig.wallet.ui.screens.v2.defi.getContractByDeFiAction
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
@@ -44,7 +44,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
-import com.vultisig.wallet.ui.utils.address
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -851,7 +850,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
-                        type = SendFormType.Bond.type,
+                        type = DeFiNavActions.BOND.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,
@@ -872,7 +871,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
-                        type = SendFormType.UnBond.type,
+                        type = DeFiNavActions.UNBOND.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                         address = nodeAddress,
@@ -893,7 +892,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 navigator.route(
                     Route.Send(
                         vaultId = vaultId,
-                        type = SendFormType.Bond.type,
+                        type = DeFiNavActions.BOND.type,
                         chainId = Chain.ThorChain.id,
                         tokenId = runeCoin.id,
                     )
@@ -907,9 +906,17 @@ internal class DefiPositionsViewModel @Inject constructor(
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
-            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
 
-            if (runeCoin != null) {
+            val tokenId = when (defiNavAction) {
+                DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
+                DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
+                DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
+                DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
+                DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE.id
+                else -> null
+            }
+            if (tokenId == null) {
                 navigator.route(
                     Route.Deposit(
                         vaultId = vaultId,
@@ -918,7 +925,15 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
                 )
             } else {
-                Timber.e("RUNE coin not found in vault")
+                navigator.route(
+                    Route.Send(
+                        vaultId = vaultId,
+                        type = defiNavAction.type,
+                        chainId = Chain.ThorChain.id,
+                        tokenId = tokenId,
+                        address = defiNavAction.getContractByDeFiAction(), // dst address
+                    )
+                )
             }
         }
     }

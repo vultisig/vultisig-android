@@ -127,13 +127,9 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val tokenId: TokenId? = null,
         val type: String? = null,
-        // send fields
         val address: String? = null,
         val amount: String? = null,
         val memo: String? = null,
-
-        // bond fields
-        val nodeAddress: String? = null,
     ) {
 
         @Serializable
