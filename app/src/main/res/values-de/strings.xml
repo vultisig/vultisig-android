@@ -923,7 +923,7 @@
     <string name="dialog_default_error_body">Es ist ein Fehler aufgetreten.</string>
     <string name="onboarding_desc_page_2_part_1">Sie sind</string>
     <string name="onboarding_desc_page_2_part_2">Aufgeteilt in Teile.</string>
-    <string name="select_vault_type_fast_desc_2">Kleinere Beträge für den täglichen Gebrauch speichern</string>
+    <string name="select_vault_type_fast_desc_2">Geld für den täglichen Gebrauch zurücklegen</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Möchten Sie einen privaten Datentresor erstellen?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">In den lokalen Modus wechseln</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Zurück in den Internetmodus wechseln</string>

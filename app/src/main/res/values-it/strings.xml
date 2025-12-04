@@ -921,7 +921,7 @@
     <string name="dialog_default_error_body">Qualcosa è andato storto</string>
     <string name="onboarding_desc_page_2_part_1">Sono</string>
     <string name="onboarding_desc_page_2_part_2">diviso in parti</string>
-    <string name="select_vault_type_fast_desc_2">Conserva fondi più piccoli per l\'uso quotidiano</string>
+    <string name="select_vault_type_fast_desc_2">Conserva i fondi per l\'uso quotidiano</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Vuoi creare un vault privatamente?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Passa alla modalità locale</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Passa alla modalità Internet</string>
