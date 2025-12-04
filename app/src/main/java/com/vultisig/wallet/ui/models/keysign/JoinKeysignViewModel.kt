@@ -1,4 +1,7 @@
-@file:OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(
+    ExperimentalSerializationApi::class,
+    ExperimentalStdlibApi::class
+)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -107,7 +110,9 @@ sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
-    data object MissingRequiredVault : JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
+    data object MissingRequiredVault :
+        JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
+
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
     data object WrongVaultShare :
         JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
@@ -115,8 +120,11 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
-    data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
-    data object WrongLibType : JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
+    data object FailedConnectToServer :
+        JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
+
+    data object WrongLibType :
+        JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
 }
 
 sealed interface JoinKeysignState {
@@ -189,11 +197,17 @@ internal class JoinKeysignViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
+
+        private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
     }
+
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
-    private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
+    private var _currentVault: Vault = Vault(
+        id = UUID.randomUUID().toString(),
+        "temp vault"
+    )
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
@@ -304,7 +318,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     // when Payload is not in the QRCode
                     if (payloadProto.payloadId.isNotEmpty()) {
-                        routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                        routerApi.getPayload(
+                            _serverAddress,
+                            payloadId
+                        ).let { payload ->
                             if (payload.isNotEmpty()) {
                                 val rawPayload = decompressQr(payload.decodeBase64Bytes())
                                 val payloadProto =
@@ -329,10 +346,16 @@ internal class JoinKeysignViewModel @Inject constructor(
                     currentState.value = JoinKeysignState.DiscoverService
                 }
             } catch (e: UnknownHostException) {
-                Timber.d(e, "Failed to resolve request")
+                Timber.d(
+                    e,
+                    "Failed to resolve request"
+                )
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                Timber.d(e, "Failed to parse QR code")
+                Timber.d(
+                    e,
+                    "Failed to parse QR code"
+                )
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }
@@ -394,7 +417,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         val model = SignMessageTransactionUiModel(
             method = customMessage.method,
-            message = customMessage.message.normalizeMessageFormat(),
+            message = getNormalizedCustomMessage(customMessage),
         )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
@@ -407,6 +430,25 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         return true
     }
+
+    private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload) =
+    // For "eth_signTypedData_v4", the extension sends both the message and the domain
+    // as pre-hashed values. Because these fields are already hashed, the original data
+    // cannot be decoded from the resulting hex string.
+    // Therefore, we display the raw hex instead.
+    //
+    // Reference:
+    // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
+        // https://github.com/vultisig/vultisig-windows/blob/e7e5b388ca022c9e3f02a85346336b837857a856/core/inpage-provider/popup/view/resolvers/signMessage/overview/index.tsx#L36
+        if (customMessage.method.equals(
+                other = ETH_SIGN_TYPED_DATA_V4,
+                ignoreCase = true
+            )
+        ) {
+            customMessage.message
+        } else {
+            customMessage.message.normalizeMessageFormat()
+        }
 
     private suspend fun handleKeysignMessage(
         proto: KeysignMessageProto
@@ -456,9 +498,14 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val chain = srcToken.chain
                 val (nativeTokenAddress, _) = chainAccountAddressRepository.getAddress(
-                    nativeToken, _currentVault
+                    nativeToken,
+                    _currentVault
                 )
-                val gasFee = gasFeeRepository.getGasFee(chain = chain, address = nativeTokenAddress, isSwap = true)
+                val gasFee = gasFeeRepository.getGasFee(
+                    chain = chain,
+                    address = nativeTokenAddress,
+                    isSwap = true
+                )
                 val estimatedNetworkGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -535,7 +582,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
                                 fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
                             ),
-                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue)+
+                            networkFeeFormatted = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                     " ${estimatedNetworkGasFee.tokenValue.unit}",
                             totalFee = fiatValueToStringMapper(
                                 estimatedFee + networkGasFeeFiatValue
@@ -560,7 +607,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                             tokenValue = srcTokenValue,
                         )
 
-                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        val estimatedFee = convertTokenValueToFiat(
+                            dstToken,
+                            quote.fees,
+                            currency
+                        )
                         val swapTransactionUiModel = SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
