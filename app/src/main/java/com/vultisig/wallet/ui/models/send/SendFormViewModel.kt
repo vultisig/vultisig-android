@@ -1025,40 +1025,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             showLoading()
             try {
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 val providerAddress =
                     if (providerBondFieldState.text.toString().isNotEmpty()) {
@@ -1184,55 +1156,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 showLoading()
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val nonDeFiBalance =
-                    accountsRepository.loadAddresses(vaultId).firstOrNull()
-                        ?.flatMap {
-                            it.accounts
-                        }
-                        ?.find {
-                            it.token.id.equals(selectedToken.value?.id ?: "", true)
-                        }?.tokenValue?.value ?: BigInteger.ZERO
-
-                if (nonDeFiBalance < gasFee.value) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 val providerAddress =
                     if (providerBondFieldState.text.toString().isNotEmpty()) {
@@ -1349,40 +1278,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             showLoading()
             try {
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -1496,40 +1397,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             showLoading()
             try {
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -1642,40 +1515,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             showLoading()
             try {
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -1804,40 +1649,12 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             showLoading()
             try {
-                val vaultId = vaultId
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val selectedAccount = selectedAccount
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_token)
-                    )
-
-                val chain = selectedAccount.token.chain
-
-                val gasFee = gasFee.value
-                    ?: throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-
-                val dstAddress = try {
-                    addressParserRepository.resolveName(
-                        addressFieldState.text.toString(),
-                        chain,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.failed_to_resolve_address)
-                    )
-                }
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.seletedAccount
+                val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
@@ -2739,6 +2556,51 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private suspend fun accountValidation(): AccountValidation {
+        val vaultId = vaultId
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_token)
+            )
+
+        val selectedAccount = selectedAccount
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_token)
+            )
+
+        val chain = selectedAccount.token.chain
+
+        val gasFee = gasFee.value
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_gas_fee)
+            )
+
+        if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_gas_fee)
+            )
+        }
+
+        val dstAddress = try {
+            addressParserRepository.resolveName(
+                addressFieldState.text.toString(),
+                chain,
+            )
+        } catch (e: Exception) {
+            Timber.e(e)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.failed_to_resolve_address)
+            )
+        }
+
+        return AccountValidation(
+            vaultId = vaultId,
+            seletedAccount = selectedAccount,
+            chain = chain,
+            gasFee = gasFee,
+            dstAddress = dstAddress,
+        )
+    }
+
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
         private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
@@ -2785,3 +2647,11 @@ internal fun List<Address>.findCurrentSrc(
         return firstSendSrc(selectedTokenId, null)
     }
 }
+
+private data class AccountValidation(
+    val vaultId: String,
+    val seletedAccount: Account,
+    val chain: Chain,
+    val gasFee: TokenValue,
+    val dstAddress: String,
+)
