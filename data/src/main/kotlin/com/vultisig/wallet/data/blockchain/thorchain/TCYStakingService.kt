@@ -54,7 +54,7 @@ class TCYStakingService @Inject constructor(
         defaultExpirationMs = CONSTANTS_CACHE_DURATION_MS
     )
 
-    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails?> = flow {
+    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> = flow {
         val cachedDetails =
             stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
         if (cachedDetails != null) {

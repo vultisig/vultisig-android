@@ -573,29 +573,27 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
                 }
             }.collect { position ->
-                if (position != null) {
-                    val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
-                    val formattedAmount = "${stakedAmount.toPlainString()} TCY"
+                val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
+                val formattedAmount = "${stakedAmount.toPlainString()} TCY"
 
-                    // Create and return the UI model
-                    val stakePosition = StakePositionUiModel(
-                        coin = position.coin,
-                        stakeAssetHeader = "Staked TCY",
-                        stakeAmount = formattedAmount,
-                        apy = position.apr?.formatPercentage(),
-                        canWithdraw = false, // TCY auto-distributes rewards
-                        canStake = true,
-                        canUnstake = true,
-                        rewards = null,
-                        nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
-                        nextPayout = position.nextPayoutDate?.formatDate()
-                    )
+                // Create and return the UI model
+                val stakePosition = StakePositionUiModel(
+                    coin = position.coin,
+                    stakeAssetHeader = "Staked TCY",
+                    stakeAmount = formattedAmount,
+                    apy = position.apr?.formatPercentage(),
+                    canWithdraw = false, // TCY auto-distributes rewards
+                    canStake = true,
+                    canUnstake = true,
+                    rewards = null,
+                    nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
+                    nextPayout = position.nextPayoutDate?.formatDate()
+                )
 
-                    updateExistingPosition(stakePosition)
+                updateExistingPosition(stakePosition)
 
-                    _totalValueTCYStake.update { position.stakeAmount }
-                    _isLoadingTotalAmount.update { false }
-                }
+                _totalValueTCYStake.update { position.stakeAmount }
+                _isLoadingTotalAmount.update { false }
             }
         }
     }
