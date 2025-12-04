@@ -515,6 +515,7 @@ internal fun VerifyCardDetails(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    showAllContent: Boolean = false,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -540,8 +541,9 @@ internal fun VerifyCardDetails(
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.End,
-            modifier = Modifier.widthIn(max = 100.dp),
-            maxLines = 1,
+            modifier = if (showAllContent) Modifier.fillMaxWidth()
+            else Modifier.widthIn(max = 100.dp),
+            maxLines = if (showAllContent) 5 else 1,
             overflow = TextOverflow.MiddleEllipsis,
         )
     }

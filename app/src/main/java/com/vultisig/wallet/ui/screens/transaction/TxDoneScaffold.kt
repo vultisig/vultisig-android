@@ -75,7 +75,7 @@ internal fun TxDoneScaffold(
             }
 
             Column(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(contentPadding)
                     .padding(
@@ -88,21 +88,21 @@ internal fun TxDoneScaffold(
                         Image(
                             painter = painterResource(R.drawable.img_tx_overview_bg),
                             contentDescription = null,
-                            alignment = Alignment.Companion.Center,
-                            modifier = Modifier.Companion
+                            alignment = Alignment.Center,
+                            modifier = Modifier
                                 .padding(horizontal = 48.dp)
                                 .fillMaxWidth(),
                         )
                         Text(
                             text = stringResource(R.string.tx_transaction_successful_screen_title),
-                            textAlign = TextAlign.Companion.Center,
+                            textAlign = TextAlign.Center,
                             style = Theme.brockmann.body.l.medium
                                 .copy(
                                     brush = Theme.v2.colors.gradients.primary,
                                 ),
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .align(Alignment.Companion.BottomCenter)
+                                .align(Alignment.BottomCenter)
                                 .padding(
                                     bottom = 48.dp,
                                 ),
@@ -115,7 +115,7 @@ internal fun TxDoneScaffold(
                 UiSpacer(8.dp)
 
                 Column(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .background(
                             color = Theme.v2.colors.backgrounds.disabled,
                             shape = RoundedCornerShape(16.dp)
