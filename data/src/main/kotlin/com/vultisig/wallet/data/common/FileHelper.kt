@@ -298,7 +298,7 @@ private suspend inline fun <T> retryWithDelay(
         } catch (_: Throwable) {
             Timber.e("Error in retryWithDelay, attempt: $attempt")
         }
-        delay(delay.milliseconds * attempt)
+        delay(delay.milliseconds * (attempt + 1))
     }
 
     return try {

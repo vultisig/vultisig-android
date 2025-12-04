@@ -27,7 +27,7 @@ class IsVaultBackupFileExtensionValidUseCaseImpl @Inject constructor(
         return when (mimeType) {
             MimeType.OCTET_STREAM -> {
                 FILE_ALLOWED_EXTENSIONS.any {
-                    it == file.extension
+                    it.equals(file.extension, ignoreCase = true)
                 }
             }
 
