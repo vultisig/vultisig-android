@@ -1029,7 +1029,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 val providerAddress =
@@ -1160,7 +1160,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 val providerAddress =
@@ -1282,7 +1282,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
@@ -1401,7 +1401,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
@@ -1519,7 +1519,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
@@ -1653,7 +1653,7 @@ internal class SendFormViewModel @Inject constructor(
                 val vaultId = accountValidation.vaultId
                 val chain = accountValidation.chain
                 val dstAddress = accountValidation.dstAddress
-                val selectedAccount = accountValidation.seletedAccount
+                val selectedAccount = accountValidation.selectedAccount
                 val gasFee = accountValidation.gasFee
 
                 if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
@@ -2594,7 +2594,7 @@ internal class SendFormViewModel @Inject constructor(
 
         return AccountValidation(
             vaultId = vaultId,
-            seletedAccount = selectedAccount,
+            selectedAccount = selectedAccount,
             chain = chain,
             gasFee = gasFee,
             dstAddress = dstAddress,
@@ -2650,7 +2650,7 @@ internal fun List<Address>.findCurrentSrc(
 
 private data class AccountValidation(
     val vaultId: String,
-    val seletedAccount: Account,
+    val selectedAccount: Account,
     val chain: Chain,
     val gasFee: TokenValue,
     val dstAddress: String,

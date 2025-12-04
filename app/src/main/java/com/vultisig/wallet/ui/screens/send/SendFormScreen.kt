@@ -1040,7 +1040,7 @@ private fun FoldableBondDestinationAddress(
         ) {
             Text(
                 text = when (state.defiType) {
-                    null, DeFiNavActions.BOND -> stringResource(R.string.bond_node_address)
+                    null, DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.v2.colors.text.extraLight,
