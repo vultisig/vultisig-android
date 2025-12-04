@@ -444,13 +444,17 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         """.trimIndent()
 
-        val response = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
+        val httpResponse = httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject {
                 put("query", query)
             })
-        }.body<GraphQLResponse<RootData>>()
+        }
+        if (!httpResponse.status.isSuccess()) {
+            throw Exception("Could not fetch balances: status ${httpResponse.status.value}")
+        }
 
+        val response = httpResponse.body<GraphQLResponse<RootData>>()
         if (!response.errors.isNullOrEmpty()) {
             throw Exception("Could not fetch balances: ${response.errors}")
         }
@@ -462,7 +466,8 @@ internal class ThorChainApiImpl @Inject constructor(
         val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: "USDC"
-        val apr = runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
+        val apr =
+            runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
 
         return RujiStakeBalances(
             stakeAmount = stakeAmount,
@@ -514,7 +519,8 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getThorchainTokenPriceByContract(contract: String): VaultRedemptionResponseJson {
-        val url = "https://api-thorchain.rorcual.xyz/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+        val url =
+            "https://api-thorchain.rorcual.xyz/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<VaultRedemptionResponseJson>()
@@ -590,7 +596,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun getMidgardNetworkData(): MidgardNetworkData {
         val url = "$MIDGARD_URL/network"
-        
+
         return httpClient.get(url) {
             header(xClientID, xClientIDValue)
         }.bodyOrThrow<MidgardNetworkData>()
@@ -605,18 +611,9 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
-        return try {
-            val response = httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
-                header(xClientID, xClientIDValue)
-            }
-            if (response.status.isSuccess()) {
-                response.body<TcyStakeResponse>()
-            } else {
-                TcyStakeResponse(amount = "0", address = address)
-            }
-        } catch (_: Exception) {
-            TcyStakeResponse(amount = "0", address = address)
-        }
+        return httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
+            header(xClientID, xClientIDValue)
+        }.body<TcyStakeResponse>()
     }
 
     override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {

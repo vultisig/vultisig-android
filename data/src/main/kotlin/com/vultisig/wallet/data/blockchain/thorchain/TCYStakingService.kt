@@ -156,51 +156,56 @@ class TCYStakingService @Inject constructor(
         address: String,
         stakedAmount: BigDecimal
     ): Double {
-        // Get prices
-        val currency = AppCurrency.USD
-        val tcyCoin = Coins.ThorChain.TCY
-        val runeCoin = Coins.ThorChain.RUNE
-        val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.id, currency)
-            ?: BigDecimal.ZERO
-        val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.id, currency)
-            ?: BigDecimal.ZERO
+        return try {
+            // Get prices
+            val currency = AppCurrency.USD
+            val tcyCoin = Coins.ThorChain.TCY
+            val runeCoin = Coins.ThorChain.RUNE
+            val tcyPrice = tokenPriceRepository.getCachedPrice(tcyCoin.id, currency)
+                ?: BigDecimal.ZERO
+            val runePrice = tokenPriceRepository.getCachedPrice(runeCoin.id, currency)
+                ?: BigDecimal.ZERO
 
-        if (tcyPrice <= BigDecimal.ZERO ||
-            runePrice <= BigDecimal.ZERO ||
-            stakedAmount == BigDecimal.ZERO
-        ) {
-            return 0.0
-        }
+            if (tcyPrice <= BigDecimal.ZERO ||
+                runePrice <= BigDecimal.ZERO ||
+                stakedAmount == BigDecimal.ZERO
+            ) {
+                return 0.0
+            }
 
-        // Get user distributions
-        val distributionData = thorChainApi.fetchTcyUserDistributions(address)
-        val distributions = distributionData.distributions
+            // Get user distributions
+            val distributionData = thorChainApi.fetchTcyUserDistributions(address)
+            val distributions = distributionData.distributions
 
-        if (distributions.isEmpty()) {
-            return 0.0
-        }
+            if (distributions.isEmpty()) {
+                return 0.0
+            }
 
-        // Calculate total RUNE received
-        val totalRuneSatoshis = distributions.sumOf { dist ->
-            dist.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
-        }
-        val totalRune = CoinType.THORCHAIN.toValue(totalRuneSatoshis)
+            // Calculate total RUNE received
+            val totalRuneSatoshis = distributions.sumOf { dist ->
+                dist.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
+            }
+            val totalRune = CoinType.THORCHAIN.toValue(totalRuneSatoshis)
 
-        // Calculate average daily RUNE
-        val days = distributions.size.toBigDecimal()
-        val avgDailyRune = totalRune.divide(days, 8, RoundingMode.HALF_UP)
+            // Calculate average daily RUNE
+            val days = distributions.size.toBigDecimal()
+            val avgDailyRune = totalRune.divide(days, 8, RoundingMode.HALF_UP)
 
-        // Annualize
-        val annualRune = avgDailyRune.multiply(BigDecimal(DAYS_IN_YEAR))
-        val annualUSD = annualRune.multiply(runePrice)
+            // Annualize
+            val annualRune = avgDailyRune.multiply(BigDecimal(DAYS_IN_YEAR))
+            val annualUSD = annualRune.multiply(runePrice)
 
-        // Calculate staked value in Currency
-        val stakedValueUSD = stakedAmount.multiply(tcyPrice)
+            // Calculate staked value in Currency
+            val stakedValueUSD = stakedAmount.multiply(tcyPrice)
 
-        // Calculate APY
-        return if (stakedValueUSD > BigDecimal.ZERO) {
-            (annualUSD.divide(stakedValueUSD, 4, RoundingMode.HALF_UP).toDouble() * 100)
-        } else {
+            // Calculate APY
+            return if (stakedValueUSD > BigDecimal.ZERO) {
+                (annualUSD.divide(stakedValueUSD, 4, RoundingMode.HALF_UP).toDouble() * 100)
+            } else {
+                0.0
+            }
+        } catch (t: Throwable) {
+            Timber.e(t)
             0.0
         }
     }
