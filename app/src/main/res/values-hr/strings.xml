@@ -959,4 +959,6 @@
     <string name="bond_button_label">Vezati</string>
     <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
     <string name="bond_provider_optional">Pružatelj (Neobavezno)</string>
+    <string name="deposit_option_withdraw_secured">Povlačenje osigurane imovine</string>
+    <string name="deposit_option_secured_assets">Osigurana imovina</string>
 </resources>

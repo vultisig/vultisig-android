@@ -25,6 +25,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
 import java.math.BigInteger
+import kotlin.text.drop
 
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -84,13 +85,14 @@ class ThorChainHelper(
         return if (coin.isNativeToken) {
             ticker
         } else {
-            if(coin.ticker.startsWith("x/",true)) {
-                coin.ticker.drop(2)
-            } else {
-                coin.ticker
-            }
+            coin.getNotNativeTicker()
         }
     }
+
+    private fun Coin.getNotNativeTicker(): String {
+        return this.ticker.uppercase().removePrefix("x/")
+    }
+
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val tokenAddress = keysignPayload.coin.address
         val fromAddress = if (!hrp.isNullOrEmpty()) {
@@ -379,12 +381,13 @@ class ThorChainHelper(
     }
 
 
-
     private fun getChianName(coin: Coin): String {
         return if (coin.isSecuredAsset()) {
             "THOR"
-        } else if (coin.ticker.uppercase() == "BNB") {
+        } else if (coin.chain == Chain.BscChain) {
             "BSC"
+        } else if (coin.chain == Chain.MayaChain) {
+            "MAYA"
         } else {
             coin.chain.ticker().uppercase()
         }

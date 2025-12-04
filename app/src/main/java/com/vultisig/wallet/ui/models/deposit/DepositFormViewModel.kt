@@ -48,6 +48,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.screens.deposit.DepositFormScreen
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
@@ -105,6 +106,8 @@ internal enum class DepositOption {
     MintYRUNE,
     RedeemYRUNE,
     RedeemYTCY,
+    SecuredAsset,
+    WithdrawSecuredAsset
 }
 
 @Immutable
@@ -877,6 +880,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
                     DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
                     DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
+                    DepositOption.SecuredAsset -> createSecuredAssetTransaction()
+                    DepositOption.WithdrawSecuredAsset -> createWithdrawSecuredAssetTransaction()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -1403,6 +1408,98 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+    }
+
+
+
+    private suspend fun createSecuredAssetTransaction(): DepositTransaction {
+        val chain = chain ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val address = accountsRepository.loadAddress(vaultId, chain)
+            .firstOrNull() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmountInt = BigInteger.ZERO
+        val memo = "secured:sample"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+        )
+    }
+
+    private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
+        val chain = chain ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val address = accountsRepository.loadAddress(vaultId, chain)
+            .firstOrNull() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmountInt = BigInteger.ZERO
+        val memo = "withdraw_secured:sample"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
         )
     }
 

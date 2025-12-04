@@ -224,6 +224,8 @@ internal fun DepositFormScreen(
                         DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
                         DepositOption.AddCacaoPool -> stringResource(R.string.deposit_option_add_cacao_pool)
                         DepositOption.RemoveCacaoPool -> stringResource(R.string.deposit_option_remove_cacao_pool)
+                        DepositOption.SecuredAsset -> stringResource(R.string.deposit_option_secured_assets)
+                        DepositOption.WithdrawSecuredAsset -> stringResource(R.string.deposit_option_withdraw_secured)
                     }
                 })
 

@@ -967,4 +967,6 @@
     <string name="bond_button_label">Bonden</string>
     <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
     <string name="bond_provider_optional">Provider (Optioneel)</string>
+    <string name="deposit_option_withdraw_secured">Gedekte activa opnemen</string>
+    <string name="deposit_option_secured_assets">Gedekte activa</string>
 </resources>

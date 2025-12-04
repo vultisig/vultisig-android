@@ -957,4 +957,6 @@
     <string name="bond_button_label">Vincular</string>
     <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
     <string name="bond_provider_optional">Fornecedor (Opcional)</string>
+    <string name="deposit_option_withdraw_secured">Retirar ativo garantido</string>
+    <string name="deposit_option_secured_assets">Ativos garantidos</string>
 </resources>

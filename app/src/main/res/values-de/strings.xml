@@ -960,4 +960,6 @@
     <string name="bond_button_label">Bonden</string>
     <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
     <string name="bond_provider_optional">Anbieter (Optional)</string>
+    <string name="deposit_option_withdraw_secured">Patrimoni garantiti</string>
+    <string name="deposit_option_secured_assets">Sicherheiten</string>
 </resources>

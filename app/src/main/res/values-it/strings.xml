@@ -958,4 +958,6 @@
     <string name="bond_button_label">Vincola</string>
     <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
     <string name="bond_provider_optional">Fornitore (Opzionale)</string>
+    <string name="deposit_option_withdraw_secured">Prelevare il patrimonio garantito</string>
+    <string name="deposit_option_secured_assets">Patrimoni garantiti</string>
 </resources>

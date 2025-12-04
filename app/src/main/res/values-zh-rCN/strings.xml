@@ -1364,5 +1364,7 @@
     <string name="bond_button_label">绑定</string>
     <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
     <string name="bond_provider_optional">提供商（可选）</string>
+    <string name="deposit_option_withdraw_secured">提取担保资产</string>
+    <string name="deposit_option_secured_assets">担保资产</string>
 
 </resources>
