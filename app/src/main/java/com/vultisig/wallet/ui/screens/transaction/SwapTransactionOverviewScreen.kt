@@ -202,6 +202,7 @@ internal fun SwapTransactionOverviewScreen(
 internal fun TextDetails(
     title: String,
     subtitle: String,
+    showAllContent: Boolean = false,
 ) {
     Details(
         title = title,
@@ -213,10 +214,10 @@ internal fun TextDetails(
             text = subtitle,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
-            overflow = TextOverflow.MiddleEllipsis,
+            overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier = Modifier.widthIn(max = 100.dp),
-            maxLines = 1,
+            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
+            maxLines = if (showAllContent) 5 else 1,
         )
     }
 }

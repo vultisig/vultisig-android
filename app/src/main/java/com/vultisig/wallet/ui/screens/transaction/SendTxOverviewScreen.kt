@@ -135,6 +135,7 @@ internal fun SendTxOverviewScreen(
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_memo),
                         subtitle = tx.memo,
+                        showAllContent = true
                     )
                 }
 
