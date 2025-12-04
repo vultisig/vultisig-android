@@ -55,46 +55,35 @@ class TCYStakingService @Inject constructor(
     )
 
     fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails?> = flow {
-        try {
-            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
-            if (cachedDetails != null) {
-                Timber.d("TCYStakingService: Emitting cached TCY staking position for vault $vaultId")
-                emit(cachedDetails)
-            }
-            
-            // Fetch fresh data from network
-            val freshDetails = getStakingDetailsFromNetwork(address)
-            
-            if (freshDetails.stakeAmount > BigInteger.ZERO) {
-                Timber.d("TCYStakingService: Emitting fresh TCY staking position for vault $vaultId")
-                
-                // Update cache
-                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.TCY.id)
-                stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
-                
-                emit(freshDetails)
-            } else {
-                Timber.d("TCYStakingService: No TCY staking position found for vault $vaultId")
-                
-                // Clear cache if no position exists
-                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.TCY.id)
-                
-                emit(freshDetails)
-            }
-            
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+        if (cachedDetails != null) {
+            Timber.d("TCYStakingService: Emitting cached TCY staking position for vault $vaultId")
+            emit(cachedDetails)
+        }
+
+        // Fetch fresh data from network
+        val freshDetails = try {
+            getStakingDetailsFromNetwork(address)
         } catch (e: Exception) {
             Timber.e(e, "TCYStakingService: Error fetching TCY staking details for vault $vaultId")
-            
-            // If network fails, try to emit cached data
-            val cachedDetails = stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+
             if (cachedDetails != null) {
-                Timber.d("TCYStakingService: Network error, using cached TCY position")
+                Timber.d("TCYStakingService: Using cached TCY position due to error")
                 emit(cachedDetails)
-            } else {
-                // No cache available, propagate the error
-                throw e
+                return@flow
             }
+
+            throw e
         }
+
+        // Emit new fresh positions
+        Timber.d("RujiStakingService: Emitting fresh TCY staking position for vault $vaultId")
+        emit(freshDetails)
+
+        // Update DB cache
+        Timber.d("RujiStakingService: Saving fresh TCY position for vault $vaultId")
+        stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
     }.flowOn(Dispatchers.IO)
 
     suspend fun getStakingDetailsFromNetwork(
@@ -105,7 +94,7 @@ class TCYStakingService @Inject constructor(
             val stakedResponse = thorChainApi.fetchTcyStakedAmount(address)
             val stakedAmount = stakedResponse.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
             val stakeDecimal = CoinType.THORCHAIN.toValue(stakedAmount)
-            
+
             val rewardsCoin = Coin(
                 chain = Chain.ThorChain,
                 ticker = "RUNE",
@@ -346,7 +335,7 @@ class TCYStakingService @Inject constructor(
 
         val bps = data.int64Values.tcyStakeSystemIncomeBps ?: 0L
 
-        val constants =  TcyConstants(
+        val constants = TcyConstants(
             minRuneForDistribution = minRuneDecimal,
             minTcyForDistribution = minTcyDecimal,
             systemIncomeBps = bps
@@ -359,7 +348,7 @@ class TCYStakingService @Inject constructor(
 
     private suspend fun fetchTotalStakedTcy(): BigDecimal {
         val response = thorChainApi.fetchTcyStakers()
-        
+
         // Sum all staked amounts (they are in satoshis as strings)
         val totalSatoshis = response.tcyStakers.fold(BigDecimal.ZERO) { sum, staker ->
             val amount = try {
