@@ -227,7 +227,7 @@ internal fun VerifySendScreen(
                     if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)
 
-                        VerifyCardDetails(
+                        VerifyCardJsonDetails(
                             title = stringResource(R.string.deposit_screen_title),
                             subtitle = state.functionSignature
                         )
