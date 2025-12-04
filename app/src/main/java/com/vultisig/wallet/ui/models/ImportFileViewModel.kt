@@ -55,7 +55,10 @@ internal data class ImportFileState(
     val activeVault: Vault? = null,
 )
 
-internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*", "text/plain")
+internal val FILE_ALLOWED_MIME_TYPES = arrayOf(
+    "application/*",
+    "text/plain"
+)
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
@@ -95,7 +98,10 @@ internal class ImportFileViewModel @Inject constructor(
         if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
                 try {
-                    saveToDb(vaultFileContent, key)
+                    saveToDb(
+                        vaultFileContent,
+                        key
+                    )
                     hidePasswordPromptDialog()
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -109,8 +115,11 @@ internal class ImportFileViewModel @Inject constructor(
     private suspend fun parseFileContent() {
         val fileContent = uiModel.value.fileContent ?: return
         try {
-            saveToDb(fileContent, null)
-        }  catch (e: Exception) {
+            saveToDb(
+                fileContent,
+                null
+            )
+        } catch (e: Exception) {
             Timber.e(e)
             uiModel.update {
                 it.copy(
@@ -124,7 +133,12 @@ internal class ImportFileViewModel @Inject constructor(
 
     private suspend fun saveToDb(fileContent: String, password: String?) {
         try {
-            insertVaultToDb(parseVaultFromString(fileContent, password))
+            insertVaultToDb(
+                parseVaultFromString(
+                    fileContent,
+                    password
+                )
+            )
         } catch (e: DuplicateVaultException) {
             Timber.e(e)
             snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
@@ -135,12 +149,21 @@ internal class ImportFileViewModel @Inject constructor(
         // if the backup didn't set libtype correctly , then we need a way to override it manually
         // when the backup file has share\d+of\d+ in the filename, then it's a DKLS vault
         val regex = "share\\d+of\\d+".toRegex()
-        if(uiModel.value.fileName?.contains(regex) == true) {
+        if (uiModel.value.fileName?.contains(regex) == true) {
             vault.libType = SigningLibType.DKLS
         }
-        saveVault(vault, false)
-        vaultDataStoreRepository.setBackupStatus(vault.id, true)
-        discoverToken(vault.id, null)
+        saveVault(
+            vault,
+            false
+        )
+        vaultDataStoreRepository.setBackupStatus(
+            vault.id,
+            true
+        )
+        discoverToken(
+            vault.id,
+            null
+        )
         if (uiModel.value.isZip == true) {
             val updatedZipOutput = uiModel.value.zipOutputs.filter {
                 it.content != uiModel.value.fileContent
@@ -188,6 +211,18 @@ internal class ImportFileViewModel @Inject constructor(
             if (uri == null)
                 return@launch
             val fileName = uri.fileName(context = context)
+            if (fileName.isNullOrBlank()) {
+                uiModel.update {
+                    it.copy(
+                        fileUri = null,
+                        fileName = null,
+                        fileContent = null,
+                        isZip = null,
+                        error = UiText.StringResource(R.string.import_file_not_supported)
+                    )
+                }
+                return@launch
+            }
             val file = File(fileName)
             val ext = file.extension
             val isZipFile = uri.isValidZipFile(context = context)
