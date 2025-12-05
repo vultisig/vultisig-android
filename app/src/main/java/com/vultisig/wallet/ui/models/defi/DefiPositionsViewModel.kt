@@ -534,7 +534,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                             coin = details.coin,
                             stakeAssetHeader = "Staked $RUJI_SYMBOL",
                             stakeAmount = formattedAmount,
-                            apy = details.apr?.formatPercentage(),
+                            apy = details.apr.toString()+ "%",
                             canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
                             canStake = true,
                             canUnstake = details.stakeAmount > BigInteger.ZERO,

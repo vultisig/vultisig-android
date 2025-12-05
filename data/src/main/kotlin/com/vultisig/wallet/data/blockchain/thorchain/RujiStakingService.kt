@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 
 class RujiStakingService @Inject constructor(
@@ -83,10 +84,14 @@ class RujiStakingService @Inject constructor(
                 isNativeToken = false
             )
 
-            val apr = if (rujiStakeInfo.apr == 0.0) {
+            val apr = if (rujiStakeInfo.apr == BigInteger.ZERO) {
                 null
             } else {
-                rujiStakeInfo.apr
+                runCatching {
+                    rujiStakeInfo.apr.toBigDecimal()
+                        .divide(RUJI_DECIMAL_SCALED_API, 5, RoundingMode.HALF_UP)
+                        .toDouble()
+                }.getOrDefault(null)
             }
 
             StakingDetails(
@@ -103,5 +108,9 @@ class RujiStakingService @Inject constructor(
             Timber.e(e, "RujiStakingService: Failed to fetch RUJI staking details from network")
             throw e
         }
+    }
+
+    private companion object {
+        val RUJI_DECIMAL_SCALED_API = "1000000000000".toBigDecimal()
     }
 }
