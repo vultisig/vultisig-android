@@ -148,6 +148,7 @@ internal data class SendFormUiModel(
     val defiType: DeFiNavActions? = null,
 
     val slippage: String = "1.0",
+    val isAutocompound: Boolean = false,
 
     // errors
     val errorText: UiText? = null,
@@ -647,6 +648,12 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    fun onAutoCompound(checked: Boolean) {
+        viewModelScope.launch {
+            uiState.update { it.copy(isAutocompound = checked) }
+        }
+    }
+
     fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
@@ -723,6 +730,7 @@ internal class SendFormViewModel @Inject constructor(
         val availableTokenBalance = if (defiType == null
             || defiType == DeFiNavActions.BOND
             || defiType == DeFiNavActions.STAKE_RUJI
+            || defiType == DeFiNavActions.STAKE_TCY
             || defiType == DeFiNavActions.MINT_YRUNE
             || defiType == DeFiNavActions.REDEEM_YRUNE
             || defiType == DeFiNavActions.MINT_YTCY
@@ -1933,6 +1941,7 @@ internal class SendFormViewModel @Inject constructor(
         loadAccountsJob = if (this.defiType == null
             || this.defiType == DeFiNavActions.BOND
             || this.defiType == DeFiNavActions.STAKE_RUJI
+            || this.defiType == DeFiNavActions.STAKE_TCY
             || this.defiType == DeFiNavActions.MINT_YRUNE
             || this.defiType == DeFiNavActions.MINT_YTCY
             || this.defiType == DeFiNavActions.REDEEM_YRUNE

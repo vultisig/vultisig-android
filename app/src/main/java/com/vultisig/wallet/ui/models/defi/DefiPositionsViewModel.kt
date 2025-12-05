@@ -909,6 +909,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
