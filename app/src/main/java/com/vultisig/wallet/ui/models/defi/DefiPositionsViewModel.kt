@@ -913,6 +913,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
                 DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE.id
+                DeFiNavActions.WITHDRAW_RUJI -> "USDC-${Chain.ThorChain.id}"
                 else -> null
             }
             if (tokenId == null) {

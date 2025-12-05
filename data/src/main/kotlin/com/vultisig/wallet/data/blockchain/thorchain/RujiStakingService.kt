@@ -70,19 +70,6 @@ class RujiStakingService @Inject constructor(
     suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
         return try {
             val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
-
-            val rewardsCoin = Coin(
-                chain = Chain.ThorChain,
-                ticker = "USDC",
-                logo = "usdc",
-                address = "",
-                decimal = 6,
-                hexPublicKey = "",
-                priceProviderID = "usd-coin",
-                contractAddress = rujiStakeInfo.rewardsTicker,
-                isNativeToken = false
-            )
-
             val apr = if (rujiStakeInfo.apr == 0.0) {
                 null
             } else {
@@ -97,11 +84,25 @@ class RujiStakingService @Inject constructor(
                 estimatedRewards = null, // Not available for Ruji
                 nextPayoutDate = null, // Not available for Ruji
                 rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
-                rewardsCoin = rewardsCoin,
+                rewardsCoin = RUJI_REWARDS_COIN,
             )
         } catch (e: Exception) {
             Timber.e(e, "RujiStakingService: Failed to fetch RUJI staking details from network")
             throw e
         }
+    }
+
+    companion object {
+        val RUJI_REWARDS_COIN = Coin(
+            chain = Chain.ThorChain,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            isNativeToken = false
+        )
     }
 }

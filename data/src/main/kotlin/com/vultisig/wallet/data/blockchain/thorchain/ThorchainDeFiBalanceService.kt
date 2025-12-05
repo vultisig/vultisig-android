@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.thorchain
 
 import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
@@ -11,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.BigInteger
 
 class ThorchainDeFiBalanceService(
@@ -72,16 +74,33 @@ class ThorchainDeFiBalanceService(
         val defiBalances = mutableListOf<DeFiBalance>()
         
         // Add RUJI balance if exists
-        rujiDetails?.let {
+        rujiDetails?.let { details ->
+            val balances = mutableListOf<DeFiBalance.Balance>()
+
+            // Always add stake balance
+            balances.add(
+                DeFiBalance.Balance(
+                    coin = details.coin,
+                    amount = details.stakeAmount
+                )
+            )
+
+            // Add rewards if available and > 0
+            details.rewards
+                ?.takeIf { it > BigDecimal.ZERO }
+                ?.let { rewards ->
+                    balances.add(
+                        DeFiBalance.Balance(
+                            coin = RUJI_REWARDS_COIN,
+                            amount = runCatching { rewards.toBigInteger() }.getOrDefault(BigInteger.ZERO)
+                        )
+                    )
+                }
+
             defiBalances.add(
                 DeFiBalance(
                     chain = Chain.ThorChain,
-                    balances = listOf(
-                        DeFiBalance.Balance(
-                            coin = it.coin,
-                            amount = it.stakeAmount
-                        )
-                    )
+                    balances = balances
                 )
             )
         }
