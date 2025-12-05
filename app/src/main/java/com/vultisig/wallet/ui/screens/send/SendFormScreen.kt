@@ -484,6 +484,7 @@ private fun SendFormContent(
     } else if (state.defiType == DeFiNavActions.STAKE_RUJI
         || state.defiType == DeFiNavActions.UNSTAKE_RUJI
         || state.defiType == DeFiNavActions.STAKE_TCY
+        || state.defiType == DeFiNavActions.UNSTAKE_TCY
         || state.defiType == DeFiNavActions.MINT_YRUNE
         || state.defiType == DeFiNavActions.MINT_YTCY
         || state.defiType == DeFiNavActions.REDEEM_YRUNE
