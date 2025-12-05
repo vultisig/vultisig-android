@@ -41,9 +41,8 @@ jobs:
       - name: Free disk space
         run: |
           echo "Freeing disk space..."
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/hostedtoolcache/Java
-          docker image prune -af || true
+          sudo rm -rf /usr/share/dotnet || true                    
+          sudo rm -rf /usr/local/lib/nodejs || true  
           sudo apt-get clean
           df -h
 
@@ -86,7 +85,7 @@ jobs:
           api-level: 29
           target: default
           arch: x86_64
-          profile: none                     #  Smallest image
+          profile: Nexus 5
           force-avd-creation: false
           emulator-options: -no-window -noaudio -no-snapshot-save -no-snapshot -no-snapstorage -gpu swiftshader_indirect -no-boot-anim
           disable-animations: true
