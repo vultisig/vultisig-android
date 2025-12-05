@@ -179,7 +179,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         loadSavedPositions()
         loadTotalValue()
     }
-    
+
     private fun loadBalanceVisibility() {
         viewModelScope.launch {
             val isVisible = withContext(Dispatchers.IO) {
@@ -221,16 +221,17 @@ internal class DefiPositionsViewModel @Inject constructor(
 
             try {
                 val currency = appCurrencyRepository.currency.first()
-                
+
                 val runeFiatValue = createFiatValue(totalInRune, Coins.ThorChain.RUNE, currency)
                 val rujiFiatValue = createFiatValue(totalInRuji, Coins.ThorChain.RUJI, currency)
                 val tcyFiatValue = createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
-                
-                val defaultStakingFiatValues = totalValue.defaultStakeValues.stakeElements.map { position ->
-                    val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
-                    createFiatValue(decimalAmount, position.coin, currency)
-                }
-                
+
+                val defaultStakingFiatValues =
+                    totalValue.defaultStakeValues.stakeElements.map { position ->
+                        val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
+                        createFiatValue(decimalAmount, position.coin, currency)
+                    }
+
                 val totalFiatValue = listOf(runeFiatValue, rujiFiatValue, tcyFiatValue)
                     .plus(defaultStakingFiatValues)
                     .fold(FiatValue(BigDecimal.ZERO, currency.ticker)) { acc, fiatValue ->
@@ -258,10 +259,10 @@ internal class DefiPositionsViewModel @Inject constructor(
             }
         }
     }
-    
+
     private suspend fun createFiatValue(
-        amount: BigDecimal, 
-        coin: Coin, 
+        amount: BigDecimal,
+        coin: Coin,
         currency: AppCurrency
     ): FiatValue {
         try {
@@ -521,33 +522,31 @@ internal class DefiPositionsViewModel @Inject constructor(
                     }
                 }
                 .collect { details ->
-                    if (details != null) {
-                        val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
-                        val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
+                    val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
+                    val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
 
-                        val rewards = details.rewards?.let { rewardAmount ->
-                            val rewardValue = rewardAmount.setScale(8, RoundingMode.HALF_UP)
-                            "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
-                        }
-
-                        val stakePosition = StakePositionUiModel(
-                            coin = details.coin,
-                            stakeAssetHeader = "Staked $RUJI_SYMBOL",
-                            stakeAmount = formattedAmount,
-                            apy = details.apr?.formatPercentage(),
-                            canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
-                            canStake = true,
-                            canUnstake = details.stakeAmount > BigInteger.ZERO,
-                            rewards = rewards,
-                            nextReward = null,
-                            nextPayout = null
-                        )
-
-                        updateExistingPosition(stakePosition)
-
-                        _totalValueRujiStake.update { details.stakeAmount }
-                        _isLoadingTotalAmount.update { false }
+                    val rewards = details.rewards?.let { rewardAmount ->
+                        val rewardValue = rewardAmount.setScale(8, RoundingMode.HALF_UP)
+                        "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
                     }
+
+                    val stakePosition = StakePositionUiModel(
+                        coin = details.coin,
+                        stakeAssetHeader = "Staked $RUJI_SYMBOL",
+                        stakeAmount = formattedAmount,
+                        apy = details.apr?.formatPercentage(),
+                        canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
+                        canStake = true,
+                        canUnstake = details.stakeAmount > BigInteger.ZERO,
+                        rewards = rewards,
+                        nextReward = null,
+                        nextPayout = null
+                    )
+
+                    updateExistingPosition(stakePosition)
+
+                    _totalValueRujiStake.update { details.stakeAmount }
+                    _isLoadingTotalAmount.update { false }
                 }
         }
     }
@@ -573,29 +572,27 @@ internal class DefiPositionsViewModel @Inject constructor(
                     )
                 }
             }.collect { position ->
-                if (position != null) {
-                    val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
-                    val formattedAmount = "${stakedAmount.toPlainString()} TCY"
+                val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
+                val formattedAmount = "${stakedAmount.toPlainString()} TCY"
 
-                    // Create and return the UI model
-                    val stakePosition = StakePositionUiModel(
-                        coin = position.coin,
-                        stakeAssetHeader = "Staked TCY",
-                        stakeAmount = formattedAmount,
-                        apy = position.apr?.formatPercentage(),
-                        canWithdraw = false, // TCY auto-distributes rewards
-                        canStake = true,
-                        canUnstake = true,
-                        rewards = null,
-                        nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
-                        nextPayout = position.nextPayoutDate?.formatDate()
-                    )
+                // Create and return the UI model
+                val stakePosition = StakePositionUiModel(
+                    coin = position.coin,
+                    stakeAssetHeader = "Staked TCY",
+                    stakeAmount = formattedAmount,
+                    apy = position.apr?.formatPercentage(),
+                    canWithdraw = false, // TCY auto-distributes rewards
+                    canStake = true,
+                    canUnstake = true,
+                    rewards = null,
+                    nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
+                    nextPayout = position.nextPayoutDate?.formatDate()
+                )
 
-                    updateExistingPosition(stakePosition)
+                updateExistingPosition(stakePosition)
 
-                    _totalValueTCYStake.update { position.stakeAmount }
-                    _isLoadingTotalAmount.update { false }
-                }
+                _totalValueTCYStake.update { position.stakeAmount }
+                _isLoadingTotalAmount.update { false }
             }
         }
     }
@@ -614,7 +611,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                             staking = it.staking.copy(
                                 positions = it.staking.positions.map { position ->
                                     if (position.coin.id == Coins.ThorChain.yRUNE.id
-                                        || position.coin.id == Coins.ThorChain.yTCY.id) {
+                                        || position.coin.id == Coins.ThorChain.yTCY.id
+                                    ) {
                                         position.copy(isLoading = false)
                                     } else {
                                         position
@@ -682,7 +680,7 @@ internal class DefiPositionsViewModel @Inject constructor(
         } else {
             stakePosition
         }
-        
+
         state.update { currentState ->
             val existingPositions = currentState.staking.positions
             val positionExists = existingPositions.any {
@@ -979,7 +977,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                     rewards = null,
                     nextReward = null,
                     nextPayout = null
-                ), StakePositionUiModel(
+                ),
+                StakePositionUiModel(
                     coin = ytcy,
                     stakeAssetHeader = "Staked ${ytcy.ticker}",
                     stakeAmount = ytcy.ticker,

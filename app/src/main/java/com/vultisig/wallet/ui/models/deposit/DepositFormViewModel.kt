@@ -2453,13 +2453,14 @@ internal class DepositFormViewModel @Inject constructor(
                 lpUnits.all { it.isDigit() } &&
                 lpUnits.toInt() > 0
 
+    @Deprecated("Use Ruji Staking through DeFi Tab")
     private suspend fun fetchRujiStakeBalances(address: String): RujiStakeBalances {
         if (rujiStakeBalances.value != null) {
             return rujiStakeBalances.value!!
         }
 
         val balances = withContext(Dispatchers.IO) {
-            thorChainApi.getRujiStakeBalance(address)
+            runCatching { thorChainApi.getRujiStakeBalance(address) }.getOrDefault(RujiStakeBalances())
         }
 
         rujiStakeBalances.update { balances }
