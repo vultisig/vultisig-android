@@ -71,6 +71,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_YTCY_AFFILIATE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
@@ -764,7 +765,7 @@ internal class SendFormViewModel @Inject constructor(
         when (uiState.value.defiType) {
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
-            DeFiNavActions.STAKE_RUJI -> stake()
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
             DeFiNavActions.UNSTAKE_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
@@ -1345,15 +1346,29 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val depositTx = createRujiStakeDepositTransaction(
-                    vaultId = vaultId,
-                    selectedToken = selectedToken,
-                    srcAddress = srcAddress,
-                    dstAddress = dstAddress,
-                    tokenAmountInt = tokenAmountInt,
-                    gasFee = gasFee,
-                    chain = chain
-                )
+                val depositTx = when (defiType) {
+                    DeFiNavActions.STAKE_RUJI -> createRujiStakeDepositTransaction(
+                        vaultId = vaultId,
+                        selectedToken = selectedToken,
+                        srcAddress = srcAddress,
+                        dstAddress = dstAddress,
+                        tokenAmountInt = tokenAmountInt,
+                        gasFee = gasFee,
+                        chain = chain
+                    )
+
+                    DeFiNavActions.STAKE_TCY -> createTCYStakeDepositTransaction(
+                        vaultId = vaultId,
+                        selectedToken = selectedToken,
+                        srcAddress = srcAddress,
+                        dstAddress = dstAddress,
+                        tokenAmountInt = tokenAmountInt,
+                        gasFee = gasFee,
+                        chain = chain
+                    )
+
+                    else -> error("DeFi Type not supported ${defiType?.type}")
+                }
 
                 depositTransactionRepository.addTransaction(depositTx)
 
@@ -2631,6 +2646,69 @@ internal class SendFormViewModel @Inject constructor(
                 denom = selectedToken.contractAddress,
                 amount = tokenAmountInt,
             )
+        )
+    }
+
+    private suspend fun createTCYStakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain
+    ): DepositTransaction {
+        val isAutoCompound = uiState.value.isAutocompound
+        val stakingMemo = if (isAutoCompound) {
+            ""
+        } else {
+            "TCY+"
+        }
+
+        val specific = withContext(Dispatchers.IO) {
+            blockChainSpecificRepository
+                .getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = if (isAutoCompound) {
+                        TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
+                    } else {
+                        TransactionType.TRANSACTION_TYPE_UNSPECIFIED
+                    },
+                )
+        }
+
+        val stakingPayload = if (isAutoCompound) {
+            ThorchainFunctions.stakeTcyCompound(
+                fromAddress = srcAddress,
+                stakingContract = STAKING_TCY_COMPOUND_CONTRACT,
+                denom = selectedToken.contractAddress,
+                amount = tokenAmountInt
+            )
+        } else {
+            null
+        }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = stakingMemo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = stakingPayload,
         )
     }
 
