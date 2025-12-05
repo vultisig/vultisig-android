@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
@@ -107,7 +108,12 @@ internal class VerifySwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val transaction = swapTransactionRepository.getTransaction(transactionId)
+            val transaction = runCatching {
+                swapTransactionRepository.getTransaction(transactionId)
+            }.getOrElse {
+                navigator.back()
+                return@launch
+            }
             val vaultName = vaultRepository.get(vaultId)?.name
             if (vaultName == null) {
                 state.update {
@@ -165,8 +171,11 @@ internal class VerifySwapViewModel @Inject constructor(
         if (hasAllConsents) {
             viewModelScope.launch {
                 launchKeysign(
-                    keysignInitType, transactionId, password.value,
-                    Route.Keysign.Keysign.TxType.Swap, vaultId
+                    keysignInitType,
+                    transactionId,
+                    password.value,
+                    Route.Keysign.Keysign.TxType.Swap,
+                    vaultId
                 )
             }
         } else {
@@ -230,7 +239,10 @@ internal class VerifySwapViewModel @Inject constructor(
                 }
             } catch (t: Throwable) {
                 val errorMessage = "Security Scanner Failed"
-                Timber.e(t, errorMessage)
+                Timber.e(
+                    t,
+                    errorMessage
+                )
 
                 state.update {
                     val message = t.message ?: errorMessage
