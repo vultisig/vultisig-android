@@ -462,8 +462,7 @@ internal class ThorChainApiImpl @Inject constructor(
         val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
         val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: "USDC"
-        val apr = runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
-
+        val apr = runCatching { (stake.pool?.summary?.apr?.value ?: "0").toBigInteger() }.getOrDefault(BigInteger.ZERO)
         return RujiStakeBalances(
             stakeAmount = stakeAmount,
             stakeTicker = stakeTicker,
@@ -816,7 +815,7 @@ data class RujiStakeBalances(
     val stakeTicker: String = "",
     val rewardsAmount: BigInteger = BigInteger.ZERO,
     val rewardsTicker: String = "USDC",
-    val apr: Double = 0.0,
+    val apr: BigInteger = BigInteger.ZERO, // 12 decimals
 )
 
 @Serializable
