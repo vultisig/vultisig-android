@@ -1345,42 +1345,14 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val depositMemo = "bond:${selectedToken.contractAddress}:$tokenAmountInt"
-
-                val specific = withContext(Dispatchers.IO) {
-                    blockChainSpecificRepository
-                        .getSpecific(
-                            chain,
-                            srcAddress,
-                            selectedToken,
-                            gasFee,
-                            isSwap = false,
-                            isMaxAmountEnabled = false,
-                            isDeposit = true,
-                            transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-                        )
-                }
-
-                val depositTx = DepositTransaction(
-                    id = UUID.randomUUID().toString(),
+                val depositTx = createRujiStakeDepositTransaction(
                     vaultId = vaultId,
-                    srcToken = selectedToken,
+                    selectedToken = selectedToken,
                     srcAddress = srcAddress,
                     dstAddress = dstAddress,
-                    memo = depositMemo,
-                    srcTokenValue = TokenValue(
-                        value = tokenAmountInt,
-                        token = selectedToken,
-                    ),
-                    estimatedFees = gasFee,
-                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
-                    blockChainSpecific = specific.blockChainSpecific,
-                    wasmExecuteContractPayload = ThorchainFunctions.stakeRUJI(
-                        fromAddress = srcAddress,
-                        stakingContract = STAKING_RUJI_CONTRACT,
-                        denom = selectedToken.contractAddress,
-                        amount = tokenAmountInt,
-                    )
+                    tokenAmountInt = tokenAmountInt,
+                    gasFee = gasFee,
+                    chain = chain
                 )
 
                 depositTransactionRepository.addTransaction(depositTx)
@@ -1399,6 +1371,10 @@ internal class SendFormViewModel @Inject constructor(
                 hideLoading()
             }
         }
+    }
+
+    private suspend fun stakeRujiPayload() {
+
     }
 
     fun unstake() {
@@ -2607,6 +2583,54 @@ internal class SendFormViewModel @Inject constructor(
             chain = chain,
             gasFee = gasFee,
             dstAddress = dstAddress,
+        )
+    }
+
+    private suspend fun createRujiStakeDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain
+    ): DepositTransaction {
+        val depositMemo = "bond:${selectedToken.contractAddress}:$tokenAmountInt"
+
+        val specific = withContext(Dispatchers.IO) {
+            blockChainSpecificRepository
+                .getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+        }
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = depositMemo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.stakeRUJI(
+                fromAddress = srcAddress,
+                stakingContract = STAKING_RUJI_CONTRACT,
+                denom = selectedToken.contractAddress,
+                amount = tokenAmountInt,
+            )
         )
     }
 
