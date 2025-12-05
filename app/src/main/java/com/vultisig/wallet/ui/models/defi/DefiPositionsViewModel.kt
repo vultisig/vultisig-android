@@ -482,7 +482,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 createGenericStakePosition(address, vaultId, coinsToLoad)
-
             } catch (t: Throwable) {
                 Timber.e(t, "Failed to load staking positions")
                 state.update {
@@ -648,7 +647,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                                 supportsMint = supportsMint,
                                 canWithdraw = false, // TCY auto-distributes rewards
                                 canStake = true,
-                                canUnstake = true,
+                                canUnstake = stakeAmount > BigDecimal.ZERO,
                                 rewards = null,
                                 nextReward = null,
                                 nextPayout = null,

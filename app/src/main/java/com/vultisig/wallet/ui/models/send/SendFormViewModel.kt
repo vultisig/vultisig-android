@@ -1388,10 +1388,6 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun stakeRujiPayload() {
-
-    }
-
     fun unstake() {
         viewModelScope.launch {
             showLoading()

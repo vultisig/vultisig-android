@@ -412,7 +412,7 @@ private fun SendFormContent(
             operatorFeeFieldState = operatorFeeFieldState,
             slippageTexFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
-            )
+        )
 
         UiSpacer(24.dp)
 
@@ -847,6 +847,15 @@ private fun FoldableAmountWidget(
                 AutoCompoundToggle(
                     title = stringResource(R.string.tcy_auto_compound_enable_title),
                     subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
+                    isChecked = state.isAutocompound,
+                    onCheckedChange = onAutoCompoundCheckedChange,
+                )
+            }
+
+            if (state.defiType == DeFiNavActions.UNSTAKE_TCY) {
+                AutoCompoundToggle(
+                    title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                    subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
                     isChecked = state.isAutocompound,
                     onCheckedChange = onAutoCompoundCheckedChange,
                 )
