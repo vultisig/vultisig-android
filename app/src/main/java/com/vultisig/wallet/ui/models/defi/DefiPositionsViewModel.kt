@@ -905,11 +905,10 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-
             val tokenId = when (defiNavAction) {
                 DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
+                DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
