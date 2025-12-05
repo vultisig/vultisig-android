@@ -16,42 +16,55 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
       - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
-      
+
       - name: git submodule update
         run: git submodule update --init --recursive
-      
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      
-      # Build and run unit tests (no emulator needed)
+
+      # ✨ Free disk space
+      - name: Free disk space
+        run: |
+          echo "Freeing disk space..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/hostedtoolcache/Java
+          sudo rm -rf /usr/local/lib/android
+          docker image prune -af || true
+          sudo apt-get clean
+          df -h
+
+      # Build and run unit tests
       - name: Build and run unit tests
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew build test --parallel --build-cache --no-daemon
-      
+
       # Enable KVM for better emulator performance
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      
-      # Cache AVD for faster builds
+
+      # Clean AVD (avoid corrupt AVD cache)
+      - name: Clean old AVD
+        run: rm -rf ~/.android/avd/*
+
+      # Cache minimal AVD
       - name: AVD cache
         uses: actions/cache@v4
         id: avd-cache
@@ -59,8 +72,8 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api-29-headless
-      
+          key: avd-api-29-minimal
+
       # Run all instrumented tests with minimal emulator
       - name: Run instrumented tests with emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -71,15 +84,15 @@ jobs:
           api-level: 29
           target: default
           arch: x86_64
-          profile: Nexus 6
+          profile: none
           force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu off -noaudio -no-boot-anim -camera-back none -no-snapshot -no-snapstorage
+          emulator-options: -no-window -noaudio -no-snapshot-save -no-snapshot -no-snapstorage -gpu swiftshader_indirect -no-boot-anim
           disable-animations: true
           disable-spellchecker: true
           script: |
             # Run ALL instrumented tests
             ./gradlew app:connectedDebugAndroidTest --stacktrace
-      
+
       # Archive lint reports
       - name: Archive code analysis reports
         if: always()
