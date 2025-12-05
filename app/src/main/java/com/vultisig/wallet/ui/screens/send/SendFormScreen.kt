@@ -80,12 +80,12 @@ import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AddressBookType
-import com.vultisig.wallet.ui.models.send.SendFormType
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.TokenChip
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.UiText
@@ -135,6 +135,7 @@ internal fun NavGraphBuilder.sendScreen(
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
             operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
             providerFieldState = viewModel.providerBondFieldState,
+            slippageFieldState = viewModel.slippageFieldState,
             onSetProviderAddressRequest = viewModel::setProviderAddress,
             onScanProviderAddressRequest = viewModel::scanProviderAddress,
             onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
@@ -198,6 +199,9 @@ private fun SendFormScreen(
     // bond fields
     operatorFeeFieldState: TextFieldState,
     providerFieldState: TextFieldState,
+
+    // trade
+    slippageFieldState: TextFieldState,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -212,9 +216,13 @@ private fun SendFormScreen(
     }
 
     V2Scaffold(
-        title = when (state.type) {
-            SendFormType.Bond -> stringResource(R.string.bond_screen_title)
-            SendFormType.UnBond -> stringResource(R.string.unbond_screen_title)
+        title = when (state.defiType) {
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stringResource(R.string.stake_screen_title)
+            DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.UNSTAKE_RUJI -> stringResource(R.string.unstake_screen_title)
+            DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
+            DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
+            DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
+            DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
@@ -298,6 +306,9 @@ private fun SendFormScreen(
                         onSetProvider = onSetProviderAddressRequest,
                         onScanProvider = onScanProviderAddressRequest,
                         onProviderBookClick = onAddressProviderBookClick,
+
+                        // trade
+                        slippageFieldState = slippageFieldState,
                     )
                 }
             }
@@ -342,9 +353,12 @@ private fun SendFormContent(
     onSetProvider: (String) -> Unit,
     onScanProvider: () -> Unit,
     onProviderBookClick: () -> Unit,
+
+    // trade
+    slippageFieldState: TextFieldState,
 ) {
-    // select asset
-    if (state.type == SendFormType.Send) {
+    // send asset
+    if (state.defiType == null) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -386,6 +400,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
         )
 
         UiSpacer(24.dp)
@@ -405,7 +420,7 @@ private fun SendFormContent(
                 }
             }
         }
-    } else if (state.type == SendFormType.Bond || state.type == SendFormType.UnBond) {
+    } else if (state.defiType == DeFiNavActions.BOND || state.defiType == DeFiNavActions.UNBOND) {
         FoldableBondDestinationAddress(
             state = state,
             onExpandSection = onExpandSection,
@@ -434,6 +449,7 @@ private fun SendFormContent(
             onChooseMaxTokenAmount = onChooseMaxTokenAmount,
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
         )
 
         UiSpacer(24.dp)
@@ -453,6 +469,29 @@ private fun SendFormContent(
                 }
             }
         }
+    } else if (state.defiType == DeFiNavActions.STAKE_RUJI
+        || state.defiType == DeFiNavActions.UNSTAKE_RUJI
+        || state.defiType == DeFiNavActions.MINT_YRUNE
+        || state.defiType == DeFiNavActions.MINT_YTCY
+        || state.defiType == DeFiNavActions.REDEEM_YRUNE
+        || state.defiType == DeFiNavActions.REDEEM_YTCY
+    ) {
+        FoldableAmountWidget(
+            state = state,
+            addressFieldState = addressFieldState,
+            onExpandSection = onExpandSection,
+            onGasSettingsClick = onGasSettingsClick,
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusManager = focusManager,
+            onSend = onSend,
+            onToogleAmountInputType = onToogleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            memoFieldState = memoFieldState,
+            operatorFeeFieldState = operatorFeeFieldState,
+            slippageTexFieldState = slippageFieldState,
+        )
     }
 }
 
@@ -471,6 +510,7 @@ private fun FoldableAmountWidget(
     onChooseMaxTokenAmount: () -> Unit,
     memoFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
+    slippageTexFieldState: TextFieldState,
 ) {
     FoldableSection(
         expanded = state.expandedSection == SendSections.Amount,
@@ -674,7 +714,7 @@ private fun FoldableAmountWidget(
             UiSpacer(12.dp)
 
             // memo
-            if (state.hasMemo && state.type == SendFormType.Send) {
+            if (state.hasMemo && state.defiType == null) {
                 var isMemoExpanded by remember { mutableStateOf(false) }
 
                 val rotationAngle by animateFloatAsState(
@@ -738,7 +778,7 @@ private fun FoldableAmountWidget(
                 }
             }
 
-            if (state.type == SendFormType.Bond) {
+            if (state.defiType == DeFiNavActions.BOND) {
                 Column(
                     modifier = Modifier.padding(
                         vertical = 2.dp,
@@ -755,6 +795,31 @@ private fun FoldableAmountWidget(
                     VsTextInputField(
                         textFieldState = operatorFeeFieldState,
                         hint = "0",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    UiSpacer(12.dp)
+                }
+            }
+
+            if (state.defiType == DeFiNavActions.REDEEM_YRUNE
+                || state.defiType == DeFiNavActions.REDEEM_YTCY) {
+                Column(
+                    modifier = Modifier.padding(
+                        vertical = 2.dp,
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.deposit_form_operator_slippage_title),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.extraLight,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    VsTextInputField(
+                        textFieldState = slippageTexFieldState,
+                        hint = stringResource(R.string.slippage_hint),
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -865,8 +930,8 @@ private fun FoldableDestinationAddressWidget(
             UiSpacer(16.dp)
 
             Text(
-                text = when (state.type) {
-                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
+                text = when (state.defiType) {
+                    DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.v2.colors.text.extraLight,
@@ -974,8 +1039,8 @@ private fun FoldableBondDestinationAddress(
                 )
         ) {
             Text(
-                text = when (state.type) {
-                    SendFormType.Bond, SendFormType.UnBond -> stringResource(R.string.bond_node_address)
+                text = when (state.defiType) {
+                    null, DeFiNavActions.BOND, DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                     else -> stringResource(R.string.send_to_address)
                 },
                 color = Theme.v2.colors.text.extraLight,
@@ -1501,5 +1566,6 @@ private fun SendScreenPreview() {
         onAssetLongPressStarted = {},
         operatorFeeFieldState = TextFieldState(),
         providerFieldState = TextFieldState(),
+        slippageFieldState = TextFieldState(),
     )
 }

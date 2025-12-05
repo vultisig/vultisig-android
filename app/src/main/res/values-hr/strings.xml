@@ -431,6 +431,10 @@
     <string name="apy">APY</string>
     <string name="unbond">Odveži</string>
     <string name="unbond_screen_title">Odveži</string>
+    <string name="stake_screen_title">Ulog</string>
+    <string name="unstake_screen_title">Ukloni ulog</string>
+    <string name="mint_screen_title">Kovati</string>
+    <string name="redeem_screen_title">Otkupiti</string>
     <string name="bond">Veži</string>
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
