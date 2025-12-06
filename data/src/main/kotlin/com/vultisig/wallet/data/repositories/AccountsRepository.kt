@@ -73,49 +73,49 @@ internal class AccountsRepositoryImpl @Inject constructor(
             "No vault with id $vaultId"
         }
     private fun getVaultAsFlow(vaultId: String): Flow<Vault> =
-       vaultRepository.getAsFlow(vaultId).filterNotNull()
+        vaultRepository.getAsFlow(vaultId).filterNotNull()
 
     override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses )->
-       channelFlow {
-           supervisorScope {
-               val loadPrices =
-                   async { tokenPriceRepository.refresh(vaultCoins) }
+        channelFlow {
+            supervisorScope {
+                val loadPrices =
+                    async { tokenPriceRepository.refresh(vaultCoins) }
 
-               if (!isRefresh) {
-                   addresses.fetchAccountFromDb()
-                   send(addresses)
-               }
+                if (!isRefresh) {
+                    addresses.fetchAccountFromDb()
+                    send(addresses)
+                }
 
-               addresses.mapIndexed { index, account ->
-                   async {
-                       try {
-                           val address = account.address
-                           loadPrices.await()
+                addresses.mapIndexed { index, account ->
+                    async {
+                        try {
+                            val address = account.address
+                            loadPrices.await()
 
-                           val newAccounts = supervisorScope {
-                               account.accounts.map {
-                                   async {
-                                       val balance =
-                                           balanceRepository.getTokenBalanceAndPrice(address, it.token)
-                                               .first()
+                            val newAccounts = supervisorScope {
+                                account.accounts.map {
+                                    async {
+                                        val balance =
+                                            balanceRepository.getTokenBalanceAndPrice(address, it.token)
+                                                .first()
 
-                                       it.applyBalance(balance.tokenBalance, balance.price)
-                                   }
-                               }.awaitAll()
-                           }
+                                        it.applyBalance(balance.tokenBalance, balance.price)
+                                    }
+                                }.awaitAll()
+                            }
 
-                           addresses[index] = account.copy(accounts = newAccounts)
+                            addresses[index] = account.copy(accounts = newAccounts)
 
-                       } catch (e: Exception) {
-                           Timber.e(e)
-                           // ignore
-                       }
-                   }
-               }.awaitAll()
-               send(addresses)
-           }
-           awaitClose()
-       }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            // ignore
+                        }
+                    }
+                }.awaitAll()
+                send(addresses)
+            }
+            awaitClose()
+        }
     }
 
     override fun loadCachedAddresses(vaultId: String): Flow<List<Address>> =  buildCacheAddresses(vaultId)
@@ -238,6 +238,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
                     it.applyBalance(balance.tokenBalance, balance.price)
                 }
             ))
+    }.map {
+        it.distinctByChainAndContractAddress()
     }
 
     override suspend fun fetchMergeBalance(chain: Chain, vaultId: String): List<MergeAccount> {
@@ -401,6 +403,12 @@ internal class AccountsRepositoryImpl @Inject constructor(
         tokenValue = balance.tokenValue,
         fiatValue = balance.fiatValue,
         price = price
+    )
+
+    private fun Address.distinctByChainAndContractAddress() = copy(
+        accounts = accounts.distinctBy { account ->
+            account.token.chain.id to account.token.contractAddress.lowercase()
+        }
     )
 }
 
