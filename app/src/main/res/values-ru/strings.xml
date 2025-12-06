@@ -442,6 +442,10 @@
     <string name="apy">APY</string>
     <string name="unbond">Отвязать</string>
     <string name="unbond_screen_title">Отвязать</string>
+    <string name="stake_screen_title">Стейкинг</string>
+    <string name="unstake_screen_title">Отменить стейкинг</string>
+    <string name="mint_screen_title">Чеканить</string>
+    <string name="redeem_screen_title">Выкупить</string>
     <string name="bond">Привязать</string>
     <string name="active_nodes">Активные узлы</string>
     <string name="next_churn">Следующая ротация</string>

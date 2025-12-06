@@ -431,6 +431,10 @@
     <string name="apy">APY</string>
     <string name="unbond">Svincola</string>
     <string name="unbond_screen_title">Svincola</string>
+    <string name="stake_screen_title">Puntare</string>
+    <string name="unstake_screen_title">Rimuovi puntata</string>
+    <string name="mint_screen_title">Coniare</string>
+    <string name="redeem_screen_title">Riscattare</string>
     <string name="bond">Vincola</string>
     <string name="active_nodes">Nodi Attivi</string>
     <string name="next_churn">Prossima Rotazione</string>

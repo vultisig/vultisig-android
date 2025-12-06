@@ -117,7 +117,6 @@ dependencies {
     implementation(libs.apache.compress.xz)
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
-    implementation(libs.web3)
 
     // test
     testImplementation(libs.ktor.client.mock)
