@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.RujiStakeBalances
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
+import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -26,6 +27,7 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -48,6 +50,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.screens.deposit.DepositFormScreen
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_YTCY_AFFILIATE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
@@ -78,6 +81,7 @@ import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
+import java.lang.reflect.Array.set
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -87,6 +91,7 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.first
+import kotlin.text.get
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -110,6 +115,8 @@ internal enum class DepositOption {
     MintYRUNE,
     RedeemYRUNE,
     RedeemYTCY,
+    SecuredAsset,
+    WithdrawSecuredAsset
 }
 
 @Immutable
@@ -133,6 +140,7 @@ internal data class DepositFormUiModel(
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
+    val thorAddress : UiText = UiText.Empty,
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -151,6 +159,10 @@ internal data class DepositFormUiModel(
 
     val isAutoCompoundTcyStake: Boolean = false,
     val isAutoCompoundTcyUnStake: Boolean = false,
+
+    val availableSecuredAssets: List<Chain> = listOf(
+    ),
+    val securedAssetWithdrawOptions: List<String> = listOf("Select Secured Asset to Withdraw") + availableSecuredAssets.map { it.ticker() }
 )
 
 @HiltViewModel
@@ -250,6 +262,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.MintYRUNE,
                 DepositOption.RedeemYTCY,
                 DepositOption.RedeemYRUNE,
+                DepositOption.SecuredAsset,
+                DepositOption.WithdrawSecuredAsset,
             )
 
             Chain.MayaChain -> listOf(
@@ -270,10 +284,16 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Switch,
             )
 
-            else -> listOf(
-                DepositOption.Stake,
-                DepositOption.Unstake,
-            )
+            else -> when {
+                chain.ticker() in SECURE_ASSETS_TICKERS -> listOf(
+                    DepositOption.SecuredAsset
+                )
+                else -> listOf(
+                    DepositOption.Stake,
+                    DepositOption.Unstake,
+                )
+            }
+
         }
         val depositOption = depositOptions.first()
         state.update {
@@ -343,6 +363,20 @@ internal class DepositFormViewModel @Inject constructor(
                         -> {
                         tickerToActivate = selectedToken.ticker
                         address.accounts.find { it.token.id == selectedToken.id }
+                    }
+                    DepositOption.SecuredAsset -> {
+                        val thorAddress = accountsRepository
+                            .loadAddress(vaultId, Chain.ThorChain)
+                            .firstOrNull()
+                            ?.address
+                        state.update {
+                            it.copy(
+                                thorAddress = thorAddress?.asUiText() ?: UiText.Empty
+                            )
+                        }
+                        val account = address.accounts.find { it.token.isNativeToken }
+                        tickerToActivate = account?.token?.ticker
+                        account
                     }
 
                     else -> {
@@ -882,6 +916,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
                     DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
                     DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
+                    DepositOption.SecuredAsset -> createSecuredAssetTransaction()
+                    DepositOption.WithdrawSecuredAsset -> createWithdrawSecuredAssetTransaction()
                 }
 
                 transactionRepository.addTransaction(transaction)
@@ -1408,6 +1444,129 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+        )
+    }
+
+    var addressFields: Map<String, String>
+        get() = mapOf("thorAddress" to thorAddressFieldState.text.toString())
+        set(value) {
+            value["thorAddress"]?.let { thorAddress ->
+                thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
+            }
+        }
+
+    private suspend fun createSecuredAssetTransaction(): DepositTransaction {
+
+
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val thorAddress = accountsRepository
+            .loadAddress(vaultId, Chain.ThorChain)
+            .firstOrNull()
+            ?.address
+
+
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+        val memo = "SECURE+:$thorAddress"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = thorAddress ?: "",
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+
+        )
+    }
+
+    private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
+        val chain = chain ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val address = accountsRepository.loadAddress(vaultId, chain)
+            .firstOrNull() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val tokenAmountInt = BigInteger.ZERO
+        val memo = "withdraw_secured:sample"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
         )
     }
 

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import wallet.core.jni.CoinType
 
 typealias TokenId = String
@@ -25,4 +26,10 @@ data class Coin(
 
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Tron
+}
+fun Coin.getNotNativeTicker(): String {
+    return this.ticker.uppercase().removePrefix("x/")
+}
+fun Coin.isSecuredAsset(): Boolean {
+    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && !isNativeToken
 }
