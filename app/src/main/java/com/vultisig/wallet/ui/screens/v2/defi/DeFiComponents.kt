@@ -73,7 +73,7 @@ internal fun BalanceBanner(
                 .padding(start = 16.dp, top = 16.dp)
         ) {
             Text(
-                text = Chain.ThorChain.name,
+                text = Chain.ThorChain.raw,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
@@ -298,7 +298,7 @@ internal fun PositionsSelectionDialog(
             )
         }
     }
-    
+
     val updateStakePositions = remember(stakePositions, selectedPositions) {
         stakePositions.map {
             it.copy(
@@ -315,7 +315,7 @@ internal fun PositionsSelectionDialog(
             updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
         }
     }
-    
+
     val filteredStakePositions = remember(searchQuery, updateStakePositions) {
         if (searchQuery.isEmpty()) {
             updateStakePositions
