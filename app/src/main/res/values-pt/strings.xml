@@ -431,6 +431,10 @@
     <string name="apy">APY</string>
     <string name="unbond">Desvincular</string>
     <string name="unbond_screen_title">Desvincular</string>
+    <string name="stake_screen_title">Apostar</string>
+    <string name="unstake_screen_title">Desapostar</string>
+    <string name="mint_screen_title">Cunhar</string>
+    <string name="redeem_screen_title">Resgatar</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>

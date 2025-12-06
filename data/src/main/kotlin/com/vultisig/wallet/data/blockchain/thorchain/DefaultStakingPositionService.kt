@@ -37,7 +37,6 @@ class DefaultStakingPositionService @Inject constructor(
 
             Timber.d("DefaultStakingPositionService: Emitting ${freshDetails.size} fresh staking positions for vault $vaultId")
 
-            stakingDetailsRepository.deleteStakingDetails(vaultId)
             stakingDetailsRepository.saveAllStakingDetails(vaultId, freshDetails)
             
             emit(freshDetails)
