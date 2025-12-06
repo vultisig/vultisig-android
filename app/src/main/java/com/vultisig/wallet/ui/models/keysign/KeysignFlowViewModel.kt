@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -326,6 +327,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         is BlockChainSpecific.Ton -> specific.isDeposit
+                        //.bitcoin, .bitcoinCash, .litecoin, .dogecoin, .ethereum, .avalanche, .bscChain, .base, .ripple:
                         is BlockChainSpecific.Cosmos ->
                             specific.transactionType ==
                                     TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
@@ -336,7 +338,24 @@ internal class KeysignFlowViewModel @Inject constructor(
                                         false
                                     }
 
-                        else -> false
+                        else -> {
+//                            if (keysignPayload.coin.chain in listOf(
+//                                    Chain.Bitcoin,
+//                                    Chain.BitcoinCash,
+//                                    Chain.Litecoin,
+//                                    Chain.Dogecoin,
+//                                    Chain.Ethereum,
+//                                    Chain.Avalanche,
+//                                    Chain.BscChain,
+//                                    Chain.Base,
+//                                    Chain.Ripple
+//                                ){
+//                                    TransactionType.Sec
+//                                }
+//                            )
+//                                else
+                            false
+                        }
                     }
 
                     transactionTypeUiModel = when {

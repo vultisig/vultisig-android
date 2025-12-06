@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -481,6 +482,73 @@ internal fun DepositFormScreen(
                                 onLostFocus = onSlippageLostFocus,
                                 error = state.slippageError,
                             )
+                    }
+
+
+                    if(depositOption == DepositOption.SecuredAsset){
+
+                        Text(
+                            text = "Mint Secured Asset (SECURE+)",
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+
+                        Text(
+                            text = "Target Asset:${state.selectedToken.chain}-${state.selectedToken.ticker}}",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+
+                        FormTextFieldCard(
+                            title = amountLabel,
+                            hint = amountHint,
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = tokenAmountFieldState,
+                            onLostFocus = onTokenAmountLostFocus,
+                            error = state.tokenAmountError,
+                        )
+
+                        FormTextFieldCard(
+                            title = amountLabel,
+                            hint = amountHint,
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = tokenAmountFieldState,
+                            onLostFocus = onTokenAmountLostFocus,
+                            error = state.tokenAmountError,
+                        )
+                        Text(
+                            text = "${state.selectedToken.chain.raw} Address (auto-filled)",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+                        Text(
+                            text = "${state.thorAddress}",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+                        Text(
+                            text = "Generated Memo:",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+
+                        Text(
+                            text = "SECURE+:${state.thorAddress}",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
                     }
                 }
             }

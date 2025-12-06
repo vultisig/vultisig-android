@@ -74,6 +74,7 @@ import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
+import java.lang.reflect.Array.set
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -83,6 +84,7 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.first
+import kotlin.text.get
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -131,6 +133,7 @@ internal data class DepositFormUiModel(
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
+    val thorAddress : UiText = UiText.Empty,
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -1411,22 +1414,63 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-
+    var addressFields: Map<String, String>
+        get() = mapOf("thorAddress" to thorAddressFieldState.text.toString())
+        set(value) {
+            value["thorAddress"]?.let { thorAddress ->
+                thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
+            }
+        }
 
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
-        val chain = chain ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
+
+
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val thorAddress = accountsRepository
+            .loadAddress(vaultId, Chain.ThorChain)
+            .firstOrNull()
+            ?.address
+
+        thorAddress?.let {
+            thorAddressFieldState.setTextAndPlaceCursorAtEnd(it)
+        }
+
+        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+
+
         val address = accountsRepository.loadAddress(vaultId, chain)
             .firstOrNull() ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+
+
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val selectedToken = selectedAccount.token
+
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmountInt = BigInteger.ZERO
-        val memo = "secured:sample"
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+        val memo = "SECURE+:$thorAddress"
 
         val specific = blockChainSpecificRepository
             .getSpecific(
