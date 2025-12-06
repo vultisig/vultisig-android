@@ -7,8 +7,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.getNotNativeTicker
+import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
@@ -87,10 +90,6 @@ class ThorChainHelper(
         } else {
             coin.getNotNativeTicker()
         }
-    }
-
-    private fun Coin.getNotNativeTicker(): String {
-        return this.ticker.uppercase().removePrefix("x/")
     }
 
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
@@ -401,53 +400,3 @@ private fun TransactionType.mergeOrUnMerge(): Boolean =
     this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
             this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
 
-
-fun Coin.isSecuredAsset(): Boolean {
-    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && !isNativeToken
-}
-
-
-fun Coin.getNotNativeTicker(): String {
-    return ticker.uppercase().replace("X/", "")
-}
-
-fun Chain.ticker(): String {
-    return when (this) {
-        Chain.ThorChain -> "RUNE"
-        Chain.Solana -> "SOL"
-        Chain.Ethereum -> "ETH"
-        Chain.Avalanche -> "AVAX"
-        Chain.Base -> "BASE"
-        Chain.Blast -> "BLAST"
-        Chain.Arbitrum -> "ARB"
-        Chain.Polygon -> "POL"
-        Chain.Optimism -> "OP"
-        Chain.BscChain -> "BNB"
-        Chain.Bitcoin -> "BTC"
-        Chain.BitcoinCash -> "BCH"
-        Chain.Litecoin -> "LTC"
-        Chain.Dogecoin -> "DOGE"
-        Chain.Dash -> "DASH"
-        Chain.GaiaChain -> "UATOM"
-        Chain.Kujira -> "KUJI"
-        Chain.MayaChain -> "CACAO"
-        Chain.CronosChain -> "CRO"
-        Chain.Polkadot -> "DOT"
-        Chain.Dydx -> "DYDX"
-        Chain.ZkSync -> "ZK"
-        Chain.Sui -> "SUI"
-        Chain.Ton -> "TON"
-        Chain.Osmosis -> "OSMO"
-        Chain.Terra -> "LUNA"
-        Chain.TerraClassic -> "LUNC"
-        Chain.Noble -> "USDC"
-        Chain.Ripple -> "XRP"
-        Chain.Akash -> "AKT"
-        Chain.Tron -> "TRX"
-        Chain.Zcash -> "ZEC"
-        Chain.Cardano -> "ADA"
-        Chain.Mantle -> "MNT"
-        Chain.Sei -> "SEI"
-        Chain.Hyperliquid -> "HYPE"
-    }
-}

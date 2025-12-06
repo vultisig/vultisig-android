@@ -3,9 +3,9 @@ package com.vultisig.wallet.ui.models.settings
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.crypto.ticker
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
