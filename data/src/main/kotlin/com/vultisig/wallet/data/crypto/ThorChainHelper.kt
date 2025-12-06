@@ -272,7 +272,7 @@ class ThorChainHelper(
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
-        val chainName = getChianName(keysignPayload.coin)
+        val chainName = keysignPayload.coin.getChianName()
         val isSecured = keysignPayload.coin.isSecuredAsset()
 
         val coin = Cosmos.THORChainCoin.newBuilder()
@@ -380,20 +380,19 @@ class ThorChainHelper(
         )
     }
 
-
-    private fun getChianName(coin: Coin): String {
-        return if (coin.isSecuredAsset()) {
-            "THOR"
-        } else if (coin.chain == Chain.BscChain) {
-            "BSC"
-        } else if (coin.chain == Chain.MayaChain) {
-            "MAYA"
-        } else {
-            coin.chain.ticker().uppercase()
-        }
-    }
 }
 
+fun Coin.getChianName(): String {
+    return if (this.isSecuredAsset()) {
+        "THOR"
+    } else if (this.chain == Chain.BscChain) {
+        "BSC"
+    } else if (this.chain == Chain.MayaChain) {
+        "MAYA"
+    } else {
+        this.chain.ticker().uppercase()
+    }
+}
 
 private fun TransactionType.genericWasmMessage(): Boolean =
     this.mergeOrUnMerge() || this == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT

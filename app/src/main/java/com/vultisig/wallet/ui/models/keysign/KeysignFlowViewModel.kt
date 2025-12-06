@@ -327,7 +327,6 @@ internal class KeysignFlowViewModel @Inject constructor(
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         is BlockChainSpecific.Ton -> specific.isDeposit
-                        //.bitcoin, .bitcoinCash, .litecoin, .dogecoin, .ethereum, .avalanche, .bscChain, .base, .ripple:
                         is BlockChainSpecific.Cosmos ->
                             specific.transactionType ==
                                     TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
@@ -338,24 +337,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                                         false
                                     }
 
-                        else -> {
-//                            if (keysignPayload.coin.chain in listOf(
-//                                    Chain.Bitcoin,
-//                                    Chain.BitcoinCash,
-//                                    Chain.Litecoin,
-//                                    Chain.Dogecoin,
-//                                    Chain.Ethereum,
-//                                    Chain.Avalanche,
-//                                    Chain.BscChain,
-//                                    Chain.Base,
-//                                    Chain.Ripple
-//                                ){
-//                                    TransactionType.Sec
-//                                }
-//                            )
-//                                else
-                            false
-                        }
+                        else -> false
                     }
 
                     transactionTypeUiModel = when {

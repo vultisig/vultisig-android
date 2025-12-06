@@ -12,6 +12,8 @@ import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.RujiStakeBalances
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
+import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
+import com.vultisig.wallet.data.crypto.ticker
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -157,6 +159,10 @@ internal data class DepositFormUiModel(
 
     val isAutoCompoundTcyStake: Boolean = false,
     val isAutoCompoundTcyUnStake: Boolean = false,
+
+    val availableSecuredAssets: List<Chain> = listOf(
+    ),
+    val securedAssetWithdrawOptions: List<String> = listOf("Select Secured Asset to Withdraw") + availableSecuredAssets.map { it.ticker() }
 )
 
 @HiltViewModel
@@ -256,6 +262,8 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.MintYRUNE,
                 DepositOption.RedeemYTCY,
                 DepositOption.RedeemYRUNE,
+                DepositOption.SecuredAsset,
+                DepositOption.WithdrawSecuredAsset,
             )
 
             Chain.MayaChain -> listOf(
@@ -276,10 +284,16 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Switch,
             )
 
-            else -> listOf(
-                DepositOption.Stake,
-                DepositOption.Unstake,
-            )
+            else -> when {
+                chain.ticker() in SECURE_ASSETS_TICKERS -> listOf(
+                    DepositOption.SecuredAsset
+                )
+                else -> listOf(
+                    DepositOption.Stake,
+                    DepositOption.Unstake,
+                )
+            }
+
         }
         val depositOption = depositOptions.first()
         state.update {
@@ -349,6 +363,20 @@ internal class DepositFormViewModel @Inject constructor(
                         -> {
                         tickerToActivate = selectedToken.ticker
                         address.accounts.find { it.token.id == selectedToken.id }
+                    }
+                    DepositOption.SecuredAsset -> {
+                        val thorAddress = accountsRepository
+                            .loadAddress(vaultId, Chain.ThorChain)
+                            .firstOrNull()
+                            ?.address
+                        state.update {
+                            it.copy(
+                                thorAddress = thorAddress?.asUiText() ?: UiText.Empty
+                            )
+                        }
+                        val account = address.accounts.find { it.token.isNativeToken }
+                        tickerToActivate = account?.token?.ticker
+                        account
                     }
 
                     else -> {
@@ -1440,17 +1468,6 @@ internal class DepositFormViewModel @Inject constructor(
             .firstOrNull()
             ?.address
 
-        thorAddress?.let {
-            thorAddressFieldState.setTextAndPlaceCursorAtEnd(it)
-        }
-
-        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-
-
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .firstOrNull() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
 
 
         val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
@@ -1495,7 +1512,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = thorAddress ?: "",
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmountInt,
@@ -1504,6 +1521,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
+
         )
     }
 

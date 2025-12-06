@@ -1025,4 +1025,11 @@
 
     <string name="deposit_option_withdraw_secured">Withdraw Secured Asset</string>
     <string name="deposit_option_secured_assets">Secured Assets</string>
+    <string name="address_auto_filled">%1$s Address (auto-filled)</string>
+    <string name="generated_memo">Generated Memo:</string>
+    <string name="secure" translatable="false">SECURE+:%1$s</string>
+    <string name="select_secured_asset_to_withdraw">Select Secured Asset to Withdraw</string>
+    <string name="amount_to_withdraw">Amount to Withdraw</string>
+    <string name="mint_secured_asset_secure">Mint Secured Asset (SECURE+)</string>
+    <string name="target_asset">Target Asset:%1$s-%2$s</string>
 </resources>

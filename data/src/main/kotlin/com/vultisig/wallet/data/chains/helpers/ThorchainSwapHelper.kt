@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.isSecuredAsset
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -43,7 +44,7 @@ class ThorchainSwapHelper {
                     .setChain("THOR")
                     .setSymbol(getTicker(keysignPayload.coin))
                     .setTicker(getTicker(keysignPayload.coin))
-                    .setSecured(keysignPayload.coin.isNativeToken)
+                    .setSecured(keysignPayload.coin.isSecuredAsset())
                     .setSynth(false)
                     .build()
             )

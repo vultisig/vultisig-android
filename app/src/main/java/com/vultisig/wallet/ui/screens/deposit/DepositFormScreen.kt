@@ -25,6 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.crypto.getChianName
+import com.vultisig.wallet.data.crypto.ticker
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -45,7 +47,9 @@ import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 internal fun DepositFormScreen(
@@ -164,6 +168,8 @@ internal fun DepositFormScreen(
     onLoadRujiBalances: () -> Unit = {},
     onAutoCompoundTcyStake: (Boolean) -> Unit = {},
     onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
+    onSelectSecureAsset: (String) -> Unit = {},
+
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -390,6 +396,7 @@ internal fun DepositFormScreen(
                             DepositOption.MintYTCY, DepositOption.MintYRUNE,
                             DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
                             DepositOption.RemoveCacaoPool,DepositOption.AddCacaoPool,
+                            DepositOption.SecuredAsset,DepositOption.WithdrawSecuredAsset
                         )
                     ) {
                         FormTextFieldCard(
@@ -488,7 +495,7 @@ internal fun DepositFormScreen(
                     if(depositOption == DepositOption.SecuredAsset){
 
                         Text(
-                            text = "Mint Secured Asset (SECURE+)",
+                            text = stringResource(R.string.mint_secured_asset_secure),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.text.primary,
                             textAlign = TextAlign.Center,
@@ -496,11 +503,15 @@ internal fun DepositFormScreen(
                         )
 
                         Text(
-                            text = "Target Asset:${state.selectedToken.chain}-${state.selectedToken.ticker}}",
+                            text = stringResource(
+                                R.string.target_asset,
+                                state.selectedToken.getChianName(),
+                                state.selectedToken.ticker
+                            ),
                             style = Theme.brockmann.body.l.medium,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
                         )
 
                         FormTextFieldCard(
@@ -511,43 +522,59 @@ internal fun DepositFormScreen(
                             onLostFocus = onTokenAmountLostFocus,
                             error = state.tokenAmountError,
                         )
+                        Text(
+                            text = stringResource(
+                                R.string.address_auto_filled,
+                                state.selectedToken.chain.raw
+                            ),
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+                        Text(
+                            text = "${state.thorAddress.asString()}",
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+                        Text(
+                            text = stringResource(R.string.generated_memo),
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
 
+                        Text(
+                            text = stringResource(
+                                R.string.secure,
+                                state.thorAddress.asString()
+                            ),
+                            style = Theme.brockmann.body.l.medium,
+                            color = Theme.v2.colors.text.extraLight,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier .align(Alignment.CenterHorizontally),
+                        )
+                    }
+                    if(depositOption == DepositOption.WithdrawSecuredAsset){
+
+                        FormSelection(
+                            selected = stringResource(R.string.select_secured_asset_to_withdraw),
+                            options = state.securedAssetWithdrawOptions,
+                            onSelectOption = { onSelectSecureAsset},
+                            mapTypeToString = { option ->
+                                option
+                            }
+                        )
                         FormTextFieldCard(
-                            title = amountLabel,
+                            title = stringResource(R.string.amount_to_withdraw),
                             hint = amountHint,
                             keyboardType = KeyboardType.Number,
                             textFieldState = tokenAmountFieldState,
                             onLostFocus = onTokenAmountLostFocus,
                             error = state.tokenAmountError,
-                        )
-                        Text(
-                            text = "${state.selectedToken.chain.raw} Address (auto-filled)",
-                            style = Theme.brockmann.body.l.medium,
-                            color = Theme.v2.colors.text.extraLight,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier .align(Alignment.CenterHorizontally),
-                        )
-                        Text(
-                            text = "${state.thorAddress}",
-                            style = Theme.brockmann.body.l.medium,
-                            color = Theme.v2.colors.text.extraLight,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier .align(Alignment.CenterHorizontally),
-                        )
-                        Text(
-                            text = "Generated Memo:",
-                            style = Theme.brockmann.body.l.medium,
-                            color = Theme.v2.colors.text.extraLight,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier .align(Alignment.CenterHorizontally),
-                        )
-
-                        Text(
-                            text = "SECURE+:${state.thorAddress}",
-                            style = Theme.brockmann.body.l.medium,
-                            color = Theme.v2.colors.text.extraLight,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier .align(Alignment.CenterHorizontally),
                         )
                     }
                 }
