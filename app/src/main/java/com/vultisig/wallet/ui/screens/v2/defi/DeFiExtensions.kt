@@ -74,6 +74,9 @@ internal fun DeFiNavActions.getContractByDeFiAction(): String? {
         DeFiNavActions.REDEEM_YTCY -> YTCY_CONTRACT
         DeFiNavActions.REDEEM_YRUNE -> YRUNE_CONTRACT
 
+        DeFiNavActions.STAKE_TCY,
+        DeFiNavActions.UNSTAKE_TCY -> STAKING_TCY_COMPOUND_CONTRACT
+
         else -> null
     }
 }
