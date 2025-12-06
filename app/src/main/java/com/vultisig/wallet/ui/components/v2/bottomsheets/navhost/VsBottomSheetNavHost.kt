@@ -2,12 +2,17 @@ package com.vultisig.wallet.ui.components.v2.bottomsheets.navhost
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
@@ -28,9 +33,11 @@ import kotlin.reflect.KClass
  * @param navController Custom navigation controller for managing bottom sheet navigation state
  * @param content Lambda to define the navigation graph with composable destinations
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun VsBottomSheetNavHost(
     modifier: Modifier = Modifier,
+    sheetState: SheetState,
     navController: VsBottomSheetNavController,
     content: VsBottomSheetNavGraphBuilder.() -> Unit
 ) {
@@ -40,10 +47,21 @@ internal fun VsBottomSheetNavHost(
     val currentRouteData = navController.currentRouteData
     val currentRouteClass = currentRouteData::class.qualifiedName ?: ""
 
+    var isExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(sheetState.currentValue) {
+        isExpanded = sheetState.currentValue != SheetValue.Hidden
+    }
+
     if (builder.hasRoute(currentRouteClass)) {
-        val currentContent = builder.getContent(currentRouteClass, currentRouteData)
+        val currentContent = builder.getContent(
+            currentRouteClass,
+            currentRouteData
+        )
         Box(
-            modifier = modifier.animateContentSize(),
+            modifier = if (isExpanded) modifier.animateContentSize() else modifier,
             content = { currentContent() }
         )
     }
@@ -56,7 +74,8 @@ internal class VsBottomSheetNavGraphBuilder {
         routeClass: KClass<T>,
         content: @Composable (T) -> Unit
     ) {
-        val className = routeClass.qualifiedName ?: throw IllegalArgumentException("Route class must have a qualified name")
+        val className = routeClass.qualifiedName
+            ?: throw IllegalArgumentException("Route class must have a qualified name")
         routes[className] = { routeData ->
             @Suppress("UNCHECKED_CAST")
             if (routeClass.isInstance(routeData)) {

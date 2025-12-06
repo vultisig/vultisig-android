@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,6 +37,7 @@ import com.vultisig.wallet.ui.models.ReceiveUiModel
 import com.vultisig.wallet.ui.models.ReceiveViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReceiveBottomSheet(
     viewModel: ReceiveViewModel = hiltViewModel(),
@@ -99,7 +101,7 @@ private fun ReceiveContent(
             ) {
                 itemsIndexed(uiState.chains) { index, chain ->
 
-                    Column() {
+                    Column {
                         Row(
                             modifier = Modifier
                                 .clickOnce(onClick = {
