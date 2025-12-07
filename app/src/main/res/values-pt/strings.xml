@@ -969,4 +969,6 @@
     <string name="amount_to_withdraw">Valor a levantar</string>
     <string name="mint_secured_asset_secure">Ativo garantido Mint (SECURE+)</string>
     <string name="target_asset">Ativo alvo: %1$s-%2$s</string>
+    <string name="thor_address">Discurso de Thor</string>
+    <string name="operation">Operação</string>
 </resources>

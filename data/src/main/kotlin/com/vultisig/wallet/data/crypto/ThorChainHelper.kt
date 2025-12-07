@@ -28,7 +28,6 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
 import java.math.BigInteger
-import kotlin.text.drop
 
 
 @OptIn(ExperimentalStdlibApi::class)

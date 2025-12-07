@@ -982,4 +982,6 @@
     <string name="amount_to_withdraw">Сумма вывода</string>
     <string name="mint_secured_asset_secure">Обеспеченный актив Mint (SECURE+)</string>
     <string name="target_asset">Целевой актив:%1$s-%2$s</string>
+    <string name="thor_address">Адрес Тора</string>
+    <string name="operation">Операция</string>
 </resources>

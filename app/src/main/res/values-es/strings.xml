@@ -970,4 +970,6 @@
     <string name="amount_to_withdraw">Monto a retirar</string>
     <string name="mint_secured_asset_secure">Activo asegurado de Mint (SECURE+)</string>
     <string name="target_asset">Activo objetivo:%1$s-%2$s</string>
+    <string name="thor_address">Dirección de Thor</string>
+    <string name="operation">Operación</string>
 </resources>

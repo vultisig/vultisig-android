@@ -979,4 +979,6 @@
     <string name="amount_to_withdraw">Op te nemen bedrag</string>
     <string name="mint_secured_asset_secure">Mint Onderpand (SECURE+)</string>
     <string name="target_asset">Doelactiva:%1$s-%2$s</string>
+    <string name="thor_address">Thor Adres</string>
+    <string name="operation">Operatie</string>
 </resources>

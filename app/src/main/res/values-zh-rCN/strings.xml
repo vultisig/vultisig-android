@@ -1376,5 +1376,7 @@
     <string name="amount_to_withdraw">提取金额</string>
     <string name="mint_secured_asset_secure">铸造担保资产（SECURE+）</string>
     <string name="target_asset">目标资产：%1$s-%2$s</string>
+    <string name="thor_address">Thor 地址</string>
+    <string name="operation">操作</string>
 
 </resources>

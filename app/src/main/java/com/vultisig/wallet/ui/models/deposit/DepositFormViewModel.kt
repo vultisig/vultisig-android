@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -81,7 +82,6 @@ import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
-import java.lang.reflect.Array.set
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -91,7 +91,6 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.first
-import kotlin.text.get
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -1242,6 +1241,7 @@ internal class DepositFormViewModel @Inject constructor(
             UiText.StringResource(R.string.send_error_no_address)
         )
 
+
         val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
@@ -1476,22 +1476,22 @@ internal class DepositFormViewModel @Inject constructor(
 
         val selectedToken = selectedAccount.token
 
+//        if(!selectedAccount.token.isSecuredAsset()){
+//            throw InvalidTransactionDataException(
+//                UiText.StringResource(R.string.deposit_error_not_secured_asset)
+//            )
+//        }
+
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+        val tokenAmount =
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+
         val memo = "SECURE+:$thorAddress"
 
         val specific = blockChainSpecificRepository
@@ -1515,7 +1515,7 @@ internal class DepositFormViewModel @Inject constructor(
             dstAddress = thorAddress ?: "",
             memo = memo,
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = tokenAmount,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,

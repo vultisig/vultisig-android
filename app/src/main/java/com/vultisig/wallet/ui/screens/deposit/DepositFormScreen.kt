@@ -495,7 +495,7 @@ internal fun DepositFormScreen(
 
                         Text(
                             text = stringResource(R.string.mint_secured_asset_secure),
-                            style = Theme.brockmann.body.s.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.primary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier .align(Alignment.CenterHorizontally),
@@ -507,7 +507,7 @@ internal fun DepositFormScreen(
                                 state.selectedToken.getChianName(),
                                 state.selectedToken.ticker
                             ),
-                            style = Theme.brockmann.body.l.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -526,21 +526,21 @@ internal fun DepositFormScreen(
                                 R.string.address_auto_filled,
                                 state.selectedToken.chain.raw
                             ),
-                            style = Theme.brockmann.body.l.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                             modifier = Modifier .align(Alignment.CenterHorizontally),
                         )
                         Text(
                             text = "${state.thorAddress.asString()}",
-                            style = Theme.brockmann.body.l.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                             modifier = Modifier .align(Alignment.CenterHorizontally),
                         )
                         Text(
                             text = stringResource(R.string.generated_memo),
-                            style = Theme.brockmann.body.l.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                             modifier = Modifier .align(Alignment.CenterHorizontally),
@@ -551,7 +551,7 @@ internal fun DepositFormScreen(
                                 R.string.secure,
                                 state.thorAddress.asString()
                             ),
-                            style = Theme.brockmann.body.l.medium,
+                            style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                             modifier = Modifier .align(Alignment.CenterHorizontally),

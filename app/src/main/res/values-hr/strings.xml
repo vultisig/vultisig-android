@@ -969,6 +969,8 @@
     <string name="generated_memo">Generirani dopis:</string>
     <string name="select_secured_asset_to_withdraw">Odaberite osiguranu imovinu za isplatu</string>
     <string name="amount_to_withdraw">Iznos za isplatu</string>
-    <string name="mint_secured_asset_secure">osigurana</string>
+    <string name="mint_secured_asset_secure">Osigurana imovina Mint (SECURE+)</string>
     <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
+    <string name="thor_address">Thorova adresa</string>
+    <string name="operation">Operacija</string>
 </resources>
