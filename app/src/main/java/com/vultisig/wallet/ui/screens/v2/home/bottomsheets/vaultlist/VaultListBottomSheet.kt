@@ -2,7 +2,8 @@ package com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavHost
@@ -18,8 +19,9 @@ internal fun VaultListBottomSheet(
     vaultList: Route.VaultList,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
+    val sheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        skipHiddenState = false
     )
 
     V2BottomSheet(
