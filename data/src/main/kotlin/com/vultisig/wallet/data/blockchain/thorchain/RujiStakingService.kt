@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
-import java.math.BigInteger
 import javax.inject.Inject
 
 class RujiStakingService @Inject constructor(
@@ -20,8 +19,7 @@ class RujiStakingService @Inject constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
 ) {
 
-    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails?> = flow {
-        try {
+    fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> = flow {
             val cachedDetails =
                 stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
             if (cachedDetails != null) {
@@ -29,43 +27,28 @@ class RujiStakingService @Inject constructor(
                 emit(cachedDetails)
             }
 
-            // Fetch fresh data from network
-            val freshDetails = getStakingDetailsFromNetwork(address)
+            val freshDetails = try {
+                getStakingDetailsFromNetwork(address)
+            } catch (e: Exception) {
+                Timber.e(e, "RujiStakingService: Error fetching RUJI staking details for vault $vaultId")
 
-            if (freshDetails.stakeAmount > BigInteger.ZERO) {
-                Timber.d("RujiStakingService: Emitting fresh RUJI staking position for vault $vaultId")
-                // Update cache
-                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
-                stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
+                if (cachedDetails != null) {
+                    Timber.d("RujiStakingService: Using cached RUJI position due to error")
+                    emit(cachedDetails)
+                    return@flow
+                }
 
-                emit(freshDetails)
-            } else {
-                Timber.d("RujiStakingService: No RUJI staking position found for vault $vaultId")
-
-                // Clear cache if no position exists
-                stakingDetailsRepository.deleteStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
-
-                emit(freshDetails)
-            }
-
-        } catch (e: Exception) {
-            Timber.e(
-                e,
-                "RujiStakingService: Error fetching RUJI staking details for vault $vaultId"
-            )
-
-            // If network fails, try to emit cached data
-            val cachedDetails =
-                stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
-            if (cachedDetails != null) {
-                Timber.d("RujiStakingService: Network error, using cached RUJI position")
-                emit(cachedDetails)
-            } else {
-                // No cache available, propagate the error
                 throw e
             }
-        }
-    }.flowOn(Dispatchers.IO)
+
+            // Emit new fresh positions
+            Timber.d("RujiStakingService: Emitting fresh RUJI staking position for vault $vaultId")
+            emit(freshDetails)
+
+            // Update DB cache
+            Timber.d("RujiStakingService: Saving fresh RUJI position for vault $vaultId")
+            stakingDetailsRepository.saveStakingDetails(vaultId, freshDetails)
+        }.flowOn(Dispatchers.IO)
 
     suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
         return try {
