@@ -1280,7 +1280,6 @@ private fun FoldableAssetWidget(
                 TokenChip(
                     selectedToken = state.selectedCoin,
                     onSelectTokenClick = onSelectTokenRequest,
-
                     onDragCancel = onAssetDragCancel,
                     onDrag = onAssetDrag,
                     onDragStart = onAssetDragStart,

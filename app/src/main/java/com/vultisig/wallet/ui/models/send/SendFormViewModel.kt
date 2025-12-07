@@ -95,6 +95,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -259,7 +260,7 @@ internal class SendFormViewModel @Inject constructor(
         get() {
             val selectedTokenValue = selectedTokenValue
             val accounts = accounts.value
-            return accounts.find { it.token.id == selectedTokenValue?.id }
+            return accounts.find { it.token.id.equals(selectedTokenValue?.id, true)  }
         }
 
     private var preSelectTokenJob: Job? = null
@@ -287,6 +288,7 @@ internal class SendFormViewModel @Inject constructor(
     private var lastTokenValueUserInput = ""
     private var lastFiatValueUserInput = ""
 
+    private val isSwitchingAccounts = MutableStateFlow(false)
 
     init {
         loadData(
@@ -651,15 +653,43 @@ internal class SendFormViewModel @Inject constructor(
 
     fun onAutoCompound(checked: Boolean) {
         viewModelScope.launch {
+            isSwitchingAccounts.value = true
+
             uiState.update { it.copy(isAutocompound = checked) }
 
-            if (checked && defiType == DeFiNavActions.UNSTAKE_TCY) {
-                if (vaultId != null) {
-                    selectedToken.update { Coins.ThorChain.sTCY }
-                    accountsRepository.loadAddresses(vaultId!!)
+            if (defiType == DeFiNavActions.UNSTAKE_TCY && vaultId != null) {
+                selectedToken.value = null
+
+                if (checked) {
+                    val regularAccounts = accountsRepository.loadAddresses(vaultId!!)
                         .map { addrs -> addrs.flatMap { it.accounts } }
-                        .collect(accounts)
+                        .first()
+
+                    accounts.value = regularAccounts
+
+                    delay(300)
+
+                    regularAccounts.find {
+                        it.token.ticker.equals("sTCY", true) && it.token.chain == Chain.ThorChain
+                    }?.let {
+                        selectToken(it.token)
+                    }
+                } else {
+                    val defiAccounts = accountsRepository.loadDeFiAddresses(vaultId!!, false)
+                        .map { addrs -> addrs.flatMap { it.accounts } }
+                        .first()
+
+                    accounts.value = defiAccounts
+
+                    delay(300)
+
+                   defiAccounts.find {
+                        it.token.ticker.equals("TCY", true) && it.token.chain == Chain.ThorChain
+                    }?.let {
+                        selectToken(it.token)
+                    }
                 }
+                isSwitchingAccounts.value = false
             }
         }
     }
@@ -2243,7 +2273,10 @@ internal class SendFormViewModel @Inject constructor(
             combine(
                 selectedToken.filterNotNull(),
                 accounts,
-            ) { token, accounts ->
+                isSwitchingAccounts,
+            ) { token, accounts, switching ->
+                if (switching) return@combine null  // <-- SKIP during transitions
+
                 val address = token.address
                 val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
 
@@ -2254,7 +2287,7 @@ internal class SendFormViewModel @Inject constructor(
                             address = address,
                             accounts = accounts,
                         ),
-                        accounts.find { it.token.id == token.id } ?: Account(
+                        accounts.find { it.token.id.equals(token.id, true) } ?: Account(
                             token = token,
                             tokenValue = null,
                             fiatValue = null,
