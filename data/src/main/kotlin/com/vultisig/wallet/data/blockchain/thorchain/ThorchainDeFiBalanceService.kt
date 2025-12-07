@@ -105,25 +105,20 @@ class ThorchainDeFiBalanceService(
         rujiDetails?.let { details ->
             val balances = mutableListOf<DeFiBalance.Balance>()
 
-            // Always add stake balance
+            // Add stake balance with rewards if available
+            val rewardsAmount = details.rewards
+                ?.takeIf { it > BigDecimal.ZERO }
+                ?.let { runCatching { it.toBigInteger() }.getOrDefault(BigInteger.ZERO) }
+                ?: BigInteger.ZERO
+
             balances.add(
                 DeFiBalance.Balance(
                     coin = details.coin,
-                    amount = details.stakeAmount
+                    amount = details.stakeAmount,
+                    coinRewards = RUJI_REWARDS_COIN,
+                    rewardsAmount = rewardsAmount
                 )
             )
-
-            // Add rewards if available and > 0
-            details.rewards
-                ?.takeIf { it > BigDecimal.ZERO }
-                ?.let { rewards ->
-                    balances.add(
-                        DeFiBalance.Balance(
-                            coin = RUJI_REWARDS_COIN,
-                            amount = runCatching { rewards.toBigInteger() }.getOrDefault(BigInteger.ZERO)
-                        )
-                    )
-                }
 
             defiBalances.add(
                 DeFiBalance(

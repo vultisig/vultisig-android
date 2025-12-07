@@ -228,6 +228,7 @@ private fun SendFormScreen(
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
             DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
+            DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,

@@ -525,7 +525,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                     val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
 
                     val rewards = details.rewards?.let { rewardAmount ->
-                        val rewardValue = rewardAmount.setScale(8, RoundingMode.HALF_UP)
+                        val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
+                        val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.HALF_UP)
                         "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
                     }
 

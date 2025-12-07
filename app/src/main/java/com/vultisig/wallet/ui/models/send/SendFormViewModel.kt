@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
@@ -54,6 +55,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
@@ -227,6 +229,7 @@ internal class SendFormViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val stakingDetailsRepository: StakingDetailsRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -805,13 +808,12 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY -> unstake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI  -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
             else -> send()
         }
     }
-
 
     fun send() {
         viewModelScope.launch {
@@ -1427,6 +1429,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+
     fun unstake() {
         viewModelScope.launch {
             showLoading()
@@ -1511,6 +1514,26 @@ internal class SendFormViewModel @Inject constructor(
                         gasFee = gasFee,
                         chain = chain
                     )
+
+                    DeFiNavActions.WITHDRAW_RUJI -> {
+                        val ruji = accountsRepository.loadAddresses(vaultId).firstOrNull()
+                            ?.flatMap {
+                                it.accounts
+                            }
+                            ?.find {
+                                it.token.id.equals(Coins.ThorChain.RUJI.id, true)
+                            } ?: return@launch
+
+                        createRUJIRewardsDepositTransaction(
+                            vaultId = vaultId,
+                            selectedToken = ruji.token,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                            tokenAmountInt = tokenAmountInt,
+                            gasFee = gasFee,
+                            chain = chain
+                        )
+                    }
 
                     else -> error("DeFi Type not supported ${defiType?.type}")
                 }
@@ -1966,12 +1989,49 @@ internal class SendFormViewModel @Inject constructor(
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect(accounts)
             }
+        } else if (this.defiType == DeFiNavActions.WITHDRAW_RUJI) {
+            viewModelScope.launch {
+                loadRewardsAccount(vaultId)
+            }
         } else {
             viewModelScope.launch {
                 accountsRepository.loadDeFiAddresses(vaultId, false)
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect(accounts)
             }
+        }
+    }
+
+    private suspend fun loadRewardsAccount(vaultId: VaultId) {
+        val accountsLoaded =
+            accountsRepository.loadAddresses(vaultId).firstOrNull()
+                ?.flatMap {
+                    it.accounts
+                }
+        val thorchainAccount = accountsLoaded?.find {
+            it.token.id.equals(Coins.ThorChain.RUNE.id, true)
+        } ?: return
+
+        val rujiAccount = accountsLoaded.find {
+            it.token.id.equals(Coins.ThorChain.RUJI.id, true)
+        } ?: return
+
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+
+        if (cachedDetails != null) {
+            val rewardsAccount = Account(
+                token = RujiStakingService.RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
+                tokenValue = TokenValue(
+                    value = cachedDetails.rewards?.toBigInteger() ?: BigInteger.ZERO,
+                    token = RujiStakingService.RUJI_REWARDS_COIN
+                ),
+                fiatValue = null,
+                price = null
+            )
+            accounts.value = listOf(rewardsAccount, thorchainAccount, rujiAccount)
+        } else {
+            accounts.value = emptyList()
         }
     }
 
@@ -2670,6 +2730,50 @@ internal class SendFormViewModel @Inject constructor(
                 fromAddress = srcAddress,
                 stakingContract = STAKING_RUJI_CONTRACT,
                 amount = tokenAmountInt.toString(),
+            )
+        )
+    }
+
+    private suspend fun createRUJIRewardsDepositTransaction(
+        vaultId: String,
+        selectedToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+        chain: Chain,
+    ): DepositTransaction {
+        val memo = "claim:${selectedToken.contractAddress}:$tokenAmountInt"
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+            )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddress,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            wasmExecuteContractPayload = ThorchainFunctions.claimRujiRewards(
+                fromAddress = srcAddress,
+                stakingContract = STAKING_RUJI_CONTRACT,
             )
         )
     }
