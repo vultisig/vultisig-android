@@ -766,7 +766,7 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI -> unstake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
             else -> send()
@@ -2689,7 +2689,7 @@ internal class SendFormViewModel @Inject constructor(
             dstAddress = dstAddress,
             memo = unstakeMemo,
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = BigInteger.ZERO,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
