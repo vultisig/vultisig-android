@@ -16,6 +16,7 @@
     <string name="unstake_screen_title">Unstake</string>
     <string name="mint_screen_title">Mint</string>
     <string name="redeem_screen_title">Redeem</string>
+    <string name="rewards_screen_title">Rewards</string>
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
     <string name="next_award">Next award</string>
