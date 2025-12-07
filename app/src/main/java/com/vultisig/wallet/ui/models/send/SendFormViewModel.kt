@@ -652,6 +652,15 @@ internal class SendFormViewModel @Inject constructor(
     fun onAutoCompound(checked: Boolean) {
         viewModelScope.launch {
             uiState.update { it.copy(isAutocompound = checked) }
+
+            if (checked && defiType == DeFiNavActions.UNSTAKE_TCY) {
+                if (vaultId != null) {
+                    selectedToken.update { Coins.ThorChain.sTCY }
+                    accountsRepository.loadAddresses(vaultId!!)
+                        .map { addrs -> addrs.flatMap { it.accounts } }
+                        .collect(accounts)
+                }
+            }
         }
     }
 
@@ -1472,6 +1481,7 @@ internal class SendFormViewModel @Inject constructor(
                         gasFee = gasFee,
                         chain = chain
                     )
+
                     else -> error("DeFi Type not supported ${defiType?.type}")
                 }
 
