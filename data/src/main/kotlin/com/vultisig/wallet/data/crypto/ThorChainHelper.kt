@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
-import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
@@ -270,7 +269,7 @@ class ThorChainHelper(
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
-        val chainName = keysignPayload.coin.getChianName()
+        val chainName = keysignPayload.coin.getChainName()
         val isSecured = keysignPayload.coin.isSecuredAsset()
 
         val coin = Cosmos.THORChainCoin.newBuilder()
@@ -380,7 +379,7 @@ class ThorChainHelper(
 
 }
 
-fun Coin.getChianName(): String {
+fun Coin.getChainName(): String {
     return if (this.isSecuredAsset()) {
         "THOR"
     } else if (this.chain == Chain.BscChain) {

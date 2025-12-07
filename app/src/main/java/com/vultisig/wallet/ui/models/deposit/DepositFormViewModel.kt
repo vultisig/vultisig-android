@@ -159,8 +159,7 @@ internal data class DepositFormUiModel(
     val isAutoCompoundTcyStake: Boolean = false,
     val isAutoCompoundTcyUnStake: Boolean = false,
 
-    val availableSecuredAssets: List<Chain> = listOf(
-    ),
+    val availableSecuredAssets: List<Chain> = listOf(),
     val securedAssetWithdrawOptions: List<String> = listOf("Select Secured Asset to Withdraw") + availableSecuredAssets.map { it.ticker() }
 )
 
@@ -282,17 +281,14 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.TransferIbc,
                 DepositOption.Switch,
             )
-
-            else -> when {
-                chain.ticker() in SECURE_ASSETS_TICKERS -> listOf(
-                    DepositOption.SecuredAsset
-                )
-                else -> listOf(
+            else ->
+                listOf(
                     DepositOption.Stake,
                     DepositOption.Unstake,
-                )
-            }
-
+                ).apply {
+                    if (chain.ticker() in SECURE_ASSETS_TICKERS)
+                        DepositOption.SecuredAsset
+                }
         }
         val depositOption = depositOptions.first()
         state.update {
@@ -1466,7 +1462,9 @@ internal class DepositFormViewModel @Inject constructor(
         val thorAddress = accountsRepository
             .loadAddress(vaultId, Chain.ThorChain)
             .firstOrNull()
-            ?.address
+            ?.address ?:throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.thorchain_address_not_found_in_vault)
+            )
 
 
 
@@ -1476,11 +1474,11 @@ internal class DepositFormViewModel @Inject constructor(
 
         val selectedToken = selectedAccount.token
 
-//        if(!selectedAccount.token.isSecuredAsset()){
-//            throw InvalidTransactionDataException(
-//                UiText.StringResource(R.string.deposit_error_not_secured_asset)
-//            )
-//        }
+        if(!selectedAccount.token.isSecuredAsset()){
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_not_secured_asset)
+            )
+        }
 
         val srcAddress = selectedToken.address
 
@@ -1512,7 +1510,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = thorAddress ?: "",
+            dstAddress = thorAddress ,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
@@ -1521,6 +1519,8 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
+            thorAddress = thorAddress,
+            operation = "mint"
 
         )
     }
@@ -2684,6 +2684,9 @@ internal class DepositFormViewModel @Inject constructor(
 
     fun onAutoCompoundTcyUnStake(isChecked: Boolean) {
         isAutoCompoundTcyUnStake = isChecked
+    }
+    fun onSelectSecureAsset(asset: String){
+
     }
 
 

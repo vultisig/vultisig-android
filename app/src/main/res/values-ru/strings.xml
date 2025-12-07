@@ -980,8 +980,10 @@
     <string name="generated_memo">Сгенерированное примечание:</string>
     <string name="select_secured_asset_to_withdraw">Выберите обеспеченный актив для вывода</string>
     <string name="amount_to_withdraw">Сумма вывода</string>
-    <string name="mint_secured_asset_secure">Обеспеченный актив Mint (SECURE+)</string>
-    <string name="target_asset">Целевой актив:%1$s-%2$s</string>
+    <string name="mint_secured_asset_secure">Чеканка обеспеченного актива (SECURE+)</string>
+    <string name="target_asset">Целевой актив: %1$s-%2$s</string>
     <string name="thor_address">Адрес Тора</string>
     <string name="operation">Операция</string>
+    <string name="thorchain_address_not_found_in_vault">Адрес THORChain не найден в хранилище. Убедитесь, что в вашем хранилище есть RUNE.</string>
+    <string name="deposit_error_not_secured_asset">Выбранный актив не является обеспеченным и не может быть обработан.</string>
 </resources>

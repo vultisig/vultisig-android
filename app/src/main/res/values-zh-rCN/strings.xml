@@ -1378,5 +1378,7 @@
     <string name="target_asset">目标资产：%1$s-%2$s</string>
     <string name="thor_address">Thor 地址</string>
     <string name="operation">操作</string>
+    <string name="thorchain_address_not_found_in_vault">您的金库中未找到 THORChain 地址。请确保您的金库中拥有 RUNE。</string>
+    <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
 
 </resources>

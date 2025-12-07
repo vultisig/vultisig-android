@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.crypto.getChianName
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -46,9 +46,7 @@ import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 internal fun DepositFormScreen(
@@ -112,6 +110,7 @@ internal fun DepositFormScreen(
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
         onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
+        onSelectSecureAsset = model::onSelectSecureAsset
     )
 }
 
@@ -504,7 +503,7 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(
                                 R.string.target_asset,
-                                state.selectedToken.getChianName(),
+                                state.selectedToken.getChainName(),
                                 state.selectedToken.ticker
                             ),
                             style = Theme.brockmann.body.s.regular,
@@ -562,7 +561,7 @@ internal fun DepositFormScreen(
                         FormSelection(
                             selected = stringResource(R.string.select_secured_asset_to_withdraw),
                             options = state.securedAssetWithdrawOptions,
-                            onSelectOption = { onSelectSecureAsset},
+                            onSelectOption = { onSelectSecureAsset(it) },
                             mapTypeToString = { option ->
                                 option
                             }
