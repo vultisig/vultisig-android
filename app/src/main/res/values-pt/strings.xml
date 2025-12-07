@@ -435,6 +435,7 @@
     <string name="unstake_screen_title">Desapostar</string>
     <string name="mint_screen_title">Cunhar</string>
     <string name="redeem_screen_title">Resgatar</string>
+    <string name="rewards_screen_title">Recompensas</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>

@@ -137,6 +137,7 @@
     <string name="unstake_screen_title">取消质押</string>
     <string name="mint_screen_title">铸造</string>
     <string name="redeem_screen_title">赎回</string>
+    <string name="rewards_screen_title">奖励</string>
     <string name="send_from_address">从</string>
     <string name="send_to_address">发送至</string>
     <string name="send_to_address_hint">在此输入地址</string>

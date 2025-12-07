@@ -446,6 +446,7 @@
     <string name="unstake_screen_title">Ontstaken</string>
     <string name="mint_screen_title">Munten</string>
     <string name="redeem_screen_title">Inwisselen</string>
+    <string name="rewards_screen_title">Beloningen</string>
     <string name="bond">Binden</string>
     <string name="active_nodes">Actieve Nodes</string>
     <string name="next_churn">Volgende Wisseling</string>

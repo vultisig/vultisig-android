@@ -435,6 +435,7 @@
     <string name="unstake_screen_title">Ukloni ulog</string>
     <string name="mint_screen_title">Kovati</string>
     <string name="redeem_screen_title">Otkupiti</string>
+    <string name="rewards_screen_title">Nagrade</string>
     <string name="bond">Veži</string>
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
