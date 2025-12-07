@@ -972,7 +972,7 @@
     <string name="amount_to_withdraw">Abhebungsbetrag</string>
     <string name="mint_secured_asset_secure">Gesichertes Asset erstellen (SECURE+)</string>
     <string name="target_asset">Zielvermögen: %1$s-%2$s</string>
-    <string name="thor_address">Thor-Ansprache</string>
+    <string name="thor_address">THORChain-Adresse</string>
     <string name="operation">Operation</string>
     <string name="thorchain_address_not_found_in_vault">Die THORChain-Adresse wurde im Tresor nicht gefunden. Bitte stellen Sie sicher, dass sich RUNE in Ihrem Tresor befindet.</string>
     <string name="deposit_error_not_secured_asset">Das ausgewählte Asset ist nicht gesichert und kann nicht verarbeitet werden.</string>

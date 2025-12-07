@@ -282,12 +282,11 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Switch,
             )
             else ->
-                listOf(
-                    DepositOption.Stake,
-                    DepositOption.Unstake,
-                ).apply {
+                buildList {
+                    add(DepositOption.Stake)
+                    add(DepositOption.Unstake)
                     if (chain.ticker() in SECURE_ASSETS_TICKERS)
-                        DepositOption.SecuredAsset
+                        add(DepositOption.SecuredAsset)
                 }
         }
         val depositOption = depositOptions.first()

@@ -67,7 +67,5 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
     )
 
     private fun List<Chain>.toUiModel() = map { it.toUiModel() }
-
-
 }
 

@@ -31,5 +31,5 @@ fun Coin.getNotNativeTicker(): String {
     return this.ticker.uppercase().removePrefix("x/")
 }
 fun Coin.isSecuredAsset(): Boolean {
-    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && !isNativeToken
+    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && isNativeToken
 }
