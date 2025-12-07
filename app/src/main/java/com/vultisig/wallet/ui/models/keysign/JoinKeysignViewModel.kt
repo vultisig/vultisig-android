@@ -119,7 +119,7 @@ sealed class JoinKeysignError(val message: UiText) {
 
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
-    data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
+    data class FailedToStart(val exceptionMessage: String) : JoinKeysignError(UiText.DynamicString(exceptionMessage))
     data object FailedConnectToServer :
         JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
 
@@ -949,7 +949,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
-                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart)
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.stackTraceToString()))
                 }
             }
         }
