@@ -45,34 +45,30 @@ interface DefaultSerializer<T> : KSerializer<T> {
 
 interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
 
-@Deprecated("Losses precision due to double")
 class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
-    override val descriptor = PrimitiveSerialDescriptor(
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
-        PrimitiveKind.DOUBLE
+        PrimitiveKind.STRING
     )
 
     override fun serialize(encoder: Encoder, value: BigDecimal) =
-        encoder.encodeDouble(value.toDouble())
+        encoder.encodeString(value.toPlainString())
 
-    override fun deserialize(decoder: Decoder): BigDecimal =
-        BigDecimal.valueOf(decoder.decodeDouble())
+    override fun deserialize(decoder: Decoder) = BigDecimal(decoder.decodeString())
 }
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
 
-@Deprecated("Unsafe serializer due to decodeLong and inability to handle strings")
 class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
-    override val descriptor = PrimitiveSerialDescriptor(
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
         "BigInteger",
-        PrimitiveKind.DOUBLE
+        PrimitiveKind.STRING
     )
 
     override fun serialize(encoder: Encoder, value: BigInteger) =
         encoder.encodeString(value.toString())
 
-    override fun deserialize(decoder: Decoder): BigInteger =
-        BigInteger.valueOf(decoder.decodeLong())
+    override fun deserialize(decoder: Decoder) = BigInteger(decoder.decodeString())
 }
 
 
@@ -132,7 +128,7 @@ class ThorChainSwapQuoteResponseJsonSerializerImpl @Inject constructor(private v
 interface LiFiSwapQuoteResponseSerializer : DefaultSerializer<LiFiSwapQuoteDeserialized>
 
 class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: Json) :
-    LiFiSwapQuoteResponseSerializer{
+    LiFiSwapQuoteResponseSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("LiFiSwapQuoteResponseSerializer")
 
@@ -207,7 +203,10 @@ class KeysignResponseSerializerImpl @Inject constructor() : KeysignResponseSeria
 
     override fun serialize(encoder: Encoder, value: tss.KeysignResponse) {
         val surrogate = KeysignResponseSerializable.serialize(value)
-        encoder.encodeSerializableValue(serializer, surrogate)
+        encoder.encodeSerializableValue(
+            serializer,
+            surrogate
+        )
     }
 
     override fun deserialize(decoder: Decoder): tss.KeysignResponse {
