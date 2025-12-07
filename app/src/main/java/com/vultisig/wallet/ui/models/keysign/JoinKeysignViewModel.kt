@@ -949,7 +949,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
-                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.stackTraceToString()))
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
                 }
             }
         }
