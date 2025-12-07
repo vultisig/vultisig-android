@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,21 +31,21 @@ internal fun DottyBottomSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+    val sheetState = rememberStandardBottomSheetState(
+        skipHiddenState = false
     )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         dragHandle = null,
-        containerColor = Color.Companion.Transparent,
-        scrimColor = Color.Companion.Black.copy(alpha = 0.32f),
+        containerColor = Color.Transparent,
+        scrimColor = Color.Black.copy(alpha = 0.32f),
         shape = RectangleShape,
         content = {
             Box {
                 Column(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .fillMaxWidth()
                         .clip(
                             shape = RoundedCornerShape(
@@ -60,13 +60,13 @@ internal fun DottyBottomSheet(
                             )
                             bottomFade()
                         },
-                    horizontalAlignment = Alignment.Companion.CenterHorizontally,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
                 )
                 DragHandler(
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .padding(top = 8.dp)
-                        .align(Alignment.Companion.TopCenter)
+                        .align(Alignment.TopCenter)
                 )
             }
 
@@ -109,7 +109,10 @@ private fun DrawScope.generateBackgroundDots(
             drawCircle(
                 color = dotColor,
                 radius = dotRadius,
-                center = Offset(x, y)
+                center = Offset(
+                    x,
+                    y
+                )
             )
         }
     }
