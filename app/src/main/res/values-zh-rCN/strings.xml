@@ -307,7 +307,7 @@
     <string name="faq_settings_a2">Vultisig 通过多设备认证提供增强的安全性，支持许多区块链，易于恢复选项，无需助记词或用户跟踪。</string>
     <string name="faq_settings_a3">是的，只要您在创建金库时保存并可以访问您的备份。您可以在新设备上导入这些备份以重新获得对资产的访问权限。</string>
     <string name="faq_settings_a4">Vultisig 安全地存储和管理数字资产。所有操作，如发送或交换，都需要设备阈值来签署交易。</string>
-    <string name="faq_settings_a5">Vultisig 免费使用。只有标准网络费用适用于发送。对于交换和桥接，有 0.5%%（50 基点）的费用。</string>
+    <string name="faq_settings_a5">Vultisig 免费使用。只有标准网络费用适用于发送。对于交换和桥接，有 0.5%（50 基点）的费用。</string>
     <string name="faq_settings_a6">Vultisig 支持主要的加密货币和代币，目前有超过 30 个链及其代币可用。</string>
     
     <!-- Biometry Auth -->
@@ -1331,7 +1331,7 @@
     <string name="dialog_default_error_body">出错了</string>
     <string name="onboarding_desc_page_2_part_1">它们是</string>
     <string name="onboarding_desc_page_2_part_2">拆分为多个部分</string>
-    <string name="select_vault_type_fast_desc_2">存放少量资金用于日常开支</string>
+    <string name="select_vault_type_fast_desc_2">储存资金以备日常使用</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">想创建私密金库？</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>

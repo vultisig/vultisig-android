@@ -935,7 +935,7 @@
     <string name="dialog_default_error_body">Er is iets misgegaan</string>
     <string name="onboarding_desc_page_2_part_1">Ze zijn</string>
     <string name="onboarding_desc_page_2_part_2">In delen opsplitsen</string>
-    <string name="select_vault_type_fast_desc_2">Bewaar kleinere bedragen voor dagelijks gebruik</string>
+    <string name="select_vault_type_fast_desc_2">Bewaar geld voor dagelijks gebruik</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Wilt u een privékluis aanmaken?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Schakel over naar de lokale modus</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>

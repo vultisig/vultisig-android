@@ -927,7 +927,7 @@
     <string name="dialog_default_error_body">Nešto je pošlo po zlu</string>
     <string name="onboarding_desc_page_2_part_1">Oni su</string>
     <string name="onboarding_desc_page_2_part_2">podijeljeno na dijelove</string>
-    <string name="select_vault_type_fast_desc_2">Pohranite manja sredstva za svakodnevnu upotrebu</string>
+    <string name="select_vault_type_fast_desc_2">Spremite sredstva za svakodnevnu upotrebu</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Želite li privatno izraditi trezor?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Prebacite se na lokalni način rada</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Vratite se na internetski način rada</string>
