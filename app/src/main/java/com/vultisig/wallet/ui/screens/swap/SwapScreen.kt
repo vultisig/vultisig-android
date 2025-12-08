@@ -22,13 +22,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -40,7 +37,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,9 +56,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -99,19 +95,17 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.library.form.FormDetails2
 import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
+import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
-import com.vultisig.wallet.ui.theme.v2.Colors
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -191,10 +185,6 @@ internal fun SwapScreen(
             if (state.expiredAt != null) {
                 QuoteTimer(
                     expiredAt = state.expiredAt,
-                    modifier = Modifier
-                        .padding(
-                            horizontal = 16.dp,
-                        )
                 )
             }
         },
@@ -299,7 +289,8 @@ internal fun SwapScreen(
                                         )
                                         .padding(all = space)
                                         .onGloballyPositioned {
-                                            flipButtonBottomCenter = it.boundsInRoot().bottomCenter
+                                            flipButtonBottomCenter =
+                                                it.boundsInParent().bottomCenter
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -443,9 +434,6 @@ internal fun SwapScreen(
                     val errorBoxWidth = 200.dp
                     val errorWidthBoxPx = errorBoxWidth.toPx().toInt()
                     val spacePx = space.toPx().toInt()
-                    val statusBarHeight =
-                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx()
-                            .toInt()
                     HintBox(
                         modifier = Modifier.width(errorBoxWidth),
                         message = error.asString(),
@@ -453,7 +441,7 @@ internal fun SwapScreen(
                         title = stringResource(R.string.dialog_default_error_title),
                         offset = IntOffset(
                             x = flipButtonBottomCenter.x.toInt() - errorWidthBoxPx.div(2),
-                            y = flipButtonBottomCenter.y.toInt() + spacePx - statusBarHeight
+                            y = flipButtonBottomCenter.y.toInt() + spacePx
                         ),
                         isVisible = true,
                     )
