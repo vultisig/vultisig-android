@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +60,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
@@ -96,11 +95,13 @@ private fun ChooseVaultScreen(
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary
+    V2Scaffold(
+        rightIcon = R.drawable.question,
+        onRightIconClick = onHelpClick,
+        onBackClick = onBackClick,
+        title = stringResource(R.string.select_vault_type_choose_setup),
     ) {
         Column(
-            modifier = Modifier.padding(it),
             horizontalAlignment = CenterHorizontally,
         ) {
             val isSecureTypeSelected = state.vaultType is VaultType.Secure
@@ -120,16 +121,13 @@ private fun ChooseVaultScreen(
             }
 
 
-            VsTopAppBar(
-                title = stringResource(R.string.select_vault_type_choose_setup),
-                iconRight = R.drawable.question,
-                onBackClick = onBackClick,
-                onIconRightClick = onHelpClick,
-            )
             RiveAnimation(
                 animation = R.raw.riv_choose_vault,
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(
+                        vertical = 24.dp,
+                        horizontal = 12.dp
+                    )
                     .weight(1f),
                 alignment = TOP_CENTER,
                 onInit = { rive: RiveAnimationView ->
@@ -139,7 +137,6 @@ private fun ChooseVaultScreen(
 
             Column(
                 Modifier
-                    .padding(horizontal = 16.dp)
                     .graphicsLayer {
                         this.transformOrigin = TransformOrigin.Center.copy(pivotFractionY = 1f)
                         this.alpha = fadeAnimation.value
@@ -268,10 +265,21 @@ private fun ChooseVaultScreen(
                             .drawBehind {
                                 drawLine(
                                     color = borderColor,
-                                    start = Offset(0f, size.height),
-                                    end = Offset(size.width, size.height),
+                                    start = Offset(
+                                        0f,
+                                        size.height
+                                    ),
+                                    end = Offset(
+                                        size.width,
+                                        size.height
+                                    ),
                                     strokeWidth = 5f,
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                                    pathEffect = PathEffect.dashPathEffect(
+                                        floatArrayOf(
+                                            10f,
+                                            10f
+                                        )
+                                    )
                                 )
                             }
                             .padding(16.dp),
@@ -310,7 +318,6 @@ private fun ChooseVaultScreen(
                 label = stringResource(id = R.string.select_vault_type_next),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
                     .testTag("ChooseVaultScreen.continue")
             )
             UiSpacer(32.dp)

@@ -84,6 +84,7 @@ import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.swap.TokenChip
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
@@ -139,6 +140,7 @@ internal fun NavGraphBuilder.sendScreen(
             onSetProviderAddressRequest = viewModel::setProviderAddress,
             onScanProviderAddressRequest = viewModel::scanProviderAddress,
             onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
+            onAutoCompound = { viewModel.onAutoCompound(it) }
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -202,6 +204,9 @@ private fun SendFormScreen(
 
     // trade
     slippageFieldState: TextFieldState,
+
+    // autocompound
+    onAutoCompound: (Boolean) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -223,6 +228,7 @@ private fun SendFormScreen(
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
             DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
+            DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
@@ -309,6 +315,8 @@ private fun SendFormScreen(
 
                         // trade
                         slippageFieldState = slippageFieldState,
+
+                        onAutoCompoundCheckedChange = onAutoCompound,
                     )
                 }
             }
@@ -356,6 +364,9 @@ private fun SendFormContent(
 
     // trade
     slippageFieldState: TextFieldState,
+
+    // stake tcy
+    onAutoCompoundCheckedChange: (Boolean) -> Unit
 ) {
     // send asset
     if (state.defiType == null) {
@@ -401,6 +412,7 @@ private fun SendFormContent(
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
             slippageTexFieldState = slippageFieldState,
+            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
 
         UiSpacer(24.dp)
@@ -450,6 +462,7 @@ private fun SendFormContent(
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
             slippageTexFieldState = slippageFieldState,
+            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
 
         UiSpacer(24.dp)
@@ -471,10 +484,13 @@ private fun SendFormContent(
         }
     } else if (state.defiType == DeFiNavActions.STAKE_RUJI
         || state.defiType == DeFiNavActions.UNSTAKE_RUJI
+        || state.defiType == DeFiNavActions.STAKE_TCY
+        || state.defiType == DeFiNavActions.UNSTAKE_TCY
         || state.defiType == DeFiNavActions.MINT_YRUNE
         || state.defiType == DeFiNavActions.MINT_YTCY
         || state.defiType == DeFiNavActions.REDEEM_YRUNE
         || state.defiType == DeFiNavActions.REDEEM_YTCY
+        || state.defiType == DeFiNavActions.WITHDRAW_RUJI
     ) {
         FoldableAmountWidget(
             state = state,
@@ -491,6 +507,7 @@ private fun SendFormContent(
             memoFieldState = memoFieldState,
             operatorFeeFieldState = operatorFeeFieldState,
             slippageTexFieldState = slippageFieldState,
+            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
     }
 }
@@ -508,6 +525,7 @@ private fun FoldableAmountWidget(
     onToogleAmountInputType: (Boolean) -> Unit,
     onChoosePercentageAmount: (Float) -> Unit,
     onChooseMaxTokenAmount: () -> Unit,
+    onAutoCompoundCheckedChange: (Boolean) -> Unit,
     memoFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
     slippageTexFieldState: TextFieldState,
@@ -803,7 +821,8 @@ private fun FoldableAmountWidget(
             }
 
             if (state.defiType == DeFiNavActions.REDEEM_YRUNE
-                || state.defiType == DeFiNavActions.REDEEM_YTCY) {
+                || state.defiType == DeFiNavActions.REDEEM_YTCY
+            ) {
                 Column(
                     modifier = Modifier.padding(
                         vertical = 2.dp,
@@ -825,6 +844,24 @@ private fun FoldableAmountWidget(
 
                     UiSpacer(12.dp)
                 }
+            }
+
+            if (state.defiType == DeFiNavActions.STAKE_TCY) {
+                AutoCompoundToggle(
+                    title = stringResource(R.string.tcy_auto_compound_enable_title),
+                    subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
+                    isChecked = state.isAutocompound,
+                    onCheckedChange = onAutoCompoundCheckedChange,
+                )
+            }
+
+            if (state.defiType == DeFiNavActions.UNSTAKE_TCY) {
+                AutoCompoundToggle(
+                    title = stringResource(R.string.tcy_auto_compound_unstake_title),
+                    subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
+                    isChecked = state.isAutocompound,
+                    onCheckedChange = onAutoCompoundCheckedChange,
+                )
             }
 
             if (state.showGasFee) {
@@ -1244,7 +1281,6 @@ private fun FoldableAssetWidget(
                 TokenChip(
                     selectedToken = state.selectedCoin,
                     onSelectTokenClick = onSelectTokenRequest,
-
                     onDragCancel = onAssetDragCancel,
                     onDrag = onAssetDrag,
                     onDragStart = onAssetDragStart,
