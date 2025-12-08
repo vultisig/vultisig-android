@@ -34,6 +34,41 @@ class BigIntegerSerializerImplTest {
     }
 
     @Test
+    fun `deserialize simple integer_string`() {
+        val jsonString = """{"value":12345}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigInteger("12345"), result.value)
+    }
+
+    @Test
+    fun `deserialize simple integer_string2`() {
+        val jsonString = """{"value":987654321}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigInteger("987654321"), result.value)
+    }
+
+    @Test
+    fun `deserialize simple integer_string3`() {
+        val jsonString = """{"value":9223372036854775808}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigInteger("9223372036854775808"), result.value)
+    }
+
+    @Test
+    fun `deserialize simple integer_string4`() {
+        val jsonString = """{"value":115792089237316195423570985008687907853269984665640564039457584007913129639935}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"), result.value)
+    }
+
+    @Test
+    fun `deserialize simple integer_string5`() {
+        val jsonString = """{"value":"115792089237316195423570985008687907853269984665640564039457584007913129639935"}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"), result.value)
+    }
+
+    @Test
     fun `handles zero`() {
         val data = TestData(BigInteger.ZERO)
         val jsonString = json.encodeToString(TestData.serializer(), data)

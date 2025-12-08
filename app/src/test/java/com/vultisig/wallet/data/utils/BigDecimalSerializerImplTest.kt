@@ -34,6 +34,34 @@ class BigDecimalSerializerImplTest {
     }
 
     @Test
+    fun `deserialize simple decimal2`() {
+        val jsonString = """{"amount":123.45}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigDecimal("123.45"), result.amount)
+    }
+
+    @Test
+    fun `deserialize simple decimal3`() {
+        val jsonString = """{"amount":999999999999999999999999999999.99}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigDecimal("999999999999999999999999999999.99"), result.amount)
+    }
+
+    @Test
+    fun `deserialize simple decimal4`() {
+        val jsonString = """{"amount":0.00000000000000000000000000000000000000000000000001}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigDecimal("0.00000000000000000000000000000000000000000000000001"), result.amount)
+    }
+
+    @Test
+    fun `deserialize simple decimal5`() {
+        val jsonString = """{"amount":1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890}"""
+        val result = json.decodeFromString(TestData.serializer(), jsonString)
+        assertEquals(BigDecimal("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890.12345678901234567890123456789012345678901234567890"), result.amount)
+    }
+
+    @Test
     fun `preserves high precision values`() {
         val highPrecision = BigDecimal("123.456789012345678901234567890")
         val data = TestData(highPrecision)

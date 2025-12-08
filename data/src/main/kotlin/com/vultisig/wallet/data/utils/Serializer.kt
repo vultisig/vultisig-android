@@ -18,11 +18,11 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
-import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
 import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -31,6 +31,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import java.math.BigDecimal
@@ -54,7 +55,17 @@ class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
     override fun serialize(encoder: Encoder, value: BigDecimal) =
         encoder.encodeString(value.toPlainString())
 
-    override fun deserialize(decoder: Decoder) = BigDecimal(decoder.decodeString())
+    override fun deserialize(decoder: Decoder): BigDecimal {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: return BigDecimal(decoder.decodeString())
+
+        val element = jsonDecoder.decodeJsonElement()
+
+        return when {
+            element is JsonPrimitive -> BigDecimal(element.content)
+            else -> throw SerializationException("Expected string or number for BigDecimal, got ${element::class}")
+        }
+    }
 }
 
 interface BigIntegerSerializer : DefaultSerializer<BigInteger>
@@ -68,7 +79,17 @@ class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override fun serialize(encoder: Encoder, value: BigInteger) =
         encoder.encodeString(value.toString())
 
-    override fun deserialize(decoder: Decoder) = BigInteger(decoder.decodeString())
+    override fun deserialize(decoder: Decoder): BigInteger {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: return BigInteger(decoder.decodeString())
+
+        val element = jsonDecoder.decodeJsonElement()
+
+        return when {
+            element is JsonPrimitive -> BigInteger(element.content)
+            else -> throw SerializationException("Expected string or number for BigInteger, got ${element::class}")
+        }
+    }
 }
 
 
