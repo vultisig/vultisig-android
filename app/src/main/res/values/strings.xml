@@ -436,6 +436,7 @@
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units is invalid</string>
     <string name="deposit_error_invalid_assets">Assets is invalid</string>
+    <string name="deposit_error_has_not_reached_maturity">Has not reached maturity</string>
     <string name="deposit_form_screen_assets">Assets</string>
     <string name="deposit_form_screen_lpunits">LP units</string>
     <string name="eth_gas_settings_title">Advanced</string>
