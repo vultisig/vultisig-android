@@ -483,7 +483,6 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 createGenericStakePosition(address, vaultId, coinsToLoad)
-
             } catch (t: Throwable) {
                 Timber.e(t, "Failed to load staking positions")
                 state.update {
@@ -526,7 +525,8 @@ internal class DefiPositionsViewModel @Inject constructor(
                     val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
 
                     val rewards = details.rewards?.let { rewardAmount ->
-                        val rewardValue = rewardAmount.setScale(8, RoundingMode.HALF_UP)
+                        val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
+                        val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.HALF_UP)
                         "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
                     }
 
@@ -646,7 +646,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                                 supportsMint = supportsMint,
                                 canWithdraw = false, // TCY auto-distributes rewards
                                 canStake = true,
-                                canUnstake = true,
+                                canUnstake = stakeAmount > BigDecimal.ZERO,
                                 rewards = null,
                                 nextReward = null,
                                 nextPayout = null,
@@ -903,15 +903,16 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     fun onNavigateToFunctions(defiNavAction: DeFiNavActions) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-
             val tokenId = when (defiNavAction) {
                 DeFiNavActions.STAKE_RUJI -> Coins.ThorChain.RUJI.id
                 DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI.id
+                DeFiNavActions.STAKE_TCY -> Coins.ThorChain.TCY.id
+                DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY.id
                 DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY.id
                 DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE.id
                 DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE.id
+                DeFiNavActions.WITHDRAW_RUJI -> "USDC-${Chain.ThorChain.id}"
                 else -> null
             }
             if (tokenId == null) {

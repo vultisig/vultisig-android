@@ -435,6 +435,7 @@
     <string name="unstake_screen_title">Desapostar</string>
     <string name="mint_screen_title">Acuñar</string>
     <string name="redeem_screen_title">Canjear</string>
+    <string name="rewards_screen_title">Recompensas</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nodos Activos</string>
     <string name="next_churn">Próxima Rotación</string>
@@ -925,7 +926,7 @@
     <string name="dialog_default_error_body">Algo salió mal</string>
     <string name="onboarding_desc_page_2_part_1">Son</string>
     <string name="onboarding_desc_page_2_part_2">Dividir en partes</string>
-    <string name="select_vault_type_fast_desc_2">Guarda fondos pequeños para uso diario.</string>
+    <string name="select_vault_type_fast_desc_2">Guarde fondos para uso diario</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">¿Desea crear una bóveda privada?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Cambia al modo local.</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Cambia al modo de internet.</string>

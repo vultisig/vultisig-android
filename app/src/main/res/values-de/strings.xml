@@ -435,6 +435,7 @@
     <string name="unstake_screen_title">Entstaken</string>
     <string name="mint_screen_title">Prägen</string>
     <string name="redeem_screen_title">Einlösen</string>
+    <string name="rewards_screen_title">Belohnungen</string>
     <string name="bond">Binden</string>
     <string name="active_nodes">Aktive Knoten</string>
     <string name="next_churn">Nächster Wechsel</string>
@@ -927,7 +928,7 @@
     <string name="dialog_default_error_body">Es ist ein Fehler aufgetreten.</string>
     <string name="onboarding_desc_page_2_part_1">Sie sind</string>
     <string name="onboarding_desc_page_2_part_2">Aufgeteilt in Teile.</string>
-    <string name="select_vault_type_fast_desc_2">Kleinere Beträge für den täglichen Gebrauch speichern</string>
+    <string name="select_vault_type_fast_desc_2">Geld für den täglichen Gebrauch zurücklegen</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Möchten Sie einen privaten Datentresor erstellen?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">In den lokalen Modus wechseln</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Zurück in den Internetmodus wechseln</string>

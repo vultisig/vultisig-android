@@ -282,9 +282,9 @@
     <string name="deposit_form_amount_title">Valor (Saldo: %1$s)</string>
     <string name="deposit_form_amount_title_without_balance">Montante</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
-    <string name="share_vault_qr_save" >Guardar</string>
-    <string name="vault_settings_enable_biometrics_save" >Guardar</string>
-    <string name="share_vault_qr_share" >Compartilhar</string>
+    <string name="share_vault_qr_save">Guardar</string>
+    <string name="vault_settings_enable_biometrics_save">Guardar</string>
+    <string name="share_vault_qr_share">Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>
@@ -435,6 +435,7 @@
     <string name="unstake_screen_title">Desapostar</string>
     <string name="mint_screen_title">Cunhar</string>
     <string name="redeem_screen_title">Resgatar</string>
+    <string name="rewards_screen_title">Recompensas</string>
     <string name="bond">Vincular</string>
     <string name="active_nodes">Nós Ativos</string>
     <string name="next_churn">Próxima Rotação</string>
@@ -583,7 +584,7 @@
     <string name="sign_message_continue">Continuar</string>
     <string name="sign_message_form_method_field_title">Método</string>
     <string name="hint_signing_method">Método de assinatura</string>
-    <string name="verify_sign_message_signing_method" >Método de assinatura</string>
+    <string name="verify_sign_message_signing_method">Método de assinatura</string>
     <string name="signing_error_transaction_timeout">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
     <string name="hint_message_to_sign">Mensagem para assinar</string>
     <string name="verify_sign_message_message_sign">Mensagem para assinar</string>
@@ -924,7 +925,7 @@
     <string name="dialog_default_error_body">Ocorreu um erro</string>
     <string name="onboarding_desc_page_2_part_1">Elas são</string>
     <string name="onboarding_desc_page_2_part_2">Dividir em partes</string>
-    <string name="select_vault_type_fast_desc_2">Armazene fundos mais pequenos para uso diário</string>
+    <string name="select_vault_type_fast_desc_2">Armazene fundos para uso diário</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Pretende criar um cofre privado?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Mude para o modo local</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Volte ao modo internet</string>
@@ -952,7 +953,7 @@
     <string name="energy">Energia</string>
     <string name="bandwidth_dec">Os Pontos de Largura de Banda (Bandwidth Points) são necessários para todas as transações na TRON, incluindo envios de tokens padrão e interações com contratos inteligentes. Cada utilizador da TRON recebe 600 Pontos de Largura de Banda gratuitos por dia, o que pode cobrir aproximadamente dois envios básicos. Além disso, pode ganhar Pontos de Largura de Banda extra ao fazer staking de TRX, aumentando o seu saldo diário para suportar mais transações. Se tiver Pontos de Largura de Banda suficientes, pode enviar tokens, fazer staking de TRX ou interagir com contratos inteligentes sem pagar TRX em taxas de gás.</string>
     <string name="energy_dec">A Energia (Energy) é necessária para ações mais complexas, como interagir com contratos inteligentes (por exemplo, swaps ou transações de dApps). Ao contrário da Largura de Banda, a Energia não é gratuita — é necessário fazer staking de TRX para ganhar Energia. (Os utilizadores mais avançados também podem adquirir Energia através de mecanismos de leasing, como o JustLend ou os mercados de aluguer de Energia da Tronify). No entanto, ter Energia pode reduzir significativamente ou mesmo eliminar as taxas de gás para interações com contratos inteligentes, tornando-a valiosa para aqueles que utilizam dApps da TRON com frequência.</string>
-    
+
     <!-- Bond Form -->
     <string name="bond_node_address">Endereço do Nó</string>
     <string name="bond_node_address_hint">Insira o endereço do nó THORChain</string>

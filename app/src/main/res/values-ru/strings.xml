@@ -446,6 +446,7 @@
     <string name="unstake_screen_title">Отменить стейкинг</string>
     <string name="mint_screen_title">Чеканить</string>
     <string name="redeem_screen_title">Выкупить</string>
+    <string name="rewards_screen_title">Награды</string>
     <string name="bond">Привязать</string>
     <string name="active_nodes">Активные узлы</string>
     <string name="next_churn">Следующая ротация</string>
@@ -937,7 +938,7 @@
     <string name="dialog_default_error_body">Что-то пошло не так</string>
     <string name="onboarding_desc_page_2_part_1">Они</string>
     <string name="onboarding_desc_page_2_part_2">Разделено на части</string>
-    <string name="select_vault_type_fast_desc_2">Храните небольшие суммы для повседневного использования</string>
+    <string name="select_vault_type_fast_desc_2">Храните средства для ежедневного использования</string>
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Хотите создать хранилище в частном порядке?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Переключитесь в локальный режим</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Переключитесь обратно в интернет-режим</string>
