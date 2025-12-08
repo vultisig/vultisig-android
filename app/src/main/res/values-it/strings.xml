@@ -365,6 +365,7 @@
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>
+    <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>
     <string name="deposit_form_screen_assets">Attività</string>
     <string name="deposit_form_screen_lpunits">Unità LP</string>
     <string name="eth_gas_settings_title">Avanzato</string>

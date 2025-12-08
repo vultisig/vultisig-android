@@ -211,7 +211,7 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindCValidateMayaTransactionHeightUseCase(
+    fun bindValidateMayaTransactionHeightUseCase(
         impl: ValidateMayaTransactionHeightUseCaseImpl,
     ): ValidateMayaTransactionHeightUseCase
 

@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.MayaChainApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -11,7 +11,7 @@ interface ValidateMayaTransactionHeightUseCase : suspend (String) -> Boolean
 internal class ValidateMayaTransactionHeightUseCaseImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
 ) : ValidateMayaTransactionHeightUseCase {
-    override suspend fun invoke(address: String): Boolean = coroutineScope {
+    override suspend fun invoke(address: String): Boolean = supervisorScope {
         try {
             val latestBlock = async {
                 mayaChainApi.getLatestBlock()
