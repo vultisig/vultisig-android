@@ -26,7 +26,7 @@ import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.DefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
@@ -64,9 +64,9 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
-internal data class DefiPositionsUiModel(
+internal data class ThorchainDefiPositionsUiModel(
     // tabs info
-    val totalAmountPrice: String = DefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
+    val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
     val selectedTab: String = DefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
@@ -140,7 +140,7 @@ data class TotalDefiValue(
 )
 
 @HiltViewModel
-internal class DefiPositionsViewModel @Inject constructor(
+internal class ThorchainDefiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -156,7 +156,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private var vaultId: String = savedStateHandle.toRoute<Route.PositionTokens>().vaultId
 
-    val state = MutableStateFlow(DefiPositionsUiModel())
+    val state = MutableStateFlow(ThorchainDefiPositionsUiModel())
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 

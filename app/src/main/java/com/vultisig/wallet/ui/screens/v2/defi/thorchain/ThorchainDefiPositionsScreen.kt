@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.defi
+package com.vultisig.wallet.ui.screens.v2.defi.thorchain
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,16 +23,25 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
-import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun DefiPositionsScreen(
-    model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
+internal fun ThorchainDefiPositionsScreen(
+    model: ThorchainDefiPositionsViewModel = hiltViewModel<ThorchainDefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
 
@@ -55,7 +64,7 @@ internal fun DefiPositionsScreen(
 
 @Composable
 internal fun DefiPositionScreenContent(
-    state: DefiPositionsUiModel = DefiPositionsUiModel(),
+    state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
     onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
@@ -177,7 +186,7 @@ internal fun DefiPositionScreenContent(
 private fun DefiPositionsScreenPreviewEmpty() {
     DefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(),
+        state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
@@ -189,7 +198,7 @@ private fun DefiPositionsScreenPreviewEmpty() {
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
 private fun DefiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1abcd...xyz",
             fullAddress = "",
             status = BondNodeState.ACTIVE,
@@ -198,7 +207,7 @@ private fun DefiPositionsScreenPreviewWithData() {
             nextAward = "20 RUNE",
             nextChurn = "Oct 15, 25"
         ),
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1efgh...123",
             fullAddress = "",
             status = BondNodeState.STANDBY,
@@ -207,7 +216,7 @@ private fun DefiPositionsScreenPreviewWithData() {
             nextAward = "10 RUNE",
             nextChurn = "Oct 16, 25"
         ),
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1ijkl...456",
             fullAddress = "",
             status = BondNodeState.READY,
@@ -220,10 +229,10 @@ private fun DefiPositionsScreenPreviewWithData() {
 
     DefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(
+        state = ThorchainDefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
             selectedTab = DefiTab.BONDED.displayName,
-            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+            bonded = BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "2250 RUNE",
                 nodes = mockNodes
@@ -241,8 +250,8 @@ private fun DefiPositionsScreenPreviewWithData() {
 private fun DefiPositionsScreenPreviewLoading() {
     DefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(
-            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+        state = ThorchainDefiPositionsUiModel(
+            bonded = BondedTabUiModel(
                 isLoading = true
             )
         ),

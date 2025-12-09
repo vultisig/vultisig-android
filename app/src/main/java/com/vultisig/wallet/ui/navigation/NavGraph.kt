@@ -113,8 +113,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
-import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
-import com.vultisig.wallet.ui.screens.v2.defi.DefiPositionsScreen
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
 import com.vultisig.wallet.ui.screens.v2.receive.ReceiveBottomSheet
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
@@ -176,7 +175,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Route.PositionTokens> {
-            DefiPositionsScreen()
+            ThorchainDefiPositionsScreen()
         }
 
         dialog<TokenDetail> {

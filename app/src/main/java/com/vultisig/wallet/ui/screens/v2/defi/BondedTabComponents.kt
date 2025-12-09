@@ -36,14 +36,14 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
-import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
-    state: DefiPositionsUiModel,
+    state: ThorchainDefiPositionsUiModel,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
 ) {
@@ -382,7 +382,7 @@ private fun BondedTabContentPreview() {
     )
     
     BondedTabContent(
-        state = DefiPositionsUiModel(
+        state = ThorchainDefiPositionsUiModel(
             bonded = BondedTabUiModel(
                 totalBondedAmount = "2600 RUNE",
                 nodes = mockNodes
@@ -398,7 +398,7 @@ private fun BondedTabContentPreview() {
 @Composable
 private fun BondedTabContentLoadingPreview() {
     BondedTabContent(
-        state = DefiPositionsUiModel(
+        state = ThorchainDefiPositionsUiModel(
             bonded = BondedTabUiModel(
                 isLoading = true,
                 totalBondedAmount = "0 RUNE",
@@ -415,7 +415,7 @@ private fun BondedTabContentLoadingPreview() {
 @Composable
 private fun BondedTabContentEmptyPreview() {
     BondedTabContent(
-        state = DefiPositionsUiModel(
+        state = ThorchainDefiPositionsUiModel(
             bonded = BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "0 RUNE",
