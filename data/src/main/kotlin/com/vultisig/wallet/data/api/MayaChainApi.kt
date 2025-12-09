@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.CacaoProviderResponse
+import com.vultisig.wallet.data.api.models.MayaLatestBlockInfoResponse
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -52,6 +54,12 @@ interface MayaChainApi {
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
+
+    suspend fun getLatestBlock(): MayaLatestBlockInfoResponse
+
+    suspend fun getCacaoProvider(address: String): CacaoProviderResponse
+
+    suspend fun getMayaConstants(): Map<String, Long>
 }
 
 internal class MayaChainApiImp @Inject constructor(
@@ -163,4 +171,43 @@ internal class MayaChainApiImp @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun getLatestBlock(): MayaLatestBlockInfoResponse {
+        try {
+            val response = httpClient.get("https://mayanode.mayachain.info/blocks/latest")
+            val responseBody = response.body<MayaLatestBlockInfoResponse>()
+            Timber.d("getLatestBlock: $responseBody")
+            return responseBody
+        } catch (e: Exception){
+            Timber.tag("MayaChainService").e("Error getLatestBlock: ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun getCacaoProvider(address: String): CacaoProviderResponse {
+        try {
+            val response = httpClient
+                .get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
+
+            val body = response.body<CacaoProviderResponse>()
+            Timber.d("getCacaoProvider: $body")
+            return body
+        } catch (e: Exception){
+            Timber.tag("MayaChainService").e("Error getCacaoProvider: ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun getMayaConstants(): Map<String, Long> {
+        try {
+            val response = httpClient.get("https://mayanode.mayachain.info/mayachain/mimir")
+            val body = response.body<Map<String, Long>>()
+            Timber.d("getMayaConstants: $body")
+            return body
+        } catch (e: Exception){
+            Timber.tag("MayaChainService").e("Error getMayaConstants: ${e.message}")
+            throw e
+        }
+    }
+
 }

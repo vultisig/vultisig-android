@@ -376,6 +376,7 @@
     <string name="reshare_start_join_reshare_button">Присоединиться Поделиться</string>
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>
     <string name="deposit_error_invalid_assets">Активы недействительны</string>
+    <string name="deposit_error_has_not_reached_maturity">Срок действия этого депозита еще не наступил.</string>
     <string name="deposit_form_screen_assets">Ресурсы</string>
     <string name="deposit_form_screen_lpunits">Единицы LP</string>
     <string name="eth_gas_settings_title">Передовой</string>

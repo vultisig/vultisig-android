@@ -209,4 +209,10 @@ internal interface DataUsecasesModule {
         impl: CreateZipVaultBackupFileNameUseCaseImpl,
     ): CreateZipVaultBackupFileNameUseCase
 
+    @Binds
+    @Singleton
+    fun bindValidateMayaTransactionHeightUseCase(
+        impl: ValidateMayaTransactionHeightUseCaseImpl,
+    ): ValidateMayaTransactionHeightUseCase
+
 }
