@@ -613,6 +613,30 @@ internal class DepositFormViewModel @Inject constructor(
                     handleRemoveCacaoOption()
                 }
 
+                DepositOption.SecuredAsset ->{
+                    viewModelScope.launch {
+                        try {
+                            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                            val inboundAddress = inboundAddresses
+                                .firstOrNull { it.chain.equals(state.value.selectedToken.chain.ticker(), ignoreCase = true) }
+                            if (inboundAddress != null && inboundAddress.halted.not() &&
+                                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+                            ) {
+                                val gaiaAddress = inboundAddress.address
+                                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
+                            }
+                            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                                .collect { addresses ->
+                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                                }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                        }
+                    }
+                    handleSecuredAssetsOption()
+
+                }
+
                 else -> Unit
             }
 
@@ -621,6 +645,10 @@ internal class DepositFormViewModel @Inject constructor(
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
+    }
+
+    private suspend fun  handleSecuredAssetsOption() {
+
     }
 
     private suspend fun handleRemoveCacaoOption() {
@@ -1458,13 +1486,7 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-        val thorAddress = accountsRepository
-            .loadAddress(vaultId, Chain.ThorChain)
-            .firstOrNull()
-            ?.address ?:throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.thorchain_address_not_found_in_vault)
-            )
-
+        val thorAddress = thorAddressFieldState.text.toString()
 
 
         val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
@@ -1479,9 +1501,14 @@ internal class DepositFormViewModel @Inject constructor(
             )
         }
 
+        val dstAddr = nodeAddressFieldState.text.toString()
+
         val srcAddress = selectedToken.address
 
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+        val gasFee = gasFeeRepository.getGasFee(
+            chain,
+            srcAddress
+        )
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
@@ -1509,7 +1536,7 @@ internal class DepositFormViewModel @Inject constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = thorAddress ,
+            dstAddress = dstAddr ,
             memo = memo,
             srcTokenValue = TokenValue(
                 value = tokenAmount,
