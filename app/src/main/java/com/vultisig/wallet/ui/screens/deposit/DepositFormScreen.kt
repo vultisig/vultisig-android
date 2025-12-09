@@ -316,7 +316,10 @@ internal fun DepositFormScreen(
                             DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE)
+                            DepositOption.RedeemYRUNE,
+                            DepositOption.SecuredAsset,
+                            DepositOption.WithdrawSecuredAsset,
+                        )
                         && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
                     ) {
                         FormCard {
@@ -353,7 +356,11 @@ internal fun DepositFormScreen(
 
                     if (
                         isTcyOption || isAddingCacaoPool ||isRemovingCacaoPool ||
-                        (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
+                        (depositOption != DepositOption.Leave && (depositOption !in listOf(
+                            DepositOption.WithdrawRujiRewards,
+                            DepositOption.SecuredAsset,
+                            DepositOption.WithdrawSecuredAsset
+                        )) && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom  && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
                         depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||

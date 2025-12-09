@@ -380,12 +380,12 @@ class ThorChainHelper(
 }
 
 fun Coin.getChainName(): String {
-    return if (this.isSecuredAsset()) {
+    return if (this.chain == Chain.ThorChain) {
         "THOR"
-    } else if (this.chain == Chain.BscChain) {
-        "BSC"
     } else if (this.chain == Chain.MayaChain) {
         "MAYA"
+    } else if (this.chain == Chain.BscChain) {
+        "BSC"
     } else {
         this.chain.ticker().uppercase()
     }
