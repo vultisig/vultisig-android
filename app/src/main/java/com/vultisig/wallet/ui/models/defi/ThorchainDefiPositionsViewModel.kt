@@ -26,7 +26,7 @@ import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.v2.defi.thorchain.DefiTab
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
@@ -67,7 +67,7 @@ import javax.inject.Inject
 internal data class ThorchainDefiPositionsUiModel(
     // tabs info
     val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
-    val selectedTab: String = DefiTab.BONDED.displayName,
+    val selectedTab: String = ThorchainDefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
@@ -314,7 +314,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
-        loadedTabs.add(DefiTab.BONDED.displayName)
+        loadedTabs.add(ThorchainDefiTab.BONDED.displayName)
 
         viewModelScope.launch {
             if (!state.value.selectedPositions.hasBondPositions()) {
@@ -416,7 +416,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     }
 
     private fun loadStakingPositions() {
-        loadedTabs.add(DefiTab.STAKING.displayName)
+        loadedTabs.add(ThorchainDefiTab.STAKING.displayName)
 
         viewModelScope.launch {
             val selectedPositions = state.value.selectedPositions

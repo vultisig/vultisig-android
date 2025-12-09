@@ -45,7 +45,7 @@ internal fun ThorchainDefiPositionsScreen(
 ) {
     val state by model.state.collectAsState()
 
-    DefiPositionScreenContent(
+    ThorchainDefiPositionScreenContent(
         state = state,
         onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
@@ -63,7 +63,7 @@ internal fun ThorchainDefiPositionsScreen(
 }
 
 @Composable
-internal fun DefiPositionScreenContent(
+internal fun ThorchainDefiPositionScreenContent(
     state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
     onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
@@ -81,9 +81,9 @@ internal fun DefiPositionScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        DefiTab.BONDED.displayName,
-        DefiTab.STAKING.displayName,
-        DefiTab.LPS.displayName
+        ThorchainDefiTab.BONDED.displayName,
+        ThorchainDefiTab.STAKING.displayName,
+        ThorchainDefiTab.LPS.displayName
     )
 
     V2Scaffold(
@@ -138,7 +138,7 @@ internal fun DefiPositionScreenContent(
             }
 
             when (state.selectedTab) {
-                DefiTab.BONDED.displayName -> {
+                ThorchainDefiTab.BONDED.displayName -> {
                     if (!state.selectedPositions.hasBondPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -153,7 +153,7 @@ internal fun DefiPositionScreenContent(
                     }
                 }
 
-                DefiTab.STAKING.displayName -> {
+                ThorchainDefiTab.STAKING.displayName -> {
                     if (!state.selectedPositions.hasStakingPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -169,7 +169,7 @@ internal fun DefiPositionScreenContent(
                     }
                 }
 
-                DefiTab.LPS.displayName -> {
+                ThorchainDefiTab.LPS.displayName -> {
                     NoPositionsContainer(
                         onManagePositionsClick = onEditPositionClick
                     )
@@ -183,8 +183,8 @@ internal fun DefiPositionScreenContent(
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
-private fun DefiPositionsScreenPreviewEmpty() {
-    DefiPositionScreenContent(
+private fun ThorchainDefiPositionsScreenPreviewEmpty() {
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
         state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
@@ -196,7 +196,7 @@ private fun DefiPositionsScreenPreviewEmpty() {
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
-private fun DefiPositionsScreenPreviewWithData() {
+private fun ThorchainDefiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
         BondedNodeUiModel(
             address = "thor1abcd...xyz",
@@ -227,11 +227,11 @@ private fun DefiPositionsScreenPreviewWithData() {
         )
     )
 
-    DefiPositionScreenContent(
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
         state = ThorchainDefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
-            selectedTab = DefiTab.BONDED.displayName,
+            selectedTab = ThorchainDefiTab.BONDED.displayName,
             bonded = BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "2250 RUNE",
@@ -247,8 +247,8 @@ private fun DefiPositionsScreenPreviewWithData() {
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
-private fun DefiPositionsScreenPreviewLoading() {
-    DefiPositionScreenContent(
+private fun ThorchainDefiPositionsScreenPreviewLoading() {
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
         state = ThorchainDefiPositionsUiModel(
             bonded = BondedTabUiModel(
@@ -262,7 +262,7 @@ private fun DefiPositionsScreenPreviewLoading() {
     )
 }
 
-internal enum class DefiTab(val displayName: String) {
+internal enum class ThorchainDefiTab(val displayName: String) {
     BONDED("Bonded"),
     STAKING("Staked"),
     LPS("LPs");
