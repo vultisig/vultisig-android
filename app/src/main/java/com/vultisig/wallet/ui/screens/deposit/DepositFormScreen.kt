@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.textAsFlow
 
 @Composable
 internal fun DepositFormScreen(
@@ -538,7 +539,7 @@ internal fun DepositFormScreen(
                             modifier = Modifier .align(Alignment.CenterHorizontally),
                         )
                         Text(
-                            text = "${state.thorAddress.asString()}",
+                            text = thorAddress.text.toString(),
                             style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
                             textAlign = TextAlign.Center,
@@ -555,7 +556,7 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(
                                 R.string.secure,
-                                state.thorAddress.asString()
+                                thorAddress
                             ),
                             style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,

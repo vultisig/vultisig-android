@@ -62,6 +62,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.account
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +141,6 @@ internal data class DepositFormUiModel(
     val isLoading: Boolean = false,
     val balance: UiText = UiText.Empty,
     val sharesBalance: UiText = R.string.share_balance_loading.asUiText(),
-    val thorAddress : UiText = UiText.Empty,
 
     val selectedDstChain: Chain = Chain.ThorChain,
     val dstChainList: List<Chain> = emptyList(),
@@ -361,15 +361,7 @@ internal class DepositFormViewModel @Inject constructor(
                         address.accounts.find { it.token.id == selectedToken.id }
                     }
                     DepositOption.SecuredAsset -> {
-                        val thorAddress = accountsRepository
-                            .loadAddress(vaultId, Chain.ThorChain)
-                            .firstOrNull()
-                            ?.address
-                        state.update {
-                            it.copy(
-                                thorAddress = thorAddress?.asUiText() ?: UiText.Empty
-                            )
-                        }
+
                         val account = address.accounts.find { it.token.isNativeToken }
                         tickerToActivate = account?.token?.ticker
                         account
@@ -1472,13 +1464,6 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    var addressFields: Map<String, String>
-        get() = mapOf("thorAddress" to thorAddressFieldState.text.toString())
-        set(value) {
-            value["thorAddress"]?.let { thorAddress ->
-                thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
-            }
-        }
 
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
 
@@ -1531,7 +1516,9 @@ internal class DepositFormViewModel @Inject constructor(
                 isDeposit = true,
             )
 
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+        val gasFeeFiat = getFeesFiatValue(specific, gasFee,
+            account.token
+        )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
