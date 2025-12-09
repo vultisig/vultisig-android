@@ -362,7 +362,8 @@ class EvmApiImp(
                 message.contains("nonce too low: address") || // this message happens on layer 2
                 message.contains("tx already in mempool") ||
                 message.contains("existing tx") ||
-                message.contains("tx already exists in cache")
+                message.contains("tx already exists in cache") ||
+                message.contains("code=10055")
             ) {
                 // even the server returns an error , but this still consider as success
                 return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()

@@ -53,17 +53,12 @@ class RujiStakingService @Inject constructor(
     suspend fun getStakingDetailsFromNetwork(address: String): StakingDetails {
         return try {
             val rujiStakeInfo = thorChainApi.getRujiStakeBalance(address)
-            val apr = if (rujiStakeInfo.apr == 0.0) {
-                null
-            } else {
-                rujiStakeInfo.apr
-            }
 
             StakingDetails(
                 id = Coins.ThorChain.RUJI.generateId(),
                 coin = Coins.ThorChain.RUJI,
                 stakeAmount = rujiStakeInfo.stakeAmount,
-                apr = apr,
+                apr = null,
                 estimatedRewards = null, // Not available for Ruji
                 nextPayoutDate = null, // Not available for Ruji
                 rewards = rujiStakeInfo.rewardsAmount.toBigDecimal(),
