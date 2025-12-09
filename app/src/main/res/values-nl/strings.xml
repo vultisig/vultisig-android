@@ -376,6 +376,7 @@
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>
     <string name="deposit_error_invalid_assets">Activa zijn ongeldig</string>
+    <string name="deposit_error_has_not_reached_maturity">Deze deposito heeft de vervaldatum nog niet bereikt</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
     <string name="eth_gas_settings_title">Geavanceerd</string>

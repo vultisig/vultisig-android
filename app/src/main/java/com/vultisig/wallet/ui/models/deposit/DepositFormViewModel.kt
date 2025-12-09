@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getCoinBy
 import com.vultisig.wallet.data.utils.toUnit
@@ -181,6 +182,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val enableCoin: EnableTokenUseCase,
+    private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -1612,6 +1614,10 @@ internal class DepositFormViewModel @Inject constructor(
         val selectedToken = address.accounts.first { it.token.isNativeToken }.token
 
         val srcAddress = selectedToken.address
+
+        validateMayaTransactionHeight(srcAddress) || throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.deposit_error_has_not_reached_maturity)
+        )
 
         val gasFee = gasFeeRepository.getGasFee(
             chain,
