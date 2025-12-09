@@ -365,6 +365,7 @@
     <string name="reshare_start_join_reshare_button">Pridružite se ponovnom dijeljenju</string>
     <string name="deposit_error_invalid_lpunits">LP jedinice nisu važeće</string>
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
+    <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>
     <string name="eth_gas_settings_title">Napredno</string>
