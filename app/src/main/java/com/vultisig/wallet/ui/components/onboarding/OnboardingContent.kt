@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,7 +26,6 @@ import com.vultisig.wallet.ui.components.buttons.VsIconButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsIconButtonState
 import com.vultisig.wallet.ui.components.buttons.VsIconButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.models.onboarding.components.ONBOARDING_STATE_MACHINE_NAME
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import kotlinx.coroutines.delay
 
@@ -39,7 +39,7 @@ internal fun OnboardingContent(
 ) {
     var buttonVisibility by remember { mutableStateOf(false) }
     var textVisibility by remember { mutableStateOf(false) }
-    var currentPageIndex: Int by remember { mutableStateOf(state.pageIndex) }
+    var currentPageIndex: Int by remember { mutableIntStateOf(state.pageIndex) }
 
     LaunchedEffect(state) {
         textVisibility = false
@@ -63,7 +63,7 @@ internal fun OnboardingContent(
             onInit = { riveAnimationView ->
                 riveAnimationView.setNumberState(
                     stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
-                    inputName = state.currentPage.triggerName,
+                    inputName = ONBOARDING_INPUT_NAME,
                     value = state.pageIndex.toFloat()
                 )
             }
@@ -102,6 +102,10 @@ internal fun OnboardingContent(
         }
     }
 }
+
+private const val ONBOARDING_INPUT_NAME = "Index"
+private const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
+
 
 internal object OnboardingContentTags {
     const val NEXT = "OnboardingContent.next"
