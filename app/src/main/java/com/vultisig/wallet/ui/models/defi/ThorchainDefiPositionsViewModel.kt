@@ -42,7 +42,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
-import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
+import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -471,7 +471,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
                 }
 
                 val address = runeCoin.address
-                val coinsToLoad = supportStakingDeFi.filter { coin ->
+                val coinsToLoad = thorchainSupportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
                 }.map { coin -> coin.id }
 
