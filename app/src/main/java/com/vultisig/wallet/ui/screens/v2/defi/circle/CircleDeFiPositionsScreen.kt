@@ -1,25 +1,10 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
-import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
-import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun CircleDeFiPositionsScreen() {
@@ -34,51 +19,77 @@ internal fun CircleDefiPositionScreenContent(
     onTabSelected: (String) -> Unit = {},
     onEditChains: () -> Unit = {},
 ) {
-    V2Scaffold(
+    BaseDeFiPositionsScreenContent(
+        state = state,
+        tabs = tabs,
+        bannerImage = state.bannerImage, // Use the banner image from state
         onBackClick = onBackClick,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Theme.v2.colors.backgrounds.primary),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            BalanceBanner(
-                isLoading = state.isTotalAmountLoading,
-                totalValue = state.totalAmountPrice,
-                image = R.drawable.referral_data_banner,
-                isBalanceVisible = state.isBalanceVisible,
-            )
-
-            VsTabs(
-                tabs = tabs,
-                onTabSelected = onTabSelected,
-                selectedTab = state.selectedTab,
-                content = {
-                    if (state.supportEditChains) {
-                        V2Container(
-                            type = ContainerType.SECONDARY,
-                            cornerType = CornerType.Circular,
-                            modifier = Modifier
-                                .clickOnce(onClick = {})
-                        ) {
-                            UiIcon(
-                                drawableResId = R.drawable.edit_chain,
-                                size = 16.dp,
-                                modifier = Modifier.padding(all = 12.dp),
-                                tint = Theme.v2.colors.primary.accent4,
-                                onClick = onEditChains,
-                            )
-                        }
-                    }
-                }
-            )
-
+        onTabSelected = onTabSelected,
+        onEditChains = onEditChains,
+        tabContent = {
+            // Circle-specific tab content can be added here
+            // For example: CircleDepositedContent, CircleStakedContent, etc.
         }
-    }
+    )
 }
 
 internal enum class CircleDefiTab(val displayName: String) {
     DEPOSITED("Deposited"),
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CircleDefiPositionScreenContentPreview() {
+    CircleDefiPositionScreenContent(
+        state = DefiUiModel(
+            totalAmountPrice = "$12,345.67",
+            isTotalAmountLoading = false,
+            isBalanceVisible = true,
+            supportEditChains = true,
+            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            bannerImage = R.drawable.circle_defi_banner
+        ),
+        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CircleDefiPositionScreenContentLoadingPreview() {
+    CircleDefiPositionScreenContent(
+        state = DefiUiModel(
+            totalAmountPrice = "$0.00",
+            isTotalAmountLoading = true,
+            isBalanceVisible = true,
+            supportEditChains = false,
+            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            bannerImage = R.drawable.circle_defi_banner
+        ),
+        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CircleDefiPositionScreenContentHiddenBalancePreview() {
+    CircleDefiPositionScreenContent(
+        state = DefiUiModel(
+            totalAmountPrice = "$99,999.99",
+            isTotalAmountLoading = false,
+            isBalanceVisible = false,
+            supportEditChains = true,
+            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            bannerImage = R.drawable.circle_defi_banner
+        ),
+        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        onBackClick = {},
+        onTabSelected = {},
+        onEditChains = {}
+    )
 }
