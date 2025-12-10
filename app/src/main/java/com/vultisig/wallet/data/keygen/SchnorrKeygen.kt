@@ -5,6 +5,8 @@ package com.vultisig.wallet.data.keygen
 import com.silencelaboratories.goschnorr.BufferUtilJNI
 import com.silencelaboratories.goschnorr.Handle
 import com.silencelaboratories.goschnorr.go_slice
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_import_initiator_new
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_importer_new
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_migration_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_finish
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_from_setup
@@ -79,7 +81,7 @@ class SchnorrKeygen(
         val buf = tss_buffer()
         return try {
             val result = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_output_message(handle, buf)
+                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_output_message(handle, buf)
                 TssAction.ReShare -> schnorr_qc_session_output_message(handle, buf)
             }
             if (result != LIB_OK) {
@@ -109,7 +111,7 @@ class SchnorrKeygen(
         val bufReceiver = tss_buffer()
         return try {
             val receiverResult = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_message_receiver(
+                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_message_receiver(
                     handle, message, idx, bufReceiver
                 )
 
@@ -206,7 +208,7 @@ class SchnorrKeygen(
 
             val isFinished = intArrayOf(0)
             val result = when (action) {
-                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_input_message(
+                TssAction.KEYGEN, TssAction.Migrate, TssAction.KeyImport -> schnorr_keygen_session_input_message(
                     handle, decryptedBodySlice, isFinished
                 )
 
@@ -230,13 +232,35 @@ class SchnorrKeygen(
     private suspend fun deleteMessageFromServer(hash: String) {
         sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, null)
     }
-
-    suspend fun schnorrKeygenWithRetry(attempt: Int) {
+    @Throws(Exception::class)
+    private fun getDklsKeyImportSetupMessage(hexPrivateKey: String, hexRootChainCode: String): Pair<ByteArray, Handle> {
+        val buf = tss_buffer()
+        val handler = Handle()
+        try {
+            val chainCodeArray = Numeric.hexStringToByteArray(hexRootChainCode)
+            val chainCodeSlice = chainCodeArray.toGoSlice()
+            val localUIArray = Numeric.hexStringToByteArray(hexPrivateKey)
+            val localUISlice = localUIArray.toGoSlice()
+            val threshold = DklsHelper.getThreshold(keygenCommittee.size)
+            val byteArray = DklsHelper.arrayToBytes(keygenCommittee)
+            val ids = go_slice()
+            BufferUtilJNI.set_bytes_on_go_slice(ids, byteArray)
+            val err = schnorr_key_import_initiator_new(localUISlice, chainCodeSlice, threshold.toShort(),ids, buf,handler)
+            if (err != LIB_OK) {
+                error("fail to setup keygen message, schnorr error: $err")
+            }
+            val setupMessage = BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+            return Pair(setupMessage,handler)
+        } finally {
+            tss_buffer_free(buf)
+        }
+    }
+    suspend fun schnorrKeygenWithRetry(attempt: Int, additionalHeader: String = "") {
         setKeygenDone(false)
         var task: Job? = null
         try {
             val decodedSetupMsg = setupMessage.toGoSlice()
-            val handler = Handle()
+            var handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
@@ -273,6 +297,43 @@ class SchnorrKeygen(
                         throw RuntimeException("fail to create migration session from setup message, error: $result")
                     }
                 }
+                TssAction.KeyImport -> {
+                    if(this.localUi.isEmpty()){
+                        throw RuntimeException("can't import key, local UI is empty")
+                    }
+                    if(this.isInitiatingDevice){
+                        val (keyImportSetupMsg, keyImportHandler) = getDklsKeyImportSetupMessage(
+                            this.localUi,
+                            this.hexChainCode
+                        )
+                        handler = keyImportHandler
+                        sessionApi.uploadSetupMessage(
+                            serverUrl = mediatorURL,
+                            sessionId = sessionID,
+                            message = Base64.encode(
+                                encryption.encrypt(
+                                    Base64.encodeToByteArray(keyImportSetupMsg),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex)
+                                )
+                            ),
+                            additionalHeader
+                        )
+                    } else {
+                        val keygenSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, additionalHeader)
+                            .let {
+                                encryption.decrypt(
+                                    Base64.Default.decode(it),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex)
+                                )!!
+                            }.let {
+                                Base64.decode(it)
+                            }
+                        val result = schnorr_key_importer_new(keygenSetupMsg.toGoSlice(), localPartySlice,handler)
+                        if (result != LIB_OK) {
+                            throw RuntimeException("fail to create key import session from setup message, error: $result")
+                        }
+                    }
+                }
                 TssAction.ReShare -> error("This method shouldn't be used with $action")
             }
 
@@ -305,7 +366,7 @@ class SchnorrKeygen(
             task?.cancel()
             if (attempt < 3) {
                 Timber.d("Retry $action, attempt: $attempt")
-                schnorrKeygenWithRetry(attempt + 1)
+                schnorrKeygenWithRetry(attempt + 1,additionalHeader)
             } else {
                 throw e
             }

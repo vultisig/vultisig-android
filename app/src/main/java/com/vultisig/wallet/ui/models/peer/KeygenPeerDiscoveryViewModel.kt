@@ -468,7 +468,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             )
                         )
                     ).encodeBase64()
-
+        TssAction.KeyImport-> TODO()
         TssAction.ReShare, TssAction.Migrate ->
             "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
@@ -494,6 +494,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             TssAction.KEYGEN -> "Keygen"
             TssAction.ReShare -> "Reshare"
             TssAction.Migrate -> "Migrate"
+            TssAction.KeyImport -> "KeyImport"
         }
 
     private suspend fun requestVultiServerConnection() {
@@ -542,6 +543,8 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         )
                     )
                 }
+
+                TssAction.KeyImport -> TODO()
             }
         }
     }
