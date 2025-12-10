@@ -28,5 +28,6 @@ fun SigningLibType.toJson(): Int {
     return when (this) {
         SigningLibType.GG20 -> 0
         SigningLibType.DKLS -> 1
+        SigningLibType.KeyImport -> 2
     }
 }

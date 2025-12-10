@@ -167,6 +167,7 @@ internal class KeygenViewModel @Inject constructor(
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
                     SigningLibType.GG20 -> startKeygenGG20()
+                    SigningLibType.KeyImport -> TODO("Add KeyImport logic")
                 }
 
                 updateStep(KeygenState.Success)
