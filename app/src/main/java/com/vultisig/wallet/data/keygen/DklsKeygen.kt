@@ -366,7 +366,7 @@ class DKLSKeygen(
                     }
                 }
                 TssAction.KeyImport -> {
-                    if(!this.isInitiateDevice){
+                    if(!this.isInitiateDevice || attempt > 0){
                         val result = dkls_key_importer_new(decodedSetupMsg,localPartySlice,handler)
                         if (result != LIB_OK) {
                             throw RuntimeException("fail to create key import session from setup message, error: $result")

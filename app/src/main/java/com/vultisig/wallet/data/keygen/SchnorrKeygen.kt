@@ -316,7 +316,7 @@ class SchnorrKeygen(
                                     Numeric.hexStringToByteArray(encryptionKeyHex)
                                 )
                             ),
-                            additionalHeader
+                            messageId = additionalHeader
                         )
                     } else {
                         val keygenSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, additionalHeader)
