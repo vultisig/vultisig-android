@@ -1491,19 +1491,22 @@ internal class DepositFormViewModel @Inject constructor(
         val dstAddr = nodeAddressFieldState.text.toString()
 
         val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(
-            chain,
-            srcAddress
-        )
         val address = address.value ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
-        val tokenAmount =
-            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
 
         val memo = "SECURE+:$thorAddress"
+
+        val gasFee =  gasFeeRepository.getGasFee(
+            chain = chain,
+            address = srcAddress,
+            isNativeToken = selectedToken.isNativeToken,
+            to = dstAddr,
+            memo =memo,
+        )
+
+        val tokenAmount =
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -1517,8 +1520,9 @@ internal class DepositFormViewModel @Inject constructor(
             )
 
         val gasFeeFiat = getFeesFiatValue(specific, gasFee,
-            account.token
+            selectedToken
         )
+
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),

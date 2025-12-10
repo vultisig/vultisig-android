@@ -179,8 +179,6 @@ val Chain.isDepositSupported: Boolean
         Chain.Dogecoin,
         Chain.BscChain,
         Chain.Litecoin,
-        Chain.Base,
-        Chain.Ripple,
             -> true
         else -> false
     }
