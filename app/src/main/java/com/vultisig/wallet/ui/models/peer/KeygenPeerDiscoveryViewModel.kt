@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
@@ -544,7 +545,21 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     )
                 }
 
-                TssAction.KeyImport -> TODO()
+                TssAction.KeyImport -> {
+                    vultiSignerRepository.joinKeyImport(
+                        JoinKeyImportRequest(
+                            vaultName = vaultName,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            hexChainCode = hexChainCode,
+                            localPartyId = generateServerPartyId(),
+                            encryptionPassword = password,
+                            email = email,
+                            libType = libType.toJson(),
+                            chains = emptyList() // TODO: please add correct chain list later
+                        )
+                    )
+                }
             }
         }
     }

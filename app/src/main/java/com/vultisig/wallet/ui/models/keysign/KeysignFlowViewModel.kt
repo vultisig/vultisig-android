@@ -65,7 +65,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -436,6 +435,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             ?: CoinType.ETHEREUM).derivationPath(),
                         isEcdsa = tssKeysignType == TssKeyType.ECDSA,
                         password = password,
+                        chain = _keysignPayload?.coin?.chain?.name ?: "",
                     )
                 )
             }

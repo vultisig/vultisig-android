@@ -19,4 +19,6 @@ data class JoinKeysignRequestJson(
     val isEcdsa: Boolean,
     @SerialName("vault_password")
     val password: String,
+    @SerialName("chain")
+    val chain: String,
 )
