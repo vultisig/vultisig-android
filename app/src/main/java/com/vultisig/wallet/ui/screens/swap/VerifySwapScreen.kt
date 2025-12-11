@@ -364,6 +364,11 @@ private fun VerifySwapScreen(
                             .fillMaxWidth(),
                         onClick = onFastSignClick,
                         onLongClick = onConfirm,
+                        enabled = if (isConsentsEnabled && !hasAllConsents) {
+                            false
+                        } else {
+                            true
+                        }
                     )
                 } else {
                     VsButton(

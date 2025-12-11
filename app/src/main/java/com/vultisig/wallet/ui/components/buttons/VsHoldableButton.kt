@@ -39,11 +39,12 @@ fun VsHoldableButton(
     modifier: Modifier = Modifier,
     label: String? = null,
     holdDuration: Long = 800,
+    enabled: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val backgroundColor = Theme.v2.colors.primary.accent3
-    val fillColor = Theme.v2.colors.primary.accent5
+    val backgroundColor = if (enabled) Theme.v2.colors.primary.accent3 else Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
+    val fillColor = if (enabled) Theme.v2.colors.primary.accent5 else Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
 
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
@@ -51,43 +52,45 @@ fun VsHoldableButton(
 
     Box(
         modifier = modifier
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    val longClickJob = scope.launch {
-                        try {
-                            progress.animateTo(
-                                1f,
-                                tween(
-                                    holdDuration.toInt(),
-                                    easing = LinearEasing
+            .pointerInput(enabled) {
+                if (enabled) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        val longClickJob = scope.launch {
+                            try {
+                                progress.animateTo(
+                                    1f,
+                                    tween(
+                                        holdDuration.toInt(),
+                                        easing = LinearEasing
+                                    )
                                 )
-                            )
-                            if (progress.value >= 1f) {
-                                isLongPressed = true
-                                onLongClick()
+                                if (progress.value >= 1f) {
+                                    isLongPressed = true
+                                    onLongClick()
+                                }
+                            } catch (e: Exception) {
+                                Timber.w(
+                                    e,
+                                    "Animation cancelled",
+
+                                    )
                             }
-                        } catch (e: Exception) {
-                            Timber.w(
-                                e,
-                                "Animation cancelled",
-
-                                )
                         }
-                    }
 
-                    val up = waitForUpOrCancellation()
+                        val up = waitForUpOrCancellation()
 
-                    if (up != null && !isLongPressed) {
-                        if (progress.value < 0.25f) {
-                            onClick()
+                        if (up != null && !isLongPressed) {
+                            if (progress.value < 0.25f) {
+                                onClick()
+                            }
                         }
-                    }
 
-                    scope.launch {
-                        progress.snapTo(0f)
-                        longClickJob.cancelAndJoin()
-                        isLongPressed = false
+                        scope.launch {
+                            progress.snapTo(0f)
+                            longClickJob.cancelAndJoin()
+                            isLongPressed = false
+                        }
                     }
                 }
             }
@@ -122,7 +125,7 @@ fun VsHoldableButton(
                     horizontal = 32.dp
                 )
         ) {
-            val contentColor = Theme.v2.colors.text.primary
+            val contentColor = if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.primary.copy(alpha = 0.5f)
             if (label != null) {
                 Text(
                     text = label,
@@ -140,6 +143,19 @@ fun VsHoldableButton(
 private fun VsHoldableButtonPreview() {
     VsHoldableButton(
         label = "Hold",
+        enabled = true,
+        onLongClick = {},
+        onClick = {},
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Preview
+@Composable
+private fun VsHoldableButtonDisabledPreview() {
+    VsHoldableButton(
+        label = "Hold (Disabled)",
+        enabled = false,
         onLongClick = {},
         onClick = {},
         modifier = Modifier.fillMaxWidth()
