@@ -18,9 +18,7 @@ internal fun CircleDeFiPositionsScreen(
     CircleDefiPositionScreenContent(
         state = state,
         tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
-        onBackClick = {
-
-        },
+        onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
     )
 }

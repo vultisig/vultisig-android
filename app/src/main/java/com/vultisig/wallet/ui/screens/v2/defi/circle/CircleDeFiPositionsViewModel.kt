@@ -4,9 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -59,7 +61,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     private fun loadTabData(tab: String) {
         viewModelScope.launch {
             _state.update { it.copy(isTotalAmountLoading = true) }
-            
+
             when (tab) {
                 CircleDefiTab.DEPOSITED.displayName -> {
                     _state.update { currentState ->
@@ -69,6 +71,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                         )
                     }
                 }
+
                 else -> {
                     _state.update { currentState ->
                         currentState.copy(
@@ -78,6 +81,12 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    fun onBackClick() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
         }
     }
 }
