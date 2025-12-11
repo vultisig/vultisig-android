@@ -41,6 +41,7 @@
     <string name="deposit_option_sell_yrune">Redeem yRUNE</string>
     <string name="deposit_option_sell_ytcy">Redeem yTCY</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
+    <string name="circle_defi_control_info">Funds remain fully under your vault control. Circle accounts are self custodial and yield is generated through secure off chain treasuries.</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>

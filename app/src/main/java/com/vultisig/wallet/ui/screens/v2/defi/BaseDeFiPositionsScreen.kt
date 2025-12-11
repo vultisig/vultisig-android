@@ -82,6 +82,12 @@ fun BaseDeFiPositionsScreenContent(
                 )
             }
 
+            if (state.containsTabWarningBanner) {
+                DeFiWarningBanner(
+                    text = stringResource(R.string.circle_defi_control_info)
+                )
+            }
+
             tabContent()
         }
     }

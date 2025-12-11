@@ -95,7 +95,8 @@
     <string name="send_form_network_fee">Commissione di rete</string>
     <string name="chain_account_view_send">INVIA</string>
     <string name="chain_account_view_deposit">Deposito</string>
-    <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all'interno del tuo vault Vultisig.</string>
+    <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all interno del tuo vault Vultisig.</string>
+    <string name="circle_defi_control_info">I fondi rimangono completamente sotto il controllo del tuo vault. Gli account Circle sono auto custoditi e il rendimento è generato attraverso tesorerie sicure off chain.</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Errore</string>
     <string name="send_error_no_amount">a quantità deve essere un numero positivo.</string>

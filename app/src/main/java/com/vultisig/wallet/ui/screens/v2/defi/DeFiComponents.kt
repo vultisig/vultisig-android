@@ -451,7 +451,7 @@ internal fun NoPositionsContainer(
 }
 
 @Composable
-private fun DeFiWarningBanner(
+internal fun DeFiWarningBanner(
     text: String,
     onClickClose: (() -> Unit)? = null,
 ) {
