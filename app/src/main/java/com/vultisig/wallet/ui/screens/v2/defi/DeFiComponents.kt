@@ -450,6 +450,62 @@ internal fun NoPositionsContainer(
     )
 }
 
+@Composable
+private fun DeFiWarningBanner(
+    text: String,
+    onClickClose: (() -> Unit)? = null,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.v2.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.border.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+
+        Text(
+            text = text,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.light,
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Short Text")
+@Composable
+private fun DeFiWarningBannerShortPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.v2.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        DeFiWarningBanner(
+            text = "This feature is currently in beta. Please use with caution.",
+            onClickClose = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Long Text")
+@Composable
+private fun DeFiWarningBannerLongPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.v2.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        DeFiWarningBanner(
+            text = "Important: Your funds are at risk. This DeFi protocol has not been audited and may contain smart contract vulnerabilities. Only invest what you can afford to lose. Always do your own research before participating in any DeFi protocol.",
+            onClickClose = {}
+        )
+    }
+}
+
 @Preview(showBackground = true, name = "Positions Selection Dialog")
 @Composable
 private fun PositionsSelectionDialogPreview() {
