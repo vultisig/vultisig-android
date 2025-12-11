@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,19 +28,20 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             isTotalAmountLoading = true,
             isBalanceVisible = true,
             supportEditChains = false,
-            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner,
             tabDescription = false,
             tabWarningBanner = false
         )
     )
+
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
     init {
-        loadDeFiPositions()
+        loadCirclePositions()
     }
 
-    private fun loadDeFiPositions() {
+    private fun loadCirclePositions() {
         viewModelScope.launch {
             _state.update { currentState ->
                 currentState.copy(
@@ -63,7 +65,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             _state.update { it.copy(isTotalAmountLoading = true) }
 
             when (tab) {
-                CircleDefiTab.DEPOSITED.displayName -> {
+                DeFiTab.DEPOSITED.displayName -> {
                     _state.update { currentState ->
                         currentState.copy(
                             totalAmountPrice = "$5,432.10",

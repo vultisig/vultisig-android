@@ -7,6 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 
 @Composable
@@ -17,7 +18,7 @@ internal fun CircleDeFiPositionsScreen(
     
     CircleDefiPositionScreenContent(
         state = state,
-        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
     )
@@ -26,7 +27,7 @@ internal fun CircleDeFiPositionsScreen(
 @Composable
 internal fun CircleDefiPositionScreenContent(
     state: DefiUiModel,
-    tabs: List<String> = listOf(CircleDefiTab.DEPOSITED.displayName),
+    tabs: List<String> = listOf(DeFiTab.DEPOSITED.displayName),
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit = {},
     onEditChains: () -> Unit = {},
@@ -44,16 +45,12 @@ internal fun CircleDefiPositionScreenContent(
     )
 }
 
-internal enum class CircleDefiTab(val displayName: String) {
-    DEPOSITED("Deposited"),
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun CircleDeFiPositionsScreenPreview() {
     CircleDefiPositionScreenContent(
         state = DefiUiModel(),
-        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = {},
     )
 }
@@ -67,10 +64,10 @@ private fun CircleDefiPositionScreenContentPreview() {
             isTotalAmountLoading = false,
             isBalanceVisible = true,
             supportEditChains = true,
-            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner
         ),
-        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = {},
         onTabSelected = {},
         onEditChains = {}
@@ -86,10 +83,10 @@ private fun CircleDefiPositionScreenContentLoadingPreview() {
             isTotalAmountLoading = true,
             isBalanceVisible = true,
             supportEditChains = false,
-            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner
         ),
-        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = {},
         onTabSelected = {},
         onEditChains = {}
@@ -105,10 +102,10 @@ private fun CircleDefiPositionScreenContentHiddenBalancePreview() {
             isTotalAmountLoading = false,
             isBalanceVisible = false,
             supportEditChains = true,
-            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner
         ),
-        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = {},
         onTabSelected = {},
         onEditChains = {}
