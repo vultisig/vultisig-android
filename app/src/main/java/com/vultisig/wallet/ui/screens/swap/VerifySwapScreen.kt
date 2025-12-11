@@ -365,9 +365,9 @@ private fun VerifySwapScreen(
                         onClick = onFastSignClick,
                         onLongClick = onConfirm,
                         enabled = if (isConsentsEnabled && !hasAllConsents) {
-                            false
+                            VsButtonState.Disabled
                         } else {
-                            true
+                            VsButtonState.Enabled
                         }
                     )
                 } else {

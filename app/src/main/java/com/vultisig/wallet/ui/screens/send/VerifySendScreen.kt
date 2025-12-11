@@ -151,9 +151,9 @@ internal fun VerifySendScreen(
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = if (isConsentsEnabled && !state.hasAllConsents) {
-                            false
+                            VsButtonState.Disabled
                         } else {
-                            true
+                            VsButtonState.Enabled
                         }
                     )
                 } else {

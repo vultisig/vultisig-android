@@ -39,12 +39,21 @@ fun VsHoldableButton(
     modifier: Modifier = Modifier,
     label: String? = null,
     holdDuration: Long = 800,
-    enabled: Boolean = true,
+    enabled: VsButtonState = VsButtonState.Enabled,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val backgroundColor = if (enabled) Theme.v2.colors.primary.accent3 else Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
-    val fillColor = if (enabled) Theme.v2.colors.primary.accent5 else Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
+    val isButtonEnabled = enabled == VsButtonState.Enabled || enabled == VsButtonState.Default
+    val backgroundColor = if (isButtonEnabled){
+        Theme.v2.colors.primary.accent3
+    } else {
+        Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
+    }
+    val fillColor = if (isButtonEnabled){
+        Theme.v2.colors.primary.accent5
+    } else {
+        Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
+    }
 
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) }
@@ -53,7 +62,7 @@ fun VsHoldableButton(
     Box(
         modifier = modifier
             .pointerInput(enabled) {
-                if (enabled) {
+                if (enabled == VsButtonState.Enabled) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         val longClickJob = scope.launch {
@@ -125,7 +134,11 @@ fun VsHoldableButton(
                     horizontal = 32.dp
                 )
         ) {
-            val contentColor = if (enabled) Theme.v2.colors.text.primary else Theme.v2.colors.text.primary.copy(alpha = 0.5f)
+            val contentColor = if (isButtonEnabled) {
+                Theme.v2.colors.text.primary
+            } else {
+                Theme.v2.colors.text.primary.copy(alpha = 0.5f)
+            }
             if (label != null) {
                 Text(
                     text = label,
@@ -143,7 +156,7 @@ fun VsHoldableButton(
 private fun VsHoldableButtonPreview() {
     VsHoldableButton(
         label = "Hold",
-        enabled = true,
+        enabled = VsButtonState.Enabled,
         onLongClick = {},
         onClick = {},
         modifier = Modifier.fillMaxWidth()
@@ -155,7 +168,7 @@ private fun VsHoldableButtonPreview() {
 private fun VsHoldableButtonDisabledPreview() {
     VsHoldableButton(
         label = "Hold (Disabled)",
-        enabled = false,
+        enabled = VsButtonState.Enabled,
         onLongClick = {},
         onClick = {},
         modifier = Modifier.fillMaxWidth()
