@@ -1,14 +1,28 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 
 @Composable
-internal fun CircleDeFiPositionsScreen() {
-    //val state by model.state.collectAsState()
+internal fun CircleDeFiPositionsScreen(
+    viewModel: CircleDeFiPositionsViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    
+    CircleDefiPositionScreenContent(
+        state = state,
+        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        onBackClick = {
+
+        },
+        onTabSelected = viewModel::onTabSelected,
+    )
 }
 
 @Composable
@@ -22,19 +36,28 @@ internal fun CircleDefiPositionScreenContent(
     BaseDeFiPositionsScreenContent(
         state = state,
         tabs = tabs,
-        bannerImage = state.bannerImage, // Use the banner image from state
+        bannerImage = R.drawable.circle_defi_banner,
         onBackClick = onBackClick,
         onTabSelected = onTabSelected,
         onEditChains = onEditChains,
         tabContent = {
-            // Circle-specific tab content can be added here
-            // For example: CircleDepositedContent, CircleStakedContent, etc.
+
         }
     )
 }
 
 internal enum class CircleDefiTab(val displayName: String) {
     DEPOSITED("Deposited"),
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CircleDeFiPositionsScreenPreview() {
+    CircleDefiPositionScreenContent(
+        state = DefiUiModel(),
+        tabs = listOf(CircleDefiTab.DEPOSITED.displayName),
+        onBackClick = {},
+    )
 }
 
 @Preview(showBackground = true)

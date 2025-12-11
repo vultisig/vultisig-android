@@ -299,7 +299,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 }
                 CryptoConnectionType.Defi -> {
                     navigator.route(
-                        Route.PositionTokens(
+                        Route.PositionCircle(
                             vaultId = vaultId,
                         )
                     )

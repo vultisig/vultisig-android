@@ -1,0 +1,83 @@
+package com.vultisig.wallet.ui.screens.v2.defi.circle
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+internal class CircleDeFiPositionsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(
+        DefiUiModel(
+            totalAmountPrice = "$0.00",
+            isTotalAmountLoading = true,
+            isBalanceVisible = true,
+            supportEditChains = false,
+            selectedTab = CircleDefiTab.DEPOSITED.displayName,
+            bannerImage = R.drawable.circle_defi_banner,
+            tabDescription = false,
+            tabWarningBanner = false
+        )
+    )
+    val state: StateFlow<DefiUiModel> = _state.asStateFlow()
+
+    init {
+        loadDeFiPositions()
+    }
+
+    private fun loadDeFiPositions() {
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(
+                    totalAmountPrice = "$5,432.10",
+                    isTotalAmountLoading = false,
+                    supportEditChains = true
+                )
+            }
+        }
+    }
+
+    fun onTabSelected(tab: String) {
+        _state.update { currentState ->
+            currentState.copy(selectedTab = tab)
+        }
+        loadTabData(tab)
+    }
+
+    private fun loadTabData(tab: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isTotalAmountLoading = true) }
+            
+            when (tab) {
+                CircleDefiTab.DEPOSITED.displayName -> {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            totalAmountPrice = "$5,432.10",
+                            isTotalAmountLoading = false
+                        )
+                    }
+                }
+                else -> {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            totalAmountPrice = "$0.00",
+                            isTotalAmountLoading = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
