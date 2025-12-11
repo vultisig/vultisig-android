@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -15,24 +14,24 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class OnboardingViewModel @Inject constructor(
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
+
+    private val pages = 5
 
     val state = MutableStateFlow(
         OnboardingUiModel(
-            currentPage = pages.first(),
             pageIndex = 0,
-            pageTotal = pages.size
+            pageTotal = pages
         )
     )
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = pages.getOrNull(state.value.pageIndex + 1)
-            if (nextAnimation != null) {
+            val nextPageIndex = (state.value.pageIndex + 1).takeIf { it < pages }
+            if (nextPageIndex != null) {
                 state.update {
                     it.copy(
-                        currentPage = nextAnimation,
                         pageIndex = it.pageIndex + 1
                     )
                 }
@@ -50,12 +49,3 @@ internal class OnboardingViewModel @Inject constructor(
         navigator.navigate(Destination.Back)
     }
 }
-
-private val pages = listOf(
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
-)

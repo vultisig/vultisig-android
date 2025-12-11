@@ -377,9 +377,16 @@ class DKLSKeysign(
                 signatures[messageToSign] = resp
             }
         } catch (e: Exception) {
-            println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+            if (e is CancellationException) throw e
+            if (e.message?.contains("Request failed with status 404") == true) {
+                error("Signature computations differ across signing devices for chain path: $chainPath")
+            }
+            Timber.e("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
-                keysignOneMessageWithRetry(attempt + 1, messageToSign)
+                keysignOneMessageWithRetry(
+                    attempt + 1,
+                    messageToSign
+                )
             }
         }
     }
