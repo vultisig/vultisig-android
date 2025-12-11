@@ -53,9 +53,12 @@ internal fun BondedTabContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TotalBondWidget(
+        HeaderDeFiWidget(
+            title = stringResource(R.string.total_bonded_rune),
+            iconRes = R.drawable.rune,
+            buttonText = stringResource(R.string.bond_to_node),
             onClickBondToNode = bondToNodeOnClick,
-            totalBonded = state.bonded.totalBondedAmount,
+            totalAmount = state.bonded.totalBondedAmount,
             isLoading = state.bonded.isLoading,
             isBalanceVisible = state.isBalanceVisible,
         )
@@ -72,9 +75,12 @@ internal fun BondedTabContent(
 }
 
 @Composable
-internal fun TotalBondWidget(
+internal fun HeaderDeFiWidget(
+    title: String,
+    iconRes: Int,
+    buttonText: String,
     onClickBondToNode: () -> Unit,
-    totalBonded: String,
+    totalAmount: String,
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
 ) {
@@ -92,7 +98,7 @@ internal fun TotalBondWidget(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = R.drawable.rune),
+                painter = painterResource(id = iconRes),
                 contentDescription = null,
                 modifier = Modifier.size(36.dp)
             )
@@ -101,7 +107,7 @@ internal fun TotalBondWidget(
 
             Column {
                 Text(
-                    text = stringResource(R.string.total_bonded_rune),
+                    text = title,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.extraLight,
                 )
@@ -115,7 +121,7 @@ internal fun TotalBondWidget(
                     )
                 } else {
                     Text(
-                        text = if (isBalanceVisible) totalBonded else HIDE_BALANCE_CHARS,
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -130,7 +136,7 @@ internal fun TotalBondWidget(
         UiSpacer(16.dp)
 
         VsButton(
-            label = stringResource(R.string.bond_to_node),
+            label = buttonText,
             modifier = Modifier.fillMaxWidth(),
             onClick = onClickBondToNode,
             state = VsButtonState.Enabled,
@@ -430,10 +436,13 @@ private fun BondedTabContentEmptyPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "Total Bond Widget")
 @Composable
-private fun TotalBondWidgetPreview() {
-    TotalBondWidget(
+private fun HeaderDeFiWidgetPreview() {
+    HeaderDeFiWidget(
         onClickBondToNode = { },
-        totalBonded = "2600 RUNE"
+        totalAmount = "2600 RUNE",
+        iconRes = R.drawable.rune,
+        buttonText = "Bond to Node",
+        title = "Total Bonded Rune",
     )
 }
 
