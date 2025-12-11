@@ -27,12 +27,14 @@ data class Vault(
 @Serializable
 enum class SigningLibType {
     DKLS,
-    GG20;
+    GG20,
+    KeyImport;
 
     companion object {
         fun from(string: String) = when (string.lowercase()) {
             "dkls" -> DKLS
             "gg20" -> GG20
+            "keyimport" -> KeyImport
             else -> null
         }
     }
@@ -41,6 +43,7 @@ enum class SigningLibType {
 fun SigningLibType.toProtoString() = when (this) {
     SigningLibType.DKLS -> "dkls"
     SigningLibType.GG20 -> "gg20"
+    SigningLibType.KeyImport -> "keyimport"
 }
 
 fun Vault.getVaultPart(): Int {

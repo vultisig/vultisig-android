@@ -133,6 +133,8 @@ internal class KeysignViewModel(
 
                     SigningLibType.DKLS ->
                         startKeysignDkls()
+                    SigningLibType.KeyImport ->
+                        TODO("Add KeyImport Signing logic")
                 }
             }
         }

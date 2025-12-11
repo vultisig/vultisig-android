@@ -20,6 +20,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
@@ -468,7 +469,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             )
                         )
                     ).encodeBase64()
-
+        TssAction.KeyImport-> TODO()
         TssAction.ReShare, TssAction.Migrate ->
             "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
@@ -494,6 +495,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
             TssAction.KEYGEN -> "Keygen"
             TssAction.ReShare -> "Reshare"
             TssAction.Migrate -> "Migrate"
+            TssAction.KeyImport -> "KeyImport"
         }
 
     private suspend fun requestVultiServerConnection() {
@@ -539,6 +541,22 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                             hexEncryptionKey = encryptionKeyHex,
                             encryptionPassword = password,
                             email = email
+                        )
+                    )
+                }
+
+                TssAction.KeyImport -> {
+                    vultiSignerRepository.joinKeyImport(
+                        JoinKeyImportRequest(
+                            vaultName = vaultName,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            hexChainCode = hexChainCode,
+                            localPartyId = generateServerPartyId(),
+                            encryptionPassword = password,
+                            email = email,
+                            libType = libType.toJson(),
+                            chains = emptyList() // TODO: please add correct chain list later
                         )
                     )
                 }

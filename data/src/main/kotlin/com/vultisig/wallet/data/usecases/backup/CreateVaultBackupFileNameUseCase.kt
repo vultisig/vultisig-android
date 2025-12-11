@@ -14,7 +14,7 @@ internal class CreateVaultBackupFileNameUseCaseImpl @Inject constructor() :
     override fun invoke(vault: Vault): String {
         val shareNamePart = when (vault.libType) {
             SigningLibType.GG20 -> "part"
-            SigningLibType.DKLS -> "share"
+            SigningLibType.DKLS, SigningLibType.KeyImport -> "share"
         }
 
         val fileName =
