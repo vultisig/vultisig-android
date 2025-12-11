@@ -150,6 +150,11 @@ internal fun VerifySendScreen(
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = if (isConsentsEnabled && !state.hasAllConsents) {
+                            false
+                        } else {
+                            true
+                        }
                     )
                 } else {
                     val buttonState = if (isConsentsEnabled && !state.hasAllConsents)
