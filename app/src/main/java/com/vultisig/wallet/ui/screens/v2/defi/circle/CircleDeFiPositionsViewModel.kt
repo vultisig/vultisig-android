@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -18,7 +17,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -30,8 +28,8 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             supportEditChains = false,
             selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner,
-            tabDescription = false,
-            tabWarningBanner = false
+            containsTabDescription = true,
+            containsTabWarningBanner = true,
         )
     )
 

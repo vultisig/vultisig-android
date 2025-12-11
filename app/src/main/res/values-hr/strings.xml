@@ -95,6 +95,7 @@
     <string name="send_form_network_fee">Mrežna naknada (automatski)</string>
     <string name="chain_account_view_send">POšALJI</string>
     <string name="chain_account_view_deposit">Polog</string>
+    <string name="circle_defi_description">Položite svoj USDC na Circle račun i ostvarite prinos. Sigurno unutar vašeg Vultisig trezora.</string>
     <string name="ok">U redu</string>
     <string name="dialog_default_error_title">Greška</string>
     <string name="send_error_no_amount">Iznos mora biti pozitivan broj. Pokušajte ponovno.</string>

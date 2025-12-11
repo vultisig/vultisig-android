@@ -153,6 +153,7 @@
     <string name="chain_account_view_send">发送</string>
     <string name="chain_account_view_swap">交换</string>
     <string name="chain_account_view_deposit">功能</string>
+    <string name="circle_defi_description">将您的 USDC 存入 Circle 账户并赚取收益。安全地存储在您的 Vultisig 保险库中。</string>
     
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>

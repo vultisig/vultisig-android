@@ -15,6 +15,6 @@ data class DefiUiModel(
 
     // tabs parameters
     val selectedTab: String = "Deposited",
-    val tabDescription: Boolean = false,
-    val tabWarningBanner: Boolean = false,
+    val containsTabDescription: Boolean = false,
+    val containsTabWarningBanner: Boolean = false,
 )

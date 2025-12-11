@@ -95,6 +95,7 @@
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">TROCAR</string>
     <string name="chain_account_view_deposit">Depósito</string>
+    <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Erro</string>
     <string name="select_asset_title">Selecionar ativo</string>
