@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class TssAction {
-    KEYGEN, ReShare, Migrate
+    KEYGEN, ReShare, Migrate, KeyImport
 }

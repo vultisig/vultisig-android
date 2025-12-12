@@ -74,7 +74,6 @@ internal fun DefiPositionScreenContent(
     val tabs = listOf(
         DefiTab.BONDED.displayName,
         DefiTab.STAKING.displayName,
-        DefiTab.LPS.displayName
     )
 
     V2Scaffold(

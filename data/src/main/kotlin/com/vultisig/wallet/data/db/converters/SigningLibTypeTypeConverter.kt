@@ -9,6 +9,7 @@ class SigningLibTypeTypeConverter {
     fun toSigningLibType(value: String): SigningLibType = when (value) {
         DKLS -> SigningLibType.DKLS
         GG20 -> SigningLibType.GG20
+        KeyImport -> SigningLibType.KeyImport
         else -> error("Unknown SigningLibType: $value")
     }
 
@@ -16,11 +17,13 @@ class SigningLibTypeTypeConverter {
     fun fromSigningLibType(value: SigningLibType): String = when (value) {
         SigningLibType.DKLS -> DKLS
         SigningLibType.GG20 -> GG20
+        SigningLibType.KeyImport -> KeyImport
     }
 
     companion object {
         const val DKLS = "DKLS"
         const val GG20 = "GG20"
+        const val KeyImport = "KeyImport"
     }
 
 }

@@ -18,7 +18,6 @@ import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.Theme
@@ -33,7 +32,6 @@ internal fun VaultBackupOnboardingScreen(
 
     VaultBackupOnboardingScreen(
         state = state,
-        onBackClick = model::back,
         onNextClick = model::next,
     )
 }
@@ -41,7 +39,6 @@ internal fun VaultBackupOnboardingScreen(
 @Composable
 private fun VaultBackupOnboardingScreen(
     state: VaultBackupOnboardingUiModel,
-    onBackClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
     Scaffold(
@@ -61,7 +58,6 @@ private fun VaultBackupOnboardingScreen(
 
         OnboardingContent(
             state = OnboardingUiModel(
-                currentPage = state.currentPage,
                 pageIndex = state.pageIndex,
                 pageTotal = state.pageTotal
             ),
@@ -215,10 +211,8 @@ private fun VaultBackupOnboardingScreenPreview() {
             deviceIndex = 0,
             pageIndex = 0,
             pageTotal = 2,
-            currentPage = OnboardingPage(),
             action = TssAction.KEYGEN,
         ),
-        onBackClick = {},
         onNextClick = {}
     )
 }

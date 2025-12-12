@@ -167,6 +167,7 @@ internal class KeygenViewModel @Inject constructor(
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
                     SigningLibType.GG20 -> startKeygenGG20()
+                    SigningLibType.KeyImport -> TODO("Add KeyImport logic")
                 }
 
                 updateStep(KeygenState.Success)
@@ -236,6 +237,7 @@ internal class KeygenViewModel @Inject constructor(
         when (action) {
             TssAction.KEYGEN, TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
             TssAction.ReShare -> dklsKeygen.reshareWithRetry(0)
+            TssAction.KeyImport-> error("KeyImport not supported yet")
         }
 
         updateStep(KeygenState.KeygenEdDSA)
@@ -261,6 +263,7 @@ internal class KeygenViewModel @Inject constructor(
         when (action) {
             TssAction.KEYGEN, TssAction.Migrate -> schnorr.schnorrKeygenWithRetry(0)
             TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
+            TssAction.KeyImport-> error("KeyImport not supported yet")
         }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
@@ -353,6 +356,7 @@ internal class KeygenViewModel @Inject constructor(
                         vault.pubKeyECDSA = ecdsaResp.pubKey
                         vault.resharePrefix = ecdsaResp.resharePrefix
                     }
+                    TssAction.KeyImport-> error("KeyImport will not support for GG20")
                 }
 
                 // here is the keygen process is done
@@ -465,7 +469,7 @@ internal class KeygenViewModel @Inject constructor(
                         password = args.password,
                     )
 
-                TssAction.Migrate -> if (vault.isFastVault()) {
+                TssAction.Migrate, TssAction.KeyImport -> if (vault.isFastVault()) {
                     Route.Onboarding.VaultBackup(
                         vaultId = vaultId,
                         pubKeyEcdsa = vault.pubKeyECDSA,

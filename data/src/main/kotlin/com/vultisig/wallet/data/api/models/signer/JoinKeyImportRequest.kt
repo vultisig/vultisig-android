@@ -1,11 +1,10 @@
 package com.vultisig.wallet.data.api.models.signer
 
-import com.vultisig.wallet.data.models.SigningLibType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class JoinKeygenRequestJson(
+data class JoinKeyImportRequest (
     @SerialName("name")
     val vaultName: String,
     @SerialName("session_id")
@@ -22,12 +21,6 @@ data class JoinKeygenRequestJson(
     val email: String,
     @SerialName("lib_type")
     val libType: Int, // 0 for GG20 , 1 for DKLS
+    @SerialName("chains")
+    val chains: List<String>
 )
-
-fun SigningLibType.toJson(): Int {
-    return when (this) {
-        SigningLibType.GG20 -> 0
-        SigningLibType.DKLS -> 1
-        SigningLibType.KeyImport -> 2
-    }
-}

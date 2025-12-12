@@ -719,8 +719,10 @@ private fun FoldableAmountWidget(
                     color = Theme.v2.colors.text.primary,
                 )
 
+                val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
+                
                 Text(
-                    text = state.selectedCoin?.balance ?: "",
+                    text = (state.selectedCoin?.balance ?: "") + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.light,
                     textAlign = TextAlign.End,

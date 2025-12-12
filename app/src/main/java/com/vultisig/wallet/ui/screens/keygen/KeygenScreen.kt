@@ -78,7 +78,7 @@ internal fun KeygenScreen(
         Success()
     } else {
         when (state.action) {
-            TssAction.KEYGEN, TssAction.ReShare -> {
+            TssAction.KEYGEN, TssAction.ReShare , TssAction.KeyImport -> {
                 KeygenScreen(
                     state = state,
                     onTryAgainClick = model::tryAgain,

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
@@ -107,6 +108,9 @@ private fun OnboardingScreen(
                         VsTopAppBarAction(
                             icon = R.drawable.ic_caret_left,
                             onClick = onBackClick,
+                        )
+                        UiSpacer(
+                            size = 8.dp
                         )
                         Text(
                             modifier = Modifier.align(Alignment.CenterVertically),
