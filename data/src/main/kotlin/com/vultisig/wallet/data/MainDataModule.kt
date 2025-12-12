@@ -2,9 +2,13 @@ package com.vultisig.wallet.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.vultisig.wallet.data.sources.AppDataStore
+import com.vultisig.wallet.data.sources.AppDataStoreImpl
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,11 +23,13 @@ import javax.inject.Singleton
 internal interface MainDataModule {
 
     companion object {
+
         @Provides
         @Singleton
-        fun provideAppDataStore(
-            @ApplicationContext context: Context
-        ): AppDataStore = AppDataStore(context)
+        fun provideDataStore(@ApplicationContext context: Context) =
+            PreferenceDataStoreFactory.create(
+                produceFile = { context.preferencesDataStoreFile("app_pref") }
+            )
 
         @Provides
         @Singleton
@@ -44,5 +50,11 @@ internal interface MainDataModule {
             )
         }
     }
+
+    @Singleton
+    @Binds
+    fun bindAppDataStore(
+        impl: AppDataStoreImpl,
+    ): AppDataStore
 
 }

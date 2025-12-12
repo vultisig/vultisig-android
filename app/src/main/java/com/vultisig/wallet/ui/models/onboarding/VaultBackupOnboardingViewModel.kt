@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -23,7 +22,6 @@ internal data class VaultBackupOnboardingUiModel(
     val vaultType: Route.VaultInfo.VaultType,
     val action: TssAction,
     val deviceIndex: Int = 0,
-    val currentPage: OnboardingPage,
     val pageIndex: Int,
     val pageTotal: Int,
     val vaultShares: Int = 0,
@@ -43,35 +41,23 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
     )
     private val vaultId = args.vaultId
 
-    // TODO refactor this into actually configurable model
     private val pages = when (args.vaultType) {
         Route.VaultInfo.VaultType.Fast -> {
             when (args.action) {
-                TssAction.Migrate -> listOf(
-                    OnboardingPage(),
-                )
-
-                else -> listOf(
-                    OnboardingPage(),
-                    OnboardingPage(),
-                    OnboardingPage(),
-                )
+                TssAction.Migrate -> 1
+                else -> 3
             }
         }
 
-        Route.VaultInfo.VaultType.Secure -> listOf(
-            OnboardingPage(),
-            OnboardingPage(),
-        )
+        Route.VaultInfo.VaultType.Secure -> 2
     }
 
 
     val state = MutableStateFlow(
         VaultBackupOnboardingUiModel(
             vaultType = args.vaultType,
-            currentPage = pages.first(),
             pageIndex = 0,
-            pageTotal = pages.size,
+            pageTotal = pages,
             action = args.action,
         )
     )
@@ -91,11 +77,10 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = pages.getOrNull(state.value.pageIndex + 1)
-            if (nextAnimation != null) {
+            val nextPageIndex = (state.value.pageIndex + 1).takeIf { it < pages }
+            if (nextPageIndex != null) {
                 state.update {
                     it.copy(
-                        currentPage = nextAnimation,
                         pageIndex = it.pageIndex + 1
                     )
                 }
@@ -127,9 +112,5 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun back() {
-        /* no-op */
     }
 }

@@ -367,6 +367,7 @@
     <string name="reshare_start_join_reshare_button">Únase a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Las unidades LP no son válidas</string>
     <string name="deposit_error_invalid_assets">Los activos no son válidos</string>
+    <string name="deposit_error_has_not_reached_maturity">Este depósito aún no ha alcanzado su período de vencimiento.</string>
     <string name="deposit_form_screen_assets">Activos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
     <string name="eth_gas_settings_title">Avanzado</string>

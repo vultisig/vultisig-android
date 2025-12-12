@@ -367,6 +367,7 @@
     <string name="reshare_start_join_reshare_button">Reshare beitreten</string>
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
+    <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
     <string name="deposit_form_screen_assets">Vermögenswerte</string>
     <string name="deposit_form_screen_lpunits">LP-Geräte</string>
     <string name="eth_gas_settings_title">Erweitert</string>

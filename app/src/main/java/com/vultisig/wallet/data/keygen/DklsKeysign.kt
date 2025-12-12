@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
@@ -118,8 +119,22 @@ class DKLSKeysign(
             val keyIdSlice = keyIdArr.toGoSlice()
             val byteArray = DklsHelper.arrayToBytes(keysignCommittee)
             val ids = byteArray.toGoSlice()
-            val chainPathArr = chainPath.replace("'", "").toByteArray(Charsets.UTF_8)
-            val chainPathSlice = chainPathArr.toGoSlice()
+            var chainPathSlice: go_slice? = null
+            when(vault.libType){
+                SigningLibType.DKLS -> {
+                    val chainPathArr = chainPath.replace("'", "").toByteArray(Charsets.UTF_8)
+                    chainPathSlice = chainPathArr.toGoSlice()
+                }
+
+                SigningLibType.KeyImport-> {
+                    chainPathSlice = null
+                }
+                else -> {
+                    error("unsupported lib type for DKLS keysign: ${vault.libType}")
+                }
+            }
+
+
             val decodedMsgData = message.hexToByteArray()
             val msgArr = decodedMsgData
             val msgSlice = msgArr.toGoSlice()
@@ -362,9 +377,16 @@ class DKLSKeysign(
                 signatures[messageToSign] = resp
             }
         } catch (e: Exception) {
-            println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
+            if (e is CancellationException) throw e
+            if (e.message?.contains("Request failed with status 404") == true) {
+                error("Signature computations differ across signing devices for chain path: $chainPath")
+            }
+            Timber.e("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
-                keysignOneMessageWithRetry(attempt + 1, messageToSign)
+                keysignOneMessageWithRetry(
+                    attempt + 1,
+                    messageToSign
+                )
             }
         }
     }

@@ -642,6 +642,7 @@
     <string name="deposit_error_invalid_assets">资产无效</string>
     
     <!-- Deposit Form Screen -->
+    <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
     

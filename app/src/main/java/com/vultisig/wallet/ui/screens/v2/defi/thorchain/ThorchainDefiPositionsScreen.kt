@@ -81,9 +81,8 @@ internal fun ThorchainDefiPositionScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        ThorchainDefiTab.BONDED.displayName,
-        ThorchainDefiTab.STAKING.displayName,
-        ThorchainDefiTab.LPS.displayName
+        DefiTab.BONDED.displayName,
+        DefiTab.STAKING.displayName,
     )
 
     V2Scaffold(
