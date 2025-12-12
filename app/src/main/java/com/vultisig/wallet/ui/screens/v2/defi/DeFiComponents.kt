@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -459,24 +460,52 @@ internal fun DeFiWarningBanner(
     text: String,
     onClickClose: (() -> Unit)? = null,
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = if (onClickClose != null) 40.dp else 16.dp,
+                    bottom = 16.dp
+                )
+        ) {
+            Text(
+                text = text,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.light,
+            )
+        }
 
-        Text(
-            text = text,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.light,
-        )
+        if (onClickClose != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(Theme.v2.colors.backgrounds.surface2)
+                    .clickable(onClick = onClickClose),
+                contentAlignment = Alignment.Center
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.big_close,
+                    contentDescription = "cancel",
+                    size = 16.dp,
+                )
+            }
+        }
     }
 }
 
