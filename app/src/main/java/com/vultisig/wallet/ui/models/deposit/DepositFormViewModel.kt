@@ -619,27 +619,42 @@ internal class DepositFormViewModel @Inject constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.SecuredAsset ->{
-                    viewModelScope.launch {
-                        try {
-                            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                            val inboundAddress = inboundAddresses
-                                .firstOrNull { it.chain.equals(state.value.selectedToken.chain.ticker(), ignoreCase = true) }
-                            if (inboundAddress != null && inboundAddress.halted.not() &&
-                                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
-                            ) {
-                                val gaiaAddress = inboundAddress.address
-                                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
+                DepositOption.SecuredAsset -> {
+                    try {
+                        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                        val inboundAddress = inboundAddresses
+                            .firstOrNull {
+                                it.chain.equals(
+                                    state.value.selectedToken.chain.ticker(),
+                                    ignoreCase = true
+                                )
                             }
-                            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                                .collect { addresses ->
-                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                                }
-                        } catch (e: Exception) {
-                            Timber.e(e)
+                        if (inboundAddress != null && inboundAddress.halted.not() &&
+                            inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+                        ) {
+                            val gaiaAddress = inboundAddress.address
+                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e)
                     }
 
+                }
+
+                DepositOption.WithdrawSecuredAsset ->{
+                    viewModelScope.launch {
+                        accountsRepository.loadAddress(
+                            vaultId = vaultId,
+                            chain = Chain.ThorChain,
+                        ).catch {
+                            Timber.e(it)
+                        }.collect { address ->
+                            address.accounts.find { account ->
+                                account.token.chain == Chain.ThorChain
+                                        && account.token.isSecuredAsset()
+                            }
+                        }
+                    }
                 }
 
                 else -> Unit
@@ -650,6 +665,7 @@ internal class DepositFormViewModel @Inject constructor(
                 nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress!!)
             }
         }
+
     }
 
     private suspend fun handleRemoveCacaoOption() {

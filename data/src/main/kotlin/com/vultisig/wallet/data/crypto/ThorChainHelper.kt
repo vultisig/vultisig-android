@@ -380,14 +380,19 @@ class ThorChainHelper(
 }
 
 fun Coin.getChainName(): String {
-    return if (this.chain == Chain.ThorChain) {
-        "THOR"
-    } else if (this.chain == Chain.MayaChain) {
-        "MAYA"
-    } else if (this.chain == Chain.BscChain) {
-        "BSC"
-    } else {
-        this.chain.ticker().uppercase()
+    return when (this.chain) {
+        Chain.ThorChain -> {
+            "THOR"
+        }
+        Chain.MayaChain -> {
+            "MAYA"
+        }
+        Chain.BscChain -> {
+            "BSC"
+        }
+        else -> {
+            this.chain.ticker().uppercase()
+        }
     }
 }
 
