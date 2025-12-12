@@ -577,7 +577,7 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(
                                 R.string.address_auto_filled,
-                                state.selectedToken.chain.raw
+                                Chain.ThorChain.raw
                             ),
                             style = Theme.brockmann.body.s.regular,
                             color = Theme.v2.colors.text.extraLight,
