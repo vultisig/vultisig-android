@@ -51,6 +51,7 @@ import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
@@ -336,6 +337,7 @@ private fun CreateFolderScreen(
                 )
             ,
             onClick = onAddVaultClick,
+            state = if(state.isCreateButtonEnabled) VsButtonState.Enabled else VsButtonState.Disabled
         )
     }
 }
