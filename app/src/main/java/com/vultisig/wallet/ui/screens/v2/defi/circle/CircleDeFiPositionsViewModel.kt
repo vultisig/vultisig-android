@@ -28,8 +28,6 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             supportEditChains = false,
             selectedTab = DeFiTab.DEPOSITED.displayName,
             bannerImage = R.drawable.circle_defi_banner,
-            containsTabDescription = true,
-            containsTabWarningBanner = true,
         )
     )
 

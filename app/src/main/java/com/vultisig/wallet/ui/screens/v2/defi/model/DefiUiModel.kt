@@ -9,12 +9,17 @@ data class DefiUiModel(
     val isTotalAmountLoading: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val supportEditChains: Boolean = false,
-
-    // Banner
     val bannerImage: Int = R.drawable.circle_defi_banner,
-
-    // tabs parameters
     val selectedTab: String = "Deposited",
-    val containsTabDescription: Boolean = false,
-    val containsTabWarningBanner: Boolean = false,
-)
+
+    // Specific data per screen
+    val circleDefi: CircleDeFi = CircleDeFi(),
+) {
+    // Create per tab is more are supported
+    data class CircleDeFi(
+        val isLoading: Boolean = false,
+        val isAccountOpen: Boolean = false,
+        val totalDeposit: String = "0 USDC",
+        val totalDepositCurrency: String = "$0",
+    )
+}

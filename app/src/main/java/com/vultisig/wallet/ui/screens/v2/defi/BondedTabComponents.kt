@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,19 +9,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,9 +27,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
@@ -57,7 +50,7 @@ internal fun BondedTabContent(
             title = stringResource(R.string.total_bonded_rune),
             iconRes = R.drawable.rune,
             buttonText = stringResource(R.string.bond_to_node),
-            onClickBondToNode = bondToNodeOnClick,
+            onClickAction = bondToNodeOnClick,
             totalAmount = state.bonded.totalBondedAmount,
             isLoading = state.bonded.isLoading,
             isBalanceVisible = state.isBalanceVisible,
@@ -71,76 +64,6 @@ internal fun BondedTabContent(
                 isBalanceVisible = state.isBalanceVisible,
             )
         }
-    }
-}
-
-@Composable
-internal fun HeaderDeFiWidget(
-    title: String,
-    iconRes: Int,
-    buttonText: String,
-    onClickBondToNode: () -> Unit,
-    totalAmount: String,
-    isLoading: Boolean = false,
-    isBalanceVisible: Boolean = true,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
-            .border(
-                width = 1.dp,
-                color = Theme.v2.colors.border.normal,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(36.dp)
-            )
-
-            UiSpacer(12.dp)
-
-            Column {
-                Text(
-                    text = title,
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
-                )
-
-                UiSpacer(4.dp)
-
-                if (isLoading) {
-                    UiPlaceholderLoader(
-                        modifier = Modifier
-                            .size(width = 120.dp, height = 28.dp)
-                    )
-                } else {
-                    Text(
-                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
-                        style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
-                    )
-                }
-            }
-        }
-
-        UiSpacer(16.dp)
-
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
-
-        UiSpacer(16.dp)
-
-        VsButton(
-            label = buttonText,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onClickBondToNode,
-            state = VsButtonState.Enabled,
-        )
     }
 }
 
@@ -438,7 +361,7 @@ private fun BondedTabContentEmptyPreview() {
 @Composable
 private fun HeaderDeFiWidgetPreview() {
     HeaderDeFiWidget(
-        onClickBondToNode = { },
+        onClickAction = { },
         totalAmount = "2600 RUNE",
         iconRes = R.drawable.rune,
         buttonText = "Bond to Node",

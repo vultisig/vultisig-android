@@ -111,6 +111,9 @@
     <string name="chain_account_view_deposit">STORTEN</string>
     <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
     <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
+    <string name="usdc_deposit_title">USDC-storting</string>
+    <string name="deposit_usdc_button">USDC storten</string>
+    <string name="open_account_button">Account openen</string>
     <string name="vault_settings_error_backup_file">er is een fout opgetreden</string>
     <string name="vault_settings_success_backup_file">bestand opgeslagen in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">deze naam bestaat al</string>

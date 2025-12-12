@@ -98,7 +98,10 @@
     <string name="chain_account_view_swap">TAUSCHEN</string>
     <string name="chain_account_view_deposit">Einzahlung</string>
     <string name="circle_defi_description">Zahlen Sie Ihr USDC auf ein Circle-Konto ein und erzielen Sie Rendite. Sicher in Ihrem Vultisig-Tresor.</string>
-    <string name="circle_defi_control_info">Die Mittel bleiben vollständig unter der Kontrolle Ihres Tresors. Circle-Konten sind selbstverwaltet und Erträge werden durch sichere Off Chain Treasuries generiert.</string>
+    <string name="circle_defi_control_info">Die Mittel bleiben vollständig unter der Kontrolle Ihres Tresors. Circle-Konten sind selbstverwaltet und Erträge werden durch sichere Off-Chain-Treasuries generiert.</string>
+    <string name="usdc_deposit_title">USDC-Einzahlung</string>
+    <string name="deposit_usdc_button">USDC einzahlen</string>
+    <string name="open_account_button">Konto eröffnen</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Fehler</string>
     <string name="send_error_no_amount">Die Menge muss eine positive Zahl sein</string>

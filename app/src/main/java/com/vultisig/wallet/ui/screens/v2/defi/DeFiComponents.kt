@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,8 +34,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
@@ -472,6 +476,76 @@ internal fun DeFiWarningBanner(
             text = text,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.light,
+        )
+    }
+}
+
+@Composable
+internal fun HeaderDeFiWidget(
+    title: String,
+    iconRes: Int,
+    buttonText: String,
+    onClickAction: () -> Unit,
+    totalAmount: String,
+    isLoading: Boolean = false,
+    isBalanceVisible: Boolean = true,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.v2.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.border.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp)
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .size(width = 120.dp, height = 28.dp)
+                    )
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = buttonText,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClickAction,
+            state = VsButtonState.Enabled,
         )
     }
 }

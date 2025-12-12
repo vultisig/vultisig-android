@@ -97,6 +97,9 @@
     <string name="chain_account_view_deposit">Depósito</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
+    <string name="usdc_deposit_title">Depósito USDC</string>
+    <string name="deposit_usdc_button">Depositar USDC</string>
+    <string name="open_account_button">Abrir conta</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Erro</string>
     <string name="select_asset_title">Selecionar ativo</string>

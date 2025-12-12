@@ -74,20 +74,6 @@ fun BaseDeFiPositionsScreenContent(
                 }
             )
 
-            if (state.containsTabDescription) {
-                Text(
-                    text = stringResource(R.string.circle_defi_description),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
-                )
-            }
-
-            if (state.containsTabWarningBanner) {
-                DeFiWarningBanner(
-                    text = stringResource(R.string.circle_defi_control_info)
-                )
-            }
-
             tabContent()
         }
     }

@@ -1,21 +1,26 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiWarningBanner
+import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun CircleDeFiPositionsScreen(
     viewModel: CircleDeFiPositionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    
+
     CircleDefiPositionScreenContent(
         state = state,
         tabs = listOf(DeFiTab.DEPOSITED.displayName),
@@ -40,8 +45,45 @@ internal fun CircleDefiPositionScreenContent(
         onTabSelected = onTabSelected,
         onEditChains = onEditChains,
         tabContent = {
-
+            CircleContentDepositTab(
+                state = state.circleDefi,
+                isBalanceVisible = state.isBalanceVisible,
+                onClickAction = {
+                    // TODO: Navigate to form
+                }
+            )
         }
+    )
+}
+
+@Composable
+private fun CircleContentDepositTab(
+    state: DefiUiModel.CircleDeFi,
+    isBalanceVisible: Boolean,
+    onClickAction: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.circle_defi_description),
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.light,
+    )
+
+    DeFiWarningBanner(
+        text = stringResource(R.string.circle_defi_control_info)
+    )
+
+    HeaderDeFiWidget(
+        title = stringResource(R.string.usdc_deposit_title),
+        iconRes = R.drawable.usdc,
+        buttonText = if (state.isAccountOpen) {
+            stringResource(R.string.deposit_usdc_button)
+        } else {
+            stringResource(R.string.open_account_button)
+        },
+        onClickAction = onClickAction,
+        totalAmount = state.totalDeposit,
+        isLoading = state.isLoading,
+        isBalanceVisible = isBalanceVisible,
     )
 }
 
