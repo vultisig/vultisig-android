@@ -48,7 +48,7 @@ internal fun SearchBar(
     onCancelClick: () -> Unit,
     isInitiallyFocused: Boolean,
     isPasteEnabled: Boolean = false,
-    onSetSearchText: (String) -> Unit = {},
+    onPasteClick: (String) -> Unit = {},
 ) {
     var isFocusedState by remember { mutableStateOf(isInitiallyFocused) }
     val focusManager = LocalFocusManager.current
@@ -131,7 +131,7 @@ internal fun SearchBar(
                                 weight = 1f
                             )
                             if (isPasteEnabled) {
-                                PasteIcon(onPaste = onSetSearchText)
+                                PasteIcon(onPaste = onPasteClick)
                             }
                         } else {
                             input()
