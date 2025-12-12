@@ -85,7 +85,7 @@ internal fun <T> TokenSelectionList(
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onSetSearchText = onSetSearchText
+        onPasteClick = onSetSearchText
     )
 }
 
@@ -98,7 +98,7 @@ internal fun <T> TokenSelectionList(
     onCheckChange: (Boolean, GridTokenUiModel<T>) -> Unit,
     onDoneClick: () -> Unit,
     onCancelClick: () -> Unit,
-    onSetSearchText: (String) -> Unit = {},
+    onPasteClick: (String) -> Unit = {},
 ) {
     V2BottomSheet(
         onDismissRequest = onCancelClick,
@@ -138,7 +138,7 @@ internal fun <T> TokenSelectionList(
                 onCancelClick = {},
                 isInitiallyFocused = false,
                 isPasteEnabled = true,
-                onSetSearchText = onSetSearchText,
+                onPasteClick = onPasteClick,
             )
             UiSpacer(
                 size = 24.dp
@@ -346,6 +346,6 @@ private fun TokenSelectionListPreview() {
         },
         onDoneClick = {},
         onCancelClick = {},
-        onSetSearchText = {}
+        onPasteClick = {}
     )
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -419,7 +420,7 @@ internal fun PositionsSelectionDialog(
         },
         onDoneClick = onDoneClick,
         onCancelClick = onCancelClick,
-        onSetSearchText = { /* Search is handled by the searchTextFieldState */ }
+        onPasteClick = searchTextFieldState::setTextAndPlaceCursorAtEnd
     )
 }
 
