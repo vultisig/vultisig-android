@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
@@ -81,8 +82,8 @@ internal fun ThorchainDefiPositionScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        DefiTab.BONDED.displayName,
-        DefiTab.STAKING.displayName,
+        DeFiTab.BONDED.displayName,
+        DeFiTab.STAKED.displayName,
     )
 
     V2Scaffold(
