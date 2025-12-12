@@ -62,7 +62,6 @@ internal class TokenAddressQrViewModel @Inject constructor(
 
     fun shareQRCode(context: Context) {
         viewModelScope.launch {
-            back()
             context.share(
                 qrBitmapData.bitmap ?: return@launch,
                 shareFileName(
