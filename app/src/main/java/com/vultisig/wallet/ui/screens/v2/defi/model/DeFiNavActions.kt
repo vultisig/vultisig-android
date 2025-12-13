@@ -9,6 +9,7 @@ internal enum class DeFiNavActions(val type: String){
     STAKE_RUJI("stake_ruji"), UNSTAKE_RUJI("unstake_ruji"),
     STAKE_TCY("stake_tcy"), UNSTAKE_TCY("unstake_tcy"), MINT_YRUNE("mint_yrune"),
     REDEEM_YRUNE("redeem_yrune"), MINT_YTCY("mint_ytcy"), REDEEM_YTCY("redeem_ytcy"),
+    DEPOSIT_USDC_CIRCLE("deposit_usdc_circle"), WITHDRAW_USDC_CIRCLE("withdraw_usdc_circle")
 }
 
 internal fun parseDepositType(type: String?): DeFiNavActions? {
@@ -24,6 +25,8 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "redeemyrune", "redeem_yrune", "sellyrune", "sell_yrune" -> DeFiNavActions.REDEEM_YRUNE
         "mintytcy", "mint_ytcy", "receiveytcy", "receive_ytcy" -> DeFiNavActions.MINT_YTCY
         "redeemytcy", "redeem_ytcy", "sellytcy", "sell_ytcy" -> DeFiNavActions.REDEEM_YTCY
+        "deposit_usdc_circle" -> DeFiNavActions.DEPOSIT_USDC_CIRCLE
+        "withdraw_usdc_circle" -> DeFiNavActions.WITHDRAW_USDC_CIRCLE
          else -> {
             try {
                 type?.let { DeFiNavActions.valueOf(it.uppercase()) }

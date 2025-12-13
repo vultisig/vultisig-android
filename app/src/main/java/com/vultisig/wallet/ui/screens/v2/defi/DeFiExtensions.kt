@@ -16,10 +16,10 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import wallet.core.jni.CoinType
 
 internal fun defaultPositionsBondDialog(): List<PositionUiModelDialog> =
-    supportsBonDeFi.toPositionDialogModels()
+    thorchainSupportsBonDeFi.toPositionDialogModels()
 
 internal fun defaultPositionsStakingDialog(): List<PositionUiModelDialog> =
-    supportStakingDeFi.toPositionDialogModels()
+    thorchainSupportStakingDeFi.toPositionDialogModels()
 
 internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> =
     map { coin ->
@@ -30,7 +30,7 @@ internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> =
         )
     }
 
-internal val supportStakingDeFi: List<Coin>
+internal val thorchainSupportStakingDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUJI,
         Coins.ThorChain.TCY,
@@ -38,19 +38,19 @@ internal val supportStakingDeFi: List<Coin>
         Coins.ThorChain.yTCY,
     )
 
-internal val supportsBonDeFi: List<Coin>
+internal val thorchainSupportsBonDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUNE,
     )
 
 internal fun defaultSelectedPositionsDialog(): List<String> = 
-    (supportsBonDeFi + supportStakingDeFi).map { it.ticker }
+    (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }
 
 internal fun List<String>.hasBondPositions(): Boolean = 
-    any { ticker -> supportsBonDeFi.any { it.ticker == ticker } }
+    any { ticker -> thorchainSupportsBonDeFi.any { it.ticker == ticker } }
 
 internal fun List<String>.hasStakingPositions(): Boolean = 
-    any { ticker -> supportStakingDeFi.any { it.ticker == ticker } }
+    any { ticker -> thorchainSupportStakingDeFi.any { it.ticker == ticker } }
 
 internal fun emptyBondedTabUiModel() = BondedTabUiModel(
     isLoading = false,

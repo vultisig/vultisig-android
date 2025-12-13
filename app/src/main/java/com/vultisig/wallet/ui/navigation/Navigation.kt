@@ -505,6 +505,11 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class PositionCircle(
+        val vaultId: String,
+    )
+
+    @Serializable
     data class SignMessage(
         val vaultId: String,
     )
