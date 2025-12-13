@@ -15,7 +15,17 @@ data class Account(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
     val price: FiatValue?,
-)
+
+){
+    companion object {
+        val EMPTY = Account(
+            token = Coin.EMPTY,
+            tokenValue = null,
+            fiatValue = null,
+            price = null,
+        )
+    }
+}
 
 fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =
     this.fold(FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)) { acc, account ->

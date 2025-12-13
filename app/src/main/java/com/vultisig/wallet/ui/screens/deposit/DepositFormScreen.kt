@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.crypto.getChainName
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -169,7 +170,7 @@ internal fun DepositFormScreen(
     onLoadRujiBalances: () -> Unit = {},
     onAutoCompoundTcyStake: (Boolean) -> Unit = {},
     onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
-    onSelectSecureAsset: (String) -> Unit = {},
+    onSelectSecureAsset: (Any) -> Unit = {},
 
     ) {
     val focusManager = LocalFocusManager.current
@@ -625,23 +626,24 @@ internal fun DepositFormScreen(
 
                     }
                     if (depositOption == DepositOption.WithdrawSecuredAsset) {
-
-                        FormSelection(
-                            selected = stringResource(R.string.select_secured_asset_to_withdraw),
-                            options = state.securedAssetWithdrawOptions,
-                            onSelectOption = { onSelectSecureAsset(it) },
-                            mapTypeToString = { option ->
-                                option
-                            }
-                        )
-                        FormTextFieldCard(
-                            title = stringResource(R.string.amount_to_withdraw),
-                            hint = amountHint,
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = tokenAmountFieldState,
-                            onLostFocus = onTokenAmountLostFocus,
-                            error = state.tokenAmountError,
-                        )
+                        if (state.selectedSecuredAsset != Account.EMPTY) {
+                            FormSelection(
+                                selected = state.selectedSecuredAsset,
+                                options = state.availableSecuredAssets,
+                                onSelectOption = { onSelectSecureAsset(it) },
+                                mapTypeToString = { option ->
+                                    option.toString()
+                                }
+                            )
+                            FormTextFieldCard(
+                                title = stringResource(R.string.amount_to_withdraw),
+                                hint = amountHint,
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = tokenAmountFieldState,
+                                onLostFocus = onTokenAmountLostFocus,
+                                error = state.tokenAmountError,
+                            )
+                        }
                     }
                 }
             }

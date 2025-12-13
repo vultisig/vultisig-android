@@ -59,7 +59,6 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.ui.screens.deposit.DepositFormScreen
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_YTCY_AFFILIATE_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
@@ -69,7 +68,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.account
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -168,8 +166,8 @@ internal data class DepositFormUiModel(
     val isAutoCompoundTcyStake: Boolean = false,
     val isAutoCompoundTcyUnStake: Boolean = false,
 
-    val availableSecuredAssets: List<Chain> = listOf(),
-    val securedAssetWithdrawOptions: List<String> = listOf("Select Secured Asset to Withdraw") + availableSecuredAssets.map { it.ticker() }
+    val availableSecuredAssets:  List<Account> =  emptyList(),
+    val selectedSecuredAsset: Account =  availableSecuredAssets.firstOrNull()?: Account.EMPTY,
 )
 
 @HiltViewModel
@@ -351,11 +349,11 @@ internal class DepositFormViewModel @Inject constructor(
                 state.map { it.selectedToken }.distinctUntilChanged(),
             ) { selectedMergeToken, address, depositOption, selectedToken ->
 
-                var tickerToActivate: String?
+                var targetTicker: String?
 
                 val account = when (depositOption) {
                     DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge -> {
-                        tickerToActivate = selectedMergeToken.ticker
+                        targetTicker = selectedMergeToken.ticker
                         address.accounts.find {
                             it.token.ticker.equals(
                                 selectedMergeToken.ticker, ignoreCase = true
@@ -369,24 +367,18 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.RedeemYTCY, DepositOption.RedeemYRUNE,
                     DepositOption.Custom,
                         -> {
-                        tickerToActivate = selectedToken.ticker
+                        targetTicker = selectedToken.ticker
                         address.accounts.find { it.token.id == selectedToken.id }
-                    }
-                    DepositOption.SecuredAsset -> {
-
-                        val account = address.accounts.find { it.token.isNativeToken }
-                        tickerToActivate = account?.token?.ticker
-                        account
                     }
 
                     else -> {
                         val account = address.accounts.find { it.token.isNativeToken }
-                        tickerToActivate = account?.token?.ticker
+                        targetTicker = account?.token?.ticker
                         account
                     }
                 }
 
-                updateTokenAmount(account, chain, tickerToActivate, vaultId)
+                updateTokenAmount(account, chain, targetTicker, vaultId)
 
             }.collect {
                 setMetadataInfo()
@@ -461,7 +453,7 @@ internal class DepositFormViewModel @Inject constructor(
     private suspend fun updateTokenAmount(
         account: Account?,
         chain: Chain,
-        tickerToActivate: String?,
+        targerTicker: String?,
         vaultId: String,
     ) {
         if (account != null) {
@@ -475,7 +467,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }
         } else {
-            val token = findCoin(chain, tickerToActivate)
+            val token = findCoin(chain, targerTicker)
             token?.let {
                 enableCoin(vaultId, token)
                 loadAddress(vaultId, chain)
@@ -485,7 +477,7 @@ internal class DepositFormViewModel @Inject constructor(
                         balance = UiText.Empty,
                         amountError = UiText.FormattedText(
                             R.string.must_be_enabled_before_proceeding,
-                            listOf(tickerToActivate.orEmpty())
+                            listOf(targerTicker.orEmpty())
                         )
                     )
                 }
@@ -629,11 +621,17 @@ internal class DepositFormViewModel @Inject constructor(
                                     ignoreCase = true
                                 )
                             }
+
+                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                            .collect { addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                            }
+
                         if (inboundAddress != null && inboundAddress.halted.not() &&
                             inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
                         ) {
-                            val gaiaAddress = inboundAddress.address
-                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
+                            val inboundChainAddress = inboundAddress.address
+                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(inboundChainAddress)
                         }
                     } catch (e: Exception) {
                         Timber.e(e)
@@ -649,9 +647,17 @@ internal class DepositFormViewModel @Inject constructor(
                         ).catch {
                             Timber.e(it)
                         }.collect { address ->
-                            address.accounts.find { account ->
+                           var availableSecuredAssets= address.accounts.filter { account ->
                                 account.token.chain == Chain.ThorChain
                                         && account.token.isSecuredAsset()
+                            }
+                            if (!availableSecuredAssets.isNullOrEmpty()) {
+                                state.update {
+                                    it.copy(
+                                        availableSecuredAssets = availableSecuredAssets,
+                                        selectedSecuredAsset = availableSecuredAssets.first()
+                                    )
+                                }
                             }
                         }
                     }
@@ -2801,7 +2807,7 @@ internal class DepositFormViewModel @Inject constructor(
     fun onAutoCompoundTcyUnStake(isChecked: Boolean) {
         isAutoCompoundTcyUnStake = isChecked
     }
-    fun onSelectSecureAsset(asset: String){
+    fun onSelectSecureAsset(asset: Any){
 
     }
 

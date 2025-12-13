@@ -22,6 +22,20 @@ data class Coin(
     val coinType: CoinType
         get() = chain.coinType
 
+    companion object {
+        val EMPTY = Coin(
+            chain = Chain.ThorChain,
+            ticker = "",
+            logo = "",
+            address = "",
+            decimal = 0,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = false,
+        )
+    }
+
 }
 
 fun Coin.allowZeroGas(): Boolean {
@@ -31,5 +45,5 @@ fun Coin.getNotNativeTicker(): String {
     return this.ticker.uppercase().removePrefix("x/")
 }
 fun Coin.isSecuredAsset(): Boolean {
-    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && isNativeToken
+    return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && (isNativeToken || contractAddress== "${ticker.lowercase()}-${ticker.lowercase()}")
 }
