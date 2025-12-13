@@ -34,6 +34,9 @@ internal data class DepositTransactionUiModel(
     val dstAddress: String = "",
 
     val memo: String = "",
+
+    val operation: String = "",
+    val thorAddress: String = "",
 )
 internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
@@ -79,6 +82,8 @@ internal class VerifyDepositViewModel @Inject constructor(
                     networkFeeFiatValue = transaction.estimateFeesFiat,
                     networkFeeTokenValue = "",
                     memo = transaction.memo,
+                    operation = transaction.operation,
+                    thorAddress = transaction.thorAddress,
                 )
 
                 state.update {

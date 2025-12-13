@@ -172,7 +172,23 @@ internal fun VerifyDepositScreen(
                             title = stringResource(R.string.verify_transaction_to_title),
                             subtitle = tx.dstAddress
                         )
+                        VerifyCardDivider(0.dp)
                     }
+                    if (tx.thorAddress.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.thor_address),
+                            subtitle = tx.thorAddress
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
+                    if (tx.operation.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.operation),
+                            subtitle = tx.operation
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
+                    
 
                     if (tx.memo.isNotEmpty()) {
                         if (tx.dstAddress.isNotEmpty())
@@ -322,6 +338,8 @@ private fun VerifyDepositScreenPreview() {
                 networkFeeTokenValue = "0.02 RUNE",
                 srcAddress = "123abc456bca",
                 dstAddress = "123abc456bca",
+                thorAddress = "123abc456bca",
+                operation = "mint",
                 memo = "BOND:addressHere"
             ),
         ),

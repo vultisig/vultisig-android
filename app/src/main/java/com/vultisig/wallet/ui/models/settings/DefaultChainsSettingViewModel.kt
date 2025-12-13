@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,47 +60,12 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
 
     private fun DefaultChain.toDataModel() = Chain.entries.first { it.raw == title }
 
-    private fun Chain.toUiModel() = DefaultChain(title = raw, subtitle = ticker, logo = logo)
+    private fun Chain.toUiModel() = DefaultChain(
+        title = raw,
+        subtitle = ticker(),
+        logo = logo
+    )
 
     private fun List<Chain>.toUiModel() = map { it.toUiModel() }
-
-    internal val Chain.ticker: String
-        get() = when (this) {
-            Chain.ThorChain -> "RUNE"
-            Chain.Solana -> "SOL"
-            Chain.Ethereum -> "ETH"
-            Chain.Avalanche -> "AVAX"
-            Chain.Base -> "BASE"
-            Chain.Blast -> "BLAST"
-            Chain.Arbitrum -> "ARB"
-            Chain.Polygon -> "POL"
-            Chain.Optimism -> "OP"
-            Chain.BscChain -> "BNB"
-            Chain.Bitcoin -> "BTC"
-            Chain.BitcoinCash -> "BCH"
-            Chain.Litecoin -> "LTC"
-            Chain.Dogecoin -> "DOGE"
-            Chain.Dash -> "DASH"
-            Chain.GaiaChain -> "UATOM"
-            Chain.Kujira -> "KUJI"
-            Chain.MayaChain -> "CACAO"
-            Chain.CronosChain -> "CRO"
-            Chain.Polkadot -> "DOT"
-            Chain.Dydx -> "DYDX"
-            Chain.ZkSync -> "ZK"
-            Chain.Sui -> "SUI"
-            Chain.Ton -> "TON"
-            Chain.Osmosis -> "OSMO"
-            Chain.Terra -> "LUNA"
-            Chain.TerraClassic -> "LUNC"
-            Chain.Noble -> "USDC"
-            Chain.Ripple -> "XRP"
-            Chain.Akash -> "AKT"
-            Chain.Tron -> "TRX"
-            Chain.Zcash -> "ZEC"
-            Chain.Cardano -> "ADA"
-            Chain.Mantle -> "MNT"
-            Chain.Sei -> "SEI"
-            Chain.Hyperliquid -> "HYPE"
-        }
 }
+

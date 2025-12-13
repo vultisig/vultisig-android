@@ -39,6 +39,8 @@ internal class DepositTransactionUiModelMapperImpl @Inject constructor(
             networkFeeTokenValue = mapTokenValueToStringWithUnit(from.estimatedFees),
             memo = from.memo,
             dstAddress = from.dstAddress,
+            operation = from.operation,
+            thorAddress = from.thorAddress,
         )
     }
 }
