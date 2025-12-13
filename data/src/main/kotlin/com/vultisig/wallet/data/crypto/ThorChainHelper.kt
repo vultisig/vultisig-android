@@ -269,17 +269,15 @@ class ThorChainHelper(
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
-        val chainName = keysignPayload.coin.getChainName()
         val isSecured = keysignPayload.coin.isSecuredAsset()
+        val chainName = if (isSecured) {
+            keysignPayload.coin.ticker
+        } else
+            keysignPayload.coin.getChainName()
 
-        val coin = Cosmos.THORChainCoin.newBuilder()
+        val coin = Cosmos.THORChainCoin.newBuilder().setDecimals(0)
             .setAsset(
-                Cosmos.THORChainAsset.newBuilder()
-                    .setChain(chainName)
-                    .setSymbol(symbol)
-                    .setTicker(assetTicker)
-                    .setSecured(isSecured)
-                    .setSynth(false)
+                Cosmos.THORChainAsset.newBuilder().setSecured(true).setChain(chainName).setTicker(assetTicker).setSymbol(symbol).setSynth(false)
                     .build()
             )
             .let {

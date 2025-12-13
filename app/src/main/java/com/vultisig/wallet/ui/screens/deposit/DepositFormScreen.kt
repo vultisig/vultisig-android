@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
+import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
@@ -170,7 +171,7 @@ internal fun DepositFormScreen(
     onLoadRujiBalances: () -> Unit = {},
     onAutoCompoundTcyStake: (Boolean) -> Unit = {},
     onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
-    onSelectSecureAsset: (Any) -> Unit = {},
+    onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
 
     ) {
     val focusManager = LocalFocusManager.current
@@ -630,13 +631,16 @@ internal fun DepositFormScreen(
                             FormSelection(
                                 selected = state.selectedSecuredAsset,
                                 options = state.availableSecuredAssets,
-                                onSelectOption = { onSelectSecureAsset(it) },
+                                onSelectOption = onSelectSecureAsset,
                                 mapTypeToString = { option ->
-                                    option.toString()
+                                    option.ticker
                                 }
                             )
                             FormTextFieldCard(
-                                title = stringResource(R.string.amount_to_withdraw),
+                                title = stringResource(
+                                    R.string.amount_to_withdraw,
+                                    state.balance.asString()
+                                ),
                                 hint = amountHint,
                                 keyboardType = KeyboardType.Number,
                                 textFieldState = tokenAmountFieldState,

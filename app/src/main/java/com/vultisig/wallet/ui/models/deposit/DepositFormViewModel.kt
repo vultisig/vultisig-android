@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.getChain
 import com.vultisig.wallet.data.utils.getCoinBy
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
@@ -166,8 +167,8 @@ internal data class DepositFormUiModel(
     val isAutoCompoundTcyStake: Boolean = false,
     val isAutoCompoundTcyUnStake: Boolean = false,
 
-    val availableSecuredAssets:  List<Account> =  emptyList(),
-    val selectedSecuredAsset: Account =  availableSecuredAssets.firstOrNull()?: Account.EMPTY,
+    val availableSecuredAssets:  List<TokenWithdrawSecureAsset> =  emptyList(),
+    val selectedSecuredAsset: TokenWithdrawSecureAsset =  availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
 )
 
 @HiltViewModel
@@ -641,21 +642,37 @@ internal class DepositFormViewModel @Inject constructor(
 
                 DepositOption.WithdrawSecuredAsset ->{
                     viewModelScope.launch {
+                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                            .collect { addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                            }
+
                         accountsRepository.loadAddress(
                             vaultId = vaultId,
                             chain = Chain.ThorChain,
                         ).catch {
                             Timber.e(it)
                         }.collect { address ->
-                           var availableSecuredAssets= address.accounts.filter { account ->
-                                account.token.chain == Chain.ThorChain
-                                        && account.token.isSecuredAsset()
+                            val availableSecuredAssets = address.accounts.filter { account ->
+                                account.token.isSecuredAsset()
+                            }.map {
+                                TokenWithdrawSecureAsset(
+                                    ticker = it.token.ticker,
+                                    contract = it.token.contractAddress,
+                                    coin = it.token,
+                                    tokenValue = it.tokenValue
+                                )
                             }
-                            if (!availableSecuredAssets.isNullOrEmpty()) {
+                            if (availableSecuredAssets.isNotEmpty()) {
+                                val selectedSecuredAsset = availableSecuredAssets.first()
+                                val balance = selectedSecuredAsset.tokenValue?.let(
+                                    mapTokenValueToStringWithUnit
+                                )
                                 state.update {
                                     it.copy(
                                         availableSecuredAssets = availableSecuredAssets,
-                                        selectedSecuredAsset = availableSecuredAssets.first()
+                                        selectedSecuredAsset = selectedSecuredAsset,
+                                        balance = balance?.asUiText() ?: UiText.Empty,
                                     )
                                 }
                             }
@@ -1572,7 +1589,7 @@ internal class DepositFormViewModel @Inject constructor(
                 ),
                 selectedToken = selectedToken,
             )
-             gasFee = TokenValue(
+            gasFee = TokenValue(
                 value = fees.amount,
                 token = nativeCoin,
             )
@@ -1591,6 +1608,8 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
+
+
             return DepositTransaction(
                 id = UUID.randomUUID().toString(),
                 vaultId = vaultId,
@@ -1606,7 +1625,7 @@ internal class DepositFormViewModel @Inject constructor(
                 estimateFeesFiat = estimatedGasFee.formattedFiatValue,
                 blockChainSpecific = specific.blockChainSpecific,
                 thorAddress = thorAddress,
-                operation = "mint",
+                operation = "Mint",
 
                 )
         } catch (t: Throwable) {
@@ -1623,58 +1642,109 @@ internal class DepositFormViewModel @Inject constructor(
         val chain = chain ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
-        val address = accountsRepository.loadAddress(vaultId, chain)
+
+        val thorAddress = thorAddressFieldState.text.toString()
+
+        val selectedSecureAsset = state.value.selectedSecuredAsset
+
+
+
+        val dstAddr = accountsRepository.loadAddress(vaultId,selectedSecureAsset.ticker.getChain() )
             .firstOrNull() ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-        val srcAddress = selectedToken.address
 
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmountInt = BigInteger.ZERO
+        val selectedToken = selectedSecureAsset.coin
+
+        var gasFee = gasFeeRepository.getGasFee(chain, thorAddress)
+
+        val memo = "SECURE-:${dstAddr.address}"
+
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
+
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
 
 
-        accountsRepository.loadAddress(
-            vaultId = vaultId,
-            chain = chain,
-        ) .catch {
-            Timber.e(it)
-        }.collect {address ->
-            address.accounts.find {account -> account.token.chain== Chain.ThorChain
-                    && account.token.isSecuredAsset()}
-
-
-
-//
-//                    val coinTicker = coin.ticker.uppercase(Locale.getDefault())
-//                    coinTicker == ticker || coinTicker == "$ticker-$ticker"
-//
-
-
+        if ((selectedSecureAsset.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
         }
 
 
+        val vault = withContext(Dispatchers.IO) {
+            vaultRepository.get(vaultId)
+        } ?: error("Vault not found")
 
-        val memo = "secured-:sample"
+        val blockchainTransaction = Transfer(
+            coin = selectedToken,
+            vault = VaultData(
+                vaultHexChainCode = vault.hexChainCode,
+                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+            ),
+            amount = tokenAmountInt,
+            to = dstAddr.address,
+            memo = memo,
+            isMax = false,
+        )
+
+        val fees = withContext(Dispatchers.IO) {
+            feeServiceComposite.calculateFees(blockchainTransaction)
+        }
+        val nativeCoin = withContext(Dispatchers.IO) {
+            tokenRepository.getNativeToken(chain.id)
+        }
+        val fromGas = GasFeeParams(
+            gasLimit = BigInteger.ONE,
+            gasFee = TokenValue(
+                value = fees.amount,
+                token = nativeCoin,
+            ),
+            selectedToken = selectedToken,
+        )
+        gasFee = TokenValue(
+            value = fees.amount,
+            token = nativeCoin,
+        )
+       // log selected token ticker
+        selectedToken.ticker
 
         val specific = blockChainSpecificRepository
             .getSpecific(
                 chain,
-                srcAddress,
+                thorAddress,
                 selectedToken,
                 gasFee,
+                memo = memo,
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
+                tokenAmountValue = tokenAmountInt,
+
             )
 
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
+        val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
             vaultId = vaultId,
             srcToken = selectedToken,
-            srcAddress = srcAddress,
+            srcAddress = thorAddress,
             dstAddress = "",
             memo = memo,
             srcTokenValue = TokenValue(
@@ -1682,9 +1752,9 @@ internal class DepositFormViewModel @Inject constructor(
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            estimateFeesFiat = estimatedGasFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
-            operation = "withdraw"
+            operation = "Withdraw"
         )
     }
 
@@ -2807,8 +2877,15 @@ internal class DepositFormViewModel @Inject constructor(
     fun onAutoCompoundTcyUnStake(isChecked: Boolean) {
         isAutoCompoundTcyUnStake = isChecked
     }
-    fun onSelectSecureAsset(asset: Any){
 
+    fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
+        val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
+        state.update {
+            it.copy(
+                selectedSecuredAsset = asset,
+                balance = balance?.asUiText() ?: UiText.Empty
+            )
+        }
     }
 
 
@@ -2822,6 +2899,23 @@ internal data class TokenMergeInfo(
     val denom: String
         get() = "thor.$ticker".lowercase()
 
+}
+
+
+internal data class TokenWithdrawSecureAsset(
+    val ticker: String,
+    val contract: String,
+    val coin: Coin,
+    val tokenValue: TokenValue?,
+) {
+    companion object {
+        val EMPTY = TokenWithdrawSecureAsset(
+            ticker = "Select Asset",
+            contract = "",
+            coin = Coin.EMPTY,
+            tokenValue = null
+        )
+    }
 }
 
 private val tokensToMerge = listOf(
