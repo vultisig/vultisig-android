@@ -3,6 +3,9 @@
 package com.vultisig.wallet.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -46,8 +49,6 @@ import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.DeFiChainSelectionScreen
-import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
-import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.OnRampScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
@@ -112,6 +113,7 @@ import com.vultisig.wallet.ui.screens.swap.swapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
+import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.defi.DefiPositionsScreen
@@ -337,11 +339,15 @@ internal fun SetupNavGraph(
             JoinKeygenScreen()
         }
 
-        composable<Keygen.PeerDiscovery> {
+        composable<Keygen.PeerDiscovery>(
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             KeygenPeerDiscoveryScreen()
         }
 
-        composable<Keygen.Generating> {
+        composable<Keygen.Generating>(
+            enterTransition = { fadeIn(animationSpec = tween(300)) }
+        ) {
             KeygenScreen()
         }
 
