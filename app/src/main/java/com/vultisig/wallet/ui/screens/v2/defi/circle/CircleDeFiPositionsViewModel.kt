@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.CircleApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -103,18 +104,27 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                         )
                     )
                 }
-            }
+                val fetchedAddress = fetchAssociatedMscaAccount()
+                if (fetchedAddress != null) {
+                    val api = evmApi.createEvmApi(Chain.Ethereum)
+                    val usdc = Coins.Ethereum.USDC.copy(address = fetchedAddress)
+                    val usdcDepositedBalance = api.getBalance(usdc)
 
-            /*_state.update { currentState ->
-                currentState.copy(
-                    totalAmountPrice = "$5,432.10",
-                    isTotalAmountLoading = false,
-                    supportEditChains = true,
-                    circleDefi = currentState.circleDefi.copy(
-                        isLoading = false
-                    )
-                )
-            } */
+                    _state.update { currentState ->
+                        currentState.copy(
+                            totalAmountPrice = "$5,432.10",
+                            isTotalAmountLoading = false,
+                            supportEditChains = true,
+                            circleDefi = currentState.circleDefi.copy(
+                                isLoading = false,
+                                isAccountOpen = false,
+                                totalDeposit = ,
+                            )
+                        )
+                    }
+
+                }
+            }
         }
     }
 
@@ -209,6 +219,22 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         } else {
             Timber.e("CircleDeFiPositionsViewModel: Vault Null for $vaultId")
             error("CircleDeFiPositionsViewModel: Vault Null for $vaultId")
+        }
+    }
+
+    private suspend fun fetchAssociatedMscaAccount(): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val evmAddress = getEvmVaultAddress()
+                val mscaAddress = circleApi.getScAccount(evmAddress)
+                if (mscaAddress != null) {
+                    scaCircleAccountRepository.saveAccount(vaultId, mscaAddress)
+                }
+                mscaAddress
+            } catch (t: Throwable) {
+                Timber.e(t)
+                null
+            }
         }
     }
 }

@@ -18,7 +18,7 @@ import kotlin.uuid.Uuid
 interface CircleApi {
     suspend fun createScAccount(owner: String): String
 
-    suspend fun getScAccount(vaultOwnerAddress: String)
+    suspend fun getScAccount(vaultOwnerAddress: String): String?
 }
 
 internal class CircleApiImpl @Inject constructor(
@@ -37,14 +37,16 @@ internal class CircleApiImpl @Inject constructor(
         }.body<String>()
     }
 
-    override suspend fun getScAccount(vaultOwnerAddress: String) {
-        httpClient.get(CIRCLE_URL) {
+    override suspend fun getScAccount(vaultOwnerAddress: String): String? {
+        val response = httpClient.get(CIRCLE_URL) {
             header("Content-Type", "application/json")
             url {
                 appendPathSegments("/wallet")
             }
             parameter("refId", vaultOwnerAddress)
-        }.bodyOrThrow<Unit>()
+        }.bodyOrThrow<List<AccountMscaJsonResponse>>()
+
+        return response.firstOrNull()?.address
     }
 
     private companion object {
@@ -62,4 +64,14 @@ internal data class CreateWalletJson(
     val accountType: String = "SCA",
     @SerialName("idempotency_key")
     val key: String ="",
+)
+
+@Serializable
+data class AccountMscaJsonResponse(
+    val id: String,
+    val walletSetId: String,
+    val custodyType: String,
+    val name: String,
+    val address: String,
+    val refId: String,
 )
