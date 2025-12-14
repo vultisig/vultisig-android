@@ -174,21 +174,26 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onCreateAccount() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            val mscAddress = withContext(Dispatchers.IO) {
                 try {
                     val ethereumVaultAddress = getEvmVaultAddress()
-                    circleApi.createScAccount(ethereumVaultAddress)
-                    snackbarFlow.showMessage(
-                        StringResource(R.string.circle_msca_account_created_success).asString(
-                            context
-                        )
-                    )
+                    val mscaAddress = circleApi.createScAccount(ethereumVaultAddress)
+                    scaCircleAccountRepository.saveAccount(vaultId, mscaAddress)
+                    mscaAddress
                 } catch (t: Throwable) {
                     Timber.e(t)
-                    snackbarFlow.showMessage(
-                        StringResource(R.string.circle_msca_account_created_failed).asString(context)
-                    )
+                    null
                 }
+            }
+
+            if (mscAddress == null) {
+                snackbarFlow.showMessage(
+                    StringResource(R.string.circle_msca_account_created_failed).asString(context)
+                )
+            } else {
+                snackbarFlow.showMessage(
+                    StringResource(R.string.circle_msca_account_created_success).asString(context)
+                )
             }
         }
     }
