@@ -22,7 +22,7 @@ import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -97,7 +97,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val feeServiceComposite: FeeServiceComposite,
-    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCase,
     private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
@@ -145,7 +145,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val fees = withContext(Dispatchers.IO) {
                 feeServiceComposite.calculateFees(blockchainTransaction)
             }
-            val nativeCoin = withContext (Dispatchers.IO) {
+            val nativeCoin = withContext(Dispatchers.IO) {
                 tokenRepository.getNativeToken(chain.id)
             }
             val fromGas = GasFeeParams(
@@ -156,17 +156,23 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 ),
                 selectedToken = tx.token,
             )
-            val uiFeeModel = gasFeeToEstimate.invoke(fromGas)
+            val uiFeeModel = gasFeeToEstimate(fromGas)
             val updateTx = transactionUiModel.copy(
                 networkFeeTokenValue = uiFeeModel.formattedTokenValue,
                 networkFeeFiatValue = uiFeeModel.formattedFiatValue,
             )
 
             uiState.update {
-                it.copy(isLoadingFees = false, transaction = updateTx)
+                it.copy(
+                    isLoadingFees = false,
+                    transaction = updateTx
+                )
             }
         } catch (t: Throwable) {
-            Timber.e(t, "Error calculating fees")
+            Timber.e(
+                t,
+                "Error calculating fees"
+            )
 
             uiState.update {
                 it.copy(isLoadingFees = false)

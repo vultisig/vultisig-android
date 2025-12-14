@@ -18,6 +18,9 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -35,6 +38,7 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -119,7 +123,9 @@ sealed class JoinKeysignError(val message: UiText) {
 
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
-    data class FailedToStart(val exceptionMessage: String) : JoinKeysignError(UiText.DynamicString(exceptionMessage))
+    data class FailedToStart(val exceptionMessage: String) :
+        JoinKeysignError(UiText.DynamicString(exceptionMessage))
+
     data object FailedConnectToServer :
         JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
 
@@ -194,6 +200,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val fourByteRepository: FourByteRepository,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -664,7 +671,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     is SwapPayload.MayaChain -> {
                         val srcUsdFiatValue = convertTokenValueToFiat(
-                            srcToken, srcTokenValue, AppCurrency.USD,
+                            srcToken,
+                            srcTokenValue,
+                            AppCurrency.USD,
                         )
 
                         val isAffiliate =
@@ -680,7 +689,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
 
                         val estimatedFee =
-                            convertTokenValueToFiat(dstToken, quote.fees, currency)
+                            convertTokenValueToFiat(
+                                dstToken,
+                                quote.fees,
+                                currency
+                            )
                         val swapTransactionUiModel = SwapTransactionUiModel(
                             src = ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
@@ -766,7 +779,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         srcAddress = payload.coin.address,
                         dstAddress = payload.toAddress,
 
-                        networkFeeTokenValue  = mapTokenValueToStringWithUnit(estimatedTokenFees),
+                        networkFeeTokenValue = mapTokenValueToStringWithUnit(estimatedTokenFees),
                         networkFeeFiatValue = fiatValueToStringMapper(
                             convertTokenValueToFiat(
                                 feeCurrency,
@@ -793,8 +806,35 @@ internal class JoinKeysignViewModel @Inject constructor(
                         unit = payloadToken.ticker,
                         decimals = payloadToken.decimal,
                     )
-                    val isNativeToken = payload.coin.isNativeToken
-                    val gasFee = gasFeeRepository.getGasFee(chain = chain, address = address, isNativeToken = isNativeToken)
+
+                    val vault = withContext(Dispatchers.IO) {
+                        vaultRepository.get(vaultId)
+                    } ?: return
+
+                    val blockchainTransaction = Transfer(
+                        coin = payloadToken,
+                        vault = VaultData(
+                            vaultHexChainCode = vault.hexChainCode,
+                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                        ),
+                        amount = tokenValue.value,
+                        to = payload.toAddress,
+                        memo = payload.memo,
+                        isMax = false,
+                    )
+
+
+                    val fees = withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction)
+                    }
+                    val nativeCoin = withContext(Dispatchers.IO) {
+                        tokenRepository.getNativeToken(chain.id)
+                    }
+                    val gasFee = TokenValue(
+                        value = fees.amount,
+                        token = nativeCoin,
+                    )
+
                     val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = BigInteger.valueOf(1),
@@ -802,7 +842,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                             selectedToken = payload.coin,
                         )
                     )
-                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
+                    val functionInfo = getTransactionFunctionInfo(
+                        payload.memo,
+                        chain
+                    )
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
