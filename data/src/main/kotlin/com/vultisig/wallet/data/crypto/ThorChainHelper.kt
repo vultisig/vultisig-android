@@ -2,11 +2,15 @@ package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.getNotNativeTicker
+import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
@@ -24,11 +28,11 @@ import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
 import java.math.BigInteger
 
+
 @OptIn(ExperimentalStdlibApi::class)
 class ThorChainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
-    private val chainName: String,
     private val ticker: String,
     private val hrp: String?,
     private val networkId: String,
@@ -40,6 +44,15 @@ class ThorChainHelper(
         var THORCHAIN_NETWORK_ID: String = "thorchain-1"
 
         const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
+        val SECURE_ASSETS_TICKERS = listOf(
+            "BTC",
+            "ETH",
+            "BCH",
+            "LTC",
+            "DOGE",
+            "AVAX",
+            "BNB"
+        )
 
         fun maya(
             vaultHexPublicKey: String,
@@ -47,7 +60,6 @@ class ThorChainHelper(
         ) = ThorChainHelper(
             vaultHexPublicKey = vaultHexPublicKey,
             vaultHexChainCode = vaultHexChainCode,
-            chainName = "MAYA",
             ticker = "CACAO",
             hrp = "maya",
             networkId = "mayachain-mainnet-v1",
@@ -60,7 +72,6 @@ class ThorChainHelper(
         ) = ThorChainHelper(
             vaultHexPublicKey = vaultHexPublicKey,
             vaultHexChainCode = vaultHexChainCode,
-            chainName = "THOR",
             ticker = "RUNE",
             hrp = null,
             networkId = THORCHAIN_NETWORK_ID,
@@ -75,13 +86,10 @@ class ThorChainHelper(
         return if (coin.isNativeToken) {
             ticker
         } else {
-            if(coin.ticker.startsWith("x/",true)) {
-                coin.ticker.drop(2)
-            } else {
-                coin.ticker
-            }
+            coin.getNotNativeTicker()
         }
     }
+
     private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val tokenAddress = keysignPayload.coin.address
         val fromAddress = if (!hrp.isNullOrEmpty()) {
@@ -261,12 +269,19 @@ class ThorChainHelper(
     ): Cosmos.Message? {
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
-        val coin = Cosmos.THORChainCoin.newBuilder()
+        val isSecured = keysignPayload.coin.isSecuredAsset()
+        val chainName = if (isSecured && memo?.contains("SECURE-:") == true) {
+            keysignPayload.coin.ticker
+        } else
+            keysignPayload.coin.getChainName()
+
+        val coin = Cosmos.THORChainCoin.newBuilder().setDecimals(0)
             .setAsset(
                 Cosmos.THORChainAsset.newBuilder()
+                    .setSecured(isSecured)
                     .setChain(chainName)
-                    .setSymbol(symbol)
                     .setTicker(assetTicker)
+                    .setSymbol(symbol)
                     .setSynth(false)
                     .build()
             )
@@ -364,6 +379,24 @@ class ThorChainHelper(
             cosmosSig.transactionHash(),
         )
     }
+
+}
+
+fun Coin.getChainName(): String {
+    return when (this.chain) {
+        Chain.ThorChain -> {
+            "THOR"
+        }
+        Chain.MayaChain -> {
+            "MAYA"
+        }
+        Chain.BscChain -> {
+            "BSC"
+        }
+        else -> {
+            this.chain.ticker().uppercase()
+        }
+    }
 }
 
 private fun TransactionType.genericWasmMessage(): Boolean =
@@ -372,3 +405,4 @@ private fun TransactionType.genericWasmMessage(): Boolean =
 private fun TransactionType.mergeOrUnMerge(): Boolean =
     this == TransactionType.TRANSACTION_TYPE_THOR_MERGE ||
             this == TransactionType.TRANSACTION_TYPE_THOR_UNMERGE
+
