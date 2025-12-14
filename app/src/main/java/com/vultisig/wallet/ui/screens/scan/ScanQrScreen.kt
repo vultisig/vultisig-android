@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,8 +51,11 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.ScanQrUiModel
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
@@ -69,7 +74,9 @@ import kotlin.coroutines.suspendCoroutine
 internal fun ScanQrScreen(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
+    val uiModel by viewModel.uiState.collectAsState()
     ScanQrScreen(
+        uiModel = uiModel,
         onDismiss = viewModel::back,
         onScanSuccess = viewModel::process,
         onError = viewModel::handleError
@@ -81,6 +88,7 @@ internal fun ScanQrScreen(
 internal fun ScanQrScreen(
     onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
+    uiModel: ScanQrUiModel,
     onError: (String) -> Unit = {},
 ) {
     var isFrameHighlighted by remember { mutableStateOf(false) }
@@ -92,19 +100,23 @@ internal fun ScanQrScreen(
     var isScanned by remember { mutableStateOf(false) }
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
-        if (barcodes.isNotEmpty() && !isScanned) {
-            isScanned = true
-            val barcode = barcodes.first()
-            val barcodeValue = barcode.rawValue
-            Timber.d(
-                context.getString(
-                    R.string.successfully_scanned_barcode,
-                    barcodeValue
+        if (barcodes.isNotEmpty()) {
+            if (isScanned.not()) {
+                isScanned = true
+                val barcode = barcodes.first()
+                val barcodeValue = barcode.rawValue
+                Timber.d(
+                    context.getString(
+                        R.string.successfully_scanned_barcode,
+                        barcodeValue
+                    )
                 )
-            )
-            if (barcodeValue != null) {
-                onScanSuccess(barcodeValue)
+                if (barcodeValue != null) {
+                    onScanSuccess(barcodeValue)
+                }
             }
+        } else {
+            onError(context.getString(R.string.no_barcodes_found))
         }
     }
 
@@ -127,7 +139,7 @@ internal fun ScanQrScreen(
                         ),
                         onError
                     )
-                    val barcodes = if (result.isEmpty()) {
+                    val barcodes = result.ifEmpty {
                         val bitmap = requireNotNull(
                             uriToBitmap(
                                 context.contentResolver,
@@ -145,7 +157,7 @@ internal fun ScanQrScreen(
                         )
                         bitmap.recycle()
                         resultBarcodes
-                    } else result
+                    }
                     onSuccess(barcodes)
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -228,6 +240,16 @@ internal fun ScanQrScreen(
                     },
                     contentDescription = null,
                 )
+
+                AnimatedVisibility(uiModel.error != null) {
+                    Banner(
+                        text = uiModel.error.orEmpty(),
+                        variant = BannerVariant.Warning,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopStart)
+                    )
+                }
             } else if (cameraPermissionState.status.shouldShowRationale ||
                 cameraPermissionState.status.isGranted.not()
             ) {

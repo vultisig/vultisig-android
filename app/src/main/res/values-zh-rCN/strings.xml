@@ -633,6 +633,7 @@
     <string name="scan_qr_upload_from_gallery">上传二维码</string>
     
     <!-- Reshare Start -->
+    <string name="no_barcodes_found">未找到条形码</string>
     <string name="reshare_start_join_reshare_button">加入重新分享</string>
     
     <!-- Deposit Errors -->
