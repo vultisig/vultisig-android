@@ -42,7 +42,7 @@ fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Tron
 }
 fun Coin.getNotNativeTicker(): String {
-    return this.ticker.uppercase().removePrefix("x/")
+    return this.ticker.uppercase().removePrefix("X/")
 }
 fun Coin.isSecuredAsset(): Boolean {
     return SECURE_ASSETS_TICKERS.contains(ticker.uppercase()) && (isNativeToken || contractAddress== "${ticker.lowercase()}-${ticker.lowercase()}")

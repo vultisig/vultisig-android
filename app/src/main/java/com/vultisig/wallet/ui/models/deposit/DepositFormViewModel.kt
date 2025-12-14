@@ -296,8 +296,8 @@ internal class DepositFormViewModel @Inject constructor(
             )
             else ->
                 buildList {
-                    add(DepositOption.Stake)
-                    add(DepositOption.Unstake)
+//                    add(DepositOption.Stake)
+//                    add(DepositOption.Unstake)
                     if (chain.ticker() in SECURE_ASSETS_TICKERS)
                         add(DepositOption.SecuredAsset)
                 }
@@ -454,7 +454,7 @@ internal class DepositFormViewModel @Inject constructor(
     private suspend fun updateTokenAmount(
         account: Account?,
         chain: Chain,
-        targerTicker: String?,
+        targetTicker: String?,
         vaultId: String,
     ) {
         if (account != null) {
@@ -468,7 +468,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }
         } else {
-            val token = findCoin(chain, targerTicker)
+            val token = findCoin(chain, targetTicker)
             token?.let {
                 enableCoin(vaultId, token)
                 loadAddress(vaultId, chain)
@@ -478,7 +478,7 @@ internal class DepositFormViewModel @Inject constructor(
                         balance = UiText.Empty,
                         amountError = UiText.FormattedText(
                             R.string.must_be_enabled_before_proceeding,
-                            listOf(targerTicker.orEmpty())
+                            listOf(targetTicker.orEmpty())
                         )
                     )
                 }
@@ -643,9 +643,9 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.WithdrawSecuredAsset ->{
                     viewModelScope.launch {
                         accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                            .collect { addresses ->
-                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                            }
+                            .firstOrNull()
+                            ?.address
+                            ?.let(thorAddressFieldState::setTextAndPlaceCursorAtEnd)
 
                         accountsRepository.loadAddress(
                             vaultId = vaultId,
@@ -1633,7 +1633,9 @@ internal class DepositFormViewModel @Inject constructor(
                 t,
                 "Error calculating fees"
             )
-            error("Error calculating fees")
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.`dialog_default_error_body`)
+            )
 
         }
     }
@@ -1644,10 +1646,13 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val thorAddress = thorAddressFieldState.text.toString()
+        if (thorAddress.isBlank()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        }
 
         val selectedSecureAsset = state.value.selectedSecuredAsset
-
-
 
         val dstAddr = accountsRepository.loadAddress(vaultId,selectedSecureAsset.ticker.getChain() )
             .firstOrNull() ?: throw InvalidTransactionDataException(
@@ -1656,13 +1661,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val selectedToken = selectedSecureAsset.coin
 
-        var gasFee = gasFeeRepository.getGasFee(chain, thorAddress)
-
         val memo = "SECURE-:${dstAddr.address}"
-
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
 
         val tokenAmount = tokenAmountFieldState.text
             .toString()
@@ -1717,12 +1716,10 @@ internal class DepositFormViewModel @Inject constructor(
             ),
             selectedToken = selectedToken,
         )
-        gasFee = TokenValue(
+        val gasFee = TokenValue(
             value = fees.amount,
             token = nativeCoin,
         )
-       // log selected token ticker
-        selectedToken.ticker
 
         val specific = blockChainSpecificRepository
             .getSpecific(

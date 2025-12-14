@@ -1,8 +1,5 @@
 package com.vultisig.wallet.ui.utils
 
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coins
-
 internal fun String.getAddressFromQrCode(): String {
     val removedSlashPrefix = if (contains("/")) {
         substringAfterLast("/")

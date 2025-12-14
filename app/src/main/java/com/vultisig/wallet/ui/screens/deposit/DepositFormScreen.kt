@@ -627,7 +627,9 @@ internal fun DepositFormScreen(
 
                     }
                     if (depositOption == DepositOption.WithdrawSecuredAsset) {
-                        if (state.selectedSecuredAsset != Account.EMPTY) {
+                        if (state.availableSecuredAssets.isNotEmpty() &&
+                            state.selectedSecuredAsset != TokenWithdrawSecureAsset.EMPTY
+                        ) {
                             FormSelection(
                                 selected = state.selectedSecuredAsset,
                                 options = state.availableSecuredAssets,
