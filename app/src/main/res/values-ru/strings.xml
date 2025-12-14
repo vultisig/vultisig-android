@@ -976,7 +976,7 @@
     <string name="bond_button_label">Привязать</string>
     <string name="bond_operator_fees_basis_point">Комиссии оператора (Базисные пункты)</string>
     <string name="bond_provider_optional">Провайдер (Необязательно)</string>
-    <string name="deposit_option_withdraw_secured">Вывод залогового актива</string>
+    <string name="deposit_option_withdraw_secured">Вывод обеспеченного актива</string>
     <string name="deposit_option_secured_assets">Залоговые активы</string>
     <string name="address_auto_filled">Адрес %1$s (заполняется автоматически)</string>
     <string name="generated_memo">Сгенерированное примечание:</string>

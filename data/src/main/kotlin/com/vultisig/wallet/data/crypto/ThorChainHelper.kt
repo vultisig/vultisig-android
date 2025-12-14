@@ -270,7 +270,7 @@ class ThorChainHelper(
         val symbol = getTicker(keysignPayload.coin)
         val assetTicker = getTicker(keysignPayload.coin)
         val isSecured = keysignPayload.coin.isSecuredAsset()
-        val chainName = if (isSecured) {
+        val chainName = if (isSecured && memo?.contains("SECURE-:") == true) {
             keysignPayload.coin.ticker
         } else
             keysignPayload.coin.getChainName()

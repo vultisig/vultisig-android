@@ -381,6 +381,10 @@ internal class DepositFormViewModel @Inject constructor(
 
                 updateTokenAmount(account, chain, targetTicker, vaultId)
 
+                if (depositOption == DepositOption.SecuredAsset) {
+                    collectSecuredAssetAddresses()
+                }
+
             }.collect {
                 setMetadataInfo()
             }
@@ -612,34 +616,6 @@ internal class DepositFormViewModel @Inject constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.SecuredAsset -> {
-                    try {
-                        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                        val inboundAddress = inboundAddresses
-                            .firstOrNull {
-                                it.chain.equals(
-                                    state.value.selectedToken.chain.ticker(),
-                                    ignoreCase = true
-                                )
-                            }
-
-                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                            .collect { addresses ->
-                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                            }
-
-                        if (inboundAddress != null && inboundAddress.halted.not() &&
-                            inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
-                        ) {
-                            val inboundChainAddress = inboundAddress.address
-                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(inboundChainAddress)
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                    }
-
-                }
-
                 DepositOption.WithdrawSecuredAsset ->{
                     viewModelScope.launch {
                         accountsRepository.loadAddress(vaultId, Chain.ThorChain)
@@ -689,6 +665,31 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
 
+    }
+
+    private fun collectSecuredAssetAddresses() {
+        viewModelScope.launch {
+            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+            val inboundAddress = inboundAddresses
+                .firstOrNull {
+                    it.chain.equals(
+                        state.value.selectedToken.chain.ticker(),
+                        ignoreCase = true
+                    )
+                }
+
+            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                .collect { addresses ->
+                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                }
+
+            if (inboundAddress != null && inboundAddress.halted.not() &&
+                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+            ) {
+                val inboundChainAddress = inboundAddress.address
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(inboundChainAddress)
+            }
+        }
     }
 
     private suspend fun handleRemoveCacaoOption() {
@@ -1536,27 +1537,27 @@ internal class DepositFormViewModel @Inject constructor(
             val dstAddr = nodeAddressFieldState.text.toString()
 
             val srcAddress = selectedToken.address
+
             val address = address.value ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
-
             val memo = "SECURE+:$thorAddress"
-            var gasFee =  gasFeeRepository.getGasFee(
-                chain = chain,
-                address = srcAddress,
-                isNativeToken = selectedToken.isNativeToken,
-                to = dstAddr,
-                memo = memo,
-            )
 
 
-            val tokenAmount =
-                requireTokenAmount(
-                    selectedToken,
-                    selectedAccount,
-                    address,
-                    gasFee
+            val tokenAmount = tokenAmountFieldState.text
+                .toString()
+                .toBigDecimalOrNull()
+
+            if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_amount)
                 )
+            }
+
+            val tokenAmountInt =
+                tokenAmount
+                    .movePointRight(selectedToken.decimal)
+                    .toBigInteger()
 
 
             val vault = withContext(Dispatchers.IO) {
@@ -1569,7 +1570,7 @@ internal class DepositFormViewModel @Inject constructor(
                     vaultHexChainCode = vault.hexChainCode,
                     vaultHexPublicKey = vault.getPubKeyByChain(chain),
                 ),
-                amount = tokenAmount,
+                amount = tokenAmountInt,
                 to = dstAddr,
                 memo = memo,
                 isMax = false,
@@ -1589,7 +1590,7 @@ internal class DepositFormViewModel @Inject constructor(
                 ),
                 selectedToken = selectedToken,
             )
-            gasFee = TokenValue(
+            val gasFee = TokenValue(
                 value = fees.amount,
                 token = nativeCoin,
             )
@@ -1602,13 +1603,12 @@ internal class DepositFormViewModel @Inject constructor(
                     gasFee,
                     memo = memo,
                     isSwap = false,
+                    dstAddress = address.address,
                     isMaxAmountEnabled = false,
                     isDeposit = true,
-                    tokenAmountValue = tokenAmount
+                    tokenAmountValue = tokenAmountInt
                 )
             val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
-
-
 
             return DepositTransaction(
                 id = UUID.randomUUID().toString(),
@@ -1618,7 +1618,7 @@ internal class DepositFormViewModel @Inject constructor(
                 dstAddress = dstAddr,
                 memo = memo,
                 srcTokenValue = TokenValue(
-                    value = tokenAmount,
+                    value = tokenAmountInt,
                     token = selectedToken,
                 ),
                 estimatedFees = gasFee,
