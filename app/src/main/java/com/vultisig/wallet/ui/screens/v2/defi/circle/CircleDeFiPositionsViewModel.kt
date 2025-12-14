@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.defi.circle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
+    private val scaCircleAccountRepository: ScaCircleAccountRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -39,6 +41,15 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     private fun loadCirclePositions() {
         viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(
+                )
+            }
+            // Check if account exits or not
+
+
+
+
             _state.update { currentState ->
                 currentState.copy(
                     totalAmountPrice = "$5,432.10",
@@ -85,6 +96,12 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     fun onBackClick() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun onClickCloseWarning() {
+        viewModelScope.launch {
+
         }
     }
 }

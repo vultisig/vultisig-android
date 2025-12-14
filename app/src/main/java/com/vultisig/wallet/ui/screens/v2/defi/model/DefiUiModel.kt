@@ -19,6 +19,7 @@ data class DefiUiModel(
     data class CircleDeFi(
         val isLoading: Boolean = false,
         val isAccountOpen: Boolean = false,
+        val closeWarning: Boolean = false,
         val totalDeposit: String = "0 USDC",
         val totalDepositCurrency: String = "$0",
     )

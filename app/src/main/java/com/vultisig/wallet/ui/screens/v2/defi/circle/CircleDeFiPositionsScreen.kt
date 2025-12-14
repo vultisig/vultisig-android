@@ -26,6 +26,7 @@ internal fun CircleDeFiPositionsScreen(
         tabs = listOf(DeFiTab.DEPOSITED.displayName),
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
+        onClickCloseWarning = viewModel::onClickCloseWarning,
     )
 }
 
@@ -36,6 +37,7 @@ internal fun CircleDefiPositionScreenContent(
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit = {},
     onEditChains: () -> Unit = {},
+    onClickCloseWarning: () -> Unit = {},
 ) {
     BaseDeFiPositionsScreenContent(
         state = state,
@@ -48,9 +50,8 @@ internal fun CircleDefiPositionScreenContent(
             CircleContentDepositTab(
                 state = state.circleDefi,
                 isBalanceVisible = state.isBalanceVisible,
-                onClickAction = {
-                    // TODO: Navigate to form
-                }
+                onClickAction = { },
+                onClickCloseWarning = { },
             )
         }
     )
@@ -61,6 +62,7 @@ private fun CircleContentDepositTab(
     state: DefiUiModel.CircleDeFi,
     isBalanceVisible: Boolean,
     onClickAction: () -> Unit,
+    onClickCloseWarning: () -> Unit,
 ) {
     Text(
         text = stringResource(R.string.circle_defi_description),
@@ -69,7 +71,8 @@ private fun CircleContentDepositTab(
     )
 
     DeFiWarningBanner(
-        text = stringResource(R.string.circle_defi_control_info)
+        text = stringResource(R.string.circle_defi_control_info),
+        onClickClose = onClickCloseWarning,
     )
 
     HeaderDeFiWidget(
