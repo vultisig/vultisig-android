@@ -362,6 +362,7 @@
     <string name="naming_vault_placeholder_secure_vault">Bóveda segura</string>
     <string name="import_file_password_hint_text">Pista: %s</string>
     <string name="scan_qr_upload_from_gallery">Subir desde la\n galería</string>
+    <string name="no_barcodes_found">No se encontraron códigos de barras.</string>
     <string name="reshare_start_join_reshare_button">Únase a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Las unidades LP no son válidas</string>
     <string name="deposit_error_invalid_assets">Los activos no son válidos</string>

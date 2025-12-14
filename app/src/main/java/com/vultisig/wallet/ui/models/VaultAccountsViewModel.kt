@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 internal data class VaultAccountsUiModel(
@@ -72,6 +73,7 @@ internal data class VaultAccountsUiModel(
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
+    val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
     val noChainFound: Boolean
@@ -556,6 +558,22 @@ internal class VaultAccountsViewModel @Inject constructor(
 
         if (type == CryptoConnectionType.Defi) {
             loadDeFiBalances(vaultId, true)
+        }
+    }
+
+    fun handleScanQrError(error: String) {
+        viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    scanQrUiModel = ScanQrUiModel(error = error)
+                )
+            }
+            delay(2.seconds)
+            uiState.update {
+                it.copy(
+                    scanQrUiModel = ScanQrUiModel(error = null)
+                )
+            }
         }
     }
 
