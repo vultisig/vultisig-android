@@ -51,7 +51,7 @@ internal fun CircleDefiPositionScreenContent(
                 state = state.circleDefi,
                 isBalanceVisible = state.isBalanceVisible,
                 onClickAction = { },
-                onClickCloseWarning = { },
+                onClickCloseWarning = onClickCloseWarning,
             )
         }
     )
@@ -70,10 +70,12 @@ private fun CircleContentDepositTab(
         color = Theme.v2.colors.text.light,
     )
 
-    DeFiWarningBanner(
-        text = stringResource(R.string.circle_defi_control_info),
-        onClickClose = onClickCloseWarning,
-    )
+    if (!state.closeWarning) {
+        DeFiWarningBanner(
+            text = stringResource(R.string.circle_defi_control_info),
+            onClickClose = onClickCloseWarning,
+        )
+    }
 
     HeaderDeFiWidget(
         title = stringResource(R.string.usdc_deposit_title),

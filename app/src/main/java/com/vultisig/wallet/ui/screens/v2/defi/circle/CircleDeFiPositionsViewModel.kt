@@ -58,10 +58,21 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 )
             }
 
+            val hideWarning = withContext(Dispatchers.IO){
+                scaCircleAccountRepository.getCloseWarning()
+            }
+
+            _state.update { currentState ->
+                currentState.copy(
+                    circleDefi = currentState.circleDefi.copy(
+                        closeWarning = hideWarning
+                    )
+                )
+            }
+
             val addressSca = withContext(Dispatchers.IO){
                 scaCircleAccountRepository.getAccount(vaultId)
             }
-
 
             _state.update { currentState ->
                 currentState.copy(
@@ -117,7 +128,16 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onClickCloseWarning() {
         viewModelScope.launch {
-
+            withContext(Dispatchers.IO) {
+                scaCircleAccountRepository.saveCloseWarning()
+            }
+            _state.update { currentState ->
+                currentState.copy(
+                    circleDefi = currentState.circleDefi.copy(
+                        closeWarning = true,
+                    )
+                )
+            }
         }
     }
 }
