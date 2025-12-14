@@ -1,30 +1,9 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
-import androidx.camera.core.resolutionselector.ResolutionStrategy
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.util.Size
-import android.view.MotionEvent
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.FocusMeteringAction
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.core.content.ContextCompat
 import androidx.navigation.toRoute
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.data.common.JOIN_SEND_ON_ADDRESS_FLOW
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -32,14 +11,18 @@ import com.vultisig.wallet.data.usecases.GetFlowTypeUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.scan.createScanner
-import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import java.util.concurrent.Executor
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+
+data class ScanQrUiModel(
+    val error: String? = null
+)
 
 @HiltViewModel
 internal class ScanQrViewModel @Inject constructor(
@@ -48,10 +31,9 @@ internal class ScanQrViewModel @Inject constructor(
     private val getFlowTypeUseCase: GetFlowTypeUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val requestResultRepository: RequestResultRepository,
-    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
 
-
+    val uiState = MutableStateFlow(ScanQrUiModel())
     private val args = savedStateHandle.toRoute<Route.ScanQr>()
 
     fun process(qr: String) {
@@ -91,7 +73,17 @@ internal class ScanQrViewModel @Inject constructor(
 
     fun handleError(error: String) {
         viewModelScope.launch {
-            snackbarFlow.showMessage(error)
+            uiState.update {
+                it.copy(
+                    error = error
+                )
+            }
+            delay(2.seconds)
+            uiState.update {
+                it.copy(
+                    error = null
+                )
+            }
         }
     }
 
