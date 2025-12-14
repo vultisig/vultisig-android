@@ -227,7 +227,7 @@ internal fun HomePage(
                 ) {
                     item {
                         AnimatedVisibility(
-                            visible = state.isBannerVisible,
+                            visible = state.isBannerVisible && state.cryptoConnectionType== CryptoConnectionType.Wallet,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
