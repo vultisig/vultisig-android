@@ -643,9 +643,9 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.WithdrawSecuredAsset ->{
                     viewModelScope.launch {
                         accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                            .firstOrNull()
-                            ?.address
-                            ?.let(thorAddressFieldState::setTextAndPlaceCursorAtEnd)
+                            .collect { addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                            }
 
                         accountsRepository.loadAddress(
                             vaultId = vaultId,
@@ -1648,7 +1648,7 @@ internal class DepositFormViewModel @Inject constructor(
         val thorAddress = thorAddressFieldState.text.toString()
         if (thorAddress.isBlank()) {
             throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
+                UiText.StringResource(R.string.thorchain_address_not_found_in_vault)
             )
         }
 
@@ -1658,6 +1658,12 @@ internal class DepositFormViewModel @Inject constructor(
             .firstOrNull() ?: throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_no_address)
         )
+
+        if (dstAddr.address.isBlank()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        }
 
         val selectedToken = selectedSecureAsset.coin
 

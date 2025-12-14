@@ -277,7 +277,12 @@ class ThorChainHelper(
 
         val coin = Cosmos.THORChainCoin.newBuilder().setDecimals(0)
             .setAsset(
-                Cosmos.THORChainAsset.newBuilder().setSecured(true).setChain(chainName).setTicker(assetTicker).setSymbol(symbol).setSynth(false)
+                Cosmos.THORChainAsset.newBuilder()
+                    .setSecured(isSecured)
+                    .setChain(chainName)
+                    .setTicker(assetTicker)
+                    .setSymbol(symbol)
+                    .setSynth(false)
                     .build()
             )
             .let {

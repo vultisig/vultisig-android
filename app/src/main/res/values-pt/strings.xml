@@ -974,5 +974,5 @@
     <string name="thor_address">Endereço THORChain</string>
     <string name="operation">Operação</string>
     <string name="thorchain_address_not_found_in_vault">Endereço THORChain não encontrado no cofre. Certifique-se de que tem RUNE no seu cofre.</string>
-    <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo protegido e não pode ser processado.</string>
+    <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo garantido e não pode ser processado.</string>
 </resources>

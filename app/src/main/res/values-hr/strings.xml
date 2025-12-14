@@ -973,7 +973,7 @@
     <string name="amount_to_withdraw">Iznos za isplatu (Stanje: %1$s)</string>
     <string name="mint_secured_asset_secure">Osigurana imovina Mint (SECURE+)</string>
     <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
-    <string name="thor_address">Thorova adresa</string>
+    <string name="thor_address">THORChain adresa</string>
     <string name="operation">Operacija</string>
     <string name="thorchain_address_not_found_in_vault">THORChain adresa nije pronađena u trezoru. Molimo provjerite imate li RUNE u svom trezoru.</string>
     <string name="deposit_error_not_secured_asset">Odabrana imovina nije osigurana imovina i ne može se obraditi.</string>
