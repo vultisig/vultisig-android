@@ -966,4 +966,16 @@
     <string name="bond_button_label">Vezati</string>
     <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
     <string name="bond_provider_optional">Pružatelj (Neobavezno)</string>
+    <string name="deposit_option_withdraw_secured">Povlačenje osigurane imovine</string>
+    <string name="deposit_option_secured_assets">Osigurana imovina</string>
+    <string name="address_auto_filled">%1$s Adresa (automatski popunjeno)</string>
+    <string name="generated_memo">Generirani dopis:</string>
+    <string name="select_secured_asset_to_withdraw">Odaberite osiguranu imovinu za isplatu</string>
+    <string name="amount_to_withdraw">Iznos za isplatu (Stanje: %1$s)</string>
+    <string name="mint_secured_asset_secure">Osigurana imovina Mint (SECURE+)</string>
+    <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
+    <string name="thor_address">THORChain adresa</string>
+    <string name="operation">Operacija</string>
+    <string name="thorchain_address_not_found_in_vault">THORChain adresa nije pronađena u trezoru. Molimo provjerite imate li RUNE u svom trezoru.</string>
+    <string name="deposit_error_not_secured_asset">Odabrana imovina nije osigurana imovina i ne može se obraditi.</string>
 </resources>

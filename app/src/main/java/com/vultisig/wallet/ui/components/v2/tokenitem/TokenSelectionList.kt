@@ -144,7 +144,7 @@ internal fun <T> TokenSelectionList(
                 size = 24.dp
             )
 
-            if (groups.isEmpty()) {
+            if (groups.isEmpty() || (groups.size == 1 && groups[0].items.isEmpty())) {
                 notFoundContent()
             } else
                 LazyVerticalGrid(
