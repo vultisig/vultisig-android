@@ -240,6 +240,7 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
+    private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
@@ -687,7 +688,7 @@ internal class DepositFormViewModel @Inject constructor(
                 inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
             ) {
                 val inboundChainAddress = inboundAddress.address
-                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(inboundChainAddress)
+                secureAssetNodeValue.value = inboundChainAddress
             }
         }
     }
@@ -1513,131 +1514,119 @@ internal class DepositFormViewModel @Inject constructor(
 
 
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
-        try {
-            val chain = chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-            val thorAddress = thorAddressFieldState.text.toString()
-
-
-            val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-            val selectedToken = selectedAccount.token
+        val thorAddress = thorAddressFieldState.text.toString()
 
-            if (!selectedAccount.token.isSecuredAsset()) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.deposit_error_not_secured_asset)
-                )
-            }
+        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
 
-            val dstAddr = nodeAddressFieldState.text.toString()
+        val selectedToken = selectedAccount.token
 
-            val srcAddress = selectedToken.address
+        if (!selectedAccount.token.isSecuredAsset()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_not_secured_asset)
+            )
+        }
 
-            val address = address.value ?: throw InvalidTransactionDataException(
+        val srcAddress = selectedToken.address
+
+        val dstAddr = secureAssetNodeValue.value
+        if (dstAddr.isNullOrBlank()) {
+            throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
-            val memo = "SECURE+:$thorAddress"
+        }
+        val memo = "SECURE+:$thorAddress"
 
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
 
-            val tokenAmount = tokenAmountFieldState.text
-                .toString()
-                .toBigDecimalOrNull()
-
-            if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_amount)
-                )
-            }
-
-            val tokenAmountInt =
-                tokenAmount
-                    .movePointRight(selectedToken.decimal)
-                    .toBigInteger()
-
-
-            val vault = withContext(Dispatchers.IO) {
-                vaultRepository.get(vaultId)
-            } ?: error("Vault not found")
-
-            val blockchainTransaction = Transfer(
-                coin = selectedToken,
-                vault = VaultData(
-                    vaultHexChainCode = vault.hexChainCode,
-                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                ),
-                amount = tokenAmountInt,
-                to = dstAddr,
-                memo = memo,
-                isMax = false,
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
             )
+        }
 
-            val fees = withContext(Dispatchers.IO) {
-                feeServiceComposite.calculateFees(blockchainTransaction)
-            }
-            val nativeCoin = withContext(Dispatchers.IO) {
-                tokenRepository.getNativeToken(chain.id)
-            }
-            val fromGas = GasFeeParams(
-                gasLimit = BigInteger.ONE,
-                gasFee = TokenValue(
-                    value = fees.amount,
-                    token = nativeCoin,
-                ),
-                selectedToken = selectedToken,
-            )
-            val gasFee = TokenValue(
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+
+
+        val vault = withContext(Dispatchers.IO) {
+            vaultRepository.get(vaultId)
+        } ?: error("Vault not found")
+
+        val blockchainTransaction = Transfer(
+            coin = selectedToken,
+            vault = VaultData(
+                vaultHexChainCode = vault.hexChainCode,
+                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+            ),
+            amount = tokenAmountInt,
+            to = dstAddr,
+            memo = memo,
+            isMax = false,
+        )
+
+        val fees = withContext(Dispatchers.IO) {
+            feeServiceComposite.calculateFees(blockchainTransaction)
+        }
+        val nativeCoin = withContext(Dispatchers.IO) {
+            tokenRepository.getNativeToken(chain.id)
+        }
+        val fromGas = GasFeeParams(
+            gasLimit = BigInteger.ONE,
+            gasFee = TokenValue(
                 value = fees.amount,
                 token = nativeCoin,
-            )
+            ),
+            selectedToken = selectedToken,
+        )
+        val gasFee = TokenValue(
+            value = fees.amount,
+            token = nativeCoin,
+        )
 
-            val specific = blockChainSpecificRepository
-                .getSpecific(
-                    chain,
-                    srcAddress,
-                    selectedToken,
-                    gasFee,
-                    memo = memo,
-                    isSwap = false,
-                    dstAddress = address.address,
-                    isMaxAmountEnabled = false,
-                    isDeposit = true,
-                    tokenAmountValue = tokenAmountInt
-                )
-            val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
-
-            return DepositTransaction(
-                id = UUID.randomUUID().toString(),
-                vaultId = vaultId,
-                srcToken = selectedToken,
-                srcAddress = srcAddress,
-                dstAddress = dstAddr,
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
                 memo = memo,
-                srcTokenValue = TokenValue(
-                    value = tokenAmountInt,
-                    token = selectedToken,
-                ),
-                estimatedFees = gasFee,
-                estimateFeesFiat = estimatedGasFee.formattedFiatValue,
-                blockChainSpecific = specific.blockChainSpecific,
-                thorAddress = thorAddress,
-                operation = "Mint",
-
-                )
-        } catch (t: Throwable) {
-            Timber.e(
-                t,
-                "Error calculating fees"
+                isSwap = false,
+                dstAddress = dstAddr,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                tokenAmountValue = tokenAmountInt
             )
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.`dialog_default_error_body`)
-            )
+        val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
-        }
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = dstAddr,
+            memo = memo,
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            estimateFeesFiat = estimatedGasFee.formattedFiatValue,
+            blockChainSpecific = specific.blockChainSpecific,
+            thorAddress = thorAddress,
+            operation = "Mint",
+
+            )
     }
 
     private suspend fun createWithdrawSecuredAssetTransaction(): DepositTransaction {
@@ -1738,8 +1727,7 @@ internal class DepositFormViewModel @Inject constructor(
                 isMaxAmountEnabled = false,
                 isDeposit = true,
                 tokenAmountValue = tokenAmountInt,
-
-            )
+                )
 
         val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
