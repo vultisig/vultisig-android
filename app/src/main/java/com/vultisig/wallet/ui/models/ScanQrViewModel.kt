@@ -32,13 +32,10 @@ import com.vultisig.wallet.data.usecases.GetFlowTypeUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.scan.createScanner
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import java.util.concurrent.Executor
 import javax.inject.Inject
 
 @HiltViewModel

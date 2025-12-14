@@ -1030,4 +1030,8 @@
     <string name="bond_operator_fees_basis_point">Operator-fees (Basis Points)</string>
     <string name="bond_provider_optional">Provider (Optional)</string>
 
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA account successfully created</string>
+    <string name="circle_msca_account_created_failed">Failed to create Circle MSCA account. Please try again.</string>
+
 </resources>

@@ -968,4 +968,8 @@
     <string name="bond_button_label">Vincular</string>
     <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
     <string name="bond_provider_optional">Fornecedor (Opcional)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Conta Circle MSCA criada com sucesso</string>
+    <string name="circle_msca_account_created_failed">Falha ao criar conta Circle MSCA. Por favor, tente novamente.</string>
 </resources>

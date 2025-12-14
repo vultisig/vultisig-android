@@ -970,4 +970,8 @@
     <string name="bond_button_label">Vezati</string>
     <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
     <string name="bond_provider_optional">Pružatelj (Neobavezno)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA račun uspješno stvoren</string>
+    <string name="circle_msca_account_created_failed">Neuspješno stvaranje Circle MSCA računa. Molimo pokušajte ponovno.</string>
 </resources>

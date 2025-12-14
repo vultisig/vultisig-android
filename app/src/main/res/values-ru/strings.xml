@@ -981,4 +981,8 @@
     <string name="bond_button_label">Привязать</string>
     <string name="bond_operator_fees_basis_point">Комиссии оператора (Базисные пункты)</string>
     <string name="bond_provider_optional">Провайдер (Необязательно)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Учетная запись Circle MSCA успешно создана</string>
+    <string name="circle_msca_account_created_failed">Не удалось создать учетную запись Circle MSCA. Пожалуйста, попробуйте еще раз.</string>
 </resources>

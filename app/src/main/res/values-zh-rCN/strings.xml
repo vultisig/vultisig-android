@@ -1376,4 +1376,8 @@
     <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
     <string name="bond_provider_optional">提供商（可选）</string>
 
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
+    <string name="circle_msca_account_created_failed">创建 Circle MSCA 账户失败。请重试。</string>
+
 </resources>

@@ -27,6 +27,8 @@ internal fun CircleDeFiPositionsScreen(
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
         onClickCloseWarning = viewModel::onClickCloseWarning,
+        onDepositAccount = { },
+        onCreateAccount = viewModel::onCreateAccount,
     )
 }
 
@@ -38,6 +40,8 @@ internal fun CircleDefiPositionScreenContent(
     onTabSelected: (String) -> Unit = {},
     onEditChains: () -> Unit = {},
     onClickCloseWarning: () -> Unit = {},
+    onCreateAccount: () -> Unit = {},
+    onDepositAccount: () -> Unit = {},
 ) {
     BaseDeFiPositionsScreenContent(
         state = state,
@@ -50,7 +54,13 @@ internal fun CircleDefiPositionScreenContent(
             CircleContentDepositTab(
                 state = state.circleDefi,
                 isBalanceVisible = state.isBalanceVisible,
-                onClickAction = { },
+                onClickAction = {
+                    if (state.circleDefi.isAccountOpen) {
+                        onDepositAccount()
+                    } else {
+                        onCreateAccount()
+                    }
+                },
                 onClickCloseWarning = onClickCloseWarning,
             )
         }

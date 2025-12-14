@@ -162,4 +162,9 @@ internal interface ApiModule {
         impl: KyberApiImpl,
     ): KyberApi
 
+    @Binds
+    @Singleton
+    fun circleApi(
+        impl: CircleApiImpl,
+    ): CircleApi
 }

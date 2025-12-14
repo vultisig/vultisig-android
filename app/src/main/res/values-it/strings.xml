@@ -969,4 +969,8 @@
     <string name="bond_button_label">Vincola</string>
     <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
     <string name="bond_provider_optional">Fornitore (Opzionale)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Account Circle MSCA creato con successo</string>
+    <string name="circle_msca_account_created_failed">Impossibile creare laccount Circle MSCA. Si prega di riprovare.</string>
 </resources>

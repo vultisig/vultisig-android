@@ -45,7 +45,7 @@ internal class CircleApiImpl @Inject constructor(
 @Serializable
 internal data class CreateWalletJson(
     @Serializable
-    val name: String = "",
+    val name: String = "Vultisig Wallet",
     @Serializable
     val owner: String = "",
     @Serializable

@@ -978,4 +978,8 @@
     <string name="bond_button_label">Bonden</string>
     <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
     <string name="bond_provider_optional">Provider (Optioneel)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA-account succesvol aangemaakt</string>
+    <string name="circle_msca_account_created_failed">Kan Circle MSCA-account niet aanmaken. Probeer het opnieuw.</string>
 </resources>

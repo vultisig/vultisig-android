@@ -971,4 +971,8 @@
     <string name="bond_button_label">Bonden</string>
     <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
     <string name="bond_provider_optional">Anbieter (Optional)</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA-Konto erfolgreich erstellt</string>
+    <string name="circle_msca_account_created_failed">Circle MSCA-Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.</string>
 </resources>
