@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalRiveComposeAPI::class)
+
 package com.vultisig.wallet.ui.screens.peer
 
 import android.icu.text.MessageFormat
@@ -28,7 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +59,10 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.rive.ExperimentalRiveComposeAPI
+import app.rive.ViewModelSource
+import app.rive.rememberViewModelInstance
+import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.components.KeepScreenOn
@@ -72,7 +77,7 @@ import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.WarningView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -117,7 +122,19 @@ internal fun KeygenPeerDiscoveryScreen(
         }
 
         connectingToServer != null -> {
-            ConnectingToServer(connectingToServer.isSuccess)
+
+            val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return
+            val vmi = rememberViewModelInstance(
+                file = riveFile,
+                source = ViewModelSource.Named("ViewModel").defaultInstance()
+            )
+
+            RiveAnimation(
+                file = riveFile,
+                viewModelInstance = vmi,
+                modifier = Modifier.fillMaxSize(),
+                fit = Fit.COVER
+            )
         }
 
         else -> {

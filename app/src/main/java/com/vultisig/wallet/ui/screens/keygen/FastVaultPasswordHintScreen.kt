@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -57,6 +58,7 @@ private fun FastVaultPasswordHintScreen(
     onSkipClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(
         containerColor = Theme.v2.colors.backgrounds.primary,
         topBar = {
@@ -83,7 +85,10 @@ private fun FastVaultPasswordHintScreen(
                     state = if (state.isNextAvailable)
                         VsButtonState.Enabled
                     else VsButtonState.Disabled,
-                    onClick = onNextClick,
+                    onClick = {
+                        keyboardController?.hide()
+                        onNextClick()
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -124,6 +129,7 @@ private fun FastVaultPasswordHintScreen(
                 type = VsTextInputFieldType.MultiLine(5),
                 imeAction = ImeAction.Go,
                 onKeyboardAction = {
+                    keyboardController?.hide()
                     onNextClick()
                 },
                 modifier = Modifier
