@@ -69,6 +69,7 @@ internal class TokenAddressQrViewModel @Inject constructor(
                     ShareType.TOKENADDRESS
                 )
             )
+            back()
         }
     }
 
