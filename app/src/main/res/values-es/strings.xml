@@ -964,4 +964,16 @@
     <string name="bond_button_label">Vincular</string>
     <string name="bond_operator_fees_basis_point">Comisiones del operador (Puntos base)</string>
     <string name="bond_provider_optional">Proveedor (Opcional)</string>
+    <string name="deposit_option_withdraw_secured">Retirar activos garantizados</string>
+    <string name="deposit_option_secured_assets">Activos garantizados</string>
+    <string name="address_auto_filled">Dirección de %1$s (autocompletada)</string>
+    <string name="generated_memo">Memo generado:</string>
+    <string name="select_secured_asset_to_withdraw">Seleccione el activo asegurado a retirar</string>
+    <string name="amount_to_withdraw">Cantidad a retirar (Saldo: %1$s)</string>
+    <string name="mint_secured_asset_secure">Acuñar activo garantizado (SECURE+)</string>
+    <string name="target_asset">Activo objetivo: %1$s-%2$s</string>
+    <string name="thor_address">Dirección de Thor</string>
+    <string name="operation">Operación</string>
+    <string name="thorchain_address_not_found_in_vault">No se encontró la dirección de THORChain en la bóveda. Asegúrate de tener RUNE en tu bóveda.</string>
+    <string name="deposit_error_not_secured_asset">El activo seleccionado no está protegido y no se puede procesar.</string>
 </resources>
