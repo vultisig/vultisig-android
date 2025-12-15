@@ -133,6 +133,16 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 if (fetchedAddress != null) {
                     mscaAddress = fetchedAddress
                     fetchUSDCBalanceFromNetwork(fetchedAddress)
+                } else {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            isTotalAmountLoading = false,
+                            circleDefi = currentState.circleDefi.copy(
+                                isLoading = false,
+                                isAccountOpen = false,
+                            )
+                        )
+                    }
                 }
             } else { // If account exists, show cache, then fetch and update from network
                 mscaAddress = addressSca
@@ -149,7 +159,6 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     }
                 if (cachePosition != null) {
                     showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
-
                 }
                 fetchUSDCBalanceFromNetwork(addressSca)
             }
@@ -263,10 +272,13 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchUSDCBalanceFromNetwork(mscaAddress: String, forceRefresh: Boolean = false) {
+    private suspend fun fetchUSDCBalanceFromNetwork(
+        mscaAddress: String,
+        forceRefresh: Boolean = false
+    ) {
         val api = evmApi.createEvmApi(Chain.Ethereum)
         val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
-        val usdcDepositedBalance = withContext(Dispatchers.IO){
+        val usdcDepositedBalance = withContext(Dispatchers.IO) {
             api.getBalance(usdc)
         }
 
