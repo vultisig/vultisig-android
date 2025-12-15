@@ -27,7 +27,7 @@ internal fun CircleDeFiPositionsScreen(
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
         onClickCloseWarning = viewModel::onClickCloseWarning,
-        onDepositAccount = { },
+        onDepositAccount = viewModel::onDepositAccount,
         onCreateAccount = viewModel::onCreateAccount,
     )
 }

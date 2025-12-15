@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.getContractByDeFiAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -26,7 +27,6 @@ import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +52,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var vaultId: String = savedStateHandle.toRoute<Route.PositionCircle>().vaultId
+    private var mscaAddress: String? = null
 
     private val _state = MutableStateFlow(
         DefiUiModel(
@@ -101,9 +102,11 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             if (addressSca == null) {
                 val fetchedAddress = fetchAssociatedMscaAccount()
                 if (fetchedAddress != null) {
+                    mscaAddress = addressSca
                     fetchUSDCBalanceFromNetwork(fetchedAddress)
                 }
             } else { // If account exists fetch balance
+                mscaAddress = addressSca
                 fetchUSDCBalanceFromNetwork(addressSca)
             }
         }
@@ -184,6 +187,23 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             } else {
                 snackbarFlow.showMessage(
                     StringResource(R.string.circle_msca_account_created_success).asString(context)
+                )
+            }
+        }
+    }
+
+    fun onDepositAccount() {
+        viewModelScope.launch {
+            val tokenId = Coins.Ethereum.USDC.id
+
+            if (!mscaAddress.isNullOrBlank()) {
+                navigator.route(
+                    Route.Send(
+                        vaultId = vaultId,
+                        chainId = Chain.Ethereum.id,
+                        tokenId = tokenId,
+                        address = mscaAddress,
+                    )
                 )
             }
         }
