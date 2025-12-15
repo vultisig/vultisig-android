@@ -107,6 +107,13 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 }
             } else { // If account exists fetch balance
                 mscaAddress = addressSca
+                _state.update { currentState ->
+                    currentState.copy(
+                        circleDefi = currentState.circleDefi.copy(
+                            isAccountOpen = true,
+                        )
+                    )
+                }
                 fetchUSDCBalanceFromNetwork(addressSca)
             }
         }
@@ -115,33 +122,6 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     fun onTabSelected(tab: String) {
         _state.update { currentState ->
             currentState.copy(selectedTab = tab)
-        }
-        loadTabData(tab)
-    }
-
-    private fun loadTabData(tab: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(isTotalAmountLoading = true) }
-
-            when (tab) {
-                DeFiTab.DEPOSITED.displayName -> {
-                    _state.update { currentState ->
-                        currentState.copy(
-                            totalAmountPrice = "$5,432.10",
-                            isTotalAmountLoading = false
-                        )
-                    }
-                }
-
-                else -> {
-                    _state.update { currentState ->
-                        currentState.copy(
-                            totalAmountPrice = "$0.00",
-                            isTotalAmountLoading = false
-                        )
-                    }
-                }
-            }
         }
     }
 
@@ -185,6 +165,13 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     StringResource(R.string.circle_msca_account_created_failed).asString(context)
                 )
             } else {
+                _state.update { currentState ->
+                    currentState.copy(
+                        circleDefi = currentState.circleDefi.copy(
+                            isAccountOpen = true,
+                        )
+                    )
+                }
                 snackbarFlow.showMessage(
                     StringResource(R.string.circle_msca_account_created_success).asString(context)
                 )
@@ -256,7 +243,6 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 supportEditChains = false,
                 circleDefi = currentState.circleDefi.copy(
                     isLoading = false,
-                    isAccountOpen = false,
                     totalDeposit = "$usdcFormattedBalance USDC",
                 )
             )
