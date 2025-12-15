@@ -102,10 +102,10 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
             if (addressSca == null) {
                 val fetchedAddress = fetchAssociatedMscaAccount()
                 if (fetchedAddress != null) {
-                    mscaAddress = addressSca
+                    mscaAddress = fetchedAddress
                     fetchUSDCBalanceFromNetwork(fetchedAddress)
                 }
-            } else { // If account exists fetch balance
+            } else { // If account exists, show cache, then fetch and update from network
                 mscaAddress = addressSca
                 _state.update { currentState ->
                     currentState.copy(
@@ -182,7 +182,6 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     fun onDepositAccount() {
         viewModelScope.launch {
             val tokenId = Coins.Ethereum.USDC.id
-
             if (!mscaAddress.isNullOrBlank()) {
                 navigator.route(
                     Route.Send(
@@ -243,6 +242,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 supportEditChains = false,
                 circleDefi = currentState.circleDefi.copy(
                     isLoading = false,
+                    isAccountOpen = true,
                     totalDeposit = "$usdcFormattedBalance USDC",
                 )
             )
