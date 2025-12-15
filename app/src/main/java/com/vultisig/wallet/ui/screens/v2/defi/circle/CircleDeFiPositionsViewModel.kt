@@ -9,17 +9,21 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.CircleApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
-import com.vultisig.wallet.ui.screens.v2.defi.getContractByDeFiAction
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -30,10 +34,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -48,6 +54,8 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackbarFlow: SnackbarFlow,
     private val stakingDetailsRepository: StakingDetailsRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -231,13 +239,23 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         val usdcDepositedBalance = withContext(Dispatchers.IO){
             api.getBalance(usdc)
         }
+
         val usdcFormattedBalance = usdcDepositedBalance.toValue(usdc.decimal)
-        val usdcAmountPrice =
-            "$${usdcFormattedBalance.setScale(2, RoundingMode.DOWN).toPlainString()}"
+        val currency = withContext(Dispatchers.IO) {
+            appCurrencyRepository.currency.first()
+        }
+        val currencyFormat = withContext(Dispatchers.IO) {
+            appCurrencyRepository.getCurrencyFormat()
+        }
+        val usdcTokenPrice = createFiatValue(
+            amount = usdcFormattedBalance,
+            currency = currency,
+            coin = usdc,
+        )
 
         _state.update { currentState ->
             currentState.copy(
-                totalAmountPrice = usdcAmountPrice,
+                totalAmountPrice = currencyFormat.format(usdcTokenPrice.value),
                 isTotalAmountLoading = false,
                 supportEditChains = false,
                 circleDefi = currentState.circleDefi.copy(
@@ -245,6 +263,35 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     isAccountOpen = true,
                     totalDeposit = "$usdcFormattedBalance USDC",
                 )
+            )
+        }
+    }
+
+    private suspend fun createFiatValue(
+        amount: BigDecimal,
+        coin: Coin,
+        currency: AppCurrency
+    ): FiatValue {
+        try {
+            if (amount == BigDecimal.ZERO) {
+                return FiatValue(BigDecimal.ZERO, currency.ticker)
+            }
+
+            val price = tokenPriceRepository.getCachedPrice(
+                tokenId = coin.id,
+                appCurrency = currency
+            ) ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
+
+            return FiatValue(
+                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
+                currency = currency.ticker
+            )
+        } catch (t: Throwable) {
+            Timber.e(t)
+
+            return FiatValue(
+                value = BigDecimal.ZERO,
+                currency = currency.ticker
             )
         }
     }

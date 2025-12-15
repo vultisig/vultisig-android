@@ -273,10 +273,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             val price = tokenPriceRepository.getCachedPrice(
                 tokenId = coin.id,
                 appCurrency = currency
-            ) ?: return FiatValue(
-                value = BigDecimal.ZERO,
-                currency = currency.ticker
-            )
+            ) ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
 
             return FiatValue(
                 value = amount.multiply(price).setScale(2, RoundingMode.HALF_UP),
