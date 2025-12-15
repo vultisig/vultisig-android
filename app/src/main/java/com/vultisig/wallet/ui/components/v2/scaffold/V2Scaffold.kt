@@ -20,14 +20,18 @@ internal fun V2Scaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
     onBackClick: (() -> Unit)? = null,
+    applyDefaultPaddings: Boolean = true,
+    applyScaffoldPaddings: Boolean = true,
     bottomBar: @Composable () -> Unit = {},
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
 
     V2Scaffold(
         modifier = modifier,
         content = content,
         bottomBar = bottomBar,
+        applyDefaultPaddings = applyDefaultPaddings,
+        applyScaffoldPaddings = applyScaffoldPaddings,
         topBar = {
             V2Topbar(
                 title = title,
@@ -41,15 +45,19 @@ internal fun V2Scaffold(
 internal fun V2Scaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
+    applyDefaultPaddings: Boolean = true,
+    applyScaffoldPaddings: Boolean = true,
     onBackClick: () -> Unit,
     actions: @Composable RowScope.() -> Unit,
     bottomBar: @Composable () -> Unit = {},
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     V2Scaffold(
         modifier = modifier,
         content = content,
         bottomBar = bottomBar,
+        applyDefaultPaddings = applyDefaultPaddings,
+        applyScaffoldPaddings = applyScaffoldPaddings,
         topBar = {
             V2Topbar(
                 title = title,
@@ -64,16 +72,20 @@ internal fun V2Scaffold(
 internal fun V2Scaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
+    applyDefaultPaddings: Boolean = true,
+    applyScaffoldPaddings: Boolean = true,
     onBackClick: () -> Unit,
     @DrawableRes rightIcon: Int,
     onRightIconClick: () -> Unit,
     bottomBar: @Composable () -> Unit = {},
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     V2Scaffold(
         modifier = modifier,
         content = content,
         bottomBar = bottomBar,
+        applyDefaultPaddings = applyDefaultPaddings,
+        applyScaffoldPaddings = applyScaffoldPaddings,
         topBar = {
             V2Topbar(
                 title = title,
@@ -94,8 +106,10 @@ internal fun V2Scaffold(
 }
 
 @Composable
-private fun V2Scaffold(
+internal fun V2Scaffold(
     modifier: Modifier = Modifier,
+    applyDefaultPaddings: Boolean,
+    applyScaffoldPaddings: Boolean,
     topBar: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
@@ -108,10 +122,23 @@ private fun V2Scaffold(
     ) {
         Box(
             modifier = Modifier
-                .padding(it)
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 12.dp
+                .then(
+                    if (applyScaffoldPaddings) {
+                        Modifier.padding(it)
+                    } else {
+                        Modifier
+                    }
+                )
+                .then(
+                    if (applyDefaultPaddings) {
+                        Modifier
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 12.dp
+                            )
+                    } else {
+                        Modifier
+                    }
                 )
         ) {
             content()

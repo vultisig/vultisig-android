@@ -373,6 +373,7 @@
     <string name="naming_vault_placeholder_secure_vault">Veilige kluis</string>
     <string name="import_file_password_hint_text">Voer een hint in</string>
     <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
+    <string name="no_barcodes_found">Geen barcodes gevonden</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>
     <string name="deposit_error_invalid_assets">Activa zijn ongeldig</string>
@@ -973,4 +974,16 @@
     <string name="bond_button_label">Bonden</string>
     <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
     <string name="bond_provider_optional">Provider (Optioneel)</string>
+    <string name="deposit_option_withdraw_secured">Gedekte activa opnemen</string>
+    <string name="deposit_option_secured_assets">Gedekte activa</string>
+    <string name="address_auto_filled">Adres %1$s (automatisch ingevuld)</string>
+    <string name="generated_memo">Memo gegenereerd:</string>
+    <string name="select_secured_asset_to_withdraw">Selecteer het op te nemen onderpand</string>
+    <string name="amount_to_withdraw">Bedrag om op te nemen (Saldo: %1$s)</string>
+    <string name="mint_secured_asset_secure">Mint Onderpand (SECURE+)</string>
+    <string name="target_asset">Doelactiva: %1$s-%2$s</string>
+    <string name="thor_address">Thor Adres</string>
+    <string name="operation">Operatie</string>
+    <string name="thorchain_address_not_found_in_vault">THORChain-adres niet gevonden in de kluis. Zorg ervoor dat RUNE in uw kluis staat.</string>
+    <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen beveiligd item en kan niet worden verwerkt.</string>
 </resources>

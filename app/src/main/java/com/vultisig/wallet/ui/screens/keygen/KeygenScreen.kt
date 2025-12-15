@@ -1,36 +1,23 @@
+@file:OptIn(ExperimentalRiveComposeAPI::class)
+
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,16 +36,20 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.rive.ExperimentalRiveComposeAPI
+import app.rive.ViewModelSource
+import app.rive.rememberViewModelInstance
+import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
-import com.vultisig.wallet.ui.components.loader.VsHorizontalProgressIndicator
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
@@ -99,133 +90,35 @@ private fun KeygenScreen(
     state: KeygenUiModel,
     onTryAgainClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.keygen_top_bar_title),
-            )
-        },
-        content = { contentPadding ->
+    V2Scaffold(
+        applyDefaultPaddings = false,
+        applyScaffoldPaddings = false,
+        topBar = {},
+        content = {
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .padding(contentPadding)
                     .fillMaxSize(),
             ) {
                 val error = state.error
                 if (error == null) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(
-                                all = 40.dp,
-                            ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.keygen_while_you_wait_title),
-                            style = Theme.brockmann.headings.subtitle,
-                            color = Theme.v2.colors.text.extraLight,
-                            textAlign = TextAlign.Center,
-                        )
 
-                        UiSpacer(12.dp)
+                    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return@Column
+                    val vmi = rememberViewModelInstance(
+                        file = riveFile,
+                        source = ViewModelSource.Named("ViewModel").defaultInstance()
+                    )
 
-                        val benefits = remember { benefits() }
-
-                        val transition = rememberInfiniteTransition(label = "")
-
-                        val currentIndex by transition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = (benefits.size).toFloat(),
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(benefits.size * 3333, easing = LinearEasing),
-                                repeatMode = RepeatMode.Restart,
-                            ),
-                            label = ""
-                        )
-
-                        val currentBenefit =
-                            benefits[currentIndex.toInt().coerceIn(0..benefits.lastIndex)]
-
-                        val annotatedString = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    brush = Theme.v2.colors.gradients.primary,
-                                ),
-                            ) {
-                                append(stringResource(currentBenefit.emphasized))
-                            }
-                            appendLine()
-                            append(stringResource(currentBenefit.template))
-                        }
-
-                        AnimatedContent(
-                            targetState = annotatedString, label = "",
-                            transitionSpec = {
-                                (fadeIn(animationSpec = tween(550, delayMillis = 250)))
-                                    .togetherWith(fadeOut(animationSpec = tween(250)))
-                            }
-                        ) { text ->
-                            Text(
-                                text = text,
-                                style = Theme.brockmann.headings.title2,
-                                color = Theme.v2.colors.text.primary,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                    LaunchedEffect(Unit) {
+                        vmi.setBoolean("Connected", true)
                     }
 
-                    val shape = RoundedCornerShape(24.dp)
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(all = 36.dp),
-                    ) {
-                        LazyColumn(
-                            userScrollEnabled = false,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .background(
-                                    color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = shape,
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = Theme.v2.colors.border.light,
-                                    shape = shape,
-                                )
-                                .padding(
-                                    vertical = 28.dp,
-                                    horizontal = 36.dp,
-                                )
-                                .defaultMinSize(minHeight = 64.dp)
-                        ) {
-                            items(state.steps.takeLast(2)) { step ->
-                                LoadingStageItem(
-                                    text = step.title.asString(),
-                                    isLoading = step.isLoading,
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
-                        }
-
-                        VsHorizontalProgressIndicator(
-                            progress = state.progress,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                                .padding(
-                                    horizontal = 24.dp
-                                ),
-                        )
-                    }
+                    RiveAnimation(
+                        file = riveFile,
+                        viewModelInstance = vmi,
+                        modifier = Modifier.fillMaxSize(),
+                        fit = Fit.COVER
+                    )
                 } else {
                     ErrorView(
                         title = error.title.asString(),
