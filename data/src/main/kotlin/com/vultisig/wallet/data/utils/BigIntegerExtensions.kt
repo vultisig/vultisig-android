@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.common.add0x
+import java.math.BigDecimal
 import java.math.BigInteger
 
 fun BigInteger.toHexString(): String {
@@ -18,3 +19,6 @@ fun BigInteger.toSafeByteArray(): ByteArray {
 
 fun BigInteger.increaseByPercent(percent: Int): BigInteger =
     this.multiply(BigInteger.valueOf(100L + percent)).divide(BigInteger.valueOf(100))
+
+fun BigInteger.toValue(decimals: Int): BigDecimal =
+    this.toBigDecimal().divide(BigDecimal.TEN.pow(decimals))

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.RoundingMode
 import javax.inject.Inject
 
 @HiltViewModel
@@ -92,38 +94,14 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 scaCircleAccountRepository.getAccount(vaultId)
             }
 
+            // If not cache or don't exists, check network for MSCA and fetch balance
             if (addressSca == null) {
-                _state.update { currentState ->
-                    currentState.copy(
-                        totalAmountPrice = "$0",
-                        isTotalAmountLoading = false,
-                        circleDefi = currentState.circleDefi.copy(
-                            isLoading = false,
-                            totalDeposit = "0 USDC",
-                            totalDepositCurrency = "$0"
-                        )
-                    )
-                }
                 val fetchedAddress = fetchAssociatedMscaAccount()
                 if (fetchedAddress != null) {
-                    val api = evmApi.createEvmApi(Chain.Ethereum)
-                    val usdc = Coins.Ethereum.USDC.copy(address = fetchedAddress)
-                    val usdcDepositedBalance = api.getBalance(usdc)
-
-                    _state.update { currentState ->
-                        currentState.copy(
-                            totalAmountPrice = "$5,432.10",
-                            isTotalAmountLoading = false,
-                            supportEditChains = true,
-                            circleDefi = currentState.circleDefi.copy(
-                                isLoading = false,
-                                isAccountOpen = false,
-                                totalDeposit = ,
-                            )
-                        )
-                    }
-
+                    fetchUSDCBalanceFromNetwork(fetchedAddress)
                 }
+            } else { // If account exists fetch balance
+                fetchUSDCBalanceFromNetwork(addressSca)
             }
         }
     }
@@ -235,6 +213,30 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 Timber.e(t)
                 null
             }
+        }
+    }
+
+    private suspend fun fetchUSDCBalanceFromNetwork(address: String, forceRefresh: Boolean = false) {
+        val api = evmApi.createEvmApi(Chain.Ethereum)
+        val usdc = Coins.Ethereum.USDC.copy(address = address)
+        val usdcDepositedBalance = withContext(Dispatchers.IO){
+            api.getBalance(usdc)
+        }
+        val usdcFormattedBalance = usdcDepositedBalance.toValue(usdc.decimal)
+        val usdcAmountPrice =
+            "$${usdcFormattedBalance.setScale(2, RoundingMode.DOWN).toPlainString()}"
+
+        _state.update { currentState ->
+            currentState.copy(
+                totalAmountPrice = usdcAmountPrice,
+                isTotalAmountLoading = false,
+                supportEditChains = false,
+                circleDefi = currentState.circleDefi.copy(
+                    isLoading = false,
+                    isAccountOpen = false,
+                    totalDeposit = "$usdcFormattedBalance USDC",
+                )
+            )
         }
     }
 }
