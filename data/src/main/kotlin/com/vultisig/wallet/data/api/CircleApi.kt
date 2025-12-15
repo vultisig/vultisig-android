@@ -11,6 +11,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.appendPathSegments
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -34,7 +35,7 @@ internal class CircleApiImpl @Inject constructor(
                 appendPathSegments("/create")
             }
             setBody(CreateWalletJson(owner = owner, key = requestId))
-        }.bodyOrThrow<String>()
+        }.bodyOrThrow<JsonPrimitive>().content
     }
 
     override suspend fun getScAccount(vaultOwnerAddress: String): String? {
