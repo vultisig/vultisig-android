@@ -34,7 +34,7 @@ internal class CircleApiImpl @Inject constructor(
                 appendPathSegments("/create")
             }
             setBody(CreateWalletJson(owner = owner, key = requestId))
-        }.body<String>()
+        }.bodyOrThrow<String>()
     }
 
     override suspend fun getScAccount(vaultOwnerAddress: String): String? {
