@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,13 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -50,10 +51,12 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
-import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
+import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
+import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -74,6 +77,15 @@ internal fun ChainTokensScreen(
         viewModel.refresh()
     }
 
+    if (uiModel.showCameraBottomSheet) {
+        ScanQrBottomSheet (
+            uiModel = uiModel.scanQrUiModel,
+            onError = viewModel::handleScanQrError,
+            onDismiss = viewModel::dismissCameraBottomSheet,
+            onScanSuccess = viewModel::onScanSuccess,
+        )
+    }
+
     ChainTokensScreen(
         uiModel = uiModel,
         onRefresh = viewModel::refresh,
@@ -85,6 +97,8 @@ internal fun ChainTokensScreen(
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onBackClick = { navController.popBackStack() },
+        onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
+        openCamera = viewModel::openCamera,
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
         }
@@ -95,6 +109,7 @@ internal fun ChainTokensScreen(
 @Composable
 internal fun ChainTokensScreen(
     uiModel: ChainTokensUiModel,
+    openCamera: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
@@ -105,6 +120,7 @@ internal fun ChainTokensScreen(
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
     onBackClick: () -> Unit = {},
     onShowReviewPopUp: () -> Unit = {},
+    onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
@@ -112,6 +128,11 @@ internal fun ChainTokensScreen(
     var isTabMenu by remember {
         mutableStateOf(true)
     }
+
+    val isBottomBarVisible = remember {
+        derivedStateOf { isTabMenu }
+    }
+
     var isAddressBottomSheetVisible by remember {
         mutableStateOf(false)
     }
@@ -279,6 +300,32 @@ internal fun ChainTokensScreen(
                     }
                 }
             }
+        },
+        bottomBarContent = if (isBottomBarVisible.value) {
+            {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .align(Alignment.BottomCenter),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        CryptoConnectionSelect(
+                            onTypeClick = onCryptoConnectionTypeClick,
+                            activeType = uiModel.cryptoConnectionType
+                        )
+                        CameraButton(
+                            onClick = openCamera
+                        )
+                    }
+                }
+            }
+        } else {
+            {}
         },
         content = { paddingValues ->
             Box(

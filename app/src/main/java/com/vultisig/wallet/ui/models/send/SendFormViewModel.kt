@@ -13,6 +13,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -36,10 +39,12 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
+import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -97,9 +102,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -230,8 +235,10 @@ internal class SendFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
+    private val feeServiceComposite: FeeServiceComposite,
 ) : ViewModel() {
 
+    private lateinit var vault: Vault
     private val args = savedStateHandle.toRoute<Route.Send>()
 
     val uiState = MutableStateFlow(SendFormUiModel())
@@ -263,7 +270,12 @@ internal class SendFormViewModel @Inject constructor(
         get() {
             val selectedTokenValue = selectedTokenValue
             val accounts = accounts.value
-            return accounts.find { it.token.id.equals(selectedTokenValue?.id, true)  }
+            return accounts.find {
+                it.token.id.equals(
+                    selectedTokenValue?.id,
+                    true
+                )
+            }
         }
 
     private var preSelectTokenJob: Job? = null
@@ -407,6 +419,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             vaultRepository.get(vaultId)?.let { vault ->
+                this@SendFormViewModel.vault = vault
                 uiState.update { it.copy(srcVaultName = vault.name) }
             }
         }
@@ -448,7 +461,10 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            updateChain(requestId = requestId, selectedChain = selectedChain)
+            updateChain(
+                requestId = requestId,
+                selectedChain = selectedChain
+            )
         }
     }
 
@@ -470,7 +486,10 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
 
-            updateChain(requestId, selectedChain)
+            updateChain(
+                requestId,
+                selectedChain
+            )
         }
     }
 
@@ -686,7 +705,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     delay(300)
 
-                   defiAccounts.find {
+                    defiAccounts.find {
                         it.token.ticker.equals("TCY", true) && it.token.chain == Chain.ThorChain
                     }?.let {
                         selectToken(it.token)
@@ -2128,18 +2147,58 @@ internal class SendFormViewModel @Inject constructor(
                     .filterNotNull()
                     .combine(addressFieldState.textAsFlow()) { token, dst -> token to dst.toString() }
                     .combine(memoFieldState.textAsFlow()) { (token, dst), memo ->
-                        Triple(token, dst, memo.toString())
+                        Triple(
+                            token,
+                            dst,
+                            memo.toString()
+                        )
                     }
-                    .map { triple -> triple }
+                    .combine(tokenAmountFieldState.textAsFlow()) { (token, dst, memo), tokenAmountText ->
+                        Triple(
+                            token,
+                            dst,
+                            memo
+                        ) to tokenAmountText
+                    }
                     .debounce(350)
                     .distinctUntilChanged()
-                    .map { (token, dst, memo) ->
-                        gasFeeRepository.getGasFee(
-                            chain = token.chain,
-                            address = token.address,
-                            isNativeToken = token.isNativeToken,
+                    .mapNotNull { (triple, tokenAmount) ->
+                        val (token, dst, memo) = triple
+
+                        val tokenAmount = tokenAmount
+                            .toString()
+                            .toBigDecimalOrNull()
+
+
+                        val tokenAmountInt =
+                            tokenAmount
+                                ?.movePointRight(token.decimal)
+                                ?.toBigInteger() ?: return@mapNotNull null
+
+
+                        val chain = token.chain
+                        val blockchainTransaction = Transfer(
+                            coin = token,
+                            vault = VaultData(
+                                vaultHexChainCode = vault.hexChainCode,
+                                vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                            ),
+                            amount = tokenAmountInt,
                             to = dst,
                             memo = memo,
+                            isMax = false,
+                        )
+
+                        val fees = withContext(Dispatchers.IO) {
+                            feeServiceComposite.calculateFees(blockchainTransaction)
+                        }
+                        val nativeCoin = withContext(Dispatchers.IO) {
+                            tokenRepository.getNativeToken(chain.id)
+                        }
+
+                        TokenValue(
+                            value = fees.amount,
+                            token = nativeCoin,
                         )
                     }
                     .catch {
