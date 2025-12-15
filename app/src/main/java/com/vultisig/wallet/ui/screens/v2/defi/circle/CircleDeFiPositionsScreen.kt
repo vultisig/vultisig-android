@@ -29,6 +29,7 @@ internal fun CircleDeFiPositionsScreen(
         onClickCloseWarning = viewModel::onClickCloseWarning,
         onDepositAccount = viewModel::onDepositAccount,
         onCreateAccount = viewModel::onCreateAccount,
+        onClickWithdraw = viewModel::onWithdrawAccount,
     )
 }
 
@@ -42,6 +43,7 @@ internal fun CircleDefiPositionScreenContent(
     onClickCloseWarning: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
     onDepositAccount: () -> Unit = {},
+    onClickWithdraw: () -> Unit = {},
 ) {
     BaseDeFiPositionsScreenContent(
         state = state,
@@ -55,7 +57,7 @@ internal fun CircleDefiPositionScreenContent(
             CircleContentDepositTab(
                 state = state.circleDefi,
                 isBalanceVisible = state.isBalanceVisible,
-                onClickAction = {
+                onClickDepositOrCreateAccount = {
                     if (state.circleDefi.isAccountOpen) {
                         onDepositAccount()
                     } else {
@@ -63,6 +65,7 @@ internal fun CircleDefiPositionScreenContent(
                     }
                 },
                 onClickCloseWarning = onClickCloseWarning,
+                onClickWithdraw = onClickWithdraw,
             )
         }
     )
@@ -72,7 +75,8 @@ internal fun CircleDefiPositionScreenContent(
 private fun CircleContentDepositTab(
     state: DefiUiModel.CircleDeFi,
     isBalanceVisible: Boolean,
-    onClickAction: () -> Unit,
+    onClickDepositOrCreateAccount: () -> Unit,
+    onClickWithdraw: () -> Unit,
     onClickCloseWarning: () -> Unit,
 ) {
     Text(
@@ -88,19 +92,33 @@ private fun CircleContentDepositTab(
         )
     }
 
-    HeaderDeFiWidget(
-        title = stringResource(R.string.usdc_deposit_title),
-        iconRes = R.drawable.usdc,
-        buttonText = if (state.isAccountOpen) {
-            stringResource(R.string.deposit_usdc_button)
-        } else {
-            stringResource(R.string.open_account_button)
-        },
-        onClickAction = onClickAction,
-        totalAmount = state.totalDeposit,
-        isLoading = state.isLoading,
-        isBalanceVisible = isBalanceVisible,
-    )
+    if (state.hasActiveDeposit()) {
+        HeaderDeFiWidget(
+            title = stringResource(R.string.usdc_deposit_title),
+            iconRes = R.drawable.usdc,
+            buttonFirstActionText = stringResource(R.string.deposit_usdc_button),
+            buttonSecondActionText = stringResource(R.string.withdraw),
+            onClickFirstAction = onClickWithdraw,
+            onClickSecondAction = onClickDepositOrCreateAccount,
+            totalAmount = state.totalDeposit,
+            isLoading = state.isLoading,
+            isBalanceVisible = isBalanceVisible,
+        )
+    } else {
+        HeaderDeFiWidget(
+            title = stringResource(R.string.usdc_deposit_title),
+            iconRes = R.drawable.usdc,
+            buttonText = if (state.isAccountOpen) {
+                stringResource(R.string.deposit_usdc_button)
+            } else {
+                stringResource(R.string.open_account_button)
+            },
+            onClickAction = onClickDepositOrCreateAccount,
+            totalAmount = state.totalDeposit,
+            isLoading = state.isLoading,
+            isBalanceVisible = isBalanceVisible,
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -126,9 +144,9 @@ private fun CircleDefiPositionScreenContentPreview() {
             bannerImage = R.drawable.circle_defi_banner
         ),
         tabs = listOf(DeFiTab.DEPOSITED.displayName),
-        onBackClick = {},
-        onTabSelected = {},
-        onEditChains = {}
+        onBackClick = { },
+        onTabSelected = { },
+        onEditChains = { }
     )
 }
 

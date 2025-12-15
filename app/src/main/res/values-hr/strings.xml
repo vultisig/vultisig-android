@@ -988,4 +988,5 @@
     <string name="circle_msca_account_created_success">Circle MSCA račun uspješno stvoren</string>
     <string name="circle_msca_account_created_failed">Neuspješno stvaranje Circle MSCA računa. Molimo pokušajte ponovno.</string>
     <string name="circle_usdc_account">Circle USDC račun</string>
+    <string name="withdraw">Povući</string>
 </resources>

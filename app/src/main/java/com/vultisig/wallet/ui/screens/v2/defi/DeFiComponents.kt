@@ -203,7 +203,7 @@ fun InfoItem(icon: Int, label: String, value: String?) {
 @Composable
 fun ActionButton(
     title: String,
-    icon: Int,
+    icon: Int?,
     background: Color,
     modifier: Modifier = Modifier,
     border: BorderStroke? = null,
@@ -238,21 +238,23 @@ fun ActionButton(
         contentPadding = PaddingValues(horizontal = 6.dp),
         modifier = modifier.height(42.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                    RoundedCornerShape(50)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
-            )
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
+                        RoundedCornerShape(50)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
+                )
+            }
         }
 
         Text(
@@ -581,6 +583,97 @@ internal fun HeaderDeFiWidget(
             onClick = onClickAction,
             state = VsButtonState.Enabled,
         )
+    }
+}
+
+@Composable
+internal fun HeaderDeFiWidget(
+    title: String,
+    iconRes: Int,
+    buttonFirstActionText: String,
+    buttonSecondActionText: String,
+    onClickFirstAction: () -> Unit,
+    onClickSecondAction: () -> Unit,
+    totalAmount: String,
+    isLoading: Boolean = false,
+    isBalanceVisible: Boolean = true,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.v2.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.border.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp)
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .size(width = 120.dp, height = 28.dp)
+                    )
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActionButton(
+                title = buttonSecondActionText,
+                icon = R.drawable.circle_minus,
+                background = Color.Transparent,
+                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                contentColor = Theme.v2.colors.text.primary,
+                iconCircleColor = Theme.v2.colors.text.primary.copy(alpha = 0.1f),
+                modifier = Modifier.weight(1f),
+                onClick = onClickFirstAction,
+            )
+
+            ActionButton(
+                title = buttonFirstActionText,
+                icon = null,
+                background = Theme.v2.colors.buttons.tertiary,
+                contentColor = Theme.v2.colors.text.primary,
+                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                modifier = Modifier.weight(1f),
+                onClick = onClickSecondAction,
+            )
+        }
     }
 }
 

@@ -999,4 +999,5 @@
     <string name="circle_msca_account_created_success">Учетная запись Circle MSCA успешно создана</string>
     <string name="circle_msca_account_created_failed">Не удалось создать учетную запись Circle MSCA. Пожалуйста, попробуйте еще раз.</string>
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
+    <string name="withdraw">Вывести</string>
 </resources>

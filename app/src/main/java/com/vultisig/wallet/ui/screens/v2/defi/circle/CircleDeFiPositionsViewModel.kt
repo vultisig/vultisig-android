@@ -34,12 +34,14 @@ import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
@@ -243,6 +245,12 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         }
     }
 
+    fun onWithdrawAccount() {
+        viewModelScope.launch {
+
+        }
+    }
+
     private suspend fun getEvmVaultAddress(): String {
         val vault = vaultRepository.get(vaultId)
         if (vault != null) {
@@ -273,10 +281,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchUSDCBalanceFromNetwork(
-        mscaAddress: String,
-        forceRefresh: Boolean = false
-    ) {
+    private suspend fun fetchUSDCBalanceFromNetwork(mscaAddress: String) {
         val api = evmApi.createEvmApi(Chain.Ethereum)
         val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
         val usdcDepositedBalance = withContext(Dispatchers.IO) {
@@ -305,23 +310,24 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     private suspend fun showUSDCPosition(
         usdcDepositedBalance: BigInteger,
         usdc: Coin
-    ) {
+    ) = supervisorScope {
         val usdcFormattedBalance = usdcDepositedBalance.toValue(usdc.decimal)
-        val currency = withContext(Dispatchers.IO) {
+        val currency = async(Dispatchers.IO) {
             appCurrencyRepository.currency.first()
         }
-        val currencyFormat = withContext(Dispatchers.IO) {
+        val currencyFormat = async(Dispatchers.IO) {
             appCurrencyRepository.getCurrencyFormat()
         }
+
         val usdcTokenPrice = createFiatValue(
             amount = usdcFormattedBalance,
-            currency = currency,
+            currency = currency.await(),
             coin = usdc,
         )
 
         _state.update { currentState ->
             currentState.copy(
-                totalAmountPrice = currencyFormat.format(usdcTokenPrice.value),
+                totalAmountPrice = currencyFormat.await().format(usdcTokenPrice.value),
                 isTotalAmountLoading = false,
                 supportEditChains = false,
                 circleDefi = currentState.circleDefi.copy(
