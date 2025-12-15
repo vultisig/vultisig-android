@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
 import com.vultisig.wallet.ui.screens.v2.customtoken.components.CustomTokenSearchBar
@@ -75,7 +76,6 @@ private fun CustomTokenScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
             UiSpacer(
@@ -103,22 +103,24 @@ private fun CustomTokenScreen(
                 size = 16.dp
             )
 
-            when {
-                state.isLoading -> {
-                    LoadingSearchCustomToken()
-                }
+            TopShineContainer {
+                when {
+                    state.isLoading -> {
+                        LoadingSearchCustomToken()
+                    }
 
-                state.hasError -> {
-                    TokenNotFoundError(
-                        onRetryClick = onSearchClick
-                    )
-                }
+                    state.hasError -> {
+                        TokenNotFoundError(
+                            onRetryClick = onSearchClick
+                        )
+                    }
 
-                state.token != null -> {
-                    SearchTokenResult(
-                        token = state.token,
-                        onAddTokenClick = onAddTokenClick,
-                    )
+                    state.token != null -> {
+                        SearchTokenResult(
+                            token = state.token,
+                            onAddTokenClick = onAddTokenClick,
+                        )
+                    }
                 }
             }
         }
