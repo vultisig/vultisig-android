@@ -23,6 +23,8 @@ internal fun VaultAccountsScreen(
     }
     if (state.showCameraBottomSheet) {
         ScanQrBottomSheet (
+            uiModel = state.scanQrUiModel,
+            onError = viewModel::handleScanQrError,
             onDismiss = viewModel::dismissCameraBottomSheet,
             onScanSuccess = viewModel::onScanSuccess,
         )

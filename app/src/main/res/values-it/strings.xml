@@ -367,6 +367,7 @@
     <string name="naming_vault_placeholder_secure_vault">Cassaforte sicura</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
     <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
+    <string name="no_barcodes_found">Nessun codice a barre trovato</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>

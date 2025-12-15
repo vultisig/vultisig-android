@@ -203,9 +203,9 @@ internal class ChainTokensViewModel @Inject constructor(
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
-            collectTronResourceStats(chain)
             currentVault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
+            collectTronResourceStats(chain)
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,

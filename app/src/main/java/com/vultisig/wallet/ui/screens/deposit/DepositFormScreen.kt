@@ -20,10 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.crypto.getChainName
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -34,10 +37,13 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.SelectionCard
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
+import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
@@ -45,6 +51,7 @@ import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.textAsFlow
 
 @Composable
 internal fun DepositFormScreen(
@@ -90,24 +97,25 @@ internal fun DepositFormScreen(
 
         onSelectChain = model::selectDstChain,
         dstAddress = model.nodeAddressFieldState,
-        onDstAddressLostFocus = {  },
+        onDstAddressLostFocus = { },
         onSetDstAddress = model::setNodeAddress,
         amountFieldState = model.tokenAmountFieldState,
         onAmountLostFocus = model::validateTokenAmount,
         memoFieldState = model.customMemoFieldState,
-        onMemoLostFocus = {  },
+        onMemoLostFocus = { },
         onSelectCoin = model::selectMergeToken,
         onSelectUnMergeCoin = model::selectUnMergeToken,
 
         thorAddress = model.thorAddressFieldState,
-        onThorAddressLostFocus = {  },
-        onSetThorAddress = {  },
+        onThorAddressLostFocus = { },
+        onSetThorAddress = { },
 
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
         onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
+        onSelectSecureAsset = model::onSelectSecureAsset
     )
 }
 
@@ -163,7 +171,9 @@ internal fun DepositFormScreen(
     onLoadRujiBalances: () -> Unit = {},
     onAutoCompoundTcyStake: (Boolean) -> Unit = {},
     onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
-) {
+    onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
+
+    ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
     val depositChain = state.depositChain
@@ -201,7 +211,11 @@ internal fun DepositFormScreen(
                 )
             }
 
-            FormSelection(selected = state.depositOption, options = state.depositOptions, onSelectOption = onSelectDepositOption, mapTypeToString = { option ->
+            FormSelection(
+                selected = state.depositOption,
+                options = state.depositOptions,
+                onSelectOption = onSelectDepositOption,
+                mapTypeToString = { option ->
                     when (option) {
                         DepositOption.Bond -> stringResource(R.string.deposit_option_bond)
                         DepositOption.Unbond -> stringResource(R.string.deposit_option_unbond)
@@ -224,6 +238,8 @@ internal fun DepositFormScreen(
                         DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
                         DepositOption.AddCacaoPool -> stringResource(R.string.deposit_option_add_cacao_pool)
                         DepositOption.RemoveCacaoPool -> stringResource(R.string.deposit_option_remove_cacao_pool)
+                        DepositOption.SecuredAsset -> stringResource(R.string.deposit_option_secured_assets)
+                        DepositOption.WithdrawSecuredAsset -> stringResource(R.string.deposit_option_withdraw_secured)
                     }
                 })
 
@@ -305,12 +321,25 @@ internal fun DepositFormScreen(
 
                 else -> {
                     if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
-                            DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                            DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                            DepositOption.MintYRUNE, DepositOption.MintYTCY, DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE)
-                        && depositOption !in arrayOf(DepositOption.AddCacaoPool, DepositOption.RemoveCacaoPool)
+                            DepositOption.Bond,
+                            DepositOption.Unbond,
+                            DepositOption.Leave,
+                            DepositOption.StakeTcy,
+                            DepositOption.UnstakeTcy,
+                            DepositOption.StakeRuji,
+                            DepositOption.UnstakeRuji,
+                            DepositOption.WithdrawRujiRewards,
+                            DepositOption.MintYRUNE,
+                            DepositOption.MintYTCY,
+                            DepositOption.RedeemYTCY,
+                            DepositOption.RedeemYRUNE,
+                            DepositOption.SecuredAsset,
+                            DepositOption.WithdrawSecuredAsset,
+                        )
+                        && depositOption !in arrayOf(
+                            DepositOption.AddCacaoPool,
+                            DepositOption.RemoveCacaoPool
+                        )
                     ) {
                         FormCard {
                             SelectionCard(
@@ -328,26 +357,46 @@ internal fun DepositFormScreen(
                     val isAddingCacaoPool = depositOption == DepositOption.AddCacaoPool
                     val isRemovingCacaoPool = depositOption == DepositOption.RemoveCacaoPool
                     val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
-                    val unstakableBalance = state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    val unstakableBalance =
+                        state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
                     val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
-                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
-                        isRujiWithdraw -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
-                        isRujiWithdrawRewards -> stringResource(R.string.deposit_form_rewards_title, rewardsBalance)
-                        else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
+                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(
+                            R.string.deposit_form_amount_title,
+                            unstakableBalance
+                        )
+
+                        isRujiWithdraw -> stringResource(
+                            R.string.deposit_form_amount_title,
+                            unstakableBalance
+                        )
+
+                        isRujiWithdrawRewards -> stringResource(
+                            R.string.deposit_form_rewards_title,
+                            rewardsBalance
+                        )
+
+                        else -> stringResource(
+                            R.string.deposit_form_amount_title,
+                            state.balance.asString()
+                        )
                     }
 
                     val amountHint = when {
-                        isUnstakeTcy  || isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
+                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         isRujiWithdrawRewards -> stringResource(R.string.deposit_form_pending_rewards_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
 
                     if (
-                        isTcyOption || isAddingCacaoPool ||isRemovingCacaoPool ||
-                        (depositOption != DepositOption.Leave && depositOption != DepositOption.WithdrawRujiRewards && depositChain == Chain.ThorChain) ||
-                        (depositOption == DepositOption.Custom  && depositChain == Chain.MayaChain) ||
+                        isTcyOption || isAddingCacaoPool || isRemovingCacaoPool ||
+                        (depositOption != DepositOption.Leave && (depositOption !in listOf(
+                            DepositOption.WithdrawRujiRewards,
+                            DepositOption.SecuredAsset,
+                            DepositOption.WithdrawSecuredAsset
+                        )) && depositChain == Chain.ThorChain) ||
+                        (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
                         depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
                         depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
@@ -386,7 +435,8 @@ internal fun DepositFormScreen(
                             DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
                             DepositOption.MintYTCY, DepositOption.MintYRUNE,
                             DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
-                            DepositOption.RemoveCacaoPool,DepositOption.AddCacaoPool,
+                            DepositOption.RemoveCacaoPool, DepositOption.AddCacaoPool,
+                            DepositOption.SecuredAsset, DepositOption.WithdrawSecuredAsset
                         )
                     ) {
                         FormTextFieldCard(
@@ -470,15 +520,136 @@ internal fun DepositFormScreen(
                     }
 
                     if (depositOption == DepositOption.RedeemYRUNE ||
-                        depositOption == DepositOption.RedeemYTCY) {
-                            FormTextFieldCard(
-                                title = stringResource(R.string.deposit_form_operator_slippage_title),
-                                hint = stringResource(R.string.slippage_hint),
-                                keyboardType = KeyboardType.Number,
-                                textFieldState = slippageFieldState,
-                                onLostFocus = onSlippageLostFocus,
-                                error = state.slippageError,
+                        depositOption == DepositOption.RedeemYTCY
+                    ) {
+                        FormTextFieldCard(
+                            title = stringResource(R.string.deposit_form_operator_slippage_title),
+                            hint = stringResource(R.string.slippage_hint),
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = slippageFieldState,
+                            onLostFocus = onSlippageLostFocus,
+                            error = state.slippageError,
+                        )
+                    }
+
+
+                    if (depositOption == DepositOption.SecuredAsset) {
+
+
+                        FormTextFieldCard(
+                            title = amountLabel,
+                            hint = amountHint,
+                            keyboardType = KeyboardType.Number,
+                            textFieldState = tokenAmountFieldState,
+                            onLostFocus = onTokenAmountLostFocus,
+                            error = state.tokenAmountError,
+                        )
+
+
+                        UiSpacer(
+                            size = 4.dp
+                        )
+
+                        Text(
+                            text = stringResource(R.string.mint_secured_asset_secure),
+                            style = Theme.brockmann.body.s.regular,
+                            color = Theme.v2.colors.text.extraLight,
+                        )
+
+                        V2Container(
+                            type = ContainerType.TERTIARY
+                        ) {
+
+                            Text(
+                                text = stringResource(
+                                    R.string.target_asset,
+                                    state.selectedToken.getChainName(),
+                                    state.selectedToken.ticker
+                                ),
+                                style = Theme.brockmann.body.s.regular,
+                                color = Theme.v2.colors.text.primary,
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    )
                             )
+                        }
+
+                        Text(
+                            text = stringResource(
+                                R.string.address_auto_filled,
+                                Chain.ThorChain.raw
+                            ),
+                            style = Theme.brockmann.body.s.regular,
+                            color = Theme.v2.colors.text.extraLight,
+                        )
+
+                        V2Container(
+                            type = ContainerType.TERTIARY
+                        ) {
+                            Text(
+                                text = thorAddress.text.toString(),
+                                style = Theme.brockmann.body.s.regular,
+                                color = Theme.v2.colors.text.primary,
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    )
+                            )
+                        }
+
+                        Text(
+                            text = stringResource(R.string.generated_memo),
+                            style = Theme.brockmann.body.s.regular,
+                            color = Theme.v2.colors.text.extraLight,
+                        )
+
+                        V2Container(
+                            type = ContainerType.TERTIARY,
+                        ) {
+
+                            Text(
+                                text = stringResource(
+                                    R.string.secure,
+                                    thorAddress.text
+                                ),
+                                style = Theme.brockmann.body.s.regular,
+                                color = Theme.v2.colors.text.primary,
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    )
+                            )
+                        }
+
+                    }
+                    if (depositOption == DepositOption.WithdrawSecuredAsset) {
+                        if (state.availableSecuredAssets.isNotEmpty() &&
+                            state.selectedSecuredAsset != TokenWithdrawSecureAsset.EMPTY
+                        ) {
+                            FormSelection(
+                                selected = state.selectedSecuredAsset,
+                                options = state.availableSecuredAssets,
+                                onSelectOption = onSelectSecureAsset,
+                                mapTypeToString = { option ->
+                                    option.ticker
+                                }
+                            )
+                            FormTextFieldCard(
+                                title = stringResource(
+                                    R.string.amount_to_withdraw,
+                                    state.balance.asString()
+                                ),
+                                hint = amountHint,
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = tokenAmountFieldState,
+                                onLostFocus = onTokenAmountLostFocus,
+                                error = state.tokenAmountError,
+                            )
+                        }
                     }
                 }
             }

@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault

@@ -638,6 +638,7 @@
     <string name="scan_qr_upload_from_gallery">上传二维码</string>
     
     <!-- Reshare Start -->
+    <string name="no_barcodes_found">未找到条形码</string>
     <string name="reshare_start_join_reshare_button">加入重新分享</string>
     
     <!-- Deposit Errors -->
@@ -1375,6 +1376,18 @@
     <string name="bond_button_label">绑定</string>
     <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
     <string name="bond_provider_optional">提供商（可选）</string>
+    <string name="deposit_option_withdraw_secured">提取担保资产</string>
+    <string name="deposit_option_secured_assets">担保资产</string>
+    <string name="address_auto_filled">%1$s 地址（自动填写）</string>
+    <string name="generated_memo">生成的备注：</string>
+    <string name="select_secured_asset_to_withdraw">选择要提取的担保资产</string>
+    <string name="amount_to_withdraw">提款金额（余额：%1$s）</string>
+    <string name="mint_secured_asset_secure">铸造担保资产（SECURE+）</string>
+    <string name="target_asset">目标资产：%1$s-%2$s</string>
+    <string name="thor_address">Thor 地址</string>
+    <string name="operation">操作</string>
+    <string name="thorchain_address_not_found_in_vault">您的金库中未找到 THORChain 地址。请确保您的金库中拥有 RUNE。</string>
+    <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
