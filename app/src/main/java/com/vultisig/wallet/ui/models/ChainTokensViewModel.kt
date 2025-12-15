@@ -378,11 +378,20 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun onScanSuccess(qr: String) = viewModelScope.launch {
-        val dst = getDirectionByQrCodeUseCase(qr, vaultId)
-
-        navigator.route(dst)
-
-        uiState.update { it.copy(showCameraBottomSheet = false) }
+        try {
+            val dst = getDirectionByQrCodeUseCase(
+                qr,
+                vaultId
+            )
+            navigator.route(dst)
+            uiState.update { it.copy(showCameraBottomSheet = false) }
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to process QR code"
+            )
+            handleScanQrError(e.message ?: "Invalid QR code")
+        }
     }
 
 
