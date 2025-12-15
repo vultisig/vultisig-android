@@ -151,7 +151,7 @@ class EvmApiImp(
             if (coin.isNativeToken)
                 getETHBalance(coin.address)
             else
-                BigInteger("1842370000") //getERC20Balance(coin.address, coin.contractAddress)
+                getERC20Balance(coin.address, coin.contractAddress)
         } catch (e: SocketTimeoutException) {
             Timber.d("request time out, message: ${e.message}")
             BigInteger.ZERO
