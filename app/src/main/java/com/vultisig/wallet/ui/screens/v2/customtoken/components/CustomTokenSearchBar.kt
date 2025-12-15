@@ -44,20 +44,20 @@ internal fun CustomTokenSearchBar(
     val context = LocalContext.current
 
     Row(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .height(intrinsicSize = IntrinsicSize.Max)
     ) {
 
         V2Container(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .weight(1f)
                 .height(40.dp),
             type = ContainerType.SECONDARY,
             cornerType = CornerType.Circular,
         ) {
             Row(
-                verticalAlignment = Alignment.Companion.CenterVertically,
-                modifier = Modifier.Companion
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
                     .padding(horizontal = 12.dp)
             ) {
                 AnimatedVisibility(visible = initialDisplay) {
@@ -78,7 +78,7 @@ internal fun CustomTokenSearchBar(
 
                 BasicTextField(
                     state = state,
-                    modifier = Modifier.Companion
+                    modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
                     textStyle = Theme.brockmann.supplementary.footnote.copy(
@@ -93,7 +93,7 @@ internal fun CustomTokenSearchBar(
                     ),
                     decorator = { textField ->
                         Box(
-                            contentAlignment = Alignment.Companion.CenterStart
+                            contentAlignment = Alignment.CenterStart
                         ) {
                             if (state.text.isEmpty()) {
                                 Text(
