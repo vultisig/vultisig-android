@@ -195,8 +195,6 @@
     
     <!-- Vault List -->
     <string name="vault_list_vaults_list">金库</string>
-    
-    <!-- Home Screen -->
 
     <!-- Import File -->
     <string name="import_file_screen_title">导入</string>
@@ -208,10 +206,6 @@
     
     <!-- Generating Key -->
     <string name="generating_key_screen_keygen_failed">密钥生成失败</string>
-    
-    <!-- Keygen Peer Discovery -->
-
-    <!-- Network Prompts -->
 
     <!-- Feature Items -->
     <string name="feature_item_learn_more">了解更多</string>
@@ -234,8 +228,6 @@
     <!-- Camera Bind Error -->
     <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>
     
-    <!-- Token Settings -->
-
     <!-- Vault Settings Delete -->
     <string name="vault_settings_delete_vault_caution1">我知道金库将被永久删除</string>
     <string name="vault_settings_delete_vault_caution2">我知道我可能会失去资金</string>
@@ -302,8 +294,6 @@
     <!-- Verify Swap -->
     <string name="verify_swap_sign_button">签署交易</string>
     
-    <!-- String Arrays -->
-
     <!-- Swap Errors -->
     <string name="swap_error_no_amount">金额必须是正数</string>
     
@@ -318,18 +308,12 @@
     
     <!-- Insufficient UTXOs Error -->
     <string name="insufficient_utxos_error">没有足够的可用 UTXO 来覆盖所选金额。请添加更多资金或减少发送金额</string>
-    
-    <!-- Keygen Peer Discovery -->
-
-    <!-- Peer Discovery -->
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_memo_title">备注</string>
 
     <!-- Circular Progress Indicator -->
     <string name="circular_progress_indicator_done">完成</string>
-    
-    <!-- Vault Detail -->
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
@@ -337,8 +321,6 @@
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>
     <string name="swap_form_minimum_amount">交换金额太小。建议金额 %1$s %2$s</string>
-    
-    <!-- Verify Approve -->
 
     <!-- Backup Password Screen -->
     <string name="backup_password_screen_title">备份</string>
@@ -357,8 +339,6 @@
     
     <!-- Verify Swap -->
     <string name="verify_swap_agree_allowance">我同意提供 ERC20 授权</string>
-    
-    <!-- Backup Now -->
 
     <!-- Deposit Screen -->
     <string name="deposit_screen_title">功能签名</string>
@@ -404,8 +384,6 @@
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
     <string name="deposit_form_pending_rewards_hint">待处理奖励</string>
     
-    <!-- Transaction -->
-
     <!-- Swap Screen -->
     <string name="swap_screen_same_asset_error_message">源资产和目标资产不能相同。</string>
     
@@ -423,8 +401,6 @@
     <!-- Add Address -->
     <string name="add_address_address_title">地址</string>
     <string name="add_address_type_hint">在此输入</string>
-    
-    <!-- Blowfish -->
 
     <!-- Join Keysign -->
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
@@ -436,10 +412,6 @@
     
     <!-- Import File -->
     <string name="import_file_not_supported">不支持的文件类型，请重试</string>
-    
-    <!-- Backup Password Screen -->
-
-    <!-- Token Selection -->
 
     <!-- Failed to Resolve Address -->
     <string name="failed_to_resolve_address">解析地址失败</string>
@@ -479,25 +451,15 @@
     
     <!-- Save Changes -->
     <string name="save_changes">保存更改</string>
-    
-    <!-- Current Vaults -->
 
     <!-- Create Folder -->
     <string name="create_folder_placeholder">储蓄</string>
-    
-    <!-- Vault Settings Biometrics -->
-
-    <!-- Create Folder List -->
 
     <!-- Generating Key Screen -->
     <string name="generating_key_screen_reshare_failed">重新分享失败</string>
-    
-    <!-- Vault List -->
 
     <!-- Keygen Email -->
     <string name="keygen_email_continue_button">继续</string>
-
-    <!-- Create Folder -->
 
     <!-- Keygen Password -->
     <string name="password_should_not_be_empty">密码不应为空</string>
@@ -533,8 +495,6 @@
     
     <!-- Error Folder -->
     <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的金库</string>
-    
-    <!-- Naming Vault Placeholder -->
 
     <!-- Import File Password -->
     <string name="import_file_password_hint_text">提示：%s</string>
@@ -554,8 +514,6 @@
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
-    
-    <!-- ETH Gas Settings -->
 
     <!-- Join Keysign Error -->
     <string name="join_keysign_error_wrong_vault_share">相同的金库份额。请更改份额以签名</string>
@@ -585,8 +543,6 @@
     
     <!-- Do Not Remind -->
     <string name="do_not_remind_me_again">不再提醒我</string>
-    
-    <!-- Send Form -->
 
     <!-- Monthly Backup Reminder -->
     <string name="monthly_backup_reminder_title">不要忘记备份您的金库份额并验证完整性。</string>
@@ -624,8 +580,6 @@
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
 
-    <!-- Keygen Verify -->
-
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择金库</string>
     <string name="swap_screen_invalid_no_src_error">未选择源代币</string>
@@ -634,8 +588,6 @@
     <string name="swap_screen_invalid_gas_fee_calculation">燃料费计算失败</string>
     <string name="swap_screen_invalid_quote_calculation">报价计算失败</string>
     <string name="swap_screen_invalid_vault">交易可能失败，无法加载金库。</string>
-    
-    <!-- Backup Password Screen -->
 
     <!-- Edit Address -->
     <string name="edit_address_title">编辑地址</string>
@@ -655,7 +607,6 @@
     <string name="signing_error_transaction_timeout">由于签名速度缓慢，交易超时。请重试。</string>
     <string name="hint_message_to_sign">要签名的消息</string>
     <string name="verify_sign_message_message_sign">要签名的消息</string>
-
 
     <!-- Keygen -->
     <string name="keygen_step_preparing_vault">准备金库</string>
@@ -915,8 +866,6 @@
     <!-- Unstake TCY -->
     <string name="unstake_tcy_zero_error">如果余额低于 1，则无法执行取消质押</string>
     
-    <!-- Time Formats -->
-
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
     <string name="update_available">有可用更新</string>
@@ -926,8 +875,6 @@
     <!-- Share Vault QR -->
     <string name="share_vault_qr_info">此二维码允许您分享金库的只读版本</string>
     
-    <!-- Lock Time -->
-
     <!-- Add Address -->
     <string name="add_address_title_label">标签</string>
     
@@ -1021,8 +968,6 @@
     <!-- Address Copied -->
     <string name="address_copied">%1$s 地址已复制</string>
     
-    <!-- Vault List -->
-
     <!-- Add Folder -->
     <string name="add_folder_title">添加文件夹</string>
     <string name="add_folder_list_title">选择金库</string>
