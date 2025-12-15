@@ -654,7 +654,7 @@ internal fun HeaderDeFiWidget(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ActionButton(
-                title = buttonSecondActionText,
+                title = buttonFirstActionText,
                 icon = R.drawable.circle_minus,
                 background = Color.Transparent,
                 border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
@@ -665,7 +665,7 @@ internal fun HeaderDeFiWidget(
             )
 
             ActionButton(
-                title = buttonFirstActionText,
+                title = buttonSecondActionText,
                 icon = null,
                 background = Theme.v2.colors.buttons.tertiary,
                 contentColor = Theme.v2.colors.text.primary,

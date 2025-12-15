@@ -96,8 +96,8 @@ private fun CircleContentDepositTab(
         HeaderDeFiWidget(
             title = stringResource(R.string.usdc_deposit_title),
             iconRes = R.drawable.usdc,
-            buttonFirstActionText = stringResource(R.string.deposit_usdc_button),
-            buttonSecondActionText = stringResource(R.string.withdraw),
+            buttonFirstActionText = stringResource(R.string.withdraw),
+            buttonSecondActionText = stringResource(R.string.deposit_usdc_button),
             onClickFirstAction = onClickWithdraw,
             onClickSecondAction = onClickDepositOrCreateAccount,
             totalAmount = state.totalDeposit,
