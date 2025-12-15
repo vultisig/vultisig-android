@@ -27,6 +27,7 @@ import com.vultisig.wallet.ui.theme.Theme
 fun BaseDeFiPositionsScreenContent(
     state: DefiUiModel,
     tabs: List<String>,
+    bannerTitle: String,
     bannerImage: Int = R.drawable.referral_data_banner,
     onBackClick: () -> Unit,
     onTabSelected: (String) -> Unit = {},
@@ -44,6 +45,7 @@ fun BaseDeFiPositionsScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
+                title = bannerTitle,
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
                 image = bannerImage,
@@ -98,6 +100,7 @@ private fun BaseDeFiPositionsScreenContentPreview() {
                 selectedTab = DeFiTab.DEPOSITED.displayName
             ),
             tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName),
+            bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
             onEditChains = {},
@@ -117,6 +120,7 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
                 selectedTab = DeFiTab.DEPOSITED.displayName
             ),
             tabs = listOf(DeFiTab.DEPOSITED.displayName),
+            bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
             onEditChains = {},
@@ -136,6 +140,7 @@ private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {
                 selectedTab = DeFiTab.STAKED.displayName
             ),
             tabs = listOf(DeFiTab.DEPOSITED.displayName, DeFiTab.STAKED.displayName, DeFiTab.BONDED.displayName),
+            bannerTitle = "USDC Account",
             onBackClick = {},
             onTabSelected = {},
             onEditChains = {},

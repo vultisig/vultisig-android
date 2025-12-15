@@ -973,4 +973,5 @@
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Cuenta Circle MSCA creada exitosamente</string>
     <string name="circle_msca_account_created_failed">Error al crear la cuenta Circle MSCA. Por favor, inténtelo de nuevo.</string>
+    <string name="circle_usdc_account">Cuenta Circle USDC</string>
 </resources>

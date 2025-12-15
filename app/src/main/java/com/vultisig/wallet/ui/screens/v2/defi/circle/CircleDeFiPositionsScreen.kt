@@ -46,6 +46,7 @@ internal fun CircleDefiPositionScreenContent(
     BaseDeFiPositionsScreenContent(
         state = state,
         tabs = tabs,
+        bannerTitle = stringResource(R.string.circle_usdc_account),
         bannerImage = R.drawable.circle_defi_banner,
         onBackClick = onBackClick,
         onTabSelected = onTabSelected,

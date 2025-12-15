@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BalanceBanner(
+    title: String,
     isLoading: Boolean,
     totalValue: String,
     image: Int,
@@ -79,7 +80,7 @@ internal fun BalanceBanner(
                 .padding(start = 16.dp, top = 16.dp)
         ) {
             Text(
-                text = Chain.ThorChain.raw,
+                text = title,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
@@ -121,6 +122,7 @@ private fun BalanceBannerPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
@@ -138,6 +140,7 @@ private fun BalanceBannerHiddenPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
@@ -155,6 +158,7 @@ private fun BalanceBannerLoadingPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = true,
             totalValue = "",
             image = R.drawable.referral_data_banner,
