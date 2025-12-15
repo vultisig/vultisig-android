@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
@@ -56,6 +57,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -76,7 +78,17 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
     init {
+        loadBalanceVisibility()
         loadCirclePositions()
+    }
+
+    private fun loadBalanceVisibility() {
+        viewModelScope.launch {
+            val isVisible = withContext(Dispatchers.IO) {
+                balanceVisibilityRepository.getVisibility(vaultId)
+            }
+            _state.update { it.copy(isBalanceVisible = isVisible) }
+        }
     }
 
     private fun loadCirclePositions() {
