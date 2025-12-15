@@ -64,7 +64,7 @@ internal data class CreateWalletJson(
     @SerialName("account_type")
     val accountType: String = "SCA",
     @SerialName("idempotency_key")
-    val key: String ="",
+    val key: String = "",
 )
 
 @Serializable
