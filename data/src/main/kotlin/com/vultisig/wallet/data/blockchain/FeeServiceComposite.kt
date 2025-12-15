@@ -21,14 +21,15 @@ class FeeServiceComposite @Inject constructor(
     @SolanaFee private val solanaFeeService: FeeService,
     @ThorFee private val thorchainFeeService: FeeService,
     @CosmosFee private val cosmosFeeService: FeeService,
+    @UtxoFee private val utxoFeeService: FeeService,
 ) : FeeService {
-    
+
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
         val service = getFeeServiceForChain(chain)
-        
+
         Timber.d("Calculating fees for chain: ${chain.name} using ${service::class.simpleName}")
-        
+
         return try {
             service.calculateFees(transaction)
         } catch (e: kotlinx.coroutines.CancellationException) {
@@ -43,9 +44,9 @@ class FeeServiceComposite @Inject constructor(
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
         val service = getFeeServiceForChain(chain)
-        
+
         Timber.d("Calculating default fees for chain: ${chain.name}")
-        
+
         return service.calculateDefaultFees(transaction)
     }
 
@@ -57,7 +58,7 @@ class FeeServiceComposite @Inject constructor(
 
         return ethereumFeeService.calculateFees(chain, limit, isSwap, to)
     }
-    
+
     private fun getFeeServiceForChain(chain: Chain): FeeService {
         return when {
             chain == Chain.ZkSync -> zkFeeService
@@ -70,6 +71,7 @@ class FeeServiceComposite @Inject constructor(
             chain.standard == TokenStandard.TRC20 -> tronFeeService
             chain.standard == TokenStandard.SOL -> solanaFeeService
             chain.standard == TokenStandard.THORCHAIN -> thorchainFeeService
+            chain.standard == TokenStandard.UTXO -> utxoFeeService
             else -> error("FeeServiceComposite not supported chain: ${chain.name}")
         }
     }

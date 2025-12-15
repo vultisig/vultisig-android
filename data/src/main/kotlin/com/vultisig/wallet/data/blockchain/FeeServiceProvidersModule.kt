@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain
 
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
@@ -16,6 +17,7 @@ import com.vultisig.wallet.data.blockchain.sui.SuiFeeService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainFeeService
 import com.vultisig.wallet.data.blockchain.ton.TonFeeService
 import com.vultisig.wallet.data.blockchain.tron.TronFeeService
+import com.vultisig.wallet.data.blockchain.utxo.UtxoFeeService
 import com.vultisig.wallet.data.blockchain.xrp.RippleFeeService
 import dagger.Module
 import dagger.Provides
@@ -26,7 +28,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object FeeServiceProvidersModule {
-    
+
     @Provides
     @Singleton
     @EthereumFee
@@ -40,21 +42,21 @@ object FeeServiceProvidersModule {
     fun provideZkSyncFeeService(
         evmApiFactory: EvmApiFactory
     ): FeeService = ZkFeeService(evmApiFactory)
-    
+
     @Provides
     @Singleton
     @PolkadotFee
     fun providePolkadotFeeService(
         polkadotApi: PolkadotApi
     ): FeeService = PolkadotFeeService(polkadotApi)
-    
+
     @Provides
     @Singleton
     @RippleFee
     fun provideRippleFeeService(
         rippleApi: RippleApi
     ): FeeService = RippleFeeService(rippleApi)
-    
+
     @Provides
     @Singleton
     @SuiFee
@@ -92,4 +94,11 @@ object FeeServiceProvidersModule {
     @Singleton
     @CosmosFee
     fun provideCosmosService(): FeeService = CosmosFeeService()
+
+    @Provides
+    @Singleton
+    @UtxoFee
+    fun provideUtxoService(
+        blockChairApi: BlockChairApi
+    ): FeeService = UtxoFeeService(blockChairApi)
 }

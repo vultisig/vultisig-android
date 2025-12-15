@@ -41,3 +41,7 @@ annotation class ThorFee
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class CosmosFee
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class UtxoFee
