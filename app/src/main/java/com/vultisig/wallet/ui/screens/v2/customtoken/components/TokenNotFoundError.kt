@@ -39,9 +39,9 @@ internal fun TokenNotFoundError(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.iconcrypto),
+                painter = painterResource(id = R.drawable.crypto_outline),
                 contentDescription = "token not found",
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
             UiSpacer(size = 12.dp)
             Text(
@@ -68,6 +68,9 @@ internal fun TokenNotFoundError(
                 label = stringResource(R.string.retry),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onRetryClick
+            )
+            UiSpacer(
+                size = 4.dp
             )
         }
     }
