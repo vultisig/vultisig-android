@@ -199,6 +199,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                     val ethereumVaultAddress = getEvmVaultAddress()
                     val mscaAddress = circleApi.createScAccount(ethereumVaultAddress)
                     scaCircleAccountRepository.saveAccount(vaultId, mscaAddress)
+                    this@CircleDeFiPositionsViewModel.mscaAddress = mscaAddress
                     mscaAddress
                 } catch (t: Throwable) {
                     Timber.e(t)
