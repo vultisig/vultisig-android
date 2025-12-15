@@ -1393,5 +1393,6 @@
     <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
     <string name="circle_msca_account_created_failed">创建 Circle MSCA 账户失败。请重试。</string>
     <string name="circle_usdc_account">Circle USDC 账户</string>
+    <string name="withdraw">提取</string>
 
 </resources>

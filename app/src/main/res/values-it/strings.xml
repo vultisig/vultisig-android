@@ -973,7 +973,7 @@
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Account Circle MSCA creato con successo</string>
-    <string name="circle_msca_account_created_failed">Impossibile creare l'account Circle MSCA. Si prega di riprovare.</string>
+    <string name="circle_msca_account_created_failed">Impossibile creare l\'account Circle MSCA. Si prega di riprovare.</string>
     <string name="circle_usdc_account">Account Circle USDC</string>
     <string name="withdraw">Prelevare</string>
 </resources>
