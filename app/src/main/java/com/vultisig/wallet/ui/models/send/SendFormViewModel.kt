@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
@@ -845,7 +846,124 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun withDrawUSDCCircle() {
-        TODO("Not yet implemented")
+        viewModelScope.launch {
+            showLoading()
+            try {
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.selectedAccount
+                val gasFee = accountValidation.gasFee
+
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+                val nonDeFiAccount = accountsRepository.loadAddresses(vaultId).firstOrNull()
+                    ?.flatMap {
+                        it.accounts
+                    }
+                    ?.find {
+                        it.token.id.equals(Coins.Ethereum.ETH.id, true)
+                    }
+
+                val nonDeFiBalance = nonDeFiAccount?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount
+                        .movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                val availableTokenBalance = getAvailableTokenBalance(
+                    selectedAccount,
+                    gasFee.value,
+                )?.value ?: BigInteger.ZERO
+
+                if (tokenAmountInt > availableTokenBalance) {
+                    throw InvalidTransactionDataException(
+                        UiText.FormattedText(
+                            R.string.send_error_insufficient_native_balance_with_fees,
+                            listOf(selectedToken.ticker)
+                        )
+                    )
+                }
+
+                val memo = EthereumFunction.withdrawCircleMSCA(
+                    vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
+                    tokenAddress = Coins.Ethereum.ETH.contractAddress,
+                    amount = tokenAmountInt,
+                )
+
+                val specific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain,
+                            srcAddress,
+                            selectedToken,
+                            gasFee,
+                            isSwap = true,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                }
+
+                val depositTx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = selectedToken,
+                    srcAddress = srcAddress,
+                    dstAddress = dstAddress,
+                    memo = memo,
+                    srcTokenValue = TokenValue(
+                        value = tokenAmountInt,
+                        token = selectedToken,
+                    ),
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                    blockChainSpecific = specific.blockChainSpecific,
+                    wasmExecuteContractPayload = ThorchainFunctions.unstakeRUJI(
+                        fromAddress = srcAddress,
+                        stakingContract = STAKING_RUJI_CONTRACT,
+                        amount = tokenAmountInt.toString(),
+                    )
+                )
+
+                depositTransactionRepository.addTransaction(depositTx)
+
+                navigator.route(
+                    Route.VerifyDeposit(
+                        transactionId = depositTx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
+            } finally {
+                hideLoading()
+            }
+        }
     }
 
     fun send() {
