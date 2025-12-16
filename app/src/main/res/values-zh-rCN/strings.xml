@@ -4,10 +4,8 @@
     <string name="deposit_option_bond">绑定</string>
     <string name="deposit_option_unbond">解绑</string>
     <string name="total_bonded_rune">总绑定 Rune</string>
-    <string name="bonded_label">已绑定: </string>
     <string name="bonded_amount">已绑定: %s</string>
     <string name="bond_to_node">绑定到节点</string>
-    <string name="node_address">地址</string>
     <string name="node_address_formatted">地址: %s</string>
     <string name="apy">年化收益率</string>
     <string name="unbond">解绑</string>
@@ -42,21 +40,15 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">代币标志</string>
     <string name="tokens">代币</string>
-    <string name="chains">区块链</string>
     <string name="keysign">密钥签名</string>
     <string name="danger_icon">危险图标</string>
     <string name="signing_error_please_try_again_s">签名错误。请重试。%s</string>
     <string name="bottom_warning_msg_keygen_error_screen">请保持设备在同一WiFi网络，确认金库正确并配对设备。\n确保没有其他设备正在运行Vultisig。</string>
     <string name="try_again">重试</string>
-    <string name="vault_choose_chains">选择区块链</string>
-    <string name="plus_icon">加号图标</string>
-    
+
     <!-- Vault Settings -->
     <string name="vault_settings_title">金库设置</string>
     <string name="vault_settings_details_title">详情</string>
-    <string name="vault_settings_details_subtitle">查看您的金库详情</string>
-    <string name="vault_settings_backup_title">备份</string>
-    <string name="vault_settings_backup_subtitle">备份您的金库份额</string>
     <string name="vault_settings_rename_title">重命名</string>
     <string name="vault_settings_rename_subtitle">编辑您的金库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
@@ -102,10 +94,6 @@
     <string name="vault_tier_unlock_platinum_part2">铂金</string>
     <string name="vault_tier_unlock_platinum_part3">等级</string>
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
-    <string name="vault_tier_bronze_description">持有 1,500 $VULT，您将解锁青铜等级并在所有交换中获得 5 基点的交易费折扣。</string>
-    <string name="vault_tier_silver_description">持有 3,000 $VULT，您将解锁白银等级并在所有交换中获得 10 基点的交易费折扣。</string>
-    <string name="vault_tier_gold_description">持有 7,500 $VULT，您将解锁黄金等级并在所有交换中获得 20 基点的交易费折扣。</string>
-    <string name="vault_tier_platinum_description">持有 15,000 $VULT，您将解锁铂金等级并在所有交换中获得 25 基点的交易费折扣。</string>
     <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
     <string name="vault_tier_bronze_description_part2">5 基点交易费折扣</string>
     <string name="vault_tier_bronze_description_part3">在所有交换中。</string>
@@ -128,8 +116,7 @@
     <string name="join_keysign_missing_required_vault">您没有密钥签名所需的金库</string>
     <string name="join_keysign_discovery_service">发现服务中</string>
     <string name="join_keysign_waiting_keysign_start">等待密钥签名开始。</string>
-    <string name="choose_tokens">选择代币</string>
-    
+
     <!-- Send Screen -->
     <string name="send_screen_title">发送</string>
     <string name="bond_screen_title">绑定</string>
@@ -142,18 +129,13 @@
     <string name="send_to_address">发送至</string>
     <string name="send_to_address_hint">在此输入地址</string>
     <string name="send_amount">金额</string>
-    <string name="send_amount_hint">输入金额</string>
-    <string name="send_amount_currency">金额（%s）</string>
     <string name="send_amount_currency_hint">输入金额</string>
     <string name="send_shares_currency_hint">输入份额</string>
     <string name="send_continue_button">继续</string>
-    <string name="send_form_network_fee">网络费用</string>
-    
+
     <!-- Chain Account -->
-    <string name="chain_account_view_send">发送</string>
     <string name="chain_account_view_swap">交换</string>
-    <string name="chain_account_view_deposit">功能</string>
-    
+
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>
     <string name="vault_settings_success_backup_file">文件已保存在 Downloads/%1$s</string>
@@ -179,21 +161,15 @@
     <!-- Settings Screen -->
     <string name="settings_screen_language">语言</string>
     <string name="settings_screen_currency">货币</string>
-    <string name="settings_screen_default_chains">默认区块链</string>
-    <string name="settings_screen_faq">常见问题</string>
-    <string name="settings_screen_vtx_token">$VULT 代币</string>
     <string name="settings_screen_share_the_app">分享应用</string>
-    <string name="vultisig_app_version">VULTISIG 应用 V%1$s</string>
     <string name="settings_screen_title">设置</string>
-    <string name="settings_screen_others">其他</string>
-    
+
     <!-- Settings Titles -->
     <string name="language_setting_screen_title">语言</string>
     <string name="currency_unit_setting_screen_title">货币\n</string>
     <string name="default_chain_screen_title">默认区块链</string>
     <string name="faq_setting_screen_title">常见问题</string>
-    <string name="vultisig_token_setting_screen_title">VULTISIG 代币</string>
-    
+
     <!-- Verify Transaction -->
     <string name="verify_transaction_screen_title">验证</string>
     <string name="verify_transaction_from_title">从</string>
@@ -219,10 +195,7 @@
     
     <!-- Vault List -->
     <string name="vault_list_vaults_list">金库</string>
-    
-    <!-- Home Screen -->
-    <string name="home_screen_add_new_vault">+ 添加新金库</string>
-    
+
     <!-- Import File -->
     <string name="import_file_screen_title">导入</string>
     <string name="import_file_screen_duplicate_vault">金库重复</string>
@@ -233,23 +206,12 @@
     
     <!-- Generating Key -->
     <string name="generating_key_screen_keygen_failed">密钥生成失败</string>
-    
-    <!-- Keygen Peer Discovery -->
-    <string name="keygen_peer_discovery_pair_with_other_devices">与其他设备配对：</string>
-    
-    <!-- Network Prompts -->
-    <string name="network_prompts_local">本地</string>
-    <string name="network_prompts_internet">互联网</string>
-    
+
     <!-- Feature Items -->
-    <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT 代币从费用中销毁。</string>
-    <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT 代币空投给用户。</string>
     <string name="feature_item_learn_more">了解更多</string>
     
     <!-- Vault Detail -->
     <string name="vault_detail_screen_vault_name">金库名称</string>
-    <string name="vault_detail_screen_ecdsa">ECDSA 密钥</string>
-    <string name="vault_detail_screen_eddsa">EdDSA 密钥</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 密钥已复制</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 密钥已复制</string>
     
@@ -262,20 +224,14 @@
     <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
     <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
-    <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">保持设备在同一 WiFi 网络上并打开 Vultisig。</string>
-    
+
     <!-- Camera Bind Error -->
-    <string name="camera_bind_error">相机绑定错误 %1$s</string>
     <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>
-    
-    <!-- Token Settings -->
-    <string name="token_settings_supply">供应量：%1$s</string>
     
     <!-- Vault Settings Delete -->
     <string name="vault_settings_delete_vault_caution1">我知道金库将被永久删除</string>
     <string name="vault_settings_delete_vault_caution2">我知道我可能会失去资金</string>
     <string name="vault_settings_delete_vault_caution3">我已经备份了金库</string>
-    <string name="vault_settings_delete_vault_details">详情：</string>
     <string name="vault_settings_delete_vault_name">金库名称：</string>
     <string name="vault_settings_delete_vault_value">金库价值：</string>
     <string name="vault_settings_delete_vault_id">设备 ID：</string>
@@ -292,10 +248,8 @@
     <string name="scan_qr_screen_return_vault">返回金库</string>
     
     <!-- Rename Vault -->
-    <string name="rename_vault_screen_edit_your_vault_name">编辑您的金库名称</string>
     <string name="rename_vault_screen_vault_name">金库名称</string>
-    <string name="rename_vault_screen_continue">继续</string>
-    
+
     <!-- FAQ Settings -->
     <string name="faq_settings_q1">什么是 Vultisig？</string>
     <string name="faq_settings_q2">使用 Vultisig 有什么好处？</string>
@@ -315,7 +269,6 @@
     
     <!-- Swap Form -->
     <string name="swap_form_from_title">从</string>
-    <string name="swap_form_src_amount_hint">输入金额</string>
     <string name="swap_form_estimated_fees_title">交换费用</string>
     <string name="swap_form_dst_token_title">至</string>
     <string name="transaction_type_button_swap">交换</string>
@@ -334,29 +287,12 @@
     
     <!-- Chain Token Screen -->
     <string name="chain_token_screen_address_copied">%1$s 已复制到剪贴板</string>
-    <string name="chain_account_item_address_copied">%1$s 已复制到剪贴板</string>
     <string name="tx_done_address_copied">%1$s 已复制到剪贴板</string>
     
     <!-- Settings Screen -->
-    <string name="settings_screen_vault_settings">金库设置</string>
-    <string name="home_scree_done">完成</string>
-    
+
     <!-- Verify Swap -->
     <string name="verify_swap_sign_button">签署交易</string>
-    
-    <!-- String Arrays -->
-    <string-array name="digit_words">
-        <item>零</item>
-        <item>一</item>
-        <item>二</item>
-        <item>三</item>
-        <item>四</item>
-        <item>五</item>
-        <item>六</item>
-        <item>七</item>
-        <item>八</item>
-        <item>九</item>
-    </string-array>
     
     <!-- Swap Errors -->
     <string name="swap_error_no_amount">金额必须是正数</string>
@@ -372,43 +308,26 @@
     
     <!-- Insufficient UTXOs Error -->
     <string name="insufficient_utxos_error">没有足够的可用 UTXO 来覆盖所选金额。请添加更多资金或减少发送金额</string>
-    
-    <!-- Keygen Peer Discovery -->
-    <string name="keygen_peer_discovery_looking_for_devices">寻找设备…</string>
-    <string name="keygen_peer_discovery_select_the_pairing_devices">选择配对设备</string>
-    
-    <!-- Peer Discovery -->
-    <string name="peer_discovery_hint_connect_to_internet">将所有设备连接到同一网络并打开 Vultisig</string>
-    <string name="peer_discovery_hint_connect_to_same_wifi">将所有设备连接到互联网并打开 Vultisig</string>
-    
+
     <!-- Verify Transaction -->
     <string name="verify_transaction_memo_title">备注</string>
-    <string name="send_form_screen_memo_optional">备注（可选）</string>
-    
+
     <!-- Circular Progress Indicator -->
     <string name="circular_progress_indicator_done">完成</string>
-    
-    <!-- Vault Detail -->
-    <string name="vault_detail_this_device">%1$s（此设备）</string>
-    
+
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
     
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>
     <string name="swap_form_minimum_amount">交换金额太小。建议金额 %1$s %2$s</string>
-    
-    <!-- Verify Approve -->
-    <string name="verify_approve_amount_title">批准金额</string>
-    
+
     <!-- Backup Password Screen -->
     <string name="backup_password_screen_title">备份</string>
     <string name="import_file_screen_password_error">密码不正确。</string>
-    <string name="backup_password_optional_password_protection">您的金库的可选密码保护</string>
     <string name="add_vault_save">保存</string>
     <string name="backup_password_screen_enter_password">输入密码</string>
     <string name="import_file_screen_enter_password">输入密码</string>
-    <string name="backup_password_screen_verify_password">验证密码</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="import_file_screen_ok">确定</string>
     <string name="import_file_screen_cancel">取消</string>
@@ -416,15 +335,11 @@
     <string name="share_qr_screen_permission_required">分享操作需要文件权限。</string>
     
     <!-- Token Selection -->
-    <string name="token_selection_tokens_title">代币</string>
     <string name="token_selection_search_hint">搜索…</string>
     
     <!-- Verify Swap -->
     <string name="verify_swap_agree_allowance">我同意提供 ERC20 授权</string>
-    
-    <!-- Backup Now -->
-    <string name="backup_now">立即备份此设备的金库份额！</string>
-    
+
     <!-- Deposit Screen -->
     <string name="deposit_screen_title">功能签名</string>
     <string name="deposit_screen_amount_title">金额</string>
@@ -433,10 +348,8 @@
 
     <!-- Token Selection -->
     <string name="verify_deposit_gas_title">网络费用</string>
-    <string name="token_selection_screen_custom_token">自定义代币</string>
-    
+
     <!-- Custom Token -->
-    <string name="custom_token_find_your_custom_token">查找您的自定义代币</string>
     <string name="custom_token_enter_contract_address">输入合约地址</string>
     <string name="custom_token_token_not_found">未找到代币</string>
     <string name="custom_token_add_token">添加 %1$s 代币</string>
@@ -447,7 +360,6 @@
     <string name="deposit_form_rewards_title">待处理奖励（余额：%1$s）</string>
 
     <!-- Share Vault QR -->
-    <string name="deposit_form_amount_title_without_balance">金额</string>
     <string name="share_vault_qr_title">分享金库二维码</string>
     <string name="share_vault_qr_save">保存</string>
     <string name="vault_settings_enable_biometrics_save">保存</string>
@@ -472,9 +384,6 @@
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
     <string name="deposit_form_pending_rewards_hint">待处理奖励</string>
     
-    <!-- Transaction -->
-    <string name="transaction_swap_tracking_link">交换跟踪链接</string>
-    
     <!-- Swap Screen -->
     <string name="swap_screen_same_asset_error_message">源资产和目标资产不能相同。</string>
     
@@ -490,18 +399,12 @@
     <string name="swap_route_not_available">交换路线不可用</string>
     
     <!-- Add Address -->
-    <string name="add_address_save_address_button">保存地址</string>
-    <string name="add_address_title_title">标题</string>
     <string name="add_address_address_title">地址</string>
     <string name="add_address_type_hint">在此输入</string>
-    
-    <!-- Blowfish -->
-    <string name="blowfish_approve">交易已由 Blowfish 验证。</string>
-    
+
     <!-- Join Keysign -->
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
-    <string name="join_keysign_failed_to_start">加入密钥签名失败</string>
-    
+
     <!-- Settings Screen -->
     <string name="settings_screen_legal">法律</string>
     <string name="settings_screen_privacy_policy">隐私政策</string>
@@ -509,14 +412,7 @@
     
     <!-- Import File -->
     <string name="import_file_not_supported">不支持的文件类型，请重试</string>
-    
-    <!-- Backup Password Screen -->
-    <string name="backup_password_screen_warning">切勿将来自不同设备的金库份额存储在同一位置</string>
-    <string name="backup_password_screen_confirm_password_error_message">请确保您的密码匹配</string>
-    
-    <!-- Token Selection -->
-    <string name="token_selection_selected_tokens_title">已选择</string>
-    
+
     <!-- Failed to Resolve Address -->
     <string name="failed_to_resolve_address">解析地址失败</string>
     
@@ -534,10 +430,8 @@
     <string name="threshold_error">未达到阈值\n缺少足够的初始设备</string>
     
     <!-- Create Folder -->
-    <string name="create_folder_title">创建文件夹</string>
     <string name="add_folder_folder_name_title">文件夹名称</string>
-    <string name="create_folder_create">创建</string>
-    
+
     <!-- Vault Settings Security -->
     <string name="vault_settings_security_screen_title_bottomsheet">链上安全已禁用</string>
     <string name="vault_settings_security_screen_content_bottomsheet">禁用链上安全意味着 Blockaid 无法验证交易。您将受到较少的保护</string>
@@ -557,36 +451,17 @@
     
     <!-- Save Changes -->
     <string name="save_changes">保存更改</string>
-    
-    <!-- Current Vaults -->
-    <string name="current_vaults">当前金库</string>
-    <string name="select_vaults_to_add_to_the_folder">选择要添加到文件夹的金库。</string>
-    
+
     <!-- Create Folder -->
     <string name="create_folder_placeholder">储蓄</string>
-    
-    <!-- Vault Settings Biometrics -->
-    <string name="vault_settings_biometrics_title">快速签名生物识别</string>
-    <string name="vault_settings_biometrics_description">启用快速签名生物识别</string>
-    
-    <!-- Create Folder List -->
-    <string name="create_folder_list_title">选择要添加到文件夹的金库。</string>
-    
+
     <!-- Generating Key Screen -->
     <string name="generating_key_screen_reshare_failed">重新分享失败</string>
-    
-    <!-- Vault List -->
-    <string name="vault_list_folders_list">文件夹</string>
-    
+
     <!-- Keygen Email -->
     <string name="keygen_email_continue_button">继续</string>
-    <string name="keygen_email_caption">输入您的电子邮件以接收备份</string>
-    
-    <!-- Create Folder -->
-    <string name="create_folder">创建文件夹</string>
-    
+
     <!-- Keygen Password -->
-    <string name="keygen_password_title">密码</string>
     <string name="password_should_not_be_empty">密码不应为空</string>
     
     <!-- Signing Errors -->
@@ -609,8 +484,7 @@
     <!-- Vault List -->
     <string name="vault_list_part_n_of_t">部分 %1$d-of-%2$d</string>
     <string name="vault_part_n_of_t">份额 %1$d-of-%2$d</string>
-    <string name="vault_list_fast_badge">快速</string>
-    
+
     <!-- QR Titles -->
     <string name="qr_title_join_keygen">加入密钥生成</string>
     <string name="qr_title_join_keysign">加入密钥签名</string>
@@ -621,11 +495,7 @@
     
     <!-- Error Folder -->
     <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的金库</string>
-    
-    <!-- Naming Vault Placeholder -->
-    <string name="naming_vault_placeholder_fast_vault">快速金库</string>
-    <string name="naming_vault_placeholder_secure_vault">安全金库</string>
-    
+
     <!-- Import File Password -->
     <string name="import_file_password_hint_text">提示：%s</string>
     
@@ -644,29 +514,22 @@
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
-    
-    <!-- ETH Gas Settings -->
-    <string name="eth_gas_settings_title">高级</string>
-    
+
     <!-- Join Keysign Error -->
     <string name="join_keysign_error_wrong_vault_share">相同的金库份额。请更改份额以签名</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">更改金库</string>
     
     <!-- ETH Gas Settings -->
-    <string name="eth_gas_settings_base_fee_title">当前基础费用（Gwei）</string>
     <string name="utxo_settings_byte_fee_title">网络费率（sats/vbyte）</string>
     <string name="eth_gas_settings_gas_limit_title">燃料限制</string>
-    <string name="eth_gas_settings_priority_title">优先级</string>
-    <string name="eth_gas_setting_total_fee_title">总费用（Gwei）</string>
-    
+
     <!-- Vault Details Screen -->
     <string name="vault_details_screen_vault_part">金库份额</string>
     <string name="vault_details_screen_vault_type">金库类型</string>
     <string name="vault_settings_delete_vault_part">金库份额：</string>
     <string name="vault_password_hint_to_long">提示太长</string>
     <string name="vault_details_screen_vault_part_desc">份额 %1$s-of-%2$s</string>
-    <string name="vault_details_screen_signer">签名者 %1$s：%2$s</string>
-    
+
     <!-- Settings Screen -->
     <string name="settings_screen_register_your_vaults">注册您的金库！</string>
     
@@ -680,10 +543,7 @@
     
     <!-- Do Not Remind -->
     <string name="do_not_remind_me_again">不再提醒我</string>
-    
-    <!-- Send Form -->
-    <string name="send_form_gas_token_balance">燃料代币余额</string>
-    
+
     <!-- Monthly Backup Reminder -->
     <string name="monthly_backup_reminder_title">不要忘记备份您的金库份额并验证完整性。</string>
     
@@ -719,11 +579,7 @@
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
-    <string name="swap_error_small_swap_amount">交换金额太小。请增加金额以进行交换</string>
-    
-    <!-- Keygen Verify -->
-    <string name="keygen_verify_server_backup_invalid_code">无效代码</string>
-    
+
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择金库</string>
     <string name="swap_screen_invalid_no_src_error">未选择源代币</string>
@@ -732,11 +588,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">燃料费计算失败</string>
     <string name="swap_screen_invalid_quote_calculation">报价计算失败</string>
     <string name="swap_screen_invalid_vault">交易可能失败，无法加载金库。</string>
-    
-    <!-- Backup Password Screen -->
-    <string name="backup_password_screen_skip">跳过密码</string>
-    <string name="backup_password_screen_empty_password">请使用"跳过密码"以无密码保存</string>
-    
+
     <!-- Edit Address -->
     <string name="edit_address_title">编辑地址</string>
     
@@ -750,13 +602,11 @@
     <string name="send_form_polka_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 1 DOT（存在性存款），账户将被停用（收割），任何剩余资金将丢失。您可以随时用大于存在性存款的新存款重新激活地址。但是，这不会恢复丢失的资金。</string>
     
     <!-- Sign Message -->
-    <string name="sign_message_form_method_field_title">方法</string>
     <string name="hint_signing_method">签名方法</string>
     <string name="verify_sign_message_signing_method">签名方法</string>
     <string name="signing_error_transaction_timeout">由于签名速度缓慢，交易超时。请重试。</string>
     <string name="hint_message_to_sign">要签名的消息</string>
     <string name="verify_sign_message_message_sign">要签名的消息</string>
-
 
     <!-- Keygen -->
     <string name="keygen_step_preparing_vault">准备金库</string>
@@ -773,7 +623,6 @@
 
     <!-- Select Asset/Chain -->
     <string name="select_asset_title">选择资产</string>
-    <string name="select_asset_chain_title">链</string>
     <string name="select_chain_chain_title">链</string>
     <string name="select_chain_balance_title">余额</string>
 
@@ -1017,18 +866,6 @@
     <!-- Unstake TCY -->
     <string name="unstake_tcy_zero_error">如果余额低于 1，则无法执行取消质押</string>
     
-    <!-- Time Formats -->
-    <plurals name="seconds_format">
-        <item quantity="other">%d 秒</item>
-    </plurals>
-    <plurals name="minutes_format">
-        <item quantity="other">%d 分钟</item>
-    </plurals>
-    <plurals name="hours_format">
-        <item quantity="other">%d 小时</item>
-    </plurals>
-    <string name="never">从不</string>
-    
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
     <string name="update_available">有可用更新</string>
@@ -1037,10 +874,6 @@
     
     <!-- Share Vault QR -->
     <string name="share_vault_qr_info">此二维码允许您分享金库的只读版本</string>
-    
-    <!-- Lock Time -->
-    <string name="lock_time_title">锁定时间</string>
-    <string name="lock_time_subtitle">自动锁定 Vultisig 后…</string>
     
     <!-- Add Address -->
     <string name="add_address_title_label">标签</string>
@@ -1096,11 +929,9 @@
     
     <!-- Transaction -->
     <string name="transaction_buy">购买</string>
-    <string name="transaction_receive">接收</string>
-    
+
     <!-- Search Bar -->
     <string name="search_bar_portfolio">投资组合</string>
-    <string name="search_bar_nfts">NFT</string>
     <string name="search_bar_soon">即将推出</string>
     
     <!-- Upgrade Banner -->
@@ -1111,7 +942,6 @@
     <!-- Home -->
     <string name="home_portfolio_balance">投资组合余额</string>
     <string name="wallet">钱包</string>
-    <string name="earn">赚取</string>
     <string name="hide_balance">隐藏余额</string>
     <string name="show_balance">显示余额</string>
     <string name="no_chains_found">未找到区块链</string>
@@ -1133,14 +963,11 @@
     <string name="copy_address">复制地址</string>
     
     <!-- Chain Tokens -->
-    <string name="chain_tokens_tab_hidden">隐藏</string>
     <string name="chain_tokens_qr_receive_label">接收 %1$s</string>
     
     <!-- Address Copied -->
     <string name="address_copied">%1$s 地址已复制</string>
     
-    <!-- Vault List -->
-
     <!-- Add Folder -->
     <string name="add_folder_title">添加文件夹</string>
     <string name="add_folder_list_title">选择金库</string>
@@ -1209,7 +1036,6 @@
     <string name="vault_created_success_part_2">成功</string>
     <string name="backup_vault_backup_now_button">立即备份</string>
     <string name="backup_vault_backup_vault_share_title">在线备份您的金库共享</string>
-    <string name="backup_password_request_description">我们建议不要为设备金库份额设置备份密码——只要将备份妥善存放在不同位置，数据依然安全。请注意：忘记备份密码将无法找回。一切由您决定！</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>
     <string name="backup_vault_topbar_title">备份金库</string>
     <string name="onboarding_fast_backup_desc_page_1_part_1">您的金库持有 2 份份额，</string>
@@ -1233,8 +1059,6 @@
     <string name="home_screen_scan_qr_code">扫描二维码</string>
     <string name="onboarding_desc_page_6_part_2">解锁您的金库</string>
     <string name="onboarding_summary_button">创建您的金库</string>
-    <string name="keygen_while_you_wait_title">等待期间，Vultisig 正在……</string>
-    <string name="keygen_top_bar_title">创建金库</string>
     <string name="keygen_benefit_3_template">在一个金库中兑换您喜爱的所有代币</string>
     <string name="keygen_benefit_3_emphasized">跨链</string>
     <string name="upgrade_banner_title">立即升级您的金库</string>
@@ -1293,7 +1117,6 @@
     <string name="tx_overview_screen_tx_memo">备注</string>
     <string name="verify_sign_message_message_field_title">消息</string>
     <string name="verify_sign_message_method_field_title">方法</string>
-    <string name="vault_settings_migration_subtitle">将 GG20 金库迁移到 DKLS</string>
     <string name="fast_vault_password_screen_title">Vultiserver 密码</string>
     <string name="fast_vault_password_screen_hint">这是因为密码用于对备份文件进行本地加密，类似于硬盘的加密方式。下一步，您可以选择添加密码提示。</string>
     <string name="fast_vault_password_screen_hint_title">更多信息</string>
@@ -1328,7 +1151,6 @@
     <string name="select_chain_title">选择链</string>
     <string name="keygen_benefit_2_emphasized">自保</string>
     <string name="sign_message_sign_screen_title">签名消息</string>
-    <string name="vault_settings_sign_message_title">签名</string>
     <string name="vault_settings_sign_message_description">签名自定义消息</string>
     <string name="dialog_default_error_body">出错了</string>
     <string name="onboarding_desc_page_2_part_1">它们是</string>
@@ -1343,7 +1165,6 @@
     <string name="onboarding_security_backup_desc_page_2_part_2">此金库共享</string>
     <string name="function_switch_thorchain_address">THORChain 地址</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
-    <string name="tx_overview_screen_tx_successful">交易成功</string>
     <string name="migration_onboarding_step_3_text_end">升级时</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的金库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
@@ -1365,17 +1186,12 @@
     
     <!-- Bond Form -->
     <string name="bond_node_address">节点地址</string>
-    <string name="bond_node_address_hint">输入 THORChain 节点地址</string>
-    <string name="bond_amount">绑定金额</string>
-    <string name="bond_amount_hint">输入 %s 金额</string>
-    <string name="bond_button_label">绑定</string>
     <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
     <string name="bond_provider_optional">提供商（可选）</string>
     <string name="deposit_option_withdraw_secured">提取担保资产</string>
     <string name="deposit_option_secured_assets">担保资产</string>
     <string name="address_auto_filled">%1$s 地址（自动填写）</string>
     <string name="generated_memo">生成的备注：</string>
-    <string name="select_secured_asset_to_withdraw">选择要提取的担保资产</string>
     <string name="amount_to_withdraw">提款金额（余额：%1$s）</string>
     <string name="mint_secured_asset_secure">铸造担保资产（SECURE+）</string>
     <string name="target_asset">目标资产：%1$s-%2$s</string>
