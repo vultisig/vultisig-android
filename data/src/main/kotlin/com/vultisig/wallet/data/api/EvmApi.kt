@@ -239,9 +239,9 @@ class EvmApiImp(
         value: BigInteger,
         memo: String?,
     ): BigInteger {
-
-        val memoDataHex = memo?.toByteArray()?.joinToString(separator = "") { "%02x".format(it) }
-                ?: "ffffffff".toByteArray().joinToString(separator = "") { "%02x".format(it) }
+        val memoDataHex = memo?.takeIf { it.isNotEmpty() }?.toByteArray()
+            ?.joinToString(separator = "") { "%02x".format(it) }
+            ?: "ffffffff"
 
         val rpcResp = fetch<RpcResponse>(
             "eth_estimateGas",
