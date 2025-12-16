@@ -1,12 +1,13 @@
 package com.vultisig.wallet.ui.components.v2.texts
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -18,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
-import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun LoadableValue(
@@ -45,36 +46,30 @@ internal fun LoadableValue(
         modifier = modifier,
         targetState = value,
     ) { v ->
-        if (v != null) {
-            ToggleVisibilityText(
-                text = v,
-                isVisible = isVisible,
-                style = style,
-                color = color,
-                maxLines = maxLines,
-                modifier = modifier,
-                fontSize = fontSize,
-                fontStyle = fontStyle,
-                fontWeight = fontWeight,
-                fontFamily = fontFamily,
-                letterSpacing = letterSpacing,
-                textDecoration = textDecoration,
-                textAlign = textAlign,
-                lineHeight = lineHeight,
-                overflow = overflow,
-                softWrap = softWrap,
-                minLines = minLines,
-                onTextLayout = onTextLayout,
-            )
-        } else {
-            val fontHeight = with(LocalDensity.current) {
-                style.fontSize.toDp()
-            }
-            UiPlaceholderLoader(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(fontHeight),
-            )
-        }
+        ToggleVisibilityText(
+            text = v ?: "",
+            isVisible = isVisible,
+            style = style,
+            color = color,
+            maxLines = maxLines,
+            modifier = modifier
+                .clip(RoundedCornerShape(2.dp))
+                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                .defaultMinSize(minWidth = 20.dp, minHeight = 16.dp).takeIf {
+                    v == null
+                } ?: modifier,
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            fontWeight = fontWeight,
+            fontFamily = fontFamily,
+            letterSpacing = letterSpacing,
+            textDecoration = textDecoration,
+            textAlign = textAlign,
+            lineHeight = lineHeight,
+            overflow = overflow,
+            softWrap = softWrap,
+            minLines = minLines,
+            onTextLayout = onTextLayout,
+        )
     }
 }
