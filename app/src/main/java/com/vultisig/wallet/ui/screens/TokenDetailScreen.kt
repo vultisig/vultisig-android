@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -45,19 +44,18 @@ internal fun TokenDetailScreen(
     val uiModel by viewModel.uiState.collectAsState()
     val uriHandler = VsUriHandler()
 
-    LaunchedEffect(Unit) {
-        viewModel.refresh()
-    }
-
     TokenDetailScreen(
         uiModel = uiModel,
+        onBottomSheetExpanded = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
         onDismiss = viewModel::back,
         onBuy = viewModel::buy,
         onExplorer = {
-            uriHandler.openUri(uiModel.explorerUrl)
+            uiModel.explorerUrl
+                .takeIf { it.isNotEmpty() }
+                ?.let(uriHandler::openUri)
         },
     )
 }
@@ -65,6 +63,7 @@ internal fun TokenDetailScreen(
 @Composable
 private fun TokenDetailScreen(
     uiModel: TokenDetailUiModel,
+    onBottomSheetExpanded: () -> Unit,
     onSend: () -> Unit,
     onSwap: () -> Unit,
     onDeposit: () -> Unit,
@@ -73,6 +72,7 @@ private fun TokenDetailScreen(
     onExplorer: () -> Unit,
 ) {
     DottyBottomSheet(
+        onExpand = onBottomSheetExpanded,
         onDismiss = onDismiss
     ) {
         TokenDetailsContent(
@@ -104,21 +104,21 @@ private fun TokenDetailsContent(
     )
     {
 
-        if (uiModel.explorerUrl.isNotEmpty()) {
-            VsCircleButton(
-                onClick = onExplorer,
-                size = VsCircleButtonSize.Small,
-                icon = R.drawable.explor,
-                type = VsCircleButtonType.Secondary,
-                designType = DesignType.Shined,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .offset(
-                        x = 8.dp,
-                        y = (-8).dp
-                    )
-            )
-        }
+
+        VsCircleButton(
+            onClick = onExplorer,
+            size = VsCircleButtonSize.Small,
+            icon = R.drawable.explor,
+            type = VsCircleButtonType.Secondary,
+            designType = DesignType.Shined,
+            modifier = Modifier
+                .align(Alignment.End)
+                .offset(
+                    x = 8.dp,
+                    y = (-8).dp
+                )
+        )
+
 
         Row(
             verticalAlignment = Alignment.CenterVertically,

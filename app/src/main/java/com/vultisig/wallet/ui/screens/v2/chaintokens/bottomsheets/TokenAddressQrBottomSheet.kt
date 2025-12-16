@@ -41,6 +41,7 @@ internal fun TokenAddressQrBottomSheet(
         chainAddress = uiState.chainAddress,
         qrBitmapPainter = uiState.qrCode,
         onDismiss = viewModel::back,
+        onBottomSheetExpanded = viewModel::loadData,
         onShareQrClick = {
             viewModel.shareQRCode(context)
         },
@@ -60,13 +61,23 @@ private fun TokenAddressQrBottomSheet(
     chainName: String,
     chainAddress: String,
     qrBitmapPainter: BitmapPainter?,
+    onBottomSheetExpanded: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onShareQrClick: () -> Unit = {},
     onCopyAddressClick: () -> Unit = {},
 ) {
 
-    DottyBottomSheet(onDismiss = onDismiss) {
-        TokenAddressQrContent(chainName, qrBitmapPainter, chainAddress, onShareQrClick, onCopyAddressClick)
+    DottyBottomSheet(
+        onExpand = onBottomSheetExpanded,
+        onDismiss = onDismiss
+    ) {
+        TokenAddressQrContent(
+            chainName,
+            qrBitmapPainter,
+            chainAddress,
+            onShareQrClick,
+            onCopyAddressClick
+        )
     }
 
 }
