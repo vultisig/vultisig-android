@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +36,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
@@ -51,6 +56,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BalanceBanner(
+    title: String,
     isLoading: Boolean,
     totalValue: String,
     image: Int,
@@ -74,7 +80,7 @@ internal fun BalanceBanner(
                 .padding(start = 16.dp, top = 16.dp)
         ) {
             Text(
-                text = Chain.ThorChain.raw,
+                text = title,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
@@ -116,6 +122,7 @@ private fun BalanceBannerPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
@@ -133,6 +140,7 @@ private fun BalanceBannerHiddenPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = false,
             totalValue = "$12,345.67",
             image = R.drawable.referral_data_banner,
@@ -150,6 +158,7 @@ private fun BalanceBannerLoadingPreview() {
             .padding(16.dp)
     ) {
         BalanceBanner(
+            title = Chain.ThorChain.raw,
             isLoading = true,
             totalValue = "",
             image = R.drawable.referral_data_banner,
@@ -194,7 +203,7 @@ fun InfoItem(icon: Int, label: String, value: String?) {
 @Composable
 fun ActionButton(
     title: String,
-    icon: Int,
+    icon: Int?,
     background: Color,
     modifier: Modifier = Modifier,
     border: BorderStroke? = null,
@@ -229,21 +238,23 @@ fun ActionButton(
         contentPadding = PaddingValues(horizontal = 6.dp),
         modifier = modifier.height(42.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                    RoundedCornerShape(50)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
-            )
+        if (icon != null) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
+                        RoundedCornerShape(50)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f)
+                )
+            }
         }
 
         Text(
@@ -449,6 +460,251 @@ internal fun NoPositionsContainer(
             )
         }
     )
+}
+
+@Composable
+internal fun DeFiWarningBanner(
+    text: String,
+    onClickClose: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = if (onClickClose != null) 40.dp else 16.dp,
+                    bottom = 16.dp
+                )
+        ) {
+            Text(
+                text = text,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.light,
+            )
+        }
+
+        if (onClickClose != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(Theme.v2.colors.backgrounds.surface2)
+                    .clickable(onClick = onClickClose),
+                contentAlignment = Alignment.Center
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.big_close,
+                    contentDescription = "cancel",
+                    size = 16.dp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun HeaderDeFiWidget(
+    title: String,
+    iconRes: Int,
+    buttonText: String,
+    onClickAction: () -> Unit,
+    totalAmount: String,
+    isLoading: Boolean = false,
+    isBalanceVisible: Boolean = true,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.v2.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.border.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp)
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .size(width = 120.dp, height = 28.dp)
+                    )
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        VsButton(
+            label = buttonText,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClickAction,
+            state = VsButtonState.Enabled,
+        )
+    }
+}
+
+@Composable
+internal fun HeaderDeFiWidget(
+    title: String,
+    iconRes: Int,
+    buttonFirstActionText: String,
+    buttonSecondActionText: String,
+    onClickFirstAction: () -> Unit,
+    onClickSecondAction: () -> Unit,
+    totalAmount: String,
+    isLoading: Boolean = false,
+    isBalanceVisible: Boolean = true,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Theme.v2.colors.backgrounds.secondary)
+            .border(
+                width = 1.dp,
+                color = Theme.v2.colors.border.normal,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp)
+            )
+
+            UiSpacer(12.dp)
+
+            Column {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.extraLight,
+                )
+
+                UiSpacer(4.dp)
+
+                if (isLoading) {
+                    UiPlaceholderLoader(
+                        modifier = Modifier
+                            .size(width = 120.dp, height = 28.dp)
+                    )
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
+            }
+        }
+
+        UiSpacer(16.dp)
+
+        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+        UiSpacer(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ActionButton(
+                title = buttonFirstActionText,
+                icon = R.drawable.circle_minus,
+                background = Color.Transparent,
+                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
+                contentColor = Theme.v2.colors.text.primary,
+                iconCircleColor = Theme.v2.colors.text.primary.copy(alpha = 0.1f),
+                modifier = Modifier.weight(1f),
+                onClick = onClickFirstAction,
+            )
+
+            ActionButton(
+                title = buttonSecondActionText,
+                icon = null,
+                background = Theme.v2.colors.buttons.tertiary,
+                contentColor = Theme.v2.colors.text.primary,
+                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                modifier = Modifier.weight(1f),
+                onClick = onClickSecondAction,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Short Text")
+@Composable
+private fun DeFiWarningBannerShortPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.v2.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        DeFiWarningBanner(
+            text = "This feature is currently in beta. Please use with caution.",
+            onClickClose = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, name = "DeFi Warning Banner - Long Text")
+@Composable
+private fun DeFiWarningBannerLongPreview() {
+    Box(
+        modifier = Modifier
+            .background(Theme.v2.colors.backgrounds.primary)
+            .padding(16.dp)
+    ) {
+        DeFiWarningBanner(
+            text = "Important: Your funds are at risk. This DeFi protocol has not been audited and may contain smart contract vulnerabilities. Only invest what you can afford to lose. Always do your own research before participating in any DeFi protocol.",
+            onClickClose = {}
+        )
+    }
 }
 
 @Preview(showBackground = true, name = "Positions Selection Dialog")

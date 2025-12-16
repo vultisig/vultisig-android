@@ -84,6 +84,13 @@
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_continue_button">Fortfahren</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
+    <string name="chain_account_view_deposit">Einzahlung</string>
+    <string name="chain_account_view_send">SENDEN</string>
+    <string name="circle_defi_description">Zahlen Sie Ihr USDC auf ein Circle-Konto ein und erzielen Sie Rendite. Sicher in Ihrem Vultisig-Tresor.</string>
+    <string name="circle_defi_control_info">Die Mittel bleiben vollständig unter der Kontrolle Ihres Tresors. Circle-Konten sind selbstverwaltet und Erträge werden durch sichere Off-Chain-Treasuries generiert.</string>
+    <string name="usdc_deposit_title">USDC-Einzahlung</string>
+    <string name="deposit_usdc_button">USDC einzahlen</string>
+    <string name="open_account_button">Konto eröffnen</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Fehler</string>
     <string name="send_error_no_amount">Die Menge muss eine positive Zahl sein</string>
@@ -859,4 +866,11 @@
     <string name="operation">Operation</string>
     <string name="thorchain_address_not_found_in_vault">Die THORChain-Adresse wurde im Tresor nicht gefunden. Bitte stellen Sie sicher, dass sich RUNE in Ihrem Tresor befindet.</string>
     <string name="deposit_error_not_secured_asset">Das ausgewählte Asset ist nicht gesichert und kann nicht verarbeitet werden.</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA-Konto erfolgreich erstellt</string>
+    <string name="circle_msca_account_created_failed">Circle MSCA-Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.</string>
+    <string name="circle_usdc_account">Circle USDC-Konto</string>
+    <string name="withdraw">Abheben</string>
+    <string name="send_form_network_fee">Netzwerkgebühr (automatisch)</string>
 </resources>

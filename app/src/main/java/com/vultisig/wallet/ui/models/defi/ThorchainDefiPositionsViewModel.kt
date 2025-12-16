@@ -26,7 +26,7 @@ import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.v2.defi.DefiTab
+import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiTab
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsBondDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultPositionsStakingDialog
 import com.vultisig.wallet.ui.screens.v2.defi.defaultSelectedPositionsDialog
@@ -42,7 +42,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
-import com.vultisig.wallet.ui.screens.v2.defi.supportStakingDeFi
+import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -64,10 +64,10 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
-internal data class DefiPositionsUiModel(
+internal data class ThorchainDefiPositionsUiModel(
     // tabs info
-    val totalAmountPrice: String = DefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
-    val selectedTab: String = DefiTab.BONDED.displayName,
+    val totalAmountPrice: String = ThorchainDefiPositionsViewModel.DEFAULT_ZERO_BALANCE,
+    val selectedTab: String = ThorchainDefiTab.BONDED.displayName,
     val bonded: BondedTabUiModel = BondedTabUiModel(),
     val staking: StakingTabUiModel = StakingTabUiModel(),
     val lp: LpTabUiModel = LpTabUiModel(),
@@ -140,7 +140,7 @@ data class TotalDefiValue(
 )
 
 @HiltViewModel
-internal class DefiPositionsViewModel @Inject constructor(
+internal class ThorchainDefiPositionsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
@@ -156,7 +156,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     private var vaultId: String = savedStateHandle.toRoute<Route.PositionTokens>().vaultId
 
-    val state = MutableStateFlow(DefiPositionsUiModel())
+    val state = MutableStateFlow(ThorchainDefiPositionsUiModel())
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
@@ -273,10 +273,7 @@ internal class DefiPositionsViewModel @Inject constructor(
             val price = tokenPriceRepository.getCachedPrice(
                 tokenId = coin.id,
                 appCurrency = currency
-            ) ?: return FiatValue(
-                value = BigDecimal.ZERO,
-                currency = currency.ticker
-            )
+            ) ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
 
             return FiatValue(
                 value = amount.multiply(price).setScale(2, RoundingMode.HALF_UP),
@@ -314,7 +311,7 @@ internal class DefiPositionsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
-        loadedTabs.add(DefiTab.BONDED.displayName)
+        loadedTabs.add(ThorchainDefiTab.BONDED.displayName)
 
         viewModelScope.launch {
             if (!state.value.selectedPositions.hasBondPositions()) {
@@ -416,7 +413,7 @@ internal class DefiPositionsViewModel @Inject constructor(
     }
 
     private fun loadStakingPositions() {
-        loadedTabs.add(DefiTab.STAKING.displayName)
+        loadedTabs.add(ThorchainDefiTab.STAKING.displayName)
 
         viewModelScope.launch {
             val selectedPositions = state.value.selectedPositions
@@ -471,7 +468,7 @@ internal class DefiPositionsViewModel @Inject constructor(
                 }
 
                 val address = runeCoin.address
-                val coinsToLoad = supportStakingDeFi.filter { coin ->
+                val coinsToLoad = thorchainSupportStakingDeFi.filter { coin ->
                     selectedPositions.contains(coin.ticker)
                 }.map { coin -> coin.id }
 

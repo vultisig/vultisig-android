@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.v2.defi
+package com.vultisig.wallet.ui.screens.v2.defi.thorchain
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -23,20 +24,30 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.defi.DefiPositionsViewModel
-import com.vultisig.wallet.ui.models.defi.DefiPositionsUiModel
+import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
+import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
+import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
+import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.home.components.VsTabs
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun DefiPositionsScreen(
-    model: DefiPositionsViewModel = hiltViewModel<DefiPositionsViewModel>(),
+internal fun ThorchainDefiPositionsScreen(
+    model: ThorchainDefiPositionsViewModel = hiltViewModel<ThorchainDefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
 
-    DefiPositionScreenContent(
+    ThorchainDefiPositionScreenContent(
         state = state,
         onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
@@ -54,8 +65,8 @@ internal fun DefiPositionsScreen(
 }
 
 @Composable
-internal fun DefiPositionScreenContent(
-    state: DefiPositionsUiModel = DefiPositionsUiModel(),
+internal fun ThorchainDefiPositionScreenContent(
+    state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
     onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
@@ -72,8 +83,8 @@ internal fun DefiPositionScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
 
     val tabs = listOf(
-        DefiTab.BONDED.displayName,
-        DefiTab.STAKING.displayName,
+        DeFiTab.BONDED.displayName,
+        DeFiTab.STAKED.displayName,
     )
 
     V2Scaffold(
@@ -87,6 +98,7 @@ internal fun DefiPositionScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
+                title = Chain.ThorChain.raw,
                 isLoading = state.isTotalAmountLoading,
                 totalValue = state.totalAmountPrice,
                 image = R.drawable.referral_data_banner,
@@ -128,7 +140,7 @@ internal fun DefiPositionScreenContent(
             }
 
             when (state.selectedTab) {
-                DefiTab.BONDED.displayName -> {
+                ThorchainDefiTab.BONDED.displayName -> {
                     if (!state.selectedPositions.hasBondPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -143,7 +155,7 @@ internal fun DefiPositionScreenContent(
                     }
                 }
 
-                DefiTab.STAKING.displayName -> {
+                ThorchainDefiTab.STAKING.displayName -> {
                     if (!state.selectedPositions.hasStakingPositions()) {
                         NoPositionsContainer(
                             onManagePositionsClick = onEditPositionClick
@@ -159,7 +171,7 @@ internal fun DefiPositionScreenContent(
                     }
                 }
 
-                DefiTab.LPS.displayName -> {
+                ThorchainDefiTab.LPS.displayName -> {
                     NoPositionsContainer(
                         onManagePositionsClick = onEditPositionClick
                     )
@@ -173,10 +185,10 @@ internal fun DefiPositionScreenContent(
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
-private fun DefiPositionsScreenPreviewEmpty() {
-    DefiPositionScreenContent(
+private fun ThorchainDefiPositionsScreenPreviewEmpty() {
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(),
+        state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
         onClickBondToNode = {},
@@ -186,9 +198,9 @@ private fun DefiPositionsScreenPreviewEmpty() {
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
-private fun DefiPositionsScreenPreviewWithData() {
+private fun ThorchainDefiPositionsScreenPreviewWithData() {
     val mockNodes = listOf(
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1abcd...xyz",
             fullAddress = "",
             status = BondNodeState.ACTIVE,
@@ -197,7 +209,7 @@ private fun DefiPositionsScreenPreviewWithData() {
             nextAward = "20 RUNE",
             nextChurn = "Oct 15, 25"
         ),
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1efgh...123",
             fullAddress = "",
             status = BondNodeState.STANDBY,
@@ -206,7 +218,7 @@ private fun DefiPositionsScreenPreviewWithData() {
             nextAward = "10 RUNE",
             nextChurn = "Oct 16, 25"
         ),
-        com.vultisig.wallet.ui.models.defi.BondedNodeUiModel(
+        BondedNodeUiModel(
             address = "thor1ijkl...456",
             fullAddress = "",
             status = BondNodeState.READY,
@@ -217,12 +229,12 @@ private fun DefiPositionsScreenPreviewWithData() {
         )
     )
 
-    DefiPositionScreenContent(
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(
+        state = ThorchainDefiPositionsUiModel(
             totalAmountPrice = "$3,250.00",
-            selectedTab = DefiTab.BONDED.displayName,
-            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+            selectedTab = ThorchainDefiTab.BONDED.displayName,
+            bonded = BondedTabUiModel(
                 isLoading = false,
                 totalBondedAmount = "2250 RUNE",
                 nodes = mockNodes
@@ -237,11 +249,11 @@ private fun DefiPositionsScreenPreviewWithData() {
 
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
-private fun DefiPositionsScreenPreviewLoading() {
-    DefiPositionScreenContent(
+private fun ThorchainDefiPositionsScreenPreviewLoading() {
+    ThorchainDefiPositionScreenContent(
         onBackClick = { },
-        state = DefiPositionsUiModel(
-            bonded = com.vultisig.wallet.ui.models.defi.BondedTabUiModel(
+        state = ThorchainDefiPositionsUiModel(
+            bonded = BondedTabUiModel(
                 isLoading = true
             )
         ),
@@ -252,7 +264,7 @@ private fun DefiPositionsScreenPreviewLoading() {
     )
 }
 
-internal enum class DefiTab(val displayName: String) {
+internal enum class ThorchainDefiTab(val displayName: String) {
     BONDED("Bonded"),
     STAKING("Staked"),
     LPS("LPs");

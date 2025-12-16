@@ -284,6 +284,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindScaCircleAccountRepository(
+        impl: ScaCircleAccountRepositoryImpl
+    ): ScaCircleAccountRepository
+
+    @Binds
+    @Singleton
     fun bindQrHelperModalRepository(
         impl: QrHelperModalRepositoryImpl
     ): QrHelperModalRepository
