@@ -151,6 +151,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         priorityFeeWei = feeEstimate.maxPriorityFeePerGas,
                         nonce = nonce,
                         gasLimit = feeEstimate.gasLimit,
+                        isDeposit = isDeposit
                     )
                 )
             } else {
@@ -191,6 +192,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         priorityFeeWei = priorityFeeWei,
                         nonce = nonce,
                         gasLimit = gasLimitFee,
+                        isDeposit = isDeposit
                     )
                 )
             }
