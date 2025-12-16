@@ -86,9 +86,9 @@ class ThorchainDeFiBalanceService(
         vaultId: String
     ): List<DeFiBalance> = supervisorScope {
         val rujiDetailsDeferred =
-            async { stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id) }
+            async { stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id) }
         val tcyDetailsDeferred =
-            async { stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id) }
+            async { stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id) }
         val defaultDetailsDeferred =
             async { stakingDetailsRepository.getStakingDetails(vaultId) }
         val bonDetailsDeferred =

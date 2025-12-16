@@ -11,7 +11,9 @@ import javax.inject.Singleton
 interface StakingDetailsRepository {
     suspend fun getStakingDetails(vaultId: String): List<StakingDetails>
     
-    suspend fun getStakingDetails(vaultId: String, coinId: String): StakingDetails?
+    suspend fun getStakingDetailsByCoindId(vaultId: String, coinId: String): StakingDetails?
+
+    suspend fun getStakingDetailsById(vaultId: String, id: String): StakingDetails?
     
     suspend fun saveStakingDetails(vaultId: String, stakingDetails: StakingDetails)
     
@@ -34,9 +36,16 @@ internal class StakingDetailsRepositoryImpl @Inject constructor(
             .toDomainModels()
     }
 
-    override suspend fun getStakingDetails(vaultId: String, coinId: String): StakingDetails? {
+    override suspend fun getStakingDetailsByCoindId(vaultId: String, coinId: String): StakingDetails? {
         return stakingDetailsDao.getByVaultIdAndCoinId(vaultId, coinId)
             ?.toDomainModel()
+    }
+
+    override suspend fun getStakingDetailsById(
+        vaultId: String,
+        id: String
+    ): StakingDetails? {
+        TODO("Not yet implemented")
     }
 
     override suspend fun saveStakingDetails(vaultId: String, stakingDetails: StakingDetails) {

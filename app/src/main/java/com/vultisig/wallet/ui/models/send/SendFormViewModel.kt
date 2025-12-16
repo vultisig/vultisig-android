@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
@@ -259,6 +260,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
+    private var mscaAddress: String? = null
+
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     private val selectedTokenValue: Coin?
@@ -314,6 +317,7 @@ internal class SendFormViewModel @Inject constructor(
             amount = args.amount,
             memo = args.memo,
             type = args.type,
+            mscaAddress = args.mscaAddress,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -361,13 +365,18 @@ internal class SendFormViewModel @Inject constructor(
         address: String?,
         amount: String?,
         memo: String?,
-        type: String?
+        type: String?,
+        mscaAddress: String?,
     ) {
         memoFieldState.clearText()
         this.defiType = if (type == null) {
             null
         } else {
             parseDepositType(type)
+        }
+
+        if (this.mscaAddress != mscaAddress) {
+            this.mscaAddress = mscaAddress
         }
 
         if (this.vaultId != vaultId) {
@@ -830,8 +839,13 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI  -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
             else -> send()
         }
+    }
+
+    private fun withDrawUSDCCircle() {
+        TODO("Not yet implemented")
     }
 
     fun send() {
@@ -2012,12 +2026,35 @@ internal class SendFormViewModel @Inject constructor(
             viewModelScope.launch {
                 loadRewardsAccount(vaultId)
             }
+        } else if (this.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE) {
+            viewModelScope.launch {
+                error("")
+            }
         } else {
             viewModelScope.launch {
                 accountsRepository.loadDeFiAddresses(vaultId, false)
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect(accounts)
             }
+        }
+    }
+
+    private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
+        val accountsLoaded =
+            accountsRepository.loadAddresses(vaultId).firstOrNull()
+                ?.flatMap {
+                    it.accounts
+                }
+        val ethereumAccount = accountsLoaded?.find {
+            it.token.id.equals(Coins.Ethereum.ETH.id, true)
+        } ?: return
+
+        val usdc = Coins.Ethereum.USDC
+        if (mscaAddress != null){
+            val id = usdc.generateId(mscaAddress!!)
+            val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
+
+
         }
     }
 
@@ -2036,7 +2073,7 @@ internal class SendFormViewModel @Inject constructor(
         } ?: return
 
         val cachedDetails =
-            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
 
         if (cachedDetails != null) {
             val rewardsAccount = Account(
