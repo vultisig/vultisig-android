@@ -2039,6 +2039,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    // TODO: To Clean up in last PR (home position implemented)
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
         val accountsLoaded =
             accountsRepository.loadAddresses(vaultId).firstOrNull()
@@ -2050,11 +2051,22 @@ internal class SendFormViewModel @Inject constructor(
         } ?: return
 
         val usdc = Coins.Ethereum.USDC
+
         if (mscaAddress != null){
             val id = usdc.generateId(mscaAddress!!)
             val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
-
-
+            val usdcCircleAccount = Account(
+                token = usdc,
+                tokenValue = TokenValue(
+                    value = cachedDetails?.stakeAmount ?: BigInteger.ZERO,
+                    token = usdc,
+                ),
+                fiatValue = null,
+                price = null
+            )
+            accounts.value = listOf(ethereumAccount, usdcCircleAccount)
+        } else {
+            accounts.value = listOf()
         }
     }
 
