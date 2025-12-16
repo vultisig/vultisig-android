@@ -908,11 +908,12 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val memo = EthereumFunction.withdrawCircleMSCA(
+                val memo = "Withdraw:$tokenAmountInt"
+                /* EthereumFunction.withdrawCircleMSCA(
                     vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
                     tokenAddress = Coins.Ethereum.ETH.contractAddress,
                     amount = tokenAmountInt,
-                )
+                ) */
 
                 val specific = withContext(Dispatchers.IO) {
                     blockChainSpecificRepository
@@ -941,11 +942,7 @@ internal class SendFormViewModel @Inject constructor(
                     estimatedFees = gasFee,
                     estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
                     blockChainSpecific = specific.blockChainSpecific,
-                    wasmExecuteContractPayload = ThorchainFunctions.unstakeRUJI(
-                        fromAddress = srcAddress,
-                        stakingContract = STAKING_RUJI_CONTRACT,
-                        amount = tokenAmountInt.toString(),
-                    )
+                    operation = "DepositUSDCCircle",
                 )
 
                 depositTransactionRepository.addTransaction(depositTx)

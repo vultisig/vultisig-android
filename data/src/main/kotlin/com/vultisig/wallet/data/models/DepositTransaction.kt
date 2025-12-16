@@ -18,3 +18,6 @@ data class DepositTransaction(
     val operation: String  = "",
     val thorAddress : String  = "",
 )
+
+const val OPERATION_MINT = "Mint"
+const val OPERATION_WITHDRAW = "Withdraw"
