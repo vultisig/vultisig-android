@@ -44,7 +44,7 @@ internal class TokenAddressQrViewModel @Inject constructor(
     val uiState = MutableStateFlow(TokenAddressQr())
     lateinit var qrBitmapData: QrBitmapData
 
-    init {
+    fun loadData() {
         viewModelScope.launch {
             qrBitmapData = generateAccountQrUseCase(
                 args.address,
