@@ -2028,7 +2028,7 @@ internal class SendFormViewModel @Inject constructor(
             }
         } else if (this.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE) {
             viewModelScope.launch {
-                error("")
+                loadCircleUSDCAccount(vaultId)
             }
         } else {
             viewModelScope.launch {

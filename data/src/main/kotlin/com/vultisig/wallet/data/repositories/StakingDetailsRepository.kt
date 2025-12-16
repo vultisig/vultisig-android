@@ -45,7 +45,7 @@ internal class StakingDetailsRepositoryImpl @Inject constructor(
         vaultId: String,
         id: String
     ): StakingDetails? {
-        TODO("Not yet implemented")
+        return stakingDetailsDao.getByVaultIdAndId(vaultId, id)?.toDomainModel()
     }
 
     override suspend fun saveStakingDetails(vaultId: String, stakingDetails: StakingDetails) {
