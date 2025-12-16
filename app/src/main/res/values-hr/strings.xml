@@ -858,4 +858,6 @@
     <string name="operation">Operacija</string>
     <string name="thorchain_address_not_found_in_vault">THORChain adresa nije pronađena u trezoru. Molimo provjerite imate li RUNE u svom trezoru.</string>
     <string name="deposit_error_not_secured_asset">Odabrana imovina nije osigurana imovina i ne može se obraditi.</string>
+    <string name="keysign_password_hide_hint">Sakrij savjet</string>
+    <string name="keysign_password_show_hint">Prikaži savjet</string>
 </resources>

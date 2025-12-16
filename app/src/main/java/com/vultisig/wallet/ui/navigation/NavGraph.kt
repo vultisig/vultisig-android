@@ -442,7 +442,7 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable<Keysign.Password> {
+        dialog<Keysign.Password> {
             KeysignPasswordScreen()
         }
 

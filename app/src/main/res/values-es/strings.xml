@@ -857,4 +857,6 @@
     <string name="operation">Operación</string>
     <string name="thorchain_address_not_found_in_vault">No se encontró la dirección de THORChain en la bóveda. Asegúrate de tener RUNE en tu bóveda.</string>
     <string name="deposit_error_not_secured_asset">El activo seleccionado no está protegido y no se puede procesar.</string>
+    <string name="keysign_password_hide_hint">Ocultar pista</string>
+    <string name="keysign_password_show_hint">Mostrar pista</string>
 </resources>

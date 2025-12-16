@@ -854,4 +854,6 @@
     <string name="operation">Операция</string>
     <string name="thorchain_address_not_found_in_vault">Адрес THORChain не найден в хранилище. Убедитесь, что в вашем хранилище есть RUNE.</string>
     <string name="deposit_error_not_secured_asset">Выбранный актив не является обеспеченным и не может быть обработан.</string>
+    <string name="keysign_password_hide_hint">Скрыть подсказку</string>
+    <string name="keysign_password_show_hint">Показать подсказку</string>
 </resources>

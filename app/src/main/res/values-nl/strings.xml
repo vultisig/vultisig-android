@@ -854,4 +854,6 @@
     <string name="operation">Operatie</string>
     <string name="thorchain_address_not_found_in_vault">THORChain-adres niet gevonden in de kluis. Zorg ervoor dat RUNE in uw kluis staat.</string>
     <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen beveiligd item en kan niet worden verwerkt.</string>
+    <string name="keysign_password_hide_hint">Verberg hint</string>
+    <string name="keysign_password_show_hint">Toon hint</string>
 </resources>

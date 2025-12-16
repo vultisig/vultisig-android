@@ -857,4 +857,6 @@
     <string name="operation">Operazione</string>
     <string name="thorchain_address_not_found_in_vault">Indirizzo THORChain non trovato nel vault. Assicurati di avere RUNE nel tuo vault.</string>
     <string name="deposit_error_not_secured_asset">La risorsa selezionata non è protetta e non può essere elaborata.</string>
+    <string name="keysign_password_hide_hint">Nascondi suggerimento</string>
+    <string name="keysign_password_show_hint">Mostra suggerimento</string>
 </resources>
