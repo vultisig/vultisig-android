@@ -129,6 +129,7 @@
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">SWAP</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
