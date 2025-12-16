@@ -870,4 +870,5 @@
     <string name="circle_msca_account_created_success">Circle MSCA-Konto erfolgreich erstellt</string>
     <string name="circle_msca_account_created_failed">Circle MSCA-Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.</string>
     <string name="circle_usdc_account">Circle USDC-Konto</string>
+    <string name="withdraw">Abheben</string>
 </resources>
