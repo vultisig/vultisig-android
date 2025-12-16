@@ -62,4 +62,40 @@ object EthereumFunction {
             .toHexString()
             .convertToBigIntegerOrZero()
     }
+
+    fun withdrawCircleMSCA(
+        vaultAddress: String,
+        tokenAddress: String,
+        amount: BigInteger
+    ): String {
+        require(amount >= BigInteger.ZERO) { "Amount must be non-negative" }
+        require(vaultAddress.isNotBlank()) { "Vault address cannot be blank" }
+        require(tokenAddress.isNotBlank()) { "MSCA (token) address cannot be blank" }
+
+        try {
+            // Inner call: ERC20.transfer(vaultAddress, amount)
+            val erc20TransferData = transferErc20Encoder(vaultAddress, amount)
+                .remove0x()
+                .decodeHex()
+                .toByteArray()
+
+            val tokenAddress = AnyAddress(tokenAddress, CoinType.ETHEREUM)
+
+            // execute(address _to, uint256 _value, bytes _data)
+            val executeFn = EthereumAbiFunction("execute").apply {
+                addParamAddress(tokenAddress.data(), false)
+                addParamUInt256(ByteArray(32), false)
+                addParamBytes(erc20TransferData, false)
+            }
+
+            return EthereumAbi.encode(executeFn)
+                .toHexString()
+                .add0x()
+        } catch (e: Exception) {
+            throw IllegalArgumentException(
+                "Failed to encode Circle MSCA withdraw: ${e.message}",
+                e
+            )
+        }
+    }
 }
