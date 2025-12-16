@@ -868,4 +868,5 @@
     <string name="circle_msca_account_created_failed">Falha ao criar conta Circle MSCA. Por favor, tente novamente.</string>
     <string name="circle_usdc_account">Conta Circle USDC</string>
     <string name="withdraw">Retirar</string>
+    <string name="send_form_network_fee">Taxa de rede (automática)</string>
 </resources>

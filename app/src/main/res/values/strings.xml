@@ -399,6 +399,7 @@
     <string name="join_keysign_failed_connect_to_server">Failed connect to server</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="send_form_network_fee">Network fee (automatic)</string>
 
 
     <string name="verify_sign_message_method_field_title">Method</string>

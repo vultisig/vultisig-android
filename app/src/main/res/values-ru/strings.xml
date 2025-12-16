@@ -866,4 +866,5 @@
     <string name="circle_msca_account_created_failed">Не удалось создать учетную запись Circle MSCA. Пожалуйста, попробуйте еще раз.</string>
     <string name="circle_usdc_account">Учетная запись Circle USDC</string>
     <string name="withdraw">Вывести</string>
+    <string name="send_form_network_fee">Сетевая комиссия (автоматически)</string>
 </resources>
