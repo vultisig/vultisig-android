@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
+import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -96,15 +97,15 @@ private fun SelectNetworkScreen(
                             color = Theme.v2.colors.text.extraLight,
                         )
 
-                        UiSpacer(1f)
-
-                        Text(
-                            text = stringResource(R.string.select_chain_balance_title),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
-                        )
-
-                        UiSpacer(20.dp)
+                        if(state.showAllChains.not()) {
+                            UiSpacer(1f)
+                            Text(
+                                text = stringResource(R.string.select_chain_balance_title),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.text.extraLight,
+                            )
+                            UiSpacer(20.dp)
+                        }
                     }
                     UiSpacer(16.dp)
                 }

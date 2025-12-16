@@ -27,7 +27,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -38,6 +37,8 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
+import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
@@ -78,7 +79,7 @@ internal fun AddAddressEntryScreen(
     state: AddAddressEntryUiModel,
     titleTextFieldState: TextFieldState,
     addressTextFieldState: TextFieldState,
-    onSelectChainClick: (Chain) -> Unit = {},
+    onSelectChainClick: (NetworkUiModel) -> Unit = {},
     onSaveAddressClick: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onScan: () -> Unit = {},
@@ -172,7 +173,7 @@ internal fun AddAddressEntryScreen(
 @Composable
 internal fun SelectChain(
     modifier: Modifier = Modifier,
-    selectedChain: Chain?
+    selectedChain: NetworkUiModel?
 ) {
     Column(
         modifier = modifier
@@ -214,7 +215,7 @@ internal fun SelectChain(
             } else {
                 TokenLogo(
                     logo = selectedChain.logo,
-                    title = selectedChain.raw,
+                    title = selectedChain.title,
                     modifier = Modifier
                         .size(32.dp),
                     errorLogoModifier = Modifier
@@ -222,7 +223,7 @@ internal fun SelectChain(
                 )
                 UiSpacer(size = 6.dp)
                 Text(
-                    text = selectedChain.raw,
+                    text = selectedChain.title,
                     style = Theme.brockmann.body.m.medium,
                     color = Theme.v2.colors.text.primary,
                 )
@@ -242,11 +243,11 @@ internal fun SelectChain(
     }
 }
 
-private class SelectChainPreviewParameterProvider : PreviewParameterProvider<Chain?> {
-    override val values: Sequence<Chain?>
+private class SelectChainPreviewParameterProvider : PreviewParameterProvider<NetworkUiModel?> {
+    override val values: Sequence<NetworkUiModel?>
         get() = sequenceOf(
             null,
-            Chain.Ethereum,
+            Chain.Ethereum.toNetworkUiModel(),
         )
 }
 
@@ -254,7 +255,7 @@ private class SelectChainPreviewParameterProvider : PreviewParameterProvider<Cha
 @Composable
 private fun SelectChainPreview(
     @PreviewParameter(SelectChainPreviewParameterProvider::class)
-    chain: Chain?,
+    chain: NetworkUiModel?,
 ) {
     SelectChain(selectedChain = chain)
 }

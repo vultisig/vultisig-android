@@ -740,13 +740,10 @@ internal class SendFormViewModel @Inject constructor(
             when (addressType) {
                 AddressBookType.OUTPUT -> {
                     val selectedNewChain = address.chain
-                    if (selectedChain != selectedNewChain) {
-                        preSelectToken(
-                            preSelectedChainIds = listOf(selectedNewChain.id),
-                            preSelectedTokenId = null,
-                            forcePreselection = true
-                        )
-                    }
+                    checkIfTokenSelectionRequired(
+                        currentChain = selectedChain,
+                        newChain = selectedNewChain
+                    )
                     setOutputAddress(address.address)
                 }
 
@@ -754,6 +751,21 @@ internal class SendFormViewModel @Inject constructor(
                     setProviderAddress(address.address)
                 }
             }
+        }
+    }
+
+    private fun checkIfTokenSelectionRequired(
+        currentChain: Chain,
+        newChain: Chain,
+    ) {
+        val newChainSelected = currentChain != newChain
+        val isNotEvm = newChain.standard != TokenStandard.EVM
+        if (newChainSelected && isNotEvm) {
+            preSelectToken(
+                preSelectedChainIds = listOf(newChain.id),
+                preSelectedTokenId = null,
+                forcePreselection = true
+            )
         }
     }
 

@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -21,6 +22,9 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.evmNetworkUiModel
+import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,9 +41,15 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 internal data class AddAddressEntryUiModel(
-    @StringRes val titleRes: Int = R.string.add_address_title,
-    val selectedChain: Chain = Chain.Ethereum,
-    val chains: List<Chain> = Chain.entries,
+    @param:StringRes val titleRes: Int = R.string.add_address_title,
+    val selectedChain: NetworkUiModel = evmNetworkUiModel,
+    val chains: List<NetworkUiModel> = Chain.entries.map {
+        NetworkUiModel(
+            chain = it,
+            logo = it.logo,
+            title = it.raw,
+        )
+    },
     val addressError: UiText? = null,
     val titleError: UiText? = null,
 )
@@ -61,13 +71,16 @@ internal class AddressEntryViewModel @Inject constructor(
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
-    private val addressBookEntryChainId = savedStateHandle.toRoute<Route.AddressEntry>().chainId
+    val args = savedStateHandle.toRoute<Route.AddressEntry>()
+    private val addressBookEntryChainId = args.chainId
 
-    private val addressBookEntryAddress = savedStateHandle.toRoute<Route.AddressEntry>().address
+    private val addressBookEntryAddress = args.address
 
-    private val vaultId = savedStateHandle.toRoute<Route.AddressEntry>().vaultId
+    private val vaultId = args.vaultId
 
-    private var addressExist : Boolean = false
+    private val consolidateEvm = true
+
+    private var addressExist: Boolean = false
 
     val titleTextFieldState = TextFieldState()
     val addressTextFieldState = TextFieldState()
@@ -98,7 +111,7 @@ internal class AddressEntryViewModel @Inject constructor(
         combine(
             state.map { it.selectedChain }.distinctUntilChanged(),
             addressTextFieldState.textAsFlow().filter { it.isNotEmpty() },
-        ) { chain, address ->
+        ) { (chain), address ->
             val error = validateAddress(
                 chain = chain,
                 address = address.toString()
@@ -129,7 +142,8 @@ internal class AddressEntryViewModel @Inject constructor(
         state.update {
             it.copy(
                 titleRes = R.string.add_address_title,
-                selectedChain = Chain.fromRaw(addressBookEntryChainId),
+                selectedChain = Chain.fromRaw(addressBookEntryChainId)
+                    .toNetworkUiModel(consolidateEvm = consolidateEvm),
             )
         }
         addressTextFieldState.setTextAndPlaceCursorAtEnd(addressBookEntryAddress)
@@ -146,7 +160,9 @@ internal class AddressEntryViewModel @Inject constructor(
         state.update {
             it.copy(
                 titleRes = R.string.edit_address_title,
-                selectedChain = addressBookEntry.chain,
+                selectedChain = addressBookEntry
+                    .chain
+                    .toNetworkUiModel(consolidateEvm = consolidateEvm),
             )
         }
 
@@ -167,6 +183,8 @@ internal class AddressEntryViewModel @Inject constructor(
                 selectedNetworkId = selectedChain.id,
                 requestId = requestId,
                 filters = Route.SelectNetwork.Filters.None,
+                showAllChains = true,
+                consolidateEvm = consolidateEvm,
             )
         )
 
@@ -180,21 +198,25 @@ internal class AddressEntryViewModel @Inject constructor(
         return chain
     }
 
-    fun selectChain(chain: Chain) {
+    fun selectChain(chain: NetworkUiModel) {
         viewModelScope.launch {
             val selectedChain = selectNetwork(
                 vaultId = vaultId,
-                selectedChain = chain,
+                selectedChain = chain.chain,
             ) ?: return@launch
 
             state.update {
-                it.copy(selectedChain = selectedChain)
+                it.copy(
+                    selectedChain = selectedChain.toNetworkUiModel(
+                        consolidateEvm = consolidateEvm
+                    )
+                )
             }
         }
     }
 
     fun saveAddress() {
-        val chain = state.value.selectedChain
+        val chain = state.value.selectedChain.chain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
         

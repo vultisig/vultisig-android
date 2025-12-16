@@ -111,6 +111,8 @@ internal sealed class Route {
         val selectedNetworkId: ChainId,
         val requestId: String,
         val filters: Filters,
+        val consolidateEvm: Boolean = false,
+        val showAllChains: Boolean = false,
     ) {
         @Serializable
         enum class Filters {
