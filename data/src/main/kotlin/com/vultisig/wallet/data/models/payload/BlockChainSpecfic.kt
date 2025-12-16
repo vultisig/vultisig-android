@@ -15,7 +15,6 @@ sealed class BlockChainSpecific {
         val maxFeePerGasWei: BigInteger,
         val priorityFeeWei: BigInteger,
         val nonce: BigInteger,
-        val isDeposit: Boolean,
         val gasLimit: BigInteger,
     ) : BlockChainSpecific()
 
