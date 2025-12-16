@@ -83,6 +83,13 @@
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">TROCAR</string>
+    <string name="chain_account_view_deposit">Depósito</string>
+    <string name="chain_account_view_send">ENVIAR</string>
+    <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
+    <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
+    <string name="usdc_deposit_title">Depósito USDC</string>
+    <string name="deposit_usdc_button">Depositar USDC</string>
+    <string name="open_account_button">Abrir conta</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Erro</string>
     <string name="select_asset_title">Selecionar ativo</string>
@@ -856,4 +863,11 @@
     <string name="operation">Operação</string>
     <string name="thorchain_address_not_found_in_vault">Endereço THORChain não encontrado no cofre. Certifique-se de que tem RUNE no seu cofre.</string>
     <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo garantido e não pode ser processado.</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Conta Circle MSCA criada com sucesso</string>
+    <string name="circle_msca_account_created_failed">Falha ao criar conta Circle MSCA. Por favor, tente novamente.</string>
+    <string name="circle_usdc_account">Conta Circle USDC</string>
+    <string name="withdraw">Retirar</string>
+    <string name="send_form_network_fee">Taxa de rede (automática)</string>
 </resources>

@@ -92,6 +92,13 @@
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
+    <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
+    <string name="chain_account_view_send">ОТПРАВИТЬ</string>
+    <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
+    <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
+    <string name="usdc_deposit_title">Депозит USDC</string>
+    <string name="deposit_usdc_button">Внести USDC</string>
+    <string name="open_account_button">Открыть счет</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
     <string name="vault_settings_success_backup_file">файл сохранен в Загрузках/%1$s</string>
     <string name="vault_edit_this_name_already_exist">это имя уже существует</string>
@@ -854,4 +861,11 @@
     <string name="operation">Операция</string>
     <string name="thorchain_address_not_found_in_vault">Адрес THORChain не найден в хранилище. Убедитесь, что в вашем хранилище есть RUNE.</string>
     <string name="deposit_error_not_secured_asset">Выбранный актив не является обеспеченным и не может быть обработан.</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Учетная запись Circle MSCA успешно создана</string>
+    <string name="circle_msca_account_created_failed">Не удалось создать учетную запись Circle MSCA. Пожалуйста, попробуйте еще раз.</string>
+    <string name="circle_usdc_account">Учетная запись Circle USDC</string>
+    <string name="withdraw">Вывести</string>
+    <string name="send_form_network_fee">Сетевая комиссия (автоматически)</string>
 </resources>
