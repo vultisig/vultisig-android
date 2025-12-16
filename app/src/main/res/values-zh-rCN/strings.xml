@@ -136,6 +136,14 @@
     <!-- Chain Account -->
     <string name="chain_account_view_swap">交换</string>
 
+    <string name="chain_account_view_deposit">功能</string>
+    <string name="chain_account_view_send">发送</string>
+    <string name="circle_defi_description">将您的 USDC 存入 Circle 账户并赚取收益。安全地存储在您的 Vultisig 保险库中。</string>
+    <string name="circle_defi_control_info">资金完全由您的保险库控制。Circle 账户是自托管的，收益通过安全的链下国库产生。</string>
+    <string name="usdc_deposit_title">USDC 存款</string>
+    <string name="deposit_usdc_button">存入 USDC</string>
+    <string name="open_account_button">开设账户</string>
+
     <!-- Vault Settings Errors -->
     <string name="vault_settings_error_backup_file">发生错误</string>
     <string name="vault_settings_success_backup_file">文件已保存在 Downloads/%1$s</string>
@@ -227,7 +235,7 @@
 
     <!-- Camera Bind Error -->
     <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>
-    
+
     <!-- Vault Settings Delete -->
     <string name="vault_settings_delete_vault_caution1">我知道金库将被永久删除</string>
     <string name="vault_settings_delete_vault_caution2">我知道我可能会失去资金</string>
@@ -293,7 +301,7 @@
 
     <!-- Verify Swap -->
     <string name="verify_swap_sign_button">签署交易</string>
-    
+
     <!-- Swap Errors -->
     <string name="swap_error_no_amount">金额必须是正数</string>
     
@@ -383,7 +391,7 @@
     <string name="deposit_form_custom_memo_title">自定义备注</string>
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
     <string name="deposit_form_pending_rewards_hint">待处理奖励</string>
-    
+
     <!-- Swap Screen -->
     <string name="swap_screen_same_asset_error_message">源资产和目标资产不能相同。</string>
     
@@ -865,7 +873,7 @@
     
     <!-- Unstake TCY -->
     <string name="unstake_tcy_zero_error">如果余额低于 1，则无法执行取消质押</string>
-    
+
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
     <string name="update_available">有可用更新</string>
@@ -874,7 +882,7 @@
     
     <!-- Share Vault QR -->
     <string name="share_vault_qr_info">此二维码允许您分享金库的只读版本</string>
-    
+
     <!-- Add Address -->
     <string name="add_address_title_label">标签</string>
     
@@ -967,7 +975,7 @@
     
     <!-- Address Copied -->
     <string name="address_copied">%1$s 地址已复制</string>
-    
+
     <!-- Add Folder -->
     <string name="add_folder_title">添加文件夹</string>
     <string name="add_folder_list_title">选择金库</string>
@@ -1202,4 +1210,11 @@
     <string name="keysign_password_hide_hint">隐藏提示</string>
     <string name="keysign_password_show_hint">显示提示</string>
 
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
+    <string name="circle_msca_account_created_failed">创建 Circle MSCA 账户失败。请重试。</string>
+    <string name="circle_usdc_account">Circle USDC 账户</string>
+    <string name="withdraw">提取</string>
+
+    <string name="send_form_network_fee">网络费用（自动）</string>
 </resources>

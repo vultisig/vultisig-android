@@ -96,6 +96,13 @@
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
+    <string name="chain_account_view_deposit">Depósito</string>
+    <string name="chain_account_view_send">ENVIAR</string>
+    <string name="circle_defi_description">Deposita tu USDC en una cuenta de Circle y obtén rendimientos. De forma segura dentro de tu bóveda Vultisig.</string>
+    <string name="circle_defi_control_info">Los fondos permanecen completamente bajo el control de tu bóveda. Las cuentas de Circle son de autocustodia y el rendimiento se genera a través de tesorerías seguras fuera de la cadena.</string>
+    <string name="usdc_deposit_title">Depósito USDC</string>
+    <string name="deposit_usdc_button">Depositar USDC</string>
+    <string name="open_account_button">Abrir cuenta</string>
     <string name="vault_settings_success_backup_file">archivo guardado en Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">Este nombre ya existe</string>
     <string name="send_screen_max">MÁXIMA</string>
@@ -859,4 +866,11 @@
     <string name="deposit_error_not_secured_asset">El activo seleccionado no está protegido y no se puede procesar.</string>
     <string name="keysign_password_hide_hint">Ocultar pista</string>
     <string name="keysign_password_show_hint">Mostrar pista</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Cuenta Circle MSCA creada exitosamente</string>
+    <string name="circle_msca_account_created_failed">Error al crear la cuenta Circle MSCA. Por favor, inténtelo de nuevo.</string>
+    <string name="circle_usdc_account">Cuenta Circle USDC</string>
+    <string name="withdraw">Retirar</string>
+    <string name="send_form_network_fee">Tarifa de red (automática)</string>
 </resources>

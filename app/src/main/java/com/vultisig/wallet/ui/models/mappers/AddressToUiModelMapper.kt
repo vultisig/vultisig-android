@@ -30,5 +30,4 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
             nativeTokenTicker = nativeAccount.token.ticker,
         )
     }
-
 }

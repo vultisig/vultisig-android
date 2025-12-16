@@ -92,6 +92,13 @@
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_continue_button">Doorgaan</string>
     <string name="chain_account_view_swap">WISSELEN</string>
+    <string name="chain_account_view_deposit">STORTEN</string>
+    <string name="chain_account_view_send">VERZENDEN</string>
+    <string name="circle_defi_description">Stort je USDC op een Circle-account en verdien rendement. Veilig binnen je Vultisig-kluis.</string>
+    <string name="circle_defi_control_info">Fondsen blijven volledig onder controle van je kluis. Circle-accounts zijn zelfbeheerd en rendement wordt gegenereerd via veilige off-chain schatkisten.</string>
+    <string name="usdc_deposit_title">USDC-storting</string>
+    <string name="deposit_usdc_button">USDC storten</string>
+    <string name="open_account_button">Account openen</string>
     <string name="vault_settings_error_backup_file">er is een fout opgetreden</string>
     <string name="vault_settings_success_backup_file">bestand opgeslagen in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">deze naam bestaat al</string>
@@ -856,4 +863,11 @@
     <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen beveiligd item en kan niet worden verwerkt.</string>
     <string name="keysign_password_hide_hint">Verberg hint</string>
     <string name="keysign_password_show_hint">Toon hint</string>
+
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA-account succesvol aangemaakt</string>
+    <string name="circle_msca_account_created_failed">Kan Circle MSCA-account niet aanmaken. Probeer het opnieuw.</string>
+    <string name="circle_usdc_account">Circle USDC-account</string>
+    <string name="withdraw">Opnemen</string>
+    <string name="send_form_network_fee">Netwerkkosten (automatisch)</string>
 </resources>

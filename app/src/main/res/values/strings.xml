@@ -38,6 +38,11 @@
     <string name="deposit_option_receive_ytcy">Mint yTCY</string>
     <string name="deposit_option_sell_yrune">Redeem yRUNE</string>
     <string name="deposit_option_sell_ytcy">Redeem yTCY</string>
+    <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
+    <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
+    <string name="usdc_deposit_title">USDC Deposit</string>
+    <string name="deposit_usdc_button">Deposit USDC</string>
+    <string name="open_account_button">Open Account</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
@@ -124,6 +129,8 @@
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">SWAP</string>
+    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_send">SEND</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
@@ -394,6 +401,7 @@
     <string name="join_keysign_failed_connect_to_server">Failed connect to server</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="send_form_network_fee">Network fee (automatic)</string>
 
 
     <string name="verify_sign_message_method_field_title">Method</string>
@@ -909,4 +917,10 @@
     <string name="deposit_error_not_secured_asset">The selected asset is not a secured asset and cannot be processed</string>
     <string name="keysign_password_hide_hint">Hide hint</string>
     <string name="keysign_password_show_hint">Show hint</string>
+    <!-- Circle MSCA Account -->
+    <string name="circle_msca_account_created_success">Circle MSCA account successfully created</string>
+    <string name="circle_msca_account_created_failed">Failed to create Circle MSCA account. Please try again.</string>
+    <string name="circle_usdc_account">Circle USDC Account</string>
+    <string name="withdraw">Withdraw</string>
+
 </resources>
