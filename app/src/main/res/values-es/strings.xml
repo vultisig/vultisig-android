@@ -97,6 +97,7 @@
     <string name="send_continue_button">Continuar</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
     <string name="chain_account_view_deposit">Depósito</string>
+    <string name="chain_account_view_send">ENVIAR</string>
     <string name="circle_defi_description">Deposita tu USDC en una cuenta de Circle y obtén rendimientos. De forma segura dentro de tu bóveda Vultisig.</string>
     <string name="circle_defi_control_info">Los fondos permanecen completamente bajo el control de tu bóveda. Las cuentas de Circle son de autocustodia y el rendimiento se genera a través de tesorerías seguras fuera de la cadena.</string>
     <string name="usdc_deposit_title">Depósito USDC</string>

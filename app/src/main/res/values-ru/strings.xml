@@ -93,6 +93,7 @@
     <string name="send_continue_button">Продолжить</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
+    <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle являются самостоятельными, а доход генерируется через безопасные внесетевые казначейства.</string>
     <string name="usdc_deposit_title">Депозит USDC</string>
