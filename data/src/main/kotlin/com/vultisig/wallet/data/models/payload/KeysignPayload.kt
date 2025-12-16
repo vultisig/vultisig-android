@@ -19,4 +19,7 @@ data class KeysignPayload(
     val libType: SigningLibType?,
     val wasmExecuteContractPayload: WasmExecuteContractPayload?,
     val skipBroadcast: Boolean = false,
+    val defiAction: DeFiAction = DeFiAction.NONE,
 )
+
+enum class DeFiAction { NONE, CIRCLE_USDC_WITHDRAW }

@@ -909,6 +909,7 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val memo = "Withdraw:$tokenAmountInt"
+
                 /* EthereumFunction.withdrawCircleMSCA(
                     vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
                     tokenAddress = Coins.Ethereum.ETH.contractAddress,
