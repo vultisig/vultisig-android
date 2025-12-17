@@ -63,7 +63,7 @@ class ERC20Helper(
         }
 
         return Ethereum.SigningInput.newBuilder().apply {
-            toAddress = keysignPayload.coin.contractAddress
+            toAddress = keysignPayload.toAddress
             transaction = Ethereum.Transaction.newBuilder().apply {
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
                     amount = ByteString.copyFrom(BigInteger.ZERO.toByteArray())

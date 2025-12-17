@@ -933,7 +933,7 @@ internal class SendFormViewModel @Inject constructor(
                     vaultId = vaultId,
                     srcToken = selectedToken,
                     srcAddress = srcAddress,
-                    dstAddress = dstAddress,
+                    dstAddress = mscaAddress ?: error("MSCA account not deployed yet, please try again"),
                     memo = memo,
                     srcTokenValue = TokenValue(
                         value = tokenAmountInt,
