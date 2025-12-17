@@ -2132,6 +2132,7 @@ internal class SendFormViewModel @Inject constructor(
             || this.defiType == DeFiNavActions.MINT_YTCY
             || this.defiType == DeFiNavActions.REDEEM_YRUNE
             || this.defiType == DeFiNavActions.REDEEM_YTCY
+            || this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
         ) {
             viewModelScope.launch {
                 accountsRepository.loadAddresses(vaultId)
