@@ -14,9 +14,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
@@ -35,6 +37,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -259,6 +262,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
 
+    private var mscaAddress: String? = null
+
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     private val selectedTokenValue: Coin?
@@ -314,6 +319,7 @@ internal class SendFormViewModel @Inject constructor(
             amount = args.amount,
             memo = args.memo,
             type = args.type,
+            mscaAddress = args.mscaAddress,
         )
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -361,13 +367,18 @@ internal class SendFormViewModel @Inject constructor(
         address: String?,
         amount: String?,
         memo: String?,
-        type: String?
+        type: String?,
+        mscaAddress: String?,
     ) {
         memoFieldState.clearText()
         this.defiType = if (type == null) {
             null
         } else {
             parseDepositType(type)
+        }
+
+        if (this.mscaAddress != mscaAddress) {
+            this.mscaAddress = mscaAddress
         }
 
         if (this.vaultId != vaultId) {
@@ -839,10 +850,129 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI  -> unstake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
             else -> send()
+        }
+    }
+
+    private fun withDrawUSDCCircle() {
+        viewModelScope.launch {
+            showLoading()
+            try {
+                val accountValidation = accountValidation()
+                val vaultId = accountValidation.vaultId
+                val chain = accountValidation.chain
+                val dstAddress = accountValidation.dstAddress
+                val selectedAccount = accountValidation.selectedAccount
+                val gasFee = accountValidation.gasFee
+
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+                val nonDeFiAccount = accountsRepository.loadAddresses(vaultId).firstOrNull()
+                    ?.flatMap {
+                        it.accounts
+                    }
+                    ?.find {
+                        it.token.id.equals(Coins.Ethereum.ETH.id, true)
+                    }
+
+                val nonDeFiBalance = nonDeFiAccount?.tokenValue?.value ?: BigInteger.ZERO
+
+                if (nonDeFiBalance < gasFee.value) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
+                    )
+                }
+
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedToken.address
+                val tokenAmountInt =
+                    tokenAmount
+                        .movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                val availableTokenBalance = getAvailableTokenBalance(
+                    selectedAccount,
+                    gasFee.value,
+                )?.value ?: BigInteger.ZERO
+
+                if (tokenAmountInt > availableTokenBalance) {
+                    throw InvalidTransactionDataException(
+                        UiText.FormattedText(
+                            R.string.send_error_insufficient_native_balance_with_fees,
+                            listOf(selectedToken.ticker)
+                        )
+                    )
+                }
+
+                val memo = EthereumFunction.withdrawCircleMSCA(
+                    vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
+                    tokenAddress = Coins.Ethereum.USDC.contractAddress,
+                    amount = tokenAmountInt,
+                )
+
+                val specific = withContext(Dispatchers.IO) {
+                    blockChainSpecificRepository
+                        .getSpecific(
+                            chain,
+                            srcAddress,
+                            selectedToken,
+                            gasFee,
+                            isSwap = false,
+                            isMaxAmountEnabled = false,
+                            isDeposit = true,
+                        )
+                }
+
+                val depositTx = DepositTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = selectedToken,
+                    srcAddress = srcAddress,
+                    dstAddress = mscaAddress
+                        ?: throw InvalidTransactionDataException(UiText.DynamicString("MSCA account not deployed yet, please try again")),
+                    memo = memo,
+                    srcTokenValue = TokenValue(
+                        value = tokenAmountInt,
+                        token = selectedToken,
+                    ),
+                    estimatedFees = gasFee,
+                    estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
+                    blockChainSpecific = specific.blockChainSpecific,
+                    operation = OPERATION_CIRCLE_WITHDRAW,
+                )
+
+                depositTransactionRepository.addTransaction(depositTx)
+
+                navigator.route(
+                    Route.VerifyDeposit(
+                        transactionId = depositTx.id,
+                        vaultId = vaultId,
+                    )
+                )
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
+            } finally {
+                hideLoading()
+            }
         }
     }
 
@@ -2024,12 +2154,53 @@ internal class SendFormViewModel @Inject constructor(
             viewModelScope.launch {
                 loadRewardsAccount(vaultId)
             }
+        } else if (this.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE) {
+            viewModelScope.launch {
+                loadCircleUSDCAccount(vaultId)
+            }
         } else {
             viewModelScope.launch {
                 accountsRepository.loadDeFiAddresses(vaultId, false)
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect(accounts)
             }
+        }
+    }
+
+    private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
+        val accountsLoaded =
+            accountsRepository.loadAddresses(vaultId).firstOrNull()
+                ?.flatMap {
+                    it.accounts
+                }
+        val ethereumAccount = accountsLoaded?.find {
+            it.token.id.equals(Coins.Ethereum.ETH.id, true)
+        }
+
+        if (ethereumAccount == null) {
+            Timber.e("ETH account not found for Circle USDC withdrawal")
+            accounts.value = emptyList()
+            return
+        }
+
+        val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
+
+        if (mscaAddress != null) {
+            val id = usdc.generateId(mscaAddress!!)
+            val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
+            val usdcCircleAccount = Account(
+                token = usdc,
+                tokenValue = TokenValue(
+                    value = cachedDetails?.stakeAmount ?: BigInteger.ZERO,
+                    token = usdc,
+                ),
+                fiatValue = null,
+                price = null
+            )
+            accounts.value = listOf(ethereumAccount, usdcCircleAccount)
+        } else {
+            Timber.e("MSCA address not available for Circle USDC withdrawal")
+            accounts.value = listOf()
         }
     }
 
@@ -2048,7 +2219,7 @@ internal class SendFormViewModel @Inject constructor(
         } ?: return
 
         val cachedDetails =
-            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
 
         if (cachedDetails != null) {
             val rewardsAccount = Account(

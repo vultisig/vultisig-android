@@ -132,6 +132,7 @@ internal sealed class Route {
         val address: String? = null,
         val amount: String? = null,
         val memo: String? = null,
+        val mscaAddress: String? = null,
     ) {
 
         @Serializable

@@ -262,13 +262,12 @@ class EvmApiImp(
         return rpcResp.result.convertToBigIntegerOrZero()
     }
 
-    override suspend fun estimateGasForERC20Transfer(
+    suspend fun estimateGasForCallDataTransfer(
         senderAddress: String,
-        contractAddress: String,
         recipientAddress: String,
-        value: BigInteger,
+        value: String,
+        callData: String,
     ): BigInteger {
-        val data = constructERC20TransferData(recipientAddress, value)
         val nonce = getNonce(senderAddress)
         val gasPrice = getGasPrice()
         val rpcResp = fetch<RpcResponse>(
@@ -276,20 +275,36 @@ class EvmApiImp(
             buildJsonArray {
                 addJsonObject {
                     put("from", senderAddress)
-                    put("to", contractAddress)
-                    put("value", "0x0")
-                    put("data", data)
+                    put("to", recipientAddress)
+                    put("value", value)
+                    put("data", callData)
                     put("nonce", "0x${nonce.toString(16)}")
                     put("gasPrice", "0x${gasPrice.toString(16)}")
                 }
             }
         )
         if (rpcResp.error != null) {
-            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
+            Timber.d("get gas limit, error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
 
         return rpcResp.result.convertToBigIntegerOrZero()
+    }
+
+    override suspend fun estimateGasForERC20Transfer(
+        senderAddress: String,
+        contractAddress: String,
+        recipientAddress: String,
+        value: BigInteger,
+    ): BigInteger {
+        val data = constructERC20TransferData(recipientAddress, value)
+
+        return estimateGasForCallDataTransfer(
+            senderAddress = senderAddress,
+            recipientAddress = contractAddress,
+            value = "0x0",
+            callData = data,
+        )
     }
 
     private fun constructERC20TransferData(recipientAddress: String, value: BigInteger): String {
