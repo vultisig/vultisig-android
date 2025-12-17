@@ -679,7 +679,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val isAffiliate =
                             srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-
                         val quote = swapQuoteRepository.getMayaSwapQuote(
                             srcToken = srcToken,
                             dstToken = dstToken,

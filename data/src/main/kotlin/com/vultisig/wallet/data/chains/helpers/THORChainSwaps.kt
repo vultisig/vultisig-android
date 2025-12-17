@@ -60,9 +60,11 @@ class THORChainSwaps(
                     nonceIncrement = nonceIncrement
                 )
             }
+
             Chain.Ripple -> {
                 return RippleHelper.getPreSignedInputData(keysignPayload)
             }
+
             Chain.GaiaChain -> {
                 val helper = CosmosHelper(
                     coinType = CoinType.COSMOS,

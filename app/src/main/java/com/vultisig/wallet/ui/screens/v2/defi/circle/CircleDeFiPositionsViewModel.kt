@@ -27,6 +27,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -157,7 +158,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                 }
                 val cachePosition =
                     withContext(Dispatchers.IO) {
-                        stakingDetailsRepository.getStakingDetails(vaultId, Coins.Ethereum.USDC.id)
+                        stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ethereum.USDC.id)
                     }
                 if (cachePosition != null) {
                     showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
@@ -247,7 +248,20 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
 
     fun onWithdrawAccount() {
         viewModelScope.launch {
-
+            val usdc = Coins.Ethereum.USDC
+            val tokenId = usdc.id
+            if (!mscaAddress.isNullOrBlank()) {
+                navigator.route(
+                    Route.Send(
+                        vaultId = vaultId,
+                        chainId = Chain.Ethereum.id,
+                        type = DeFiNavActions.WITHDRAW_USDC_CIRCLE.type,
+                        tokenId = tokenId,
+                        address = usdc.contractAddress,
+                        mscaAddress = mscaAddress,
+                    )
+                )
+            }
         }
     }
 

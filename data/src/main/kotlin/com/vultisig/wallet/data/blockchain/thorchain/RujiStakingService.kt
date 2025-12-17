@@ -21,7 +21,7 @@ class RujiStakingService @Inject constructor(
 
     fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> = flow {
             val cachedDetails =
-                stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.RUJI.id)
+                stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
             if (cachedDetails != null) {
                 Timber.d("RujiStakingService: Emitting cached RUJI staking position for vault $vaultId")
                 emit(cachedDetails)

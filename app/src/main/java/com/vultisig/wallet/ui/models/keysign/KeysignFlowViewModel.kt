@@ -295,7 +295,6 @@ internal class KeysignFlowViewModel @Inject constructor(
             "https://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" + data
 
         addressProvider.update(_keysignMessage.value)
-
     }
 
     private fun startParticipantDiscovery(vault: Vault) {

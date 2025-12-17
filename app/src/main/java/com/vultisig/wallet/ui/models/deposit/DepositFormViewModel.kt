@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.models.DepositMemo.Unbond
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.OPERATION_MINT
+import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getPubKeyByChain
@@ -1624,8 +1626,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimateFeesFiat = estimatedGasFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
             thorAddress = thorAddress,
-            operation = "Mint",
-
+            operation = OPERATION_MINT,
             )
     }
 
@@ -1745,7 +1746,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = estimatedGasFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
-            operation = "Withdraw"
+            operation = OPERATION_WITHDRAW,
         )
     }
 
