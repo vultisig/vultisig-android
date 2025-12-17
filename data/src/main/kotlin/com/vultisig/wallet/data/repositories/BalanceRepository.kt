@@ -139,6 +139,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
+    private val circleDeFiBalanceService: ThorchainDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -196,7 +197,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
         val defiCachedBalances = when (coin.chain) {
             Chain.ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
-            Chain.Ethereum ->
+            Chain.Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            else -> error("Not Supported ${coin.chain}")
         }
 
         val allBalances = defiCachedBalances.flatMap { it.balances }
@@ -214,7 +216,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     value = tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP),
+                        .setScale(2, RoundingMode.HALF_UP), // TODO: Check with CIRCLE USDC
                     currency = currency.ticker
                 )
             } else {
