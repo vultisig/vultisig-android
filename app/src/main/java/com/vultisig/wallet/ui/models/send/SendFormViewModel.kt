@@ -17,7 +17,7 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -2163,13 +2163,12 @@ internal class SendFormViewModel @Inject constructor(
                 }
         val ethereumAccount = accountsLoaded?.find {
             it.token.id.equals(Coins.Ethereum.ETH.id, true)
-        }
-
-        if (ethereumAccount == null) {
-            Timber.e("ETH account not found for Circle USDC withdrawal")
-            accounts.value = emptyList()
-            return
-        }
+        } ?: Account(
+            token = Coins.Ethereum.ETH,
+            tokenValue = TokenValue(BigInteger.ZERO, Coins.Ethereum.ETH),
+            fiatValue = null,
+            price = null,
+        )
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
 
@@ -2188,7 +2187,17 @@ internal class SendFormViewModel @Inject constructor(
             accounts.value = listOf(ethereumAccount, usdcCircleAccount)
         } else {
             Timber.e("MSCA address not available for Circle USDC withdrawal")
-            accounts.value = listOf()
+            accounts.value = listOf(
+                ethereumAccount, Account(
+                    token = usdc,
+                    tokenValue = TokenValue(
+                        value = BigInteger.ZERO,
+                        token = usdc,
+                    ),
+                    fiatValue = null,
+                    price = null
+                )
+            )
         }
     }
 
@@ -2211,10 +2220,10 @@ internal class SendFormViewModel @Inject constructor(
 
         if (cachedDetails != null) {
             val rewardsAccount = Account(
-                token = RujiStakingService.RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
+                token = RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
                 tokenValue = TokenValue(
                     value = cachedDetails.rewards?.toBigInteger() ?: BigInteger.ZERO,
-                    token = RujiStakingService.RUJI_REWARDS_COIN
+                    token = RUJI_REWARDS_COIN
                 ),
                 fiatValue = null,
                 price = null
@@ -2235,9 +2244,15 @@ internal class SendFormViewModel @Inject constructor(
         preSelectTokenJob?.cancel()
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
-                val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainIds, preSelectedTokenId,
-                )
+                val preSelectedToken = if (defiType == null) {
+                    findPreselectedToken(
+                        accounts, preSelectedChainIds, preSelectedTokenId,
+                    )
+                } else {
+                    findDeFiPreselectedToken(
+                        accounts, preSelectedChainIds, preSelectedTokenId,
+                    )
+                }
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
 
@@ -2271,9 +2286,43 @@ internal class SendFormViewModel @Inject constructor(
                 searchByChainResult = accountToken
             }
         }
+
         // if user selected none, or nothing was found, select the first token
         return searchByChainResult
             ?: accounts.firstOrNull()?.token
+    }
+
+    private fun findDeFiPreselectedToken(
+        accounts: List<Account>,
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+    ): Coin? {
+        for (account in accounts) {
+            val accountToken = account.token
+            if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
+                return accountToken
+            }
+        }
+
+        // default coins, in case the account does not exist
+        val defaultCoin = when (defiType) {
+            DeFiNavActions.STAKE_RUJI, DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
+            DeFiNavActions.STAKE_TCY, DeFiNavActions.UNSTAKE_TCY -> Coins.ThorChain.TCY
+            DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
+            DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
+            DeFiNavActions.BOND -> Coins.ThorChain.RUNE
+            DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
+            DeFiNavActions.WITHDRAW_RUJI -> RUJI_REWARDS_COIN
+            DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE
+            DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
+            DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Coins.Ethereum.USDC
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
+            null -> findPreselectedToken(
+                accounts, preSelectedChainIds, preSelectedTokenId,
+            )
+        }
+
+        return defaultCoin
     }
 
     private fun calculateGasTokenBalance() {
