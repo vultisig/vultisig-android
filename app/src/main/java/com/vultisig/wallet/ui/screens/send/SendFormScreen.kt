@@ -370,7 +370,7 @@ private fun SendFormContent(
     onAutoCompoundCheckedChange: (Boolean) -> Unit
 ) {
     // send asset
-    if (state.defiType == null) {
+    if (state.defiType == null || state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -724,7 +724,7 @@ private fun FoldableAmountWidget(
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
                 
                 Text(
-                    text = (state.selectedCoin?.balance ?: "") + ticker,
+                    text = (state.selectedCoin?.balance ?: "0") + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.light,
                     textAlign = TextAlign.End,
