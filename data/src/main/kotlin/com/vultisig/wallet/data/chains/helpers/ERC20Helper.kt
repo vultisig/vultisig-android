@@ -1,10 +1,12 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DeFiAction
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
@@ -24,7 +26,25 @@ class ERC20Helper(
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
-        val input = Ethereum.SigningInput.newBuilder()
+
+        val defiAction = keysignPayload.defiAction
+        val input = when (defiAction) {
+            DeFiAction.CIRCLE_USDC_WITHDRAW -> buildUsdcWithdraw(keysignPayload)
+            DeFiAction.NONE -> buildErc20TokenTransfer(keysignPayload)
+        }
+
+        return EthereumGasHelper.setGasParameters(
+            ethSpecific.gasLimit,
+            ethSpecific.maxFeePerGasWei,
+            input,
+            keysignPayload,
+            nonceIncrement = BigInteger.ZERO,
+            coinType = coinType
+        ).build().toByteArray()
+    }
+
+    private fun buildErc20TokenTransfer(keysignPayload: KeysignPayload): Ethereum.SigningInput.Builder =
+        Ethereum.SigningInput.newBuilder()
             .setToAddress(keysignPayload.coin.contractAddress)
             .setTransaction(
                 Ethereum.Transaction.newBuilder()
@@ -37,14 +57,20 @@ class ERC20Helper(
                     .build()
             )
 
-        return EthereumGasHelper.setGasParameters(
-            ethSpecific.gasLimit,
-            ethSpecific.maxFeePerGasWei,
-            input,
-            keysignPayload,
-            nonceIncrement = BigInteger.ZERO,
-            coinType = coinType
-        ).build().toByteArray()
+    private fun buildUsdcWithdraw(keysignPayload: KeysignPayload) : Ethereum.SigningInput.Builder {
+        require(!keysignPayload.memo.isNullOrBlank()) {
+            "Empty memo for usdc withdraw"
+        }
+
+        return Ethereum.SigningInput.newBuilder().apply {
+            toAddress = keysignPayload.toAddress
+            transaction = Ethereum.Transaction.newBuilder().apply {
+                transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
+                    amount = ByteString.copyFrom(BigInteger.ZERO.toByteArray())
+                    data = keysignPayload.memo.toByteStringOrHex()
+                }.build()
+            }.build()
+        }
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {

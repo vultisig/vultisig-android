@@ -229,6 +229,7 @@ private fun SendFormScreen(
             DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
             DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
             DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
             else -> stringResource(R.string.send_screen_title)
         },
         onBackClick = onBackClick,
@@ -369,7 +370,7 @@ private fun SendFormContent(
     onAutoCompoundCheckedChange: (Boolean) -> Unit
 ) {
     // send asset
-    if (state.defiType == null) {
+    if (state.defiType == null || state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE) {
         FoldableAssetWidget(
             state = state,
             onExpandSection = onExpandSection,
@@ -491,6 +492,7 @@ private fun SendFormContent(
         || state.defiType == DeFiNavActions.REDEEM_YRUNE
         || state.defiType == DeFiNavActions.REDEEM_YTCY
         || state.defiType == DeFiNavActions.WITHDRAW_RUJI
+        || state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
     ) {
         FoldableAmountWidget(
             state = state,
@@ -722,7 +724,7 @@ private fun FoldableAmountWidget(
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
                 
                 Text(
-                    text = (state.selectedCoin?.balance ?: "") + ticker,
+                    text = (state.selectedCoin?.balance ?: "0") + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.light,
                     textAlign = TextAlign.End,
