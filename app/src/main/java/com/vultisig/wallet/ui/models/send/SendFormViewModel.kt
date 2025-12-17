@@ -838,7 +838,7 @@ internal class SendFormViewModel @Inject constructor(
             DeFiNavActions.BOND -> bond()
             DeFiNavActions.UNBOND -> unbond()
             DeFiNavActions.STAKE_RUJI, DeFiNavActions.STAKE_TCY -> stake()
-            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI  -> unstake()
+            DeFiNavActions.UNSTAKE_RUJI, DeFiNavActions.UNSTAKE_TCY, DeFiNavActions.WITHDRAW_RUJI -> unstake()
             DeFiNavActions.MINT_YRUNE, DeFiNavActions.MINT_YTCY -> mint()
             DeFiNavActions.REDEEM_YRUNE, DeFiNavActions.REDEEM_YTCY -> redeem()
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withDrawUSDCCircle()
@@ -933,7 +933,8 @@ internal class SendFormViewModel @Inject constructor(
                     vaultId = vaultId,
                     srcToken = selectedToken,
                     srcAddress = srcAddress,
-                    dstAddress = mscaAddress ?: error("MSCA account not deployed yet, please try again"),
+                    dstAddress = mscaAddress
+                        ?: error("MSCA account not deployed yet, please try again"),
                     memo = memo,
                     srcTokenValue = TokenValue(
                         value = tokenAmountInt,
@@ -2162,11 +2163,17 @@ internal class SendFormViewModel @Inject constructor(
                 }
         val ethereumAccount = accountsLoaded?.find {
             it.token.id.equals(Coins.Ethereum.ETH.id, true)
-        } ?: return
+        }
+
+        if (ethereumAccount == null) {
+            Timber.e("ETH account not found for Circle USDC withdrawal")
+            accounts.value = emptyList()
+            return
+        }
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
 
-        if (mscaAddress != null){
+        if (mscaAddress != null) {
             val id = usdc.generateId(mscaAddress!!)
             val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
             val usdcCircleAccount = Account(
@@ -2180,6 +2187,7 @@ internal class SendFormViewModel @Inject constructor(
             )
             accounts.value = listOf(ethereumAccount, usdcCircleAccount)
         } else {
+            Timber.e("MSCA address not available for Circle USDC withdrawal")
             accounts.value = listOf()
         }
     }
