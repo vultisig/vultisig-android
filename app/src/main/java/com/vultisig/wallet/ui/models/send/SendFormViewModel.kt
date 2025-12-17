@@ -934,7 +934,7 @@ internal class SendFormViewModel @Inject constructor(
                     srcToken = selectedToken,
                     srcAddress = srcAddress,
                     dstAddress = mscaAddress
-                        ?: error("MSCA account not deployed yet, please try again"),
+                        ?: throw InvalidTransactionDataException(UiText.DynamicString("MSCA account not deployed yet, please try again")),
                     memo = memo,
                     srcTokenValue = TokenValue(
                         value = tokenAmountInt,
