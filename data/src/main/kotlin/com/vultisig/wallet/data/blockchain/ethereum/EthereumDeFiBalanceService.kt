@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.blockchain.ethereum
 
 import com.vultisig.wallet.data.api.EvmApi
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.DeFiService
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
@@ -8,13 +9,15 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 
 class EthereumDeFiBalanceService(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val scaCircleAccountRepository: ScaCircleAccountRepository,
-    private val evmApi: EvmApi,
+    private val evmApi: EvmApiFactory,
 ) : DeFiService {
 
     override suspend fun getCacheDeFiBalance(
@@ -47,6 +50,13 @@ class EthereumDeFiBalanceService(
         vaultId: String
     ): List<DeFiBalance> {
         val scaAccount = scaCircleAccountRepository.getAccount(vaultId) ?: return zeroDeFiBalance()
+
+        val api = evmApi.createEvmApi(Chain.Ethereum)
+        val usdc = Coins.Ethereum.USDC.copy(address = scaAccount)
+        val usdcDepositedBalance = withContext(Dispatchers.IO) {
+            api.getBalance(usdc)
+        }
+
 
     }
 
