@@ -92,7 +92,8 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 maxFeePerGasWei = BigInteger(ethereumSpecific.maxFeePerGasWei),
                 priorityFeeWei = BigInteger(ethereumSpecific.priorityFee),
                 nonce = BigInteger.valueOf(ethereumSpecific.nonce.toLong()),
-                gasLimit = BigInteger(ethereumSpecific.gasLimit)
+                gasLimit = BigInteger(ethereumSpecific.gasLimit),
+                isDeposit = false
             )
         }
 

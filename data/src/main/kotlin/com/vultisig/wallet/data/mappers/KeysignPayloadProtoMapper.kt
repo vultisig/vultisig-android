@@ -107,6 +107,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         priorityFeeWei = BigInteger(it.priorityFee),
                         nonce = it.nonce.toBigInteger(),
                         gasLimit = BigInteger(it.gasLimit),
+                        isDeposit = false,
                     )
                 }
 
