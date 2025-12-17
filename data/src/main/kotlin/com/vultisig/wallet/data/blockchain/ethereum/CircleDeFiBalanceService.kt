@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigInteger
 
-class EthereumDeFiBalanceService(
+class CircleDeFiBalanceService(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val scaCircleAccountRepository: ScaCircleAccountRepository,
     private val evmApi: EvmApiFactory,
@@ -26,11 +26,14 @@ class EthereumDeFiBalanceService(
     ): List<DeFiBalance> {
         Timber.d("EthereumDeFiBalanceService: Fetching DeFi balances for address: $address")
 
-        val scaAccount = scaCircleAccountRepository.getAccount(vaultId) ?: return zeroDeFiBalance()
-        val id = Coins.Ethereum.USDC.generateId(scaAccount)
+        val scaAccount = withContext(Dispatchers.IO) {
+            scaCircleAccountRepository.getAccount(vaultId)
+        } ?: return zeroDeFiBalance()
 
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsById(vaultId, id) ?: return zeroDeFiBalance()
+        val cachedDetails = withContext(Dispatchers.IO) {
+            val id = Coins.Ethereum.USDC.generateId(scaAccount)
+            stakingDetailsRepository.getStakingDetailsById(vaultId, id)
+        } ?: return zeroDeFiBalance()
 
         return listOf(
             DeFiBalance(
@@ -49,41 +52,46 @@ class EthereumDeFiBalanceService(
         address: String,
         vaultId: String
     ): List<DeFiBalance> {
-        val scaAccount = scaCircleAccountRepository.getAccount(vaultId) ?: return zeroDeFiBalance()
+        try {
+            val scaAccount = withContext(Dispatchers.IO) {
+                scaCircleAccountRepository.getAccount(vaultId)
+            } ?: return zeroDeFiBalance()
 
-        val api = evmApi.createEvmApi(Chain.Ethereum)
-        val usdc = Coins.Ethereum.USDC.copy(address = scaAccount)
-        val usdcDepositedBalance = withContext(Dispatchers.IO) {
-            api.getBalance(usdc)
-        }
+            val api = evmApi.createEvmApi(Chain.Ethereum)
+            val usdc = Coins.Ethereum.USDC.copy(address = scaAccount)
+            val usdcDepositedBalance = withContext(Dispatchers.IO) {
+                api.getBalance(usdc)
+            }
 
-        val usdcCircleStakingDetails = StakingDetails(
-            id = usdc.generateId(scaAccount),
-            coin = usdc,
-            stakeAmount = usdcDepositedBalance,
-            apr = null,
-            estimatedRewards = null,
-            nextPayoutDate = null,
-            rewards = null,
-            rewardsCoin = usdc,
-        )
+            val usdcCircleStakingDetails = StakingDetails(
+                id = usdc.generateId(scaAccount),
+                coin = usdc,
+                stakeAmount = usdcDepositedBalance,
+                apr = null,
+                estimatedRewards = null,
+                nextPayoutDate = null,
+                rewards = null,
+                rewardsCoin = usdc,
+            )
 
-        // Save position in  cache
-        withContext(Dispatchers.IO) {
+
             stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
-        }
 
-        return listOf(
-            DeFiBalance(
-                chain = Chain.Ethereum,
-                balances = listOf(
-                    DeFiBalance.Balance(
-                        coin = usdc,
-                        amount = usdcDepositedBalance
+            return listOf(
+                DeFiBalance(
+                    chain = Chain.Ethereum,
+                    balances = listOf(
+                        DeFiBalance.Balance(
+                            coin = usdc,
+                            amount = usdcDepositedBalance
+                        )
                     )
                 )
             )
-        )
+        } catch (t: Throwable) {
+            Timber.e(t)
+            return getCacheDeFiBalance(address, vaultId)
+        }
     }
 
     private fun zeroDeFiBalance(): List<DeFiBalance> {
