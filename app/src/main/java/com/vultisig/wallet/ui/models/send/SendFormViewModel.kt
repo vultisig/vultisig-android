@@ -2154,7 +2154,6 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    // TODO: To Clean up in last PR (home position implemented)
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
         val accountsLoaded =
             accountsRepository.loadAddresses(vaultId).firstOrNull()
@@ -2165,7 +2164,7 @@ internal class SendFormViewModel @Inject constructor(
             it.token.id.equals(Coins.Ethereum.ETH.id, true)
         } ?: return
 
-        val usdc = Coins.Ethereum.USDC
+        val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
 
         if (mscaAddress != null){
             val id = usdc.generateId(mscaAddress!!)
