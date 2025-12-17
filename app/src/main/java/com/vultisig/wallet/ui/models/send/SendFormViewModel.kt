@@ -922,7 +922,7 @@ internal class SendFormViewModel @Inject constructor(
                             srcAddress,
                             selectedToken,
                             gasFee,
-                            isSwap = true,
+                            isSwap = false,
                             isMaxAmountEnabled = false,
                             isDeposit = true,
                         )
