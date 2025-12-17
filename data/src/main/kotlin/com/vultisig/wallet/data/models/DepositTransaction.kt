@@ -20,3 +20,7 @@ data class DepositTransaction(
     val thorAddress : String  = "",
     val utxos: List<UtxoInfo> = emptyList(),
 )
+
+const val OPERATION_MINT = "Mint"
+const val OPERATION_WITHDRAW = "Withdraw"
+const val OPERATION_CIRCLE_WITHDRAW = "DepositUSDCCircle"

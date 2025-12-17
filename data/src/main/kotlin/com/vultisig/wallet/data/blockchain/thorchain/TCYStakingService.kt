@@ -56,7 +56,7 @@ class TCYStakingService @Inject constructor(
 
     fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> = flow {
         val cachedDetails =
-            stakingDetailsRepository.getStakingDetails(vaultId, Coins.ThorChain.TCY.id)
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id)
         if (cachedDetails != null) {
             Timber.d("TCYStakingService: Emitting cached TCY staking position for vault $vaultId")
             emit(cachedDetails)

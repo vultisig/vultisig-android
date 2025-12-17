@@ -9,17 +9,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.CacheDrawScope
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
@@ -27,13 +30,24 @@ import com.vultisig.wallet.ui.theme.v2.V2.colors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DottyBottomSheet(
+    onExpand: () -> Unit = {},
     onDismiss: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
 
-    val sheetState = rememberStandardBottomSheetState(
-        skipHiddenState = false
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
     )
+
+    LaunchedEffect(Unit) {
+        sheetState.expand()
+    }
+
+    LaunchedEffect(sheetState.currentValue) {
+        if (sheetState.currentValue != SheetValue.Hidden) {
+            onExpand()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -54,11 +68,22 @@ internal fun DottyBottomSheet(
                             )
                         )
                         .background(Theme.v2.colors.backgrounds.primary)
-                        .drawBehind {
-                            generateBackgroundDots(
-                                dotColor = Color(0xff172854),
+                        .drawWithCache {
+                            val dots = rememberDotsPath(
+                                stepSize = 72f,
+                                dotRadius = 2.5f,
+                                dotColor = Color(0xff172854)
                             )
-                            bottomFade()
+                            val fadeBrush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    colors.backgrounds.secondary
+                                )
+                            )
+                            onDrawBehind {
+                                drawPath(dots.path, color = dots.color)
+                                drawRect(brush = fadeBrush)
+                            }
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
@@ -75,23 +100,16 @@ internal fun DottyBottomSheet(
 }
 
 
-private fun DrawScope.bottomFade() {
-    drawRect(
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.Transparent,
-                colors.backgrounds.secondary
-            )
-        ),
-    )
-}
+private data class DotsPath(
+    val path: Path,
+    val color: Color,
+)
 
-
-private fun DrawScope.generateBackgroundDots(
-    stepSize: Float = 50f,
-    dotRadius: Float = 3f,
+private fun CacheDrawScope.rememberDotsPath(
+    stepSize: Float = 72f,
+    dotRadius: Float = 2.5f,
     dotColor: Color = colors.neutrals.n50
-) {
+): DotsPath {
     val width = size.width
     val height = size.height
 
@@ -101,19 +119,20 @@ private fun DrawScope.generateBackgroundDots(
     val offsetX = (width - (dotsX - 1) * stepSize) / 2
     val offsetY = (height - (dotsY - 1) * stepSize) / 2
 
+    val path = Path()
     for (row in 0 until dotsY) {
         for (col in 0 until dotsX) {
             val x = offsetX + col * stepSize
             val y = offsetY + row * stepSize
-
-            drawCircle(
-                color = dotColor,
-                radius = dotRadius,
-                center = Offset(
-                    x,
-                    y
+            path.addOval(
+                Rect(
+                    left = x - dotRadius,
+                    top = y - dotRadius,
+                    right = x + dotRadius,
+                    bottom = y + dotRadius,
                 )
             )
         }
     }
+    return DotsPath(path = path, color = dotColor)
 }
