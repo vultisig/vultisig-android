@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
@@ -283,6 +284,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             if (thorchainAddress != null) {
                 val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
                     address = thorchainAddress.address,
+                    coin = Coins.ThorChain.RUNE,
                     vaultId = vaultId,
                 )
 

@@ -88,6 +88,7 @@ interface BalanceRepository {
 
     suspend fun getDeFiCachedTokeBalanceAndPrice(
         address: String,
+        coin: Coin,
         vaultId: String,
     ):  List<TokenBalanceAndPrice>
 
@@ -188,12 +189,15 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
     override suspend fun getDeFiCachedTokeBalanceAndPrice(
         address: String,
+        coin: Coin,
         vaultId: String,
     ): List<TokenBalanceAndPrice> {
         val currency = appCurrencyRepository.currency.first()
 
-        val defiCachedBalances =
-            thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+        val defiCachedBalances = when (coin.chain) {
+            Chain.ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            Chain.Ethereum ->
+        }
 
         val allBalances = defiCachedBalances.flatMap { it.balances }
         
