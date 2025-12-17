@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -908,13 +909,11 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
 
-                val memo = "Withdraw:$tokenAmountInt"
-
-                /* EthereumFunction.withdrawCircleMSCA(
+                val memo = EthereumFunction.withdrawCircleMSCA(
                     vaultAddress = nonDeFiAccount?.token?.address ?: error("Vault Address Empty"),
-                    tokenAddress = Coins.Ethereum.ETH.contractAddress,
+                    tokenAddress = Coins.Ethereum.USDC.contractAddress,
                     amount = tokenAmountInt,
-                ) */
+                )
 
                 val specific = withContext(Dispatchers.IO) {
                     blockChainSpecificRepository
@@ -943,7 +942,7 @@ internal class SendFormViewModel @Inject constructor(
                     estimatedFees = gasFee,
                     estimateFeesFiat = getFeesFiatValue(gasFee, selectedToken).formattedFiatValue,
                     blockChainSpecific = specific.blockChainSpecific,
-                    operation = "DepositUSDCCircle",
+                    operation = OPERATION_CIRCLE_WITHDRAW,
                 )
 
                 depositTransactionRepository.addTransaction(depositTx)

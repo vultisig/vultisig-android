@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.DeFiAction
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -189,9 +190,9 @@ internal class KeysignShareViewModel @Inject constructor(
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 defiAction = if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
-
+                    DeFiAction.CIRCLE_USDC_WITHDRAW
                 } else {
-
+                    DeFiAction.NONE
                 }
             )
         }
