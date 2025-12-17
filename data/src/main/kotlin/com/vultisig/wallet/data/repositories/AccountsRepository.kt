@@ -261,7 +261,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         isRefresh: Boolean
     ): Flow<List<Address>> = channelFlow {
         val vault = getVault(vaultId)
-        val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
+        val defiCoins = vault.coins.filter { it.isValidForDeFi() }
             .distinctBy { it.id.lowercase() }
 
         val loadPrices = if (isRefresh) {
@@ -278,6 +278,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
         // emit cached
         try {
             val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
+            val ethereumAddresses = addresses.find { it.chain == Chain.Ethereum }
+
             if (thorchainAddress != null) {
                 val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
                     address = thorchainAddress.address,
@@ -410,6 +412,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
             account.token.chain.id to account.token.contractAddress.lowercase()
         }
     )
+
+    private fun Coin.isValidForDeFi(): Boolean {
+        return chain.isDeFiSupported || (ticker == "USDC" && chain == Chain.Ethereum)
+    }
 }
 
 private data class CachedAddresses(

@@ -98,6 +98,7 @@ internal data class AccountUiModel(
     val fiatAmount: String?,
     val assetsSize: Int = 0,
     val nativeTokenTicker: String = "",
+    val isDeFiProvider: Boolean = false,
 )
 
 @HiltViewModel

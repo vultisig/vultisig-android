@@ -248,6 +248,7 @@ val Chain.banxaAssetName: String?
 val Chain.isDeFiSupported: Boolean
     get() = when (this) {
         Chain.ThorChain -> true
+        Chain.Ethereum -> true // only circle atm
         else -> false
     }
 

@@ -43,6 +43,8 @@ internal val thorchainSupportsBonDeFi: List<Coin>
         Coins.ThorChain.RUNE,
     )
 
+internal enum class DeFiProviders { CIRCLE }
+
 internal fun defaultSelectedPositionsDialog(): List<String> = 
     (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }
 
