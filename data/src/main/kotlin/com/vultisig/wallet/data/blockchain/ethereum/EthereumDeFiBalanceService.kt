@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.blockchain.ethereum
 
-import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.DeFiService
-import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
@@ -57,7 +57,33 @@ class EthereumDeFiBalanceService(
             api.getBalance(usdc)
         }
 
+        val usdcCircleStakingDetails = StakingDetails(
+            id = usdc.generateId(scaAccount),
+            coin = usdc,
+            stakeAmount = usdcDepositedBalance,
+            apr = null,
+            estimatedRewards = null,
+            nextPayoutDate = null,
+            rewards = null,
+            rewardsCoin = usdc,
+        )
 
+        // Save position in  cache
+        withContext(Dispatchers.IO) {
+            stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
+        }
+
+        return listOf(
+            DeFiBalance(
+                chain = Chain.Ethereum,
+                balances = listOf(
+                    DeFiBalance.Balance(
+                        coin = usdc,
+                        amount = usdcDepositedBalance
+                    )
+                )
+            )
+        )
     }
 
     private fun zeroDeFiBalance(): List<DeFiBalance> {

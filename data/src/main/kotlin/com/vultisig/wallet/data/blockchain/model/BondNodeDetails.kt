@@ -14,7 +14,7 @@ data class BondedNodePosition(
     val nextChurn: Date?,
 ) {
     companion object {
-        fun Coin.generateId(nodeAddress: String): String {
+        fun Coin.generateBondedId(nodeAddress: String): String {
             return if (contractAddress.isNotEmpty()) {
                 "$id-$contractAddress-$nodeAddress"
             } else {
