@@ -14,7 +14,6 @@ data class Account(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
     val price: FiatValue?,
-    val defiProvider: String? = null,
 ){
     companion object {
         val EMPTY = Account(

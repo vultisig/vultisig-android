@@ -79,11 +79,11 @@ object EthereumFunction {
                 .decodeHex()
                 .toByteArray()
 
-            val tokenAddress = AnyAddress(tokenAddress, CoinType.ETHEREUM)
+            val tokenAddr = AnyAddress(tokenAddress, CoinType.ETHEREUM)
 
             // execute(address _to, uint256 _value, bytes _data)
             val executeFn = EthereumAbiFunction("execute").apply {
-                addParamAddress(tokenAddress.data(), false)
+                addParamAddress(tokenAddr.data(), false)
                 addParamUInt256(ByteArray(32), false)
                 addParamBytes(erc20TransferData, false)
             }
