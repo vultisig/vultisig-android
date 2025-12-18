@@ -915,6 +915,8 @@
     <string name="operation">Operation</string>
     <string name="thorchain_address_not_found_in_vault">THORChain address not found in vault. Please ensure you have RUNE in your vault</string>
     <string name="deposit_error_not_secured_asset">The selected asset is not a secured asset and cannot be processed</string>
+    <string name="keysign_password_hide_hint">Hide hint</string>
+    <string name="keysign_password_show_hint">Show hint</string>
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA account successfully created</string>
     <string name="circle_msca_account_created_failed">Failed to create Circle MSCA account. Please try again.</string>
