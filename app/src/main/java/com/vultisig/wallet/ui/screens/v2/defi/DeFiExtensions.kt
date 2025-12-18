@@ -30,6 +30,12 @@ internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> =
         )
     }
 
+val defiSupportedChains: List<Chain>
+    get() = listOf(
+        Chain.ThorChain,
+        Chain.Ethereum
+    )
+
 internal val thorchainSupportStakingDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUJI,

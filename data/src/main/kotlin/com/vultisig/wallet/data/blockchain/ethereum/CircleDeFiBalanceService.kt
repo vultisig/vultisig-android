@@ -74,8 +74,9 @@ class CircleDeFiBalanceService(
                 rewardsCoin = usdc,
             )
 
-
-            stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
+            withContext(Dispatchers.IO) {
+                stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
+            }
 
             return listOf(
                 DeFiBalance(

@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.utils.SimpleCache
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -139,7 +140,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val cardanoApi: CardanoApi,
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
-    private val circleDeFiBalanceService: ThorchainDeFiBalanceService,
+    private val circleDeFiBalanceService: CircleDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -196,8 +197,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
         val currency = appCurrencyRepository.currency.first()
 
         val defiCachedBalances = when (coin.chain) {
-            Chain.ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
-            Chain.Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            ThorChain -> thorchainDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+            Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
             else -> error("Not Supported ${coin.chain}")
         }
 
@@ -385,6 +386,16 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 mutex.withLock {
                     defiBalanceCache.get(address) ?: run {
                         val remote = thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+                        defiBalanceCache.put(address, remote)
+                        remote
+                    }
+                }
+            }
+            Ethereum -> {
+                val mutex = lockFor(address)
+                mutex.withLock {
+                    defiBalanceCache.get(address) ?: run {
+                        val remote = circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
                         defiBalanceCache.put(address, remote)
                         remote
                     }
