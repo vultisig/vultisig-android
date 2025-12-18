@@ -50,7 +50,7 @@ internal class ConvertTokenToTokenImpl @Inject constructor(
         
         // Convert to target token amount
         val toAmountDecimal = valueInCurrency
-            .divide(toPrice, CALCULATION_SCALE, RoundingMode.HALF_UP)
+            .divide(toPrice, CALCULATION_SCALE, RoundingMode.DOWN)
         
         // Convert back to raw amount with target token decimals
         return toToken.toRawAmount(toAmountDecimal)
