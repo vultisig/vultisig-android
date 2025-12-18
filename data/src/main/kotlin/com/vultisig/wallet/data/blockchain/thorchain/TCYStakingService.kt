@@ -178,7 +178,7 @@ class TCYStakingService @Inject constructor(
 
             // Calculate average daily RUNE
             val days = distributions.size.toBigDecimal()
-            val avgDailyRune = totalRune.divide(days, 8, RoundingMode.DOWN)
+            val avgDailyRune = totalRune.divide(days, 8, RoundingMode.HALF_UP)
 
             // Annualize
             val annualRune = avgDailyRune.multiply(BigDecimal(DAYS_IN_YEAR))
@@ -189,7 +189,7 @@ class TCYStakingService @Inject constructor(
 
             // Calculate APY
             return if (stakedValueUSD > BigDecimal.ZERO) {
-                (annualUSD.divide(stakedValueUSD, 4, RoundingMode.DOWN).toDouble() * 100)
+                (annualUSD.divide(stakedValueUSD, 4, RoundingMode.HALF_UP).toDouble() * 100)
             } else {
                 0.0
             }
@@ -269,7 +269,7 @@ class TCYStakingService @Inject constructor(
                     currentAccruedRune.divide(
                         blocksSinceLastDistribution.toBigDecimal(),
                         8,
-                        RoundingMode.DOWN
+                        RoundingMode.HALF_UP
                     )
 
                 // Calculate total estimated RUNE by next distribution
@@ -310,7 +310,7 @@ class TCYStakingService @Inject constructor(
             return BigDecimal.ZERO
         }
 
-        val userShare = stakedAmount.divide(totalStakedTcy, 8, RoundingMode.DOWN)
+        val userShare = stakedAmount.divide(totalStakedTcy, 8, RoundingMode.HALF_UP)
 
         return actualDistributionAmount.multiply(userShare)
     }
@@ -363,7 +363,7 @@ class TCYStakingService @Inject constructor(
         return totalSatoshis.divide(
             BigDecimal.TEN.pow(TCY_DECIMALS),
             TCY_DECIMALS,
-            RoundingMode.DOWN
+            RoundingMode.HALF_UP
         )
     }
 }

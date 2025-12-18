@@ -53,7 +53,7 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
             decimal
                 .setScale(
                     MAX_UI_TOKEN_VALUE_DECIMALS,
-                    RoundingMode.DOWN
+                    RoundingMode.HALF_UP
                 )
                 .stripTrailingZeros()
         )

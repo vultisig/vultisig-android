@@ -1983,7 +1983,7 @@ internal class SendFormViewModel @Inject constructor(
         val divider = "100".toBigDecimal()
         return try {
             this.toBigDecimal()
-                .setScale(2, RoundingMode.DOWN)
+                .setScale(2, RoundingMode.HALF_UP)
                 .divide(divider)
                 .toPlainString()
         } catch (t: Throwable) {
@@ -2664,7 +2664,7 @@ internal class SendFormViewModel @Inject constructor(
                     val fiatValue =
                         convertValue(tokenString, selectedToken) { value, price, token ->
                             // this is the fiat value , we should not keep too much decimal places
-                            value.multiply(price).setScale(3, RoundingMode.DOWN)
+                            value.multiply(price).setScale(3, RoundingMode.HALF_UP)
                                 .stripTrailingZeros()
                         } ?: return@combine
 
@@ -2675,7 +2675,7 @@ internal class SendFormViewModel @Inject constructor(
                 } else if (lastFiatValueUserInput != fiatString) {
                     val tokenValue =
                         convertValue(fiatString, selectedToken) { value, price, token ->
-                            value.divide(price, token.decimal, RoundingMode.DOWN)
+                            value.divide(price, token.decimal, RoundingMode.HALF_UP)
                         } ?: return@combine
 
                     val tokenDecimal = tokenValue.toBigDecimalOrNull()

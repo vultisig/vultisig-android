@@ -1089,7 +1089,7 @@ internal class DepositFormViewModel @Inject constructor(
         val divider = "100".toBigDecimal()
         return try {
             this.toBigDecimal()
-                .setScale(2, RoundingMode.DOWN)
+                .setScale(2, RoundingMode.HALF_UP)
                 .divide(divider)
                 .toPlainString()
         } catch (t: Throwable) {
