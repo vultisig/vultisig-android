@@ -71,7 +71,6 @@ internal data class ChainTokensUiModel(
     val canBuy: Boolean = false,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
-    val showCameraBottomSheet: Boolean = false,
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val tronResourceStats: ResourceUsage? = null,
@@ -354,7 +353,9 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun openCamera(){
-        uiState.update { it.copy(showCameraBottomSheet = true) }
+        viewModelScope.launch {
+            navigator.route(Route.ScanQr(vaultId = vaultId))
+        }
     }
 
     fun handleScanQrError(error: String) {
@@ -370,27 +371,6 @@ internal class ChainTokensViewModel @Inject constructor(
                     scanQrUiModel = ScanQrUiModel(error = null)
                 )
             }
-        }
-    }
-
-    fun dismissCameraBottomSheet() {
-        uiState.update { it.copy(showCameraBottomSheet = false) }
-    }
-
-    fun onScanSuccess(qr: String) = viewModelScope.launch {
-        try {
-            val dst = getDirectionByQrCodeUseCase(
-                qr,
-                vaultId
-            )
-            navigator.route(dst)
-            uiState.update { it.copy(showCameraBottomSheet = false) }
-        } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Failed to process QR code"
-            )
-            handleScanQrError(e.message ?: "Invalid QR code")
         }
     }
 

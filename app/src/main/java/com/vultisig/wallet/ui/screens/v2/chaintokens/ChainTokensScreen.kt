@@ -51,7 +51,6 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
-import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
@@ -75,15 +74,6 @@ internal fun ChainTokensScreen(
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
-    }
-
-    if (uiModel.showCameraBottomSheet) {
-        ScanQrBottomSheet (
-            uiModel = uiModel.scanQrUiModel,
-            onError = viewModel::handleScanQrError,
-            onDismiss = viewModel::dismissCameraBottomSheet,
-            onScanSuccess = viewModel::onScanSuccess,
-        )
     }
 
     ChainTokensScreen(

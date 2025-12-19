@@ -367,7 +367,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                                 val liquidBondShares = vaultData.data.liquidBondShares.toBigDecimalOrNull() ?: BigDecimal.ZERO
 
                                 if (liquidBondShares > BigDecimal.ZERO) {
-                                    liquidBondSize.divide(liquidBondShares, 8, RoundingMode.HALF_UP) * tcyPriceUSD
+                                    liquidBondSize.divide(liquidBondShares, 8, RoundingMode.DOWN) * tcyPriceUSD
                                 } else {
                                     BigDecimal.ONE * tcyPriceUSD
                                 }
