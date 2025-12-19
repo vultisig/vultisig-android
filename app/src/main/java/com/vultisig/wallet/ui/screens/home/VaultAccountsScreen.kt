@@ -5,7 +5,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
-import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.HomePage
 
 @Composable
@@ -19,14 +18,6 @@ internal fun VaultAccountsScreen(
             onDismiss = viewModel::dismissBackupReminder,
             onBackup = viewModel::backupVault,
             onDoNotRemind = viewModel::doNotRemindBackup,
-        )
-    }
-    if (state.showCameraBottomSheet) {
-        ScanQrBottomSheet (
-            uiModel = state.scanQrUiModel,
-            onError = viewModel::handleScanQrError,
-            onDismiss = viewModel::dismissCameraBottomSheet,
-            onScanSuccess = viewModel::onScanSuccess,
         )
     }
 
