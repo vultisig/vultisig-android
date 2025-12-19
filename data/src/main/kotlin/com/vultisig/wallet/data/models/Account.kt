@@ -6,7 +6,8 @@ import java.math.BigDecimal
 data class Address(
     val chain: Chain,
     val address: String,
-    val accounts: List<Account>
+    val accounts: List<Account>,
+    val isDefiProvider: Boolean = false,
 )
 
 data class Account(

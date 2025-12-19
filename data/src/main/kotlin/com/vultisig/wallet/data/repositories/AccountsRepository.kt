@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -278,55 +277,70 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         // emit cached
         try {
+            // TODO: Unify loading cache code into one service with DeFi Maya (generic loading)
             val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
-            val ethereumAddresses = addresses.find { it.chain == Chain.Ethereum }
+            val ethereumAddress = addresses.find { it.chain == Chain.ThorChain }
 
-            if (thorchainAddress != null) {
-                val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+            val cachedDeFiThorchainBalances = thorchainAddress?.let {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(
                     address = thorchainAddress.address,
                     coin = Coins.ThorChain.RUNE,
                     vaultId = vaultId,
                 )
+            } ?: emptyList()
 
-                if (cachedDeFiBalances.isNotEmpty()) {
-                    val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
-                        balance.tokenBalance.tokenValue?.unit?.lowercase()
-                    }
+            val cacheDeFiEthereumBalances = ethereumAddress?.let {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                    address = ethereumAddress.address,
+                    coin = Coins.Ethereum.ETH,
+                    vaultId = vaultId,
+                )
+            } ?: emptyList()
 
-                    val cachedAddresses = addresses.map { address ->
-                        val updatedAccounts = address.accounts.map { account ->
-                            val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
-                            if (cachedBalance != null) {
-                                account.applyBalance(
-                                    cachedBalance.tokenBalance,
-                                    cachedBalance.price
-                                )
-                            } else {
-                                account.copy(
-                                    tokenValue = TokenValue(
-                                        value = BigInteger.ZERO,
-                                        unit = account.token.ticker,
-                                        decimals = account.token.decimal
-                                    ),
-                                    fiatValue = FiatValue(
-                                        value = BigDecimal.ZERO,
-                                        currency = AppCurrency.USD.ticker,
-                                    ),
-                                    price = null
-                                )
-                            }
-                        }
-                        address.copy(accounts = updatedAccounts)
-                    }
+            val cacheBalances = cachedDeFiThorchainBalances + cacheDeFiEthereumBalances
 
-                    send(cachedAddresses)
+            if (cacheBalances.isNotEmpty()) {
+                val balancesByTicker = cacheBalances.associateBy { balance ->
+                    balance.tokenBalance.tokenValue?.unit?.lowercase()
                 }
+
+                val cachedAddresses = addresses.map { address ->
+                    val updatedAccounts = address.accounts.map { account ->
+                        val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
+                        if (cachedBalance != null) {
+                            account.applyBalance(
+                                cachedBalance.tokenBalance,
+                                cachedBalance.price
+                            )
+                        } else {
+                            account.copy(
+                                tokenValue = TokenValue(
+                                    value = BigInteger.ZERO,
+                                    unit = account.token.ticker,
+                                    decimals = account.token.decimal
+                                ),
+                                fiatValue = FiatValue(
+                                    value = BigDecimal.ZERO,
+                                    currency = AppCurrency.USD.ticker,
+                                ),
+                                price = null
+                            )
+                        }
+                    }
+                    val isUscCircle =
+                        address.chain.id.equals(Chain.Ethereum.id, true) &&
+                                address.accounts.any { it.token.id.equals(Coins.Ethereum.USDC.id, true) }
+
+                    address.copy(accounts = updatedAccounts, isDefiProvider = isUscCircle)
+                }
+
+                send(cachedAddresses)
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to load cached DeFi balances")
         }
 
-        if (!isRefresh) {
+        /*if (!isRefresh) {
             return@channelFlow
         }
 
@@ -359,7 +373,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             }
         }.awaitAll().filterNotNull()
 
-        send(updated)
+        send(updated) */
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {
@@ -416,8 +430,11 @@ internal class AccountsRepositoryImpl @Inject constructor(
     )
 
     private fun Coin.isValidForDeFi(): Boolean {
-        return chain.isDeFiSupported ||
-                chain == Chain.Ethereum && ticker.equals("usdc", true)
+        return when (this.chain) {
+            Chain.ThorChain -> true
+            Chain.Ethereum -> true
+            else -> false
+        }
     }
 }
 
