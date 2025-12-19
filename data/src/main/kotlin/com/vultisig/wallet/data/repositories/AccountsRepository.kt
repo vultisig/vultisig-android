@@ -416,7 +416,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
     )
 
     private fun Coin.isValidForDeFi(): Boolean {
-        return chain.isDeFiSupported || (ticker == "USDC" && chain == Chain.Ethereum)
+        return chain.isDeFiSupported ||
+                chain == Chain.Ethereum && ticker.equals("usdc", true)
     }
 }
 
