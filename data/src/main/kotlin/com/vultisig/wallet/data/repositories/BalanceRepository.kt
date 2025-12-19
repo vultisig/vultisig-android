@@ -217,7 +217,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     value = tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP), // TODO: Check with CIRCLE USDC
+                        .setScale(2, RoundingMode.HALF_UP),
                     currency = currency.ticker
                 )
             } else {
