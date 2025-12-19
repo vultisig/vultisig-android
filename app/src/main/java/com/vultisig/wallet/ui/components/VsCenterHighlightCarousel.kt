@@ -37,7 +37,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
-import com.vultisig.wallet.ui.screens.select.NetworkUiModel
+import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
