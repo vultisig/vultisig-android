@@ -748,25 +748,59 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
+                    is BlockChainSpecific.Ethereum -> specific.isDeposit
+                    is BlockChainSpecific.UTXO -> specific.isDeposit
                     else -> false
                 }
 
                 if (isDeposit) {
-                    val fee = when (val specific = payload.blockChainSpecific) {
-                        is BlockChainSpecific.MayaChain -> ThorChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
-                        is BlockChainSpecific.THORChain -> specific.fee
-                        else -> error("BlockChainSpecific $specific is not supported")
+                    when (payload.blockChainSpecific) {
+                        is BlockChainSpecific.MayaChain, is BlockChainSpecific.THORChain, is BlockChainSpecific.Ethereum, is BlockChainSpecific.UTXO -> Unit
+                        else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")
                     }
-                    val feeCurrency = tokenRepository.getNativeToken(payload.coin.chain.id)
 
-                    val estimatedTokenFees = TokenValue(
-                        value = fee,
-                        token = feeCurrency
-                    )
+                    val payloadToken = payload.coin
+                    val chain = payloadToken.chain
 
                     val tokenValue = TokenValue(
                         value = payload.toAmount,
-                        token = payload.coin,
+                        unit = payloadToken.ticker,
+                        decimals = payloadToken.decimal,
+                    )
+
+                    val vault = withContext(Dispatchers.IO) {
+                        vaultRepository.get(vaultId)
+                    } ?: return
+
+                    val blockchainTransaction = Transfer(
+                        coin = payloadToken,
+                        vault = VaultData(
+                            vaultHexChainCode = vault.hexChainCode,
+                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
+                        ),
+                        amount = tokenValue.value,
+                        to = payload.toAddress,
+                        memo = payload.memo,
+                        isMax = false,
+                    )
+
+                    val fees = withContext(Dispatchers.IO) {
+                        feeServiceComposite.calculateFees(blockchainTransaction)
+                    }
+                    val nativeCoin = withContext(Dispatchers.IO) {
+                        tokenRepository.getNativeToken(chain.id)
+                    }
+                    val estimatedTokenFees = TokenValue(
+                        value = fees.amount,
+                        token = nativeCoin,
+                    )
+
+                    val totalGasAndFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = BigInteger.valueOf(1),
+                            gasFee = estimatedTokenFees,
+                            selectedToken = payload.coin,
+                        )
                     )
 
                     val depositTransactionUiModel = DepositTransactionUiModel(
@@ -778,15 +812,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                         srcAddress = payload.coin.address,
                         dstAddress = payload.toAddress,
 
-                        networkFeeTokenValue = mapTokenValueToStringWithUnit(estimatedTokenFees),
-                        networkFeeFiatValue = fiatValueToStringMapper(
-                            convertTokenValueToFiat(
-                                feeCurrency,
-                                estimatedTokenFees,
-                                currency
-                            ),
-                        ),
+                        networkFeeTokenValue = totalGasAndFee.formattedTokenValue,
+                        networkFeeFiatValue = totalGasAndFee.formattedFiatValue,
                         memo = payload.memo ?: "",
+                        operation = payload.operation ?: "",
                     )
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Deposit(depositTransactionUiModel)

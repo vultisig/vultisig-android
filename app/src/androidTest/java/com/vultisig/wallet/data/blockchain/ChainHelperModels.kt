@@ -27,6 +27,8 @@ data class KeysignPayload(
     val libType: String,
     @SerialName("memo")
     val memo: String? = null,
+    @SerialName("operation")
+    val operation: String? = null,
     @SerialName("wasm_execute_contract_payload")
     val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
     @SerialName("SwapPayload")
@@ -154,7 +156,9 @@ data class EthereumSpecific(
     val priorityFee: String,
     val nonce: Int,
     @SerialName("gas_limit")
-    val gasLimit: String
+    val gasLimit: String,
+    @SerialName("is_deposit")
+    val isDeposit: Boolean,
 )
 
 @Serializable
@@ -254,6 +258,8 @@ data class UtxoSpecific(
     val byteFee: String,
     @SerialName("send_max_amount")
     val sendMaxAmount: Boolean = false,
+    @SerialName("is_deposit")
+    val isDeposit: Boolean,
 )
 
 @Serializable

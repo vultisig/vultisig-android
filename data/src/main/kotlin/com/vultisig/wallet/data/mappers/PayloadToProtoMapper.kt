@@ -41,6 +41,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             toAddress = keysignPayload.toAddress,
             toAmount = keysignPayload.toAmount.toString(),
             memo = keysignPayload.memo,
+            operation = keysignPayload.operation,
             vaultLocalPartyId = keysignPayload.vaultLocalPartyID,
             vaultPublicKeyEcdsa = keysignPayload.vaultPublicKeyECDSA,
             libType = keysignPayload.libType?.toProtoString() ?: "",
@@ -48,6 +49,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                 UTXOSpecific(
                     byteFee = specific.byteFee.toString(),
                     sendMaxAmount = specific.sendMaxAmount,
+                    isDeposit = specific.isDeposit,
                 )
             } else null,
             utxoInfo = keysignPayload.utxos.map {
@@ -63,6 +65,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     priorityFee = specific.priorityFeeWei.toString(),
                     nonce = specific.nonce.toLong(),
                     gasLimit = specific.gasLimit.toString(),
+                    isDeposit = specific.isDeposit,
                 )
             } else null,
             thorchainSpecific = if (specific is BlockChainSpecific.THORChain) {

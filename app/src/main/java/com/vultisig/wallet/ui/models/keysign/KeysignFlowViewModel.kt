@@ -325,6 +325,8 @@ internal class KeysignFlowViewModel @Inject constructor(
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         is BlockChainSpecific.Ton -> specific.isDeposit
+                        is BlockChainSpecific.Ethereum -> specific.isDeposit
+                        is BlockChainSpecific.UTXO -> specific.isDeposit
                         is BlockChainSpecific.Cosmos ->
                             specific.transactionType ==
                                     TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||

@@ -151,7 +151,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         priorityFeeWei = feeEstimate.maxPriorityFeePerGas,
                         nonce = nonce,
                         gasLimit = feeEstimate.gasLimit,
-                        isDeposit = isDeposit
+                        isDeposit = isDeposit,
                     )
                 )
             } else {
@@ -192,7 +192,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         priorityFeeWei = priorityFeeWei,
                         nonce = nonce,
                         gasLimit = gasLimitFee,
-                        isDeposit = isDeposit
+                        isDeposit = isDeposit,
                     )
                 )
             }
@@ -238,6 +238,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockChainSpecific = BlockChainSpecific.UTXO(
                         byteFee = byteFee,
                         sendMaxAmount = isMaxAmountEnabled,
+                        isDeposit = isDeposit,
                     ),
                     utxos = utxos
                         ?.utxos

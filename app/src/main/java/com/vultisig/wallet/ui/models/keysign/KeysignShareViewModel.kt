@@ -192,6 +192,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
+                operation = transaction.operation,
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 defiAction = if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {

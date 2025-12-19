@@ -8,7 +8,8 @@ import java.math.BigInteger
 sealed class BlockChainSpecific {
     data class UTXO(
         val byteFee: BigInteger,
-        val sendMaxAmount: Boolean
+        val sendMaxAmount: Boolean,
+        val isDeposit: Boolean,
     ) : BlockChainSpecific()
 
     data class Ethereum(

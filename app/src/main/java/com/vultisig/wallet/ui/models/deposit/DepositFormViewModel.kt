@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -676,7 +677,7 @@ internal class DepositFormViewModel @Inject constructor(
             val inboundAddress = inboundAddresses
                 .firstOrNull {
                     it.chain.equals(
-                        state.value.selectedToken.chain.ticker(),
+                        state.value.selectedToken.getChainName(),
                         ignoreCase = true
                     )
                 }

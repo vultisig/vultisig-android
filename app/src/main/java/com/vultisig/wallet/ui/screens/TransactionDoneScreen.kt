@@ -171,6 +171,12 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
             address = depositTransaction.memo,
         )
 
+        if (!depositTransaction.operation.isNullOrEmpty()){
+            AddressField(
+                title = stringResource(R.string.operation),
+                address = depositTransaction.operation,
+            )
+        }
         if (depositTransaction.dstAddress.isNotBlank()) {
             AddressField(
                 title = stringResource(R.string.verify_deposit_node_address_title),
@@ -290,10 +296,12 @@ private fun TransactionDoneViewPreview() {
         approveTransactionLink = "",
         onComplete = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-            SendTxUiModel(
+        transactionTypeUiModel = TransactionTypeUiModel.Deposit(
+            DepositTransactionUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",
+                operation = "some operation",
             )
         ),
     )
