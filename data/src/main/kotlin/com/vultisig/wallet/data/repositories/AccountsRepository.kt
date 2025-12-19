@@ -279,7 +279,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         try {
             // TODO: Unify loading cache code into one service with DeFi Maya (generic loading)
             val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
-            val ethereumAddress = addresses.find { it.chain == Chain.ThorChain }
+            val ethereumAddress = addresses.find { it.chain == Chain.Ethereum }
 
             val cachedDeFiThorchainBalances = thorchainAddress?.let {
                 balanceRepository.getDeFiCachedTokeBalanceAndPrice(
