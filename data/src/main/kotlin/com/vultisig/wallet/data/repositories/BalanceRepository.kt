@@ -170,7 +170,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             FiatValue(
                 tokenValue.decimal
                     .multiply(price)
-                    .setScale(2, RoundingMode.HALF_UP),
+                    .setScale(2, RoundingMode.DOWN),
                 currency.ticker
             )
         } else {
@@ -183,7 +183,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 fiatValue = fiatValue,
             ),
             price = if (price != null) FiatValue(
-                price.setScale(2, RoundingMode.HALF_UP),
+                price.setScale(2, RoundingMode.DOWN),
                 currency.ticker
             ) else null
         )
@@ -217,7 +217,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     value = tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP),
+                        .setScale(2, RoundingMode.DOWN),
                     currency = currency.ticker
                 )
             } else {
@@ -234,7 +234,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 ),
                 price = if (price != null) {
                     FiatValue(
-                        price.setScale(2, RoundingMode.HALF_UP),
+                        price.setScale(2, RoundingMode.DOWN),
                         currency.ticker
                     )
                 } else {
@@ -266,7 +266,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 FiatValue(
                     tokenValue.decimal
                         .multiply(price)
-                        .setScale(2, RoundingMode.HALF_UP),
+                        .setScale(2, RoundingMode.DOWN),
                     currency.ticker
                 )
             } else {
@@ -304,12 +304,12 @@ internal class BalanceRepositoryImpl @Inject constructor(
                                 fiatValue = FiatValue(
                                     value = balance.decimal
                                         .multiply(price)
-                                        .setScale(2, RoundingMode.HALF_UP),
+                                        .setScale(2, RoundingMode.DOWN),
                                     currency = currency.ticker,
                                 )
                             ),
                             price = FiatValue(
-                                value = price.setScale(2, RoundingMode.HALF_UP),
+                                value = price.setScale(2, RoundingMode.DOWN),
                                 currency = currency.ticker,
                             )
                         )
@@ -349,7 +349,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
         val fiatValue = FiatValue(
             value = tokenValue.decimal
                 .multiply(price)
-                .setScale(2, RoundingMode.HALF_UP),
+                .setScale(2, RoundingMode.DOWN),
             currency = currency.ticker,
         )
         
@@ -359,7 +359,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 fiatValue = fiatValue
             ),
             price = FiatValue(
-                value = price.setScale(2, RoundingMode.HALF_UP),
+                value = price.setScale(2, RoundingMode.DOWN),
                 currency = currency.ticker,
             )
         ))

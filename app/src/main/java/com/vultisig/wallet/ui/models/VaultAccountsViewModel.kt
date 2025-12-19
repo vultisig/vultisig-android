@@ -68,7 +68,6 @@ internal data class VaultAccountsUiModel(
     val totalFiatValue: String? = null,
     val totalDeFiValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
-    val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
@@ -284,7 +283,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun openCamera() {
-        uiState.update { it.copy(showCameraBottomSheet = true) }
+        viewModelScope.launch {
+            navigator.route(Route.ScanQr(vaultId = vaultId))
+        }
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -492,18 +493,6 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun dismissBackupReminder() {
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
-    }
-
-    fun dismissCameraBottomSheet() {
-        uiState.update { it.copy(showCameraBottomSheet = false) }
-    }
-
-    fun onScanSuccess(qr: String) = viewModelScope.launch {
-        val dst = getDirectionByQrCodeUseCase(qr, vaultId)
-
-        navigator.route(dst)
-
-        uiState.update { it.copy(showCameraBottomSheet = false) }
     }
 
     fun doNotRemindBackup() = viewModelScope.launch {

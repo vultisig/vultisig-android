@@ -1207,6 +1207,8 @@
     <string name="operation">操作</string>
     <string name="thorchain_address_not_found_in_vault">您的金库中未找到 THORChain 地址。请确保您的金库中拥有 RUNE。</string>
     <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
+    <string name="keysign_password_hide_hint">隐藏提示</string>
+    <string name="keysign_password_show_hint">显示提示</string>
 
     <!-- Circle MSCA Account -->
     <string name="circle_msca_account_created_success">Circle MSCA 账户创建成功</string>
