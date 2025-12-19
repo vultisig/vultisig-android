@@ -49,6 +49,6 @@ internal class DefaultDeFiChainsRepositoryImpl @Inject constructor(
     private fun getHasBeenSetKey(vaultId: String) = "defi_chains_set_$vaultId"
 
     private fun getDefaultDeFiChains(): Set<Chain> = setOf(
-        Chain.ThorChain,
+        Chain.ThorChain, Chain.Ethereum,
     )
 }

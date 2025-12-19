@@ -30,6 +30,12 @@ internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> =
         )
     }
 
+val defiSupportedChains: List<Chain>
+    get() = listOf(
+        Chain.ThorChain,
+        Chain.Ethereum
+    )
+
 internal val thorchainSupportStakingDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUJI,
@@ -42,6 +48,8 @@ internal val thorchainSupportsBonDeFi: List<Coin>
     get() = listOf(
         Coins.ThorChain.RUNE,
     )
+
+internal enum class DeFiProviders { CIRCLE }
 
 internal fun defaultSelectedPositionsDialog(): List<String> = 
     (thorchainSupportsBonDeFi + thorchainSupportStakingDeFi).map { it.ticker }

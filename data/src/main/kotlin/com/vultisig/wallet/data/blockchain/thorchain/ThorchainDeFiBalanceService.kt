@@ -22,75 +22,88 @@ class ThorchainDeFiBalanceService(
     private val bondUseCase: ThorchainBondUseCase,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val activeBondedNodeRepository: ActiveBondedNodeRepository,
-): DeFiService {
+) : DeFiService {
 
-    override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> = supervisorScope {
-        Timber.d("ThorchainDeFiBalanceService: Fetching DeFi balances for address: $address")
-        
-        val rujiDeFiBalance = async {
-            try {
-                getRemoteOrCachedRujiDeFiBalance(address, vaultId)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch RUJI DeFi balance")
-                null
-            }
-        }
-        val tcyStakingBalance = async {
-            try {
-                getRemoteOrCachedTcyDeFiBalance(address, vaultId)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch TCY DeFi balance")
-                null
-            }
-        }
-        val defaultStakingPositionsBalance = async {
-            try {
-                getRemoteOrCachedDefaultStakingPositionsDeFiBalance(address, vaultId)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch default staking positions")
-                null
-            }
-        }
-        val bondStakingBalance = async {
-            try {
-                getRemoteOrCachedBondStakingPositionsDeFiBalance(address, vaultId)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch bond staking positions")
-                null
-            }
-        }
+    override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
+        supervisorScope {
+            Timber.d("ThorchainDeFiBalanceService: Fetching DeFi balances for address: $address")
 
-        val results = listOfNotNull(
-            rujiDeFiBalance.await(),
-            tcyStakingBalance.await(),
-            defaultStakingPositionsBalance.await(),
-            bondStakingBalance.await(),
-        )
-        
-        results.forEach { defiBalance ->
-            defiBalance.balances.forEach { balance ->
-                if (balance.amount > BigInteger.ZERO) {
-                    Timber.d("ThorchainDeFiBalanceService: ${balance.coin.ticker} balance: ${balance.amount} (raw units)")
+            val rujiDeFiBalance = async {
+                try {
+                    getRemoteOrCachedRujiDeFiBalance(address, vaultId)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to fetch RUJI DeFi balance")
+                    null
                 }
             }
+            val tcyStakingBalance = async {
+                try {
+                    getRemoteOrCachedTcyDeFiBalance(address, vaultId)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to fetch TCY DeFi balance")
+                    null
+                }
+            }
+            val defaultStakingPositionsBalance = async {
+                try {
+                    getRemoteOrCachedDefaultStakingPositionsDeFiBalance(address, vaultId)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to fetch default staking positions")
+                    null
+                }
+            }
+            val bondStakingBalance = async {
+                try {
+                    getRemoteOrCachedBondStakingPositionsDeFiBalance(address, vaultId)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to fetch bond staking positions")
+                    null
+                }
+            }
+
+            val results = listOfNotNull(
+                rujiDeFiBalance.await(),
+                tcyStakingBalance.await(),
+                defaultStakingPositionsBalance.await(),
+                bondStakingBalance.await(),
+            )
+
+            results.forEach { defiBalance ->
+                defiBalance.balances.forEach { balance ->
+                    if (balance.amount > BigInteger.ZERO) {
+                        Timber.d("ThorchainDeFiBalanceService: ${balance.coin.ticker} balance: ${balance.amount} (raw units)")
+                    }
+                }
+            }
+
+            val totalPositions =
+                results.flatMap { it.balances }.count { it.amount > BigInteger.ZERO }
+            Timber.d("ThorchainDeFiBalanceService: Total DeFi positions found: $totalPositions")
+
+            return@supervisorScope results
         }
-        
-        val totalPositions = results.flatMap { it.balances }.count { it.amount > BigInteger.ZERO }
-        Timber.d("ThorchainDeFiBalanceService: Total DeFi positions found: $totalPositions")
-        
-        return@supervisorScope results
-    }
 
     override suspend fun getCacheDeFiBalance(
         address: String,
         vaultId: String
     ): List<DeFiBalance> = supervisorScope {
         val rujiDetailsDeferred =
-            async { stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id) }
+            async {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    vaultId,
+                    Coins.ThorChain.RUJI.id
+                )
+            }
         val tcyDetailsDeferred =
-            async { stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.TCY.id) }
+            async {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    vaultId,
+                    Coins.ThorChain.TCY.id
+                )
+            }
         val defaultDetailsDeferred =
             async { stakingDetailsRepository.getStakingDetails(vaultId) }
+
         val bonDetailsDeferred =
             async { activeBondedNodeRepository.getBondedNodes(vaultId) }
 
@@ -98,9 +111,9 @@ class ThorchainDeFiBalanceService(
         val tcyDetails = tcyDetailsDeferred.await()
         val defaultDetails = defaultDetailsDeferred.await()
         val bonDetails = bonDetailsDeferred.await()
-        
+
         val defiBalances = mutableListOf<DeFiBalance>()
-        
+
         // Add RUJI balance if exists
         rujiDetails?.let { details ->
             val balances = mutableListOf<DeFiBalance.Balance>()
@@ -127,7 +140,7 @@ class ThorchainDeFiBalanceService(
                 )
             )
         }
-        
+
         // Add TCY balance if exists
         tcyDetails?.let {
             defiBalances.add(
@@ -142,13 +155,16 @@ class ThorchainDeFiBalanceService(
                 )
             )
         }
-        
+
         // Add default staking positions if any
         if (defaultDetails.isNotEmpty()) {
             defiBalances.add(
                 DeFiBalance(
                     chain = Chain.ThorChain,
-                    balances = defaultDetails.map { detail ->
+                    balances = defaultDetails.filter {
+                        it.coin.id.equals(Coins.ThorChain.yRUNE.id, true) ||
+                                it.coin.id.equals(Coins.ThorChain.yTCY.id, true)
+                    }.map { detail ->
                         DeFiBalance.Balance(
                             coin = detail.coin,
                             amount = detail.stakeAmount
@@ -157,7 +173,7 @@ class ThorchainDeFiBalanceService(
                 )
             )
         }
-        
+
         // Add bonded nodes balance if any
         if (bonDetails.isNotEmpty()) {
             val totalBondedAmount = bonDetails.sumOf { it.amount }
@@ -173,11 +189,14 @@ class ThorchainDeFiBalanceService(
                 )
             )
         }
-        
+
         defiBalances
     }
 
-    private suspend fun getRemoteOrCachedRujiDeFiBalance(address: String, vaultId: String): DeFiBalance {
+    private suspend fun getRemoteOrCachedRujiDeFiBalance(
+        address: String,
+        vaultId: String
+    ): DeFiBalance {
         val amount = runCatching {
             rujiStakingService.getStakingDetails(address, vaultId).last().stakeAmount
         }.getOrElse { exception ->
@@ -198,9 +217,13 @@ class ThorchainDeFiBalanceService(
         )
     }
 
-    private suspend fun getRemoteOrCachedTcyDeFiBalance(address: String, vaultId: String): DeFiBalance {
+    private suspend fun getRemoteOrCachedTcyDeFiBalance(
+        address: String,
+        vaultId: String
+    ): DeFiBalance {
         val amount = runCatching {
-            tcyStakingService.getStakingDetails(address, vaultId).last()?.stakeAmount ?: BigInteger.ZERO
+            tcyStakingService.getStakingDetails(address, vaultId).last()?.stakeAmount
+                ?: BigInteger.ZERO
         }.getOrElse { exception ->
             Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch TCY balance")
             throw exception
@@ -229,9 +252,9 @@ class ThorchainDeFiBalanceService(
             Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch bonded nodes")
             throw exception
         }
-        
+
         val amount = bondedNodes.sumOf { it.amount }
-        
+
         Timber.d("ThorchainDeFiBalanceService: Found ${bondedNodes.size} bonded nodes for $address")
 
         bondedNodes.forEach { node ->
@@ -256,10 +279,14 @@ class ThorchainDeFiBalanceService(
         vaultId: String,
     ): DeFiBalance {
         val defiBalances = runCatching {
-            val stakingDetails = defaultStakingPositionService.getStakingDetails(address, vaultId).last()
+            val stakingDetails =
+                defaultStakingPositionService.getStakingDetails(address, vaultId).last()
             Timber.d("ThorchainDeFiBalanceService: Found ${stakingDetails.size} default staking positions")
-            
-            stakingDetails.map { detail ->
+
+            stakingDetails.filter {
+                it.coin.id.equals(Coins.ThorChain.yTCY.id, true) ||
+                        it.coin.id.equals(Coins.ThorChain.yRUNE.id, true)
+            }.map { detail ->
                 Timber.d("ThorchainDeFiBalanceService: ${detail.coin.ticker} staking: amount=${detail.stakeAmount}")
                 DeFiBalance.Balance(
                     coin = detail.coin,
@@ -267,10 +294,13 @@ class ThorchainDeFiBalanceService(
                 )
             }
         }.getOrElse { exception ->
-            Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch default staking positions, using zero balances")
+            Timber.e(
+                exception,
+                "ThorchainDeFiBalanceService: Failed to fetch default staking positions, using zero balances"
+            )
             throw exception
         }
-        
+
         val totalAmount = defiBalances.sumOf { it.amount }
         Timber.d("ThorchainDeFiBalanceService: Total default staking amount: $totalAmount across ${defiBalances.size} positions")
 
