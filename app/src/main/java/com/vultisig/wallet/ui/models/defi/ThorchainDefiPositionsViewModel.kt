@@ -276,7 +276,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
             ) ?: tokenPriceRepository.getPriceByContactAddress(coin.chain.id, coin.contractAddress)
 
             return FiatValue(
-                value = amount.multiply(price).setScale(2, RoundingMode.HALF_UP),
+                value = amount.multiply(price).setScale(2, RoundingMode.DOWN),
                 currency = currency.ticker
             )
         } catch (t: Throwable) {
@@ -523,7 +523,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
 
                     val rewards = details.rewards?.let { rewardAmount ->
                         val rewardAmountFormatted = Chain.ThorChain.coinType.toValue(rewardAmount)
-                        val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.HALF_UP)
+                        val rewardValue = rewardAmountFormatted.setScale(6, RoundingMode.DOWN)
                         "${rewardValue.toPlainString()} ${details.rewardsCoin?.ticker ?: RUJI_REWARDS_SYMBOL}"
                     }
 
