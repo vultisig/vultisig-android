@@ -240,6 +240,7 @@ internal class CircleDeFiPositionsViewModel @Inject constructor(
                         chainId = Chain.Ethereum.id,
                         tokenId = tokenId,
                         address = mscaAddress,
+                        type = DeFiNavActions.DEPOSIT_USDC_CIRCLE.type,
                     )
                 )
             }

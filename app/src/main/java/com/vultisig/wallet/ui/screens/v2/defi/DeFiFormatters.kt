@@ -32,7 +32,7 @@ internal fun BigInteger.formatAmount(coinType: CoinType, symbol: String? = null)
         return "0.0 ${symbol ?: coinType.symbol}"
     }
     val chainAmount = coinType.toValue(this)
-    val rounded = chainAmount.setScale(8, RoundingMode.HALF_UP)
+    val rounded = chainAmount.setScale(8, RoundingMode.DOWN)
     return "${rounded.toPlainString()} ${symbol ?: coinType.symbol}"
 }
 
@@ -41,13 +41,13 @@ internal fun Double.formatPercentage(): String {
 }
 
 internal fun Double.formatRuneReward(): String {
-    val rewardBase = BigDecimal.valueOf(this).setScale(0, RoundingMode.HALF_UP).toBigInteger()
+    val rewardBase = BigDecimal.valueOf(this).setScale(0, RoundingMode.DOWN).toBigInteger()
     val runeAmount =
-        Chain.ThorChain.coinType.toValue(rewardBase).setScale(4, RoundingMode.HALF_UP)
+        Chain.ThorChain.coinType.toValue(rewardBase).setScale(4, RoundingMode.DOWN)
     return "${runeAmount.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
 }
 
 internal fun Double.formatToString(): String {
-    val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.HALF_UP)
+    val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.DOWN)
     return "${value.toPlainString()} ${Chain.ThorChain.coinType.symbol}"
 }

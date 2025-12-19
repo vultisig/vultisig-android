@@ -281,9 +281,9 @@ class TronFeeService @Inject constructor(
         }
 
         val energyFactor =
-            (contractEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.HALF_UP)) + BigDecimal.ONE
+            (contractEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.DOWN)) + BigDecimal.ONE
         val maxFactor =
-            (contractMaxEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.HALF_UP)) + BigDecimal.ONE
+            (contractMaxEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.DOWN)) + BigDecimal.ONE
 
         val energyUnitsRequired =
             energyRequired.toBigDecimal().multiply(energyFactor).toBigInteger()

@@ -495,6 +495,13 @@ internal fun SwapScreen(
                                     onSelectSrcPercentage(0.75f)
                                 },
                             )
+                            if (state.enableMaxAmount)
+                                PercentageItem(
+                                    title = "MAX",
+                                    onClick = {
+                                        onSelectSrcPercentage(1f)
+                                    },
+                                )
                         }
                     }
                 } else {

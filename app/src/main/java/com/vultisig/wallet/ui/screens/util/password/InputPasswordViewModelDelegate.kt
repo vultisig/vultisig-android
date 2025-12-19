@@ -33,6 +33,17 @@ internal class InputPasswordViewModelDelegate(
         get() = passwordFieldState.text.toString()
 
 
+    init {
+        viewModelScope.launch {
+            val passwordHint = getPasswordHint(vaultId)
+            state.update {
+                it.copy(
+                    passwordHint = passwordHint
+                )
+            }
+        }
+    }
+
     fun togglePasswordVisibility() {
         state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
@@ -57,13 +68,11 @@ internal class InputPasswordViewModelDelegate(
             if (isPasswordValid) {
                 return true
             } else {
-                val passwordHint = getPasswordHint(vaultId)
                 state.update {
                     it.copy(
                         passwordError = UiText.StringResource(
                             R.string.keysign_password_incorrect_password
                         ),
-                        passwordHint = passwordHint
                     )
                 }
             }

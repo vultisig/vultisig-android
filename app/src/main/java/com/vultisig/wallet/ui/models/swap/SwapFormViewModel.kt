@@ -117,6 +117,7 @@ internal data class SwapFormUiModel(
     val isSwapDisabled: Boolean = false,
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
+    val enableMaxAmount: Boolean = false,
     val expiredAt: Instant? = null,
 )
 
@@ -712,8 +713,8 @@ internal class SwapFormViewModel @Inject constructor(
     private fun updateAccountInAddresses(
         loadedAccount: Account
     ) {
-        addresses.update { listOfAddreses ->
-            listOfAddreses.map { address ->
+        addresses.update { listOfAddresses ->
+            listOfAddresses.map { address ->
                 if (address.chain == loadedAccount.token.chain) {
                     address.copy(accounts = address.accounts + listOf(loadedAccount))
                 } else {
@@ -748,8 +749,14 @@ internal class SwapFormViewModel @Inject constructor(
             return
         }
 
-        val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
-            .multiply(percentage.toBigDecimal()).setScale(6, RoundingMode.DOWN)
+        val amount = TokenValue.createDecimal(
+            maxUsableTokenAmount,
+            srcTokenValue.decimals
+        )
+            .multiply(percentage.toBigDecimal()).setScale(
+                6,
+                RoundingMode.DOWN
+            )
 
         srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
     }
@@ -786,11 +793,11 @@ internal class SwapFormViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId).map { addresses ->
-                    addresses.filter { it.chain.isSwapSupported }
-                }.catch {
-                    Timber.e(it)
-                    emit(emptyList())
-                }.collect(addresses)
+                addresses.filter { it.chain.isSwapSupported }
+            }.catch {
+                Timber.e(it)
+                emit(emptyList())
+            }.collect(addresses)
         }
     }
 
@@ -803,8 +810,16 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedDstId,
             ) { addresses, srcTokenId, dstTokenId ->
                 val chain = chain
-                selectedSrc.updateSrc(srcTokenId, addresses, chain)
-                selectedDst.updateSrc(dstTokenId, addresses, chain)
+                selectedSrc.updateSrc(
+                    srcTokenId,
+                    addresses,
+                    chain
+                )
+                selectedDst.updateSrc(
+                    dstTokenId,
+                    addresses,
+                    chain
+                )
             }.collect()
         }
     }
@@ -817,11 +832,13 @@ internal class SwapFormViewModel @Inject constructor(
             ) { src, dst ->
                 val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
                 val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
-
+                val isSrcNative = src?.account?.token?.isNativeToken ?: false
+                val isDstNative = dst?.account?.token?.isNativeToken ?: false
                 uiState.update {
                     it.copy(
                         selectedSrcToken = srcUiModel,
                         selectedDstToken = dstUiModel,
+                        enableMaxAmount = (isSrcNative && isDstNative).not()
                     )
                 }
             }.collect()
@@ -831,44 +848,52 @@ internal class SwapFormViewModel @Inject constructor(
     private fun calculateGas() {
         viewModelScope.launch {
             selectedSrc.filterNotNull().map {
-                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address, true)
-                }.catch {
-                    Timber.e(it)
-                }.collect { (selectedSrc, gasFee) ->
-                    this@SwapFormViewModel.gasFee.value = gasFee
-                    val selectedAccount = selectedSrc.account
-                    val chain = selectedAccount.token.chain
-                    val selectedToken = selectedAccount.token
-                    val srcAddress = selectedAccount.token.address
-                    try {
-                        val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
+                it to gasFeeRepository.getGasFee(
+                    it.address.chain,
+                    it.address.address,
+                    true
+                )
+            }.catch {
+                Timber.e(it)
+            }.collect { (selectedSrc, gasFee) ->
+                this@SwapFormViewModel.gasFee.value = gasFee
+                val selectedAccount = selectedSrc.account
+                val chain = selectedAccount.token.chain
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedAccount.token.address
+                try {
+                    val spec = getSpecificAndUtxo(
+                        selectedToken,
+                        srcAddress,
+                        gasFee
+                    )
 
-                        val estimatedNetworkFee = gasFeeToEstimatedFee(
-                            GasFeeParams(
-                                gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                    (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                                } else {
-                                    BigInteger.valueOf(1)
-                                },
-                                gasFee = gasFee,
-                                selectedToken = selectedToken,
-                            )
+                    val estimatedNetworkFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedToken,
                         )
+                    )
 
-                        estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
-                        estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
+                    estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
+                    estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
 
-                        uiState.update {
-                            it.copy(
-                                networkFee = estimatedNetworkFee.formattedTokenValue,
-                                networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
-                            )
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
+                    uiState.update {
+                        it.copy(
+                            networkFee = estimatedNetworkFee.formattedTokenValue,
+                            networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
+                        )
                     }
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
                 }
+            }
         }
     }
 
@@ -890,9 +915,9 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedSrc.filterNotNull(),
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }.distinctUntilChanged().combine(
-                    srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
-                    address to srcAmount
-                }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
+                srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, amount ->
+                address to srcAmount
+            }.combine(refreshQuoteState) { it, _ -> it }.debounce(450L)
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
