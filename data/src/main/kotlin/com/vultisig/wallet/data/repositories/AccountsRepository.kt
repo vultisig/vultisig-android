@@ -328,8 +328,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
                         }
                     }
                     val isUscCircle =
-                        address.chain.id.equals(Chain.Ethereum.id, true) &&
-                                address.accounts.any { it.token.id.equals(Coins.Ethereum.USDC.id, true) }
+                        address.chain.id.equals(Chain.Ethereum.id, true)
 
                     address.copy(accounts = updatedAccounts, isDefiProvider = isUscCircle)
                 }
