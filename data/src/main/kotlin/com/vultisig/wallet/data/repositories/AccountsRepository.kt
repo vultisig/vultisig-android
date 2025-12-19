@@ -327,10 +327,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
                             )
                         }
                     }
-                    val isUscCircle =
+                    val canBeDeFiProvider =
                         address.chain.id.equals(Chain.Ethereum.id, true)
 
-                    address.copy(accounts = updatedAccounts, isDefiProvider = isUscCircle)
+                    address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
                 }
 
                 send(cachedAddresses)
@@ -339,7 +339,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             Timber.e(e, "Failed to load cached DeFi balances")
         }
 
-        /*if (!isRefresh) {
+        if (!isRefresh) {
             return@channelFlow
         }
 
@@ -363,8 +363,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
                                 it.applyBalance(balance.tokenBalance, balance.price)
                             }
                         }.awaitAll()
+                    val canBeDeFiProvider =
+                        account.chain.id.equals(Chain.Ethereum.id, true)
 
-                    account.copy(accounts = newAccounts)
+                    account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
                 } catch (e: Exception) {
                     Timber.e(e)
                     null
@@ -372,7 +374,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             }
         }.awaitAll().filterNotNull()
 
-        send(updated) */
+        send(updated)
     }
 
     override suspend fun loadAccount(vaultId: String, token: Coin): Account = coroutineScope {

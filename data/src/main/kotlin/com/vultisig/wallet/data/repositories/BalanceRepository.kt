@@ -299,7 +299,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     .getPrice(coin, currency)
                     .zip(getTokenValue(address, coin)) { price, balance ->
                         TokenBalanceAndPrice(
-                            tokenBalance =TokenBalance(
+                            tokenBalance = TokenBalance(
                                 tokenValue = balance,
                                 fiatValue = FiatValue(
                                     value = balance.decimal
