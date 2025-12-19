@@ -296,12 +296,10 @@ private fun TransactionDoneViewPreview() {
         approveTransactionLink = "",
         onComplete = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
-        transactionTypeUiModel = TransactionTypeUiModel.Deposit(
-            DepositTransactionUiModel(
+            SendTxUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
                 memo = "some memo",
-                operation = "some operation",
             )
         ),
     )
