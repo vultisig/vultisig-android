@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme

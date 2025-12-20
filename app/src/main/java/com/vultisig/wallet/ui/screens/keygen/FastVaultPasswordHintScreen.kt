@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,7 +28,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -59,24 +58,21 @@ private fun FastVaultPasswordHintScreen(
     onBackClick: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onBackClick
-            )
-        },
+
+    V2Scaffold(
+        title = null,
+        onBackClick = onBackClick,
         bottomBar = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .padding(24.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
             ) {
                 VsButton(
                     label = stringResource(R.string.fast_vault_password_hint_skip),
                     onClick = onSkipClick,
                     variant = VsButtonVariant.Secondary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
                         .testTag("FastVaultPasswordHintScreen.skip")
                 )
 
@@ -100,15 +96,7 @@ private fun FastVaultPasswordHintScreen(
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
         }
-        Column(
-            Modifier
-                .padding(it)
-                .padding(
-                    top = 12.dp,
-                    start = 24.dp,
-                    end = 24.dp,
-                )
-        ) {
+        Column {
             Text(
                 text = stringResource(R.string.fast_vault_password_hint_screen_title),
                 style = Theme.brockmann.headings.largeTitle,

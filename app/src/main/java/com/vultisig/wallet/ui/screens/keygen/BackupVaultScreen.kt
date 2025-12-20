@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,7 +27,7 @@ import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.BackupVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
@@ -53,22 +52,13 @@ internal fun BackupVaultScreen(
 private fun BackupVaultScreen(
     onBackupClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.backup_vault_topbar_title)
-            )
-        },
-        content = { contentPadding ->
+    V2Scaffold(
+        title = stringResource(R.string.backup_vault_topbar_title),
+        content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
-                    .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(
-                        all = 24.dp,
-                    )
             ) {
                 UiSpacer(24.dp)
 
@@ -121,7 +111,7 @@ private fun BackupVaultScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = 24.dp,
+                        horizontal = 16.dp,
                         vertical = 10.dp,
                     )
                     .testTag(BackupVaultScreenTags.BACKUP_NOW)

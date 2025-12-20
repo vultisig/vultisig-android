@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,6 +22,12 @@ internal class OnBoardingReferralViewModel @Inject constructor(
     fun onClickGetStarted() {
         viewModelScope.launch {
             navigator.navigate(Destination.ReferralCode(vaultId))
+        }
+    }
+
+    fun back(){
+        viewModelScope.launch {
+            navigator.back()
         }
     }
 }

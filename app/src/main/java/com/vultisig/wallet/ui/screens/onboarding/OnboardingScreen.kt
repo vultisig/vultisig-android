@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +33,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -97,8 +97,9 @@ private fun OnboardingScreen(
     onSkipClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+    V2Scaffold(
+        applyDefaultPaddings = true,
+        applyScaffoldPaddings = true,
         topBar = {
             VsTopAppProgressBar(
                 navigationContent = {
@@ -135,18 +136,17 @@ private fun OnboardingScreen(
                 },
             )
         },
-    ) { paddingValues ->
-
-        OnboardingContent(
-            state = state,
-            paddingValues = paddingValues,
-            riveAnimation = R.raw.riv_onboarding,
-            nextClick = onNextClick,
-            textDescription = { index ->
-                Description(index = index)
-            },
-        )
-    }
+        content = {
+            OnboardingContent(
+                state = state,
+                riveAnimation = R.raw.riv_onboarding,
+                nextClick = onNextClick,
+                textDescription = { index ->
+                    Description(index = index)
+                },
+            )
+        }
+    )
 }
 
 @Composable
