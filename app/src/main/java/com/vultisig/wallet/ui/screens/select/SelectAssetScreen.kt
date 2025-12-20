@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,6 +35,7 @@ import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -64,8 +64,10 @@ private fun SelectAssetScreen(
     onAssetClick: (AssetUiModel) -> Unit,
     onSelectChain: (Chain) -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+
+    V2Scaffold(
+        applyScaffoldPaddings = true,
+        applyDefaultPaddings = false,
         topBar = {
             Column {
                 Text(
@@ -83,13 +85,11 @@ private fun SelectAssetScreen(
                 )
             }
         },
-        content = { contentPadding ->
+        content = {
             LazyColumn(
                 contentPadding = PaddingValues(
                     all = 16.dp,
                 ),
-                modifier = Modifier
-                    .padding(contentPadding),
             ) {
                 val assets = state.assets
                 itemsIndexed(assets) { index, item ->

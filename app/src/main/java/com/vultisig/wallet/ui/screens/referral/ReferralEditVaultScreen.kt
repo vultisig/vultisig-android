@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +37,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
 import com.vultisig.wallet.ui.models.referral.ReferralError
@@ -93,21 +92,15 @@ private fun ReferralEditVaultScreen(
         )
     }
 
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_edit_referral),
-                onBackClick = onBackPressed,
-            )
-        },
-        content = { contentPadding ->
+    V2Scaffold(
+        title = stringResource(R.string.referral_edit_referral),
+        onBackClick = onBackPressed,
+
+        content = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
                     .imePadding()
                     .navigationBarsPadding(),
             ) {
@@ -192,7 +185,7 @@ private fun ReferralEditVaultScreen(
             VsButton(
                 label = stringResource(R.string.save_changes),
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 32.dp)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
                     .fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
                 state = if (state.referralCounter != 0) {

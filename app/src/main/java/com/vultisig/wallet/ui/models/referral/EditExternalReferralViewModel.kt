@@ -134,7 +134,8 @@ internal class EditExternalReferralViewModel @Inject constructor(
         }
     }
 
-    fun onPasteIconClick(content: String) {
+    fun onPasteIconClick(content: String?) {
+        if (content.isNullOrEmpty()) return
         viewModelScope.launch {
             val trimmedContent = content.trim()
             referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(trimmedContent)
