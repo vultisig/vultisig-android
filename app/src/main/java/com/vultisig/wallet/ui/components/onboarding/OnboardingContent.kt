@@ -32,7 +32,6 @@ import kotlinx.coroutines.delay
 @Composable
 internal fun OnboardingContent(
     state: OnboardingUiModel,
-    paddingValues: PaddingValues,
     riveAnimation: Int,
     nextClick: () -> Unit,
     textDescription: @Composable (Int) -> Unit,
@@ -52,7 +51,6 @@ internal fun OnboardingContent(
     }
     Box(
         modifier = Modifier
-            .padding(paddingValues)
             .fillMaxSize(),
     ) {
         RiveAnimation(

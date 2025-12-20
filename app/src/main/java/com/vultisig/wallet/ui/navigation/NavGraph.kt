@@ -288,7 +288,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Secret> {
-            SecretScreen(navController)
+            SecretScreen()
         }
 
         // onboarding
@@ -489,9 +489,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Route.ReferralOnboarding>{
-            ReferralOnboardingScreen(
-                navController = navController,
-            )
+            ReferralOnboardingScreen()
         }
 
         composable<Route.ReferralListVault>{
