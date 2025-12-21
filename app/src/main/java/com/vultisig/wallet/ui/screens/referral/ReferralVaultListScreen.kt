@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,7 +32,7 @@ import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListUiState
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
@@ -65,23 +64,17 @@ internal fun ReferralVaultListContentScreen(
     onBackPress: () -> Unit,
     onVaultClicked: (String) -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_top_bar_list),
-                onBackClick = onBackPress,
-            )
-        },
-        content = { paddingValues ->
+
+    V2Scaffold(
+        title = stringResource(R.string.referral_top_bar_list),
+        onBackClick = onBackPress,
+        content = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
                     .imePadding()
                     .navigationBarsPadding()
-                    .padding(paddingValues)
-                    .padding(16.dp),
             ) {
                 Text(
                     style = Theme.brockmann.body.m.medium,
@@ -100,7 +93,7 @@ internal fun ReferralVaultListContentScreen(
                         val vault = state.vaults[index]
 
                         VaultRow(vault, onVaultClicked)
-                        
+
                         if (index < state.vaults.size - 1) {
                             UiGradientDivider(
                                 initialColor = Theme.v2.colors.backgrounds.secondary,

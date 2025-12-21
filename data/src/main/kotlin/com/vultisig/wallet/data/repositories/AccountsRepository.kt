@@ -9,11 +9,11 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -261,7 +261,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         isRefresh: Boolean
     ): Flow<List<Address>> = channelFlow {
         val vault = getVault(vaultId)
-        val defiCoins = vault.coins.filter { it.chain.isDeFiSupported }
+        val defiCoins = vault.coins.filter { it.isValidForDeFi() }
             .distinctBy { it.id.lowercase() }
 
         val loadPrices = if (isRefresh) {
@@ -277,46 +277,63 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         // emit cached
         try {
+            // TODO: Unify loading cache code into one service with DeFi Maya (generic loading)
             val thorchainAddress = addresses.find { it.chain == Chain.ThorChain }
-            if (thorchainAddress != null) {
-                val cachedDeFiBalances = balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+            val ethereumAddress = addresses.find { it.chain == Chain.Ethereum }
+
+            val cachedDeFiThorchainBalances = thorchainAddress?.let {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(
                     address = thorchainAddress.address,
+                    coin = Coins.ThorChain.RUNE,
                     vaultId = vaultId,
                 )
+            } ?: emptyList()
 
-                if (cachedDeFiBalances.isNotEmpty()) {
-                    val balancesByTicker = cachedDeFiBalances.associateBy { balance ->
-                        balance.tokenBalance.tokenValue?.unit?.lowercase()
-                    }
+            val cacheDeFiEthereumBalances = ethereumAddress?.let {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                    address = ethereumAddress.address,
+                    coin = Coins.Ethereum.ETH,
+                    vaultId = vaultId,
+                )
+            } ?: emptyList()
 
-                    val cachedAddresses = addresses.map { address ->
-                        val updatedAccounts = address.accounts.map { account ->
-                            val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
-                            if (cachedBalance != null) {
-                                account.applyBalance(
-                                    cachedBalance.tokenBalance,
-                                    cachedBalance.price
-                                )
-                            } else {
-                                account.copy(
-                                    tokenValue = TokenValue(
-                                        value = BigInteger.ZERO,
-                                        unit = account.token.ticker,
-                                        decimals = account.token.decimal
-                                    ),
-                                    fiatValue = FiatValue(
-                                        value = BigDecimal.ZERO,
-                                        currency = AppCurrency.USD.ticker,
-                                    ),
-                                    price = null
-                                )
-                            }
-                        }
-                        address.copy(accounts = updatedAccounts)
-                    }
+            val cacheBalances = cachedDeFiThorchainBalances + cacheDeFiEthereumBalances
 
-                    send(cachedAddresses)
+            if (cacheBalances.isNotEmpty()) {
+                val balancesByTicker = cacheBalances.associateBy { balance ->
+                    balance.tokenBalance.tokenValue?.unit?.lowercase()
                 }
+
+                val cachedAddresses = addresses.map { address ->
+                    val updatedAccounts = address.accounts.map { account ->
+                        val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
+                        if (cachedBalance != null) {
+                            account.applyBalance(
+                                cachedBalance.tokenBalance,
+                                cachedBalance.price
+                            )
+                        } else {
+                            account.copy(
+                                tokenValue = TokenValue(
+                                    value = BigInteger.ZERO,
+                                    unit = account.token.ticker,
+                                    decimals = account.token.decimal
+                                ),
+                                fiatValue = FiatValue(
+                                    value = BigDecimal.ZERO,
+                                    currency = AppCurrency.USD.ticker,
+                                ),
+                                price = null
+                            )
+                        }
+                    }
+                    val canBeDeFiProvider =
+                        address.chain.id.equals(Chain.Ethereum.id, true)
+
+                    address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
+                }
+
+                send(cachedAddresses)
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to load cached DeFi balances")
@@ -346,8 +363,10 @@ internal class AccountsRepositoryImpl @Inject constructor(
                                 it.applyBalance(balance.tokenBalance, balance.price)
                             }
                         }.awaitAll()
+                    val canBeDeFiProvider =
+                        account.chain.id.equals(Chain.Ethereum.id, true)
 
-                    account.copy(accounts = newAccounts)
+                    account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
                 } catch (e: Exception) {
                     Timber.e(e)
                     null
@@ -410,6 +429,14 @@ internal class AccountsRepositoryImpl @Inject constructor(
             account.token.chain.id to account.token.contractAddress.lowercase()
         }
     )
+
+    private fun Coin.isValidForDeFi(): Boolean {
+        return when (this.chain) {
+            Chain.ThorChain -> true
+            Chain.Ethereum -> true
+            else -> false
+        }
+    }
 }
 
 private data class CachedAddresses(

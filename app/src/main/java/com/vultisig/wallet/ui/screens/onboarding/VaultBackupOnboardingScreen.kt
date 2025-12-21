@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.onboarding
 
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,6 +15,7 @@ import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
@@ -41,8 +41,8 @@ private fun VaultBackupOnboardingScreen(
     state: VaultBackupOnboardingUiModel,
     onNextClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+
+    V2Scaffold(
         topBar = {
             if (state.pageTotal != 1) {
                 VsTopAppProgressBar(
@@ -52,7 +52,9 @@ private fun VaultBackupOnboardingScreen(
                 )
             }
         },
-    ) { paddingValues ->
+        applyScaffoldPaddings = true,
+        applyDefaultPaddings = true
+    ) {
 
         val textItems = buildOnboardingPagesText(state.vaultType, state.vaultShares, state.action)
 
@@ -61,7 +63,6 @@ private fun VaultBackupOnboardingScreen(
                 pageIndex = state.pageIndex,
                 pageTotal = state.pageTotal
             ),
-            paddingValues = paddingValues,
             riveAnimation = when (state.vaultType) {
                 Route.VaultInfo.VaultType.Fast -> R.raw.riv_fastvault_overview
                 Route.VaultInfo.VaultType.Secure -> when {

@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,6 +32,8 @@ import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -59,8 +60,11 @@ private fun SelectNetworkScreen(
     searchFieldState: TextFieldState,
     onNetworkClick: (NetworkUiModel) -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+
+    V2Scaffold(
+        applyDefaultPaddings = false,
+        applyScaffoldPaddings = true,
+
         topBar = {
             Column {
                 Text(
@@ -78,13 +82,11 @@ private fun SelectNetworkScreen(
                 )
             }
         },
-        content = { contentPadding ->
+        content = {
             LazyColumn(
                 contentPadding = PaddingValues(
                     all = 16.dp,
                 ),
-                modifier = Modifier
-                    .padding(contentPadding),
             ) {
                 item {
                     Row {
@@ -96,15 +98,15 @@ private fun SelectNetworkScreen(
                             color = Theme.v2.colors.text.extraLight,
                         )
 
-                        UiSpacer(1f)
-
-                        Text(
-                            text = stringResource(R.string.select_chain_balance_title),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
-                        )
-
-                        UiSpacer(20.dp)
+                        if(state.showAllChains.not()) {
+                            UiSpacer(1f)
+                            Text(
+                                text = stringResource(R.string.select_chain_balance_title),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.text.extraLight,
+                            )
+                            UiSpacer(20.dp)
+                        }
                     }
                     UiSpacer(16.dp)
                 }

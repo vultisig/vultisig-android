@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.USDC_CIRCLE
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -97,6 +98,7 @@ internal data class AccountUiModel(
     val fiatAmount: String?,
     val assetsSize: Int = 0,
     val nativeTokenTicker: String = "",
+    val isDeFiProvider: Boolean = false,
 )
 
 @HiltViewModel
@@ -301,11 +303,20 @@ internal class VaultAccountsViewModel @Inject constructor(
                     )
                 }
                 CryptoConnectionType.Defi -> {
-                    navigator.route(
-                        Route.PositionTokens(
-                            vaultId = vaultId,
+                    // Exception for DeFi providers on home screen
+                    if (account.chainName.equals(USDC_CIRCLE, true)) {
+                        navigator.route(
+                            Route.PositionCircle(
+                                vaultId = vaultId,
+                            )
                         )
-                    )
+                    } else {
+                        navigator.route(
+                            Route.PositionTokens(
+                                vaultId = vaultId,
+                            )
+                        )
+                    }
                 }
             }
         }

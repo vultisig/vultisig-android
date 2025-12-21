@@ -5,19 +5,21 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
-import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.isSwapSupported
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.consolidateEvm
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -44,14 +47,7 @@ import kotlin.collections.map
 internal data class SelectNetworkUiModel(
     val selectedNetwork: Chain = Chain.ThorChain,
     val networks: List<NetworkUiModel> = emptyList(),
-)
-
-
-data class NetworkUiModel(
-    val chain: Chain,
-    val logo: ImageModel,
-    val title: String,
-    val value: String? = null,
+    val showAllChains: Boolean = false,
 )
 
 @HiltViewModel
@@ -65,6 +61,8 @@ internal class SelectNetworkViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.SelectNetwork>()
+    private val enableConsolidateEvm = args.consolidateEvm
+    val showAllChains = args.showAllChains
 
     private val vaultId = args.vaultId
     private val selectedNetwork = Chain.fromRaw(args.selectedNetworkId)
@@ -74,6 +72,7 @@ internal class SelectNetworkViewModel @Inject constructor(
     val state = MutableStateFlow(
         SelectNetworkUiModel(
             selectedNetwork = selectedNetwork,
+            showAllChains = showAllChains,
         )
     )
 
@@ -97,13 +96,20 @@ internal class SelectNetworkViewModel @Inject constructor(
 
     private fun collectSearchResults() {
         combine(
-            vaultRepository.getEnabledChains(vaultId),
+            getChainFlow(),
             searchFieldState.textAsFlow().map { it.toString() },
-            loadAddressesWithBalances(),
+            loadAddresses(),
         ) { chains, query, chainBalances ->
-            val filteredChains = chains
-                .asSequence()
-                .filter { chain ->
+            val networkList = if (enableConsolidateEvm) {
+                chains.consolidateEvm(chainBalances)
+            } else {
+                chains.map { chain ->
+                    chain.toNetworkUiModel(chainBalances[chain] ?: "")
+                }
+            }
+
+            val filteredChains = networkList.asSequence()
+                .filter { (chain) ->
                     val matchesQuery = chain.raw.contains(query, ignoreCase = true) ||
                             chain.coinType.symbol.contains(query, ignoreCase = true)
                     val matchesFilter = when (args.filters) {
@@ -113,15 +119,7 @@ internal class SelectNetworkViewModel @Inject constructor(
                     }
                     matchesQuery && matchesFilter
                 }
-                .sortedWith(compareBy { it.raw })
-                .map { chain ->
-                    NetworkUiModel(
-                        chain = chain,
-                        logo = chain.logo,
-                        title = chain.raw,
-                        value = chainBalances[chain] ?: ""
-                    )
-                }
+                .sortedWith(compareBy { it.chain.raw })
                 .toList()
 
             this.state.update {
@@ -130,23 +128,46 @@ internal class SelectNetworkViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun loadAddressesWithBalances(): Flow<Map<Chain, String>> {
+    private fun getChainFlow(): Flow<Set<Chain>> = if (showAllChains)
+        flowOf(Chain.entries.toSet())
+    else
+        vaultRepository.getEnabledChains(vaultId)
+
+    private fun loadAddresses(): Flow<Map<Chain, String>> {
         return accountRepository.loadCachedAddresses(vaultId = vaultId)
             .catch {
                 Timber.e(it)
                 emit(emptyList())
             }
             .map { addresses ->
-                coroutineScope {
-                    addresses.map { address ->
-                        async {
-                            val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
-                                ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
-                            val formattedValue = fiatValueToStringMapper(totalFiatValue)
-                            address.chain to formattedValue
-                        }
-                    }.awaitAll().associate { it.first to it.second }
+                if (showAllChains) {
+                    loadChainsWithoutBalance(addresses)
+                } else {
+                    loadChainsWithBalance(addresses)
                 }
             }
     }
+
+
+    private fun loadChainsWithoutBalance(addresses: List<Address>): Map<Chain, String> =
+        addresses.associate {
+            it.chain to ""
+        }
+
+    private suspend fun loadChainsWithBalance(addresses: List<Address>): Map<Chain, String> =
+        coroutineScope {
+            addresses
+                .map { address ->
+                    async {
+                        val totalFiatValue =
+                            address.accounts.calculateAccountsTotalFiatValue()
+                                ?: FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+                        val formattedValue = fiatValueToStringMapper(totalFiatValue)
+                        address.chain to formattedValue
+                    }
+                }.awaitAll()
+                .associate { (chain, balance) ->
+                    chain to balance
+                }
+        }
 }

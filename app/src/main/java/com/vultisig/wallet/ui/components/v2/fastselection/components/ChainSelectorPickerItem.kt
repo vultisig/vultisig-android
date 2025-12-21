@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.screens.select.NetworkUiModel
+import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

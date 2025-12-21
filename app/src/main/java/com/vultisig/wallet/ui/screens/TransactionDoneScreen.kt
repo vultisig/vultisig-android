@@ -4,17 +4,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -30,6 +27,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -37,7 +35,6 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun TransactionDoneView(
@@ -46,15 +43,16 @@ internal fun TransactionDoneView(
     transactionLink: String,
     approveTransactionLink: String,
     onComplete: () -> Unit,
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
+    onUriClick: (String) -> Unit,
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean,
 ) {
-    val uriHandler = VsUriHandler()
     BackHandler(onBack = onBack)
 
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
+    V2Scaffold(
+        applyDefaultPaddings = true,
+        applyScaffoldPaddings = true,
         topBar = {
             if (showToolbar) {
                 VsTopAppBar(
@@ -62,10 +60,9 @@ internal fun TransactionDoneView(
                 )
             }
         },
-        content = { contentPadding ->
+        content = {
             FormCard(
                 modifier = Modifier
-                    .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
             ) {
                 Column(
@@ -77,17 +74,17 @@ internal fun TransactionDoneView(
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
                         if (approveTransactionHash.isNotEmpty()) {
                             TxLinkAndHash(
-                                approveTransactionLink,
-                                uriHandler,
-                                approveTransactionHash,
+                                transactionLink = approveTransactionLink,
+                                onUriClick = onUriClick,
+                                transactionHash = approveTransactionHash,
                                 isApproved = true
                             )
                             UiHorizontalDivider()
                         }
                         TxLinkAndHash(
-                            transactionLink,
-                            uriHandler,
-                            transactionHash
+                            transactionLink = transactionLink,
+                            transactionHash = transactionHash,
+                            onUriClick = onUriClick,
                         )
                     }
 
@@ -114,19 +111,20 @@ internal fun TransactionDoneView(
                 label = stringResource(R.string.transaction_done_complete),
                 onClick = onComplete,
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 24.dp
+                    ),
             )
         },
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 16.dp),
     )
 }
 
 @Composable
 private fun TxLinkAndHash(
     transactionLink: String,
-    uriHandler: UriHandler,
+    onUriClick: (String) -> Unit,
     transactionHash: String,
     isApproved: Boolean = false,
 ) {
@@ -143,7 +141,7 @@ private fun TxLinkAndHash(
         CopyIcon(textToCopy = transactionLink)
 
         UiIcon(drawableResId = R.drawable.ic_link, size = 20.dp, onClick = {
-            uriHandler.openUri(transactionLink)
+            onUriClick(transactionLink)
         })
     }
     Text(
@@ -295,6 +293,8 @@ private fun TransactionDoneViewPreview() {
         transactionLink = "",
         approveTransactionLink = "",
         onComplete = {},
+        onUriClick = {},
+        onBack = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             SendTxUiModel(
                 srcAddress = "0x1234567890",
