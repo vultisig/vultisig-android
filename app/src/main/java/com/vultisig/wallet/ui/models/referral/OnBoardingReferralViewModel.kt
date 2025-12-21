@@ -8,6 +8,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,6 +29,12 @@ internal class OnBoardingReferralViewModel @Inject constructor(
                     inclusive = true,
                 )
             )
+        }
+    }
+
+    fun back(){
+        viewModelScope.launch {
+            navigator.back()
         }
     }
 }

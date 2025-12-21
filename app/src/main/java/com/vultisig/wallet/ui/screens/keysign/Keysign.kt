@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
+import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
 internal fun KeysignView(
@@ -78,6 +79,8 @@ internal fun KeysignView(
                         )
                     }
                     else -> {
+
+                        val uriHandler = VsUriHandler()
                         TransactionDoneView(
                             transactionHash = txHash,
                             approveTransactionHash = approveTransactionHash,
@@ -87,6 +90,7 @@ internal fun KeysignView(
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel,
                             showToolbar = showToolbar,
+                            onUriClick = uriHandler::openUri
                         )
                     }
                 }

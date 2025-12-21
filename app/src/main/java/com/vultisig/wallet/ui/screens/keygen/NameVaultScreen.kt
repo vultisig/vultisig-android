@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,11 +26,10 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
 import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -57,19 +55,16 @@ private fun NameVaultScreen(
     onClearClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                onBackClick = onBackClick
-            )
-        },
+
+    V2Scaffold(
+        title = null,
+        onBackClick = onBackClick,
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.fast_vault_name_screen_next),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
                     .testTag("NameVaultScreen.continue"),
                 state = if (state.isNextButtonEnabled)
                     VsButtonState.Enabled else VsButtonState.Disabled,
@@ -83,15 +78,7 @@ private fun NameVaultScreen(
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
         }
-        Column(
-            Modifier
-                .padding(it)
-                .padding(
-                    top = 12.dp,
-                    start = 24.dp,
-                    end = 24.dp,
-                )
-        ) {
+        Column {
             Text(
                 text = stringResource(R.string.fast_vault_name_screen_title),
                 style = Theme.brockmann.headings.largeTitle,

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,38 +22,39 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.referral.VsPromoBox
 import com.vultisig.wallet.ui.components.referral.VsPromoTag
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ReferralOnboardingScreen(
-    navController: NavController,
     model: OnBoardingReferralViewModel = hiltViewModel(),
 ) {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_onboarding_title),
-                onBackClick = {
-                    navController.popBackStack()
-                },
-            )
-        },
-        content = { padding ->
+    ReferralOnboardingScreen(
+        onGetStarted = model::onClickGetStarted,
+        onBackClick = model::back
+    )
+}
+
+
+@Composable
+private fun ReferralOnboardingScreen(
+    onGetStarted: () -> Unit,
+    onBackClick: () -> Unit,
+){
+    V2Scaffold(
+        title = stringResource(R.string.referral_onboarding_title),
+        onBackClick = onBackClick,
+        content = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
             ) {
                 ReferralTag()
                 Row(modifier = Modifier.height(IntrinsicSize.Min)) {
@@ -75,22 +75,20 @@ internal fun ReferralOnboardingScreen(
             }
         },
         bottomBar = {
-            FooterButton(model)
+            FooterButton(onGetStarted = onGetStarted)
         }
     )
 }
 
 @Composable
-private fun FooterButton(model: OnBoardingReferralViewModel) {
+private fun FooterButton(onGetStarted: () -> Unit) {
     Column(
         modifier = Modifier
             .navigationBarsPadding()
-            .padding(bottom = 32.dp)
+            .padding(bottom = 24.dp)
     ) {
         VsButton(
-            onClick = {
-                model.onClickGetStarted()
-            },
+            onClick = onGetStarted,
             label = stringResource(R.string.referral_onboarding_get_started),
             modifier = Modifier
                 .fillMaxWidth()
@@ -195,54 +193,8 @@ private fun HowItWorksTitle() {
 @Preview(showBackground = true)
 @Composable
 private fun ReferralOnboardingScreenPreview() {
-    Scaffold(
-        containerColor = Theme.v2.colors.backgrounds.primary,
-        topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.referral_onboarding_title),
-                onBackClick = {},
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
-                ReferralTag()
-                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 24.dp)
-                            .width(1.dp)
-                            .fillMaxHeight(0.92f)
-                            .background(Theme.v2.colors.border.light)
-                    )
-
-                    Column {
-                        HowItWorksTitle()
-
-                        TimeLineList()
-                    }
-                }
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(bottom = 32.dp)
-            ) {
-                VsButton(
-                    onClick = {},
-                    label = stringResource(R.string.referral_onboarding_get_started),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            }
-        }
+    ReferralOnboardingScreen(
+        onGetStarted = {},
+        onBackClick = {}
     )
 }
