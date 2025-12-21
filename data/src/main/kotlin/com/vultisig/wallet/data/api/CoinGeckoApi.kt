@@ -9,6 +9,7 @@ import io.ktor.client.request.parameter
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
 
@@ -43,6 +44,7 @@ internal class CoinGeckoApiImpl @Inject constructor(
                 priceProviderIdsParam, currenciesParam
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.d(e, "error occurred in getCryptoPrices")
             emptyMap()
         }
@@ -62,6 +64,7 @@ internal class CoinGeckoApiImpl @Inject constructor(
                 currenciesParam,
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.d(e, "error occurred in getContractsPrice")
             emptyMap()
         }

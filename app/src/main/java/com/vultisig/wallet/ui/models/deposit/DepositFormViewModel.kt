@@ -102,6 +102,7 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.first
+import kotlin.coroutines.cancellation.CancellationException
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -502,6 +503,7 @@ internal class DepositFormViewModel @Inject constructor(
                         this@DepositFormViewModel.address.value = address
                     }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
             }
         }
@@ -559,6 +561,7 @@ internal class DepositFormViewModel @Inject constructor(
                                     thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                                 }
                         } catch (e: Exception) {
+                            if (e is CancellationException) throw e
                             Timber.e(e)
                         }
                     }
@@ -725,6 +728,7 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch unstakable CACAO balance")
             state.update { state ->
                 state.copy(
@@ -762,6 +766,7 @@ internal class DepositFormViewModel @Inject constructor(
                     val formattedAmount = formatUnstakableTcyAmount(raw)
                     state.update { it.copy(unstakableAmount = formattedAmount) }
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.e(e)
                     state.update { it.copy(unstakableAmount = null) }
                 }
@@ -997,6 +1002,7 @@ internal class DepositFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
                 // Error occurred during deposit operation
@@ -2745,6 +2751,7 @@ internal class DepositFormViewModel @Inject constructor(
             // Format and strip trailing zeros
             decimalFormat.format(humanReadableAmount)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             // Failed to format unstakable TCY amount
             Timber.e("Error formatting unstakable TCY amount: ${e.message}")
             null
@@ -2849,6 +2856,7 @@ internal class DepositFormViewModel @Inject constructor(
                     else -> error("Deposit type not supported for RUJI: $depositOption")
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
                 state.update {
                     it.copy(unstakableAmount = null, rewardsAmount = null)

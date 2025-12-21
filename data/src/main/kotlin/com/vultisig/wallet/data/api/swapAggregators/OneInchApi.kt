@@ -20,6 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.round
 
 interface OneInchApi {
@@ -106,6 +107,7 @@ class OneInchApiImpl @Inject constructor(
                 }
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             EVMSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
         }
     }

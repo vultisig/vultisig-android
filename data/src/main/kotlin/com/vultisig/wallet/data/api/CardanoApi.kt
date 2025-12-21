@@ -54,6 +54,7 @@ internal class CardanoApiImpl @Inject constructor(
             val balanceString = balances.firstOrNull()?.balance ?: "0"
             BigInteger(balanceString)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e("Error in Cardano getBalance : ${e.message}")
             BigInteger.ZERO
         }
@@ -74,6 +75,7 @@ internal class CardanoApiImpl @Inject constructor(
         return try {
             response.body<List<CardanoUtxoResponseJson>>().toUtxos()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e("Error in Cardano getUTXOs : ${e.message}")
             emptyList()
         }
@@ -155,6 +157,7 @@ internal class CardanoApiImpl @Inject constructor(
             val cardanoBroadcastResponse: CardanoBroadcastResponseJson = response.body()
             cardanoBroadcastResponse.data.transactionHash
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             error("Failed to broadcast transaction: ${e.message}")
         }
     } */

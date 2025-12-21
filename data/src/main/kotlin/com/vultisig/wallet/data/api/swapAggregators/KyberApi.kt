@@ -24,6 +24,7 @@ import io.ktor.http.isSuccess
 import io.ktor.http.path
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface KyberApi {
 
@@ -139,6 +140,7 @@ class KyberApiImpl @Inject constructor(
                 response.body<String>()
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             return KyberSwapQuoteDeserialized.Error(
                 KyberSwapErrorResponse(
                     message = e.message ?: "Unknown error"

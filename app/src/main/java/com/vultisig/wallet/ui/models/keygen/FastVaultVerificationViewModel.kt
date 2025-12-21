@@ -32,6 +32,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 internal enum class VerifyPinState {
@@ -149,6 +150,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                         )
 
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         updateVerifyState(VerifyPinState.Error)
                     }
                 } else {

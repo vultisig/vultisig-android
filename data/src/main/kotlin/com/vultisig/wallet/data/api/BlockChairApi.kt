@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface BlockChairApi {
     suspend fun getAddressInfo(
@@ -58,6 +59,7 @@ internal class BlockChairApiImp @Inject constructor(
             Timber.d("response data: $responseData")
             return responseData.data[address]
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e("fail to get address info from blockchair: ${e.message}")
         }
         return null

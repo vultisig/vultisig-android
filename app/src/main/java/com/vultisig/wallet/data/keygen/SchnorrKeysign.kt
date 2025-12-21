@@ -345,6 +345,7 @@ class SchnorrKeysign(
                 signatures[messageToSign] = resp
             }
         } catch (e: Exception) {
+            if (e is kotlin.coroutines.cancellation.CancellationException) throw e
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)

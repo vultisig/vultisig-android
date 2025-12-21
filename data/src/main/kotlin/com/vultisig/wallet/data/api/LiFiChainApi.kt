@@ -12,6 +12,7 @@ import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.round
 
 interface LiFiChainApi {
@@ -73,6 +74,7 @@ internal class LiFiChainApiImpl @Inject constructor(
                 response.body<String>()
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             LiFiSwapQuoteDeserialized.Error(
                 LiFiSwapQuoteError(
                     HttpStatusCode.fromValue(response.status.value).description

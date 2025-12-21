@@ -28,6 +28,7 @@ import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface GasFeeRepository {
     suspend fun getGasFee(
@@ -294,6 +295,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         val accountExists = try {
             tronApi.getAccount(to).address.isNotEmpty()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e)
             false
         }

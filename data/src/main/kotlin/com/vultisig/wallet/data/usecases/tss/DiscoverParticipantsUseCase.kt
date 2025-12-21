@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 typealias ParticipantName = String
@@ -37,6 +38,7 @@ internal class DiscoverParticipantsUseCaseImpl @Inject constructor(
                     .filter { it != localPartyId }
                 emit(cachedValue)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e, "Error getting participants")
                 emit(cachedValue)
             }

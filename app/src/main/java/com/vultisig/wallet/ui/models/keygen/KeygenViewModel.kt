@@ -52,6 +52,7 @@ import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -176,6 +177,7 @@ internal class KeygenViewModel @Inject constructor(
 
                 saveVault()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.d(e, "generateKey error")
 
                 state.update {
@@ -373,6 +375,7 @@ internal class KeygenViewModel @Inject constructor(
 
                 messagePuller.stop()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 messagePuller.stop()
 
                 Timber.e(e, "attempt $attempt keygenWithRetry failed")

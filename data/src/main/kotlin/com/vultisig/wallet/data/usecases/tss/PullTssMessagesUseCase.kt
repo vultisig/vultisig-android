@@ -13,6 +13,7 @@ import kotlinx.coroutines.isActive
 import timber.log.Timber
 import tss.ServiceImpl
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 fun interface PullTssMessagesUseCase {
@@ -93,6 +94,7 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
 
                 emit(Unit)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e, "Error pulling tss messages")
                 emit(Unit)
             }

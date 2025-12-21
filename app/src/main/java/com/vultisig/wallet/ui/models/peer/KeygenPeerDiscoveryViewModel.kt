@@ -76,6 +76,7 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -384,6 +385,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 }
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             // TODO handle exceptions more precisely
             state.update {
                 it.copy(
@@ -612,6 +614,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
                 return
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.tag("startSessionAndDiscovery").e(
                     e,
                     "Attempt ${attempt + 1} failed"
@@ -638,6 +641,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 sessionId
             ).isNotEmpty()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             false
         }
     }
