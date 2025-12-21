@@ -8,6 +8,7 @@ import io.ktor.serialization.ContentConvertException
 import io.ktor.serialization.JsonConvertException
 import io.ktor.serialization.WebsocketContentConvertException
 import io.ktor.serialization.WebsocketDeserializeException
+import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 
@@ -29,12 +30,45 @@ suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "mess
     }
 }
 
-// TODO: Enhance and check for key recursively
 suspend fun extractError(response: HttpResponse, errorKey: String): String {
     return try {
         val responseBody = response.bodyAsText()
-        val json = JSONObject(responseBody)
-        return json.optString(errorKey, responseBody)
+        val root: Any? = try {
+            JSONObject(responseBody)
+        } catch (e: Exception) {
+            try {
+                JSONArray(responseBody)
+            } catch (e2: Exception) {
+                null
+            }
+        }
+
+        if (root == null) return responseBody
+
+        fun findValue(node: Any?): String? {
+            when (node) {
+                is JSONObject -> {
+                    if (node.has(errorKey)) {
+                        return node.opt(errorKey)?.toString()
+                    }
+                    val keys = node.keys()
+                    while (keys.hasNext()) {
+                        val k = keys.next()
+                        val found = findValue(node.opt(k))
+                        if (found != null) return found
+                    }
+                }
+                is JSONArray -> {
+                    for (i in 0 until node.length()) {
+                        val found = findValue(node.opt(i))
+                        if (found != null) return found
+                    }
+                }
+            }
+            return null
+        }
+
+        findValue(root) ?: if (root is JSONObject) root.optString(errorKey, responseBody) else responseBody
     } catch (t: Throwable) {
         Timber.e(t, "Failed to extract error from response")
         response.bodyAsText()
@@ -45,4 +79,8 @@ class NetworkException(
     val httpStatusCode: Int,
     override val message: String,
     cause: Throwable? = null
-) : RuntimeException(message, cause)
+) : RuntimeException(message, cause){
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
