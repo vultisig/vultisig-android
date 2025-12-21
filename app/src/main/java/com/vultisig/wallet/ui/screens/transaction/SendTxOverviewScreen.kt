@@ -139,19 +139,6 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                if (tx.operation.isNotEmpty()) {
-                    VerifyCardDivider(
-                        size = 1.dp,
-                    )
-
-                    TextDetails(
-                        title = stringResource(R.string.operation),
-                        subtitle = tx.operation,
-                        showAllContent = true
-                    )
-                }
-
-
                 if (tx.token.value.isNotEmpty() && try {
                         tx.token.value.toBigInteger() > BigInteger.ZERO
                     } catch (e: Exception) {
@@ -341,7 +328,6 @@ internal data class UiTransactionInfo(
     val from: String,
     val to: String,
     val memo: String,
-    val operation: String,
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",

@@ -12,7 +12,6 @@ data class KeysignPayload(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
     val memo: String? = null,
-    val operation: String? = null,
     val swapPayload: SwapPayload? = null,
     val approvePayload: ERC20ApprovePayload? = null,
     val vaultPublicKeyECDSA: String,

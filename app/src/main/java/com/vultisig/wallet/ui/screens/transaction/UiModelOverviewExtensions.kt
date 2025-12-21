@@ -12,7 +12,6 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 from = this.tx.srcAddress,
                 to = this.tx.dstAddress,
                 memo = this.tx.memo ?: "",
-                operation = "",
                 networkFeeFiatValue = this.tx.networkFeeFiatValue,
                 networkFeeTokenValue = this.tx.networkFeeTokenValue,
             )
@@ -24,7 +23,6 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 from = this.depositTransactionUiModel.srcAddress,
                 to = this.depositTransactionUiModel.dstAddress,
                 memo = this.depositTransactionUiModel.memo,
-                operation = this.depositTransactionUiModel.operation,
                 networkFeeFiatValue = this.depositTransactionUiModel.networkFeeFiatValue,
                 networkFeeTokenValue = this.depositTransactionUiModel.networkFeeTokenValue,
             )
@@ -36,7 +34,6 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 from = "",
                 to = "",
                 memo = this.model.message,
-                operation = "",
                 signMethod = this.model.method,
                 networkFeeFiatValue = "",
                 networkFeeTokenValue = "",

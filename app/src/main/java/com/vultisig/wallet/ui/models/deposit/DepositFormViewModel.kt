@@ -1608,7 +1608,7 @@ internal class DepositFormViewModel @Inject constructor(
                 dstAddress = dstAddr,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
-                tokenAmountValue = tokenAmountInt,
+                tokenAmountValue = tokenAmountInt
             )
         val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
@@ -1628,7 +1628,6 @@ internal class DepositFormViewModel @Inject constructor(
             blockChainSpecific = specific.blockChainSpecific,
             thorAddress = thorAddress,
             operation = OPERATION_MINT,
-            utxos = specific.utxos,
             )
     }
 

@@ -9,14 +9,12 @@ sealed class BlockChainSpecific {
     data class UTXO(
         val byteFee: BigInteger,
         val sendMaxAmount: Boolean,
-        val isDeposit: Boolean,
     ) : BlockChainSpecific()
 
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
         val priorityFeeWei: BigInteger,
         val nonce: BigInteger,
-        val isDeposit: Boolean,
         val gasLimit: BigInteger,
     ) : BlockChainSpecific()
 

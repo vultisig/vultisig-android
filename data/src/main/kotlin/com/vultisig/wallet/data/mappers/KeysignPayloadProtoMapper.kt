@@ -35,7 +35,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             toAddress = from.toAddress,
             toAmount = BigInteger(from.toAmount),
             memo = from.memo,
-            operation = from.operation,
             coin = requireNotNull(from.coin).toCoin(),
             libType = SigningLibType.from(from.libType),
             utxos = from.utxoInfo
@@ -108,7 +107,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         priorityFeeWei = BigInteger(it.priorityFee),
                         nonce = it.nonce.toBigInteger(),
                         gasLimit = BigInteger(it.gasLimit),
-                        isDeposit = it.isDeposit,
                     )
                 }
 
@@ -126,7 +124,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     BlockChainSpecific.UTXO(
                         byteFee = BigInteger(it.byteFee),
                         sendMaxAmount = it.sendMaxAmount,
-                        isDeposit = it.isDeposit,
                     )
                 }
 

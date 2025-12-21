@@ -41,7 +41,6 @@ import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.UTXOSpecific
 import javax.inject.Inject
-import kotlin.collections.emptyList
 
 @HiltViewModel
 internal class KeysignShareViewModel @Inject constructor(
@@ -181,7 +180,6 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
-
             customMessagePayload = null
             keysignPayload = KeysignPayload(
                 coin = srcToken,
@@ -192,7 +190,6 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
-                operation = transaction.operation,
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 defiAction = if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {

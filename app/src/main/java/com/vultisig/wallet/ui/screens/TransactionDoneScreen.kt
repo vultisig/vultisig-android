@@ -169,12 +169,6 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
             address = depositTransaction.memo,
         )
 
-        if (!depositTransaction.operation.isNullOrEmpty()){
-            AddressField(
-                title = stringResource(R.string.operation),
-                address = depositTransaction.operation,
-            )
-        }
         if (depositTransaction.dstAddress.isNotBlank()) {
             AddressField(
                 title = stringResource(R.string.verify_deposit_node_address_title),

@@ -748,8 +748,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
-                    is BlockChainSpecific.Ethereum -> specific.isDeposit
-                    is BlockChainSpecific.UTXO -> specific.isDeposit
                     else -> false
                 }
 
@@ -815,7 +813,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                         networkFeeTokenValue = totalGasAndFee.formattedTokenValue,
                         networkFeeFiatValue = totalGasAndFee.formattedFiatValue,
                         memo = payload.memo ?: "",
-                        operation = payload.operation ?: "",
                     )
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Deposit(depositTransactionUiModel)

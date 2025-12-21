@@ -37,7 +37,6 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
             )
         } ?: emptyList(),
         memo = this.memo,
-        operation = this.operation,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
         vaultLocalPartyID = "",
         libType = SigningLibType.valueOf(this.libType),
@@ -93,8 +92,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 maxFeePerGasWei = BigInteger(ethereumSpecific.maxFeePerGasWei),
                 priorityFeeWei = BigInteger(ethereumSpecific.priorityFee),
                 nonce = BigInteger.valueOf(ethereumSpecific.nonce.toLong()),
-                gasLimit = BigInteger(ethereumSpecific.gasLimit),
-                isDeposit = ethereumSpecific.isDeposit
+                gasLimit = BigInteger(ethereumSpecific.gasLimit)
             )
         }
 
@@ -186,7 +184,6 @@ fun BlockchainSpecific.toBlockChainSpecific(
             BlockChainSpecific.UTXO(
                 byteFee = utxoSpecific.byteFee.toBigInteger(),
                 sendMaxAmount = utxoSpecific.sendMaxAmount,
-                isDeposit = utxoSpecific.isDeposit,
             )
         }
 
