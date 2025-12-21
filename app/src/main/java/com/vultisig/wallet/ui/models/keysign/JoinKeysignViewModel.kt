@@ -768,7 +768,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                     val vault = withContext(Dispatchers.IO) {
                         vaultRepository.get(vaultId)
-                    } ?: return
+                    } ?: error("Vault not found")
 
                     val blockchainTransaction = Transfer(
                         coin = payloadToken,

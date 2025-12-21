@@ -102,6 +102,7 @@ import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -686,7 +687,7 @@ internal class DepositFormViewModel @Inject constructor(
         viewModelScope.launch {
             val (thorAddress) = chainAccountAddressRepository.getAddress(
                 chain = Chain.ThorChain,
-                vault = vaultRepository.get(vaultId)!!
+                vault = vaultRepository.get(vaultId)?: error("Vault not found")
             )
 
             thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
@@ -2921,7 +2922,7 @@ internal class DepositFormViewModel @Inject constructor(
 
 
     @kotlin.ExperimentalStdlibApi
-    fun selectUtxosIfNeeded(
+    private fun selectUtxosIfNeeded(
         chain: Chain,
         specific: BlockChainSpecificAndUtxo
     ): BlockChainSpecificAndUtxo {
@@ -2937,6 +2938,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         return specific.copy(utxos = updatedUtxo)
     }
+
     private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
         val minAmount = chain.getDustThreshold
         if (tokenAmountInt < minAmount) {
@@ -2954,8 +2956,11 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             )
         }
-}
-    suspend fun getBitcoinTransactionPlan(
+        if (planBtc.value?.error != SigningError.OK) {
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
+        }
+    }
+    private suspend fun getBitcoinTransactionPlan(
         vaultId: String,
         selectedToken: Coin,
         dstAddress: String,
