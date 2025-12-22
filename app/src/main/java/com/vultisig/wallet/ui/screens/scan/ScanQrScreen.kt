@@ -173,36 +173,6 @@ internal fun ScanQrScreen(
     }
 
     V2Scaffold(
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                if (cameraPermissionState.status.isGranted.not()) {
-                    VsButton(
-                        label = stringResource(id = R.string.scan_qr_screen_return_vault),
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .fillMaxWidth()
-
-                    )
-                    UiSpacer(
-                        size = 12.dp
-                    )
-                }
-
-                VsButton(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = {
-                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                    },
-                    label = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                    iconLeft = R.drawable.ic_qr_upload
-                )
-            }
-
-        },
         onBackClick = onDismiss,
         title = stringResource(R.string.scan_qr_screen_title)
     ) {
@@ -272,6 +242,37 @@ internal fun ScanQrScreen(
                         )
                     }
                 }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        vertical = 16.dp
+                    )
+            ) {
+                if (cameraPermissionState.status.isGranted.not()) {
+                    VsButton(
+                        label = stringResource(id = R.string.scan_qr_screen_return_vault),
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+
+                    )
+                    UiSpacer(
+                        size = 12.dp
+                    )
+                }
+
+                VsButton(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = {
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    },
+                    label = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                    iconLeft = R.drawable.ic_qr_upload
+                )
             }
         }
     }

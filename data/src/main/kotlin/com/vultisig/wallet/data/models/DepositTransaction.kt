@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
 data class DepositTransaction(
@@ -17,6 +18,7 @@ data class DepositTransaction(
     val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
     val operation: String  = "",
     val thorAddress : String  = "",
+    val utxos: List<UtxoInfo> = emptyList(),
 )
 
 const val OPERATION_MINT = "Mint"
