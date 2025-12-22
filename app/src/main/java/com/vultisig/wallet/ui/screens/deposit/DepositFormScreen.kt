@@ -113,8 +113,6 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
 
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
-        onAutoCompoundTcyStake = model::onAutoCompoundTcyStake,
-        onAutoCompoundTcyUnStake = model::onAutoCompoundTcyUnStake,
         onSelectSecureAsset = model::onSelectSecureAsset
     )
 }
@@ -169,8 +167,6 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
 
     onLoadRujiBalances: () -> Unit = {},
-    onAutoCompoundTcyStake: (Boolean) -> Unit = {},
-    onAutoCompoundTcyUnStake: (Boolean) -> Unit = {},
     onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
 
     ) {
@@ -227,15 +223,9 @@ internal fun DepositFormScreen(
                         DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
                         DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
                         DepositOption.UnMerge -> stringResource(R.string.deposit_option_withdraw_ruji)
-                        DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
-                        DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
-                        DepositOption.StakeRuji -> stringResource(R.string.deposit_option_stake_ruji)
-                        DepositOption.UnstakeRuji -> stringResource(R.string.deposit_option_unstake_ruji)
-                        DepositOption.WithdrawRujiRewards -> stringResource(R.string.deposit_option_collect_ruji)
-                        DepositOption.MintYRUNE -> stringResource(R.string.deposit_option_receive_yrune)
-                        DepositOption.MintYTCY -> stringResource(R.string.deposit_option_receive_ytcy)
-                        DepositOption.RedeemYRUNE -> stringResource(R.string.deposit_option_sell_yrune)
-                        DepositOption.RedeemYTCY -> stringResource(R.string.deposit_option_sell_ytcy)
+
+
+
                         DepositOption.AddCacaoPool -> stringResource(R.string.deposit_option_add_cacao_pool)
                         DepositOption.RemoveCacaoPool -> stringResource(R.string.deposit_option_remove_cacao_pool)
                         DepositOption.SecuredAsset -> stringResource(R.string.deposit_option_secured_assets)
@@ -324,15 +314,8 @@ internal fun DepositFormScreen(
                             DepositOption.Bond,
                             DepositOption.Unbond,
                             DepositOption.Leave,
-                            DepositOption.StakeTcy,
-                            DepositOption.UnstakeTcy,
-                            DepositOption.StakeRuji,
-                            DepositOption.UnstakeRuji,
-                            DepositOption.WithdrawRujiRewards,
-                            DepositOption.MintYRUNE,
-                            DepositOption.MintYTCY,
-                            DepositOption.RedeemYTCY,
-                            DepositOption.RedeemYRUNE,
+
+
                             DepositOption.SecuredAsset,
                             DepositOption.WithdrawSecuredAsset,
                         )
@@ -350,32 +333,18 @@ internal fun DepositFormScreen(
                         }
                     }
 
-                    val isRujiWithdraw = depositOption == DepositOption.UnstakeRuji
-                    val isRujiWithdrawRewards = depositOption == DepositOption.WithdrawRujiRewards
-
-                    val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
                     val isAddingCacaoPool = depositOption == DepositOption.AddCacaoPool
                     val isRemovingCacaoPool = depositOption == DepositOption.RemoveCacaoPool
-                    val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
                     val unstakableBalance =
                         state.unstakableAmount?.takeIf { it.isNotBlank() } ?: "0"
-                    val rewardsBalance = state.rewardsAmount?.takeIf { it.isNotBlank() } ?: "0"
 
                     val amountLabel = when {
-                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(
+                        isRemovingCacaoPool -> stringResource(
                             R.string.deposit_form_amount_title,
                             unstakableBalance
                         )
 
-                        isRujiWithdraw -> stringResource(
-                            R.string.deposit_form_amount_title,
-                            unstakableBalance
-                        )
 
-                        isRujiWithdrawRewards -> stringResource(
-                            R.string.deposit_form_rewards_title,
-                            rewardsBalance
-                        )
 
                         else -> stringResource(
                             R.string.deposit_form_amount_title,
@@ -384,22 +353,19 @@ internal fun DepositFormScreen(
                     }
 
                     val amountHint = when {
-                        isUnstakeTcy || isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
-                        isRujiWithdrawRewards -> stringResource(R.string.deposit_form_pending_rewards_hint)
+                        isRemovingCacaoPool -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
 
                     if (
-                        isTcyOption || isAddingCacaoPool || isRemovingCacaoPool ||
+                        isAddingCacaoPool || isRemovingCacaoPool ||
                         (depositOption != DepositOption.Leave && (depositOption !in listOf(
-                            DepositOption.WithdrawRujiRewards,
                             DepositOption.SecuredAsset,
                             DepositOption.WithdrawSecuredAsset
                         )) && depositChain == Chain.ThorChain) ||
                         (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake ||
-                        depositOption == DepositOption.StakeRuji || depositOption == DepositOption.UnstakeRuji ||
-                        depositOption == DepositOption.MintYRUNE || depositOption == DepositOption.MintYTCY
+                        depositOption == DepositOption.AddCacaoPool
                     ) {
                         FormTextFieldCard(
                             title = amountLabel,
@@ -410,31 +376,11 @@ internal fun DepositFormScreen(
                             error = state.tokenAmountError,
                         )
 
-                        if (depositOption == DepositOption.StakeTcy) {
-                            AutoCompoundToggle(
-                                title = stringResource(R.string.tcy_auto_compound_enable_title),
-                                subtitle = stringResource(R.string.tcy_auto_compound_enable_subtitle),
-                                isChecked = state.isAutoCompoundTcyStake,
-                                onCheckedChange = onAutoCompoundTcyStake
-                            )
-                        }
 
-                        if (depositOption == DepositOption.UnstakeTcy) {
-                            AutoCompoundToggle(
-                                title = stringResource(R.string.tcy_auto_compound_unstake_title),
-                                subtitle = stringResource(R.string.tcy_auto_compound_unstake_subtitle),
-                                isChecked = state.isAutoCompoundTcyUnStake,
-                                onCheckedChange = onAutoCompoundTcyUnStake
-                            )
-                        }
                     }
 
                     if (depositOption !in arrayOf(
-                            DepositOption.Custom, DepositOption.StakeTcy,
-                            DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                            DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                            DepositOption.MintYTCY, DepositOption.MintYRUNE,
-                            DepositOption.RedeemYRUNE, DepositOption.RedeemYTCY,
+                            DepositOption.Custom,
                             DepositOption.RemoveCacaoPool, DepositOption.AddCacaoPool,
                             DepositOption.SecuredAsset, DepositOption.WithdrawSecuredAsset
                         )
@@ -508,29 +454,9 @@ internal fun DepositFormScreen(
                         )
                     }
 
-                    if (depositOption == DepositOption.WithdrawRujiRewards) {
-                        FormTextFieldCard(
-                            title = amountLabel,
-                            hint = amountHint,
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = rewardsAmountFieldState,
-                            onLostFocus = onTokenAmountLostFocus,
-                            error = state.tokenAmountError,
-                        )
-                    }
 
-                    if (depositOption == DepositOption.RedeemYRUNE ||
-                        depositOption == DepositOption.RedeemYTCY
-                    ) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_operator_slippage_title),
-                            hint = stringResource(R.string.slippage_hint),
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = slippageFieldState,
-                            onLostFocus = onSlippageLostFocus,
-                            error = state.slippageError,
-                        )
-                    }
+
+
 
 
                     if (depositOption == DepositOption.SecuredAsset) {
