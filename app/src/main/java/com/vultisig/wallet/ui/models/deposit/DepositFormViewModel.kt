@@ -395,8 +395,6 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }.collect {}
         }
-
-        collectTcyStakeAutoCompound()
     }
 
     private fun setMetadataInfo() {
@@ -654,10 +652,6 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun collectTcyStakeAutoCompound() {
-
     }
 
     fun selectDstChain(chain: Chain) {
