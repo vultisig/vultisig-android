@@ -245,8 +245,6 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Custom,
                 DepositOption.Merge,
                 DepositOption.UnMerge,
-
-                DepositOption.SecuredAsset,
                 DepositOption.WithdrawSecuredAsset,
             )
 
