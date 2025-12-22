@@ -246,7 +246,6 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Merge,
                 DepositOption.UnMerge,
 
-
                 DepositOption.SecuredAsset,
                 DepositOption.WithdrawSecuredAsset,
             )
@@ -268,6 +267,12 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.TransferIbc,
                 DepositOption.Switch,
             )
+            Chain.Ton -> {
+                listOf(
+                    DepositOption.Stake,
+                    DepositOption.Unstake
+                )
+            }
             else ->
                 buildList {
 //                    add(DepositOption.Stake)
@@ -404,7 +409,6 @@ internal class DepositFormViewModel @Inject constructor(
             if (action != null) {
                 val depositOption = when (action) {
                     DeFiNavActions.UNBOND -> DepositOption.Unbond
-
 
                     else -> DepositOption.Bond
                 }
