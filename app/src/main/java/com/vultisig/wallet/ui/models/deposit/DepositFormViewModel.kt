@@ -276,7 +276,6 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.MintYRUNE,
                 DepositOption.RedeemYTCY,
                 DepositOption.RedeemYRUNE,
-                DepositOption.SecuredAsset,
                 DepositOption.WithdrawSecuredAsset,
             )
 
@@ -297,6 +296,12 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.TransferIbc,
                 DepositOption.Switch,
             )
+            Chain.Ton -> {
+                listOf(
+                    DepositOption.Stake,
+                    DepositOption.Unstake
+                )
+            }
             else ->
                 buildList {
 //                    add(DepositOption.Stake)
