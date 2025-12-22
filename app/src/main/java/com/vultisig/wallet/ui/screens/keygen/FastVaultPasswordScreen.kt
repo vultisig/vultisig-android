@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -107,7 +107,7 @@ internal fun FastVaultPasswordScreen(
                         onShowMoreInfo = onShowMoreInfo,
                         modifier = Modifier
                             .onGloballyPositioned { position ->
-                                hintBoxOffset = position.boundsInRoot().bottom.toInt()
+                                hintBoxOffset = position.boundsInParent().bottom.toInt() + position.size.height
                             }
                     )
 
@@ -170,7 +170,7 @@ internal fun FastVaultPasswordScreen(
                 message = stringResource(R.string.fast_vault_password_screen_hint),
                 offset = IntOffset(
                     x = 0,
-                    y = hintBoxOffset - statusBarHeight
+                    y = hintBoxOffset
                 ),
                 pointerAlignment = Alignment.End,
                 onDismissClick = onHideMoreInfo,
