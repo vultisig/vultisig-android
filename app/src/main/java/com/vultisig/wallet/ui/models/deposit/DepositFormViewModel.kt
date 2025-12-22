@@ -2217,5 +2217,3 @@ private val tokensToMerge = listOf(
         contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf"
     ),
 )
-
-private const val DEFAULT_SLIPPAGE = "1.0"
