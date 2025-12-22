@@ -2140,21 +2140,6 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
 
-            // Use the same decimal formatting as the rest of the app
-            val decimalFormat = DecimalFormat(
-                "#,###.########", // 8 decimal places max, consistent with app standard
-                DecimalFormatSymbols(Locale.getDefault())
-            )
-
-            // Format and strip trailing zeros
-            decimalFormat.format(humanReadableAmount)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            // Failed to format unstakable TCY amount
-            Timber.e("Error formatting unstakable TCY amount: ${e.message}")
-            null
-        }
-    }
 
     fun validateAssets() {
         val assets = assetsFieldState.text.toString()
