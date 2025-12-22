@@ -26,9 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
@@ -106,9 +106,13 @@ private fun OnboardingScreen(
                     Row(
                         Modifier.clickable(onClick = onBackClick),
                     ) {
-                        VsTopAppBarAction(
-                            icon = R.drawable.ic_caret_left,
+                        UiSpacer(
+                            size = 12.dp
+                        )
+                        UiIcon(
+                            drawableResId = R.drawable.ic_caret_left,
                             onClick = onBackClick,
+                            size = 24.dp
                         )
                         UiSpacer(
                             size = 8.dp
