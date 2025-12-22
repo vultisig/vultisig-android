@@ -53,8 +53,6 @@ internal fun AccountList(
                     }
                 }
             }
-
         }
-
     }
 }

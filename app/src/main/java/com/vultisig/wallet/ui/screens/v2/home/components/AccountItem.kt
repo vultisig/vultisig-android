@@ -24,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -130,8 +131,15 @@ internal fun AccountItem(
             }
 
         }
-    }
+        
+        UiSpacer(size = 8.dp)
 
+        UiIcon(
+            drawableResId = R.drawable.ic_small_caret_right,
+            size = 16.dp,
+            tint = Theme.v2.colors.text.primary,
+        )
+    }
 }
 
 
