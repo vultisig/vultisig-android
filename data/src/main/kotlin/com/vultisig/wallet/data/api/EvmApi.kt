@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -366,7 +367,7 @@ class EvmApiImp(
         }
         val responseBody = response.bodyAsText()
         Timber.d("broadcast response: $responseBody")
-        val jsonObject = response.body<SendTransactionJson>()
+        val jsonObject = response.bodyOrThrow<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
             if (message.contains("known") ||
