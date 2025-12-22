@@ -15,9 +15,11 @@ import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.DeFiAction
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -37,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
+import vultisig.keysign.v1.UTXOSpecific
 import javax.inject.Inject
 
 @HiltViewModel
@@ -184,7 +187,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 toAmount = transaction.srcTokenValue.value,
                 blockChainSpecific = specific,
                 vaultPublicKeyECDSA = pubKeyECDSA,
-                utxos = emptyList(),
+                utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
                 libType = vault.libType,
