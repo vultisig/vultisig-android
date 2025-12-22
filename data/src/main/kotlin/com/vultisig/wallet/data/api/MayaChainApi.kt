@@ -10,9 +10,12 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.MayaChainDepositCacaoResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.models.maya.MayaBondedNodesResponse
+import com.vultisig.wallet.data.api.models.maya.MayaNodeResponse
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -23,6 +26,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.path
@@ -60,6 +64,10 @@ interface MayaChainApi {
     suspend fun getCacaoProvider(address: String): CacaoProviderResponse
 
     suspend fun getMayaConstants(): Map<String, Long>
+
+    suspend fun getAllNodes(): MayaBondedNodesResponse
+
+    suspend fun getNodeDetails(address: String): MayaNodeResponse
 }
 
 internal class MayaChainApiImp @Inject constructor(
@@ -210,25 +218,25 @@ internal class MayaChainApiImp @Inject constructor(
         }
     }
 
-    /*
-        var path: String {
-            switch self {
-            case .getAllNodes:
-            return "/mayachain/nodes"
-            case .getNodeDetails(let nodeAddress):
-            return "/mayachain/node/\(nodeAddress)"
-            case .getHealth:
-            return "/health"
-            case .getNetwork:
-            return "/network"
-            case .getMimir:
-            return "/mayachain/mimir"
+
+    override suspend fun getAllNodes(): MayaBondedNodesResponse {
+        return httpClient.get(MAYA_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/mayachain/nodes")
             }
-        }
-     */
+        }.bodyOrThrow<MayaBondedNodesResponse>()
+    }
 
-    suspend fun getAllNodes() {
-
+    override suspend fun getNodeDetails(address: String): MayaNodeResponse {
+        return httpClient.get(MAYA_URL_INFO) {
+            header(xClientID, xClientIDValue)
+            contentType(ContentType.Application.Json)
+            url {
+                appendPathSegments("/mayachain/node/$address")
+            }
+        }.bodyOrThrow<MayaNodeResponse>()
     }
 
     private companion object {

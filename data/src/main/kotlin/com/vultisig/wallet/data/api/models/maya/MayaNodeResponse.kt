@@ -34,3 +34,26 @@ data class MayaNodeResponse(
         val pools: Map<String, String>
     )
 }
+
+@Serializable
+data class MayaBondedNodesResponse(
+    val totalBonded: String,
+    val nodes: List<MayaBondNode>
+)
+
+@Serializable
+data class MayaBondNode(
+    val status: String,
+    val address: String,
+    val bond: String
+) {
+    val id: String
+        get() = address
+
+    val shortAddress: String
+        get() = if (address.length > 4) {
+            address.takeLast(4)
+        } else {
+            address
+        }
+}
