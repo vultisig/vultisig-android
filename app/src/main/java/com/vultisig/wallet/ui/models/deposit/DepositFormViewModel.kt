@@ -15,7 +15,9 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
+import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -31,10 +33,15 @@ import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -54,6 +61,7 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
 import com.vultisig.wallet.data.utils.getCoinBy
+import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -90,6 +98,8 @@ import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -99,6 +109,8 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.first
+import kotlin.collections.map
+import kotlin.let
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -197,6 +209,7 @@ internal class DepositFormViewModel @Inject constructor(
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
+    private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
@@ -593,18 +606,20 @@ internal class DepositFormViewModel @Inject constructor(
 
     private fun collectSecuredAssetAddresses() {
         viewModelScope.launch {
+            val (thorAddress) = chainAccountAddressRepository.getAddress(
+                chain = Chain.ThorChain,
+                vault = vaultRepository.get(vaultId)?: error("Vault not found")
+            )
+
+            thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
+
             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
             val inboundAddress = inboundAddresses
                 .firstOrNull {
                     it.chain.equals(
-                        state.value.selectedToken.chain.ticker(),
+                        state.value.selectedToken.getChainName(),
                         ignoreCase = true
                     )
-                }
-
-            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                .collect { addresses ->
-                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                 }
 
             if (inboundAddress != null && inboundAddress.halted.not() &&
@@ -1010,6 +1025,7 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
 
+    @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
         val chain = chain
             ?: throw InvalidTransactionDataException(
@@ -1103,7 +1119,30 @@ internal class DepositFormViewModel @Inject constructor(
                 isMaxAmountEnabled = false,
                 isDeposit = true,
                 tokenAmountValue = tokenAmountInt
-            )
+            ).let { specific ->
+                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                    planBtc.value ?: getBitcoinTransactionPlan(
+                        vaultId = vaultId,
+                        selectedToken = selectedToken,
+                        dstAddress = dstAddr,
+                        tokenAmountInt = tokenAmountInt,
+                        specific = specific,
+                        memo = memo
+                    ).also { plan ->
+                        planBtc.value = plan
+                    }
+
+                    selectUtxosIfNeeded(
+                        chain,
+                        specific
+                    )
+                } else {
+                    specific
+                }
+            }
+        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+            validateBtcLikeAmount(tokenAmountInt, chain)
+        }
         val estimatedGasFee = gasFeeToEstimate.invoke(fromGas)
 
         return DepositTransaction(
@@ -1120,6 +1159,7 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = estimatedGasFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
+            utxos = specific.utxos,
             thorAddress = thorAddress,
             operation = OPERATION_MINT,
             )
@@ -2161,6 +2201,74 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
+
+    @kotlin.ExperimentalStdlibApi
+    private fun selectUtxosIfNeeded(
+        chain: Chain,
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
+        val updatedUtxo = planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
+            UtxoInfo(
+                hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
+                index = planUtxo.outPoint.index.toUInt(),
+                amount = planUtxo.amount,
+            )
+        } ?: return specific
+
+        return specific.copy(utxos = updatedUtxo)
+    }
+
+    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
+        val minAmount = chain.getDustThreshold
+        if (tokenAmountInt < minAmount) {
+            val symbol = chain.coinType.symbol
+            val name = chain.raw
+            val formattedMinAmount = chain.toValue(minAmount).toString()
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_form_minimum_send_amount_is_requires_this,
+                    listOf(
+                        formattedMinAmount,
+                        symbol,
+                        name
+                    )
+                )
+            )
+        }
+        if (planBtc.value?.error != SigningError.OK) {
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
+        }
+    }
+    private suspend fun getBitcoinTransactionPlan(
+        vaultId: String,
+        selectedToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        specific: BlockChainSpecificAndUtxo,
+        memo: String?,
+    ): Bitcoin.TransactionPlan {
+        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
+
+        val keysignPayload = KeysignPayload(
+            coin = selectedToken,
+            toAddress = dstAddress,
+            toAmount = tokenAmountInt,
+            blockChainSpecific = specific.blockChainSpecific,
+            memo = memo,
+            vaultPublicKeyECDSA = vault.pubKeyECDSA,
+            vaultLocalPartyID = vault.localPartyID,
+            utxos = specific.utxos,
+            libType = vault.libType,
+            wasmExecuteContractPayload = null,
+        )
+
+        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
+
+        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
+        return plan
+    }
 
 }
 
