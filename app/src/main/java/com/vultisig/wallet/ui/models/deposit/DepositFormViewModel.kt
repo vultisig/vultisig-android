@@ -63,11 +63,8 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.screens.select.AssetSelected
-import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_YTCY_AFFILIATE_CONTRACT
-import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
-import com.vultisig.wallet.ui.screens.v2.defi.STAKING_TCY_COMPOUND_CONTRACT
-import com.vultisig.wallet.ui.screens.v2.defi.YRUNE_CONTRACT
-import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
+
+
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
@@ -116,15 +113,9 @@ internal enum class DepositOption {
     Merge,
     RemoveCacaoPool,
     UnMerge,
-    StakeTcy,
-    UnstakeTcy,
-    StakeRuji,
-    UnstakeRuji,
-    WithdrawRujiRewards,
-    MintYTCY,
-    MintYRUNE,
-    RedeemYRUNE,
-    RedeemYTCY,
+
+
+
     SecuredAsset,
     WithdrawSecuredAsset
 }
@@ -166,8 +157,7 @@ internal data class DepositFormUiModel(
 
     val rewardsAmount: String? = null,
 
-    val isAutoCompoundTcyStake: Boolean = false,
-    val isAutoCompoundTcyUnStake: Boolean = false,
+
 
     val availableSecuredAssets:  List<TokenWithdrawSecureAsset> =  emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =  availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
@@ -201,21 +191,9 @@ internal class DepositFormViewModel @Inject constructor(
     private lateinit var vaultId: String
     private var chain: Chain? = null
 
-    private var tcyAutoCompoundAmount: String? = null
 
-    private var unstakableAmountCache: String? = null
 
-    var isAutoCompoundTcyStake: Boolean
-        get() = state.value.isAutoCompoundTcyStake
-        set(value) {
-            state.value = state.value.copy(isAutoCompoundTcyStake = value)
-        }
 
-    var isAutoCompoundTcyUnStake: Boolean
-        get() = state.value.isAutoCompoundTcyUnStake
-        set(value) {
-            state.value = state.value.copy(isAutoCompoundTcyUnStake = value)
-        }
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
@@ -267,15 +245,6 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Custom,
                 DepositOption.Merge,
                 DepositOption.UnMerge,
-                DepositOption.StakeTcy,
-                DepositOption.UnstakeTcy,
-                DepositOption.StakeRuji,
-                DepositOption.UnstakeRuji,
-                DepositOption.WithdrawRujiRewards,
-                DepositOption.MintYTCY,
-                DepositOption.MintYRUNE,
-                DepositOption.RedeemYTCY,
-                DepositOption.RedeemYRUNE,
                 DepositOption.WithdrawSecuredAsset,
             )
 
@@ -370,10 +339,6 @@ internal class DepositFormViewModel @Inject constructor(
                         }
                     }
 
-                    DepositOption.StakeTcy, DepositOption.UnstakeTcy, DepositOption.StakeRuji,
-                    DepositOption.UnstakeRuji, DepositOption.WithdrawRujiRewards,
-                    DepositOption.MintYTCY, DepositOption.MintYRUNE,
-                    DepositOption.RedeemYTCY, DepositOption.RedeemYRUNE,
                     DepositOption.Custom,
                         -> {
                         targetTicker = selectedToken.ticker
@@ -433,8 +398,6 @@ internal class DepositFormViewModel @Inject constructor(
                 }
             }.collect {}
         }
-
-        collectTcyStakeAutoCompound()
     }
 
     private fun setMetadataInfo() {
@@ -444,15 +407,7 @@ internal class DepositFormViewModel @Inject constructor(
             if (action != null) {
                 val depositOption = when (action) {
                     DeFiNavActions.UNBOND -> DepositOption.Unbond
-                    DeFiNavActions.WITHDRAW_RUJI -> DepositOption.WithdrawRujiRewards
-                    DeFiNavActions.STAKE_RUJI -> DepositOption.StakeRuji
-                    DeFiNavActions.UNSTAKE_RUJI -> DepositOption.UnstakeRuji
-                    DeFiNavActions.STAKE_TCY -> DepositOption.StakeTcy
-                    DeFiNavActions.UNSTAKE_TCY -> DepositOption.UnstakeTcy
-                    DeFiNavActions.MINT_YRUNE -> DepositOption.MintYRUNE
-                    DeFiNavActions.REDEEM_YRUNE -> DepositOption.RedeemYRUNE
-                    DeFiNavActions.MINT_YTCY -> DepositOption.MintYTCY
-                    DeFiNavActions.REDEEM_YTCY -> DepositOption.RedeemYTCY
+
                     else -> DepositOption.Bond
                 }
                 selectDepositOption(depositOption)
@@ -570,55 +525,16 @@ internal class DepositFormViewModel @Inject constructor(
 
                 }
 
-                DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
-                DepositOption.MintYRUNE,
-                    ->
+                DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave ->
                     state.update {
                         it.copy(selectedToken = Coins.ThorChain.RUNE, unstakableAmount = null)
                     }
 
-                DepositOption.MintYTCY -> {
-                    state.update {
-                        it.copy(selectedToken = Coins.ThorChain.TCY)
-                    }
-                }
 
-                DepositOption.RedeemYTCY -> {
-                    val yTCY = Coins.getCoinBy(Chain.ThorChain, "yTCY") ?: return@launch
-                    state.update {
-                        it.copy(selectedToken = yTCY)
-                    }
-                    setSlippage(DEFAULT_SLIPPAGE)
-                }
 
-                DepositOption.RedeemYRUNE -> {
-                    val yRUNE = Coins.getCoinBy(Chain.ThorChain, "yRUNE") ?: return@launch
-                    state.update {
-                        it.copy(selectedToken = yRUNE)
-                    }
-                    setSlippage(DEFAULT_SLIPPAGE)
-                }
 
-                DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
-                    state.update {
-                        it.copy(selectedToken = Coins.ThorChain.TCY, unstakableAmount = null)
-                    }
-                }
 
-                DepositOption.StakeRuji -> {
-                    val rujiToken = Coins.getCoinBy(Chain.ThorChain, "RUJI") ?: return@launch
-                    state.update {
-                        it.copy(selectedToken = rujiToken)
-                    }
-                }
 
-                DepositOption.UnstakeRuji -> {
-                    handleRujiDepositOption(DepositOption.UnstakeRuji)
-                }
-
-                DepositOption.WithdrawRujiRewards -> {
-                    handleRujiDepositOption(DepositOption.WithdrawRujiRewards)
-                }
 
                 DepositOption.RemoveCacaoPool -> {
                     handleRemoveCacaoOption()
@@ -738,40 +654,6 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun collectTcyStakeAutoCompound() {
-        combine(
-            state.map { it.depositOption }.distinctUntilChanged(),
-            state.map { it.isAutoCompoundTcyUnStake }.distinctUntilChanged(),
-            address.filterNotNull().map { it.address }.distinctUntilChanged(),
-        ) { option, isAuto, addr ->
-            Triple(
-                option,
-                isAuto,
-                addr
-            )
-        }
-            .filter { (option, _, _) -> option == DepositOption.UnstakeTcy }
-            .onEach { (_, isAuto, addressValue) ->
-                try {
-                    val raw = if (isAuto) {
-                        tcyAutoCompoundAmount
-                            ?: balanceRepository.getTcyAutoCompoundAmount(addressValue)
-                                .also { tcyAutoCompoundAmount = it }
-                    } else {
-                        unstakableAmountCache
-                            ?: balanceRepository.getUnstakableTcyAmount(addressValue)
-                                .also { unstakableAmountCache = it }
-                    }
-                    val formattedAmount = formatUnstakableTcyAmount(raw)
-                    state.update { it.copy(unstakableAmount = formattedAmount) }
-                } catch (e: Exception) {
-                    Timber.e(e)
-                    state.update { it.copy(unstakableAmount = null) }
-                }
-            }
-            .launchIn(viewModelScope)
     }
 
     fun selectDstChain(chain: Chain) {
@@ -923,28 +805,7 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = true
                 val depositOption = state.value.depositOption
 
-                // Validate percentage input for TCY unstaking
-                if (depositOption == DepositOption.UnstakeTcy) {
-                    val percentageText = tokenAmountFieldState.text.toString()
-                    val percentage = percentageText.toFloatOrNull()
-                        ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
 
-                    val error = when {
-                        percentage <= 0 -> {
-                            UiText.StringResource(R.string.send_error_no_amount)
-                        }
-
-                        percentage > 100 -> {
-                            UiText.StringResource(R.string.deposit_error_max_amount)
-                        }
-
-                        else -> null
-                    }
-
-                    error?.let {
-                        throw InvalidTransactionDataException(it)
-                    }
-                }
 
                 val transaction = when (depositOption) {
                     DepositOption.AddCacaoPool -> createAddCacaoPoolTransaction()
@@ -958,34 +819,10 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.Switch -> createSwitchTx()
                     DepositOption.Merge -> createMergeTx()
                     DepositOption.UnMerge -> createUnMergeTx()
-                    DepositOption.StakeTcy -> createTcyStakeTx(
-                        if (isAutoCompoundTcyStake) "" else "TCY+",
-                        isUnStake = false,
-                        percentage = null
-                    )
 
-                    DepositOption.UnstakeTcy -> {
-                        // Get percentage from user input
-                        val percentageText = tokenAmountFieldState.text.toString()
-                        val percentage =
-                            percentageText.toFloatOrNull()
-                                ?: 100f // Default to 100% if invalid
-                        val basisPoints = (percentage * 100).toInt()
-                            .coerceIn(0, 10000) // Convert to basis points (0-10000)
-                        createTcyStakeTx(
-                            if (isAutoCompoundTcyUnStake) "" else "TCY-:$basisPoints",
-                            isUnStake = true,
-                            percentage = percentage
-                        )
-                    }
 
-                    DepositOption.StakeRuji -> createStakeRuji()
-                    DepositOption.UnstakeRuji -> createUnstakeRuji()
-                    DepositOption.WithdrawRujiRewards -> createWithdrawRewardsRuji()
-                    DepositOption.MintYTCY -> createReceiveYToken(DepositOption.MintYTCY)
-                    DepositOption.MintYRUNE -> createReceiveYToken(DepositOption.MintYRUNE)
-                    DepositOption.RedeemYRUNE -> createSellYToken(DepositOption.RedeemYRUNE)
-                    DepositOption.RedeemYTCY -> createSellYToken(DepositOption.RedeemYTCY)
+
+
                     DepositOption.RemoveCacaoPool -> createRemoveCacaoPoolTransaction()
                     DepositOption.SecuredAsset -> createSecuredAssetTransaction()
                     DepositOption.WithdrawSecuredAsset -> createWithdrawSecuredAssetTransaction()
@@ -1011,358 +848,11 @@ internal class DepositFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createSellYToken(depositOption: DepositOption): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val slippage = slippageFieldState.text.toString()
-        val slippageError = validateSlippage(slippage)
-        if (slippageError != null) {
-            throw InvalidTransactionDataException(slippageError)
-        }
-
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmount =
-            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
-        val memo = "sell:${selectedToken.contractAddress}:$tokenAmount"
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-        val contractAddress = when (depositOption) {
-            DepositOption.RedeemYTCY -> {
-                YTCY_CONTRACT
-            }
-
-            DepositOption.RedeemYRUNE -> {
-                YRUNE_CONTRACT
-            }
-
-            else -> {
-                throw RuntimeException("Invalid Deposit Parameter ")
-            }
-        }
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = contractAddress,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmount,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.redeemYToken(
-                fromAddress = srcAddress,
-                tokenContract = contractAddress,
-                slippage = slippage.formatSlippage(),
-                denom = selectedToken.contractAddress,
-                amount = tokenAmount,
-            )
-        )
-    }
-
-    private fun String.formatSlippage(): String {
-        val divider = "100".toBigDecimal()
-        return try {
-            this.toBigDecimal()
-                .setScale(2, RoundingMode.DOWN)
-                .divide(divider)
-                .toPlainString()
-        } catch (t: Throwable) {
-            "0.01" // Default slippage for safety
-        }
-    }
-
-    private suspend fun createReceiveYToken(depositOption: DepositOption): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmount =
-            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
-        val memo = "receive:${selectedToken.ticker.lowercase()}:$tokenAmount"
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        val tokenContract = when (depositOption) {
-            DepositOption.MintYRUNE -> {
-                YRUNE_CONTRACT
-            }
-
-            DepositOption.MintYTCY -> {
-                YTCY_CONTRACT
-            }
-
-            else -> {
-                throw RuntimeException("Invalid Deposit Parameter ")
-            }
-        }
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = YRUNE_YTCY_AFFILIATE_CONTRACT,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmount,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.mintYToken(
-                fromAddress = srcAddress,
-                stakingContract = YRUNE_YTCY_AFFILIATE_CONTRACT,
-                tokenContract = tokenContract,
-                denom = selectedToken.ticker.lowercase(),
-                amount = tokenAmount,
-            )
-        )
-    }
-
-    private suspend fun createWithdrawRewardsRuji(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
-        val tokenAmount = fetchRujiStakeBalances(srcAddress).rewardsAmount
-
-        if (tokenAmount <= BigInteger.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val memo = "claim:${selectedToken.contractAddress}:$tokenAmount"
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = STAKING_RUJI_CONTRACT,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmount,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.claimRujiRewards(
-                fromAddress = srcAddress,
-                stakingContract = STAKING_RUJI_CONTRACT,
-            )
-        )
-    }
-
-    private suspend fun createUnstakeRuji(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
-
-        val stakeBalance = fetchRujiStakeBalances(srcAddress).stakeAmount
-
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()?.let { CoinType.THORCHAIN.toUnit(it) }
-
-        if (tokenAmount == null || tokenAmount <= BigInteger.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        if (tokenAmount > stakeBalance) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_max_shares)
-            )
-        }
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val memo = "withdraw:${selectedToken.contractAddress}:$tokenAmount"
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = STAKING_RUJI_CONTRACT,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmount,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.unstakeRUJI(
-                fromAddress = srcAddress,
-                stakingContract = STAKING_RUJI_CONTRACT,
-                amount = tokenAmount.toString(),
-            )
-        )
-    }
-
-    private suspend fun createStakeRuji(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
 
 
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
 
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
 
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-        val tokenAmount =
-            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
-        val memo = "bond:${selectedToken.contractAddress}:$tokenAmount"
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = STAKING_RUJI_CONTRACT,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmount,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = ThorchainFunctions.stakeRUJI(
-                srcAddress,
-                STAKING_RUJI_CONTRACT,
-                selectedToken.contractAddress,
-                tokenAmount
-            )
-        )
-    }
 
     private suspend fun createUnMergeTx(): DepositTransaction {
         val unmergeToken = state.value.selectedUnMergeCoin
@@ -2187,126 +1677,9 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    private suspend fun createTcyStakeTx(
-        stakeMemo: String,
-        isUnStake: Boolean,
-        percentage: Float?,
-    ): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        val address = address.value ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedAccount = getSelectedAccount() ?: throw InvalidTransactionDataException(
-            UiText.StringResource(R.string.send_error_no_address)
-        )
-
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-
-        // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
-        // For staking (TCY+), we send the full amount entered by user
-        val tokenAmountInt = if (isUnStake) {
-            // Get the appropriate unstakable amount based on compound type
-            val totalUnits = if (isAutoCompoundTcyUnStake) {
-                tcyAutoCompoundAmount?.toBigIntegerOrNull()
-            } else {
-                unstakableAmountCache?.toBigIntegerOrNull()
-            }
-                ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
-
-            if (totalUnits < BigInteger.ONE) {
-                throw InvalidTransactionDataException(UiText.StringResource(R.string.unstake_tcy_zero_error))
-            }
-            // For unstaking, send zero TCY as gas is covered by RUNE
-            BigInteger.ZERO
-        } else {
-            // For staking or other operations, validate and send the full amount
-            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-        }
-
-        val memo = stakeMemo
-
-        val isAutoCompound = if (isUnStake) {
-            isAutoCompoundTcyUnStake
-        } else {
-            isAutoCompoundTcyStake
-        }
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = if (isAutoCompound)
-                    TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
-                else TransactionType.TRANSACTION_TYPE_UNSPECIFIED
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
 
 
-        val wasmExecuteContractPayload = if (isAutoCompound)
-            getWasmExecuteContractPayload(
-                isUnStake,
-                percentage,
-                srcAddress,
-                selectedToken,
-                tokenAmountInt
-            )
-        else null
 
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = STAKING_TCY_COMPOUND_CONTRACT,
-            memo = memo,
-            srcTokenValue = TokenValue(
-                value = tokenAmountInt,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-            wasmExecuteContractPayload = wasmExecuteContractPayload
-        )
-    }
-
-    private fun getWasmExecuteContractPayload(
-        isUnStake: Boolean,
-        percentage: Float?,
-        srcAddress: String,
-        selectedToken: Coin,
-        tokenAmountInt: BigInteger,
-    ): WasmExecuteContractPayload? {
-        return if (isUnStake) {
-            val units = percentage?.toBigDecimal()
-                ?.times(tcyAutoCompoundAmount?.toBigDecimal() ?: BigDecimal.ZERO)
-                ?.div(BigDecimal.valueOf(100))?.toBigInteger() ?: return null
-
-            ThorchainFunctions.unStakeTcyCompound(
-                units = units,
-                stakingContract = STAKING_TCY_COMPOUND_CONTRACT,
-                fromAddress = srcAddress
-            )
-        } else ThorchainFunctions.stakeTcyCompound(
-            fromAddress = srcAddress,
-            stakingContract = STAKING_TCY_COMPOUND_CONTRACT,
-            denom = selectedToken.contractAddress,
-            amount = tokenAmountInt
-        )
-    }
 
 
     private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
@@ -2662,19 +2035,7 @@ internal class DepositFormViewModel @Inject constructor(
             )
 
         if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
-            // For UnstakeTCY operations, check against the unstakable amount instead of the wallet balance
-            if (state.value.depositOption == DepositOption.UnstakeTcy && selectedToken.ticker == "TCY") {
-                // Convert the unstakable amount string to BigInteger for comparison
-                val unstakableAmount = state.value.unstakableAmount
-                    ?.toBigDecimalOrNull()
-                    ?.movePointRight(selectedToken.decimal)
-                    ?.toBigInteger() ?: BigInteger.ZERO
 
-                if (tokenAmountInt <= unstakableAmount) {
-                    // Amount is valid for unstaking
-                    return tokenAmountInt
-                }
-            }
 
             // For all other operations, or if the unstakable check failed
             throw InvalidTransactionDataException(
@@ -2733,28 +2094,7 @@ internal class DepositFormViewModel @Inject constructor(
         return null
     }
 
-    private fun formatUnstakableTcyAmount(unstakableAmount: String?): String? {
-        if (unstakableAmount.isNullOrEmpty()) return null
-        return try {
-            val amount = unstakableAmount.toBigDecimalOrNull() ?: return null
 
-            // TCY has 8 decimal places, so divide by 10^8 to get the human-readable amount
-            val humanReadableAmount = amount.movePointLeft(8)
-
-            // Use the same decimal formatting as the rest of the app
-            val decimalFormat = DecimalFormat(
-                "#,###.########", // 8 decimal places max, consistent with app standard
-                DecimalFormatSymbols(Locale.getDefault())
-            )
-
-            // Format and strip trailing zeros
-            decimalFormat.format(humanReadableAmount)
-        } catch (e: Exception) {
-            // Failed to format unstakable TCY amount
-            Timber.e("Error formatting unstakable TCY amount: ${e.message}")
-            null
-        }
-    }
 
     fun validateAssets() {
         val assets = assetsFieldState.text.toString()
@@ -2802,78 +2142,14 @@ internal class DepositFormViewModel @Inject constructor(
                 lpUnits.toInt() > 0
 
     @Deprecated("Use Ruji Staking through DeFi Tab")
-    private suspend fun fetchRujiStakeBalances(address: String): RujiStakeBalances {
-        if (rujiStakeBalances.value != null) {
-            return rujiStakeBalances.value!!
-        }
 
-        val balances = withContext(Dispatchers.IO) {
-            runCatching { thorChainApi.getRujiStakeBalance(address) }.getOrDefault(RujiStakeBalances())
-        }
-
-        rujiStakeBalances.update { balances }
-
-        return balances
-    }
-
-    private suspend fun handleRujiDepositOption(depositOption: DepositOption) {
-        val rujiToken = Coins.ThorChain.RUJI
-        state.update {
-            it.copy(selectedToken = rujiToken, unstakableAmount = "Loading...")
-        }
-        val addressValue = address.value?.address
-
-        if (addressValue != null) {
-            try {
-                val balances = fetchRujiStakeBalances(addressValue)
-
-                when (depositOption) {
-                    DepositOption.UnstakeRuji -> {
-                        val formattedAmount =
-                            CoinType.THORCHAIN.toValue(balances.stakeAmount).toPlainString()
-                        state.update {
-                            it.copy(unstakableAmount = formattedAmount + " ${rujiToken.ticker}")
-                        }
-                    }
-
-                    DepositOption.WithdrawRujiRewards -> {
-                        val formattedAmount =
-                            CoinType.THORCHAIN.toValue(balances.rewardsAmount)
-                                .toPlainString()
-                        val rewardsTicker = balances.rewardsTicker
-                        state.update {
-                            it.copy(rewardsAmount = "$formattedAmount $rewardsTicker")
-                        }
-                        if (balances.rewardsAmount > BigInteger.ZERO) {
-                            rewardsAmountFieldState.setTextAndPlaceCursorAtEnd(
-                                formattedAmount
-                            )
-                        }
-                    }
-
-                    else -> error("Deposit type not supported for RUJI: $depositOption")
-                }
-            } catch (e: Exception) {
-                Timber.e(e)
-                state.update {
-                    it.copy(unstakableAmount = null, rewardsAmount = null)
-                }
-            }
-        }
-    }
 
 
     private fun findCoin(chain: Chain, ticker: String?) =
         Coins.coins[chain]?.find { it.ticker.equals(ticker, ignoreCase = true) }
 
 
-    fun onAutoCompoundTcyStake(isChecked: Boolean) {
-        isAutoCompoundTcyStake = isChecked
-    }
 
-    fun onAutoCompoundTcyUnStake(isChecked: Boolean) {
-        isAutoCompoundTcyUnStake = isChecked
-    }
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
@@ -2941,5 +2217,3 @@ private val tokensToMerge = listOf(
         contract = "thor1ltd0maxmte3xf4zshta9j5djrq9cl692ctsp9u5q0p9wss0f5lms7us4yf"
     ),
 )
-
-private const val DEFAULT_SLIPPAGE = "1.0"
