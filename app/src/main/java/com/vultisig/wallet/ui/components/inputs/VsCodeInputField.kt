@@ -42,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.components.v2.utils.toPx
+import com.vultisig.wallet.ui.components.util.toPx
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.textAsFlow
 import kotlin.math.roundToInt
@@ -143,11 +143,11 @@ internal fun VsCodeInputField(
                     modifier = boxModifier
                         .background(
                             color = when {
-                                value.length <= index -> Theme.v2.colors.backgrounds.secondary
+                                value.length <= index -> Theme.colors.backgrounds.secondary
                                 else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.v2.colors.backgrounds.secondary
-                                    VsCodeInputFieldState.Success -> Theme.v2.colors.backgrounds.success
-                                    VsCodeInputFieldState.Error -> Theme.v2.colors.backgrounds.error
+                                    VsCodeInputFieldState.Default -> Theme.colors.backgrounds.secondary
+                                    VsCodeInputFieldState.Success -> Theme.colors.backgrounds.success
+                                    VsCodeInputFieldState.Error -> Theme.colors.backgrounds.error
                                 }
                             },
                             shape = inputBoxShape,
@@ -158,12 +158,12 @@ internal fun VsCodeInputField(
                                 else -> 1.dp
                             },
                             color = when {
-                                isActiveBox -> Theme.v2.colors.border.normal
-                                value.length <= index -> Theme.v2.colors.border.light
+                                isActiveBox -> Theme.colors.border.normal
+                                value.length <= index -> Theme.colors.border.light
                                 else -> when (state) {
-                                    VsCodeInputFieldState.Default -> Theme.v2.colors.border.light
-                                    VsCodeInputFieldState.Success -> Theme.v2.colors.alerts.success
-                                    VsCodeInputFieldState.Error -> Theme.v2.colors.alerts.error
+                                    VsCodeInputFieldState.Default -> Theme.colors.border.light
+                                    VsCodeInputFieldState.Success -> Theme.colors.alerts.success
+                                    VsCodeInputFieldState.Error -> Theme.colors.alerts.error
                                 }
                             },
                             shape = inputBoxShape,
@@ -180,7 +180,7 @@ internal fun VsCodeInputField(
 
                     Text(
                         text = displayChar.toString(),
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
                         modifier = Modifier
                             .padding(all = 12.dp)

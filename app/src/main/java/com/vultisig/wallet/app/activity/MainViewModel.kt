@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
-import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.components.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator

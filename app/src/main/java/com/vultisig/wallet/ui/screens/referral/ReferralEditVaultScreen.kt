@@ -37,7 +37,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
 import com.vultisig.wallet.ui.models.referral.ReferralError
@@ -92,7 +92,7 @@ private fun ReferralEditVaultScreen(
         )
     }
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.referral_edit_referral),
         onBackClick = onBackPressed,
 
@@ -107,7 +107,7 @@ private fun ReferralEditVaultScreen(
                 Text(
                     text = stringResource(R.string.referral_view_your_referral_code),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
 
                 UiSpacer(8.dp)
@@ -129,8 +129,8 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
+                    initialColor = Theme.colors.backgrounds.primary,
+                    endColor = Theme.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)
@@ -149,7 +149,7 @@ private fun ReferralEditVaultScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                         text = stringResource(R.string.referral_create_expiration_date),
                         textAlign = TextAlign.Start,
@@ -158,7 +158,7 @@ private fun ReferralEditVaultScreen(
                     UiSpacer(1f)
 
                     Text(
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                         text = state.referralExpiration,
                         textAlign = TextAlign.Start,
@@ -168,8 +168,8 @@ private fun ReferralEditVaultScreen(
                 UiSpacer(16.dp)
 
                 UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
+                    initialColor = Theme.colors.backgrounds.primary,
+                    endColor = Theme.colors.backgrounds.primary,
                 )
 
                 UiSpacer(16.dp)

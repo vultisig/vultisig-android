@@ -13,19 +13,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.loading.V2Loading
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.loader.V2Loading
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun LoadingSearchCustomToken() {
-    V2Container(
-        type = ContainerType.TERTIARY,
-        cornerType = CornerType.RoundedCornerShape(size = 24.dp),
-        borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.normal)
+    VsContainer(
+        type = VsContainerType.TERTIARY,
+        vsContainerCornerType = VsContainerCornerType.RoundedVsContainerCornerShape(size = 24.dp),
+        borderType = VsContainerBorderType.Bordered(color = Theme.colors.border.normal)
     ) {
         Column(
             modifier = Modifier.Companion
@@ -42,7 +42,7 @@ internal fun LoadingSearchCustomToken() {
             )
             Text(
                 text = stringResource(R.string.custom_token_screen_finding_token),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.supplementary.footnote
 
             )

@@ -78,10 +78,10 @@ internal fun ActiveNodesWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -90,7 +90,7 @@ internal fun ActiveNodesWidget(
             Text(
                 text = stringResource(R.string.active_nodes),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
             )
 
             UiSpacer(1f)
@@ -98,7 +98,7 @@ internal fun ActiveNodesWidget(
             UiIcon(
                 drawableResId = R.drawable.ic_caret_down,
                 size = 16.dp,
-                tint = Theme.v2.colors.text.light,
+                tint = Theme.colors.text.light,
                 modifier = Modifier.rotate(180f)
             )
         }
@@ -139,7 +139,7 @@ private fun NodeContent(
             Text(
                 text = stringResource(R.string.node_address_formatted, node.address),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -162,7 +162,7 @@ private fun NodeContent(
         Text(
             text = stringResource(R.string.bonded_amount, if (isBalanceVisible) node.bondedAmount else HIDE_BALANCE_CHARS),
             style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         UiSpacer(16.dp)
@@ -173,7 +173,7 @@ private fun NodeContent(
 
         UiSpacer(16.dp)
 
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+        UiHorizontalDivider(color = Theme.colors.border.light)
 
         UiSpacer(16.dp)
 
@@ -212,23 +212,23 @@ private fun NodeContent(
                 title = stringResource(R.string.unbond),
                 icon = R.drawable.ic_unbond,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
+                border = BorderStroke(1.dp, Theme.colors.primary.accent4),
+                contentColor = Theme.colors.text.primary,
                 onClick = onClickUnbond,
                 modifier = Modifier.weight(1f),
                 enabled = node.status.canUnbond,
-                iconCircleColor = Theme.v2.colors.text.extraLight
+                iconCircleColor = Theme.colors.text.extraLight
             )
 
             ActionButton(
                 title = stringResource(R.string.bond),
                 icon = R.drawable.ic_bond,
-                background = Theme.v2.colors.primary.accent3,
-                contentColor = Theme.v2.colors.text.primary,
+                background = Theme.colors.primary.accent3,
+                contentColor = Theme.colors.text.primary,
                 onClick = onClickBond,
                 modifier = Modifier.weight(1f),
                 enabled = node.status.canBond,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.colors.primary.accent4
             )
         }
 
@@ -238,7 +238,7 @@ private fun NodeContent(
             Text(
                 text = stringResource(R.string.wait_until_node_churned_out),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
             )
         }
     }
@@ -246,8 +246,8 @@ private fun NodeContent(
 
 @Composable
 private fun getStyleByNodeStatus(nodeStatus: BondNodeState): Pair<Color, String> {
-    val successColor = Theme.v2.colors.alerts.success
-    val warningColor = Theme.v2.colors.alerts.warning
+    val successColor = Theme.colors.alerts.success
+    val warningColor = Theme.colors.alerts.warning
 
     return when (nodeStatus) {
         BondNodeState.WHITELISTED -> Pair(successColor, stringResource(R.string.bond_node_state_whitelisted))

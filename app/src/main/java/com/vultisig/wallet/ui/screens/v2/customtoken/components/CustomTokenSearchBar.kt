@@ -24,13 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -48,12 +48,12 @@ internal fun CustomTokenSearchBar(
             .height(intrinsicSize = IntrinsicSize.Max)
     ) {
 
-        V2Container(
+        VsContainer(
             modifier = Modifier
                 .weight(1f)
                 .height(40.dp),
-            type = ContainerType.SECONDARY,
-            cornerType = CornerType.Circular,
+            type = VsContainerType.SECONDARY,
+            vsContainerCornerType = VsContainerCornerType.Circular,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -66,7 +66,7 @@ internal fun CustomTokenSearchBar(
                         UiIcon(
                             drawableResId = R.drawable.search_custom_token,
                             size = 16.dp,
-                            tint = Theme.v2.colors.text.button.light,
+                            tint = Theme.colors.text.button.light,
                             onClick = onSearchClick
                         )
                         UiSpacer(
@@ -82,7 +82,7 @@ internal fun CustomTokenSearchBar(
                         .weight(1f)
                         .fillMaxHeight(),
                     textStyle = Theme.brockmann.supplementary.footnote.copy(
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     ),
                     lineLimits = TextFieldLineLimits.SingleLine,
                     onKeyboardAction = {
@@ -99,7 +99,7 @@ internal fun CustomTokenSearchBar(
                                 Text(
                                     text = context.getString(R.string.custom_token_enter_contract_address),
                                     style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.extraLight
+                                    color = Theme.colors.text.extraLight
                                 )
                             } else {
                                 textField()
@@ -120,7 +120,7 @@ internal fun CustomTokenSearchBar(
                             R.drawable.paste_v2 else
                             R.drawable.big_close,
                         size = 16.dp,
-                        tint = Theme.v2.colors.text.light,
+                        tint = Theme.colors.text.light,
                         onClick = if (it) onPasteClick else onCloseClick,
                     )
                 }
@@ -140,12 +140,12 @@ internal fun CustomTokenSearchBar(
                 VsCircleButton(
                     drawableResId = R.drawable.icon_search_menu,
                     onClick = onSearchClick,
-                    type = VsCircleButtonType.Custom(color = Theme.v2.colors.backgrounds.secondary),
+                    type = VsCircleButtonType.Custom(color = Theme.colors.backgrounds.secondary),
                     modifier = Modifier.Companion,
                     size = VsCircleButtonSize.Custom(size = 40.dp),
                     designType = DesignType.Solid,
                     iconSize = 20.dp,
-                    tint = Theme.v2.colors.text.light
+                    tint = Theme.colors.text.light
                 )
             }
 

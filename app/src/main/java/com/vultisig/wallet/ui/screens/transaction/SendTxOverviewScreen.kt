@@ -185,7 +185,7 @@ internal fun SendTxOverviewScreen(
                         Text(
                             text = chain.raw,
                             style = Theme.brockmann.body.s.medium,
-                            color = Theme.v2.colors.text.primary,
+                            color = Theme.colors.text.primary,
                             textAlign = TextAlign.End,
                             maxLines = 1,
                             overflow = TextOverflow.MiddleEllipsis,
@@ -222,12 +222,12 @@ private fun AddToAddressBookButton(
         modifier = modifier
             .clip(CircleShape)
             .background(
-                color = Theme.v2.colors.backgrounds.success,
+                color = Theme.colors.backgrounds.success,
                 shape = CircleShape
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.alerts.success,
+                color = Theme.colors.alerts.success,
                 shape = CircleShape
             )
             .clickOnce(
@@ -241,14 +241,14 @@ private fun AddToAddressBookButton(
         UiIcon(
             drawableResId = R.drawable.plus,
             size = 16.dp,
-            tint = Theme.v2.colors.alerts.success,
+            tint = Theme.colors.alerts.success,
         )
 
 
         Text(
             text = stringResource(R.string.send_tx_overview_add_to_address_book),
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.alerts.success,
+            color = Theme.colors.alerts.success,
         )
     }
 }
@@ -274,7 +274,7 @@ internal fun TxDetails(
             Text(
                 text = hash,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 overflow = TextOverflow.MiddleEllipsis,
                 maxLines = 1,
                 modifier = Modifier
@@ -292,7 +292,7 @@ internal fun TxDetails(
             UiIcon(
                 drawableResId = R.drawable.ic_square_arrow_top_right,
                 size = 16.dp,
-                tint = Theme.v2.colors.text.primary,
+                tint = Theme.colors.text.primary,
                 onClick = {
                     uriHandler.openUri(link)
                 }

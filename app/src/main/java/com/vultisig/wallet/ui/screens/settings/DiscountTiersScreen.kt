@@ -38,11 +38,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.topbar.VsTopbar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
@@ -65,9 +65,9 @@ internal fun DiscountTiersScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.secondary),
+            .background(Theme.colors.backgrounds.secondary),
         topBar = {
-            V2Topbar(
+            VsTopbar(
                 title = stringResource(R.string.vault_settings_discounts),
                 onBackClick = { navController.popBackStack() },
                 actions = {
@@ -99,7 +99,7 @@ internal fun DiscountTiersScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.light,
+                        color = Theme.colors.border.light,
                         shape = RoundedCornerShape(16.dp)
                     )
             ) {
@@ -258,7 +258,7 @@ private fun TierCard(
                         else -> {
                             Modifier.border(
                                 width = 1.dp,
-                                color = Theme.v2.colors.border.normal,
+                                color = Theme.colors.border.normal,
                                 shape = RoundedCornerShape(16.dp)
                             )
                         }
@@ -266,7 +266,7 @@ private fun TierCard(
                 )
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
+                .background(Theme.colors.backgrounds.secondary)
                 .clickable { onClickCard.invoke() }
         ) {
         Column(
@@ -293,7 +293,7 @@ private fun TierCard(
                     Text(
                         text = styleTier.titleText,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -306,16 +306,16 @@ private fun TierCard(
                         .clip(RoundedCornerShape(50))
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
+                            color = Theme.colors.border.normal,
                             shape = RoundedCornerShape(50)
                         )
-                        .background(Theme.v2.colors.backgrounds.surface2)
+                        .background(Theme.colors.backgrounds.surface2)
                         .padding(horizontal = 10.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = styleTier.discountText,
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         maxLines = 1,
                     )
                 }
@@ -327,7 +327,7 @@ private fun TierCard(
                 Text(
                     text = stringResource(R.string.vault_tier_hold),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight
+                    color = Theme.colors.text.extraLight
                 )
 
                 Row(
@@ -336,7 +336,7 @@ private fun TierCard(
                     Text(
                         text = styleTier.amountText,
                         style = Theme.brockmann.body.l.regular,
-                        color = Theme.v2.colors.text.primary
+                        color = Theme.colors.text.primary
                     )
 
                     if (isActive) {
@@ -344,7 +344,7 @@ private fun TierCard(
 
                         UiIcon(
                             drawableResId = R.drawable.ic_check,
-                            tint = Theme.v2.colors.alerts.success,
+                            tint = Theme.colors.alerts.success,
                             size = 18.dp,
                             modifier = Modifier.padding(4.dp),
                         )
@@ -352,7 +352,7 @@ private fun TierCard(
                         Text(
                             text = stringResource(R.string.vault_tier_active),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.alerts.success,
+                            color = Theme.colors.alerts.success,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                     }
@@ -383,7 +383,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFDB5727).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
+                    Theme.colors.border.light,
                 ),
                 startY = 0f,
                 endY = 400f
@@ -398,7 +398,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFC9D6E8).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
+                    Theme.colors.border.light,
                 ),
                 startY = 0f,
                 endY = 400f
@@ -413,7 +413,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFFFC25C).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.light,
+                    Theme.colors.border.light,
                 ),
                 startY = 0f,
                 endY = 400f
@@ -428,7 +428,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF33E6BF).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.normal,
+                    Theme.colors.border.normal,
                 ),
                 startY = 0f,
                 endY = 400f
@@ -443,7 +443,7 @@ internal fun getStyleByTier(type: TierType): TierStyle {
             gradient = Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF9747FF).copy(alpha = 0.5f),
-                    Theme.v2.colors.border.normal,
+                    Theme.colors.border.normal,
                 ),
                 startY = 0f,
                 endY = 400f

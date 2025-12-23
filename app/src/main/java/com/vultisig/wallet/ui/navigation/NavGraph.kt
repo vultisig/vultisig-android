@@ -254,7 +254,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Route.QrAddressScreen> {
-            QrAddressScreen(navController = navController)
+            QrAddressScreen()
         }
 
         composable<Route.ConfirmDelete>{

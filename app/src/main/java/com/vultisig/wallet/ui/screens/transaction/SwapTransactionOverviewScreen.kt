@@ -95,11 +95,11 @@ internal fun SwapTransactionOverviewScreen(
                 Icon(
                     painter = painterResource(R.drawable.ic_caret_right),
                     contentDescription = null,
-                    tint = Theme.v2.colors.text.button.disabled,
+                    tint = Theme.colors.text.button.disabled,
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = Theme.v2.colors.border.light,
+                            color = Theme.colors.border.light,
                             shape = CircleShape,
                         )
                         .padding(6.dp)
@@ -213,7 +213,7 @@ internal fun TextDetails(
         Text(
             text = subtitle,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
             modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier.widthIn(max = 100.dp),
@@ -238,7 +238,7 @@ internal fun Details(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = titleColor ?: Theme.v2.colors.text.extraLight,
+            color = titleColor ?: Theme.colors.text.extraLight,
         )
 
         UiSpacer(

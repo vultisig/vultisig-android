@@ -44,11 +44,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.components.snackbar.VsSnackBar
+import com.vultisig.wallet.ui.components.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.util.dashedBorder
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
-import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.FILE_ALLOWED_MIME_TYPES
 import com.vultisig.wallet.ui.models.ImportFileState
 import com.vultisig.wallet.ui.models.ImportFileViewModel
@@ -116,7 +116,7 @@ private fun ImportFileScreen(
                 Text(
                     text = stringResource(id = R.string.import_file_screen_enter_password),
                     style = Theme.menlo.subtitle1,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
                 UiSpacer(size = 16.dp)
                 FormBasicSecureTextField(
@@ -133,7 +133,7 @@ private fun ImportFileScreen(
                                     id = if (uiModel.isPasswordObfuscated)
                                         R.drawable.hidden else R.drawable.visible
                                 ),
-                                tint = Theme.v2.colors.neutrals.n50,
+                                tint = Theme.colors.neutrals.n50,
                                 contentDescription = "change visibility button"
                             )
                         }
@@ -144,7 +144,7 @@ private fun ImportFileScreen(
                     Text(
                         text = stringResource(R.string.import_file_screen_ok),
                         style = Theme.menlo.subtitle1,
-                        color = Theme.v2.colors.neutrals.n50
+                        color = Theme.colors.neutrals.n50
                     )
                 }
                 HorizontalDivider()
@@ -152,7 +152,7 @@ private fun ImportFileScreen(
                     Text(
                         text = stringResource(R.string.import_file_screen_cancel),
                         style = Theme.menlo.subtitle1,
-                        color = Theme.v2.colors.neutrals.n50
+                        color = Theme.colors.neutrals.n50
                     )
                 }
 
@@ -160,7 +160,7 @@ private fun ImportFileScreen(
         }
     }
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.import_file_screen_title),
         onBackClick = onBackClick,
         bottomBar = {
@@ -194,18 +194,18 @@ private fun ImportFileScreen(
                         .fillMaxWidth()
                         .background(
                             color = when {
-                                uiModel.error != null -> Theme.v2.colors.backgrounds.error
-                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.backgrounds.success
-                                else -> Theme.v2.colors.backgrounds.secondary
+                                uiModel.error != null -> Theme.colors.backgrounds.error
+                                !uiModel.fileName.isNullOrBlank() -> Theme.colors.backgrounds.success
+                                else -> Theme.colors.backgrounds.secondary
                             },
                             shape = RoundedCornerShape(12.dp),
                         )
                         .dashedBorder(
                             width = 1.dp,
                             color = when {
-                                uiModel.error != null -> Theme.v2.colors.alerts.error
-                                !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                                else -> Theme.v2.colors.border.normal
+                                uiModel.error != null -> Theme.colors.alerts.error
+                                !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
+                                else -> Theme.colors.border.normal
                             },
                             cornerRadius = 12.dp,
                             dashLength = 4.dp,
@@ -227,9 +227,9 @@ private fun ImportFileScreen(
                         ),
                         contentDescription = null,
                         tint = when {
-                            uiModel.error != null -> Theme.v2.colors.alerts.error
-                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                            else -> Theme.v2.colors.primary.accent4
+                            uiModel.error != null -> Theme.colors.alerts.error
+                            !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
+                            else -> Theme.colors.primary.accent4
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -240,9 +240,9 @@ private fun ImportFileScreen(
                             ?: uiModel.fileName
                             ?: stringResource(R.string.import_file_import_your_vault_share),
                         color = when {
-                            uiModel.error != null -> Theme.v2.colors.alerts.error
-                            !uiModel.fileName.isNullOrBlank() -> Theme.v2.colors.alerts.success
-                            else -> Theme.v2.colors.text.light
+                            uiModel.error != null -> Theme.colors.alerts.error
+                            !uiModel.fileName.isNullOrBlank() -> Theme.colors.alerts.success
+                            else -> Theme.colors.text.light
                         },
                         style = Theme.brockmann.headings.subtitle,
                         textAlign = TextAlign.Center,
@@ -254,7 +254,7 @@ private fun ImportFileScreen(
                 if (uiModel.fileName.isNullOrBlank()) {
                     Text(
                         text = stringResource(R.string.import_file_supported_file_types_dat_bak_vult),
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.supplementary.footnote,
                     )
                 }
@@ -293,7 +293,7 @@ private fun ZipOutput(
                 ) {
                     Text(
                         text = zipOutput.name,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.supplementary.footnote,
                     )
                     UiSpacer(

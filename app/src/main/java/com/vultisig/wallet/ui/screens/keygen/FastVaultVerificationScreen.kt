@@ -45,7 +45,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputField
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputFieldState
 import com.vultisig.wallet.ui.components.rememberClipboardText
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel.Companion.FAST_VAULT_VERIFICATION_CODE_LENGTH
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
@@ -85,7 +85,7 @@ private fun FastVaultVerificationScreen(
     }
     val hasClipContent = textToPaste != null
 
-    V2Scaffold(
+    VsScaffold(
         title = null,
         onBackClick = onBackClick,
         bottomBar = {
@@ -106,7 +106,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_email_sent_to, state.sentEmailTo
                                 ),
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.colors.text.extraLight,
                                 style = Theme.brockmann.supplementary.footnote,
                             )
 
@@ -114,7 +114,7 @@ private fun FastVaultVerificationScreen(
                                 text = stringResource(
                                     R.string.vault_backup_screen_change_email,
                                 ),
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.colors.text.light,
                                 textDecoration = TextDecoration.Underline,
                                 style = Theme.brockmann.supplementary.footnote,
                                 modifier = Modifier.clickOnce(
@@ -133,7 +133,7 @@ private fun FastVaultVerificationScreen(
                             append(" ")
                             withStyle(
                                 style = SpanStyle(
-                                    color = Theme.v2.colors.text.light,
+                                    color = Theme.colors.text.light,
                                     textDecoration = TextDecoration.Underline
                                 )
                             ) {
@@ -144,7 +144,7 @@ private fun FastVaultVerificationScreen(
                         Text(
                             text = annotatedString,
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 24.dp)
@@ -176,13 +176,13 @@ private fun FastVaultVerificationScreen(
                 Text(
                     text = stringResource(R.string.enter_backup_screen_title),
                     style = Theme.brockmann.headings.largeTitle,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.enter_backup_screen_desc),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight
+                    color = Theme.colors.text.extraLight
                 )
                 UiSpacer(1f)
 
@@ -211,7 +211,7 @@ private fun FastVaultVerificationScreen(
                         modifier = Modifier
                             .fillMaxHeight()
                             .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
+                                color = Theme.colors.backgrounds.secondary,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .padding(all = 12.dp)
@@ -227,8 +227,8 @@ private fun FastVaultVerificationScreen(
                         Text(
                             text = stringResource(R.string.vault_backup_screen_paste),
                             style = Theme.brockmann.body.s.medium,
-                            color = if (hasClipContent) Theme.v2.colors.text.primary
-                            else Theme.v2.colors.text.button.disabled,
+                            color = if (hasClipContent) Theme.colors.text.primary
+                            else Theme.colors.text.button.disabled,
                         )
                     }
                 }
@@ -249,7 +249,7 @@ private fun FastVaultVerificationScreen(
                             )
                             Text(
                                 text = stringResource(R.string.vault_backup_verifying_pin),
-                                color = Theme.v2.colors.text.primary,
+                                color = Theme.colors.text.primary,
                                 style = Theme.brockmann.supplementary.footnote
                             )
                         }
@@ -259,7 +259,7 @@ private fun FastVaultVerificationScreen(
                         VerifyPinState.Error -> {
                             Text(
                                 text = stringResource(R.string.vault_backup_error_pin),
-                                color = Theme.v2.colors.alerts.error,
+                                color = Theme.colors.alerts.error,
                                 style = Theme.brockmann.supplementary.footnote
                             )
                         }

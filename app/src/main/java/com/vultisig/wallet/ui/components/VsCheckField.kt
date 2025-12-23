@@ -47,7 +47,7 @@ internal fun VsCheckField(
 
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = textStyle,
         )
     }

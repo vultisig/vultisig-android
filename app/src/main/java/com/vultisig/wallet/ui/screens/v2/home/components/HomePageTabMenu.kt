@@ -21,12 +21,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.tab.VsTab
-import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.tab.VsTab
+import com.vultisig.wallet.ui.components.tab.VsTabGroup
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -80,30 +80,30 @@ internal fun HomePageTabMenu(
             verticalAlignment = Alignment.CenterVertically,
 
             ) {
-            V2Container(
+            VsContainer(
                 modifier = Modifier.clickOnce(onClick = onSearchClick),
-                cornerType = CornerType.Circular,
-                type = ContainerType.SECONDARY,
-                borderType = ContainerBorderType.Borderless
+                vsContainerCornerType = VsContainerCornerType.Circular,
+                type = VsContainerType.SECONDARY,
+                borderType = VsContainerBorderType.Borderless
             ) {
                 UiIcon(
                     drawableResId = R.drawable.ic_search,
                     size = 16.dp,
-                    tint = Theme.v2.colors.text.primary,
+                    tint = Theme.colors.text.primary,
                     modifier = Modifier.padding(12.dp)
                 )
             }
 
-            V2Container(
+            VsContainer(
                 modifier = Modifier.clickOnce(onClick = onEditClick),
-                cornerType = CornerType.Circular,
-                type = ContainerType.SECONDARY,
-                borderType = ContainerBorderType.Borderless
+                vsContainerCornerType = VsContainerCornerType.Circular,
+                type = VsContainerType.SECONDARY,
+                borderType = VsContainerBorderType.Borderless
             ) {
                 UiIcon(
                     drawableResId = R.drawable.edit_chain,
                     size = 16.dp,
-                    tint = Theme.v2.colors.primary.accent4,
+                    tint = Theme.colors.primary.accent4,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -133,13 +133,13 @@ private fun HomepageTab(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            V2Container(
-                type = ContainerType.SECONDARY,
-                cornerType = CornerType.RoundedCornerShape(8.dp),
+            VsContainer(
+                type = VsContainerType.SECONDARY,
+                vsContainerCornerType = VsContainerCornerType.RoundedVsContainerCornerShape(8.dp),
             ) {
                 Text(
                     text = stringResource(R.string.search_bar_soon),
-                    color = Theme.v2.colors.alerts.info,
+                    color = Theme.colors.alerts.info,
                     style = Theme.brockmann.supplementary.caption,
                     modifier = Modifier.padding(
                         horizontal = 6.dp,

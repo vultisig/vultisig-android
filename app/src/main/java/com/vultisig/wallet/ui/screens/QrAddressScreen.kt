@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,49 +25,42 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
-import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.QrAddressViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.extractBitmap
 
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
-internal fun QrAddressScreen(navController: NavHostController) {
+internal fun QrAddressScreen() {
     val viewModel = hiltViewModel<QrAddressViewModel>()
     val address = viewModel.address
     val chainName = viewModel.chainName
     val context = LocalContext.current
     val bitmapPainter by viewModel.qrBitmapPainter.collectAsState()
-    val background = Theme.v2.colors.backgrounds.primary
+    val background = Theme.colors.backgrounds.primary
     val title = stringResource(id = R.string.qr_address_screen_title)
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = title,
-                startIcon = R.drawable.ic_caret_left,
-                endIcon = R.drawable.qr_share,
-                onEndIconClick = { viewModel.shareQRCode(context) }
-            )
-        },
+    VsScaffold(
+        title = title,
+        onBackClick = viewModel::back,
+        rightIcon = R.drawable.qr_share,
+        onRightIconClick = { viewModel.shareQRCode(context) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth()
-                .padding(it)
                 .background(background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            UiSpacer(size = 42.dp)
+            UiSpacer(size = 30.dp)
             Text(
-                modifier = Modifier.padding(horizontal = 32.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 textAlign = TextAlign.Center,
                 text = stringResource(id = R.string.qr_address_screen_description, chainName, address),
                 style = Theme.menlo.body1
@@ -85,7 +77,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
                         bitmapPainter = bitmapPainter,
                         modifier = Modifier
                             .width(min(maxHeight, maxWidth))
-                            .padding(all = 48.dp)
+                            .padding(all = 32.dp)
                             .aspectRatio(1f)
                             .extractBitmap { bitmap ->
                                 if (bitmapPainter != null) {
@@ -107,4 +99,5 @@ internal fun QrAddressScreen(navController: NavHostController) {
             }
         }
     }
+
 }

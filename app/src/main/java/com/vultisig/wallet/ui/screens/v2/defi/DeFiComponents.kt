@@ -43,12 +43,12 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGroupUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.components.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionGroupUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.screens.referral.SetBackgoundBanner
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
@@ -69,7 +69,7 @@ internal fun BalanceBanner(
             .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
@@ -81,7 +81,7 @@ internal fun BalanceBanner(
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
             )
 
@@ -89,7 +89,7 @@ internal fun BalanceBanner(
 
             Text(
                 text = stringResource(R.string.defi_balance),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -103,7 +103,7 @@ internal fun BalanceBanner(
             } else {
                 Text(
                     text = if (isBalanceVisible) totalValue else HIDE_BALANCE_CHARS,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     style = Theme.satoshi.price.title1,
                 )
             }
@@ -118,7 +118,7 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 private fun BalanceBannerPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -136,7 +136,7 @@ private fun BalanceBannerPreview() {
 private fun BalanceBannerHiddenPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -154,7 +154,7 @@ private fun BalanceBannerHiddenPreview() {
 private fun BalanceBannerLoadingPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         BalanceBanner(
@@ -175,14 +175,14 @@ fun InfoItem(icon: Int, label: String, value: String?) {
                 size = 16.dp,
                 drawableResId = icon,
                 contentDescription = null,
-                tint = Theme.v2.colors.text.extraLight,
+                tint = Theme.colors.text.extraLight,
             )
 
             UiSpacer(4.dp)
 
             Text(
                 text = label,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
         }
@@ -193,7 +193,7 @@ fun InfoItem(icon: Int, label: String, value: String?) {
             Text(
                 text = value,
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
             )
         }
     }
@@ -285,7 +285,7 @@ fun ApyInfoItem(
         Text(
             text = apy,
             style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.alerts.success,
+            color = Theme.colors.alerts.success,
         )
     }
 }
@@ -402,7 +402,7 @@ internal fun PositionsSelectionDialog(
                 Text(
                     stringResource(R.string.select_positions),
                     style = Theme.brockmann.headings.title2,
-                    color = Theme.v2.colors.neutrals.n100,
+                    color = Theme.colors.neutrals.n100,
                 )
 
                 UiSpacer(16.dp)
@@ -410,7 +410,7 @@ internal fun PositionsSelectionDialog(
                 Text(
                     text = stringResource(R.string.enable_at_least_one_position),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
             }
         },
@@ -446,12 +446,12 @@ internal fun NoPositionsContainer(
             Text(
                 text = stringResource(R.string.manage_positions),
                 style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 modifier = Modifier
                     .clip(shape = CircleShape)
                     .clickOnce(onClick = onManagePositionsClick)
                     .background(
-                        color = Theme.v2.colors.border.primaryAccent4
+                        color = Theme.colors.border.primaryAccent4
                     )
                     .padding(
                         vertical = 8.dp,
@@ -475,10 +475,10 @@ internal fun DeFiWarningBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
+                .background(Theme.colors.backgrounds.secondary)
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.normal,
+                    color = Theme.colors.border.normal,
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(
@@ -491,7 +491,7 @@ internal fun DeFiWarningBanner(
             Text(
                 text = text,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
             )
         }
 
@@ -502,7 +502,7 @@ internal fun DeFiWarningBanner(
                     .padding(8.dp)
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.surface2)
+                    .background(Theme.colors.backgrounds.surface2)
                     .clickable(onClick = onClickClose),
                 contentAlignment = Alignment.Center
             ) {
@@ -530,10 +530,10 @@ internal fun HeaderDeFiWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -551,7 +551,7 @@ internal fun HeaderDeFiWidget(
                 Text(
                     text = title,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
 
                 UiSpacer(4.dp)
@@ -565,7 +565,7 @@ internal fun HeaderDeFiWidget(
                     Text(
                         text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
                 }
             }
@@ -573,7 +573,7 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+        UiHorizontalDivider(color = Theme.colors.border.light)
 
         UiSpacer(16.dp)
 
@@ -602,10 +602,10 @@ internal fun HeaderDeFiWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -623,7 +623,7 @@ internal fun HeaderDeFiWidget(
                 Text(
                     text = title,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
 
                 UiSpacer(4.dp)
@@ -637,7 +637,7 @@ internal fun HeaderDeFiWidget(
                     Text(
                         text = if (isBalanceVisible) totalAmount else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
                 }
             }
@@ -645,7 +645,7 @@ internal fun HeaderDeFiWidget(
 
         UiSpacer(16.dp)
 
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+        UiHorizontalDivider(color = Theme.colors.border.light)
 
         UiSpacer(16.dp)
 
@@ -657,9 +657,9 @@ internal fun HeaderDeFiWidget(
                 title = buttonFirstActionText,
                 icon = R.drawable.circle_minus,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.text.primary.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, Theme.colors.primary.accent4),
+                contentColor = Theme.colors.text.primary,
+                iconCircleColor = Theme.colors.text.primary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = onClickFirstAction,
             )
@@ -667,9 +667,9 @@ internal fun HeaderDeFiWidget(
             ActionButton(
                 title = buttonSecondActionText,
                 icon = null,
-                background = Theme.v2.colors.buttons.tertiary,
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                background = Theme.colors.buttons.tertiary,
+                contentColor = Theme.colors.text.primary,
+                iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = onClickSecondAction,
             )
@@ -682,7 +682,7 @@ internal fun HeaderDeFiWidget(
 private fun DeFiWarningBannerShortPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         DeFiWarningBanner(
@@ -697,7 +697,7 @@ private fun DeFiWarningBannerShortPreview() {
 private fun DeFiWarningBannerLongPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         DeFiWarningBanner(
@@ -723,7 +723,7 @@ private fun PositionsSelectionDialogPreview() {
 private fun InfoItemWithValuePreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         InfoItem(
@@ -739,7 +739,7 @@ private fun InfoItemWithValuePreview() {
 private fun InfoItemWithoutValuePreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         InfoItem(
@@ -755,7 +755,7 @@ private fun InfoItemWithoutValuePreview() {
 private fun InfoItemsRowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Row(
@@ -786,15 +786,15 @@ private fun InfoItemsRowPreview() {
 private fun ActionButtonBondEnabledPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.v2.colors.buttons.tertiary,
-            contentColor = Theme.v2.colors.text.primary,
-            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+            background = Theme.colors.buttons.tertiary,
+            contentColor = Theme.colors.text.primary,
+            iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
             enabled = true,
             onClick = {}
         )
@@ -806,15 +806,15 @@ private fun ActionButtonBondEnabledPreview() {
 private fun ActionButtonBondDisabledPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.v2.colors.buttons.tertiary,
-            contentColor = Theme.v2.colors.text.primary,
-            iconCircleColor = Theme.v2.colors.text.primary,
+            background = Theme.colors.buttons.tertiary,
+            contentColor = Theme.colors.text.primary,
+            iconCircleColor = Theme.colors.text.primary,
             enabled = false,
             onClick = {}
         )
@@ -826,16 +826,16 @@ private fun ActionButtonBondDisabledPreview() {
 private fun ActionButtonUnbondPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ActionButton(
             title = "Unbond",
             icon = R.drawable.circle_minus,
             background = Color.Transparent,
-            border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-            contentColor = Theme.v2.colors.buttons.tertiary,
-            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, Theme.colors.buttons.tertiary),
+            contentColor = Theme.colors.buttons.tertiary,
+            iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
             onClick = {}
         )
     }
@@ -846,7 +846,7 @@ private fun ActionButtonUnbondPreview() {
 private fun ActionButtonsRowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Row(
@@ -856,9 +856,9 @@ private fun ActionButtonsRowPreview() {
             ActionButton(
                 title = "Bond",
                 icon = R.drawable.circle_plus,
-                background = Theme.v2.colors.buttons.tertiary,
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                background = Theme.colors.buttons.tertiary,
+                contentColor = Theme.colors.text.primary,
+                iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = {}
             )
@@ -866,9 +866,9 @@ private fun ActionButtonsRowPreview() {
                 title = "Unbond",
                 icon = R.drawable.circle_minus,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-                contentColor = Theme.v2.colors.buttons.tertiary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, Theme.colors.buttons.tertiary),
+                contentColor = Theme.colors.buttons.tertiary,
+                iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
                 modifier = Modifier.weight(1f),
                 onClick = {}
             )
@@ -881,14 +881,14 @@ private fun ActionButtonsRowPreview() {
 private fun CompleteNodeCardMockPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Theme.v2.colors.backgrounds.secondary,
+                    Theme.colors.backgrounds.secondary,
                     RoundedCornerShape(12.dp)
                 )
                 .padding(16.dp)
@@ -897,7 +897,7 @@ private fun CompleteNodeCardMockPreview() {
             Text(
                 text = "thor1abcd...xyz",
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
 
             UiSpacer(12.dp)
@@ -933,9 +933,9 @@ private fun CompleteNodeCardMockPreview() {
                 ActionButton(
                     title = "Bond",
                     icon = R.drawable.circle_plus,
-                    background = Theme.v2.colors.buttons.tertiary,
-                    contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                    background = Theme.colors.buttons.tertiary,
+                    contentColor = Theme.colors.text.primary,
+                    iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
                     onClick = {}
                 )
@@ -943,9 +943,9 @@ private fun CompleteNodeCardMockPreview() {
                     title = "Unbond",
                     icon = R.drawable.circle_minus,
                     background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-                    contentColor = Theme.v2.colors.buttons.tertiary,
-                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, Theme.colors.buttons.tertiary),
+                    contentColor = Theme.colors.buttons.tertiary,
+                    iconCircleColor = Theme.colors.buttons.tertiary.copy(alpha = 0.1f),
                     modifier = Modifier.weight(1f),
                     onClick = {}
                 )
@@ -959,7 +959,7 @@ private fun CompleteNodeCardMockPreview() {
 private fun ApyInfoItemPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(
@@ -973,7 +973,7 @@ private fun ApyInfoItemPreview() {
 private fun ApyInfoItemHighPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(
@@ -987,7 +987,7 @@ private fun ApyInfoItemHighPreview() {
 private fun ApyInfoItemLowPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         ApyInfoItem(

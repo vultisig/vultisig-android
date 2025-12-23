@@ -31,7 +31,7 @@ internal fun ErrorView(
     Column(
         modifier = Modifier
             .background(
-                color = Theme.v2.colors.backgrounds.primary,
+                color = Theme.colors.backgrounds.primary,
             )
             .padding(
                 vertical = 24.dp,
@@ -57,7 +57,7 @@ internal fun ErrorView(
             Text(
                 text = errorLabel,
                 style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.alerts.warning,
+                color = Theme.colors.alerts.warning,
                 textAlign = TextAlign.Center
             )
 
@@ -67,7 +67,7 @@ internal fun ErrorView(
                 Text(
                     text = infoText,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     textAlign = TextAlign.Center
                 )
 

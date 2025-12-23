@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
+import com.vultisig.wallet.ui.components.topbar.VsTopbar
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
@@ -60,10 +60,10 @@ internal fun TxDoneScaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         },
-        containerColor = Theme.v2.colors.backgrounds.primary,
+        containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             if (showToolbar) {
-                V2Topbar(
+                VsTopbar(
                     title = stringResource(R.string.tx_overview_screen_title),
                     onBackClick = onBack,
                 )
@@ -98,7 +98,7 @@ internal fun TxDoneScaffold(
                             textAlign = TextAlign.Center,
                             style = Theme.brockmann.body.l.medium
                                 .copy(
-                                    brush = Theme.v2.colors.gradients.primary,
+                                    brush = Theme.colors.gradients.primary,
                                 ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -117,12 +117,12 @@ internal fun TxDoneScaffold(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.v2.colors.backgrounds.disabled,
+                            color = Theme.colors.backgrounds.disabled,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.border.light,
+                            color = Theme.colors.border.light,
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                         )
                         .padding(horizontal = 24.dp, vertical = 8.dp),
@@ -160,7 +160,7 @@ internal fun TxDoneScaffold(
                                     isTransactionDetailVisible = true
                                 })
                                 .padding(vertical = 12.dp),
-                            titleColor = Theme.v2.colors.text.light,
+                            titleColor = Theme.colors.text.light,
                             content = {
                                 UiIcon(
                                     R.drawable.ic_caret_right,

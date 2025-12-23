@@ -36,16 +36,16 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.ExpandedTopbarContainer
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.bottomsheet.utils.BottomFadeEffect
+import com.vultisig.wallet.ui.components.scaffold.ScaffoldWithExpandableTopBar
+import com.vultisig.wallet.ui.components.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
@@ -135,7 +135,7 @@ internal fun ChainTokensScreen(
         onRefresh = onRefresh,
         isRefreshing = uiModel.isRefreshing,
         snackbarState = snackbarState,
-        backgroundColor = Theme.v2.colors.backgrounds.primary,
+        backgroundColor = Theme.colors.backgrounds.primary,
         topBarExpandedContent = {
             ExpandedTopbarContainer {
                 Row(
@@ -176,7 +176,7 @@ internal fun ChainTokensScreen(
                     Text(
                         text = uiModel.chainName,
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
                 }
 
@@ -188,7 +188,7 @@ internal fun ChainTokensScreen(
                     value = uiModel.totalBalance,
                     isVisible = uiModel.isBalanceVisible,
                     style = Theme.satoshi.price.title1,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
 
                 UiSpacer(
@@ -213,13 +213,13 @@ internal fun ChainTokensScreen(
                             )
                         )
                         .background(
-                            color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f)
+                            color = Theme.colors.text.button.dim.copy(alpha = 0.12f)
                         )
                         .padding(
                             horizontal = 6.dp,
                             vertical = 4.dp,
                         ),
-                    tint = Theme.v2.colors.alerts.info,
+                    tint = Theme.colors.alerts.info,
                     maxLength = 108.dp
                 )
 
@@ -325,7 +325,7 @@ internal fun ChainTokensScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.primary)
+                        .background(Theme.colors.backgrounds.primary)
                         .fillMaxSize()
                 ) {
                     ChainTokensTabMenuAndSearchBar(

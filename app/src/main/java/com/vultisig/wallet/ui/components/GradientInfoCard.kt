@@ -33,7 +33,7 @@ internal fun GradientInfoCard(text: String, gradient: Brush = Brush.vultiGradien
                 shape = RoundedCornerShape(12.dp)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.transparent,
+            containerColor = Theme.colors.backgrounds.transparent,
         )
     ) {
         Row(
@@ -65,7 +65,7 @@ internal fun GradientInfoCard(text: String, gradient: Brush = Brush.vultiGradien
                 style = Theme.menlo.body2.copy(
                     fontSize = 12.sp,
                 ).copy(textAlign = TextAlign.Center),
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
             )
         }
     }

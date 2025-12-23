@@ -45,14 +45,14 @@ fun VsHoldableButton(
 ) {
     val isButtonEnabled = enabled == VsButtonState.Enabled || enabled == VsButtonState.Default
     val backgroundColor = if (isButtonEnabled){
-        Theme.v2.colors.primary.accent3
+        Theme.colors.primary.accent3
     } else {
-        Theme.v2.colors.primary.accent3.copy(alpha = 0.5f)
+        Theme.colors.primary.accent3.copy(alpha = 0.5f)
     }
     val fillColor = if (isButtonEnabled){
-        Theme.v2.colors.primary.accent5
+        Theme.colors.primary.accent5
     } else {
-        Theme.v2.colors.primary.accent5.copy(alpha = 0.5f)
+        Theme.colors.primary.accent5.copy(alpha = 0.5f)
     }
 
     val scope = rememberCoroutineScope()
@@ -135,9 +135,9 @@ fun VsHoldableButton(
                 )
         ) {
             val contentColor = if (isButtonEnabled) {
-                Theme.v2.colors.text.primary
+                Theme.colors.text.primary
             } else {
-                Theme.v2.colors.text.primary.copy(alpha = 0.5f)
+                Theme.colors.text.primary.copy(alpha = 0.5f)
             }
             if (label != null) {
                 Text(

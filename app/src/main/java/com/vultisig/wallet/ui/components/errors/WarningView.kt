@@ -37,13 +37,13 @@ internal fun WarningView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
 
         ) {
-        val waveCircleColor = Theme.v2.colors.border.light
+        val waveCircleColor = Theme.colors.border.light
 
         UiSpacer(
             weight = 1f
@@ -78,7 +78,7 @@ internal fun WarningView(
         Text(
             text = title,
             style = Theme.brockmann.headings.title2,
-            color = Theme.v2.colors.alerts.warning,
+            color = Theme.colors.alerts.warning,
             textAlign = TextAlign.Center
         )
 
@@ -87,7 +87,7 @@ internal fun WarningView(
         Text(
             text = description,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center
         )
 

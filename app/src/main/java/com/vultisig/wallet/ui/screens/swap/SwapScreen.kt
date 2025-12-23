@@ -97,9 +97,9 @@ import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
-import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.utils.toPx
+import com.vultisig.wallet.ui.components.fastselection.contentWithFastSelection
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.util.toPx
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -178,7 +178,7 @@ internal fun SwapScreen(
 
     val isShowingKeyboard by rememberKeyboardVisibilityAsState()
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.chain_account_view_swap),
         onBackClick = onBackClick,
         actions = {
@@ -258,10 +258,10 @@ internal fun SwapScreen(
                                         VsBasicTextField(
                                             textFieldState = srcAmountTextFieldState,
                                             style = Theme.brockmann.headings.title2,
-                                            color = Theme.v2.colors.text.light,
+                                            color = Theme.colors.text.light,
                                             textAlign = TextAlign.End,
                                             hint = "0",
-                                            hintColor = Theme.v2.colors.text.extraLight,
+                                            hintColor = Theme.colors.text.extraLight,
                                             hintStyle = Theme.brockmann.headings.title2,
                                             lineLimits = TextFieldLineLimits.SingleLine,
                                             interactionSource = interactionSource,
@@ -284,7 +284,7 @@ internal fun SwapScreen(
                                         }
                                         .size(40.dp)
                                         .background(
-                                            color = if (error != null) Theme.v2.colors.alerts.error else Theme.v2.colors.buttons.tertiary,
+                                            color = if (error != null) Theme.colors.alerts.error else Theme.colors.buttons.tertiary,
                                             shape = CircleShape,
                                         )
                                         .padding(all = space)
@@ -304,7 +304,7 @@ internal fun SwapScreen(
                                         if (isLoading) {
                                             CircularProgressIndicator(
                                                 modifier = Modifier.size(24.dp),
-                                                color = Theme.v2.colors.text.primary,
+                                                color = Theme.colors.text.primary,
                                                 strokeWidth = 2.dp,
                                             )
                                         } else {
@@ -314,7 +314,7 @@ internal fun SwapScreen(
                                                     else R.drawable.iconwarning
                                                 ),
                                                 contentDescription = null,
-                                                tint = Theme.v2.colors.text.primary,
+                                                tint = Theme.colors.text.primary,
                                                 modifier = Modifier
                                                     .clickable {
                                                         spinTrigger++
@@ -356,7 +356,7 @@ internal fun SwapScreen(
                                     Text(
                                         text = state.estimatedDstTokenValue,
                                         style = Theme.brockmann.headings.title2,
-                                        color = Theme.v2.colors.text.light,
+                                        color = Theme.colors.text.light,
                                         textAlign = TextAlign.End,
                                         maxLines = 1,
                                     )
@@ -396,7 +396,7 @@ internal fun SwapScreen(
                             value = buildAnnotatedString {
                                 withStyle(
                                     style = SpanStyle(
-                                        color = Theme.v2.colors.neutrals.n100,
+                                        color = Theme.colors.neutrals.n100,
                                     )
                                 ) {
                                     append(state.networkFee)
@@ -404,7 +404,7 @@ internal fun SwapScreen(
                                 append(" ")
                                 withStyle(
                                     style = SpanStyle(
-                                        color = Theme.v2.colors.neutrals.n400,
+                                        color = Theme.colors.neutrals.n400,
                                     )
                                 ) {
                                     append(
@@ -462,7 +462,7 @@ internal fun SwapScreen(
                     Column {
                         HorizontalDivider(
                             thickness = 1.dp,
-                            color = Theme.v2.colors.border.light
+                            color = Theme.colors.border.light
                         )
 
                         Row(
@@ -470,7 +470,7 @@ internal fun SwapScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = Theme.v2.colors.backgrounds.secondary,
+                                    color = Theme.colors.backgrounds.secondary,
                                 )
                                 .padding(
                                     vertical = 12.dp,
@@ -542,12 +542,12 @@ private fun RowScope.PercentageItem(
     Text(
         text = title,
         style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.primary,
+        color = Theme.colors.text.primary,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .clickable(onClick = onClick)
             .background(
-                color = Theme.v2.colors.backgrounds.tertiary_2,
+                color = Theme.colors.backgrounds.tertiary_2,
                 shape = RoundedCornerShape(99.dp),
             )
             .padding(
@@ -582,14 +582,14 @@ private fun TokenInput(
         modifier = modifier
             .background(
                 color = if (focused)
-                    Theme.v2.colors.backgrounds.secondary
+                    Theme.colors.backgrounds.secondary
                 else
-                    Theme.v2.colors.backgrounds.disabled,
+                    Theme.colors.backgrounds.disabled,
                 shape = shape
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = shape,
             )
             .clip(shape)
@@ -620,7 +620,7 @@ private fun TokenInput(
             Text(
                 text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 textAlign = TextAlign.End,
             )
         }
@@ -659,7 +659,7 @@ private fun TokenInput(
                     Text(
                         text = fiatValue,
                         style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.End,
                     )
                 }
@@ -713,7 +713,7 @@ internal fun TokenChip(
                 )
             }
             .background(
-                color = Theme.v2.colors.backgrounds.tertiary_2,
+                color = Theme.colors.backgrounds.tertiary_2,
                 shape = RoundedCornerShape(99.dp)
             )
             .padding(
@@ -724,7 +724,7 @@ internal fun TokenChip(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+                .background(Theme.colors.neutrals.n100),
             logo = selectedToken?.tokenLogo ?: "",
             title = selectedToken?.title ?: "",
             modifier = Modifier
@@ -737,14 +737,14 @@ internal fun TokenChip(
             Text(
                 text = selectedToken?.title ?: "",
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
 
             if (selectedToken?.isNativeToken == true) {
                 Text(
                     text = stringResource(R.string.swap_form_native),
                     style = Theme.brockmann.supplementary.captionSmall,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
             }
         }
@@ -754,7 +754,7 @@ internal fun TokenChip(
         UiIcon(
             drawableResId = R.drawable.ic_chevron_right_small,
             size = 20.dp,
-            tint = Theme.v2.colors.text.primary,
+            tint = Theme.colors.text.primary,
         )
 
         UiSpacer(6.dp)
@@ -784,7 +784,7 @@ private fun QuoteTimer(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
             .background(
-                color = Theme.v2.colors.backgrounds.secondary,
+                color = Theme.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(99.dp)
             )
             .padding(
@@ -795,13 +795,13 @@ private fun QuoteTimer(
         Text(
             text = timeLeft,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
         )
 
         CircularProgressIndicator(
             progress = { progress },
-            trackColor = Theme.v2.colors.border.normal,
-            color = Theme.v2.colors.primary.accent4,
+            trackColor = Theme.colors.border.normal,
+            color = Theme.colors.primary.accent4,
             strokeCap = StrokeCap.Square,
             strokeWidth = 2.dp,
             gapSize = 0.dp,
