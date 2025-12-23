@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
-import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.components.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -48,7 +48,7 @@ internal fun AccountList(
 
                     if (index != accounts.lastIndex) {
                         UiHorizontalDivider(
-                            color = Theme.v2.colors.border.light,
+                            color = Theme.colors.border.light,
                         )
                     }
                 }

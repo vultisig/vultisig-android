@@ -41,8 +41,8 @@ fun TransactionTypeButton(
 ) {
 
     val backgroundColor = if (isSelected)
-        Theme.v2.colors.buttons.tertiary
-    else Theme.v2.colors.backgrounds.tertiary_2
+        Theme.colors.buttons.tertiary
+    else Theme.colors.backgrounds.tertiary_2
 
     val (logo, title) = when (txType) {
         TransactionType.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
@@ -70,7 +70,7 @@ fun TransactionTypeButton(
                 )
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.03f),
+                    color = Theme.colors.neutrals.n100.copy(alpha = 0.03f),
                     shape = RoundedCornerShape(16.dp)
                 )
                 .background(backgroundColor),
@@ -79,7 +79,7 @@ fun TransactionTypeButton(
             UiIcon(
                 drawableResId = logo,
                 size = 24.dp,
-                tint = Theme.v2.colors.text.primary
+                tint = Theme.colors.text.primary
             )
         }
 
@@ -89,7 +89,7 @@ fun TransactionTypeButton(
 
         Text(
             text = stringResource(title),
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.supplementary.caption
         )
     }

@@ -29,11 +29,11 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -67,7 +67,7 @@ internal fun ChainAccount(
                 errorLogoModifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Theme.v2.colors.backgrounds.body),
+                    .background(Theme.colors.backgrounds.body),
             )
             monoToneChainLogo.takeIf { chainLogo != tokenLogo }?.let {
                 Image(
@@ -77,11 +77,11 @@ internal fun ChainAccount(
                         .size(16.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.backgrounds.secondary,
+                            color = Theme.colors.backgrounds.secondary,
                             shape = CircleShape
                         )
                         .background(
-                            Theme.v2.colors.neutrals.n200,
+                            Theme.colors.neutrals.n200,
                             CircleShape
                         )
                         .align(Alignment.BottomEnd)
@@ -102,16 +102,16 @@ internal fun ChainAccount(
                 style = Theme.brockmann.body.s.medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
             UiSpacer(
                 size = 2.dp
             )
 
-            V2Container(
-                type = ContainerType.TERTIARY,
-                borderType = ContainerBorderType.Borderless,
-                cornerType = CornerType.RoundedCornerShape(
+            VsContainer(
+                type = VsContainerType.TERTIARY,
+                borderType = VsContainerBorderType.Borderless,
+                vsContainerCornerType = VsContainerCornerType.RoundedVsContainerCornerShape(
                     size = 8.dp
                 )
             ) {
@@ -119,7 +119,7 @@ internal fun ChainAccount(
                     value = price,
                     isVisible = true,
                     style = Theme.satoshi.price.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     modifier = Modifier
                         .padding(
                             horizontal = 8.dp,
@@ -141,7 +141,7 @@ internal fun ChainAccount(
                 value = fiatBalance,
                 isVisible = isBalanceVisible,
                 style = Theme.satoshi.price.bodyS,
-                color = Theme.v2.colors.neutrals.n50,
+                color = Theme.colors.neutrals.n50,
             )
 
             UiSpacer(
@@ -152,7 +152,7 @@ internal fun ChainAccount(
                 value = balance,
                 isVisible = isBalanceVisible,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 maxLines = 2,
                 textAlign = TextAlign.End,
             )
@@ -165,7 +165,7 @@ internal fun ChainAccount(
         UiIcon(
             drawableResId = R.drawable.ic_small_caret_right,
             size = 16.dp,
-            tint = Theme.v2.colors.text.primary,
+            tint = Theme.colors.text.primary,
         )
     }
 }

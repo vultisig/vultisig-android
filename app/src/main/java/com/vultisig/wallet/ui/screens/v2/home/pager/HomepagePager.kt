@@ -8,9 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.pager.VsPager
-import com.vultisig.wallet.ui.components.v2.pager.indicator.VsPagerIndicator
-import com.vultisig.wallet.ui.components.v2.pager.utils.rememberVsPagerState
+import com.vultisig.wallet.ui.components.pager.VsPager
+import com.vultisig.wallet.ui.components.pager.indicator.VsPagerIndicator
+import com.vultisig.wallet.ui.components.pager.utils.rememberVsPagerState
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.FollowXBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer

@@ -28,12 +28,13 @@ import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
-import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
+import com.vultisig.wallet.ui.components.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.Theme.colors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 
                 Box(
                     modifier = Modifier
-                        .background(color = Theme.v2.colors.backgrounds.primary)
+                        .background(color = Theme.colors.backgrounds.primary)
                         .safeDrawingPadding()
                 ) {
 

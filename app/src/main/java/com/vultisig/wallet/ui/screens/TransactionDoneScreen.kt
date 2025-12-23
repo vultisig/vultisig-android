@@ -26,8 +26,8 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.topbar.VsTopbar
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -50,12 +50,12 @@ internal fun TransactionDoneView(
 ) {
     BackHandler(onBack = onBack)
 
-    V2Scaffold(
+    VsScaffold(
         applyDefaultPaddings = true,
         applyScaffoldPaddings = true,
         topBar = {
             if (showToolbar) {
-                VsTopAppBar(
+                VsTopbar(
                     title = "Overview",
                 )
             }
@@ -134,7 +134,7 @@ private fun TxLinkAndHash(
     ) {
         Text(
             text = stringResource(if (isApproved) R.string.transaction_done_form_approve else R.string.transaction_done_form_title),
-            color = Theme.v2.colors.neutrals.n50,
+            color = Theme.colors.neutrals.n50,
             style = Theme.montserrat.heading5,
         )
 
@@ -146,7 +146,7 @@ private fun TxLinkAndHash(
     }
     Text(
         text = transactionHash,
-        color = Theme.v2.colors.backgrounds.teal,
+        color = Theme.colors.backgrounds.teal,
         style = Theme.menlo.subtitle3,
     )
 }
@@ -218,7 +218,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
             title = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n100,
+                        color = Theme.colors.neutrals.n100,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
@@ -231,7 +231,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
             value = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n100,
+                        color = Theme.colors.neutrals.n100,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,
@@ -241,7 +241,7 @@ private fun TransactionDetail(transaction: SendTxUiModel?) {
                 }
                 withStyle(
                     style = SpanStyle(
-                        color = Theme.v2.colors.neutrals.n400,
+                        color = Theme.colors.neutrals.n400,
                         fontSize = 14.sp,
                         fontFamily = Theme.montserrat.subtitle1.fontFamily,
                         fontWeight = Theme.montserrat.subtitle1.fontWeight,

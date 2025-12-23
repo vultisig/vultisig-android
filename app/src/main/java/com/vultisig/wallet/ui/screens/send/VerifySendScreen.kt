@@ -39,7 +39,7 @@ import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -115,7 +115,7 @@ internal fun VerifySendScreen(
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
 ) {
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.verify_send_send_overview).takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
         bottomBar = {
@@ -142,7 +142,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         textAlign = TextAlign.Center,
                     )
                     VsHoldableButton(
@@ -185,7 +185,7 @@ internal fun VerifySendScreen(
                 Column(
                     modifier = Modifier
                         .background(
-                            color = Theme.v2.colors.backgrounds.secondary,
+                            color = Theme.colors.backgrounds.secondary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(
@@ -195,7 +195,7 @@ internal fun VerifySendScreen(
                     Text(
                         text = stringResource(R.string.verify_deposit_sending),
                         style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.colors.text.light,
                     )
 
                     UiSpacer(24.dp)
@@ -259,7 +259,7 @@ internal fun VerifySendScreen(
                         Text(
                             text = stringResource(R.string.verify_deposit_network),
                             style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             maxLines = 1,
                         )
 
@@ -280,7 +280,7 @@ internal fun VerifySendScreen(
                             Text(
                                 text = chain.raw,
                                 style = Theme.brockmann.supplementary.footnote,
-                                color = Theme.v2.colors.text.primary,
+                                color = Theme.colors.text.primary,
                                 textAlign = TextAlign.End,
                                 maxLines = 1,
                                 overflow = TextOverflow.MiddleEllipsis,
@@ -334,7 +334,7 @@ internal fun AddressField(
     Column {
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.montserrat.heading5,
         )
 
@@ -343,7 +343,7 @@ internal fun AddressField(
         Text(
             text = address,
             style = Theme.montserrat.subtitle3,
-            color = Theme.v2.colors.backgrounds.teal,
+            color = Theme.colors.backgrounds.teal,
         )
 
         if (divider) {
@@ -369,7 +369,7 @@ internal fun OtherField(
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.montserrat.subtitle1,
             )
 
@@ -379,7 +379,7 @@ internal fun OtherField(
             Text(
                 text = value,
                 textAlign = TextAlign.End,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.menlo.subtitle1,
             )
         }

@@ -30,7 +30,7 @@ fun ErrorView(
         Text(
             text = title,
             style = Theme.brockmann.headings.title2,
-            color = Theme.v2.colors.alerts.error,
+            color = Theme.colors.alerts.error,
             textAlign = TextAlign.Center,
         )
 
@@ -39,7 +39,7 @@ fun ErrorView(
         Text(
             text = description,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
         )
 

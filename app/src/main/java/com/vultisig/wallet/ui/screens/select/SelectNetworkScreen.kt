@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -61,7 +61,7 @@ private fun SelectNetworkScreen(
     onNetworkClick: (NetworkUiModel) -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         applyDefaultPaddings = false,
         applyScaffoldPaddings = true,
 
@@ -70,7 +70,7 @@ private fun SelectNetworkScreen(
                 Text(
                     text = stringResource(R.string.select_chain_title),
                     style = Theme.brockmann.body.l.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,7 +95,7 @@ private fun SelectNetworkScreen(
                         Text(
                             text = stringResource(R.string.select_chain_chain_title),
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                         )
 
                         if(state.showAllChains.not()) {
@@ -103,7 +103,7 @@ private fun SelectNetworkScreen(
                             Text(
                                 text = stringResource(R.string.select_chain_balance_title),
                                 style = Theme.brockmann.supplementary.caption,
-                                color = Theme.v2.colors.text.extraLight,
+                                color = Theme.colors.text.extraLight,
                             )
                             UiSpacer(20.dp)
                         }
@@ -118,9 +118,9 @@ private fun SelectNetworkScreen(
                     val rounding = 12.dp
                     val isSelected = state.selectedNetwork == item.chain
                     val selectedColor = if (isSelected) {
-                        Theme.v2.colors.backgrounds.tertiary_2
+                        Theme.colors.backgrounds.tertiary_2
                     } else {
-                        Theme.v2.colors.backgrounds.secondary
+                        Theme.colors.backgrounds.secondary
                     }
 
                     NetworkItem(
@@ -174,7 +174,7 @@ private fun NetworkItem(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+                .background(Theme.colors.neutrals.n100),
             logo = logo,
             title = title,
             modifier = Modifier
@@ -184,7 +184,7 @@ private fun NetworkItem(
         Text(
             text = title,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         if (value.isNotEmpty()) {
@@ -193,7 +193,7 @@ private fun NetworkItem(
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
             )
         }
     }

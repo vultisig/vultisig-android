@@ -18,18 +18,18 @@ internal fun UiAlertDialog(
     confirmTitle: String = stringResource(R.string.ok),
 ) {
     AlertDialog(
-        containerColor = Theme.v2.colors.backgrounds.secondary,
+        containerColor = Theme.colors.backgrounds.secondary,
         title = {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.montserrat.heading5,
             )
         },
         text = {
             Text(
                 text = text,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.montserrat.body2,
             )
         },
@@ -40,7 +40,7 @@ internal fun UiAlertDialog(
             ) {
                 Text(
                     text = confirmTitle,
-                    color = Theme.v2.colors.neutrals.n100,
+                    color = Theme.colors.neutrals.n100,
                     style = Theme.montserrat.body3,
                 )
             }

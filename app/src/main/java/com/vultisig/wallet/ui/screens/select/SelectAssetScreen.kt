@@ -35,7 +35,7 @@ import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -65,7 +65,7 @@ private fun SelectAssetScreen(
     onSelectChain: (Chain) -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         applyScaffoldPaddings = true,
         applyDefaultPaddings = false,
         topBar = {
@@ -73,7 +73,7 @@ private fun SelectAssetScreen(
                 Text(
                     text = stringResource(R.string.select_asset_title),
                     style = Theme.brockmann.body.l.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -109,7 +109,7 @@ private fun SelectAssetScreen(
                                 onAssetClick(item)
                             })
                             .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
+                                color = Theme.colors.backgrounds.secondary,
                                 shape = RoundedCornerShape(
                                     topStart = if (isFirst) rounding else 0.dp,
                                     topEnd = if (isFirst) rounding else 0.dp,
@@ -121,8 +121,8 @@ private fun SelectAssetScreen(
 
                     if (!isLast) {
                         UiGradientDivider(
-                            initialColor = Theme.v2.colors.backgrounds.secondary,
-                            endColor = Theme.v2.colors.backgrounds.secondary,
+                            initialColor = Theme.colors.backgrounds.secondary,
+                            endColor = Theme.colors.backgrounds.secondary,
                         )
                     }
                 }
@@ -161,7 +161,7 @@ private fun AssetItem(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+                .background(Theme.colors.neutrals.n100),
             logo = logo,
             title = title,
             modifier = Modifier
@@ -171,18 +171,18 @@ private fun AssetItem(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             modifier = Modifier.weight(2f)
         )
 
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
             modifier = Modifier
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light,
+                    color = Theme.colors.border.light,
                     shape = RoundedCornerShape(70.dp),
                 )
                 .padding(
@@ -200,13 +200,13 @@ private fun AssetItem(
                 AutoSizingText(
                     text = amount,
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
 
                 AutoSizingText(
                     text = value,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
             }
         }

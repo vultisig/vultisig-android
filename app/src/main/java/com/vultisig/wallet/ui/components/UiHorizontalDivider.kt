@@ -9,7 +9,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun UiHorizontalDivider(
     modifier: Modifier = Modifier,
-    color: Color = Theme.v2.colors.backgrounds.tertiary_2,
+    color: Color = Theme.colors.backgrounds.tertiary_2,
 ) {
     HorizontalDivider(
         color = color,

@@ -16,7 +16,10 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
@@ -34,6 +37,7 @@ internal class QrAddressViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
+    private val navigator: Navigator<Destination>
 ) : ViewModel() {
     private val args = savedStateHandle.toRoute<Route.QrAddressScreen>()
     val address = args.address
@@ -86,5 +90,11 @@ internal class QrAddressViewModel @Inject constructor(
                 ShareType.TOKENADDRESS
             )
         )
+    }
+
+    fun back(){
+        viewModelScope.launch {
+            navigator.back()
+        }
     }
 }

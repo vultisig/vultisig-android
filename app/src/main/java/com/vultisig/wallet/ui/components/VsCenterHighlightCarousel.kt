@@ -158,7 +158,7 @@ fun VsCenterHighlightCarousel(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(vertical = 16.dp)
     ) {
         Column(
@@ -166,7 +166,7 @@ fun VsCenterHighlightCarousel(
         ) {
             Text(
                 text = stringResource(R.string.select_chain_title),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.m.medium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -203,7 +203,7 @@ fun VsCenterHighlightCarousel(
                         .border(
                             width = 2.dp,
                             brush = Brush.horizontalGradient(
-                                listOf(Theme.v2.colors.primary.accent4, Theme.v2.colors.buttons.tertiary)
+                                listOf(Theme.colors.primary.accent4, Theme.colors.buttons.tertiary)
                             ),
                             shape = RoundedCornerShape(30.dp)
                         )
@@ -223,7 +223,7 @@ private fun CarouselChainItem(
         modifier = modifier
             .height(50.dp)
             .clip(RoundedCornerShape(30.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -231,7 +231,7 @@ private fun CarouselChainItem(
         TokenLogo(
             errorLogoModifier = Modifier
                 .size(32.dp)
-                .background(Theme.v2.colors.neutrals.n100),
+                .background(Theme.colors.neutrals.n100),
             logo = logo,
             title = "${chain.raw} logo",
             modifier = Modifier.size(26.dp)
@@ -242,7 +242,7 @@ private fun CarouselChainItem(
         AutoSizingText(
             text = chain.raw,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
     }
 }

@@ -36,10 +36,10 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
-import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.snackbar.VSSnackbarState
+import com.vultisig.wallet.ui.components.snackbar.VsSnackBar
+import com.vultisig.wallet.ui.components.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.DeviceMeta
 import com.vultisig.wallet.ui.models.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
@@ -83,7 +83,7 @@ private fun VaultDetailScreen(
     val eddsaKeyCopiedMessage = stringResource(R.string.vault_detail_screen_eddsa_key_copied)
     
     Box(modifier = Modifier.fillMaxSize()) {
-        V2Scaffold(
+        VsScaffold(
             title = stringResource(R.string.vault_settings_details_title),
             onBackClick = onBackClick,
             rightIcon = R.drawable.ic_share,
@@ -201,7 +201,7 @@ fun VaultDetailGroup(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.extraLight
+            color = Theme.colors.text.extraLight
         )
         content()
     }
@@ -265,7 +265,7 @@ private fun KeyItemPrev() {
 @Composable
 internal fun Modifier.itemModifier(): Modifier = border(
     width = 1.dp,
-    color = Theme.v2.colors.border.light,
+    color = Theme.colors.border.light,
     shape = RoundedCornerShape(
         size = 12.dp
     )
@@ -274,7 +274,7 @@ internal fun Modifier.itemModifier(): Modifier = border(
         shape = RoundedCornerShape(
             size = 12.dp
         ),
-        color = Theme.v2.colors.backgrounds.disabled
+        color = Theme.colors.backgrounds.disabled
     )
     .padding(
         vertical = 24.dp,
@@ -298,13 +298,13 @@ private fun KeyItem(type: String, value: String, onCopyCompleted: (String) -> Un
             Text(
                 text = type,
                 style = Theme.brockmann.headings.subtitle,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
 
             Text(
                 text = value,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.colors.text.extraLight
             )
         }
         UiSpacer(16.dp)
@@ -329,7 +329,7 @@ internal fun SettingInfoHorizontalItem(
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary
+            color = Theme.colors.text.primary
         )
 
         if (value == null)
@@ -340,7 +340,7 @@ internal fun SettingInfoHorizontalItem(
             Text(
                 text = value,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
     }
 
@@ -362,13 +362,13 @@ internal fun SettingInfoItemVertical(
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
         )
 
         Text(
             text = value,
             style = Theme.brockmann.button.medium.medium,
-            color = Theme.v2.colors.neutrals.n50
+            color = Theme.colors.neutrals.n50
         )
 
         content?.let {
@@ -394,7 +394,7 @@ private fun DeviceItem(
                 Text(
                     text = stringResource(R.string.peer_discovery_this_device),
                     style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.light
+                    color = Theme.colors.text.light
                 )
             }
         } else null

@@ -36,12 +36,12 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.reorderable.VerticalDoubleReorderList
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.bottomsheet.navhost.VsBottomSheetNavController
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.models.home.FolderAndVaultsCount
 import com.vultisig.wallet.ui.models.home.VaultListUiModel
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
@@ -145,7 +145,7 @@ private fun VaultListScreen(
                 UiSpacer(size = 16.dp)
                 Text(
                     text = stringResource(id = R.string.vault_list_vaults_list),
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.supplementary.caption,
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
@@ -206,12 +206,12 @@ private fun VaultListScreen(
                 UiIcon(
                     drawableResId = R.drawable.ic_folder,
                     size = 20.dp,
-                    tint = Theme.v2.colors.neutrals.n100
+                    tint = Theme.colors.neutrals.n100
                 )
                 Text(
                     text = stringResource(R.string.vault_list_add_folder),
                     style = Theme.brockmann.button.semibold.semibold,
-                    color = Theme.v2.colors.neutrals.n100
+                    color = Theme.colors.neutrals.n100
                 )
             }
         }
@@ -338,7 +338,7 @@ internal fun VaultInfo(
         Text(
             text = vaultName,
             style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
         )
 
         UiSpacer(
@@ -352,7 +352,7 @@ internal fun VaultInfo(
             Text(
                 text = "$vaultCounts Vault${if (vaultCounts != 1) "s" else ""}",
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
             )
 
             UiSpacer(
@@ -363,7 +363,7 @@ internal fun VaultInfo(
                 modifier = Modifier
                     .size(2.dp)
                     .background(
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
             )
 
@@ -373,7 +373,7 @@ internal fun VaultInfo(
             LoadableValue(
                 value = totalBalance,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 isVisible = true
             )
         }
@@ -410,7 +410,7 @@ internal fun BottomSheetHeader(
         Text(
             text = title,
             style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             modifier = Modifier
                 .align(Alignment.Center)
         )

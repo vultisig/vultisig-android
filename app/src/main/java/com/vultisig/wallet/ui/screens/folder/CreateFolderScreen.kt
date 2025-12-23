@@ -53,16 +53,16 @@ import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.v2.bottomsheets.navhost.VsBottomSheetNavController
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.bottomsheet.navhost.VsBottomSheetNavController
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.models.folder.CreateFolderUiModel
 import com.vultisig.wallet.ui.models.folder.CreateFolderViewModel
 import com.vultisig.wallet.ui.navigation.Route
@@ -136,7 +136,7 @@ private fun CreateFolderScreen(
                     VsCircleButton(
                         designType = DesignType.Solid,
                         size = VsCircleButtonSize.Small,
-                        type = VsCircleButtonType.Custom(Theme.v2.colors.alerts.error),
+                        type = VsCircleButtonType.Custom(Theme.colors.alerts.error),
                         icon = R.drawable.trash_outline,
                         onClick = onDeleteFolderClick,
                     )
@@ -163,7 +163,7 @@ private fun CreateFolderScreen(
 
             Text(
                 text = stringResource(R.string.add_folder_folder_name_title),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.m.medium,
             )
             UiSpacer(
@@ -183,7 +183,7 @@ private fun CreateFolderScreen(
 
                 Text(
                     text = stringResource(R.string.add_folder_active_vaults),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     style = Theme.brockmann.body.s.medium,
                 )
 
@@ -204,7 +204,7 @@ private fun CreateFolderScreen(
                             UiSpacer(size = 20.dp)
                             Text(
                                 text = stringResource(id = R.string.add_folder_available_vaults),
-                                color = Theme.v2.colors.text.light,
+                                color = Theme.colors.text.light,
                                 style = Theme.brockmann.body.s.medium,
                             )
 
@@ -279,7 +279,7 @@ private fun CreateFolderScreen(
             if (!isEditMode) {
                 Text(
                     text = stringResource(id = R.string.add_folder_list_title),
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     style = Theme.brockmann.body.s.medium,
                 )
                 UiSpacer(size = 12.dp)
@@ -361,14 +361,14 @@ fun FolderNameTextField(
             focusManager.clearFocus()
         }
     }
-    V2Container(
-        type = ContainerType.SECONDARY,
+    VsContainer(
+        type = VsContainerType.SECONDARY,
         borderType = if (isFocusedState)
-            ContainerBorderType.Bordered(
-                color = Theme.v2.colors.border.normal,
+            VsContainerBorderType.Bordered(
+                color = Theme.colors.border.normal,
             )
-        else ContainerBorderType.Borderless,
-        cornerType = CornerType.RoundedCornerShape(
+        else VsContainerBorderType.Borderless,
+        vsContainerCornerType = VsContainerCornerType.RoundedVsContainerCornerShape(
             size = 12.dp
         ),
     ) {
@@ -377,8 +377,8 @@ fun FolderNameTextField(
             state = textFieldState,
             cursorBrush = Brush.linearGradient(
                 colors = listOf(
-                    Theme.v2.colors.primary.accent4,
-                    Theme.v2.colors.primary.accent4,
+                    Theme.colors.primary.accent4,
+                    Theme.colors.primary.accent4,
                 )
             ),
             modifier = Modifier
@@ -395,7 +395,7 @@ fun FolderNameTextField(
             ),
             lineLimits = TextFieldLineLimits.SingleLine,
             textStyle = Theme.brockmann.supplementary.footnote.copy(
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             ),
             decorator = { input ->
                 Row(
@@ -406,7 +406,7 @@ fun FolderNameTextField(
                     if (textFieldState.text.isEmpty()) {
                         Text(
                             text = stringResource(id = R.string.create_folder_placeholder),
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             style = Theme.brockmann.supplementary.footnote,
                         )
                     } else {
@@ -417,7 +417,7 @@ fun FolderNameTextField(
                         UiIcon(
                             drawableResId = R.drawable.close_circle,
                             size = 18.dp,
-                            tint = Theme.v2.colors.neutrals.n300,
+                            tint = Theme.colors.neutrals.n300,
                             onClick = {
                                 textFieldState.clearText()
                             }

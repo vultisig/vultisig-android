@@ -28,7 +28,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -65,7 +65,7 @@ internal fun AccountItem(
             Text(
                 text = account.chainName,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -91,7 +91,7 @@ internal fun AccountItem(
             LoadableValue(
                 value = account.fiatAmount,
                 style = Theme.satoshi.price.bodyS,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 isVisible = isBalanceVisible,
             )
 
@@ -103,7 +103,7 @@ internal fun AccountItem(
                         account.assetsSize
                     ),
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -117,7 +117,7 @@ internal fun AccountItem(
                             isVisible = isBalanceVisible,
                             text = nativeTokenAmount,
                             style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -137,7 +137,7 @@ internal fun AccountItem(
         UiIcon(
             drawableResId = R.drawable.ic_small_caret_right,
             size = 16.dp,
-            tint = Theme.v2.colors.text.primary,
+            tint = Theme.colors.text.primary,
         )
     }
 }

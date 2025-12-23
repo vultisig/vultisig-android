@@ -52,9 +52,9 @@ internal fun VsTabs(
                     Text(
                         text = tab,
                         color = if (tab == selectedTab) {
-                            Theme.v2.colors.text.primary
+                            Theme.colors.text.primary
                         } else {
-                            Theme.v2.colors.text.extraLight
+                            Theme.colors.text.extraLight
                         },
                         style = Theme.brockmann.body.s.medium,
                     )
@@ -67,7 +67,7 @@ internal fun VsTabs(
                             .fillMaxWidth()
                             .background(
                                 color = if (tab == selectedTab) {
-                                    Theme.v2.colors.primary.accent4
+                                    Theme.colors.primary.accent4
                                 } else {
                                     Color.Transparent
                                 },

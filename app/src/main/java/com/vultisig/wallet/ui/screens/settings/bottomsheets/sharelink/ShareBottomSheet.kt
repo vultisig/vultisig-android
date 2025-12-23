@@ -32,9 +32,9 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
@@ -74,7 +74,7 @@ private fun ShareLinkContent(
         Text(
             text = stringResource(R.string.app_name),
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
@@ -87,7 +87,7 @@ private fun ShareLinkContent(
 
         Text(
             text = stringResource(R.string.settings_screen_share_the_app),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier
                 .padding(
@@ -119,10 +119,10 @@ private fun ShareLinkContent(
             size = 24.dp,
         )
 
-        V2Container(
+        VsContainer(
             modifier = Modifier.padding(horizontal = 20.dp),
-            type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Bordered()
+            type = VsContainerType.SECONDARY,
+            borderType = VsContainerBorderType.Bordered()
         ) {
             Row(
                 modifier = Modifier
@@ -132,7 +132,7 @@ private fun ShareLinkContent(
                 Text(
                     text = uiModel.link,
                     style = Theme.brockmann.body.m.regular,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     modifier = Modifier
                         .weight(1f),
                     maxLines = 1,
@@ -145,7 +145,7 @@ private fun ShareLinkContent(
 
                 CopyIcon(
                     textToCopy = uiModel.link,
-                    tint = Theme.v2.colors.primary.accent4,
+                    tint = Theme.colors.primary.accent4,
                     size = 16.dp,
                 )
 
@@ -178,7 +178,7 @@ private fun ShareOptionItem(
                 onClick = onClick
             )
             .background(
-                Theme.v2.colors.backgrounds.secondary
+                Theme.colors.backgrounds.secondary
             ),
         contentAlignment = Alignment.Center,
     ) {

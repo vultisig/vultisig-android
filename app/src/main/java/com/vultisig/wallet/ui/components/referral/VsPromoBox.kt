@@ -31,12 +31,12 @@ fun VsPromoBox(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Theme.v2.colors.backgrounds.secondary,
+                color = Theme.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(12.dp),
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(12.dp),
             )
             .padding(
@@ -47,7 +47,7 @@ fun VsPromoBox(
         UiIcon(
             drawableResId = icon,
             size = 20.dp,
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
 
         UiSpacer(12.dp)
@@ -55,13 +55,13 @@ fun VsPromoBox(
         Column {
             Text(
                 text = title,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.supplementary.footnote,
             )
 
             Text(
                 text = description,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.captionSmall,
             )
         }
@@ -78,7 +78,7 @@ fun VsPromoTag(
         modifier = modifier
             .padding(start = 16.dp)
             .background(
-                color = Theme.v2.colors.backgrounds.secondary,
+                color = Theme.colors.backgrounds.secondary,
                 shape = RoundedCornerShape(
                     topEnd = 50.dp,
                     bottomEnd = 50.dp,
@@ -88,7 +88,7 @@ fun VsPromoTag(
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(
                     topEnd = 50.dp,
                     bottomEnd = 50.dp,
@@ -102,14 +102,14 @@ fun VsPromoTag(
         UiIcon(
             drawableResId = icon,
             size = 14.dp,
-            tint = Theme.v2.colors.primary.accent4,
+            tint = Theme.colors.primary.accent4,
         )
 
         UiSpacer(8.dp)
 
         Text(
             text = text,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption,
         )
     }

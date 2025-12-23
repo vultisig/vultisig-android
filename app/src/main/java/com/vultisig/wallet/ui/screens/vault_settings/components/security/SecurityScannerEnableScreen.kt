@@ -63,12 +63,12 @@ private fun SecurityScannerEnableScreen(
             Text(
                 text = stringResource(id = R.string.vault_settings_security_screen_title_switch),
                 style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
             Text(
                 text = stringResource(id = R.string.vault_settings_security_screen_title_content),
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.light
+                color = Theme.colors.text.light
             )
 
             Row (
@@ -85,7 +85,7 @@ private fun SecurityScannerEnableScreen(
                 Text(
                     text = if (uiModel.isSwitchEnabled) "ON" else "OFF",
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary
+                    color = Theme.colors.text.primary
                 )
             }
 

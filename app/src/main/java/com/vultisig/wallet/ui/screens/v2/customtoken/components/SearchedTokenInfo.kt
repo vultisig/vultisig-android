@@ -23,7 +23,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -50,7 +50,7 @@ internal fun SearchedTokenInfo(
                     errorLogoModifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Theme.v2.colors.backgrounds.body),
+                        .background(Theme.colors.backgrounds.body),
                 )
 
                 Image(
@@ -60,11 +60,11 @@ internal fun SearchedTokenInfo(
                         .size(16.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.backgrounds.secondary,
+                            color = Theme.colors.backgrounds.secondary,
                             shape = CircleShape
                         )
                         .background(
-                            Theme.v2.colors.neutrals.n200,
+                            Theme.colors.neutrals.n200,
                             CircleShape
                         )
                         .align(Alignment.BottomEnd)
@@ -81,7 +81,7 @@ internal fun SearchedTokenInfo(
                 ) {
                     Text(
                         text = token.ticker,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
                     )
 
@@ -91,12 +91,12 @@ internal fun SearchedTokenInfo(
 
                     Text(
                         text = token.chain.raw,
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.colors.text.light,
                         style = Theme.brockmann.supplementary.captionSmall,
                         modifier = Modifier.Companion
                             .border(
                                 width = 1.dp,
-                                color = Theme.v2.colors.border.light,
+                                color = Theme.colors.border.light,
                                 shape = CircleShape
                             )
                             .padding(
@@ -110,7 +110,7 @@ internal fun SearchedTokenInfo(
                 )
                 Text(
                     text = token.contractAddress,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.supplementary.caption,
                     maxLines = 1,
                     overflow = TextOverflow.Companion.Ellipsis

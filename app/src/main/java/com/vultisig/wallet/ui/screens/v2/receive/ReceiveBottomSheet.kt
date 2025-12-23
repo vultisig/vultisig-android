@@ -26,12 +26,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.searchbar.VsSearchBar
 import com.vultisig.wallet.ui.models.ChainToReceiveUiModel
 import com.vultisig.wallet.ui.models.ReceiveUiModel
 import com.vultisig.wallet.ui.models.ReceiveViewModel
@@ -44,7 +44,7 @@ internal fun ReceiveBottomSheet(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    V2BottomSheet(
+    VsBottomSheet(
         onDismissRequest = viewModel::back
     ) {
         ReceiveContent(
@@ -77,11 +77,11 @@ private fun ReceiveContent(
         Text(
             text = stringResource(R.string.select_chain_title),
             style = Theme.brockmann.body.l.medium,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
         UiSpacer(16.dp)
 
-        SearchBar(
+        VsSearchBar(
             isInitiallyFocused = false,
             state = searchFieldState,
             onCancelClick = {},
@@ -91,8 +91,8 @@ private fun ReceiveContent(
             size = 16.dp
         )
 
-        V2Container(
-            type = ContainerType.SECONDARY
+        VsContainer(
+            type = VsContainerType.SECONDARY
         ) {
             LazyColumn(
                 modifier = Modifier.padding(
@@ -129,17 +129,17 @@ private fun ReceiveContent(
                             Text(
                                 text = chain.ticker.uppercase(),
                                 style = Theme.brockmann.body.s.medium,
-                                color = Theme.v2.colors.text.primary
+                                color = Theme.colors.text.primary
                             )
 
                             UiSpacer(
                                 size = 24.dp
                             )
 
-                            V2Container(
-                                cornerType = CornerType.Circular,
-                                borderType = ContainerBorderType.Bordered(),
-                                type = ContainerType.SECONDARY,
+                            VsContainer(
+                                vsContainerCornerType = VsContainerCornerType.Circular,
+                                borderType = VsContainerBorderType.Bordered(),
+                                type = VsContainerType.SECONDARY,
                             ) {
                                 Text(
                                     modifier = Modifier.padding(
@@ -148,7 +148,7 @@ private fun ReceiveContent(
                                     ),
                                     text = chain.name,
                                     style = Theme.brockmann.body.s.medium,
-                                    color = Theme.v2.colors.text.primary
+                                    color = Theme.colors.text.primary
                                 )
                             }
                         }

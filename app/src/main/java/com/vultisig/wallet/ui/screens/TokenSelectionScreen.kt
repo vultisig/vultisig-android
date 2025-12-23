@@ -16,11 +16,11 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.tokenitem.GridPlusUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
+import com.vultisig.wallet.ui.components.tokenitem.GridPlusUiModel
+import com.vultisig.wallet.ui.components.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionUiModel.TokenUiSingle
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.models.TokenUiModel
@@ -72,13 +72,13 @@ internal fun TokenSelectionScreen(
                 Text(
                     text = stringResource(R.string.token_selection_screen_select_tokens),
                     style = Theme.brockmann.headings.title2,
-                    color = Theme.v2.colors.neutrals.n100,
+                    color = Theme.colors.neutrals.n100,
                 )
                 UiSpacer(16.dp)
                 Text(
                     text = stringResource(R.string.token_selecton_screen_enable_at_least_one),
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
 
             }

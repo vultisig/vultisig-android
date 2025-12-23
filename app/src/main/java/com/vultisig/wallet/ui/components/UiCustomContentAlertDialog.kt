@@ -21,7 +21,7 @@ internal fun UiCustomContentAlertDialog(
     onDismissRequest: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
-    val appColor = Theme.v2.colors
+    val appColor = Theme.colors
     BasicAlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest

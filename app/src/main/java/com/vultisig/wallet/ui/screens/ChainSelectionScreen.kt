@@ -12,14 +12,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.tokenitem.GridTokenUiModel
+import com.vultisig.wallet.ui.components.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.ChainSelectionUiModel
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 import com.vultisig.wallet.ui.models.ChainUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
-import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -57,7 +57,7 @@ internal fun ChainSelectionScreen(
             Text(
                 text = title,
                 style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
             )
         },
         items = state.chains.map {

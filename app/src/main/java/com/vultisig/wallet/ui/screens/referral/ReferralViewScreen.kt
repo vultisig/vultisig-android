@@ -58,7 +58,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
@@ -132,7 +132,7 @@ internal fun ReferralViewScreen(
         )
     }
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.referral_view_title),
         onBackClick = onBackPressed,
         bottomBar = {
@@ -166,7 +166,7 @@ internal fun ReferralViewScreen(
                         .border(
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = Theme.v2.colors.border.light
+                                color = Theme.colors.border.light
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -175,7 +175,7 @@ internal fun ReferralViewScreen(
                     Text(
                         text = stringResource(R.string.referral_view_selected_vault),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
 
                     UiSpacer(16.dp)
@@ -224,7 +224,7 @@ private fun ReferralDetails(
     Text(
         text = stringResource(R.string.referral_view_your_referral_code),
         style = Theme.brockmann.body.s.medium,
-        color = Theme.v2.colors.text.primary,
+        color = Theme.colors.text.primary,
     )
 
     UiSpacer(8.dp)
@@ -256,7 +256,7 @@ private fun FriendReferralCode(
             .border(
                 border = BorderStroke(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light
+                    color = Theme.colors.border.light
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -265,7 +265,7 @@ private fun FriendReferralCode(
         Text(
             text = stringResource(R.string.referral_view_your_friend_referral),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         UiSpacer(8.dp)
@@ -290,17 +290,17 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
             .border(
                 border = BorderStroke(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light
+                    color = Theme.colors.border.light
                 ),
                 shape = RoundedCornerShape(12.dp),
             )
             .clip(RoundedCornerShape(12.dp))
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .fillMaxWidth()
             .padding(all = 16.dp),
     ) {
         Text(
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.body.s.medium,
             text = stringResource(R.string.referral_view_expires_on)
         )
@@ -314,7 +314,7 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
             )
         } else {
             Text(
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.l.medium,
                 text = expiration,
             )
@@ -332,7 +332,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
             .clickable { onClick() }
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
@@ -351,12 +351,12 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
             Text(
                 text = buildAnnotatedString {
                     append(stringResource(R.string.referral_view_save))
-                    withStyle(style = SpanStyle(color = Theme.v2.colors.primary.accent4)) {
+                    withStyle(style = SpanStyle(color = Theme.colors.primary.accent4)) {
                         append(" 10% ")
                     }
                     append(stringResource(R.string.referral_view_on_swaps))
                 },
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.caption,
             )
 
@@ -364,7 +364,7 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
 
             Text(
                 text = stringResource(R.string.referral_view_add_friend),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
             )
         }
@@ -383,7 +383,7 @@ private fun ReferralRewardsBanner(
             .clip(RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(16.dp)
             )
     ) {
@@ -397,14 +397,14 @@ private fun ReferralRewardsBanner(
             UiIcon(
                 drawableResId = R.drawable.ic_cup,
                 size = 24.dp,
-                tint = Theme.v2.colors.primary.accent4,
+                tint = Theme.colors.primary.accent4,
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = stringResource(R.string.referral_view_collected_rewards),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
 
@@ -419,7 +419,7 @@ private fun ReferralRewardsBanner(
             } else {
                 Text(
                     text = rewards,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     style = Theme.brockmann.body.l.medium,
                 )
             }
@@ -450,10 +450,10 @@ fun VaultItem(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(28.dp))
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(28.dp)
             )
             .clickable { onVaultClicked() }
@@ -470,7 +470,7 @@ fun VaultItem(
 
         Text(
             text = name,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.body.m.regular,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -481,7 +481,7 @@ fun VaultItem(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = "click_referral_vault",
-            tint = Theme.v2.colors.text.primary,
+            tint = Theme.colors.text.primary,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -496,10 +496,10 @@ internal fun ContentRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.light,
+                color = Theme.colors.border.light,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(16.dp),
@@ -507,7 +507,7 @@ internal fun ContentRow(
     ) {
         Text(
             text = text,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.body.m.regular,
         )
 
@@ -523,11 +523,11 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .shadeCircle()
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .border(
                 border = BorderStroke(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light
+                    color = Theme.colors.border.light
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -548,7 +548,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
         Text(
             style = Theme.brockmann.body.m.medium,
             text = stringResource(R.string.referral_not_found),
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -557,7 +557,7 @@ internal fun EmptyReferralBanner(onClickedCreateReferral: () -> Unit) {
         Text(
             style = Theme.brockmann.supplementary.caption,
             text = stringResource(R.string.referral_cta),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center
         )
 

@@ -13,8 +13,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,7 +62,7 @@ internal class GenerateAccountQrUseCaseImpl @Inject constructor(
                 Path.Direction.CCW
             )
             canvas.clipPath(path)
-            canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
+            canvas.drawColor(colors.backgrounds.secondary.toArgb())
             drawable.setBounds(
                 0,
                 0,

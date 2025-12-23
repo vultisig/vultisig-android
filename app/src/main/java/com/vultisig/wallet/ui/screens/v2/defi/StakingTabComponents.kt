@@ -80,10 +80,10 @@ internal fun StakingWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -101,7 +101,7 @@ internal fun StakingWidget(
                 Text(
                     text = state.stakeAssetHeader,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
 
                 UiSpacer(4.dp)
@@ -116,7 +116,7 @@ internal fun StakingWidget(
                     Text(
                         text = if (isBalanceVisible) state.stakeAmount else HIDE_BALANCE_CHARS,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
                 }
             }
@@ -125,7 +125,7 @@ internal fun StakingWidget(
         if (state.apy != null || (state.nextReward != null || state.nextPayout != null)) {
             UiSpacer(16.dp)
 
-            UiHorizontalDivider(color = Theme.v2.colors.border.light)
+            UiHorizontalDivider(color = Theme.colors.border.light)
 
             UiSpacer(16.dp)
         }
@@ -145,7 +145,7 @@ internal fun StakingWidget(
                 Text(
                     text = state.apy,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.alerts.success,
+                    color = Theme.colors.alerts.success,
                 )
             }
         }
@@ -185,7 +185,7 @@ internal fun StakingWidget(
 
         UiSpacer(16.dp)
 
-        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+        UiHorizontalDivider(color = Theme.colors.border.light)
 
         UiSpacer(16.dp)
 
@@ -210,12 +210,12 @@ internal fun StakingWidget(
                 ),
                 icon = R.drawable.ic_circle_minus,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
+                border = BorderStroke(1.dp, Theme.colors.primary.accent4),
+                contentColor = Theme.colors.text.primary,
                 onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canUnstake,
-                iconCircleColor = Theme.v2.colors.text.extraLight
+                iconCircleColor = Theme.colors.text.extraLight
             )
 
             ActionButton(
@@ -223,12 +223,12 @@ internal fun StakingWidget(
                     if (!state.supportsMint) R.string.defi_action_stake else R.string.defi_action_mint
                 ),
                 icon = R.drawable.ic_circle_plus,
-                background = Theme.v2.colors.primary.accent3,
-                contentColor = Theme.v2.colors.text.primary,
+                background = Theme.colors.primary.accent3,
+                contentColor = Theme.colors.text.primary,
                 onClick = { onClickUnstake(state.coin.getStakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canStake,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.colors.primary.accent4
             )
         }
     }
@@ -253,7 +253,7 @@ internal fun StakingHeader(
             Text(
                 text = title,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
             )
 
             UiSpacer(4.dp)
@@ -261,7 +261,7 @@ internal fun StakingHeader(
             Text(
                 text = amount,
                 style = Theme.brockmann.headings.title1,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
         }
     }
@@ -283,7 +283,7 @@ private fun getHeaderIcon(assetStake: String): Int {
 private fun StakingHeaderAtomPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         StakingHeader(
@@ -299,7 +299,7 @@ private fun StakingHeaderAtomPreview() {
 private fun StakingHeaderLargeAmountPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         StakingHeader(
@@ -315,7 +315,7 @@ private fun StakingHeaderLargeAmountPreview() {
 private fun StakingWidgetFullActionsPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         StakingWidget(
@@ -343,7 +343,7 @@ private fun StakingWidgetFullActionsPreview() {
 private fun StakingWidgetLoadingPreview() {
     Box(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .padding(16.dp)
     ) {
         StakingWidget(

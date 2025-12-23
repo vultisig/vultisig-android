@@ -37,11 +37,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.icons.VaultIcon
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -65,10 +65,10 @@ internal fun VaultsToBackupScreen(
     onCurrentVaultBackupClick: () -> Unit,
     onAllVaultsBackupClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBackClick,
         modifier = Modifier
-            .background(color = Theme.v2.colors.backgrounds.primary),
+            .background(color = Theme.colors.backgrounds.primary),
     ) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize()
@@ -130,7 +130,7 @@ private fun SelectVaultTypeHeader(
         Text(
             text = stringResource(R.string.backup_select_vaults_title),
             style = Theme.brockmann.headings.title1,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         UiSpacer(
@@ -140,7 +140,7 @@ private fun SelectVaultTypeHeader(
         Text(
             text = stringResource(R.string.backup_select_vaults_subtitle),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
         )
 
         UiSpacer(
@@ -157,9 +157,9 @@ private fun BackupVaultContainer(
     onClick: () -> Unit,
     availableHeight: Dp?,
 ) {
-    V2Container(
-        type = ContainerType.PRIMARY,
-        borderType = ContainerBorderType.Bordered(),
+    VsContainer(
+        type = VsContainerType.PRIMARY,
+        borderType = VsContainerBorderType.Bordered(),
         modifier = modifier.clickOnce(onClick = onClick)
     ) {
         Column(
@@ -187,14 +187,14 @@ private fun BackupVaultContainer(
                 Row {
                     Text(
                         text = title,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         style = Theme.brockmann.body.s.medium,
                     )
                     UiSpacer(weight = 1f)
                     UiIcon(
                         drawableResId = R.drawable.ic_small_caret_right,
                         size = 16.dp,
-                        tint = Theme.v2.colors.text.extraLight,
+                        tint = Theme.colors.text.extraLight,
                     )
                 }
                 UiSpacer(size = topSpacerHeight)
@@ -209,9 +209,9 @@ private fun BackupVaultContainer(
                         0.dp
                     )
 
-                V2Container(
-                    type = ContainerType.SECONDARY,
-                    borderType = ContainerBorderType.Borderless,
+                VsContainer(
+                    type = VsContainerType.SECONDARY,
+                    borderType = VsContainerBorderType.Borderless,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = vaultListMaxHeight)
@@ -256,9 +256,9 @@ private fun BackupVaultContainer(
                     }
                 }
             } else if (availableHeight == null) {
-                V2Container(
-                    type = ContainerType.SECONDARY,
-                    borderType = ContainerBorderType.Borderless,
+                VsContainer(
+                    type = VsContainerType.SECONDARY,
+                    borderType = VsContainerBorderType.Borderless,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
@@ -291,7 +291,7 @@ private fun RemainedCountText(remainedCount: Int?) {
                 R.string.more,
                 remainedCount
             ),
-            color = Theme.v2.colors.text.light,
+            color = Theme.colors.text.light,
             style = Theme.brockmann.supplementary.footnote,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -317,7 +317,7 @@ internal fun VaultToBackup(
             Text(
                 text = model.name,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -336,9 +336,9 @@ internal fun VaultToBackup(
 
 @Composable
 private fun VaultMetaInfo(model: VaultToBackupUiModel) {
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered(),
+    VsContainer(
+        type = VsContainerType.SECONDARY,
+        borderType = VsContainerBorderType.Bordered(),
     ) {
         Row(
             modifier = Modifier.padding(
@@ -359,7 +359,7 @@ private fun VaultMetaInfo(model: VaultToBackupUiModel) {
                     model.size
                 ),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
 
         }

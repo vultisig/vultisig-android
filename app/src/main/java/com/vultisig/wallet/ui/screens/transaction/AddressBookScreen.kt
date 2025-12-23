@@ -43,11 +43,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
@@ -87,18 +87,18 @@ internal fun AddressBookScreen(
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
 
-    V2Scaffold(
+    VsScaffold(
         actions = {
             if (state.entries.isNotEmpty()) {
                 if (isEditModeEnabled) {
                     Text(
                         text = stringResource(R.string.address_book_edit_mode_done),
                         style = Theme.brockmann.button.medium.medium,
-                        color = Theme.v2.colors.primary.accent4,
+                        color = Theme.colors.primary.accent4,
                         modifier = Modifier
                             .clickOnce(onClick = onToggleEditMode)
                             .background(
-                                color = Theme.v2.colors.backgrounds.secondary,
+                                color = Theme.colors.backgrounds.secondary,
                                 shape = CircleShape
                             )
                             .padding(
@@ -176,7 +176,7 @@ private fun NoAddressView(
         Text(
             text = stringResource(R.string.address_book_empty_title),
             style = Theme.brockmann.button.semibold.large,
-            color = Theme.v2.colors.neutrals.n50,
+            color = Theme.colors.neutrals.n50,
             textAlign = TextAlign.Center
         )
 
@@ -187,7 +187,7 @@ private fun NoAddressView(
         Text(
             text = stringResource(R.string.address_book_empty_description),
             style = Theme.brockmann.button.medium.medium,
-            color = Theme.v2.colors.neutrals.n300,
+            color = Theme.colors.neutrals.n300,
             textAlign = TextAlign.Center
         )
 
@@ -244,14 +244,14 @@ private fun AddressItem(
                 .fillMaxWidth()
                 .clickOnce(onClick = onClick)
                 .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
+                    color = Theme.colors.backgrounds.secondary,
                     shape = RoundedCornerShape(
                         size = 12.dp
                     ),
                 )
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light,
+                    color = Theme.colors.border.light,
                     shape = RoundedCornerShape(
                         size = 12.dp
                     )
@@ -278,7 +278,7 @@ private fun AddressItem(
                 Text(
                     text = name,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
 
                 UiSpacer(
@@ -287,7 +287,7 @@ private fun AddressItem(
                 Text(
                     text = address,
                     style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.light,
+                    color = Theme.colors.text.light,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis
                 )

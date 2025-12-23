@@ -60,7 +60,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
@@ -95,7 +95,7 @@ private fun ChooseVaultScreen(
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         rightIcon = R.drawable.question,
         onRightIconClick = onHelpClick,
         onBackClick = onBackClick,
@@ -150,7 +150,7 @@ private fun ChooseVaultScreen(
                         modifier = Modifier
                             .height(intrinsicSize = IntrinsicSize.Min)
                             .clip(CircleShape)
-                            .background(Theme.v2.colors.backgrounds.tertiary_2)
+                            .background(Theme.colors.backgrounds.tertiary_2)
                             .padding(6.dp)
                     ) {
                         Box(
@@ -164,7 +164,7 @@ private fun ChooseVaultScreen(
                                 modifier = Modifier
                                     .animatePlacementInScope(this@LookaheadScope)
                                     .clip(CircleShape)
-                                    .background(Theme.v2.colors.backgrounds.primary)
+                                    .background(Theme.colors.backgrounds.primary)
                                     .fillMaxHeight()
                                     .fillMaxWidth(0.5f)
                             )
@@ -184,7 +184,7 @@ private fun ChooseVaultScreen(
                                     .wrapContentWidth(CenterHorizontally)
                                     .testTag("ChooseVaultScreen.selectFastVault")
                             ) {
-                                val brushGradient = Theme.v2.colors.gradients.primary
+                                val brushGradient = Theme.colors.gradients.primary
                                 val iconModifier = if (!isSecureTypeSelected) {
                                     Modifier
                                         .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -204,12 +204,12 @@ private fun ChooseVaultScreen(
                                     modifier = iconModifier,
                                     painter = painterResource(R.drawable.thunder),
                                     contentDescription = stringResource(R.string.select_vault_type_fast),
-                                    tint = Theme.v2.colors.text.primary,
+                                    tint = Theme.colors.text.primary,
                                 )
                                 UiSpacer(8.dp)
                                 Text(
                                     text = stringResource(R.string.select_vault_type_fast),
-                                    color = Theme.v2.colors.text.primary,
+                                    color = Theme.colors.text.primary,
                                     style = Theme.brockmann.body.s.medium,
                                 )
                             }
@@ -218,8 +218,8 @@ private fun ChooseVaultScreen(
                                 text = stringResource(R.string.select_vault_type_secure),
                                 icon = painterResource(R.drawable.ic_shield),
                                 tint = if (isSecureTypeSelected)
-                                    Theme.v2.colors.alerts.success
-                                else Theme.v2.colors.text.primary,
+                                    Theme.colors.alerts.success
+                                else Theme.colors.text.primary,
                                 contentDescription = stringResource(R.string.select_vault_type_secure),
                                 modifier = Modifier
                                     .weight(1f)
@@ -235,7 +235,7 @@ private fun ChooseVaultScreen(
                 }
 
                 UiSpacer(16.dp)
-                val borderColor = Theme.v2.colors.border.normal
+                val borderColor = Theme.colors.border.normal
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -245,22 +245,22 @@ private fun ChooseVaultScreen(
                             color = borderColor,
                             shape = RoundedCornerShape(15)
                         )
-                        .background(Theme.v2.colors.backgrounds.tertiary_2),
+                        .background(Theme.colors.backgrounds.tertiary_2),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                            withStyle(style = SpanStyle(brush = Theme.colors.gradients.primary)) {
                                 append(state.vaultType.title.asString())
                             }
                         },
-                        color = Theme.v2.colors.alerts.success,
+                        color = Theme.colors.alerts.success,
                         style = Theme.brockmann.headings.subtitle,
                         modifier = Modifier
-                            .background(Theme.v2.colors.backgrounds.tertiary_2)
+                            .background(Theme.colors.backgrounds.tertiary_2)
                             .fillMaxWidth()
                             .background(
-                                color = Theme.v2.colors.backgrounds.primary
+                                color = Theme.colors.backgrounds.primary
                             )
                             .drawBehind {
                                 drawLine(
@@ -289,21 +289,21 @@ private fun ChooseVaultScreen(
                     TextAndIcon(
                         text = state.vaultType.desc1.asString(),
                         icon = painterResource(R.drawable.check),
-                        tint = Theme.v2.colors.alerts.success,
+                        tint = Theme.colors.alerts.success,
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
                     )
                     TextAndIcon(
                         text = state.vaultType.desc2.asString(),
                         icon = painterResource(R.drawable.check),
-                        tint = Theme.v2.colors.alerts.success,
+                        tint = Theme.colors.alerts.success,
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
                     )
                     TextAndIcon(
                         text = state.vaultType.desc3.asString(),
                         icon = painterResource(R.drawable.check),
-                        tint = Theme.v2.colors.alerts.success,
+                        tint = Theme.colors.alerts.success,
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
                     )
@@ -369,7 +369,7 @@ private fun TextAndIcon(
         UiSpacer(8.dp)
         Text(
             text = text,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.body.s.medium,
         )
     }

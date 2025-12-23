@@ -42,7 +42,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.ReferralUiState
 import com.vultisig.wallet.ui.models.referral.ReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -94,7 +94,7 @@ private fun ReferralScreen(
     clipboardData: MutableState<String?>,
     referralState: TextFieldState,
 ) {
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBackPressed,
         title = stringResource(R.string.referral_screen_title),
     ) {
@@ -123,7 +123,7 @@ private fun ReferralScreen(
             StyledText(
                 parts = listOf(
                     StyledTextPart(stringResource(R.string.referral_save)),
-                    StyledTextPart("10%", Theme.v2.colors.primary.accent4),
+                    StyledTextPart("10%", Theme.colors.primary.accent4),
                     StyledTextPart(stringResource(R.string.referral_add_referral))
                 ),
                 fontSize = 16.sp,
@@ -171,27 +171,27 @@ private fun ReferralScreen(
                 ) {
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = Theme.v2.colors.border.light,
+                        color = Theme.colors.border.light,
                     )
 
                     Text(
                         text = stringResource(R.string.referral_or),
                         modifier = Modifier.padding(16.dp),
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                         style = Theme.brockmann.supplementary.caption,
                         textAlign = TextAlign.Center,
                     )
 
                     HorizontalDivider(
                         modifier = Modifier.weight(1f),
-                        color = Theme.v2.colors.border.light,
+                        color = Theme.colors.border.light,
                     )
                 }
 
                 StyledText(
                     parts = listOf(
                         StyledTextPart(stringResource(R.string.referral_create_code_and_earn)),
-                        StyledTextPart("20%", Theme.v2.colors.primary.accent4),
+                        StyledTextPart("20%", Theme.colors.primary.accent4),
                         StyledTextPart(stringResource(R.string.referral_on_referred_swaps))
                     ),
                     fontSize = 14.sp,

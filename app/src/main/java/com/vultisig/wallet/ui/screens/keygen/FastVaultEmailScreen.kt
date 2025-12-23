@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailState
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -57,7 +57,7 @@ private fun FastVaultEmailScreen(
     onBackClick: () -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = null,
         onBackClick = onBackClick,
         bottomBar = {
@@ -86,13 +86,13 @@ private fun FastVaultEmailScreen(
             Text(
                 text = stringResource(R.string.enter_email_screen_title),
                 style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
             UiSpacer(16.dp)
             Text(
                 text = stringResource(R.string.enter_email_screen_desc),
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.extraLight
+                color = Theme.colors.text.extraLight
             )
             VsTextInputField(
                 textFieldState = textFieldState,

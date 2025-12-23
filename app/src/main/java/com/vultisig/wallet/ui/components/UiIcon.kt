@@ -15,7 +15,7 @@ internal fun UiIcon(
     @DrawableRes drawableResId: Int,
     size: Dp,
     modifier: Modifier = Modifier,
-    tint: Color = Theme.v2.colors.neutrals.n100,
+    tint: Color = Theme.colors.neutrals.n100,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
 ) = Icon(

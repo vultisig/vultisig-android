@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.SelectionItem
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.SecretUiModel
 import com.vultisig.wallet.ui.models.SecretViewModel
 
@@ -39,7 +39,7 @@ private fun SecretScreen(
     onToggleDkls: (Boolean) -> Unit
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.vault_settings_title),
         onBackClick = onBackClick,
     ) {

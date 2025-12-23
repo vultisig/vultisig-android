@@ -7,9 +7,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.core.graphics.toColorInt
-import com.vultisig.wallet.ui.theme.v2.LocalV2Theme
-import com.vultisig.wallet.ui.theme.v2.V2
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 
 @Composable
 fun OnBoardingComposeTheme(
@@ -38,9 +36,7 @@ fun OnBoardingComposeTheme(
 
 internal object Theme {
 
-    val v2: V2
-    @Composable
-    get() = LocalV2Theme.current
+    val colors: Colors = Colors()
 
     val menlo: VultisigTypography
         @Composable
@@ -60,4 +56,4 @@ internal object Theme {
 
 internal val Theme.cursorBrush: Brush
     @Composable
-    get() = SolidColor(v2.colors.neutrals.n100)
+    get() = SolidColor(colors.neutrals.n100)

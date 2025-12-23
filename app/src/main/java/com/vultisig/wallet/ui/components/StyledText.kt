@@ -18,7 +18,7 @@ fun StyledText(
     fontFamily: androidx.compose.ui.text.font.FontFamily?,
     fontWeight: FontWeight?,
     textAlign: TextAlign = TextAlign.Center,
-    defaultColor: Color = Theme.v2.colors.text.primary
+    defaultColor: Color = Theme.colors.text.primary
 ) {
     Text(
         text = buildAnnotatedString {

@@ -38,7 +38,7 @@ internal fun SettingsItem(
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary
+            containerColor = Theme.colors.backgrounds.secondary
         )
     ) {
         Row(
@@ -53,19 +53,19 @@ internal fun SettingsItem(
                     .size(20.dp),
                 painter = painterResource(id = icon),
                 contentDescription = stringResource(R.string.token_logo),
-                tint = colorTint ?: Theme.v2.colors.neutrals.n100,
+                tint = colorTint ?: Theme.colors.neutrals.n100,
             )
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = title,
-                    color = colorTint ?: Theme.v2.colors.neutrals.n100,
+                    color = colorTint ?: Theme.colors.neutrals.n100,
                     style = Theme.montserrat.body2,
                 )
                 Text(
                     text = subtitle,
-                    color = colorTint ?: Theme.v2.colors.neutrals.n300,
+                    color = colorTint ?: Theme.colors.neutrals.n300,
                     style = Theme.menlo.overline2,
                 )
             }
@@ -75,7 +75,7 @@ internal fun SettingsItem(
             Icon(
                 painter = painterResource(id = R.drawable.ic_small_caret_right),
                 contentDescription = null,
-                tint = colorTint ?: Theme.v2.colors.neutrals.n100,
+                tint = colorTint ?: Theme.colors.neutrals.n100,
             )
         }
     }

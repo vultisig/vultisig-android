@@ -33,7 +33,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -55,7 +55,7 @@ internal fun OnboardingScreen(
     if (showPreview) {
         Box(
             modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.primary)
+                .background(Theme.colors.backgrounds.primary)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
@@ -69,11 +69,11 @@ internal fun OnboardingScreen(
                     listTextItems = listOf(
                         PartiallyGradientTextItem(
                             resId = R.string.onboarding_intro_preview_part_1,
-                            coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                            coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                         ),
                         PartiallyGradientTextItem(
                             resId = R.string.onboarding_intro_preview_part_2,
-                            coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                            coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                         ),
                     ),
                     style = Theme.brockmann.headings.title1,
@@ -97,7 +97,7 @@ private fun OnboardingScreen(
     onSkipClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         applyDefaultPaddings = true,
         applyScaffoldPaddings = true,
         topBar = {
@@ -121,7 +121,7 @@ private fun OnboardingScreen(
                             modifier = Modifier.align(Alignment.CenterVertically),
                             text = stringResource(R.string.onboarding_intro_back),
                             style = Theme.brockmann.headings.title3,
-                            color = Theme.v2.colors.text.primary,
+                            color = Theme.colors.text.primary,
                             textAlign = TextAlign.Start,
                         )
                     }
@@ -132,7 +132,7 @@ private fun OnboardingScreen(
                     Text(
                         text = stringResource(R.string.welcome_screen_skip),
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.extraLight,
+                        color = Theme.colors.text.extraLight,
                         modifier = Modifier
                             .clickable(onClick = onSkipClick)
                             .testTag("OnboardingScreen.skip")
@@ -164,19 +164,19 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_3,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.light),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.light),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_4,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
             }
@@ -185,19 +185,19 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_3,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_4,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
 
@@ -207,15 +207,15 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_3_part_1,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_3_part_2,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_3_part_3,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
 
@@ -225,11 +225,11 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_4_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_4_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
             }
@@ -238,15 +238,15 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_5_part_1,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_5_part_2,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_5_part_3,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
             }
@@ -255,11 +255,11 @@ private fun Description(
                 listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_6_part_1,
-                        coloring = GradientColoring.VsColor(Theme.v2.colors.text.primary),
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_6_part_2,
-                        coloring = GradientColoring.Gradient(Theme.v2.colors.gradients.primary),
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
                 )
             }

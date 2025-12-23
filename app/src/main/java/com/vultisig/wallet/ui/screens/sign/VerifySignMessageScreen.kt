@@ -172,7 +172,7 @@ private fun SignMessageBox(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption
         )
 
@@ -182,18 +182,18 @@ private fun SignMessageBox(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = Theme.v2.colors.border.light,
+                    color = Theme.colors.border.light,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .background(
-                    Theme.v2.colors.backgrounds.disabled,
+                    Theme.colors.backgrounds.disabled,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .padding(
                     horizontal = 24.dp,
                     vertical = 20.dp,
                 ),
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.body.s.medium
         )
     }

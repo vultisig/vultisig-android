@@ -56,12 +56,12 @@ import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 data class ResourceState(
@@ -272,7 +272,7 @@ fun BandwidthEnergyContent(
     var expandByItem by remember { mutableStateOf<Int?>(null) }
     Scaffold(
         modifier = Modifier.padding(24.dp),
-        containerColor = Theme.v2.colors.backgrounds.primary,
+        containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -380,9 +380,9 @@ fun BandwidthEnergyItem(
     val rotation = animateFloatAsState(
         targetValue = if (isExpanded) 90f else 0f
     )
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered()
+    VsContainer(
+        type = VsContainerType.SECONDARY,
+        borderType = VsContainerBorderType.Bordered()
     ) {
         LazyColumn(
             contentPadding = PaddingValues(

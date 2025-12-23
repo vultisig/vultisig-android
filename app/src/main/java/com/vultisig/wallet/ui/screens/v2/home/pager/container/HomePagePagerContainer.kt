@@ -7,12 +7,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -20,14 +20,14 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun HomePagePagerContainer(
     modifier: Modifier = Modifier,
     onCloseClick: () -> Unit = {},
-    containerType: ContainerType = ContainerType.SECONDARY,
+    vsContainerType: VsContainerType = VsContainerType.SECONDARY,
     content: @Composable () -> Unit,
 ) {
-    V2Container(
+    VsContainer(
         modifier = modifier
             .fillMaxWidth(),
-        type = containerType,
-        borderType = ContainerBorderType.Bordered()
+        type = vsContainerType,
+        borderType = VsContainerBorderType.Bordered()
     ) {
 
         Box(
@@ -39,7 +39,7 @@ internal fun HomePagePagerContainer(
                 icon = R.drawable.glass,
                 size = VsCircleButtonSize.Custom(size = 40.dp),
                 type = VsCircleButtonType.Custom(
-                    color = Theme.v2.colors.neutrals.n100.copy(alpha = 0.2f)
+                    color = Theme.colors.neutrals.n100.copy(alpha = 0.2f)
                 ),
                 modifier = Modifier
                     .align(alignment = Alignment.TopEnd)

@@ -82,7 +82,7 @@ internal fun SelectionCard(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.menlo.body1,
             modifier = Modifier.weight(1f),
         )

@@ -23,7 +23,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.DottyBottomSheet
 import com.vultisig.wallet.ui.models.TokenAddressQrViewModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.QrContainer
 import com.vultisig.wallet.ui.theme.Theme
@@ -108,7 +108,7 @@ private fun TokenAddressQrContent(
         Text(
             text = chainAddress,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             modifier = Modifier.width(232.dp),
             textAlign = TextAlign.Center
         )

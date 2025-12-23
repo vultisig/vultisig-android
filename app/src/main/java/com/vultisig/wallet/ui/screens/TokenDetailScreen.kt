@@ -19,15 +19,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
-import com.vultisig.wallet.ui.components.v2.buttons.DesignType
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
+import com.vultisig.wallet.ui.components.bottomsheet.DottyBottomSheet
+import com.vultisig.wallet.ui.components.buttons.DesignType
+import com.vultisig.wallet.ui.components.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.TopShineContainer
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.texts.LoadableValue
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TokenDetailViewModel
@@ -131,7 +131,7 @@ private fun TokenDetailsContent(
             Text(
                 text = uiModel.token.name,
                 style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
             )
         }
 
@@ -143,7 +143,7 @@ private fun TokenDetailsContent(
             value = uiModel.token.fiatBalance,
             isVisible = uiModel.isBalanceVisible,
             style = Theme.satoshi.price.title1,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         UiSpacer(
@@ -154,7 +154,7 @@ private fun TokenDetailsContent(
             value = uiModel.token.balance,
             isVisible = uiModel.isBalanceVisible,
             style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
         )
 
         UiSpacer(
@@ -204,7 +204,7 @@ private fun TokenDetailsContent(
         )
 
         TopShineContainer(
-            backgroundColor = Theme.v2.colors.backgrounds.primary
+            backgroundColor = Theme.colors.backgrounds.primary
         ) {
             Column {
                 TokenMeta(
@@ -238,10 +238,10 @@ private fun TokenMeta(
                 all = 16.dp
             )
     ) {
-        V2Container {
+        VsContainer {
             Text(
                 text = key,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.body.s.medium,
                 modifier = Modifier
                     .padding(all = 4.dp)
@@ -250,12 +250,12 @@ private fun TokenMeta(
         UiSpacer(
             weight = 1f
         )
-        V2Container(
-            type = ContainerType.TERTIARY
+        VsContainer(
+            type = VsContainerType.TERTIARY
         ) {
             LoadableValue(
                 value = value,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.satoshi.price.bodyS,
                 isVisible = isVisible,
                 modifier = Modifier

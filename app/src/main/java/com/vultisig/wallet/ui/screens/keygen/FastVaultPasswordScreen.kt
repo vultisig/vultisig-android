@@ -41,8 +41,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.utils.roundToPx
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.util.roundToPx
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
@@ -86,7 +86,7 @@ internal fun FastVaultPasswordScreen(
     var hintBoxOffset by remember { mutableIntStateOf(0) }
     val defaultVerticalPadding = 12.dp.roundToPx()
     val topbarHeight = 64.dp.roundToPx()
-    V2Scaffold(
+    VsScaffold(
         title = null,
         onBackClick = onBackClick,
         content = {
@@ -94,7 +94,7 @@ internal fun FastVaultPasswordScreen(
                 Text(
                     text = title,
                     style = Theme.brockmann.headings.largeTitle,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                 )
                 UiSpacer(16.dp)
 
@@ -199,8 +199,8 @@ private fun WarningCard(
     modifier: Modifier,
     onShowMoreInfo: () -> Unit,
 ) {
-    val warningColor = Theme.v2.colors.alerts.warning
-    val lightWarningColor = Theme.v2.colors.alerts.warning.copy(alpha = 0.25f)
+    val warningColor = Theme.colors.alerts.warning
+    val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

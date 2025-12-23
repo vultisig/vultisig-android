@@ -49,7 +49,7 @@ internal fun ChainSelector(
         Text(
             text = chain.raw,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
         )
 
         Image(
@@ -110,7 +110,7 @@ internal fun ChainSelector(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
         )
 
         ChainSelector(

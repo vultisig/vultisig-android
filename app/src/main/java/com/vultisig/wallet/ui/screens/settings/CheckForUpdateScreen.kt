@@ -25,7 +25,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateUiModel
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
@@ -55,7 +55,7 @@ internal fun CheckForUpdateScreen(
     onUpdateClick: () -> Unit = {},
     onClickSecret: () -> Unit = {},
 ) {
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBackClick,
         title = stringResource(R.string.check_updates_title),
     ) {
@@ -84,7 +84,7 @@ internal fun CheckForUpdateScreen(
                     else
                         stringResource(R.string.app_up_to_date),
                 style = Theme.brockmann.button.medium.large,
-                color = Theme.v2.colors.neutrals.n50
+                color = Theme.colors.neutrals.n50
             )
 
             UiSpacer(

@@ -14,7 +14,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 fun UiGradientDivider(
     initialColor: Color,
-    borderColor: Color = Theme.v2.colors.border.light,
+    borderColor: Color = Theme.colors.border.light,
     endColor: Color,
 ) {
     Box(

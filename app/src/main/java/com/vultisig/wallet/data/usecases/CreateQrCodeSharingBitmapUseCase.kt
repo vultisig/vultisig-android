@@ -7,7 +7,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.toArgb
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 

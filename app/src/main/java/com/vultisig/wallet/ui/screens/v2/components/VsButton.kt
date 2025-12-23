@@ -35,7 +35,7 @@ fun VsButton(
             Text(
                 text = label,
                 style = Theme.brockmann.button.semibold.semibold,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
             )
         }
     }
@@ -44,8 +44,8 @@ fun VsButton(
 @Composable
 fun VsButton(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Theme.v2.colors.buttons.secondary,
-    borderColor: Color = Theme.v2.colors.border.primaryAccent4,
+    backgroundColor: Color = Theme.colors.buttons.secondary,
+    borderColor: Color = Theme.colors.border.primaryAccent4,
     borderWidth: Dp = 1.dp,
     shape: Shape = RoundedCornerShape(percent = 100),
     contentPadding: PaddingValues = PaddingValues(
@@ -82,9 +82,9 @@ fun VsButton(
     modifier: Modifier = Modifier,
     label: String,
     textStyle: TextStyle = Theme.brockmann.button.semibold.semibold,
-    textColor: Color = Theme.v2.colors.text.primary,
-    backgroundColor: Color = Theme.v2.colors.buttons.secondary,
-    borderColor: Color = Theme.v2.colors.border.primaryAccent4,
+    textColor: Color = Theme.colors.text.primary,
+    backgroundColor: Color = Theme.colors.buttons.secondary,
+    borderColor: Color = Theme.colors.border.primaryAccent4,
     borderWidth: Dp = 1.dp,
     shape: Shape = RoundedCornerShape(percent = 100),
     contentPadding: PaddingValues = PaddingValues(

@@ -20,7 +20,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.VaultRenameViewModel
 import com.vultisig.wallet.ui.utils.asString
 
@@ -56,7 +56,7 @@ private fun VaultRenameScreen(
     isLoading: Boolean,
     errorText: String?,
 ) {
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(id = R.string.rename_vault_screen_rename_vault),
         onBackClick = onBackClick
     ) {

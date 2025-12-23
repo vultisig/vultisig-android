@@ -31,12 +31,12 @@ fun UpgradeBanner(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .background(
-                color = Theme.v2.colors.backgrounds.success,
+                color = Theme.colors.backgrounds.success,
                 shape = shape,
             )
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.alerts.success,
+                color = Theme.colors.alerts.success,
                 shape = shape,
             )
             .padding(all = 12.dp),
@@ -51,7 +51,7 @@ fun UpgradeBanner(
         Text(
             text = stringResource(R.string.upgrade_banner_title),
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.alerts.success,
+            color = Theme.colors.alerts.success,
             textAlign = TextAlign.Center,
         )
     }

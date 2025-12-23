@@ -24,7 +24,7 @@ internal fun UiBarContainer(
     val startIcon = if (showStartIcon) R.drawable.ic_caret_left else null
     Column(
         modifier = Modifier
-            .background(Theme.v2.colors.backgrounds.primary)
+            .background(Theme.colors.backgrounds.primary)
             .fillMaxSize(),
     ) {
         TopBar(
