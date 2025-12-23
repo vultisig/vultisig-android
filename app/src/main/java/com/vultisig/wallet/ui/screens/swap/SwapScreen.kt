@@ -2,8 +2,10 @@ package com.vultisig.wallet.ui.screens.swap
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,8 +22,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
@@ -177,6 +182,14 @@ internal fun SwapScreen(
     val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
 
     val isShowingKeyboard by rememberKeyboardVisibilityAsState()
+
+    var isFeeDetailsExpanded by remember { mutableStateOf(false) }
+
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isFeeDetailsExpanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "caretRotation"
+    )
 
     V2Scaffold(
         title = stringResource(R.string.chain_account_view_swap),
@@ -381,51 +394,104 @@ internal fun SwapScreen(
                         )
 
                         FormDetails2(
-                            title = stringResource(R.string.swap_form_estimated_fees_title),
-                            value = state.fee,
-                            placeholder = if (state.isLoading) {
-                                { UiPlaceholderLoader(placeHolderModifier) }
-                            } else null
-                        )
-
-                        FormDetails2(
-                            modifier = Modifier.fillMaxWidth(),
-                            title = buildAnnotatedString {
-                                append(stringResource(R.string.swap_form_gas_title))
-                            },
-                            value = buildAnnotatedString {
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = Theme.v2.colors.neutrals.n100,
-                                    )
-                                ) {
-                                    append(state.networkFee)
-                                }
-                                append(" ")
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = Theme.v2.colors.neutrals.n400,
-                                    )
-                                ) {
-                                    append(
-                                        if (state.networkFeeFiat.isNotEmpty())
-                                            "(~${state.networkFeeFiat})"
-                                        else ""
-                                    )
-                                }
-                            },
-                            placeholder = if (state.isLoading) {
-                                { UiPlaceholderLoader(placeHolderModifier) }
-                            } else null
-                        )
-
-                        FormDetails2(
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    isFeeDetailsExpanded = !isFeeDetailsExpanded
+                                }),
                             title = stringResource(R.string.swap_form_total_fees_title),
-                            value = state.totalFee,
-                            placeholder = if (state.isLoading) {
-                                { UiPlaceholderLoader(placeHolderModifier) }
-                            } else null
+                            valueComposable = if (state.isLoading) {
+                                {
+                                    UiPlaceholderLoader(placeHolderModifier)
+                                }
+                            } else {
+                                {
+                                    Row {
+                                        Text(
+                                            text = state.totalFee,
+                                            color = Theme.v2.colors.text.light,
+                                            style = Theme.brockmann.supplementary.caption,
+                                            textAlign = TextAlign.End,
+                                        )
+
+                                        UiSpacer(size = 8.dp)
+                                        UiIcon(
+                                            drawableResId = R.drawable.ic_caret_down,
+                                            tint = Theme.v2.colors.text.primary,
+                                            size = 16.dp,
+                                            modifier = Modifier
+                                                .rotate(rotationAngle)
+                                        )
+                                    }
+                                }
+                            },
                         )
+
+                        AnimatedVisibility(visible = isFeeDetailsExpanded && state.isLoading.not()) {
+                            Row(
+                                modifier = Modifier
+                                    .height(IntrinsicSize.Max)
+                            ) {
+
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.5.dp)
+                                        .fillMaxHeight()
+                                        .background(
+                                            color = Theme.v2.colors.border.primaryAccent4,
+                                            shape = CircleShape
+                                        )
+                                )
+
+                                UiSpacer(
+                                    size = 8.dp
+                                )
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+
+                                    FormDetails2(
+                                        title = stringResource(R.string.swap_form_estimated_fees_title),
+                                        value = state.fee,
+                                        placeholder = if (state.isLoading) {
+                                            { UiPlaceholderLoader(placeHolderModifier) }
+                                        } else null
+                                    )
+
+                                    FormDetails2(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        title = buildAnnotatedString {
+                                            append(stringResource(R.string.swap_form_gas_title))
+                                        },
+                                        value = buildAnnotatedString {
+                                            withStyle(
+                                                style = SpanStyle(
+                                                    color = Theme.v2.colors.neutrals.n100,
+                                                )
+                                            ) {
+                                                append(state.networkFee)
+                                            }
+                                            append(" ")
+                                            withStyle(
+                                                style = SpanStyle(
+                                                    color = Theme.v2.colors.neutrals.n400,
+                                                )
+                                            ) {
+                                                append(
+                                                    if (state.networkFeeFiat.isNotEmpty())
+                                                        "(~${state.networkFeeFiat})"
+                                                    else ""
+                                                )
+                                            }
+                                        },
+                                        placeholder = if (state.isLoading) {
+                                            { UiPlaceholderLoader(placeHolderModifier) }
+                                        } else null
+                                    )
+                                }
+                            }
+                        }
+
                     }
                 }
 
