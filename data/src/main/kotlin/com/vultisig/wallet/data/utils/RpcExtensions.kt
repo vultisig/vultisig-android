@@ -8,8 +8,12 @@ import io.ktor.serialization.ContentConvertException
 import io.ktor.serialization.JsonConvertException
 import io.ktor.serialization.WebsocketContentConvertException
 import io.ktor.serialization.WebsocketDeserializeException
-import org.json.JSONArray
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "message"): T {
@@ -30,57 +34,61 @@ suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "mess
     }
 }
 
-suspend fun extractError(response: HttpResponse, errorKey: String): String {
+
+suspend fun extractError(
+    response: HttpResponse,
+    errorKey: String
+): String {
+    val body = response.bodyAsText()
+
     return try {
-        val responseBody = response.bodyAsText()
-        val root: Any? = try {
-            JSONObject(responseBody)
-        } catch (e: Exception) {
-            try {
-                JSONArray(responseBody)
-            } catch (e2: Exception) {
-                null
-            }
-        }
+        val element = Json.parseToJsonElement(body)
 
-        if (root == null) return responseBody
-
-        fun findValue(node: Any?): String? {
-            when (node) {
-                is JSONObject -> {
-                    if (node.has(errorKey)) {
-                        return node.opt(errorKey)?.toString()
-                    }
-                    val keys = node.keys()
-                    while (keys.hasNext()) {
-                        val k = keys.next()
-                        val found = findValue(node.opt(k))
-                        if (found != null) return found
-                    }
-                }
-                is JSONArray -> {
-                    for (i in 0 until node.length()) {
-                        val found = findValue(node.opt(i))
-                        if (found != null) return found
-                    }
-                }
-            }
-            return null
-        }
-
-        findValue(root) ?: if (root is JSONObject) root.optString(errorKey, responseBody) else responseBody
+        findValueRecursively(element, errorKey)
+            ?: body
     } catch (t: Throwable) {
         Timber.e(t, "Failed to extract error from response")
-        response.bodyAsText()
+        body
     }
 }
+
+
+
+private fun findValueRecursively(
+    element: JsonElement,
+    key: String
+): String? {
+    return when (element) {
+
+        is JsonObject -> {
+            element[key]
+                ?.takeIf { it is JsonPrimitive && it.isString }
+                ?.jsonPrimitive
+                ?.content
+                ?: element.values
+                    .asSequence()
+                    .mapNotNull { child ->
+                        findValueRecursively(child, key)
+                    }
+                    .firstOrNull()
+        }
+
+        is JsonArray -> {
+            element.asSequence()
+                .mapNotNull { child ->
+                    findValueRecursively(child, key)
+                }
+                .firstOrNull()
+        }
+
+        else -> null
+    }
+}
+
+
 
 class NetworkException(
     val httpStatusCode: Int,
     override val message: String,
     cause: Throwable? = null
-) : RuntimeException(message, cause){
-    companion object {
-        private const val serialVersionUID: Long = 1L
-    }
-}
+) : RuntimeException(message, cause)
