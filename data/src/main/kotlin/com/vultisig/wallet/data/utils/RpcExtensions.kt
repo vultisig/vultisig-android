@@ -8,7 +8,12 @@ import io.ktor.serialization.ContentConvertException
 import io.ktor.serialization.JsonConvertException
 import io.ktor.serialization.WebsocketContentConvertException
 import io.ktor.serialization.WebsocketDeserializeException
-import org.json.JSONObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "message"): T {
@@ -29,17 +34,58 @@ suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "mess
     }
 }
 
-// TODO: Enhance and check for key recursively
-suspend fun extractError(response: HttpResponse, errorKey: String): String {
+
+suspend fun extractError(
+    response: HttpResponse,
+    errorKey: String
+): String {
+    val body = response.bodyAsText()
+
     return try {
-        val responseBody = response.bodyAsText()
-        val json = JSONObject(responseBody)
-        return json.optString(errorKey, responseBody)
+        val element = Json.parseToJsonElement(body)
+
+        findValueRecursively(element, errorKey)
+            ?: body
     } catch (t: Throwable) {
         Timber.e(t, "Failed to extract error from response")
-        response.bodyAsText()
+        body
     }
 }
+
+
+
+private fun findValueRecursively(
+    element: JsonElement,
+    key: String
+): String? {
+    return when (element) {
+
+        is JsonObject -> {
+            element[key]
+                ?.takeIf { it is JsonPrimitive && it.isString }
+                ?.jsonPrimitive
+                ?.content
+                ?: element.values
+                    .asSequence()
+                    .mapNotNull { child ->
+                        findValueRecursively(child, key)
+                    }
+                    .firstOrNull()
+        }
+
+        is JsonArray -> {
+            element.asSequence()
+                .mapNotNull { child ->
+                    findValueRecursively(child, key)
+                }
+                .firstOrNull()
+        }
+
+        else -> null
+    }
+}
+
+
 
 class NetworkException(
     val httpStatusCode: Int,
