@@ -221,8 +221,9 @@ class RpcExtensionExtractErrorTest {
             )
         }
 
-        val client = HttpClient(engine)
-        return client.get("https://test.com")
+        return HttpClient(engine).use { client ->
+            client.get("https://test.com")
+        }
     }
 
 
