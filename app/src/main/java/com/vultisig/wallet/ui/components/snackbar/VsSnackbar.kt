@@ -22,7 +22,7 @@ import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
 import com.vultisig.wallet.ui.components.containers.VsContainerType
 import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
 import com.vultisig.wallet.ui.components.containers.VsContainer
-import com.vultisig.wallet.ui.components.loader.V2ProgressiveLoading
+import com.vultisig.wallet.ui.components.loader.VsProgressiveLoading
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -68,7 +68,7 @@ internal fun VsSnackBar(
                 verticalArrangement = Arrangement.Center
             ) {
 
-                V2ProgressiveLoading(
+                VsProgressiveLoading(
                     progress = snackbarState.progress,
                 )
 

@@ -23,7 +23,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun V2ProgressiveLoading(
+internal fun VsProgressiveLoading(
     progress: Float,
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
