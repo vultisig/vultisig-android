@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.math.BigInteger
+import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -142,6 +143,7 @@ internal fun SendTxOverviewScreen(
                 if (tx.token.value.isNotEmpty() && try {
                         tx.token.value.toBigInteger() > BigInteger.ZERO
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         false
                     }
                 ) {

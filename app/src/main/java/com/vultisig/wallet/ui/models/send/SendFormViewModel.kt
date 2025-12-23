@@ -123,6 +123,7 @@ import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.flatMap
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 
 
@@ -969,6 +970,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1225,6 +1227,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1356,6 +1359,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1478,6 +1482,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1583,6 +1588,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1710,6 +1716,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1844,6 +1851,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -1984,6 +1992,7 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
@@ -2487,6 +2496,7 @@ internal class SendFormViewModel @Inject constructor(
                     planFee.value = plan.fee
                     planBtc.value = plan
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.e(e)
                 }
             }.collect()
@@ -2585,6 +2595,7 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.e(e)
                 }
             }.collect()

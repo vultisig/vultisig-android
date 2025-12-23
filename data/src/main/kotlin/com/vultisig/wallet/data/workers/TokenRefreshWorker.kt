@@ -13,6 +13,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltWorker
 internal class TokenRefreshWorker @AssistedInject constructor(
@@ -48,6 +49,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                     .getEnabledTokens(vaultId = vault.id)
                     .first()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.e(e)
                 return Result.failure()
             }
@@ -64,6 +66,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                             addRefreshTokenToVault(enabledCoinIds, refreshToken, vault)
                         }
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.e(e)
                 }
 

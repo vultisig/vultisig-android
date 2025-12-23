@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface CosmosApi {
     suspend fun getBalance(address: String): List<CosmosBalance>
@@ -111,6 +112,7 @@ internal class CosmosApiImp(
             }
             throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }

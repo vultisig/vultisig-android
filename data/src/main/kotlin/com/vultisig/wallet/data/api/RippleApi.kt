@@ -18,6 +18,7 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 interface RippleApi {
@@ -102,6 +103,7 @@ internal class RippleApiImp @Inject constructor(
 
             maxOf(balance - accountReservedBalance, BigInteger.ZERO)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e("Error in getBalance: ${e.message}")
             BigInteger.ZERO
         }

@@ -33,6 +33,7 @@ import timber.log.Timber
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -180,6 +181,7 @@ class EvmApiImp(
             try {
                 EthereumFunction.balanceErc20Decoder(it)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
                 BigInteger.ZERO
             }
@@ -409,6 +411,7 @@ class EvmApiImp(
                 )
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.d("find custom token error: ${e.message}")
             emptyList()
         }
