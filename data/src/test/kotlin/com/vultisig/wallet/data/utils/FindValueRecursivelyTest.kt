@@ -21,19 +21,54 @@ class RpcExtensionExtractErrorTest {
             """{ "error": "Invalid token" }"""
         )
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("Invalid token", result)
+        assertEquals(
+            "Invalid token",
+            result
+        )
     }
 
     @Test
-    fun returnsfullresponsebodywhenjsondoesnotcontainerrorKey() = runBlocking {
+    fun returnsErrorValueFromTopLevelJsonArray() = runBlocking {
+        val body = """
+        [
+          { "code": 401 },
+          { "error": "Authentication failed" }
+        ]
+    """.trimIndent()
+
+        val response = mockResponse(body)
+
+        val result = extractError(
+            response,
+            "error"
+        )
+
+        assertEquals(
+            "Authentication failed",
+            result
+        )
+    }
+
+
+    @Test
+    fun returnsFullResponseBodyWhenJsonDoesNotContainErrorKey() = runBlocking {
         val body = """{ "message": "Something went wrong" }"""
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals(body, result)
+        assertEquals(
+            body,
+            result
+        )
     }
 
     @Test
@@ -41,9 +76,15 @@ class RpcExtensionExtractErrorTest {
         val body = "Internal Server Error"
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals(body, result)
+        assertEquals(
+            body,
+            result
+        )
     }
 
     @Test
@@ -51,9 +92,15 @@ class RpcExtensionExtractErrorTest {
         val body = """{ "error": "Invalid token" """
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals(body, result)
+        assertEquals(
+            body,
+            result
+        )
     }
 
     @Test
@@ -62,9 +109,15 @@ class RpcExtensionExtractErrorTest {
             """{ "error": "" }"""
         )
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("", result)
+        assertEquals(
+            "",
+            result
+        )
     }
 
     @Test
@@ -80,9 +133,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("Invalid token", result)
+        assertEquals(
+            "Invalid token",
+            result
+        )
     }
 
 
@@ -102,9 +161,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("User not authorized", result)
+        assertEquals(
+            "User not authorized",
+            result
+        )
     }
 
 
@@ -121,9 +186,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("Top level error", result)
+        assertEquals(
+            "Top level error",
+            result
+        )
     }
 
 
@@ -140,9 +211,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("Token expired", result)
+        assertEquals(
+            "Token expired",
+            result
+        )
     }
 
 
@@ -161,9 +238,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("First error", result)
+        assertEquals(
+            "First error",
+            result
+        )
     }
 
 
@@ -178,9 +261,15 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals(body, result)
+        assertEquals(
+            body,
+            result
+        )
     }
 
 
@@ -200,16 +289,22 @@ class RpcExtensionExtractErrorTest {
 
         val response = mockResponse(body)
 
-        val result = extractError(response, "error")
+        val result = extractError(
+            response,
+            "error"
+        )
 
-        assertEquals("Deep array error", result)
+        assertEquals(
+            "Deep array error",
+            result
+        )
     }
 
 
     private suspend fun mockResponse(
         body: String,
         status: HttpStatusCode = HttpStatusCode.BadRequest,
-    ): HttpResponse  {
+    ): HttpResponse {
         val engine = MockEngine {
             respond(
                 content = body,
