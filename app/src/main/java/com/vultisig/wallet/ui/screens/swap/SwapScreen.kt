@@ -5,13 +5,19 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -110,6 +116,7 @@ import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
@@ -451,14 +458,6 @@ internal fun SwapScreen(
                                 ) {
 
                                     FormDetails2(
-                                        title = stringResource(R.string.swap_form_estimated_fees_title),
-                                        value = state.fee,
-                                        placeholder = if (state.isLoading) {
-                                            { UiPlaceholderLoader(placeHolderModifier) }
-                                        } else null
-                                    )
-
-                                    FormDetails2(
                                         modifier = Modifier.fillMaxWidth(),
                                         title = buildAnnotatedString {
                                             append(stringResource(R.string.swap_form_gas_title))
@@ -488,6 +487,73 @@ internal fun SwapScreen(
                                             { UiPlaceholderLoader(placeHolderModifier) }
                                         } else null
                                     )
+
+                                    FormDetails2(
+                                        title = stringResource(R.string.swap_form_estimated_fees_title),
+                                        value = state.fee,
+                                        placeholder = if (state.isLoading) {
+                                            { UiPlaceholderLoader(placeHolderModifier) }
+                                        } else null
+                                    )
+
+                                    if(state.vultBpsDiscount != null) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            VultDiscountTier(
+                                                vultBpsDiscount = state.vultBpsDiscount,
+                                                tierType = state.tierType
+                                            )
+
+                                            Text(
+                                                text = "-${state.vultBpsDiscountFiatValue}",
+                                                color = Theme.v2.colors.text.light,
+                                                style = Theme.brockmann.supplementary.caption,
+                                            )
+                                        }
+                                    }
+
+                                    if(state.referralBpsDiscount != null) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+
+                                            UiIcon(
+                                                drawableResId = R.drawable.referral_code,
+                                                size = 16.dp,
+                                                tint = Theme.v2.colors.border.primaryAccent4,
+                                            )
+                                            UiSpacer(
+                                                size = 4.dp
+                                            )
+
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.swap_form_referral_discount_bps,
+                                                    state.referralBpsDiscount
+                                                ),
+                                                color = Theme.v2.colors.text.extraLight,
+                                                style = Theme.brockmann.supplementary.caption,
+                                            )
+
+                                            UiSpacer(
+                                                weight = 1f
+                                            )
+
+                                            Text(
+                                                text = "-${state.referralBpsDiscountFiatValue}",
+                                                color = Theme.v2.colors.text.light,
+                                                style = Theme.brockmann.supplementary.caption,
+                                            )
+                                        }
+                                    }
+
+
+
                                 }
                             }
                         }
@@ -623,6 +689,57 @@ private fun RowScope.PercentageItem(
     )
 }
 
+@Composable
+private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
+    val (title, logo) = when (tierType) {
+        TierType.BRONZE -> R.string.vault_tier_bronze to R.drawable.type_bronze_tier__size_small
+        TierType.SILVER -> R.string.vault_tier_silver to R.drawable.type_silver_tier__size_small
+        TierType.GOLD -> R.string.vault_tier_gold to R.drawable.type_gold_tier__size_small
+        TierType.PLATINUM -> R.string.vault_tier_platinum to R.drawable.type_platinum_tier__size_small
+        TierType.DIAMOND -> R.string.vault_tier_diamond to R.drawable.type_diamond__size_small
+        TierType.ULTIMATE -> R.string.vault_tier_ultimate to R.drawable.tier_ultimate
+        else -> null to null
+    }
+
+    if (title == null || logo == null)
+        return
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+
+        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+
+        val rotation by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 10000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "rotation"
+        )
+
+        Image(
+            painterResource(logo),
+            contentDescription = null,
+            modifier = Modifier
+                .size(16.dp)
+                .rotate(rotation)
+        )
+
+        Text(
+            text = stringResource(
+                R.string.swap_form_vult_discount_bps,
+                stringResource(title),
+                vultBpsDiscount,
+            ),
+            color = Theme.v2.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
+}
 
 @Composable
 private fun TokenInput(
@@ -969,7 +1086,12 @@ internal fun SwapFormScreenPreview4() {
             isSwapDisabled = false,
             isLoading = false,
             isLoadingNextScreen = false,
-            expiredAt = Clock.System.now()
+            expiredAt = Clock.System.now(),
+            referralBpsDiscount = 10,
+            referralBpsDiscountFiatValue = "0.001 USD",
+            vultBpsDiscount = 30,
+            vultBpsDiscountFiatValue = "0.003 USD",
+            tierType = TierType.GOLD,
         ),
         srcAmountTextFieldState = TextFieldState(),
     )

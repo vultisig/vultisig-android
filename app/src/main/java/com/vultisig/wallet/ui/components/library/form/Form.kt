@@ -317,7 +317,7 @@ internal fun BasicFormTextField(
             focusManager.clearFocus()
         },
         modifier = modifier
-            .onFocusEvent {
+             .onFocusEvent {
                 if (isFocused != it.isFocused ) {
                     isFocused = it.isFocused
                     if (!isFocused) {
@@ -621,8 +621,8 @@ internal fun FormDetails2(
 @Composable
 internal fun FormDetails2(
     title: String,
-    modifier: Modifier = Modifier,
     valueComposable:  @Composable (() -> Unit),
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
