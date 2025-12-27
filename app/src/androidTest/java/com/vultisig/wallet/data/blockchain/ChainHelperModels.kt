@@ -298,13 +298,13 @@ data class SignAmino(
     @SerialName("fee")
     public val fee: Fee? = null,
     @SerialName("msgs")
-    public val msgs: List<Msgs?> = emptyList(),
+    public val msgs: List<Msgs> = emptyList(),
 )
 
 @Serializable
 data class Fee(
     @SerialName("amount")
-    val amount: List<WasmExecuteContractPayload.CosmosCoin?> = emptyList(),
+    val amount: List<WasmExecuteContractPayload.CosmosCoin> = emptyList(),
     @SerialName("gas")
     val gas: String = "",
 )
@@ -314,7 +314,7 @@ data class Msgs(
     @SerialName("type")
     public val type: String = "",
     @SerialName("value")
-    public val value: Value? = null,
+    public val value: Value,
 )
 
 @Serializable
