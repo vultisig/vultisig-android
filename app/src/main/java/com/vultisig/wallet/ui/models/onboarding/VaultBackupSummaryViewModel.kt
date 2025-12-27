@@ -61,4 +61,20 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
         }
     }
 
+    fun chooseChains() {
+        if (state.value.isConsentChecked) {
+            viewModelScope.launch {
+                navigator.route(
+                    route = Route.AddChainAccount(
+                        vaultId = args.vaultId,
+                        routeFromInitVault = true
+                    ),
+                    opts = NavigationOptions(
+                        clearBackStack = true,
+                    ),
+                )
+            }
+        }
+    }
+
 }
