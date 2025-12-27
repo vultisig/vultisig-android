@@ -621,8 +621,8 @@ internal fun FormDetails2(
 @Composable
 internal fun FormDetails2(
     title: String,
-    valueComposable:  @Composable (() -> Unit),
     modifier: Modifier = Modifier,
+    valueComposable:  @Composable (() -> Unit),
 ) {
     Row(
         modifier = modifier
