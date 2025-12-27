@@ -130,6 +130,12 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
+    fun bindConvertBpsToFiatUseCase(
+        impl: ConvertBpsToFiatUseCaseImpl
+    ): ConvertBpsToFiatUseCase
+
+    @Binds
+    @Singleton
     fun bindGenerateAccountQrUseCase(
         impl: GenerateAccountQrUseCaseImpl
     ): GenerateAccountQrUseCase
