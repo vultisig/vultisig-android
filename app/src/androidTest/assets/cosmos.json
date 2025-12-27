@@ -221,7 +221,6 @@
           ]
         }
       },
-      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "03a4d9b5d643f9a08846295e3010b26fe37c12611020853d526b96cdd0e09d12af",
