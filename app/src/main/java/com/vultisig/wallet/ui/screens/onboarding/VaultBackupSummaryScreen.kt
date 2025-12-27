@@ -39,7 +39,7 @@ internal fun VaultBackupSummaryScreen(
 
     BlockBackClick()
 
-    VultBackupSummeryScreen(
+    VultBackupSummaryScreen(
         state = state,
         onNext = model::next,
         onConsentToggleCheck = model::toggleCheck,
@@ -48,7 +48,7 @@ internal fun VaultBackupSummaryScreen(
 }
 
 @Composable
-private fun VultBackupSummeryScreen(
+private fun VultBackupSummaryScreen(
     state: VaultBackupSummaryUiModel,
     onConsentToggleCheck: (Boolean) -> Unit,
     onNext: () -> Unit,
@@ -122,8 +122,8 @@ private fun VultBackupSummeryScreen(
 
 @Preview
 @Composable
-private fun VultBackupSummeryScreenPreview(){
-    VultBackupSummeryScreen(
+private fun VultBackupSummaryScreenPreview(){
+    VultBackupSummaryScreen(
         state = VaultBackupSummaryUiModel(
             vaultType = VaultType.Secure,
             vaultShares = 3,
