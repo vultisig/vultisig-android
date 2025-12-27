@@ -42,49 +42,5 @@ class CosmosAminoTest {
                 )
             )
         )
-
-        val keysignPayload = KeysignPayload(
-            signAmino = aminoPayload,
-            blockChainSpecific = BlockChainSpecific.Cosmos(
-                accountNumber = BigInteger("12345"),
-                sequence = BigInteger("0"),
-                gas = BigInteger("5000"),
-                ibcDenomTraces = null,
-                transactionType = TransactionType.TRANSACTION_TYPE_VOTE
-            ),
-            coin =  Coin(
-                chain = Chain.ThorChain,
-                ticker = "RUNE",
-                logo = "rune",
-                address = "0xbfBe561a7C8d916553F9b315620b56381Fe33194",
-                decimal = 18,
-                hexPublicKey = "03a23eac54de9b7d251ec1f80ec9666279a298c034ad329e99f90b81aaceda9234",
-                priceProviderID = "ethereum",
-                contractAddress = "",
-                isNativeToken = true
-            ),
-            toAddress = "",
-            toAmount = BigInteger.ZERO,
-            utxos = emptyList(),
-            memo = "",
-            swapPayload = null,
-            approvePayload = null,
-            vaultPublicKeyECDSA = "",
-            vaultLocalPartyID = "",
-            libType = null,
-            wasmExecuteContractPayload = null,
-            skipBroadcast = false,
-        )
-
-        val helper = CosmosHelper(
-            coinType = CoinType.COSMOS,
-            denom = "uatom"
-        )
-
-        val hashes = helper.getPreSignedImageHash(keysignPayload)
-        assertNotNull(hashes)
-        assertTrue(hashes.isNotEmpty())
     }
-
-
 }

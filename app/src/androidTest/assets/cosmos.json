@@ -23,6 +23,7 @@
           "transaction_type": 0
         }
       },
+      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
@@ -57,6 +58,7 @@
         }
       },
       "memo": "helloworld",
+      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
@@ -95,6 +97,7 @@
           }
         }
       },
+      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
@@ -129,6 +132,7 @@
         }
       },
       "memo": "switch:thor18altpx2gwt4c4ejr5uzda4kyzsudyn9q56fnng",
+      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
@@ -217,6 +221,7 @@
           ]
         }
       },
+      "sign_data": null,
       "utxo_info": [],
       "SwapPayload": null,
       "vault_public_key_ecdsa": "03a4d9b5d643f9a08846295e3010b26fe37c12611020853d526b96cdd0e09d12af",
@@ -226,7 +231,6 @@
       "235ed1789c6acd39f020c4b4ef80565bb154d97fb52fc8e76d3fa0253762c653"
     ]
   },
-  ,
   {
     "name": "SignDirect - ATOM transaction (multi-send)",
     "keysign_payload": {
