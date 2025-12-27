@@ -10,7 +10,7 @@
         "price_provider_id": "rune",
         "is_native_token": true,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"",
+        "contract_address": "",
         "logo": "rune.png"
       },
       "to_address": "thor1tgxm5jw6hrlvslrd6lqpk4jwuu4g29dxytrean",
@@ -29,7 +29,9 @@
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
       "lib_type": "DKLS"
     },
-    "expected_image_hash": ["7e513b23957b2e3caf77e796ba1412851be066cd77f96a7d196c3c856c641ebf"]
+    "expected_image_hash": [
+      "7e513b23957b2e3caf77e796ba1412851be066cd77f96a7d196c3c856c641ebf"
+    ]
   },
   {
     "name": "Bond RUNE",
@@ -42,7 +44,7 @@
         "price_provider_id": "rune",
         "is_native_token": true,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"",
+        "contract_address": "",
         "logo": "rune.png"
       },
       "to_address": "",
@@ -62,7 +64,9 @@
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
       "lib_type": "DKLS"
     },
-    "expected_image_hash": ["7ed0c815c1f70f6d4670268e4df1439e7f340ebefeb26e0a8694d59e84d243ec"]
+    "expected_image_hash": [
+      "7ed0c815c1f70f6d4670268e4df1439e7f340ebefeb26e0a8694d59e84d243ec"
+    ]
   },
   {
     "name": "UnBond RUNE",
@@ -75,7 +79,7 @@
         "price_provider_id": "rune",
         "is_native_token": true,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"",
+        "contract_address": "",
         "logo": "rune.png"
       },
       "to_address": "",
@@ -95,7 +99,9 @@
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
       "lib_type": "DKLS"
     },
-    "expected_image_hash": ["ea76ee8ac3f601a34d2b65d6c228484362ab075290cdb62a75c84678f90e93bc"]
+    "expected_image_hash": [
+      "ea76ee8ac3f601a34d2b65d6c228484362ab075290cdb62a75c84678f90e93bc"
+    ]
   },
   {
     "name": "Mint YRUNE",
@@ -108,7 +114,7 @@
         "price_provider_id": "rune",
         "is_native_token": true,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"",
+        "contract_address": "",
         "logo": "rune.png"
       },
       "to_address": "",
@@ -139,7 +145,9 @@
         ]
       }
     },
-    "expected_image_hash": ["2b7ee69b59f230163c8e4620d46289ec418f20847d336d538cd24292fe5ad86c"]
+    "expected_image_hash": [
+      "2b7ee69b59f230163c8e4620d46289ec418f20847d336d538cd24292fe5ad86c"
+    ]
   },
   {
     "name": "Redeem RUNE",
@@ -152,7 +160,7 @@
         "price_provider_id": "rune",
         "is_native_token": true,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
+        "contract_address": "x/nami-index-nav-thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt-rcpt",
         "logo": "YRUNE"
       },
       "to_address": "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt",
@@ -183,7 +191,9 @@
         ]
       }
     },
-    "expected_image_hash": ["20f6fb36702198ecf2b5757f391b90ccb8747a6b7e24aa306b40dc6c00ddfdf8"]
+    "expected_image_hash": [
+      "20f6fb36702198ecf2b5757f391b90ccb8747a6b7e24aa306b40dc6c00ddfdf8"
+    ]
   },
   {
     "name": "Stake Ruji",
@@ -196,7 +206,7 @@
         "price_provider_id": "rune",
         "is_native_token": false,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"x/ruji",
+        "contract_address": "x/ruji",
         "logo": "RUJI"
       },
       "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
@@ -227,7 +237,9 @@
         ]
       }
     },
-    "expected_image_hash": ["8482277a76bb4aa0fc9d49e0862a21ca248b5b84848bfd7c2ffbe9d3686ded05"]
+    "expected_image_hash": [
+      "8482277a76bb4aa0fc9d49e0862a21ca248b5b84848bfd7c2ffbe9d3686ded05"
+    ]
   },
   {
     "name": "Unstake Ruji",
@@ -240,7 +252,7 @@
         "price_provider_id": "rune",
         "is_native_token": false,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"x/ruji",
+        "contract_address": "x/ruji",
         "logo": "RUJI"
       },
       "to_address": "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr",
@@ -266,7 +278,9 @@
         "coins": []
       }
     },
-    "expected_image_hash": ["0e5a0f2d303ace7b1d210b182f231d64b177e48447146a5515f66d82617f247a"]
+    "expected_image_hash": [
+      "0e5a0f2d303ace7b1d210b182f231d64b177e48447146a5515f66d82617f247a"
+    ]
   },
   {
     "name": "Merge Kuji",
@@ -279,7 +293,7 @@
         "price_provider_id": "rune",
         "is_native_token": false,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"thor.kuji",
+        "contract_address": "thor.kuji",
         "logo": "KUJI"
       },
       "to_address": "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy",
@@ -299,7 +313,9 @@
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
       "lib_type": "DKLS"
     },
-    "expected_image_hash": ["1321dca67037384d6dec75351de2c7b9450280eff44e0b9548a198ca528473c3"]
+    "expected_image_hash": [
+      "1321dca67037384d6dec75351de2c7b9450280eff44e0b9548a198ca528473c3"
+    ]
   },
   {
     "name": "UnMerge Kuji",
@@ -312,7 +328,7 @@
         "price_provider_id": "rune",
         "is_native_token": false,
         "hex_public_key": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
-        "contract_address":"thor.kuji",
+        "contract_address": "thor.kuji",
         "logo": "RUJI"
       },
       "to_address": "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy",
@@ -332,6 +348,50 @@
       "vault_public_key_ecdsa": "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b",
       "lib_type": "DKLS"
     },
-    "expected_image_hash": ["815f5f2cc595263c742dd3e2d37cb9c90a659e7bae427d31b0fa6fd950c5a8ba"]
+    "expected_image_hash": [
+      "815f5f2cc595263c742dd3e2d37cb9c90a659e7bae427d31b0fa6fd950c5a8ba"
+    ]
+  },
+  {
+    "name": "SignDirect - THORChain Secure asset: LTC transaction",
+    "keysign_payload": {
+      "coin": {
+        "chain": "THORChain",
+        "ticker": "LTC",
+        "address": "thor1zgmsl5g25mfrtyuyrgdxh7r35wyyreh3p89jgq",
+        "decimals": 8,
+        "price_provider_id": "litecoin",
+        "is_native_token": false,
+        "hex_public_key": "03d0fa17aba7cb57c2bfe4308ea7a7e55227e2efd9d5ddb5bd73e33357cb66e1ea",
+        "contract_address": "LTC-LTC",
+        "logo": "ltc"
+      },
+      "to_address": "",
+      "to_amount": "3000000",
+      "BlockchainSpecific": {
+        "ThorchainSpecific": {
+          "account_number": 139521,
+          "fee": 2000000,
+          "isDeposit": false,
+          "sequence": 392,
+          "transaction_type": 0
+        }
+      },
+      "sign_data": {
+        "sign_direct": {
+          "body_bytes": "CoQBChEvdHlwZXMuTXNnRGVwb3NpdBJvCiIKFQoDTFRDEgNMVEMaA0xUQyAAKAAwARIHMzAwMDAwMBgAEjNzZWN1cmUtOmx0YzFxYzU2cTk5MHZ6ajNhODlkNTQ0ZHZqMjhncnJweHFxMHB3NjRocTQaFBI3D9EKptI1k4QaGmv4caOIQebx",
+          "auth_info_bytes": "ClEKRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiED0PoXq6fLV8K/5DCOp6flUifi79nV3bW9c+MzV8tm4eoSBAoCCAEYiAMSEgoMCgRydW5lEgQxMDAwEMCaDA==",
+          "chain_id": "thorchain-1",
+          "account_number": "139521"
+        }
+      },
+      "utxo_info": [],
+      "SwapPayload": null,
+      "vault_public_key_ecdsa": "03a4d9b5d643f9a08846295e3010b26fe37c12611020853d526b96cdd0e09d12af",
+      "lib_type": "DKLS"
+    },
+    "expected_image_hash": [
+      "78a50364c4bbd5c5df8407215a8161044ff07ac00a90fee5b1a7770f8291f0d1"
+    ]
   }
 ]

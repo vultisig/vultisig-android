@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import androidx.work.Data
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
@@ -14,6 +15,7 @@ import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
+import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -55,6 +57,14 @@ class CosmosHelper(
         }
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        keysignPayload.signAmino?.let{signAmino ->
+            return buildAminoSigningInput(
+                aminoPayload = signAmino,
+                cosmosData = atomData,
+                publicKey = publicKey,
+                memo = keysignPayload.memo
+            )
+        }
         val inputData = Cosmos.SigningInput.newBuilder()
             .setChainId(coinType.chainId())
             .setMemo(keysignPayload.memo)
@@ -117,6 +127,14 @@ class CosmosHelper(
             ?: error("Invalid blockChainSpecific for Cosmos")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        keysignPayload.signAmino?.let{signAmino ->
+            return buildAminoSigningInput(
+                aminoPayload = signAmino,
+                cosmosData = atomData,
+                publicKey = publicKey,
+                memo = keysignPayload.memo
+            )
+        }
 
         return when (atomData.transactionType) {
             TransactionType.TRANSACTION_TYPE_IBC_TRANSFER -> {
@@ -307,4 +325,46 @@ class CosmosHelper(
         )
     }
 
+    private fun buildAminoSigningInput(
+        aminoPayload : SignAmino,
+        cosmosData: BlockChainSpecific.Cosmos,
+        publicKey: PublicKey,
+        memo : String?
+    ): ByteArray{
+        val inputBuilder = Cosmos.SigningInput.newBuilder()
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .setSigningMode(Cosmos.SigningMode.JSON)  // Use JSON mode for Amino
+            .setChainId(coinType.chainId())
+            .setAccountNumber(cosmosData.accountNumber.toLong())
+            .setSequence(cosmosData.sequence.toLong())
+            .setMode(Cosmos.BroadcastMode.SYNC)
+
+        aminoPayload.msgs.forEach { cosmosMsg ->
+            val message = Cosmos.Message.newBuilder()
+                .setRawJsonMessage(
+                    Cosmos.Message.RawJSON.newBuilder()
+                        .setType(cosmosMsg?.type)
+                        .setValue(cosmosMsg?.value)
+                        .build()
+                )
+                .build()
+            inputBuilder.addMessages(message)
+        }
+        val feeBuilder = Cosmos.Fee.newBuilder()
+            .setGas(aminoPayload.fee?.gas?.toLongOrNull() ?: gasLimit)
+
+        aminoPayload.fee?.amount?.forEach { amount ->
+            feeBuilder.addAmounts(
+                Cosmos.Amount.newBuilder()
+                    .setDenom(amount?.denom)
+                    .setAmount(amount?.amount)
+                    .build()
+            )
+        }
+        inputBuilder.setFee(feeBuilder)
+
+        memo?.let { inputBuilder.memo = it }
+
+        return inputBuilder.build().toByteArray()
+    }
 }

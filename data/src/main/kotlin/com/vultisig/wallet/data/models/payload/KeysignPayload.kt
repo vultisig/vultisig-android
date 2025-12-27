@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models.payload
 
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
+import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import java.math.BigInteger
 
@@ -18,6 +19,7 @@ data class KeysignPayload(
     val vaultLocalPartyID: String,
     val libType: SigningLibType?,
     val wasmExecuteContractPayload: WasmExecuteContractPayload?,
+    val signAmino: SignAmino? = null,
     val skipBroadcast: Boolean = false,
     val defiAction: DeFiAction = DeFiAction.NONE,
 )
