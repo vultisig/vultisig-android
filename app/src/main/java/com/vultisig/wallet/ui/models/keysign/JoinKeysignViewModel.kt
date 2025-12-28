@@ -890,6 +890,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGas = totalGasAndFee.formattedTokenValue,
                         signAmino = payload.signAmino,
+                        signDirect = payload.signDirect,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

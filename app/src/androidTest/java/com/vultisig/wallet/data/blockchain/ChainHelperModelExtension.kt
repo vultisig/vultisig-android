@@ -22,7 +22,6 @@ import vultisig.keysign.v1.CosmosFee
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.CosmosMsg
 import vultisig.keysign.v1.SignAmino
-import vultisig.keysign.v1.SignDirect
 
 import vultisig.keysign.v1.TransactionType
 import java.math.BigInteger
@@ -65,6 +64,14 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
                         value = if (msg.value is String) msg.value else Json.encodeToString(msg.value)
                     )
                 }
+            )
+        },
+        signDirect = this.signData?.signDirect?.let {  signDirect ->
+            vultisig.keysign.v1.SignDirect(
+                bodyBytes = signDirect.bodyBytes,
+                authInfoBytes = signDirect.authInfoBytes,
+                chainId = signDirect.chainId,
+                accountNumber = signDirect.accountNumber,
             )
         },
         memo = this.memo,
