@@ -68,6 +68,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -164,6 +165,7 @@ internal fun ScanQrScreen(
                     }
                     onSuccess(barcodes)
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.e(e)
                 }
             }
@@ -305,6 +307,7 @@ private fun QrCameraScreen(
                     try {
                         cameraProviderFuture.get().unbindAll()
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         // Provider might not be ready yet
                         Timber.e(e)
                     }
@@ -368,6 +371,7 @@ private suspend fun scanImage(inputImage: InputImage, onError: (String) -> Unit)
                 }
 
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             onError("Barcode scanner unavailable: ${e.message}")
             continuation.resume(emptyList())
         }

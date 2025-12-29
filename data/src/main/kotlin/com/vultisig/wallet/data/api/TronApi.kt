@@ -28,6 +28,7 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 interface TronApi {
 
@@ -136,6 +137,7 @@ internal class TronApiImpl @Inject constructor(
                     ?: BigInteger.ZERO
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "error getting tron balance")
             return BigInteger.ZERO
         }

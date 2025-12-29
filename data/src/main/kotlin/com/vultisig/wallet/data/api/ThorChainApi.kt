@@ -43,6 +43,7 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -132,6 +133,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 response.body<TcyStakerResponse>().unstakable
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             // Exception occurred while fetching or parsing TCY staker data
             null
         }
@@ -198,6 +200,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 response.body<String>()
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag("THORChainService")
                 .e("Error deserializing THORChain swap quote: ${e.message}")
             THORChainSwapQuoteDeserialized.Error(
@@ -486,6 +489,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 }
             return response.status.isSuccess()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.tag("THORChainService").e("Error checking referral code: ${e.message}")
             return false
         }
@@ -537,6 +541,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 .body<MetadataResponse>()
             response.metadata
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(
                 e,
                 "Failed to fetch denom metadata for $denom"
@@ -552,6 +557,7 @@ internal class ThorChainApiImpl @Inject constructor(
                     .body<MetadatasResponse>()
             response.metadatas
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(
                 e,
                 "Failed to fetch denom metadata list"

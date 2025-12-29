@@ -50,6 +50,7 @@ import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 import java.util.Base64
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 internal sealed class KeysignState {
@@ -206,6 +207,7 @@ internal class KeysignViewModel(
             currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message ?: "Unknown error")
         }
@@ -252,6 +254,7 @@ internal class KeysignViewModel(
 
             pullTssMessagesJob?.cancel()
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message ?: "Unknown error")
         }
@@ -323,6 +326,7 @@ internal class KeysignViewModel(
 
             delay(1.seconds)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             pullTssMessagesJob?.cancel()
             Timber.tag("KeysignViewModel")
                 .d("signMessageWithRetry error: %s", e.stackTraceToString())

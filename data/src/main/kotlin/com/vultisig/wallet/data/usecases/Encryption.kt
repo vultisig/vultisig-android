@@ -9,6 +9,7 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 interface Encryption {
@@ -70,6 +71,7 @@ internal class AesEncryption @Inject constructor() : Encryption {
             )
             return cipher.doFinal(encryptedData)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(
                 e,
                 "switch to old version decryption"
