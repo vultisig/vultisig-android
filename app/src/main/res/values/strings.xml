@@ -558,6 +558,7 @@
     <string name="vault_backup_screen_donot_recieve_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault">Start using your Vault</string>
+    <string name="vault_backup_summary_choose_chains">Choose Chains</string>
     <string name="transaction_done_form_approve">Approve</string>
     <string name="vault_settings_migration_title">Migrate</string>
     <string name="swap_swap_button">Swap</string>

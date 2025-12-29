@@ -563,6 +563,7 @@
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Erneut teilen, TSS ändern oder Nachrichten signieren.</string>
     <string name="vault_backup_summary_start_using_vault">Jetzt Ihren Tresor nutzen.</string>
+    <string name="vault_backup_summary_choose_chains">Wählen Sie Ketten</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>
     <string name="transaction_buy">Kaufen</string>
