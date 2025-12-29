@@ -558,6 +558,7 @@
     <string name="vault_settings_migrate_gg20">Migreer GG20-kluis DKLS</string>
     <string name="vault_settings_reshare_change">Deel, wijzig TSS of onderteken berichten opnieuw.</string>
     <string name="vault_backup_summary_start_using_vault">Begin met het gebruiken van uw kluis</string>
+    <string name="vault_backup_summary_choose_chains">Kies kettingen</string>
     <string name="transaction_done_form_approve">Goedkeuren</string>
     <string name="vault_settings_migration_title">Migreren</string>
     <string name="transaction_buy">Kopen</string>
