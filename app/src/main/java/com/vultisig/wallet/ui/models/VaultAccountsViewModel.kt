@@ -9,15 +9,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.isSwapSupported
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
@@ -29,12 +29,12 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.USDC_CIRCLE
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -118,7 +119,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
-    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
@@ -137,7 +137,21 @@ internal class VaultAccountsViewModel @Inject constructor(
     private var loadDeFiBalancesJob: Job? = null
 
     init {
+        collectCryptoConnectionType()
         collectLastOpenedVault()
+    }
+
+    private fun collectCryptoConnectionType() {
+        cryptoConnectionTypeRepository
+            .activeCryptoConnectionFlow
+            .onEach { connectionType ->
+                uiState.update { state ->
+                    state.copy(
+                        cryptoConnectionType = connectionType
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private suspend fun updateLastOpenedVault() {
@@ -296,9 +310,11 @@ internal class VaultAccountsViewModel @Inject constructor(
             when (uiState.value.cryptoConnectionType) {
                 CryptoConnectionType.Wallet -> {
                     navigator.route(
-                        Route.ChainTokens(
-                            vaultId = vaultId,
-                            chainId = chainId,
+                        Route.ChainDashboard(
+                            route = ChainDashboardRoute.Wallet(
+                                vaultId = vaultId,
+                                chainId = chainId,
+                            )
                         )
                     )
                 }
@@ -306,14 +322,18 @@ internal class VaultAccountsViewModel @Inject constructor(
                     // Exception for DeFi providers on home screen
                     if (account.chainName.equals(USDC_CIRCLE, true)) {
                         navigator.route(
-                            Route.PositionCircle(
-                                vaultId = vaultId,
+                            Route.ChainDashboard(
+                                route = ChainDashboardRoute.PositionCircle(
+                                    vaultId = vaultId,
+                                )
                             )
                         )
                     } else {
                         navigator.route(
-                            Route.PositionTokens(
-                                vaultId = vaultId,
+                            Route.ChainDashboard(
+                                route = ChainDashboardRoute.PositionTokens(
+                                    vaultId = vaultId,
+                                )
                             )
                         )
                     }
