@@ -21,8 +21,8 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun UiCirclesLoader(
     modifier: Modifier = Modifier,
-    color1: Color = Theme.v2.colors.backgrounds.teal,
-    color2: Color = Theme.v2.colors.primary.accent4,
+    color1: Color = Theme.colors.backgrounds.teal,
+    color2: Color = Theme.colors.primary.accent4,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "UiCirclesLoader")
     val circleX = infiniteTransition.animateFloat(

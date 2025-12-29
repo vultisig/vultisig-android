@@ -35,8 +35,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.bottomsheet.VsBottomSheet
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -70,7 +69,7 @@ internal fun InputPasswordScreen(
     onBackClick: () -> Unit,
 ) {
 
-    V2BottomSheet(
+    VsBottomSheet(
         onDismissRequest = onBackClick,
     ) {
         Column(
@@ -89,7 +88,7 @@ internal fun InputPasswordScreen(
                 size = 24.dp,
                 modifier = Modifier
                     .align(alignment = Alignment.CenterHorizontally),
-                tint = Theme.v2.colors.alerts.success,
+                tint = Theme.colors.alerts.success,
             )
 
             UiSpacer(
@@ -98,7 +97,7 @@ internal fun InputPasswordScreen(
 
             Text(
                 text = stringResource(R.string.keysign_password_enter_your_password),
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 style = Theme.brockmann.headings.title3,
             )
 
@@ -107,7 +106,7 @@ internal fun InputPasswordScreen(
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     style = Theme.brockmann.body.s.medium,
                 )
                 UiSpacer(16.dp)
@@ -163,7 +162,7 @@ internal fun InputPasswordScreen(
                         text = if (isHintVisible) stringResource(R.string.keysign_password_hide_hint) else stringResource(
                             R.string.keysign_password_show_hint
                         ),
-                        color = Theme.v2.colors.text.light,
+                        color = Theme.colors.text.light,
                         style = Theme.brockmann.supplementary.footnote,
                     )
 
@@ -176,7 +175,7 @@ internal fun InputPasswordScreen(
                         modifier = Modifier
                             .rotate(degrees = caretRotationDegree),
                         size = 12.dp,
-                        tint = Theme.v2.colors.text.light,
+                        tint = Theme.colors.text.light,
                     )
                 }
 
@@ -187,7 +186,7 @@ internal fun InputPasswordScreen(
                         )
                         Text(
                             text = state.passwordHint.asString(),
-                            color = Theme.v2.colors.text.light,
+                            color = Theme.colors.text.light,
                             style = Theme.brockmann.supplementary.footnote,
                             modifier = Modifier.fillMaxWidth(),
                         )

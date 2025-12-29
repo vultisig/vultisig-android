@@ -49,13 +49,13 @@ fun VsIconButton(
                 color =
                     when (state) {
                         Enabled -> when (variant) {
-                            Primary -> Theme.v2.colors.buttons.primary
-                            Secondary -> Theme.v2.colors.backgrounds.secondary
+                            Primary -> Theme.colors.buttons.primary
+                            Secondary -> Theme.colors.backgrounds.secondary
                         }
 
                         Disabled -> when (variant) {
-                            Primary -> Theme.v2.colors.buttons.disabled
-                            Secondary -> Theme.v2.colors.buttons.disabled
+                            Primary -> Theme.colors.buttons.disabled
+                            Secondary -> Theme.colors.buttons.disabled
                         }
                     },
                 shape = RoundedCornerShape(percent = 100)
@@ -80,11 +80,11 @@ fun VsIconButton(
     ) {
         val contentColor = when (state) {
             Enabled -> when (variant) {
-                Primary -> Theme.v2.colors.backgrounds.primary
-                Secondary -> Theme.v2.colors.text.button.light
+                Primary -> Theme.colors.backgrounds.primary
+                Secondary -> Theme.colors.text.button.light
             }
 
-            Disabled -> Theme.v2.colors.text.button.disabled
+            Disabled -> Theme.colors.text.button.disabled
         }
 
         val iconSize = when (size) {

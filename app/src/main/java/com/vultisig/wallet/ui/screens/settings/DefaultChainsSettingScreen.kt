@@ -43,7 +43,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun DefaultChainSetting(navController: NavHostController) {
 
-    val colors = Theme.v2.colors
+    val colors = Theme.colors
     val viewModel = hiltViewModel<DefaultChainsSettingViewModel>()
     val state by viewModel.state.collectAsState()
 
@@ -93,7 +93,7 @@ internal fun TokenSelection(
     isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit),
 ) {
-    val appColor = Theme.v2.colors
+    val appColor = Theme.colors
     Card(
         modifier = Modifier
             .fillMaxWidth()

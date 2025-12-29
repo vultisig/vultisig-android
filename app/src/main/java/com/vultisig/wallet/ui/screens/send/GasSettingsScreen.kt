@@ -97,7 +97,7 @@ private fun GasSettingsScreen(
     Column(
         modifier = Modifier
             .background(
-                color = Theme.v2.colors.backgrounds.primary,
+                color = Theme.colors.backgrounds.primary,
                 shape = RoundedCornerShape(16.dp),
             )
             .padding(all = 24.dp),
@@ -109,14 +109,14 @@ private fun GasSettingsScreen(
             UiIcon(
                 drawableResId = R.drawable.ic_caret_left,
                 size = 16.dp,
-                tint = Theme.v2.colors.text.extraLight,
+                tint = Theme.colors.text.extraLight,
                 onClick = onCloseClick,
             )
 
             Text(
                 text = stringResource(R.string.gas_settings_advanced_gas_fee),
                 style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary
+                color = Theme.colors.text.primary
             )
         }
 
@@ -181,7 +181,7 @@ private fun EthGasSettings(
     Text(
         text = stringResource(R.string.gas_settings_max_base_fee_gwei),
         style = Theme.brockmann.body.s.medium,
-        color = Theme.v2.colors.text.primary,
+        color = Theme.colors.text.primary,
     )
 
     UiSpacer(8.dp)
@@ -196,7 +196,7 @@ private fun EthGasSettings(
     Text(
         text = stringResource(R.string.gas_settings_priority_fee_gwei),
         style = Theme.brockmann.body.s.medium,
-        color = Theme.v2.colors.text.primary,
+        color = Theme.colors.text.primary,
     )
 
     UiSpacer(8.dp)
@@ -211,7 +211,7 @@ private fun EthGasSettings(
     Text(
         text = stringResource(R.string.eth_gas_settings_gas_limit_title),
         style = Theme.brockmann.body.s.medium,
-        color = Theme.v2.colors.text.primary,
+        color = Theme.colors.text.primary,
     )
 
     UiSpacer(8.dp)

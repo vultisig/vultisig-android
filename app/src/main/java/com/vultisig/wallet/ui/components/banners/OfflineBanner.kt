@@ -29,10 +29,10 @@ internal fun OfflineBanner(isOffline: Boolean) {
                 text = stringResource(R.string.offline),
                 style = Theme.menlo.heading5,
                 textAlign = TextAlign.Companion.Center,
-                color = Theme.v2.colors.backgrounds.primary,
+                color = Theme.colors.backgrounds.primary,
                 fontSize = 12.sp,
                 modifier = Modifier.Companion
-                    .background(Theme.v2.colors.backgrounds.amber)
+                    .background(Theme.colors.backgrounds.amber)
                     .fillMaxWidth()
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )

@@ -31,11 +31,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.topbar.VsTopbar
 import com.vultisig.wallet.ui.screens.SettingInfoHorizontalItem
 import com.vultisig.wallet.ui.screens.itemModifier
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.theme.Theme.colors
 
 
 @Composable
@@ -67,10 +67,9 @@ private fun ConfirmDeleteScreen(
 ) {
     Scaffold(
         topBar = {
-            VsTopAppBar(
+            VsTopbar(
                 title = stringResource(R.string.vault_settings_delete_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick
+                onBackClick = onBackClick,
             )
         },
         bottomBar = {

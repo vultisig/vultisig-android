@@ -56,7 +56,7 @@ private fun JoinKeygenScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                color = Theme.v2.colors.backgrounds.primary,
+                color = Theme.colors.backgrounds.primary,
             )
             .padding(
                 all = 36.dp,
@@ -65,7 +65,7 @@ private fun JoinKeygenScreen(
         Text(
             text = stringResource(R.string.join_key_gen_waiting_for_other_devices_to_join),
             style = Theme.brockmann.headings.title1,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -74,7 +74,7 @@ private fun JoinKeygenScreen(
         Text(
             text = stringResource(R.string.join_key_gen_your_vault_will_start_generating),
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             textAlign = TextAlign.Center,
         )
 

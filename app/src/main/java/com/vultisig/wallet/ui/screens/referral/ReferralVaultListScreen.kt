@@ -32,7 +32,7 @@ import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListUiState
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
@@ -65,20 +65,20 @@ internal fun ReferralVaultListContentScreen(
     onVaultClicked: (String) -> Unit,
 ) {
 
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.referral_top_bar_list),
         onBackClick = onBackPress,
         content = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Theme.v2.colors.backgrounds.primary)
+                    .background(Theme.colors.backgrounds.primary)
                     .imePadding()
                     .navigationBarsPadding()
             ) {
                 Text(
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     text = stringResource(R.string.referral_top_bar_list_vaults),
                     textAlign = TextAlign.Start,
                 )
@@ -87,7 +87,7 @@ internal fun ReferralVaultListContentScreen(
 
                 LazyColumn(
                     modifier = Modifier
-                        .background(Theme.v2.colors.backgrounds.secondary, shape = RoundedCornerShape(12.dp)),
+                        .background(Theme.colors.backgrounds.secondary, shape = RoundedCornerShape(12.dp)),
                 ) {
                     items(state.vaults.size) { index ->
                         val vault = state.vaults[index]
@@ -96,8 +96,8 @@ internal fun ReferralVaultListContentScreen(
 
                         if (index < state.vaults.size - 1) {
                             UiGradientDivider(
-                                initialColor = Theme.v2.colors.backgrounds.secondary,
-                                endColor = Theme.v2.colors.backgrounds.secondary,
+                                initialColor = Theme.colors.backgrounds.secondary,
+                                endColor = Theme.colors.backgrounds.secondary,
                             )
                         }
                     }
@@ -118,7 +118,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
     ) {
         Text(
             text = vault.name,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             maxLines = 1,
             style = Theme.brockmann.body.m.medium,
             overflow = TextOverflow.Ellipsis,
@@ -128,11 +128,11 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
 
         Row(
             modifier = Modifier
-                .background(Theme.v2.colors.backgrounds.secondary, shape = RoundedCornerShape(20.dp))
+                .background(Theme.colors.backgrounds.secondary, shape = RoundedCornerShape(20.dp))
                 .border(
                     border = BorderStroke(
                         width = 1.dp,
-                        color = Theme.v2.colors.border.light
+                        color = Theme.colors.border.light
                     ),
                     shape = RoundedCornerShape(20.dp)
                 )
@@ -143,7 +143,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
                 Icon(
                     painter = painterResource(id = R.drawable.biomatrics_fast),
                     contentDescription = null,
-                    tint = Theme.v2.colors.backgrounds.orange,
+                    tint = Theme.colors.backgrounds.orange,
                     modifier = Modifier.size(14.dp)
                 )
             } else {
@@ -151,7 +151,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
                     painter = painterResource(id = R.drawable.ic_shield),
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = Theme.v2.colors.alerts.success,
+                    tint = Theme.colors.alerts.success,
                 )
             }
 
@@ -160,7 +160,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             Text(
                 text = vault.signingInfo,
                 style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
             )
         }
 
@@ -171,14 +171,14 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
                 modifier = Modifier.size(20.dp),
                 painter = painterResource(id = R.drawable.ic_check),
                 contentDescription = null,
-                tint = Theme.v2.colors.alerts.success,
+                tint = Theme.colors.alerts.success,
             )
         } else {
             Icon(
                 modifier = Modifier.size(20.dp),
                 painter = painterResource(id = R.drawable.ic_caret_right),
                 contentDescription = null,
-                tint = Theme.v2.colors.text.primary,
+                tint = Theme.colors.text.primary,
             )
         }
     }

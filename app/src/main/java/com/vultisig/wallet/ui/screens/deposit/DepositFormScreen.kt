@@ -20,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.crypto.getChainName
-import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -37,21 +35,19 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.SelectionCard
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
-import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.function.MergeFunctionScreen
 import com.vultisig.wallet.ui.screens.function.SwitchFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.screens.function.UnMergeFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.textAsFlow
 
 @Composable
 internal fun DepositFormScreen(
@@ -195,7 +191,7 @@ internal fun DepositFormScreen(
             FormCard {
                 Text(
                     text = state.depositMessage.asString(),
-                    color = Theme.v2.colors.neutrals.n100,
+                    color = Theme.colors.neutrals.n100,
                     style = Theme.menlo.body1,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -479,11 +475,11 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(R.string.mint_secured_asset_secure),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                         )
 
-                        V2Container(
-                            type = ContainerType.TERTIARY
+                        VsContainer(
+                            type = VsContainerType.TERTIARY
                         ) {
 
                             Text(
@@ -493,7 +489,7 @@ internal fun DepositFormScreen(
                                     state.selectedToken.ticker
                                 ),
                                 style = Theme.brockmann.body.s.regular,
-                                color = Theme.v2.colors.text.primary,
+                                color = Theme.colors.text.primary,
                                 modifier = Modifier
                                     .padding(
                                         horizontal = 12.dp,
@@ -508,16 +504,16 @@ internal fun DepositFormScreen(
                                 Chain.ThorChain.raw
                             ),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                         )
 
-                        V2Container(
-                            type = ContainerType.TERTIARY
+                        VsContainer(
+                            type = VsContainerType.TERTIARY
                         ) {
                             Text(
                                 text = thorAddress.text.toString(),
                                 style = Theme.brockmann.body.s.regular,
-                                color = Theme.v2.colors.text.primary,
+                                color = Theme.colors.text.primary,
                                 modifier = Modifier
                                     .padding(
                                         horizontal = 12.dp,
@@ -529,11 +525,11 @@ internal fun DepositFormScreen(
                         Text(
                             text = stringResource(R.string.generated_memo),
                             style = Theme.brockmann.body.s.regular,
-                            color = Theme.v2.colors.text.extraLight,
+                            color = Theme.colors.text.extraLight,
                         )
 
-                        V2Container(
-                            type = ContainerType.TERTIARY,
+                        VsContainer(
+                            type = VsContainerType.TERTIARY,
                         ) {
 
                             Text(
@@ -542,7 +538,7 @@ internal fun DepositFormScreen(
                                     thorAddress.text
                                 ),
                                 style = Theme.brockmann.body.s.regular,
-                                color = Theme.v2.colors.text.primary,
+                                color = Theme.colors.text.primary,
                                 modifier = Modifier
                                     .padding(
                                         horizontal = 12.dp,

@@ -12,10 +12,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Language
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.settings.LanguageSettingUiModel
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
@@ -48,13 +48,13 @@ private fun LanguageSettingScreen(
     onBackClick: () -> Unit,
     onLanguageClick: (Language) -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.language_setting_screen_title),
         onBackClick = onBackClick
     ) {
-        V2Container(
-            type = ContainerType.SECONDARY,
-            borderType = ContainerBorderType.Borderless
+        VsContainer(
+            type = VsContainerType.SECONDARY,
+            borderType = VsContainerBorderType.Borderless
         ) {
             LazyColumn {
                 itemsIndexed(state.languages) { index, language ->

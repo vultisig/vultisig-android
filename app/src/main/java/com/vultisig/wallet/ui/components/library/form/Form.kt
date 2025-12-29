@@ -118,7 +118,7 @@ internal fun TokenCard(
                 errorLogoModifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Theme.v2.colors.neutrals.n100)
+                    .background(Theme.colors.neutrals.n100)
             )
             if (chainLogo != null)
                 Image(
@@ -128,7 +128,7 @@ internal fun TokenCard(
                         .size(12.dp)
                         .border(
                             width = 1.dp,
-                            color = Theme.v2.colors.neutrals.n50,
+                            color = Theme.colors.neutrals.n50,
                             shape = RoundedCornerShape(4.dp)
                         )
                         .align(BottomEnd)
@@ -139,7 +139,7 @@ internal fun TokenCard(
 
         Text(
             text = tokenStandard?.let { "$title ($it)" } ?: title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.menlo.body1,
         )
 
@@ -147,7 +147,7 @@ internal fun TokenCard(
 
         Text(
             text = availableToken ?: "",
-            color = Theme.v2.colors.neutrals.n200,
+            color = Theme.colors.neutrals.n200,
             style = Theme.menlo.body1.copy(fontWeight = FontWeight.Bold),
         )
 
@@ -171,7 +171,7 @@ internal fun FormTextFieldCard(
     textFieldState: TextFieldState,
     outputTransformation: OutputTransformation? = null,
     onLostFocus: () -> Unit = {},
-    hintColor: Color = Theme.v2.colors.neutrals.n100,
+    hintColor: Color = Theme.colors.neutrals.n100,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     TextFieldValidator(
@@ -256,7 +256,7 @@ internal fun FormTextField(
     hint: String,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
-    hintColor: Color = Theme.v2.colors.neutrals.n100,
+    hintColor: Color = Theme.colors.neutrals.n100,
     outputTransformation: OutputTransformation? = null,
     onLostFocus: () -> Unit,
     content: (@Composable RowScope.() -> Unit)? = null,
@@ -298,7 +298,7 @@ internal fun BasicFormTextField(
     modifier: Modifier = Modifier,
     outputTransformation: OutputTransformation? = null,
     textStyle: TextStyle = Theme.menlo.body1,
-    hintColor: Color = Theme.v2.colors.neutrals.n100,
+    hintColor: Color = Theme.colors.neutrals.n100,
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -306,7 +306,7 @@ internal fun BasicFormTextField(
     BasicTextField(
         state = textFieldState,
         lineLimits = TextFieldLineLimits.SingleLine,
-        textStyle = textStyle.copy(color = Theme.v2.colors.neutrals.n100),
+        textStyle = textStyle.copy(color = Theme.colors.neutrals.n100),
         cursorBrush = Theme.cursorBrush,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
@@ -368,7 +368,7 @@ internal fun FormBasicSecureTextField(
                 Row(modifier = Modifier.weight(1f)) {
                     BasicSecureTextField(
                         state = textFieldState,
-                        textStyle = textStyle.copy(color = Theme.v2.colors.neutrals.n100),
+                        textStyle = textStyle.copy(color = Theme.colors.neutrals.n100),
                         cursorBrush = Theme.cursorBrush,
                         textObfuscationMode = if (isObfuscationMode)
                             TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
@@ -386,7 +386,7 @@ internal fun FormBasicSecureTextField(
                             if (textFieldState.text.isEmpty()) {
                                 Text(
                                     text = hint,
-                                    color = Theme.v2.colors.neutrals.n100,
+                                    color = Theme.colors.neutrals.n100,
                                     style = textStyle,
                                 )
                             }
@@ -445,7 +445,7 @@ internal fun FormTitleContainer(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.montserrat.body1,
         )
         UiSpacer(size = 10.dp)
@@ -483,7 +483,7 @@ internal fun FormTitleCollapsibleTextField(
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.montserrat.body1,
             )
             Icon(
@@ -492,7 +492,7 @@ internal fun FormTitleCollapsibleTextField(
                 modifier = Modifier
                     .width(12.dp)
                     .rotate(arrowDegree.value),
-                tint = Theme.v2.colors.neutrals.n100
+                tint = Theme.colors.neutrals.n100
             )
         }
         UiSpacer(size = 10.dp)
@@ -527,7 +527,7 @@ internal fun FormTitleContainerWithPercentage(
         ) {
             Text(
                 text = title,
-                color = Theme.v2.colors.neutrals.n100,
+                color = Theme.colors.neutrals.n100,
                 style = Theme.montserrat.body1,
             )
             UiSpacer(weight = 1f)
@@ -556,7 +556,7 @@ internal fun FormCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary,
+            containerColor = Theme.colors.backgrounds.secondary,
         ),
         shape = RoundedCornerShape(10.dp),
         content = content,
@@ -574,13 +574,13 @@ internal fun FormDetails(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.montserrat.body1,
         )
         UiSpacer(weight = 1f)
         Text(
             text = value,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.menlo.body1
         )
     }
@@ -600,7 +600,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )
@@ -610,7 +610,7 @@ internal fun FormDetails2(
         } else {
             Text(
                 text = value,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
                 style = Theme.brockmann.supplementary.caption,
                 textAlign = TextAlign.End,
             )
@@ -631,7 +631,7 @@ internal fun FormDetails2(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.text.extraLight,
+            color = Theme.colors.text.extraLight,
             style = Theme.brockmann.supplementary.caption,
             textAlign = TextAlign.Start,
         )
@@ -641,7 +641,7 @@ internal fun FormDetails2(
         } else {
             Text(
                 text = value,
-                color = Theme.v2.colors.text.light,
+                color = Theme.colors.text.light,
                 style = Theme.brockmann.supplementary.caption,
                 textAlign = TextAlign.End,
             )
@@ -662,12 +662,12 @@ internal fun FormDetails(
     ) {
         Text(
             text = title,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.montserrat.body1,
         )
         Text(
             text = value,
-            color = Theme.v2.colors.neutrals.n100,
+            color = Theme.colors.neutrals.n100,
             style = Theme.menlo.body1,
             textAlign = TextAlign.End
         )
@@ -685,7 +685,7 @@ internal fun FormError(
 
         Text(
             text = errorMessage,
-            color = Theme.v2.colors.alerts.error,
+            color = Theme.colors.alerts.error,
             style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -709,7 +709,7 @@ internal fun TextFieldValidator(
                     UiSpacer(size = 8.dp)
                     Text(
                         text = errorMessage.asString(),
-                        color = Theme.v2.colors.backgrounds.amber,
+                        color = Theme.colors.backgrounds.amber,
                         style = Theme.menlo.body1
                     )
                 }

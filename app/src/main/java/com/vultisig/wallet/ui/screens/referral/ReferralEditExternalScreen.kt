@@ -28,7 +28,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.EditExternalReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditExternalReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -70,7 +70,7 @@ private fun ReferralEditExternalScreen(
     onSaveReferral: () -> Unit,
     onPasteClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.referral_edit_external_title),
         onBackClick = onBackClick,
         bottomBar = {
@@ -95,7 +95,7 @@ private fun ReferralEditExternalScreen(
                 Text(
                     text = stringResource(R.string.referral_use_referred_code),
                     textAlign = TextAlign.Start,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     style = Theme.brockmann.body.s.medium,
                 )
 

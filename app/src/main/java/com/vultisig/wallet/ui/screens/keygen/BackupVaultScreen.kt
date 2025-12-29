@@ -27,7 +27,7 @@ import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.keygen.BackupVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
@@ -52,7 +52,7 @@ internal fun BackupVaultScreen(
 private fun BackupVaultScreen(
     onBackupClick: () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.backup_vault_topbar_title),
         content = {
             Column(
@@ -73,7 +73,7 @@ private fun BackupVaultScreen(
                 Text(
                     text = stringResource(R.string.backup_vault_backup_vault_share_title),
                     style = Theme.brockmann.headings.title1,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -85,7 +85,7 @@ private fun BackupVaultScreen(
                             url = "https://docs.vultisig.com/vultisig-user-actions/managing-your-vault/vault-backup",
                             styles = TextLinkStyles(
                                 style = SpanStyle(
-                                    color = Theme.v2.colors.text.light,
+                                    color = Theme.colors.text.light,
                                     textDecoration = TextDecoration.Underline,
                                 )
                             )
@@ -98,7 +98,7 @@ private fun BackupVaultScreen(
                 Text(
                     text = link,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                     textAlign = TextAlign.Center,
                 )
             }

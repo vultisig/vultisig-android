@@ -68,10 +68,10 @@ internal fun LpWidget(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Theme.v2.colors.backgrounds.secondary)
+            .background(Theme.colors.backgrounds.secondary)
             .border(
                 width = 1.dp,
-                color = Theme.v2.colors.border.normal,
+                color = Theme.colors.border.normal,
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(16.dp)
@@ -89,7 +89,7 @@ internal fun LpWidget(
                 Text(
                     text = state.titleLp,
                     style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.extraLight,
+                    color = Theme.colors.text.extraLight,
                 )
 
                 UiSpacer(4.dp)
@@ -104,7 +104,7 @@ internal fun LpWidget(
                     Text(
                         text = state.totalPriceLp,
                         style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
+                        color = Theme.colors.text.primary,
                     )
                 }
             }
@@ -131,7 +131,7 @@ internal fun LpWidget(
                 Text(
                     text = state.apr,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.alerts.success,
+                    color = Theme.colors.alerts.success,
                 )
             }
 
@@ -141,7 +141,7 @@ internal fun LpWidget(
         Column {
             Text(
                 text = stringResource(R.string.lp_position),
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.body.s.medium,
             )
 
@@ -157,7 +157,7 @@ internal fun LpWidget(
             } else {
                 Text(
                     text = state.position,
-                    color = Theme.v2.colors.text.primary,
+                    color = Theme.colors.text.primary,
                     style = Theme.brockmann.headings.title3,
                 )
             }
@@ -172,23 +172,23 @@ internal fun LpWidget(
                 title = stringResource(R.string.remove),
                 icon = R.drawable.ic_circle_minus,
                 background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
+                border = BorderStroke(1.dp, Theme.colors.primary.accent4),
+                contentColor = Theme.colors.text.primary,
                 onClick = onClickRemove,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.text.extraLight
+                iconCircleColor = Theme.colors.text.extraLight
             )
 
             ActionButton(
                 title = stringResource(R.string.add),
                 icon = R.drawable.ic_circle_plus,
-                background = Theme.v2.colors.primary.accent3,
-                contentColor = Theme.v2.colors.text.primary,
+                background = Theme.colors.primary.accent3,
+                contentColor = Theme.colors.text.primary,
                 onClick = onClickAdd,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.primary.accent4
+                iconCircleColor = Theme.colors.primary.accent4
             )
         }
     }

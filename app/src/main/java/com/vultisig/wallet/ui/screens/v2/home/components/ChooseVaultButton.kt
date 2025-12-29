@@ -14,10 +14,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.*
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType.*
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType.*
+import com.vultisig.wallet.ui.components.containers.VsContainerType.*
+import com.vultisig.wallet.ui.components.containers.VsContainerCornerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -28,9 +28,9 @@ internal fun ChooseVaultButton(
     isFastVault: Boolean,
     onClick: () -> Unit,
 ) {
-    V2Container(
+    VsContainer(
         modifier = modifier.clickOnce(onClick = onClick),
-        cornerType = CornerType.Circular,
+        vsContainerCornerType = VsContainerCornerType.Circular,
         borderType = Bordered(),
         type = SECONDARY
     ) {
@@ -50,7 +50,7 @@ internal fun ChooseVaultButton(
                 },
                 contentDescription = "vault type logo",
                 size = 16.dp,
-                tint = if (isFastVault) Theme.v2.colors.alerts.warning else Theme.v2.colors.alerts.success,
+                tint = if (isFastVault) Theme.colors.alerts.warning else Theme.colors.alerts.success,
             )
             UiSpacer(
                 size = 6.dp
@@ -58,7 +58,7 @@ internal fun ChooseVaultButton(
             Text(
                 text = vaultName,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = 138.dp),

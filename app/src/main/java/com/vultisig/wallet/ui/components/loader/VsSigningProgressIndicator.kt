@@ -26,7 +26,7 @@ fun VsSigningProgressIndicator(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                color = Theme.v2.colors.backgrounds.primary,
+                color = Theme.colors.backgrounds.primary,
             )
             .padding(
                 horizontal = 16.dp,
@@ -46,7 +46,7 @@ fun VsSigningProgressIndicator(
 
         Text(
             text = text,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             style = Theme.brockmann.headings.title2,
             textAlign = TextAlign.Center,
         )

@@ -28,7 +28,7 @@ internal fun SelectionItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Theme.v2.colors.backgrounds.secondary
+            containerColor = Theme.colors.backgrounds.secondary
         )
     ) {
         Row(
@@ -42,18 +42,18 @@ internal fun SelectionItem(
             ) {
                 Text(
                     text = title,
-                    color = Theme.v2.colors.neutrals.n100,
+                    color = Theme.colors.neutrals.n100,
                     style = Theme.montserrat.subtitle1,
                 )
             }
             VsSwitch(
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Theme.v2.colors.neutrals.n50,
-                    checkedBorderColor = Theme.v2.colors.backgrounds.teal,
-                    checkedTrackColor = Theme.v2.colors.backgrounds.teal,
-                    uncheckedThumbColor = Theme.v2.colors.neutrals.n50,
-                    uncheckedBorderColor = Theme.v2.colors.backgrounds.tertiary_2,
-                    uncheckedTrackColor = Theme.v2.colors.backgrounds.tertiary_2
+                    checkedThumbColor = Theme.colors.neutrals.n50,
+                    checkedBorderColor = Theme.colors.backgrounds.teal,
+                    checkedTrackColor = Theme.colors.backgrounds.teal,
+                    uncheckedThumbColor = Theme.colors.neutrals.n50,
+                    uncheckedBorderColor = Theme.colors.backgrounds.tertiary_2,
+                    uncheckedTrackColor = Theme.colors.backgrounds.tertiary_2
                 ),
                 checked = isChecked,
                 onCheckedChange = null,

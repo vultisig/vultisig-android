@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.referral.VsPromoBox
 import com.vultisig.wallet.ui.components.referral.VsPromoTag
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
 import com.vultisig.wallet.ui.models.referral.OnBoardingReferralViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -47,7 +47,7 @@ private fun ReferralOnboardingScreen(
     onGetStarted: () -> Unit,
     onBackClick: () -> Unit,
 ){
-    V2Scaffold(
+    VsScaffold(
         title = stringResource(R.string.referral_onboarding_title),
         onBackClick = onBackClick,
         content = {
@@ -63,7 +63,7 @@ private fun ReferralOnboardingScreen(
                             .padding(start = 24.dp)
                             .width(1.dp)
                             .fillMaxHeight(0.92f)
-                            .background(Theme.v2.colors.border.light)
+                            .background(Theme.colors.border.light)
                     )
 
                     Column {
@@ -156,7 +156,7 @@ private fun TimeLineItem(
             modifier = Modifier
                 .width(24.dp)
                 .height(1.dp)
-                .background(Theme.v2.colors.border.light)
+                .background(Theme.colors.border.light)
         )
 
         Box(
@@ -184,7 +184,7 @@ private fun HowItWorksTitle() {
         Text(
             text = stringResource(R.string.referral_how_it_works),
             style = Theme.brockmann.headings.largeTitle,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.colors.text.primary,
             modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp)
         )
     }

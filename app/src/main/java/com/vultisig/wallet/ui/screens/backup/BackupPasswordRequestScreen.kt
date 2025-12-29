@@ -31,11 +31,11 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.components.v2.texts.highlightedText
+import com.vultisig.wallet.ui.components.containers.VsContainerBorderType
+import com.vultisig.wallet.ui.components.containers.VsContainerType
+import com.vultisig.wallet.ui.components.containers.VsContainer
+import com.vultisig.wallet.ui.components.scaffold.VsScaffold
+import com.vultisig.wallet.ui.components.texts.highlightedText
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.RequestWriteFilePermissionOnceIfNotGranted
 import com.vultisig.wallet.ui.utils.asString
@@ -96,7 +96,7 @@ private fun BackupPasswordRequestScreen(
     onWithPasswordClick : () -> Unit,
     onBackClick : () -> Unit,
 ) {
-    V2Scaffold(
+    VsScaffold(
         onBackClick = onBackClick
     ) {
         Column(
@@ -115,7 +115,7 @@ private fun BackupPasswordRequestScreen(
                         64.dp,
                     )
                     .background(
-                        color = Theme.v2.colors.backgrounds.tertiary_2,
+                        color = Theme.colors.backgrounds.tertiary_2,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .clip(
@@ -135,7 +135,7 @@ private fun BackupPasswordRequestScreen(
             Text(
                 text = stringResource(R.string.backup_password_request_title),
                 style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.text.primary,
+                color = Theme.colors.text.primary,
                 textAlign = TextAlign.Center,
             )
 
@@ -208,9 +208,9 @@ private fun BackupCaution(
     @DrawableRes icon: Int
 ) {
 
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered()
+    VsContainer(
+        type = VsContainerType.SECONDARY,
+        borderType = VsContainerBorderType.Bordered()
     ) {
 
         Row(
@@ -224,7 +224,7 @@ private fun BackupCaution(
             UiIcon(
                 drawableResId = icon,
                 size = 20.dp,
-                tint = Theme.v2.colors.primary.accent4,
+                tint = Theme.colors.primary.accent4,
             )
             UiSpacer(16.dp)
 
@@ -232,9 +232,9 @@ private fun BackupCaution(
                 text = highlightedText(
                     mainText = mainText,
                     highlightedWords = highlightedWords,
-                    mainTextColor = Theme.v2.colors.text.extraLight,
+                    mainTextColor = Theme.colors.text.extraLight,
                     mainTextStyle = Theme.brockmann.supplementary.footnote,
-                    highlightTextColor = Theme.v2.colors.text.primary,
+                    highlightTextColor = Theme.colors.text.primary,
                     highlightTextStyle = Theme.brockmann.supplementary.footnote,
                 ),
                 modifier = Modifier

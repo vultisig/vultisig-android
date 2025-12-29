@@ -8,8 +8,8 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun Brush.Companion.vultiGradient() = horizontalGradient(
     colors = listOf(
-        Theme.v2.colors.buttons.primary,
-        Theme.v2.colors.primary.accent2
+        Theme.colors.buttons.primary,
+        Theme.colors.primary.accent2
     )
 )
 

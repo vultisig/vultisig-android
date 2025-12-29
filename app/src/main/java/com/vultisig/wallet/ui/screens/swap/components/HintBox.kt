@@ -122,7 +122,7 @@ private fun HintBoxPopupContent(
     onDismissClick: () -> Unit,
 ) {
 
-    val shapeColor = Theme.v2.colors.neutrals.n200
+    val shapeColor = Theme.colors.neutrals.n200
     Column(
         modifier = modifier
             .clickable(onClick = onDismissClick),
@@ -157,7 +157,7 @@ private fun HintBoxPopupContent(
                 Text(
                     text = title,
                     style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.backgrounds.primary
+                    color = Theme.colors.backgrounds.primary
                 )
                 UiSpacer(
                     weight = 1f
@@ -165,7 +165,7 @@ private fun HintBoxPopupContent(
                 UiIcon(
                     drawableResId = R.drawable.x,
                     size = 16.dp,
-                    tint = Theme.v2.colors.text.button.disabled,
+                    tint = Theme.colors.text.button.disabled,
                 )
             }
 
@@ -175,7 +175,7 @@ private fun HintBoxPopupContent(
 
             Text(
                 text = message,
-                color = Theme.v2.colors.text.extraLight,
+                color = Theme.colors.text.extraLight,
                 style = Theme.brockmann.supplementary.footnote
             )
         }
