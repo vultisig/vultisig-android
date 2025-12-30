@@ -59,6 +59,7 @@ internal data class SendTxUiModel(
 
     val memo: String? = null,
     val signAmino: String? = null,
+    val signDirect: String? = null,
 )
 
 @Immutable

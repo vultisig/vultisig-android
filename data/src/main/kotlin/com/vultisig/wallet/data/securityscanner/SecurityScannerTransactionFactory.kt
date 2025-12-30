@@ -198,8 +198,6 @@ class SecurityScannerTransactionFactory(
             vaultLocalPartyID = "", // no need for SUI prehash
             libType = null, // no need for SUI prehash
             wasmExecuteContractPayload = null,
-            signAmino = transaction.signAmino,
-            signDirect = transaction.signDirect,
         )
 
         val serializedTransaction = SuiHelper.getZeroSignedTransaction(keySignPayload)
@@ -226,8 +224,6 @@ class SecurityScannerTransactionFactory(
             vaultLocalPartyID = "", // no need for BTC
             libType = null, // no need for BTC
             wasmExecuteContractPayload = null,
-            signAmino = transaction.signAmino,
-            signDirect = transaction.signDirect,
         )
 
         val dummyVault = Vault(

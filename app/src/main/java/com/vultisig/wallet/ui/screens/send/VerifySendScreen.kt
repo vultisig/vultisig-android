@@ -236,6 +236,14 @@ internal fun VerifySendScreen(
                             subtitle = tx.signAmino
                         )
                     }
+                    if(tx.signDirect != null) {
+                        VerifyCardDivider(0.dp)
+
+                        VerifyCardJsonDetails(
+                            title = stringResource(R.string.amino_direct),
+                            subtitle = tx.signDirect
+                        )
+                    }
 
                     if (state.functionSignature != null) {
                         VerifyCardDivider(0.dp)

@@ -61,7 +61,7 @@ fun KeysignPayload.toInternalKeySignPayload(): com.vultisig.wallet.data.models.p
 
                     CosmosMsg(
                         type = msg.type,
-                        value = if (msg.value is String) msg.value else Json.encodeToString(msg.value)
+                        value = Json.encodeToString(msg.value)
                     )
                 }
             )

@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
-import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -51,6 +50,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -86,6 +86,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.http.ContentType.Application.Json
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -98,6 +99,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
@@ -172,7 +174,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
-
+    @param:PrettyJson private val json: Json,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
@@ -871,6 +873,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         payload.memo,
                         chain
                     )
+                    val signAminoString = json.encodeToString(payload.signAmino)
+                    val signDirectString = json.encodeToString(payload.signDirect)
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -889,8 +893,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGas = totalGasAndFee.formattedTokenValue,
-                        signAmino = payload.signAmino,
-                        signDirect = payload.signDirect,
+                        signAmino = signAminoString,
+                        signDirect = signDirectString,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

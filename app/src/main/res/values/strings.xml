@@ -923,6 +923,7 @@
     <string name="circle_msca_account_created_failed">Failed to create Circle MSCA account. Please try again.</string>
     <string name="circle_usdc_account">Circle USDC Account</string>
     <string name="withdraw">Withdraw</string>
-    <string name="amino_sign" translatable="false">Sign Amino</string>
+    <string name="amino_sign" translatable="false">Amino Sign</string>
+    <string name="amino_direct" translatable="false">Direct Sign</string>
 
 </resources>
