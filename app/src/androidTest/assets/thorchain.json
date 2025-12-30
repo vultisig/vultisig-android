@@ -372,7 +372,7 @@
         "ThorchainSpecific": {
           "account_number": 139521,
           "fee": 2000000,
-          "isDeposit": false,
+          "is_deposit": false,
           "sequence": 392,
           "transaction_type": 0
         }
