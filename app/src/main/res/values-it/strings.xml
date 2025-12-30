@@ -562,6 +562,7 @@
     <string name="vault_settings_migrate_gg20">Esegui la migrazione del vault DKLS GG20</string>
     <string name="vault_settings_reshare_change">Ricondividi, modifica TSS o firma messaggi.</string>
     <string name="vault_backup_summary_start_using_vault">Inizia a usare la tua cassaforte</string>
+    <string name="vault_backup_summary_choose_chains">Scegli le catene</string>
     <string name="transaction_done_form_approve">Approva</string>
     <string name="vault_settings_migration_title">Migrare</string>
     <string name="transaction_buy">Acquista</string>
