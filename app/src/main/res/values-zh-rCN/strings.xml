@@ -626,6 +626,7 @@
 
     <!-- Vault Settings Migration -->
     <string name="vault_backup_summary_start_using_vault">开始使用您的金库</string>
+    <string name="vault_backup_summary_choose_chains">选择链条</string>
     <string name="transaction_done_form_approve">批准</string>
     <string name="vault_settings_migration_title">迁移</string>
 
