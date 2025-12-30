@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import vultisig.keysign.v1.SignAmino
 import javax.inject.Inject
 

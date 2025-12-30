@@ -1211,8 +1211,6 @@ internal class SendFormViewModel @Inject constructor(
                     memo = memo,
                     estimatedFee = totalGasAndFee.formattedFiatValue,
                     totalGas = totalGasAndFee.formattedTokenValue,
-                    signAmino = null,
-                    signDirect = null
                 )
 
                 transactionRepository.addTransaction(transaction)

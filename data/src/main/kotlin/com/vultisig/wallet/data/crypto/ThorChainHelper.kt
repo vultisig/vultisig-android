@@ -487,8 +487,6 @@ class ThorChainHelper(
             )
             .build()
 
-        cosmosSpecific
-
         val inputBuilder = Cosmos.SigningInput.newBuilder()
             .setPublicKey(ByteString.copyFrom(publicKey.data()))
             .setSigningMode(Cosmos.SigningMode.Protobuf)
