@@ -960,9 +960,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
                         val vultBPSDiscount = if (vaultId != null) {
-                            getDiscountBpsUseCase.invoke(vaultId!!, provider)
+                            getDiscountBpsUseCase.invoke(vaultId!!, provider).takeIf { it != 0 }
                         } else {
-                            0
+                            null
                         }
 
 
@@ -984,7 +984,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     )
                                     mayaSwapQuote as SwapQuote.MayaChain to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
@@ -993,7 +993,7 @@ internal class SwapFormViewModel @Inject constructor(
                                             ?.let { referralRepository.getExternalReferralBy(it) }
 
                                     referral?.let { code ->
-                                        val tierType = vultBPSDiscount.getTierType()
+                                        val tierType = vultBPSDiscount?.getTierType()
                                         checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
                                     }
 
@@ -1003,7 +1003,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         referralCode = referral.orEmpty(),
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     )
                                     thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }
@@ -1121,7 +1121,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                     isAffiliate = isAffiliate,
-                                    bpsDiscount = vultBPSDiscount,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
                                 )
 
                                 val expectedDstValue = TokenValue(
@@ -1178,7 +1178,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
-                                        bpsDiscount = vultBPSDiscount,
+                                        bpsDiscount = vultBPSDiscount ?: 0,
                                     ) else swapQuoteRepository.getJupiterSwapQuote(
                                         srcAddress = src.address.address,
                                         srcToken = srcToken,
@@ -1317,22 +1317,28 @@ internal class SwapFormViewModel @Inject constructor(
     private suspend fun checkVultBpsDiscount(
         srcToken: Coin,
         tokenValue: TokenValue,
-        vultBPSDiscount: Int,
+        vultBPSDiscount: Int?,
     ) {
-        val vultBpsDiscountFiat = convertBpsToFiat(
-            token = srcToken,
-            tokenValue = tokenValue,
-            bps = vultBPSDiscount,
-        )
-
-        val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat)
-
-        val tierType = vultBPSDiscount.getTierType()
-        uiState.update {
+        vultBPSDiscount?.let {
+            val vultBpsDiscountFiat = convertBpsToFiat(
+                token = srcToken,
+                tokenValue = tokenValue,
+                bps = vultBPSDiscount,
+            )
+            val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat)
+            val tierType = vultBPSDiscount.getTierType()
+            uiState.update {
+                it.copy(
+                    vultBpsDiscount = vultBPSDiscount,
+                    vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
+                    tierType = tierType
+                )
+            }
+        } ?: uiState.update {
             it.copy(
-                vultBpsDiscount = vultBPSDiscount,
-                vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
-                tierType = tierType
+                vultBpsDiscount = null,
+                vultBpsDiscountFiatValue = null,
+                tierType = null
             )
         }
     }
