@@ -872,7 +872,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         payload.memo,
                         chain
                     )
-                    val notmalizedsignAmino = kotlinx.serialization.json.buildJsonObject {
+                    val notmalizedsignAminoJson = kotlinx.serialization.json.buildJsonObject {
                         payload.signAmino?.msgs?.forEach { cosmosMsg ->
                             val type = cosmosMsg?.type ?: return@forEach
                             val valueElem = try {
@@ -894,10 +894,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                         }
                     }
 
-
-
-                    val signAminoString = json.encodeToString(notmalizedsignAmino)
+                    val notmalizedsignAmino = json.encodeToString(notmalizedsignAminoJson)
+                        .takeIf { !notmalizedsignAminoJson.isNullOrEmpty() } ?: ""
                     val signDirectString = json.encodeToString(payload.signDirect)
+                        .takeIf { payload.signDirect != null } ?: ""
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -916,7 +916,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
                         totalGas = totalGasAndFee.formattedTokenValue,
-                        signAmino = signAminoString,
+                        signAmino = notmalizedsignAmino,
                         signDirect = signDirectString,
                     )
 
