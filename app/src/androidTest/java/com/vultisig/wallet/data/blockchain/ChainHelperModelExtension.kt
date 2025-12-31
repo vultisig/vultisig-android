@@ -9,6 +9,7 @@ import OneinchTransaction
 import SwapPayload
 import ThorchainSwapPayload
 import WasmExecuteContractPayload
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
@@ -112,7 +113,7 @@ internal fun Coin.toInternalCoinPayload(): com.vultisig.wallet.data.models.Coin 
                 this.chain,
                 true
             )
-        } ?: Chain.Ethereum,
+        } ?: error("Unrecognized chain: ${this.chain}"),
         ticker = this.ticker,
         logo = this.logo,
         address = this.address,
