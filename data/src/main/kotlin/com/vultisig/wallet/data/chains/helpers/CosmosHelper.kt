@@ -9,13 +9,13 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
 import vultisig.keysign.v1.SignAmino
-import vultisig.keysign.v1.SignDirect
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
@@ -354,7 +354,7 @@ class CosmosHelper(
     }
 
     private fun buildSignDirectSigningInput(
-        signDirect: SignDirect,
+        signDirect: SignDirectProto,
         cosmosData: BlockChainSpecific.Cosmos,
         memo: String?,
         publicKey: PublicKey
@@ -402,7 +402,7 @@ class CosmosHelper(
     ): ByteArray {
         val inputBuilder = Cosmos.SigningInput.newBuilder()
             .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setSigningMode(Cosmos.SigningMode.JSON)  // Use JSON mode for Amino
+            .setSigningMode(Cosmos.SigningMode.JSON)  
             .setChainId(coinType.chainId())
             .setAccountNumber(cosmosSpecific.accountNumber.toLong())
             .setSequence(cosmosSpecific.sequence.toLong())

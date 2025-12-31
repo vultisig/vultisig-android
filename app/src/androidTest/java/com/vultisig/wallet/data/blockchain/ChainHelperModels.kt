@@ -1,5 +1,10 @@
+import com.vultisig.wallet.data.models.payload.SignDirect
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
 data class TransactionData(
@@ -281,17 +286,8 @@ data class SignData(
     val signAmino: SignAmino? = null,
 )
 
-@Serializable
-data class SignDirect(
-    @SerialName("body_bytes")
-    val bodyBytes: String,
-    @SerialName("auth_info_bytes")
-    val authInfoBytes: String,
-    @SerialName("chain_id")
-    val chainId: String,
-    @SerialName("account_number")
-    val accountNumber: String,
-)
+
+
 
 @Serializable
 data class SignAmino(
@@ -416,3 +412,4 @@ data class OneinchTransaction(
     @SerialName("value")
     val value: String,
 )
+

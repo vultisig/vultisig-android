@@ -228,7 +228,7 @@ internal fun VerifySendScreen(
                             subtitle = tx.memo
                         )
                     }
-                    if (tx.signAmino != null) {
+                    tx.signAmino?.takeIf { it.isNotBlank() && it.lowercase() != "null" }?.let {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(
@@ -236,7 +236,8 @@ internal fun VerifySendScreen(
                             subtitle = tx.signAmino
                         )
                     }
-                    if(tx.signDirect != null) {
+
+                    tx.signDirect?.takeIf { it.isNotBlank() && it.lowercase() != "null" }?.let {
                         VerifyCardDivider(0.dp)
 
                         VerifyCardJsonDetails(

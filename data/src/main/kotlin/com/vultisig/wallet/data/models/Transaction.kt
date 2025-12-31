@@ -3,7 +3,6 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import vultisig.keysign.v1.SignAmino
-import vultisig.keysign.v1.SignDirect
 
 typealias TransactionId = String
 

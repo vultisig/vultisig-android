@@ -6,7 +6,6 @@ import com.vultisig.wallet.ui.models.SendTxUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import kotlinx.serialization.json.Json
 import vultisig.keysign.v1.SignAmino
-import vultisig.keysign.v1.SignDirect
 import javax.inject.Inject
 
 internal interface TransactionToUiModelMapper : SuspendMapperFunc<Transaction, SendTxUiModel>

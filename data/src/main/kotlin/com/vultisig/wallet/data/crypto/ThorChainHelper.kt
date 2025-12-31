@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.getNotNativeTicker
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
@@ -19,7 +20,6 @@ import com.vultisig.wallet.data.wallet.Swaps
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
 import vultisig.keysign.v1.SignAmino
-import vultisig.keysign.v1.SignDirect
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.Base64
@@ -465,7 +465,7 @@ class ThorChainHelper(
     }
 
     private fun buildSignDirectSigningInput(
-        signDirect: SignDirect,
+        signDirect: SignDirectProto,
         cosmosSpecific: BlockChainSpecific.Cosmos,
         memo: String?,
         publicKey: PublicKey,
