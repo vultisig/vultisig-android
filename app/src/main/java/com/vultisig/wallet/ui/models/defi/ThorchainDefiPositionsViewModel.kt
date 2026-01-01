@@ -1,9 +1,7 @@
 package com.vultisig.wallet.ui.models.defi
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -13,6 +11,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -141,7 +140,6 @@ data class TotalDefiValue(
 
 @HiltViewModel
 internal class ThorchainDefiPositionsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val bondUseCase: ThorchainBondUseCase,
@@ -154,7 +152,7 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
 
-    private var vaultId: String = savedStateHandle.toRoute<Route.PositionTokens>().vaultId
+    private lateinit var vaultId: String
 
     val state = MutableStateFlow(ThorchainDefiPositionsUiModel())
 
@@ -174,7 +172,10 @@ internal class ThorchainDefiPositionsViewModel @Inject constructor(
     val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
 
-    init {
+
+
+    fun setData(vaultId: VaultId){
+        this.vaultId = vaultId
         loadBalanceVisibility()
         loadSavedPositions()
         loadTotalValue()

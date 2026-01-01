@@ -23,10 +23,10 @@ fun OnBoardingComposeTheme(
     ) {
         MaterialTheme(
             colorScheme = lightColorScheme(
-                background = Color("#02122a".toColorInt()),
-                onBackground = Color.White,
-                primary = Color("#33e6bf".toColorInt()),
-                onPrimary = Color("#02122a".toColorInt()),
+                background = Theme.v2.colors.backgrounds.primary,
+                onBackground = Theme.v2.colors.neutrals.n50,
+                primary = Theme.v2.colors.buttons.primary,
+                onPrimary = Theme.v2.colors.backgrounds.primary,
                 surfaceDim = Color("#1f9183".toColorInt())
             ),
             shapes = Shapes,

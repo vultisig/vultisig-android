@@ -497,21 +497,7 @@ internal sealed class Route {
     @Serializable
     data class Details(val vaultId: String)
 
-    @Serializable
-    data class ChainTokens(
-        val vaultId: String,
-        val chainId: String,
-    )
 
-    @Serializable
-    data class PositionTokens(
-        val vaultId: String,
-    )
-
-    @Serializable
-    data class PositionCircle(
-        val vaultId: String,
-    )
 
     @Serializable
     data class SignMessage(
@@ -613,6 +599,10 @@ internal sealed class Route {
         val vaultId: String,
     )
 
+    @Serializable
+    data class ChainDashboard(
+        val route: ChainDashboardRoute
+    )
 }
 
 @Serializable
@@ -627,6 +617,27 @@ internal sealed interface BackupType {
     data object AllVaults : BackupType
 }
 
+@Serializable
+sealed interface ChainDashboardRoute {
+    @Serializable
+    data class Wallet(
+        val vaultId: String,
+        val chainId: String,
+    ) : ChainDashboardRoute
+
+    @Serializable
+    data class PositionTokens(
+        val vaultId: String,
+    ) : ChainDashboardRoute
+
+    @Serializable
+    data class PositionCircle(
+        val vaultId: String,
+    ) : ChainDashboardRoute
+}
+
+
+
 
 internal val BackupTypeNavType = createNavType<BackupType>()
 
@@ -634,6 +645,7 @@ internal val VaultListOpenTypeNavType = createNavType<VaultList.OpenType>()
 
 internal val BackupPasswordTypeNavType = createNavType<BackupVault.BackupPasswordType>()
 
+internal val ChainDashboardRouteNavType = createNavType<ChainDashboardRoute>()
 
 private inline fun <reified T> createNavType(
     isNullableAllowed: Boolean = false
