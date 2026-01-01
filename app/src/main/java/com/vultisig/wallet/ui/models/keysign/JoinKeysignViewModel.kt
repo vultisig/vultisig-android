@@ -895,7 +895,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
 
                     val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
-                        .takeIf { !normalizedSignAminoJson.isNullOrEmpty() } ?: ""
+                        .takeIf { !normalizedSignAminoJson.isEmpty() } ?: ""
                     val signDirectString = json.encodeToString(payload.signDirect)
                         .takeIf { payload.signDirect != null } ?: ""
                     val transaction = Transaction(
