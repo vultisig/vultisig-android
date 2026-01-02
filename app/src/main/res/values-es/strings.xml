@@ -876,4 +876,6 @@
     <string name="send_form_network_fee">Tarifa de red (automática)</string>
     <string name="swap_form_vult_discount_bps">VULT (%1$s - %2$d bps)</string>
     <string name="swap_form_referral_discount_bps">Referencia (-%1$d bps)</string>
+    <string name="amino_sign">Firma Amino</string>
+    <string name="amino_direct">Firma directa</string>
 </resources>

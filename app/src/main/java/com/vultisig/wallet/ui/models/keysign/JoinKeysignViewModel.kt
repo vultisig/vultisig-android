@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
-import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -51,6 +50,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -98,6 +98,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
@@ -172,7 +173,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
-
+    @param:PrettyJson private val json: Json,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
@@ -871,6 +872,32 @@ internal class JoinKeysignViewModel @Inject constructor(
                         payload.memo,
                         chain
                     )
+                    val normalizedSignAminoJson = kotlinx.serialization.json.buildJsonObject {
+                        payload.signAmino?.msgs?.forEach { cosmosMsg ->
+                            val type = cosmosMsg?.type ?: return@forEach
+                            val valueElem = try {
+                                json.parseToJsonElement(cosmosMsg.value)
+                            } catch (e: Exception) {
+                                kotlinx.serialization.json.JsonPrimitive(cosmosMsg.value)
+                            }
+
+                            put(
+                                "type",
+                                kotlinx.serialization.json.JsonPrimitive(
+                                    type
+                                )
+                            )
+                            put(
+                                "value",
+                                valueElem
+                            )
+                        }
+                    }
+
+                    val normalizedSignAmino = json.encodeToString(normalizedSignAminoJson)
+                        .takeIf { !normalizedSignAminoJson.isEmpty() } ?: ""
+                    val signDirectString = json.encodeToString(payload.signDirect)
+                        .takeIf { payload.signDirect != null } ?: ""
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = payload.vaultPublicKeyECDSA,
@@ -888,7 +915,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         memo = payload.memo.takeIf { functionInfo == null },
                         estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
-                        totalGas = totalGasAndFee.formattedTokenValue
+                        totalGas = totalGasAndFee.formattedTokenValue,
+                        signAmino = normalizedSignAmino,
+                        signDirect = signDirectString,
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
@@ -939,7 +968,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
                         txScanStatus = TransactionScanStatus.Error(
-                            e.message ?: "Security Scanner Failed", BLOCKAID_PROVIDER
+                            e.message ?: "Security Scanner Failed",
+                            BLOCKAID_PROVIDER
                         )
                     )
                 }
@@ -969,7 +999,10 @@ internal class JoinKeysignViewModel @Inject constructor(
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.launch {
                 // when Payload is not in the QRCode
-                routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                routerApi.getPayload(
+                    _serverAddress,
+                    payloadId
+                ).let { payload ->
                     if (payload.isNotEmpty()) {
                         val rawPayload = decompressQr(payload.decodeBase64Bytes())
                         val payloadProto =
@@ -999,10 +1032,16 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     fun discoveryMediator(nsdManager: NsdManager) {
         _discoveryListener =
-            MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
+            MediatorServiceDiscoveryListener(
+                nsdManager,
+                _serviceName,
+                ::onServerAddressDiscovered
+            )
         _nsdManager = nsdManager
         nsdManager.discoverServices(
-            "_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener
+            "_http._tcp.",
+            NsdManager.PROTOCOL_DNS_SD,
+            _discoveryListener
         )
     }
 
@@ -1011,13 +1050,21 @@ internal class JoinKeysignViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
-                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+                    sessionApi.startSession(
+                        _serverAddress,
+                        _sessionID,
+                        listOf(_localPartyID)
+                    )
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
-                        .e("Failed to join keysign: %s", e.stackTraceToString())
-                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
+                        .e(
+                            "Failed to join keysign: %s",
+                            e.stackTraceToString()
+                        )
+                    currentState.value =
+                        JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
                 }
             }
         }
@@ -1061,7 +1108,10 @@ internal class JoinKeysignViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
+            this._keysignCommittee = sessionApi.checkCommittee(
+                _serverAddress,
+                _sessionID
+            )
             Timber.d("Keysign committee: $_keysignCommittee")
             Timber.d("local party: $_localPartyID")
             if (this._keysignCommittee.contains(_localPartyID)) {
@@ -1072,6 +1122,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             vault = _currentVault,
                         )
                     }
+
                     customMessagePayload != null -> {
                         messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
                     }
@@ -1080,7 +1131,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                 return true
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to check keysign start")
+            Timber.e(
+                e,
+                "Failed to check keysign start"
+            )
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
@@ -1120,8 +1174,14 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         val functionSignature = fourByteRepository.decodeFunction(memo)
         val functionInputs = if (functionSignature != null) {
-            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
+            fourByteRepository.decodeFunctionArgs(
+                functionSignature,
+                memo
+            ) ?: return null
         } else return null
-        return FunctionInfo(functionSignature, functionInputs)
+        return FunctionInfo(
+            functionSignature,
+            functionInputs
+        )
     }
 }
