@@ -16,7 +16,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.ChainDashboardRouteNavType
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
-import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_DEFI
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +55,7 @@ internal class ChainDashboardViewModel @Inject constructor(
 
     init {
         initData()
-        initAvailableCryptoTypes(Chain.ThorChain.id)
+        initAvailableCryptoTypes()
         collectBottomBarVisibility()
         collectActiveRoute()
     }
@@ -65,7 +64,7 @@ internal class ChainDashboardViewModel @Inject constructor(
         when (args.route) {
             is ChainDashboardRoute.PositionCircle -> {
                 vaultId = args.route.vaultId
-                chainId = null
+                chainId = Chain.Ethereum.id
             }
 
             is ChainDashboardRoute.PositionTokens -> {
@@ -81,14 +80,11 @@ internal class ChainDashboardViewModel @Inject constructor(
         }
     }
 
-    private fun initAvailableCryptoTypes(thorChainId: ChainId) {
-        val availableCryptoTypes = when (args.route) {
-            is ChainDashboardRoute.PositionCircle -> ONLY_DEFI
-            else -> {
-                if (chainId == thorChainId) BOTH_CRYPTO_CONNECTION_TYPES
-                else ONLY_WALLET
-            }
-        }
+    private fun initAvailableCryptoTypes() {
+        val availableCryptoTypes =
+            if (chainId in listOf(Chain.ThorChain.id, Chain.Ethereum.id))
+                BOTH_CRYPTO_CONNECTION_TYPES
+            else ONLY_WALLET
 
         uiState.update {
             it.copy(
